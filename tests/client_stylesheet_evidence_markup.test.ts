@@ -16,6 +16,7 @@ import type {
   ViewResourceEvidence,
 } from "../packages/viewer/dist/review/types.js";
 import { viewEvidenceReasons } from "../packages/viewer/dist/review/view_evidence.js";
+import { entryWording } from "../packages/viewer/dist/shell/entry_wording.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
@@ -128,14 +129,30 @@ test("Details read the same facts whatever viewport or scheme is shown", () => {
 
 test("a consuming component shows its live view evidence before any comparison loads", () => {
   const data = componentWorkspace("Unmodified", componentRules, "toolbar");
+  data.included = false;
   data.relatedComponents = [{ path: "action", title: "Action" }];
-  data.variants = savedViews("toolbar/default", "Changed");
+  data.variants = savedViews("toolbar/default", "Unmodified");
   const markup = render(data, "toolbar/default");
   assert.match(
     markup,
     /<li>static\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
   );
+  assert.ok(
+    markup.endsWith(`<p>${SCREEN_STYLE_COPY.sharedImpact}</p></section>`),
+    markup,
+  );
   assert.doesNotMatch(markup, /No changes to this saved view\./);
+});
+
+test("the shared-component pane headings follow the design copy", () => {
+  assert.equal(
+    entryWording("screen").componentsChanged,
+    SCREEN_STYLE_COPY.componentsChanged,
+  );
+  assert.equal(
+    entryWording("component").componentsChanged,
+    COMPONENT_STYLE_COPY.componentsChanged,
+  );
 });
 
 test("a parent route closes with the selected saved view's own status", () => {

@@ -1,0 +1,238 @@
+/**
+ * Details of an entry that only changed components affect, on the live
+ * path: the published index and entry detail, then a loaded comparison.
+ */
+
+import assert from "node:assert/strict";
+import { test } from "node:test";
+
+import { renderToStaticMarkup } from "react-dom/server";
+
+import { detailKey } from "../src/catalogue/detail_fences.js";
+import type {
+  CatalogueReadModel,
+  EntryDetailV1,
+} from "../src/catalogue/types.js";
+import { parseReviewResult } from "../src/review/result_validation.js";
+import type { ReviewResult } from "../src/review/types.js";
+import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
+import { viewerCatalogue } from "../src/viewer/projection.js";
+import { publicWorkspace } from "../src/viewer/public_workspace.js";
+
+import {
+  detailPairs,
+  rawDetailFixtures,
+  rawIndexFixture,
+  shellModelFixture,
+} from "./catalogue_v7_fixture.js";
+
+const SCREEN = "product/browse/home/empty";
+const SHARED =
+  "Shared component changes affect this preview. This page has no independent entry in Changes.";
+const NO_CHANGES = "No changes to this screen.";
+const ACTION = { path: "components/action", title: "Action" } as const;
+
+/** The routed screen's Details after one edit of its index record and detail. */
+function details(
+  edit: {
+    changes?: CatalogueReadModel["screens"][number]["changes"];
+    detail?: (detail: EntryDetailV1) => void;
+  },
+  loaded?: ReviewResult,
+): string {
+  const index = rawIndexFixture();
+  const record = index.screens.find(({ path }) => path === SCREEN)!;
+  if (edit.changes) record.changes = edit.changes;
+  const fixtures = rawDetailFixtures();
+  edit.detail?.(fixtures.current[SCREEN]!);
+  const model = shellModelFixture(
+    index,
+    new Map(
+      detailPairs(undefined, fixtures).map(([request, detail]) => [
+        detailKey(request),
+        detail,
+      ]),
+    ),
+  );
+  const catalogue = viewerCatalogue(model);
+  const entry = catalogue.byPath.get(SCREEN);
+  assert.ok(entry?.kind === "screen");
+  const data = publicWorkspace(
+    catalogue,
+    model,
+    entry,
+    true,
+    undefined,
+    "main",
+  );
+  return renderToStaticMarkup(
+    <WorkspaceEvidence data={data} {...(loaded ? { loaded } : {})} />,
+  );
+}
+
+/** The detail of a screen that uses changed Action. */
+function usesAction(detail: EntryDetailV1) {
+  detail.workspace!.relatedComponents = [ACTION];
+}
+
+/** A view rule that changed Action owns, which the screen keeps. */
+function keepsActionRule(detail: EntryDetailV1) {
+  detail.views[0]!.resourceEvidence = {
+    rules: [
+      {
+        stylesheet: "mockups/action.css",
+        selector: ".action",
+        status: "matched",
+        owner: { kind: "component", path: ACTION.path },
+      },
+    ],
+    resources: [],
+  };
+}
+
+test("an affected-only screen explains the shared change in place of its no-changes line", () => {
+  const markup = details({
+    detail: (detail) => {
+      usesAction(detail);
+      keepsActionRule(detail);
+    },
+  });
+  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
+  assert.ok(!markup.includes(NO_CHANGES), markup);
+  assert.match(markup, /Changed component: <a href="[^"]*">Action<\/a>/);
+  assert.match(markup, /Changed styles that apply to this screen:/);
+});
+
+test("the explanation needs no stylesheet when the screen uses a changed component", () => {
+  const markup = details({ detail: usesAction });
+  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
+  assert.ok(!markup.includes(NO_CHANGES), markup);
+});
+
+test("a component-owned record alone explains the shared change", () => {
+  const rule = details({ detail: keepsActionRule });
+  assert.ok(rule.includes(`<p>${SHARED}</p>`), rule);
+  const resource = details({
+    detail: (detail) => {
+      detail.views[1]!.resourceEvidence = {
+        rules: [],
+        resources: [
+          {
+            path: "static/icons/action.svg",
+            owner: { kind: "component", path: ACTION.path },
+          },
+        ],
+      };
+    },
+  });
+  assert.ok(resource.includes(`<p>${SHARED}</p>`), resource);
+});
+
+test("an excluded component rule explains nothing", () => {
+  const markup = details({
+    detail: (detail) => {
+      detail.views[0]!.resourceEvidence = {
+        rules: [
+          {
+            stylesheet: "mockups/action.css",
+            selector: "",
+            status: "excluded",
+            owner: { kind: "component", path: ACTION.path },
+          },
+        ],
+        resources: [],
+      };
+    },
+  });
+  assert.ok(!markup.includes(SHARED), markup);
+  assert.ok(markup.endsWith(`<p>${NO_CHANGES}</p></section>`), markup);
+});
+
+test("an entry with its own Changes row, or before Changes is ready, keeps the explanation out", () => {
+  const listed = details({
+    changes: { status: "ready", kind: "changed", included: true },
+    detail: usesAction,
+  });
+  assert.ok(!listed.includes(SHARED), listed);
+  const pending = details({
+    changes: { status: "pending" },
+    detail: usesAction,
+  });
+  assert.ok(!pending.includes(SHARED), pending);
+});
+
+test("an unaffected unchanged screen keeps its no-changes line", () => {
+  const markup = details({});
+  assert.ok(!markup.includes(SHARED), markup);
+  assert.ok(markup.endsWith(`<p>${NO_CHANGES}</p></section>`), markup);
+});
+
+test("a loaded review that lists the screen as affected explains the change", () => {
+  const side = { path: SCREEN, title: "Empty", props: {} };
+  const action = { ...ACTION, props: {}, suppliedSlots: [] };
+  const loaded = parseReviewResult({
+    schemaVersion: 8,
+    baseCommit: "a".repeat(40),
+    entries: [
+      {
+        kind: "component",
+        path: ACTION.path,
+        title: ACTION.title,
+        before: action,
+        after: action,
+        state: "changed",
+        included: true,
+        reasons: [{ kind: "material" }],
+        views: [
+          {
+            viewport: "mobile",
+            colorScheme: "light",
+            state: "changed",
+            ignoredIds: [],
+          },
+        ],
+        variants: [],
+      },
+      {
+        kind: "screen",
+        path: SCREEN,
+        title: "Empty",
+        before: side,
+        after: side,
+        state: "unchanged",
+        included: false,
+        reasons: [],
+        views: [
+          {
+            viewport: "mobile",
+            colorScheme: "light",
+            state: "unchanged",
+            ignoredIds: [],
+          },
+        ],
+      },
+    ],
+    affected: [
+      {
+        changedComponentId: ACTION.path,
+        consumer: { kind: "screen", path: SCREEN },
+        evidence: [
+          {
+            side: "after",
+            context: {
+              kind: "screen",
+              entry: side,
+              viewport: "mobile",
+              colorScheme: "light",
+            },
+            via: [{ componentId: ACTION.path, instanceKey: "a".repeat(64) }],
+          },
+        ],
+      },
+    ],
+    diagnostics: [],
+  });
+  const markup = details({}, loaded);
+  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
+  assert.ok(!markup.includes(NO_CHANGES), markup);
+});

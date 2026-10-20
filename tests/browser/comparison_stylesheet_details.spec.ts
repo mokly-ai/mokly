@@ -18,6 +18,8 @@ const VARIANT_EXCLUDED_LEAD =
   "This stylesheet changed, but none of the changed styles apply to this variant.";
 const EXAMINED_LEAD = "Examined and excluded:";
 const SCREEN_TERMINAL = "No changes to this screen.";
+const SHARED_IMPACT =
+  "Shared component changes affect this preview. This page has no independent entry in Changes.";
 const VARIANT_TERMINAL = "No changes to this saved view.";
 const COMPONENT_FILES_LEAD =
   "Changes to these files may affect this component:";
@@ -187,7 +189,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
     });
 
-    test("an affected-only screen keeps its full styles without a row of its own", async ({
+    test("an affected-only screen keeps its full styles and explains the shared change", async ({
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.consumer}/`);
@@ -201,9 +203,12 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toBeVisible();
+      // The shared-component sentence closes Details in place of the
+      // no-changes line, because Card changes how the screen renders.
+      await expect(evidence.locator("p").last()).toHaveText(SHARED_IMPACT);
       await expect(
         evidence.getByText(SCREEN_TERMINAL, { exact: true }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
       ).toHaveText("26");

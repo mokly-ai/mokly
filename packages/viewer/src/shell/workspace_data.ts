@@ -56,11 +56,18 @@ export interface WorkspaceData {
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
   status?: EntryStatus;
+  /** Whether Changes lists the routed entry; absent until Changes is ready. */
+  included?: boolean;
   /**
    * The routed entry's direct reasons from its detail, while Changes is
    * ready and includes it; a pure move has none.
    */
   reasons?: readonly EntryChangeReason[];
+  /**
+   * A shown view's entry-detail evidence keeps a retained rule or a resource
+   * that a component owns.
+   */
+  componentRecords?: boolean;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;
@@ -166,5 +173,8 @@ export function workspaceData(
     usedBy: usedByUsageLinks(catalogue, evidenceEntry),
     affected: [],
     ...(status ? { status } : {}),
+    ...(context.changedEntries
+      ? { included: context.changedEntries.includes(entry.path) }
+      : {}),
   };
 }

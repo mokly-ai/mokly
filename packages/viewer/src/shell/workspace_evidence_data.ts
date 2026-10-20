@@ -7,6 +7,10 @@ import {
   reviewEntry,
   viewReasons,
 } from "../review/entries.js";
+import {
+  affectedEntry,
+  keepsComponentRecord,
+} from "../review/shared_impact.js";
 import type {
   ChangeReason,
   EvidenceReasons,
@@ -29,6 +33,12 @@ export interface WorkspaceComparisonEvidence {
   views: readonly ReviewView[];
   resourceViews: readonly EvidenceReasons[];
   reasons: readonly ChangeReason[];
+  /**
+   * Changes does not list the routed entry, yet changed components affect
+   * it: its detail names changed components it uses, a shown view keeps a
+   * component-owned record, or the loaded review lists it as affected.
+   */
+  sharedImpact: boolean;
 }
 
 /**
@@ -57,6 +67,14 @@ export function workspaceComparisonEvidence(
     componentId: data.component?.path,
     views,
     resourceViews: [...resources, ...viewEvidence],
+    sharedImpact:
+      data.included === false &&
+      (data.relatedComponents.length > 0 ||
+        data.componentRecords === true ||
+        views.some(keepsComponentRecord) ||
+        (loaded !== undefined &&
+          routed !== undefined &&
+          affectedEntry(loaded, routed))),
     reasons: mergeReasons([
       ...(data.reasons ?? []),
       ...(routed?.reasons ?? []),

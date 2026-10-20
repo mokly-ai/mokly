@@ -57,6 +57,14 @@ kind, a font or image resource, a dependency without a rule on the view, or a
 view whose named stylesheets are all `excluded` keeps the ordinary changed
 label.
 
+A view says “Components this screen uses changed”, or “Components this variant
+uses changed” for a component variant, when its state is `unchanged` and
+changed components affect it: the view keeps a `matched` or `unresolved` rule
+or a resource that a component owns, or an `affected` evidence item of the
+loaded review names it by side, entry path, viewport, and colour scheme, so a
+moved entry's before side matches its previous path. Every other `unchanged`
+view keeps “No changes to this screen”.
+
 ## Details Copy
 
 Screens, component saved views and whole-document pages use one shared
@@ -182,16 +190,24 @@ path alone. No outcome shows owner records.
 
 ## Status Lines
 
+Each changed component that the entry consumes is linked as “Changed
+component: Title”. The shared-component sentence, “Shared component changes
+affect this preview. This page has no independent entry in Changes.”, appears
+when the routed entry's index record is ready and not `included` and changed
+components affect it: its detail's `relatedComponents` names a changed
+component, which the review's `affected` records give, a shown view keeps a
+`matched` or `unresolved` rule or a resource that a component owns, or the
+loaded review's `affected` evidence names the entry. It shows in Current and
+in a loaded comparison alike. A saved view whose rules are all owned by the
+entry gains no sentence from those rules. A whole-document page consumes no
+components, so its Details never link a changed component or say that
+sentence.
+
 The terminal line, “No changes to this screen.”, “No changes to this page.” or
 “No changes to this saved view.”, appears only when the routed entry is
-unmodified. In a component workspace, the selected saved view must also be
-unmodified. Each changed component that the entry consumes is linked as
-“Changed component: Title”. The sentence “Shared component changes affect this
-preview. This page has no independent entry in Changes.” appears only when the
-entry has no Changes row of its own, consumes at least one changed component,
-and a selected view changed. A saved view whose rules are all owned by the entry
-therefore never says it. A whole-document page consumes no components, so its
-Details never link a changed component or say that sentence.
+unmodified and the shared-component sentence does not apply; that sentence
+takes its place. In a component workspace, the selected saved view must also
+be unmodified.
 
 A current whole-document page shows Added, Changed or Unmodified beside its
 title once its Changes are ready, from the catalogue change kind: Added when

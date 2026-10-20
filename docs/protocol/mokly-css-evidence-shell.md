@@ -81,6 +81,14 @@ rules:
   file's item. The mockup card must render that spacing as authored, whatever
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
+- A screen or component that only changed components affect stays
+  Unmodified with no Changes row. Its Details keep the full matched styles of
+  each file, link each changed component, and end with “Shared component
+  changes affect this preview. This page has no independent entry in
+  Changes.” in place of the terminal line, as
+  `design/components/states/shared-impact/affected-screen` depicts. In a
+  loaded comparison, each of its affected views reads the stage heading
+  "Components this screen uses changed".
 - A whole-document page in Changes keeps its plain document pane, with no
   comparison toolbar and no stage heading. Its Details hold the same
   comparison details and files list, led by "Changes to these files may affect

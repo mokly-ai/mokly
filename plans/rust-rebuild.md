@@ -383,9 +383,10 @@ option applies under the user's rule. Milestones 10.1 and 10.2 apply them.
   in every window.
 - Item 32 A: Details explain a screen or component that only changed
   components affect when the review lists it in `affected` or a shown view
-  keeps a component-owned record; the records page states that such an entry
-  keeps `unchanged` views; the pane heading of such a view is settled; the
-  design state comes first.
+  keeps a component-owned record, in place of the no-changes line; the records
+  page states that such an entry keeps `unchanged` views; the pane heading of
+  such a view reads “Components this screen uses changed” (“variant” for a
+  component); the design state comes first.
 - Item 35 A: the `implementation` reason reads “Rendered content changed where
   this component is used.”, and the design catalogue depicts it.
 - Item 38 C: a view reads the style-only heading when the entry has a reason,
@@ -1633,7 +1634,7 @@ Tags: ui
 
 - [x] Item 42 A: show the design catalogue's missing-pane copy.
 - [x] Item 38 C: apply the style-only heading rule of any rule status.
-- [ ] Item 32 A: explain affected-only entries in Details and their
+- [x] Item 32 A: explain affected-only entries in Details and their
       comparison pane heading; fix the records sentence.
 - [ ] Item 24 A: show each use-case step's mobile view in a phone frame below
       760px.

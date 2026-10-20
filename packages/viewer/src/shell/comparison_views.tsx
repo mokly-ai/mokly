@@ -85,12 +85,15 @@ function ComparisonSection({
     createComparisonScrollSync({ owner, together }),
   );
   useEffect(() => sync.setTogether(together), [sync, together]);
-  const { documents, mode, styleOnly, view, viewport } = selected;
+  const { componentsOnly, documents, mode, styleOnly, view, viewport } =
+    selected;
   const component = entryKind === "component";
   const wording = entryWording(component ? "component" : "screen");
   const label = styleOnly
     ? wording.stylesChanged
-    : wording.label(stateLabels[view.state]);
+    : componentsOnly
+      ? wording.componentsChanged
+      : wording.label(stateLabels[view.state]);
   const pane = (side: ComparisonSide): PaneDocument | undefined => {
     const address = documents[side];
     const document = address ? presentations.get(address) : undefined;

@@ -9,7 +9,9 @@ export function mergeWorkspaceEvidence(
 ): void {
   for (const key of [
     "status",
+    "included",
     "reasons",
+    "componentRecords",
     "resourceEvidence",
     "usageComplete",
     "viewUsagePending",

@@ -262,7 +262,14 @@ same markup. `workspace_evidence.tsx` follows the designs' order: the reason
 sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
-design places, and the no-changes line follow, in that order. The heading names
+design places, and the no-changes line follow, in that order.
+`workspace_evidence_data.ts` shows the shared-component sentence in place of
+the no-changes line when Changes does not list the routed entry and changed
+components affect it, by the facts of `../review/shared_impact.ts`: the
+detail's related components, a component-owned record on a shown view, or the
+loaded review's `affected` evidence. The same facts give an unchanged view in
+`comparison_selection.ts` its "Components this screen uses changed" pane
+heading. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its

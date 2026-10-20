@@ -13,11 +13,17 @@ import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 
+/** Details of an entry that only changed components affect end with it. */
+const SHARED_IMPACT =
+  "Shared component changes affect this preview. This page has no independent entry in Changes.";
+
 /**
  * Comparison facts for the current entry and optional loaded comparison, in
  * the designs' order: the branch point and, for a moved entry, the path its
  * earlier side comes from; one sentence per reason; the changed and excluded
  * stylesheets; the paired prop values; then the changed components used here.
+ * An entry that only changed components affect ends with their explanation in
+ * place of the no-changes line.
  */
 export function WorkspaceEvidence({
   data,
@@ -96,6 +102,7 @@ export function WorkspaceEvidence({
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
+          {evidence.sharedImpact ? <p>{SHARED_IMPACT}</p> : null}
           {variant?.before &&
           variant.after &&
           JSON.stringify(variant.before.props) !==
@@ -108,7 +115,8 @@ export function WorkspaceEvidence({
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
           ) : null}
-          {data.status === "Unmodified" &&
+          {!evidence.sharedImpact &&
+          data.status === "Unmodified" &&
           (savedView?.status ?? "Unmodified") === "Unmodified" ? (
             <p>{wording.noChanges}</p>
           ) : null}
