@@ -1,6 +1,7 @@
 name: CI
 on:
   pull_request: null
+  workflow_dispatch: null
   push:
     branches:
       - main

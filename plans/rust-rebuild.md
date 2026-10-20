@@ -655,6 +655,11 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       repair without a compatible published update. The narrow exception lets
       the audit protect all other dependencies.
       Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+- [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
+      approved 2026-10-20, mirrors the trigger in main PR #198. A selected
+      branch runs its own workflow and selects the baseline audit. The
+      alternative was to leave manual dispatch unavailable on the rebuild.
+      Evidence: `.context/ci-gates-round2/manual-dispatch-checks.log`.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
