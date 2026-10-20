@@ -95,6 +95,8 @@ variant before any render starts, on every wrapper invocation before its
 adapter runs, and on the fully merged props of a live control edit. Index and
 detail readers decode and validate recorded props against the serialized
 schema before trusting a props key or a usage record.
+The JavaScript wrapper pre-check uses the same profile as the viewer.
+The Rust core rechecks every returned instance against its registered schema.
 
 ## Canonical Wire Props
 
@@ -157,5 +159,5 @@ its type comes from the schema. A control that names an undeclared prop or a
 slot fails `component-controls`. Uneditable props receive the same complete
 validation and hashing as controlled ones. A live edit is applied to a fresh
 copy of the shown entry's props, then validated and encoded under this one
-policy before the sidecar renders it. One validator serves the registry, the
-saved variants, the live controls, and the readers.
+policy before the sidecar renders it. One schema profile governs the registry,
+saved variants, wrapper calls, live controls, and readers.

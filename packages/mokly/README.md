@@ -130,8 +130,11 @@ Node's rule for `.mjs` and `.mts`, the `__esModule` default otherwise.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed
-instance and slot drafts, and render warnings. Nested supplied slots share
-one encounter order per original input scope; repeated placements keep that
+instance and slot drafts, and render warnings. Registered wrappers check dynamic
+data props with the viewer's profile validator before calling their adapters.
+The Rust core rechecks every returned instance against its registered schema.
+Nested supplied slots share one encounter order per original input scope;
+repeated placements keep that
 input's order. A consumer
 renderer wraps React screens and components and must default-export a function.
 Bundle diagnostics use the compiler's source coordinates and reason without
