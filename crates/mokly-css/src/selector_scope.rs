@@ -13,10 +13,10 @@ pub(crate) struct Scope {
 }
 
 pub(crate) fn broaden(source: &str) -> Scope {
-    walk(&mut Parser::new(source))
+    walk(&mut Parser::new(source), false)
 }
 
-fn walk(parser: &mut Parser<'_>) -> Scope {
+fn walk(parser: &mut Parser<'_>, argument: bool) -> Scope {
     let mut scope = Scope {
         text: String::new(),
         unresolved: false,
@@ -37,7 +37,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
         }
         match token {
             Token::SquareBracketBlock => {
-                anchored |= colons == 0;
+                anchored |= !argument && colons == 0;
                 prefix(&mut scope.text, colons);
                 let start = parser.position();
                 let raw: result::Result<_, ParseError<()>> = parser.parse_nested_block(|nested| {
@@ -54,7 +54,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
             Token::Function(name) => {
                 let name = name.to_ascii_lowercase();
                 let nested: result::Result<_, ParseError<()>> =
-                    parser.parse_nested_block(|nested| Ok(walk(nested)));
+                    parser.parse_nested_block(|nested| Ok(walk(nested, true)));
                 let nested = nested.unwrap_or(Scope {
                     text: String::new(),
                     unresolved: true,
@@ -80,7 +80,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
                 previous = Some(')');
             }
             Token::Ident(name) => {
-                anchored |= colons == 0;
+                anchored |= !argument && colons == 0;
                 let name_lower = name.to_ascii_lowercase();
                 if (colons == 0
                     && previous != Some('.')
@@ -101,7 +101,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
             token => {
                 match token {
                     Token::Delim('*') => universal = true,
-                    Token::IDHash(_) => anchored |= colons == 0,
+                    Token::IDHash(_) => anchored |= !argument && colons == 0,
                     Token::Comma => {
                         scope.unresolved |= universal && !anchored;
                         universal = false;

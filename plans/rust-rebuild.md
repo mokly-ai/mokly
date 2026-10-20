@@ -2537,6 +2537,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         outer supplier cannot block a receiver's declared physical claim.
         This applies option B within decision 96. Evidence:
         `.context/defaults-engine-round4/ancestor-cli-red.log`.
+  - [x] Defaults-engine round 4 post-push review finding 2: carry functional
+        argument context through selector broadening. Argument-local anchors
+        cannot enable universal matching. This applies option A within the
+        scoped-universal default. Evidence:
+        `.context/defaults-engine-round4/arguments-cli-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.
