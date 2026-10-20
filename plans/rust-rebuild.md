@@ -2155,13 +2155,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
-      retention order, cancellation, fallback, and every charge and bound.
+      cancellation, fallback, and every charge and bound. Trims preserve the
+      earlier kept routes; skipped or trimmed views use source fallback.
       User decision 62 (2026-10-20): B now, in parallel.
       Move this item from the post-merge follow-up into Milestone 14.
       Evidence: `.context/m14-collector/observations.json`,
       `.context/m14-collector/example-parity.json`, and
       `.context/m14-collector/final-verification.json`.
       Integration: `.context/m14-collector/merge-resolution.md`.
+      Follow-up integration: `.context/m14-collector-fix1/merge-resolution.md`.
 
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
@@ -2323,6 +2325,29 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         bounded, ordered collector, is a post-merge follow-up.
         User decision 62 (2026-10-20): B now, in parallel. This later instruction
         supersedes the deferral. The collector must not delay the final pull request.
+        Collector follow-up finding 2, option A (2026-10-20): record the
+        partial-capture rule that was applied as a default, not explicit approval.
+        Inputs arrive in route order. Trims remove the last kept routes first.
+        A skipped or trimmed view is not reconsidered and uses source fallback.
+        A later view can remain even when an earlier skipped view would fit
+        the final capacity. Exact old membership and strict route priority
+        are not preserved. Options B, stop retaining after the first skip or
+        trim, and C, restore the old rule with final-capacity rerenders, remain
+        for the user. No retention rule changes in this follow-up.
+        Collector follow-up finding 1, option B (2026-10-20): matched-span
+        release observations cover all of `changes.classify`. The React fixture
+        has 5,850 views, eight render workers, and two sidecars on one host.
+        At `324fcfbb`, family peak RSS was 2,557,532 KiB over 270.069 s.
+        With the final collector code at `5107d4ce`, it was 2,014,376 KiB over
+        188.282 s. Both use Node 24.21.0 and their matching sidecar sources.
+        The baseline peak includes a 1,006,284 KiB esbuild helper before
+        capture. The collector peak includes a 702,500 KiB helper.
+        The whole classification did not regress in this sample, so option C,
+        stopping idle esbuild services after bundling, is not selected.
+        These observations set no budget or limit. Method and raw samples:
+        `.context/m14-collector-fix1/measurement-method.md` and
+        `.context/m14-collector-fix1/observations.json`. Final-commit repeat:
+        `.context/m14-collector-fix1/final-analysis.json`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2531,6 +2556,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
+    calls `render_all` in `compare_captured` after `build_prepare` validated
+    the head. Evicted head views can compose again. Separate branch.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.

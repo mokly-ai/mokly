@@ -20,6 +20,7 @@ use mokly_model::{material, namespace};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::capture_producer;
 use crate::comparison::Engine;
 use crate::comparison_types::ComparisonRequest;
 use crate::moves::Detector;
@@ -171,6 +172,18 @@ pub(super) fn generation(
     let generated_resources = resources.clone();
     let generated_probe = probe.clone();
     let capture = probe.capture_base;
+    let validation = RenderGenerationMock::render_all
+        .each_call(matching!())
+        .answers_arc(Arc::new(move |_| {
+            if side == "head" {
+                probe.head_started.store(true, Ordering::SeqCst);
+            }
+            probe.record(side, "all");
+            Ok(RenderSummary {
+                documents: count,
+                ..Default::default()
+            })
+        }));
     let common = (
         RenderGenerationMock::catalogue
             .each_call(matching!())
@@ -178,18 +191,6 @@ pub(super) fn generation(
         RenderGenerationMock::plans
             .each_call(matching!())
             .returns(plans),
-        RenderGenerationMock::render_all
-            .each_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                if side == "head" {
-                    probe.head_started.store(true, Ordering::SeqCst);
-                }
-                probe.record(side, "all");
-                Ok(RenderSummary {
-                    documents: count,
-                    ..Default::default()
-                })
-            })),
         RenderGenerationMock::comparison_document
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, route| {
@@ -237,23 +238,12 @@ pub(super) fn generation(
     let routes = RenderGenerationMock::resource_routes
         .each_call(matching!())
         .returns(routes);
-    let collection = RenderGenerationMock::collect_comparison
-        .each_call(matching!(_))
-        .answers(&|mock, collector| {
-            let summary = mock.render_all()?;
-            collector.summary(&summary);
-            for route in mock.plans().keys() {
-                let input = mock.comparison_input(route)?;
-                mock.check_cancelled()?;
-                collector.collect(route, input)?;
-            }
-            Ok(summary)
-        });
+    let collection = capture_producer::collection();
     let cancellation = RenderGenerationMock::check_cancelled
         .each_call(matching!())
         .answers(&|_| Ok(()));
     if side == "head" {
-        Arc::new(Unimock::new((common, render, read)))
+        Arc::new(Unimock::new((common, validation, render, read)))
     } else if capture {
         Arc::new(Unimock::new((
             common,

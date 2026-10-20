@@ -135,7 +135,8 @@ impl Fixture {
             self.cache.clone(),
         )?;
         let engine: &dyn Comparison = &Engine { moves, css };
-        engine.compare(
+        let before = engine.capture_base(before)?;
+        engine.compare_prepared(
             &ComparisonRequest {
                 base_ref: "fixture-base".into(),
                 base_commit: self.commit.to_string(),
