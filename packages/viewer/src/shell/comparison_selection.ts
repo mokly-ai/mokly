@@ -16,8 +16,8 @@ export interface SelectedComparisonView {
   mode: ComparisonPresentation["mode"];
   /**
    * The view is changed, its entry has a reason, every reason is a
-   * dependency, and each named path has a matched or unresolved rule on this
-   * view.
+   * dependency, each named path has a rule of any status on this view, and
+   * at least one named path has a matched or unresolved rule on this view.
    */
   styleOnly: boolean;
   view: ReviewView;

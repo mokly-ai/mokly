@@ -1623,7 +1623,7 @@ Tags: mockup
 Tags: ui
 
 - [x] Item 42 A: show the design catalogue's missing-pane copy.
-- [ ] Item 38 C: apply the style-only heading rule of any rule status.
+- [x] Item 38 C: apply the style-only heading rule of any rule status.
 - [ ] Item 32 A: explain affected-only entries in Details and their
       comparison pane heading; fix the records sentence.
 - [ ] Item 24 A: show each use-case step's mobile view in a phone frame below

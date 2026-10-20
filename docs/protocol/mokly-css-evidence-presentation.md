@@ -46,11 +46,16 @@ the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
-changed” when its state is `changed`, every reason of its review entry is a
-`dependency` reason, and each named path has a rule on this view. A component
-variant says “Styles this variant uses changed”. Any `material`, `inputs`, or
-`structure` reason, a font or image resource, or a dependency without a rule
-keeps the ordinary changed label.
+changed” when its state is `changed`, its review entry has a reason, every
+reason is a `dependency` reason, each named path has a rule of any status on
+this view, and at least one named path has a `matched` or `unresolved` rule on
+this view. An `excluded` record keeps the heading while another named
+stylesheet applies to the view, so a stylesheet whose changes apply to dark
+views only leaves the light and dark views of one entry with the same heading.
+A component variant says “Styles this variant uses changed”. Any other reason
+kind, a font or image resource, a dependency without a rule on the view, or a
+view whose named stylesheets are all `excluded` keeps the ordinary changed
+label.
 
 ## Details Copy
 
