@@ -59,6 +59,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [
       colorScheme,
       data,
+      data?.affectedComparison,
       data?.status,
       data?.views,
       data?.viewStates,

@@ -1784,11 +1784,11 @@ Tags: mockup
 
 Tags: ui
 
-- [ ] User decision 82 B: show the comparison band for a screen or component
+- [x] User decision 82 B: show the comparison band for a screen or component
       that only changed components affect, when its entry detail marks it
       comparison-eligible. It stays out of Changes and keeps its Unmodified
       status. Cover the static build and Serve.
-- [ ] Open that comparison from the Affected screens list.
+- [x] Open that comparison from the Affected screens list.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
@@ -2828,6 +2828,24 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         component line now follows the Status Lines rule (`69ffa907`), the
         catalogue column stays at 900px (`eeaea061`), and the dead workspace
         path for a catalogue without published records is gone (`37e596df`).
+  - User decision 82 follow-ups for the user, raised on 2026-10-20:
+    1. A moved consumer of a changed component offers no comparison.
+       Severity Low, effort Small. Its Affected screens link asks for the
+       comparison, but Changes lists it as a pure move with unchanged views,
+       so it opens Current, and its Details end with "No changes to this
+       screen." Recommended: B, apply the affected rule to every entry whose
+       own views are all unchanged and whose detail names changed components,
+       with the shared-component sentence. Option A keeps the rule to entries
+       that Changes does not list.
+    2. No artboard depicts an affected-only component's comparison, which
+       reads "Components this variant uses changed". Severity Low, effort
+       Large, because it is a new artboard. Recommended: B, draw it when the
+       design's Affected screens list also shows components, as the viewer's
+       list does. Option A keeps the component case in the design copy only.
+  - Outside the scope of user decision 82:
+    `examples/basic/specs/design/components/parts/component_usage.tsx` lists
+    only screens under "Affected screens", while the viewer lists screens and
+    components under "Affected screens and components". Separate branch.
   - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
     user: `HistoricalManifest` has no user and no published export since
     `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still

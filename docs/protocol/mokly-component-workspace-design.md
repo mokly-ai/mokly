@@ -94,10 +94,13 @@ effective displayed scheme before reading that state: a light-only preview uses
 Light status and marks while the catalogue's Dark preference stays selected.
 One view maps review states to Added, Changed, Removed, or Unmodified; Both uses
 that priority order. Changed is eligible, as is Removed only for a component
-variant. Missing or nonmatching evidence keeps status and independently
-supplied eligibility; never derive one from the other. Axis, entry, and evidence
-updates recompute the decision. Unmodified omits the band and uses control marks
-plus `Changed views` for changes elsewhere. Removed screens show their badge
+variant. An entry that Changes does not list stays eligible while it shows
+Unmodified when its entry detail marks it comparison-eligible, because changed
+components affect it. Missing or nonmatching evidence keeps status and
+independently supplied eligibility; never derive one from the other. Axis,
+entry, and evidence updates recompute the decision. Any other Unmodified entry
+omits the band and uses control marks plus `Changed views` for changes
+elsewhere. Removed screens show their badge
 without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.

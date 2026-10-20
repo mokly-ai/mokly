@@ -61,6 +61,12 @@ export interface WorkspaceData {
   base: string;
   comparisons: boolean;
   comparisonEligible: boolean;
+  /**
+   * Changes does not list the routed entry, yet its entry detail marks it
+   * comparison-eligible and names the changed components that affect it.
+   * Its comparison stays available while it shows Unmodified.
+   */
+  affectedComparison: boolean;
   removed: boolean;
   relatedComponents: readonly { path: string; title: string }[];
   inputChanges: readonly InputChange[];

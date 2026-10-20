@@ -147,7 +147,11 @@ ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
 provenance together; missing or partial matching evidence retains the selected
-entry's fallback status and eligibility.
+entry's fallback status and eligibility. `publicWorkspace` sets
+`affectedComparison` when Changes does not list the routed entry but its entry
+detail marks it comparison-eligible, because changed components affect it, and
+`workspace_views.ts` then keeps the comparison eligible while the shown views
+read Unmodified (user decision 82 B).
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
@@ -292,7 +296,9 @@ load, rather than publishing a partial or false-empty list. It keeps one
 entry-owned workspace object, so a publication that replaces the detail keeps
 loaded usage and local editor state. `workspace_usage.tsx` keys each Usage row
 by its entry and removal state only, so a publication that changes a row's
-comparison eligibility keeps its link element and the focus on it.
+comparison eligibility keeps its link element and the focus on it. Its
+`usageHref` opens an Affected screens consumer, or a removed one, in Side by
+side when the consumer can be compared; a Used by link opens Current.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and

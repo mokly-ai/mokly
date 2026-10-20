@@ -68,6 +68,8 @@ export function visibleWorkspaceViews(
 /**
  * Resolve requested axes to actual renders and use per-view evidence only when
  * it covers every shown render. Otherwise preserve selection-level fallbacks.
+ * An entry that only changed components affect keeps its comparison while its
+ * views show Unmodified.
  */
 export function resolveWorkspaceView(
   data: WorkspaceData,
@@ -94,9 +96,14 @@ export function resolveWorkspaceView(
         ? data.viewStates[evidenceKey]
         : undefined,
   });
+  // The routed entry's detail decides; a parent route selects its own row.
+  const affected =
+    data.affectedComparison &&
+    (selection.variant === undefined ||
+      selection.variant.value.path === data.entry.path);
   return {
     ...resolved,
-    comparisonEligible: presentation.comparisonEligible,
+    comparisonEligible: presentation.comparisonEligible || affected,
     evidence: presentation.evidence === "matching" ? "view" : "selection",
     status: presentation.status,
   };

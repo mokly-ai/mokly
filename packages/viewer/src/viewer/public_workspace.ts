@@ -179,6 +179,11 @@ export function publicWorkspace(
               view.comparison.status === "ready" && view.comparison.eligible,
           )
         : (selectedVariant?.comparisonEligible ?? false)),
+    affectedComparison:
+      original.changes.status === "ready" &&
+      !original.changes.included &&
+      detail?.comparisonEligible === true &&
+      detail.relatedComponents.length > 0,
     removed,
     relatedComponents: detail?.relatedComponents ?? [],
     inputChanges: detail?.inputChanges ?? [],
