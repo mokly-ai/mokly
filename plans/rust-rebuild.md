@@ -397,6 +397,13 @@ readiness rather than blocking this acceptance round on further startup work.
   exit while output installation, restoration, or cleanup settles. Exit once
   that operation finishes without another signal. Reject immediate exit in
   these operations because it can strand the earlier site in a backup.
+- User decision 86 (2026-10-20): D. Successful and already-published outcomes
+  delete the whole private directory created by publish, including its site
+  and reservation locks. Use its allocated path held in memory and do not
+  follow symbolic links. Failed or cancelled uploads retain the whole directory.
+  Cleanup failure warns with that path and keeps publication successful.
+  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
+  Evidence: `.context/publish-cleanup/`.
 - Item 23 B, applied by default (user rule): preserve control declaration
   order in entry detail v2 and show that order in the viewer. Explicit controls
   use their declaration order. Derived controls use schema property order or

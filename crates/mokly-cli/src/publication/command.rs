@@ -44,7 +44,7 @@ pub struct Options {
 pub trait BuildReporter: Send + Sync {
     /// Report the private build directory exactly once, before calling the builder.
     fn build_directory(&self, directory: &std::path::Path);
-    /// Explain a retained local snapshot after a successful remote publication.
+    /// Warn with the allocated private root when cleanup fails after publication.
     fn retained_directory(&self, directory: &std::path::Path);
 }
 
@@ -105,7 +105,8 @@ impl Publish for Command {
             ),
             cancellation,
         )?;
-        let directory = self.directories.create(&initial.root)?;
+        let private_directory = self.directories.create(&initial.root)?;
+        let directory = private_directory.join("site");
         self.reporter.build_directory(&directory);
         let request = BuildRequest {
             invocation_directory: options.directory.clone(),
@@ -156,8 +157,8 @@ impl Publish for Command {
             .publish(prepared, settings, cancellation)
             .await
             .publication()?;
-        if self.directories.remove(&directory).is_err() {
-            self.reporter.retained_directory(&directory);
+        if self.directories.remove(&private_directory).is_err() {
+            self.reporter.retained_directory(&private_directory);
         }
         Ok(receipt)
     }
