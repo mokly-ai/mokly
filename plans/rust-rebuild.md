@@ -2311,6 +2311,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         and the specific release workflow assertions. The alternative was a
         new general policy check for every fixed-name upload. The user chose
         the direct fixes without that additional gate.
+  - [x] Keep decision 81's existing shell and toolchain checks on the moved
+        preparation workflow. The complete gate exposed the shell test's old
+        workflow lookup. Preserve its tagged-commit assertion and include the
+        moved steps in the existing npm and Rust pin inventories.
+        Evidence: `.context/ci-release-checks/workflow-location-red.log` and
+        `.context/ci-release-checks/workflow-location-green.log`.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
