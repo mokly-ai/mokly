@@ -1,5 +1,7 @@
 //! Shared plaintext activation in the foreign-content contexts of serialized tags.
 
+use std::collections::BTreeMap;
+
 use crate::tree::Element;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
@@ -20,6 +22,7 @@ enum Integration {
 
 struct Frame {
     token: Token,
+    name: String,
     namespace: Namespace,
     integration: Integration,
 }
@@ -43,12 +46,17 @@ impl Frame {
 
 /// A serialized element can outlive its parser ancestor after foreign-content repair.
 #[derive(Clone, Copy, Eq, PartialEq)]
-pub(crate) struct Token(usize);
+pub(crate) struct Token {
+    id: usize,
+    index: usize,
+}
 
 /// Region annotations are transparent; both tree walks enter and leave only elements.
 #[derive(Default)]
 pub(crate) struct TextMode {
     open: Vec<Frame>,
+    names: BTreeMap<String, Vec<usize>>,
+    html: Vec<usize>,
     next: usize,
     plaintext: bool,
 }
@@ -61,10 +69,13 @@ impl TextMode {
 
     /// Advance the effective parser context for a serialized start tag.
     pub(crate) fn enter(&mut self, element: &Element) -> Token {
-        let token = Token(self.next);
+        let id = self.next;
         self.next += 1;
         if self.plaintext {
-            return token;
+            return Token {
+                id,
+                index: self.open.len(),
+            };
         }
         let name = element.name.to_ascii_lowercase();
         if self
@@ -78,7 +89,7 @@ impl TextMode {
                 .last()
                 .is_some_and(|parent| !parent.breakout_boundary())
             {
-                self.open.pop();
+                self.pop();
             }
         }
         let namespace = match self.open.last() {
@@ -101,18 +112,74 @@ impl TextMode {
             }
             _ => Integration::None,
         };
+        let token = Token {
+            id,
+            index: self.open.len(),
+        };
+        self.names
+            .entry(name.clone())
+            .or_default()
+            .push(token.index);
+        if namespace == Namespace::Html {
+            self.html.push(token.index);
+        }
         self.open.push(Frame {
             token,
+            name,
             namespace,
             integration,
         });
         token
     }
 
-    /// Leave an ancestor unless foreign-content repair already popped it.
-    pub(crate) fn leave(&mut self, token: Token) {
+    /// Apply an end tag even when foreign-content repair removed its original node.
+    pub(crate) fn leave(&mut self, token: Token, name: &str) {
+        if self.plaintext {
+            return;
+        }
         if self.open.last().is_some_and(|frame| frame.token == token) {
-            self.open.pop();
+            self.pop();
+            return;
+        }
+        if self
+            .open
+            .last()
+            .is_some_and(|frame| frame.namespace != Namespace::Html)
+            && let Some(index) = self
+                .names
+                .get(&name.to_ascii_lowercase())
+                .and_then(|indices| indices.last())
+                .copied()
+            && self.html.last().is_none_or(|html| index > *html)
+        {
+            self.truncate(index);
+        } else if self
+            .open
+            .get(token.index)
+            .is_some_and(|frame| frame.token == token)
+        {
+            self.truncate(token.index);
+        }
+    }
+
+    fn truncate(&mut self, index: usize) {
+        while self.open.len() > index {
+            self.pop();
+        }
+    }
+
+    /// Name and HTML-boundary indices avoid rescanning deep surviving ancestors.
+    fn pop(&mut self) {
+        if let Some(frame) = self.open.pop() {
+            if let Some(indices) = self.names.get_mut(&frame.name) {
+                indices.pop();
+                if indices.is_empty() {
+                    self.names.remove(&frame.name);
+                }
+            }
+            if frame.namespace == Namespace::Html {
+                self.html.pop();
+            }
         }
     }
 }

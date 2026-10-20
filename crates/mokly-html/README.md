@@ -49,6 +49,8 @@ nodes, so authored ampersands, markup, and entity spellings stay literal.
 Serialization and metadata repair share the parser-context state. Foreign
 `plaintext` elements keep escaped text unless an HTML integration point or
 foreign-content repair puts the element in HTML parsing mode.
+End tags close the surviving matching parser ancestor after foreign-content
+repair. This keeps later text in the correct mode when a nested tag was popped.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.

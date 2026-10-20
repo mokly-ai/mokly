@@ -2298,6 +2298,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     effort Medium. Recommended: preserve own-page root ownership after repair;
     the alternative marks Usage unavailable. User decision pending. Evidence:
     `.context/defaults-engine-round1/plaintext-own-page-export.md`.
+  - [x] Defaults-engine round 1 post-push review, finding 1: apply foreign
+        end-tag rules after a breakout removed the original element. Shared
+        parser context closes the surviving matching ancestor and keeps later
+        escaped text inert. Evidence: `.context/defaults-engine-round1/foreign-end-red.log`
+        and `.context/defaults-engine-round1/foreign-end-green.log`.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
