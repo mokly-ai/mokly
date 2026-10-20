@@ -48,7 +48,9 @@ index, and files do not change. The checkout and snapshot fingerprints must
 match before warmup.
 
 Xtask warms up seven boxes in parallel with a 30-minute idle timeout, probes
-every box within the 10-minute readiness bound, then starts the
+every box within the 10-minute readiness bound, and reports the successful
+probe count from that box list. A failed probe emits no success count.
+It then starts the
 [seven commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
 in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
 `browser-4-of-4`, plus `static-delivery`. The delivery command builds the source

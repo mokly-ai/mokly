@@ -2497,6 +2497,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 6, item 1 (2026-10-20): report the actual number of
+      successfully probed Testboxes. The mocked regression checks all seven
+      probes, the message before suite execution, and no success message after
+      a failed probe or fingerprint. Evidence:
+      `.context/ci-probe-diagnostic/probe-red.log` and `probe-green.log`.
+
 - [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
       all discovered browser specs to four whole-file shards in hosted CI and
       the remote executor. Keep the 1.25 test-count share limit. Use the
