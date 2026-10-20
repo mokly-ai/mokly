@@ -8,9 +8,6 @@ test-results
 playwright-report
 
 # Protocol fixtures keep their canonical bytes.
-docs/protocol/fixtures/catalogue-v4.json
-docs/protocol/fixtures/catalogue-v5.json
-docs/protocol/fixtures/catalogue-v6.json
 
 # release-please owns the changelog format
 CHANGELOG.md

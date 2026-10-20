@@ -366,6 +366,74 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**Follow-up decision defaults (F8):** These numbers identify the orchestrator's
+follow-up list, not the architecture decisions above.
+
+- **10 A:** applied by default (user rule), 2026-10-20. Base dependency installs
+  support npm only. When installation is needed, pnpm, Yarn, and Bun fall back
+  to working dependencies with `base-dependencies`. Equal dependency identities
+  still use tier one. Document the limit and add pnpm and Yarn before the first
+  release under option B. Corepack, option C, is not selected.
+- **12 C:** applied by default (user rule), 2026-10-20. Registered JavaScript
+  wrappers pre-check dynamic data props with the viewer's existing profile
+  validator before their adapters run. The Rust fragment reader rechecks every
+  returned instance against its registered schema. Verification found the Rust
+  check in place; F8 adds the missing wrapper pre-check and its regression.
+  No binary callback or WebAssembly validator is selected.
+- **14 A:** applied by default (user rule), 2026-10-20. Declared component
+  stylesheets remain delivery roots. Bundle their imports and assets, keep
+  sources private, and fail on bundle errors. Align the component stylesheet
+  pages with the configured local CSS model instead of linking sources as-is.
+- **15 A:** applied by default (user rule), 2026-10-20. Keep rejecting `data:`
+  and protocol-relative `//` URLs in HTML screen `href` and `src`. Authors
+  reference image files; no `data:image/*` exception is added.
+- **18 B:** applied by default (user rule), 2026-10-20. Keep the documented
+  empty own-entry view of a slot component. Do not add caller slot content
+  to a component's own entry.
+- **21 B:** applied by default (user rule), 2026-10-20. Keep every component's
+  Used by list unavailable for a generation if one view fails. Keep the
+  documented copy and the workspace without a separate failed-render status.
+- **26 A:** applied by default (user rule), 2026-10-20. Accept one PostCSS Node
+  child per context in each sidecar, running in that side's source directory.
+  Keep the combined 1 GiB recycle check for the sidecar and its Node children.
+  Do not return to worker threads that expose the head's working directory.
+- **28 A:** applied by default (user rule), 2026-10-20. Keep bundle parsing
+  independent of package `type` and tsconfig parse settings. Only the source
+  `@jsxImportSource` pragma selects a module's JSX import source. Document this
+  policy; reconsider option B only if users need tsconfig JSX settings.
+- **29 A:** applied by default (user rule), 2026-10-20. A stylesheet edit reloads
+  every document that links the changed bundle. Keep keys based on emitted CSS
+  and asset bytes, computable before render, rather than rule-level keys.
+- **31 A:** applied by default (user rule), 2026-10-20. Keep the named list of
+  43 design screens with no inbound artboard link. Review each area's entries
+  when its design changes. Keep them separate from the 12 runtime-only states.
+- **41 C:** applied by default (user rule), 2026-10-20. Add neither optional
+  base-render hardening rule. Keep removing only `INIT_CWD`, `npm_package_json`,
+  and `npm_config_local_prefix`; retain other inherited environment values.
+  Keep `node_modules/.mokly-roots/` documented as reserved without a new
+  rejection. Revisit either rule only after a real project encounters it.
+- **59 A:** applied by default (user rule), 2026-10-20. Keep the current
+  compiled-recipe lifetime under decision 57 C's performance-later rule.
+  Mokly Cloud observations: a long Serve session compiled the same base six
+  times. Default-setting probes crossed the external 4 GB guard during a later
+  base compilation; esbuild reached 2.91 GB in the merged sample. These are
+  observations, not a product memory bound. Do not add default Go environment
+  settings under option B. Defer option C, a byte-bounded cache of unused
+  compiled recipes revalidated before reuse, to the post-merge follow-up.
+
+**F8 explicit user approvals:**
+
+- **13 A:** approved by the user, decision 13 A, 2026-10-20. Delete the unused
+  former catalogue fixtures `docs/protocol/fixtures/catalogue-v4.json`,
+  `catalogue-v5.json`, and `catalogue-v6.json`. Architecture decisions 4 and 28
+  replaced these formats. Remove their `.prettierignore` entries and settle
+  the pending plan item. Searches found no live test, script, or README reference.
+- **33 A:** approved by the user, decision 33 A, 2026-10-20. Approve the earlier
+  rebuild deletion of `packages/viewer/src/navigation/reserved_attributes.ts`
+  and the functions `lexical`, `validateComponentViews`, `isPortableUrlPath`,
+  `resolveLinkPath`, and `effectiveColorSchemes`. This record authorizes those
+  completed removals and makes no additional code change.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1263,12 +1331,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       Acceptance: one worker spawns a small constant per side switch plus
       recycles, independent of the number of paired views. Keep the pool bound.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/final-root-groups.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/comparison-equality.json`.
-- [ ] Decide whether sidecars and PostCSS children remove all `npm_*` variables
-      and head `.bin` entries from `PATH` (review 7 finding 5B). Keep other
-      inherited values until the user decides.
-- [ ] Decide enforcement for source or installation paths beneath the reserved
-      `node_modules/.mokly-roots/` prefix (review 7 finding 7). The reservation
-      is documented; a new rejection requires the user's decision.
+- [x] Settle base-render hardening under F8 decision 41 C. Retain the current
+      environment filtering and reserved-path documentation without new rejection.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
   - [x] Keep a selected variant nested under its component parent in review v8.
@@ -1800,6 +1864,10 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
 
 ## Milestone 13: Release packaging
 
+- [ ] Add pnpm and Yarn base dependency installation before the first release,
+      under F8 decision 10 option B. Keep the current npm-only limit documented
+      until that support is implemented and verified.
+
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
 - [x] Add the release build matrix for the five targets, the package set
@@ -2071,9 +2139,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         disposal while Serve stays open across two source replacements.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
         Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m14-cloud-memory/merge-decisions.md`.
-  - [ ] Decide compiled-recipe retention between comparisons: R19-1, severity
-        Medium, effort Large. Recommended C: a byte-bounded cache with compiler
-        and resolution input revalidation. Agree its budget before implementation.
+  - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
+        lifetime and the recorded Cloud observations. Option C remains a
+        post-merge follow-up with an explicit byte budget still to be agreed.
   - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
@@ -2493,19 +2561,18 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 13 review 1, finding 5: the user must settle the Release Please
     component for core-only commits; keep the `packages/mokly` layout until
     that decision. Native builds and paired-tag publication remain unchanged.
-  - Milestone 6 review 2, finding 6: decide failed-render detail status and
-    Usage copy; keep all Used by lists unavailable after one unavailable view
-    until the next generation while the user decision is pending.
-  - M8 sidecar review D2: the user must settle schema validation of dynamic
-    wrapper props before the adapter runs; add no validator or callback yet.
+  - Milestone 6 review 2, finding 6: settled by F8 decision 21 B. Keep all
+    Used by lists unavailable after one unavailable view until the next generation.
+  - M8 sidecar review D2: settled by F8 decision 12 C. The wrapper uses the
+    viewer profile pre-check, and Rust rechecks every returned instance.
   - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
     HTML-only catalogues that import package CSS; retain working dependencies
     until the user decides.
   - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
     control bounds and declared steps that conflict with schema multiples or
     integer values. Keep the current validation until the user decides.
-  - Milestone 9 part 1 review 1, finding 11: user decision pending on support
-    for package managers other than npm; retain the npm-only fallback policy.
+  - Milestone 9 part 1 review 1, finding 11: settled by F8 decision 10 A now,
+    with pnpm and Yarn support under option B required before the first release.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
   - `crates/mokly-compare/src/projection_context.rs:24-38` builds its own
@@ -2521,15 +2588,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention
     after success; keep the existing retention until the user decides.
-  - Milestone 5 review 1, finding 5: decide the declared component stylesheet
-    delivery model; keep the current bundled code and pages pending the user.
+  - Milestone 5 review 1, finding 5: settled by F8 decision 14 A. Keep declared
+    stylesheets bundled as delivery roots and align the pages.
   - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
-  - Milestone 7 review 1, finding 12: decide whether to delete the
-    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
-    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
-    user.
+  - Milestone 7 review 1, finding 12: settled by F8 decision 13 A. Delete the
+    unused former catalogue fixtures and their `.prettierignore` entries.
   - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
     2026-10-15. `.prettierrc.json` stays: Prettier's Angular parser rewrites
     `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
@@ -2538,10 +2603,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
     viewer follow the settled design copy changes the viewer's presentation,
     a non-goal of this plan; it needs the user's approval.
-  - Milestone 8 example port review 1, finding 6: option B (a component parent
-    renders without caller slot content) is documented; decide option C,
-    which lets a component parent supply its own slot content (a contract
-    change).
+  - Milestone 8 example port review 1, finding 6: settled by F8 decision 18 B.
+    Keep the documented own-entry view without caller slot content.
   - Milestone 8 example port review 2, finding 9: settled on 2026-10-16. The
     design links page is three pages within the 250-line limit, its cap is
     gone, and its retry link opens the exact paragraph.
@@ -2627,6 +2690,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
+      reuse, under F8 decision 59 option C. Revalidate compiler and resolution
+      inputs, and agree the byte budget before implementation. The current
+      recipe lifetime stays in force under option A until this work lands.
 
 - [ ] Bring large React usable startup under 5,000 ms
       (compilation cache redesign, decision 57 option A); measured 10.5 s
