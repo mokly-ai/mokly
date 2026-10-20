@@ -2228,6 +2228,19 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+- [ ] Resolve the Braces exception expiry, CI gates round 3 decision 1
+      (pending, 2026-10-20). Severity Medium. Recommended effort Small.
+      The React Native Web fixture dependencies retain Metro. No compatible
+      published update removes GHSA-vfj7-8cjw-p6xm. Option A accepts strict
+      audit failure after 2026-11-03. Option B renews the same exact dev-only
+      exception through 2026-11-20 after explicit risk approval. Option C
+      removes the Metro dependency chain while preserving the fixture coverage
+      and peer contracts, effort Large. Recommend B to retain coverage while
+      awaiting a supported upstream fix. The current date remains unchanged.
+      The user requested a decision and a stop when no safe exception-free
+      change exists, so no default renewal applies in this round.
+      Evidence: `.context/audit-braces/report.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
