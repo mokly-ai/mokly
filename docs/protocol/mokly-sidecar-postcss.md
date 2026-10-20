@@ -22,11 +22,13 @@ from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 ## Read Evidence
 
 Each result returns `readEvidence` separately from its dependency declarations.
-Its coverage is always `incomplete`. Its `reads` contain `whole-file` records,
+Its coverage is always `incomplete`. Its `reads` contain `whole-file` and `byte-range` records,
 with the absolute child-side path and the SHA-256 digest of the raw delivered
 bytes. Its `modules` identify known module inputs, including files without
 an observed read. A declaration or a module path alone is not a read witness.
 Runtime builtins use runtime identity and have no invented file digest.
+Each byte range retains its offset, delivered length, and any observed end of file.
+Never compare a range digest with a whole-file digest or infer unread bytes.
 
 Observe supported local compiler inputs before compilation, including JSON and
 configured loaders. Preserve the original byte digest across BOM handling and
@@ -34,6 +36,9 @@ text decoding. Observe native module source buffers where the runtime exposes
 them. Path-based synchronous, callback, and promise `readFile` operations record
 raw bytes before delivery. Preserve encodings, errors, cancellation, and return
 values. Instrumentation must not raise the supported Node minimum.
+Observe descriptor and `FileHandle` reads through supported whole-file, scalar,
+and vector APIs. Keep offsets through sequential reads and descriptor reuse.
+Node read streams retain their raw chunk witnesses before decoding or delivery.
 
 Keep all distinct witnessed versions for the child's context lifetime.
 Keep configuration observations for later stylesheet requests. Return the
@@ -60,8 +65,11 @@ Their reads can escape observation, even when they report a dependency correctly
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
-Descriptor reads, `FileHandle` reads, streams, and partial ranges remain opaque
-in this stage. Exotic read options retain native behavior without a witness.
+Untracked descriptors, unknown offsets, overlapping sequential operations, and
+exotic read options retain native behavior without a guessed range witness.
+An explicit position can establish a later range after a cursor becomes unknown.
+FileHandle web streams retain raw witnesses without changing reader, cancellation,
+or buffer-transfer behavior. Custom streams retain witnesses only for underlying observed reads.
 Older Node runtimes without synchronous module customization retain ordinary
 file observation and local compiler witnesses. Unobserved transitive ESM loads,
 private resolution metadata, and read-time path identity remain incomplete.

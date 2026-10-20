@@ -39,21 +39,37 @@ pub(crate) fn collect(
         }
     }
     for read in &evidence.reads {
-        let Read::WholeFile { path, digest } = read;
+        let (path, baseline) = match read {
+            Read::WholeFile { path, digest } => {
+                (path, ReadBaseline::ObservedWholeFile(digest.clone()))
+            }
+            Read::ByteRange {
+                path,
+                digest,
+                offset,
+                length,
+                eof,
+            } => (
+                path,
+                ReadBaseline::ObservedRange {
+                    offset: *offset,
+                    length: *length,
+                    eof: *eof,
+                    digest: digest.clone(),
+                },
+            ),
+        };
         let physical = normalize(Path::new(path));
         if physical.starts_with(&side.source_root) {
             let name = relative(&physical, &side.source_root);
             if inventory.inputs.contains_key(&name) {
-                result.insert(
-                    format!("{SOURCE_INPUT_PREFIX}{name}"),
-                    ReadBaseline::ObservedWholeFile(digest.clone()),
-                );
+                result.insert(format!("{SOURCE_INPUT_PREFIX}{name}"), baseline.clone());
             }
         }
         if let Some(name) = logical(path, side)
             && modules.contains(&name)
         {
-            result.insert(name, ReadBaseline::ObservedWholeFile(digest.clone()));
+            result.insert(name, baseline);
         }
     }
     result

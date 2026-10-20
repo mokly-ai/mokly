@@ -76,7 +76,7 @@ for(const name of ['sync','callback','promise']) result.messages.push({type:'dep
   ]);
 });
 
-test("opaque helpers and partial descriptor reads remain incomplete beside observed reads", async (context) => {
+test("opaque helpers remain incomplete beside observed whole files and ranges", async (context) => {
   const { base } = await sidecarSources(context);
   await fs.writeFile(path.join(base, "opaque.txt"), "opaque");
   await fs.writeFile(path.join(base, "partial.txt"), "partial");
@@ -107,7 +107,18 @@ for(const file of ['opaque.txt','partial.txt','both.txt']) result.messages.push(
   assert.match(result.text, /opaque-first-second/);
   assert.equal(result.readEvidence.coverage, "incomplete");
   assert.deepEqual(versions(result, path.join(base, "opaque.txt")), []);
-  assert.deepEqual(versions(result, path.join(base, "partial.txt")), []);
+  assert.deepEqual(versions(result, path.join(base, "partial.txt")), [
+    digest("ar"),
+  ]);
+  assert.ok(
+    result.readEvidence.reads.some(
+      (read) =>
+        read.kind === "byte-range" &&
+        read.path === path.join(base, "partial.txt") &&
+        read.offset === 1 &&
+        read.length === 2,
+    ),
+  );
   assert.deepEqual(versions(result, path.join(base, "both.txt")), [
     digest("first"),
   ]);

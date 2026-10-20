@@ -66,7 +66,7 @@ impl SourceTree for CapturedTree {
         &self,
         path: &Path,
         baseline: &ReadBaseline,
-        digest: &str,
+        digest: Option<&str>,
     ) -> error::Result<()> {
         self.evidence.record_pinned(path, baseline, digest)
     }

@@ -9,4 +9,24 @@ path: string,
 /**
  * SHA-256 of the delivered raw bytes, before decoding or compilation.
  */
-digest: string, };
+digest: string, } | { "kind": "byte-range",
+/**
+ * Absolute child-side name associated with the opened descriptor.
+ */
+path: string,
+/**
+ * SHA-256 of the delivered range before caller buffer mutation.
+ */
+digest: string,
+/**
+ * Zero-based byte position. Node emits only exactly representable values.
+ */
+offset: number,
+/**
+ * Number of bytes delivered by this observation.
+ */
+length: number,
+/**
+ * The read also observed the end of the file at or before its end position.
+ */
+eof: boolean, };

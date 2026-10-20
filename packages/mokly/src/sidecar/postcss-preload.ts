@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 
 import { observeModuleLoads, trustEarlyReaders } from "./postcss-evidence.js";
+import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 
 const option = `--require=${JSON.stringify(fileURLToPath(import.meta.url))}`;
@@ -12,4 +13,5 @@ if (inherited?.startsWith(option)) {
 }
 trustEarlyReaders();
 observeFileReads();
+observeDescriptors();
 observeModuleLoads();

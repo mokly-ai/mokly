@@ -7,6 +7,17 @@ use std::collections::{BTreeMap, BTreeSet};
 pub enum ReadBaseline {
     /// SHA-256 of the exact buffer delivered by an observed whole-file read.
     ObservedWholeFile(String),
+    /// An exact observed range. It does not supply a whole-file cache stamp.
+    ObservedRange {
+        /// Byte offset in the opened file.
+        offset: u64,
+        /// Number of delivered bytes.
+        length: u64,
+        /// Whether this read also observed end of file.
+        eof: bool,
+        /// SHA-256 of only the delivered range.
+        digest: String,
+    },
     /// SHA-256 captured after processing, with an unobserved read-to-capture gap.
     Late(String),
 }
@@ -16,12 +27,22 @@ impl ReadBaseline {
     pub fn digest(&self) -> &str {
         match self {
             Self::ObservedWholeFile(value) | Self::Late(value) => value,
+            Self::ObservedRange { digest, .. } => digest,
+        }
+    }
+
+    /// Whole-file stamps exclude partial byte observations.
+    pub fn whole_digest(&self) -> Option<&str> {
+        match self {
+            Self::ObservedRange { .. } => None,
+            _ => Some(self.digest()),
         }
     }
 
     fn retained_bytes(&self) -> usize {
         match self {
             Self::ObservedWholeFile(value) | Self::Late(value) => value.capacity(),
+            Self::ObservedRange { digest, .. } => digest.capacity(),
         }
     }
 }

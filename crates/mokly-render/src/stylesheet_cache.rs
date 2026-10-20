@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
+use mokly_source_interface::range_evidence;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::input_stamp::InputStamp;
@@ -107,12 +108,16 @@ impl StylesheetBundler for CachedStylesheets {
         stamp.directories(self.tree.as_ref(), &self.root, &bundle.directories);
         let mut consistent = true;
         for (path, versions) in &bundle.read_evidence.inputs {
-            let mut versions = versions.iter();
+            let mut versions = versions.iter().filter_map(|version| version.whole_digest());
             if let Some(first) = versions.next() {
-                consistent &= versions.all(|other| other.digest() == first.digest());
-                stamp
-                    .files
-                    .insert(self.root.join(path), Some(first.digest().into()));
+                consistent &= versions.all(|other| other == first);
+                consistent &= range_evidence::verify(
+                    self.tree.as_ref(),
+                    &self.root.join(path),
+                    &bundle.read_evidence.inputs[path],
+                    first,
+                );
+                stamp.files.insert(self.root.join(path), Some(first.into()));
             }
         }
         let bytes =
@@ -139,12 +144,10 @@ impl StylesheetBundler for CachedStylesheets {
 impl CachedStylesheets {
     fn deliver(&self, bundle: &Bundle) -> Result<Bundle> {
         for (path, versions) in &bundle.read_evidence.inputs {
-            for version in versions {
-                if let Err(source) = self.tree.observe_input(&self.root.join(path), version) {
-                    return Err(CssError::Internal(InternalError::Provider {
-                        source: Box::new(source),
-                    }));
-                }
+            if let Err(source) = self.tree.observe_inputs(&self.root.join(path), versions) {
+                return Err(CssError::Internal(InternalError::Provider {
+                    source: Box::new(source),
+                }));
             }
         }
         Ok(bundle.clone())

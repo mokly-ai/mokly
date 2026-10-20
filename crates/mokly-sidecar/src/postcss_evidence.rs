@@ -15,6 +15,21 @@ pub enum Read {
         /// SHA-256 of the delivered raw bytes, before decoding or compilation.
         digest: String,
     },
+    /// Hash of exactly one delivered byte range, without claiming unread bytes.
+    ByteRange {
+        /// Absolute child-side name associated with the opened descriptor.
+        path: String,
+        /// SHA-256 of the delivered range before caller buffer mutation.
+        digest: String,
+        /// Zero-based byte position. Node emits only exactly representable values.
+        #[ts(type = "number")]
+        offset: u64,
+        /// Number of bytes delivered by this observation.
+        #[ts(type = "number")]
+        length: u64,
+        /// The read also observed the end of the file at or before its end position.
+        eof: bool,
+    },
 }
 
 /// Observation does not prove that all readers use the observed bytes.
@@ -48,7 +63,9 @@ impl Evidence {
                 .reads
                 .iter()
                 .map(|read| match read {
-                    Read::WholeFile { path, digest } => path.capacity() + digest.capacity(),
+                    Read::WholeFile { path, digest } | Read::ByteRange { path, digest, .. } => {
+                        path.capacity() + digest.capacity()
+                    }
                 })
                 .sum::<usize>()
             + self.modules.capacity() * size_of::<String>()

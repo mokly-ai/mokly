@@ -104,7 +104,7 @@ fn pinned_base_witnesses_never_read_or_replace_the_matching_head_path() {
     tree.observe_pinned_input(
         path,
         &ReadBaseline::ObservedWholeFile("base".into()),
-        "base",
+        Some("base"),
     )
     .unwrap();
     tree.verify().unwrap();
@@ -112,7 +112,7 @@ fn pinned_base_witnesses_never_read_or_replace_the_matching_head_path() {
         tree.observe_pinned_input(
             path,
             &ReadBaseline::ObservedWholeFile("changed".into()),
-            "base"
+            Some("base")
         )
         .is_err()
     );

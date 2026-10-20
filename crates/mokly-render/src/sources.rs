@@ -1,12 +1,13 @@
 //! Map logical dependency graph names to the selected installation for this side.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
+use mokly_source_interface::range_evidence;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
@@ -139,19 +140,30 @@ impl SideTree {
 
 impl SourceTree for SideTree {
     fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
+        self.observe_inputs(path, &BTreeSet::from([baseline.clone()]))
+    }
+    fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
         let (tree, physical, origin) = self.selected(path)?;
         if let Some(base) = &self._base
             && matches!(origin, SourceOrigin::Repository)
             && let Ok(relative) = physical.strip_prefix(&self.root)
         {
             let digest = tree.digest(&physical)?;
-            return self.dependencies.observe_pinned_input(
-                &base.sources.directory.join(relative),
-                baseline,
-                &digest,
-            );
+            let ranges_valid = range_evidence::verify(tree, &physical, baselines, &digest);
+            for baseline in baselines {
+                let actual = match baseline.whole_digest() {
+                    Some(_) => Some(digest.as_str()),
+                    None => ranges_valid.then(|| baseline.digest()),
+                };
+                self.dependencies.observe_pinned_input(
+                    &base.sources.directory.join(relative),
+                    baseline,
+                    actual,
+                )?;
+            }
+            return Ok(());
         }
-        tree.observe_input(&physical, baseline)
+        tree.observe_inputs(&physical, baselines)
     }
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         let mut sources = Vec::new();

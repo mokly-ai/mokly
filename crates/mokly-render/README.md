@@ -67,12 +67,14 @@ maps, describe, and bindings before rendering. Metadata invalidation still recom
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
 identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
-PostCSS read evidence retains observed whole-file digests beside late baselines.
+PostCSS read evidence retains observed whole-file and byte-range digests beside late baselines.
 Both cache layers replay the original evidence to static admission. Selected
 module inputs remain separate from plugin privacy and catalogue membership.
 Base witnesses compare with pinned Git bytes through the shared admission
 observer. They never enter the head path ledger.
 Conflicting versions cannot seed cross-generation stylesheet reuse.
+Range digests never replace the whole-file cache stamp. Range admission checks
+one stream per path and keeps the original observations through cache hits.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.

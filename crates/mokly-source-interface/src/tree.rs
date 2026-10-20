@@ -1,5 +1,6 @@
 //! Object-safe filesystem and Git-tree boundary.
 
+use std::collections::BTreeSet;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -45,11 +46,18 @@ pub struct Child {
 
 /// Read-only source access. All paths belong to the adapter's source tree.
 /// Missing and replaced paths project to `None`. Reads preserve their errors.
-#[cfg_attr(feature = "mock", unimock::unimock(api = SourceTreeMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = SourceTreeMock))]
 pub trait SourceTree: Send + Sync {
     /// Retain a consumer's baseline without rereading or upgrading its coverage.
     /// Static admission observes it; ordinary source adapters need no ledger.
     fn observe_input(&self, _path: &Path, _baseline: &ReadBaseline) -> Result<()> {
+        Ok(())
+    }
+    /// Keep one path's range observations together for a single verification pass.
+    fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
+        for baseline in baselines {
+            self.observe_input(path, baseline)?;
+        }
         Ok(())
     }
     /// Forward a pinned source proof without reading a working-tree alias.
@@ -57,7 +65,7 @@ pub trait SourceTree: Send + Sync {
         &self,
         _path: &Path,
         _baseline: &ReadBaseline,
-        _pinned_digest: &str,
+        _pinned_digest: Option<&str>,
     ) -> Result<()> {
         Ok(())
     }

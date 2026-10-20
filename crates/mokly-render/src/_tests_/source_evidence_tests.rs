@@ -16,7 +16,7 @@ fn repository_witnesses_bypass_dependency_root_aliases() {
     let tree = SideTree {
         _base:None, root:"/repo".into(), dependency_roots:vec!["/repo/app/node_modules".into()],
         repository_roots:vec!["/repo".into()], aliases:BTreeMap::new(),
-        sources:Arc::new(Unimock::new(SourceTreeMock::observe_input.next_call(matching!((path, _) if *path == Path::new("/repo/node_modules/workspace/tokens.txt"))).returns(Ok(())))),
+        sources:Arc::new(Unimock::new(SourceTreeMock::observe_inputs.next_call(matching!((path, _) if *path == Path::new("/repo/node_modules/workspace/tokens.txt"))).returns(Ok(())))),
         dependencies:Arc::new(Unimock::new(())),usage:Arc::new(Unimock::new(())),
     };
     tree.observe_input(

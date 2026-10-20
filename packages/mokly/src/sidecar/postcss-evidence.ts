@@ -6,8 +6,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
+import type { PostcssRead } from "../generated/sidecar/PostcssRead.js";
 
 const reads = new Map<string, Set<string>>();
+const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
 const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
@@ -38,6 +40,26 @@ export function observeBytes(file: string, bytes: Uint8Array): void {
   let versions = reads.get(name);
   if (!versions) reads.set(name, (versions = new Set()));
   versions.add(digest);
+}
+
+/** Ranges retain their offsets and never become whole-file digests. */
+export function observeRange(
+  file: string,
+  offset: number,
+  bytes: Uint8Array,
+  eof = false,
+): void {
+  if (!Number.isSafeInteger(offset) || offset < 0 || (!bytes.length && !eof))
+    return;
+  const record: PostcssRead = {
+    kind: "byte-range",
+    path: path.resolve(file),
+    digest: createHash("sha256").update(bytes).digest("hex"),
+    offset,
+    length: bytes.length,
+    eof,
+  };
+  ranges.set(JSON.stringify(record), record);
 }
 
 /** Supply compiler bytes; only native file providers establish raw provenance. */
@@ -141,8 +163,15 @@ export function readEvidence(loaded: Iterable<string>): PostcssEvidence {
   return {
     coverage: "incomplete",
     modules: [...modules],
-    reads: [...reads].flatMap(([path, versions]) =>
-      [...versions].map((digest) => ({ kind: "whole-file", path, digest })),
-    ),
+    reads: [
+      ...[...reads].flatMap(([path, versions]) =>
+        [...versions].map((digest): PostcssRead => ({
+          kind: "whole-file",
+          path,
+          digest,
+        })),
+      ),
+      ...ranges.values(),
+    ],
   };
 }

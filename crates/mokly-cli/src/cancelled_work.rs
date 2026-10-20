@@ -1,5 +1,6 @@
 //! Cancellation checkpoints at source IO and between independently scheduled views.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -46,11 +47,19 @@ impl SourceTree for CancellableTree {
         self.check(path)?;
         self.inner.observe_input(path, baseline)
     }
+    fn observe_inputs(
+        &self,
+        path: &Path,
+        baselines: &BTreeSet<ReadBaseline>,
+    ) -> mokly_source_interface::error::Result<()> {
+        self.check(path)?;
+        self.inner.observe_inputs(path, baselines)
+    }
     fn observe_pinned_input(
         &self,
         path: &Path,
         baseline: &ReadBaseline,
-        digest: &str,
+        digest: Option<&str>,
     ) -> mokly_source_interface::error::Result<()> {
         self.check(path)?;
         self.inner.observe_pinned_input(path, baseline, digest)

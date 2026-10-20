@@ -2210,8 +2210,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Start observation before consumer preloads. Preserve transformed provider
         output and record raw reads below the provider. Synthetic bytes and
         providers that bypass observed APIs retain incomplete coverage.
+  - [x] Retain scalar, vector, and whole-file descriptor reads as exact byte
+        ranges. Track FileHandle, Node streams, and FileHandle web streams.
+        Keep unknown or overlapping sequential positions opaque. Verify ranges
+        in one streamed pass per path and preserve them through both caches.
   - [ ] Complete the remaining coverage: native/helper/worker reads,
-        descriptors, streams and ranges, older-runtime transitive ESM loading, private
+        older-runtime transitive ESM loading, private
         resolution metadata, and read-time path identity. The full M14 item
         remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
