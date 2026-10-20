@@ -208,6 +208,7 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
             Mobile · Dark, Desktop · Dark
           </MockLink>
         }
+        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
         open
         subject="welcome"
         viewport={viewport}

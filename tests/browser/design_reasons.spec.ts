@@ -28,6 +28,7 @@ const REASONS: Readonly<Record<string, readonly SentenceReason[]>> = {
   "design/browse/appearance/workspaces/side-by-side": ["material"],
   "design/browse/index-entries/member-changes": ["material"],
   "design/browse/publication/changes": ["material"],
+  "design/browse/variants/changed-views": ["material"],
   "design/browse/variants/variant-changes": ["material"],
   "design/browse/variants/variant-removed": ["removed"],
   "design/browse/variants/variant-reparented": ["removed"],
