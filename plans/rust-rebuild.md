@@ -1624,9 +1624,12 @@ Tags: mockup
       the final review TODO owns that depiction.
 - [x] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
       width, and state it in the component design.
-- [ ] Item 35 A: confirm that the design catalogue depicts the
-      `implementation` sentence.
-- [ ] Run the mockup check and smoke-test the changed pages through Serve.
+- [x] Item 35 A: confirm that the design catalogue depicts the
+      `implementation` sentence. Already done:
+      `design/components/states/shared-impact/style-changed` reads it, and
+      the component workspace design and the viewer use the same sentence.
+- [x] Run the mockup check and smoke-test the changed pages through Serve.
+      Evidence: `.context/defaults-viewer/` (mockup check logs and shots).
 
 ## Milestone 10.2: Decision defaults in the viewer
 
