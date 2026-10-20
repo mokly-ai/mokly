@@ -26,7 +26,11 @@ pub fn html(nodes: &[Node]) -> String {
             Step::ElementEnd(name, entered_plaintext, token) => {
                 mode.leave(token, name);
                 if mode.plaintext() == entered_plaintext {
-                    output.push_str(&format!("</{name}>"));
+                    if entered_plaintext {
+                        mode.write_raw(&format!("</{name}>"), &mut output);
+                    } else {
+                        output.push_str(&format!("</{name}>"));
+                    }
                 }
                 continue;
             }
@@ -43,11 +47,11 @@ pub fn html(nodes: &[Node]) -> String {
             }
         };
         match node {
-            Node::Text(text) if raw || mode.plaintext() => output.push_str(text),
+            Node::Text(text) if raw || mode.plaintext() => mode.write_raw(text, &mut output),
             Node::Text(text) => output.push_str(&escape(text)),
             Node::Comment(text) => {
                 if !(mode.plaintext() && text.starts_with("mokly-normalize:")) {
-                    output.push_str(&format!("<!--{text}-->"));
+                    mode.write_raw(&format!("<!--{text}-->"), &mut output);
                 }
             }
             Node::Doctype(name) => output.push_str(&format!("<!doctype {name}>")),

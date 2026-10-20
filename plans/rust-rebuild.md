@@ -437,6 +437,11 @@ readiness rather than blocking this acceptance round on further startup work.
   until the plaintext helper lands. Do not implement that follow-up in this
   round. The helper's foreign-content correction keeps the current `noscript`
   behavior.
+- User decision 76 (2026-10-20): B, implemented in F14 after the shared helper
+  landed. Escape raw `</noscript` text inside HTML `noscript`, preserving case.
+  Accept the authored-character change to prevent markup activation with
+  scripting enabled. Foreign `noscript` keeps ordinary element behavior.
+  Reject retaining raw closing sequences in this context.
 
 - Orchestrator item 11 A is the selected default under the user rule.
   Implementation waits for the further decision below. The default requires
@@ -2305,9 +2310,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       re-review once, and report the rest.
   - [x] Defaults-engine hub review 1, finding 1: apply user decision 73 C
         through catalogue-wide rule proof and supplier input ancestry.
-  - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`
-    can expose markup in scripting-enabled browsers. Severity Medium, effort
-    Small. User decision 76 selects a later follow-up after the helper lands.
+  - [x] Defaults-engine hub review 1, finding 2 C: F14 applies user decision
+        76 B through the shared parser context. Guard raw `noscript` closing
+        text, including split writes, without changing foreign elements.
+        Evidence: `.context/f14/reproduction.md`.
   - Defaults-engine hub review 1, finding 3: HTML dependency warnings scan
     every manifest. Severity Medium, effort Small. Recommended: B, compare
     identities only when head CSS uses a dependency directory. Superseded by

@@ -81,6 +81,9 @@ mod marker_tests;
 #[path = "_tests_/navigation_sweep_tests.rs"]
 mod navigation_sweep_tests;
 #[cfg(test)]
+#[path = "_tests_/noscript_tests.rs"]
+mod noscript_tests;
+#[cfg(test)]
 #[path = "_tests_/parser_tests.rs"]
 mod parser_tests;
 #[cfg(test)]

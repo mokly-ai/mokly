@@ -46,6 +46,10 @@ nodes become stable literal text. While plaintext mode is active, serialization
 omits private normalization attributes from cloned tags and private markers.
 It writes all text raw, including text inside formatting clones and later
 nodes, so authored ampersands, markup, and entity spellings stay literal.
+Inside HTML `noscript`, raw text instead writes `</noscript` as `&lt;/noscript`,
+with case preserved, so scripting-enabled browsers cannot expose its payload.
+The shared writer checks adjacent text writes and keeps foreign `noscript`
+elements under their ordinary escaping rules.
 Serialization and metadata repair share the parser-context state. Foreign
 `plaintext` elements keep escaped text unless an HTML integration point or
 foreign-content repair puts the element in HTML parsing mode.
@@ -97,6 +101,8 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 ### Key Code
 
 - [Annotated tree](./src/tree.rs) and [HTML5 parser](./src/parse.rs).
+- [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
+  share plaintext activation and guard raw HTML `noscript` text.
 - [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
 - [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
 - [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).
