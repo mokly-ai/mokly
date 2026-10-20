@@ -2094,6 +2094,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         keyframes name, and make the wrapper table test follow each piece of
         advice to a stylesheet that scopes. Decision: nesting report finding 19
         options A and C, approved by the orchestrator on 2026-10-20.
+  - [x] Keep the height of each anchored value in the YAML alias scan, so it
+        steps aside at an alias copy that is too deep, and narrow its comment
+        to the three places where it steps aside. Decision: nesting report
+        finding 20 option B, approved by the orchestrator on 2026-10-20.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
