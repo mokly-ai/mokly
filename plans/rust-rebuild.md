@@ -428,6 +428,11 @@ follow-up list, not the architecture decisions above.
   `catalogue-v5.json`, and `catalogue-v6.json`. Architecture decisions 4 and 28
   replaced these formats. Remove their `.prettierignore` entries and settle
   the pending plan item. Searches found no live test, script, or README reference.
+- **33 A:** approved by the user, decision 33 A, 2026-10-20. Approve the earlier
+  rebuild deletion of `packages/viewer/src/navigation/reserved_attributes.ts`
+  and the functions `lexical`, `validateComponentViews`, `isPortableUrlPath`,
+  `resolveLinkPath`, and `effectiveColorSchemes`. This record authorizes those
+  completed removals and makes no additional code change.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
