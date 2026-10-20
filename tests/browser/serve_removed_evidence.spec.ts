@@ -156,10 +156,11 @@ test("a background baseline places a removed variant under its parent", async ({
 }) => {
   // A private base where Plain screen had one variant; the head has none, so
   // the parent's variant list exists only while that base is the baseline.
+  // The variant has no props, so the parent's own fields stay unchanged.
   const parent = changes.paths.plainScreen;
   const withVariant = await changes.commitBase({
     [`specs/${parent}.screen.html`]:
-      '---\ntitle: Plain screen\nprops: {label: Plain}\nvariants: [{slug: extra, title: Plain extra, props: {label: Extra}}]\n---\n<h1 class="plain">Plain screen</h1>',
+      '---\ntitle: Plain screen\nvariants: [{slug: extra, title: Plain extra}]\n---\n<h1 class="plain">Plain screen</h1>',
   });
   await joinFixtureHistory(changes.root, withVariant);
   const row = page.locator(
@@ -179,6 +180,8 @@ test("a background baseline places a removed variant under its parent", async ({
   await expect(list.locator(row)).toHaveCount(1);
   await expect(parentRow).toHaveAttribute("aria-current", "page");
   await expect(parentRow).toHaveAttribute("data-changed-variants", "true");
+  // The parent itself is unchanged, so only its removed variant marks it.
+  await expect(parentRow).not.toHaveAttribute("data-changed", "true");
   await expect(row).toBeHidden();
 
   await chooseFilter(page, "changed");

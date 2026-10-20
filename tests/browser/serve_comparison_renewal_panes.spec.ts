@@ -51,7 +51,9 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
     await chooseViewport(page, "both");
     await modeButton(page, "Difference").click();
     expect(pending.requests()).toBe(1);
-    pending.release();
+    await pending.release();
+    // The one renewal served every switch; nothing cancelled it.
+    expect(pending.outcomes()).toEqual(["delivered"]);
     await expect(page.locator(".mb-pane iframe")).toHaveCount(4);
     for (const viewport of ["mobile", "desktop"]) {
       const view = page.locator(`[data-diff-viewport="${viewport}"]`);
@@ -70,7 +72,7 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
     expect(pending.requests()).toBe(1);
     expect(metadata).toEqual(originalMetadata);
   } finally {
-    pending.release();
+    pending.unblock();
   }
 });
 
@@ -88,8 +90,9 @@ for (const destination of ["Current", "another screen"] as const)
       await pending.arrived;
       if (destination === "Current") await modeButton(page, "Current").click();
       else await navRow(page, changes.paths.component).click();
-      pending.release();
-      await pending.finished;
+      await pending.release();
+      // Leaving the comparison cancelled the renewal before its response.
+      expect(pending.outcomes()).toEqual(["cancelled"]);
       await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
       await expect(page.locator("[data-current-screen]")).toBeVisible();
       await expect(modeButton(page, "Current")).toHaveAttribute(
@@ -101,7 +104,7 @@ for (const destination of ["Current", "another screen"] as const)
           new RegExp(`/view/${changes.paths.component}/$`, "u"),
         );
     } finally {
-      pending.release();
+      pending.unblock();
     }
   });
 
@@ -153,12 +156,13 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     await pending.arrived;
     await chooseVariant(page, "Badge");
     await expect(label).toHaveText("After Badge");
-    pending.release();
-    await pending.finished;
+    await pending.release();
+    // Choosing the sibling cancelled the renewal before its response.
+    expect(pending.outcomes()).toEqual(["cancelled"]);
     await expect(page).toHaveURL(new RegExp(`/view/${badge}/$`, "u"));
     await expect(label).toHaveText("After Badge");
   } finally {
-    pending.release();
+    pending.unblock();
   }
 });
 
@@ -195,8 +199,9 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
       "aria-pressed",
       "true",
     );
-    pending.release();
-    await pending.finished;
+    await pending.release();
+    // The new revision cancelled the renewal before its response.
+    expect(pending.outcomes()).toEqual(["cancelled"]);
     await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
     expect(requests).toHaveLength(1);
     await loadComparison(page, "Overlay");
@@ -207,6 +212,6 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
     expect(requests).toHaveLength(2);
     expect(requests[1]!.searchParams.get("path")).toBe(changes.paths.changed);
   } finally {
-    pending.release();
+    pending.unblock();
   }
 });

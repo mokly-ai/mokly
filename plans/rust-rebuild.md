@@ -2275,38 +2275,46 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keep the parent with only the selected variant, preserving parent-owned
         evidence instead of returning 503. The Card Featured browser case
         verifies both panes. Evidence: `.context/f5/report.md`.
-  - M10 Serve and moved rows review 1, open findings for the user:
-    1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
-       effort Small. Recommended: C, one shared helper fakes a complete
-       collection of the expired generation and its previews.
-    2. Renewal fence checks pass before the late response. Severity Medium,
-       effort Small. Recommended: B, the held renewal release waits until
-       the browser ends each held request.
-    3. Regression test proves one shape of the fix. Severity Low, effort
-       Small. Recommended: A, CLI tests for a lost Dark view, a variant that
-       gains Dark, and a removed component with a surviving consumer.
-    4. The copy drops the moved variant comparison. Severity Low, effort
-       Small. Recommended: A, register the moved variant comparison on the
-       branch copy too.
-  - M10 Serve and moved rows review 3, open finding 7 for the user (review 3
-    finding 1): the kept ports lack two steps of the dropped copies, the
-    parent activation while a search shows only the removed sibling, and the
-    removed page's Location row. Severity Low, effort Small. Recommended: B,
-    add both steps to the kept ports when the branches merge.
+  - [ ] Switch the three Serve specs that used the Badge family back to the
+        Card family now that decision 6 has landed.
+  - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
+        2026-10-20 as the orchestrator asked:
+    1. Expiry emulation could not fail its snapshot checks. Fixed by
+       `7ec5673a` (C): one shared helper emulates a complete collection.
+    2. Renewal fence checks passed before the late response. Fixed by
+       `bbc763a8` (B): the held renewal release waits until the browser ends
+       each held request, and reports whether the page cancelled it.
+    3. The regression test proved one shape of the fix. Fixed by `ebe7dccc`
+       (A): CLI tests for a lost Dark view, a variant that gains Dark, and a
+       removed component with a surviving consumer.
+    4. The copy dropped the moved variant comparison. Fixed by `a230499c`
+       (A): the branch copy registers it too.
+  - [x] M10 Serve and moved rows review 3, finding 7: the kept ports lacked two
+        steps of the dropped copies. Fixed by `0a9a8be8` (B) on 2026-10-20.
   - [x] M10 Serve and moved rows decision 10, Severity Low, effort Small:
         apply F5 item 2. Each sweep override lists the old checks that its port
         does not prove, and a dropped duplicate moves its extra checks into
         the kept port. The sweep procedure now states this rule. Covers
         review 3 findings 1 and 2 and review 4 finding 2; previous examples
         0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
-  - M10 Serve and moved rows review 4, open finding 12 for the user: the
-    restored removed-variant journey also changes the parent entry, because
-    its private base gives `screens/plain` props. Severity Low, effort Small.
-    Recommended: B, drop the props and check that the parent row has no
-    changed mark.
-  - M10 Serve and moved rows review 4, open finding 13 for the user: the Serve
-    fixture's poll comment misstates the publication time. Severity Low,
-    effort Small. Recommended: A, drop the duration from the comment.
+  - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
+        2026-10-20: the restored removed-variant journey keeps its parent
+        unchanged (`bd05ab75`, B), and the poll comment names no duration
+        (`437154a8`, A).
+  - [x] M10 Serve and moved rows reviews 5 and 6: comments and README text
+        that described a failed advertised renewal as Serve's collection, and
+        a README clause that gave the 404 rule a wrong scope. Fixed by
+        `814fc1b1` and `0571ba15`.
+  - M10 Serve and moved rows review 5, open finding 15 for the user: the
+    emulated collection of a selected generation starts only at its renewal,
+    so a pane document request before the renewal still reaches the old
+    generation. Severity Low, effort Small. Recommended: B, collect a selected
+    generation at once and arm the helper after every pane document loaded.
+  - M10 Serve and moved rows review 6, open finding 18 for the user: the
+    helper module, function, and interface still say "collection", although
+    the removed-preview journeys use them only to fail a renewal. Severity
+    Low, effort Small. Recommended: A, keep the names; option C, one helper
+    per generation kind, fits the change for finding 15.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2318,6 +2326,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.
+    - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
+      `branch/parent`, so no journey ports the old step that opened the
+      removed sibling through a container row. Separate branch.
+    - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
+      keys the shared case names, but no key equals a name in
+      `tests/fixtures/branch_point_cases.json`. Separate branch.
+    - `tests/browser/serve_generation_collection.ts:63-80`: when the first
+      stable-endpoint request after the failed renewal already asks for a
+      refresh, the next plain request also becomes a refresh. No journey does
+      this. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:

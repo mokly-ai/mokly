@@ -305,17 +305,26 @@ moves without sharing writable state with another test.
 
 `serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
 selected comparison request through the redirect to its generation before UI
-deadlines apply. It also records requests to the stable endpoint and holds
-the HEAD renewal of a selected generation. `serve_changes_emulation.ts`
-rewrites the index body into a pending, preparing, or unavailable Changes
-state, the shape Serve writes before classification completes. Each step
-still arrives as a real watched publication, and Serve keeps no test seam.
-Specs that run the same comparison checks on the copied output and on Serve
-register them from a `*_cases.ts` module. The copied output registers the
-alignment, input, and Scroll together memory cases in
-`comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
-`comparison_regions_toggle.spec.ts`. Serve registers them in
-`serve_comparison_alignment.spec.ts`,
+deadlines apply. It also records requests to the stable endpoint and holds the
+HEAD renewal of a selected generation. A held renewal's release waits until
+the browser ended the request and the page rendered. Its outcomes report
+whether the page received each response or cancelled the request first.
+`serve_changes_emulation.ts` rewrites the index body into a pending,
+preparing, or unavailable Changes state, the shape Serve writes before
+classification completes. Each step still arrives as a real watched
+publication, and Serve keeps no test seam. `serve_generation_collection.ts`
+fails the next renewal of a generation: that renewal answers 404, and so does
+every request for the generation's files while the generation is gone. For a
+selected generation this emulates Serve's collection of an idle generation,
+and the comparison then gets a new generation. Serve keeps an advertised
+classification generation's `review.json` and recaptures its snapshots, so for
+that generation the failure only exercises the shell's reacquire, and the
+generation returns when the shell reacquires its `review.json`. Specs that run
+the same comparison checks on the copied output and on Serve register them
+from a `*_cases.ts` module. The copied output registers the alignment, input,
+and Scroll together memory cases in `comparison_alignment.spec.ts`,
+`comparison_alignment_input.spec.ts`, and `comparison_regions_toggle.spec.ts`.
+Serve registers them in `serve_comparison_alignment.spec.ts`,
 `serve_comparison_alignment_input.spec.ts`, and
 `serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
