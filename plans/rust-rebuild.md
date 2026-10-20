@@ -391,6 +391,26 @@ readiness rather than blocking this acceptance round on further startup work.
   rendered sources, so no consumer needs Git path discovery. Alternatives:
   A, retain and rename the span; C, add unused Git discovery.
 
+**Comparison filter follow-up (2026-10-20):**
+
+- Orchestrator item 11 A is the selected default under the user rule.
+  Implementation waits for the further decision below. The default requires
+  checkout conversion without network access and equality on Git clean form.
+  Arbitrary configured Git filters are external programs. Git's transport
+  restrictions do not restrict their network access. LFS skip-smudge returns
+  a pointer even when a local object exists. The current process boundary
+  does not provide portable network isolation.
+- Further decision 11.1: offline custom-filter policy. Severity Medium,
+  effort Large. Base resources currently compare raw blobs with working
+  bytes, so checkout conversion can cause false Changes. Option A supports
+  Git's built-in conversions and local LFS objects without running external
+  filters; an unsupported custom-filter resource becomes unavailable.
+  Option B adds network isolation for arbitrary clean and checkout filters
+  on every supported operating system. Both options have Large effort.
+  Recommend A: it handles the named line-ending and LFS cases with a clear
+  offline guarantee. The new unavailable-resource case needs approval before
+  implementation. Keep raw-blob behaviour until this decision is settled.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1138,6 +1158,10 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 - [ ] Commit.
 
 ## Milestone 9: Changes
+
+- [ ] Settle further decision 11.1 for default 11 A. Severity Medium, effort
+      Large. Recommended A: built-in checkout conversion and local LFS only,
+      with unavailable resources for unsupported external filters.
 
 - [x] Settle the Git changed-path input with decision default 45 B. Remove
       the misleading timing stage and Git-input wording. Keep output exclusions
