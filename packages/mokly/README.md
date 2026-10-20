@@ -151,6 +151,8 @@ consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
 child process in the side's source root, with consumer plugins unbundled.
 A child watchdog stops even a blocked plugin after its sidecar dies.
 Operation events count each fork and its terminal event once.
+PostCSS child failures settle pending requests when startup, IPC, or exit fails.
+The child lifetime retains errors raised before the request is attached.
 The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 Sidecars and PostCSS children set `PWD` to their source directory and omit
@@ -178,6 +180,8 @@ package. Copied docs, the package changelog, and build output stay ignored.
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).
+The [PostCSS process](./src/sidecar/postcss-process.ts) owns IPC requests and
+terminal child state.
 
 On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
 its SIGINT and SIGBREAK listeners alive while the binary receives the shared

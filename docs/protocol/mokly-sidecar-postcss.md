@@ -18,6 +18,10 @@ Class-map changes and restored JavaScript generations follow the
 [bundling contract](./mokly-sidecar.md#bundling). Expected PostCSS errors carry a typed
 `postcss` failure in the error envelope. Rust selects its exact code and text
 from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
+Child startup errors, exit, IPC disconnection, and failed request writes settle
+affected requests without waiting for the request deadline. Errors raised before
+request attachment remain failures of that request. A failed child cannot accept
+later work; a later request starts a new child for the context.
 
 ## Read Evidence
 

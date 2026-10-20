@@ -2551,6 +2551,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] Native CI round 2 review finding 1: share protected-location checks
         for requested and physical paths. Apply option B so dependency case
         aliases stay private during admission and live rechecks.
+  - [x] Native CI round 3: select the host cache folder in the external-cache
+        fixture. Retain PostCSS child failures from startup through requests,
+        including IPC disconnect and send failure. A later request replaces
+        the failed child. Evidence: `.context/native-ci-fixes-3/`.
+        The hub must dispatch hosted macOS and Windows CI on
+        `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
   - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
     Windows executable suffixes. Selected Native bypasses this path.
     Separate branch before claiming Windows remote-executor support.
