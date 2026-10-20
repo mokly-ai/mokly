@@ -16,6 +16,8 @@ use crate::yaml_limits::MAX_DEPTH;
 /// expansion passes `budget` nodes. The scan steps aside without a failure at
 /// a parser error, at a value or an alias copy deeper than [`MAX_DEPTH`], and
 /// at the end of the first document, so the builder reports those failures.
+/// An alias's own depth counts with its copy's height, after the scan names
+/// its anchor, so the builder finds the anchor there.
 /// Other builder failures, such as a duplicate key, do not stop the scan, so
 /// an expansion past the budget is reported before them.
 pub(crate) fn scan(text: &str, budget: usize) -> Result<BTreeSet<usize>, Marker> {
@@ -27,10 +29,7 @@ pub(crate) fn scan(text: &str, budget: usize) -> Result<BTreeSet<usize>, Marker>
     while let Ok((event, marker)) = parser.next_token() {
         let node = matches!(
             event,
-            Event::Scalar(..)
-                | Event::Alias(_)
-                | Event::SequenceStart(..)
-                | Event::MappingStart(..)
+            Event::Scalar(..) | Event::SequenceStart(..) | Event::MappingStart(..)
         );
         if node && open.len() > MAX_DEPTH {
             break;

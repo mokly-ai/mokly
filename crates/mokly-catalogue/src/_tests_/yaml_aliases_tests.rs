@@ -88,6 +88,26 @@ fn the_scan_steps_aside_at_parser_errors_depth_and_the_document_end() {
     assert_eq!(issue.message, "while parsing node, found unknown anchor");
 }
 
+/// An alias that is itself deeper than the limit fails with the depth
+/// message, also when no earlier alias names its anchor and when it refers to
+/// its own unfinished anchor. A shallow recursive alias keeps its message.
+#[test]
+fn an_alias_past_the_depth_limit_fails_with_the_depth_message() {
+    let around = |inner: &str| format!("{}{inner}{}", "[".repeat(MAX_DEPTH), "]".repeat(MAX_DEPTH));
+    let deep = format!("a: &a x\nb: {}\n", around("*a"));
+    let issue = yaml::parse(&deep, "deep.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, TOO_DEEP);
+    let location = issue.location.unwrap();
+    assert_eq!((location.line, location.column), (2, 132));
+    let recursive = format!("a: &a {}\n", around("*a"));
+    let issue = yaml::parse(&recursive, "recursive.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, TOO_DEEP);
+    let location = issue.location.unwrap();
+    assert_eq!((location.line, location.column), (1, 135));
+    let issue = yaml::parse("a: &a [*a]\n", "recursive.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, "unknown or recursive YAML alias");
+}
+
 /// Other builder failures do not stop the scan, so an alias expansion past
 /// the budget is reported before them.
 #[test]

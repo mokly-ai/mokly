@@ -156,6 +156,7 @@ impl<'a> Reader<'a> {
                     (value, start)
                 }
                 Event::Alias(anchor) => {
+                    self.within(frames.len(), marker)?;
                     let Some(node) = self.anchors.get(&anchor) else {
                         return Err(self.error(marker, "unknown or recursive YAML alias"));
                     };
