@@ -104,6 +104,9 @@ An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
+Static builds keep the input-change outcome when historical PostCSS evidence
+disagrees with its pinned Git source. They preserve the earlier output.
+They also check selected base package inputs before base document callbacks.
 Build and Serve share the same runtime composition. Each command owns one
 pool and cache across catalogue preparation, document rendering, and live
 prop previews. Serve checks the render token and installed revision before
@@ -267,6 +270,7 @@ retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 
 ### Key Code
 
+- [Static base admission](./src/changes_static.rs) checks input evidence before base document callbacks.
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).

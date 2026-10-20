@@ -1,31 +1,17 @@
 //! Ignore CSS's top-level HTML boundary tokens without touching nested or quoted text.
 
-use std::result;
+use cssparser::Token;
 
-use cssparser::{ParseError, Parser, ParserInput, Token};
+use crate::token_tree::Tokens;
 
 pub(crate) fn strip(source: &str) -> String {
-    let mut input = ParserInput::new(source);
-    let mut parser = Parser::new(&mut input);
+    let tokens = Tokens::new(source);
+    let mut range = tokens.root();
     let mut edits = Vec::new();
-    while !parser.is_exhausted() {
-        let start = parser.position().byte_index();
-        let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
-            break;
-        };
-        match token {
-            Token::CDO | Token::CDC => edits.push((start, parser.position().byte_index())),
-            Token::Function(_)
-            | Token::CurlyBracketBlock
-            | Token::SquareBracketBlock
-            | Token::ParenthesisBlock => {
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        consume(nested);
-                        Ok(())
-                    });
-            }
-            _ => {}
+    while let Some(index) = tokens.next(&mut range) {
+        let node = &tokens.nodes[index];
+        if matches!(node.token, Token::CDO | Token::CDC) {
+            edits.push((node.start, node.end));
         }
     }
     let mut output = source.to_owned();
@@ -35,21 +21,4 @@ pub(crate) fn strip(source: &str) -> String {
         }
     }
     output
-}
-
-fn consume(parser: &mut Parser<'_, '_>) {
-    while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
-        if matches!(
-            token,
-            Token::Function(_)
-                | Token::CurlyBracketBlock
-                | Token::SquareBracketBlock
-                | Token::ParenthesisBlock
-        ) {
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_nested_block(|nested| {
-                consume(nested);
-                Ok(())
-            });
-        }
-    }
 }

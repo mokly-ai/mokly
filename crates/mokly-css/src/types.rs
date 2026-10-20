@@ -3,6 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
+use mokly_source_interface::read_evidence::ReadEvidence;
+
 use crate::dependencies::{DirectoryDependency, PluginInput};
 use crate::error::Result;
 
@@ -42,6 +44,8 @@ impl OpaqueAsset {
 /// Fully prepared stylesheet bundle and private source inventory.
 #[derive(Clone, Debug)]
 pub struct Bundle {
+    /// Consumed-byte witnesses and explicitly incomplete late baselines.
+    pub read_evidence: ReadEvidence,
     /// Route inside the generated namespace.
     pub route: String,
     /// Normalized CSS with one final LF.
@@ -67,6 +71,8 @@ pub struct Bundle {
 /// Sidecar processing result. Dependency scanning belongs to its adapter.
 #[derive(Clone, Debug)]
 pub struct ProcessedCss {
+    /// Read versions kept separately from watch reports and scan digests.
+    pub read_evidence: ReadEvidence,
     /// Reporter provenance for each protected file or alias.
     pub plugin_inputs: BTreeMap<String, PluginInput>,
     /// Validated directory watch recipes.
@@ -100,6 +106,7 @@ impl CssProcessor for IdentityProcessor {
         _excluded: &BTreeSet<String>,
     ) -> Result<ProcessedCss> {
         Ok(ProcessedCss {
+            read_evidence: ReadEvidence::default(),
             text: source.into(),
             inputs: BTreeMap::new(),
             plugin_inputs: BTreeMap::new(),

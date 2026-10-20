@@ -1,9 +1,11 @@
 //! Lossless rule boundaries and canonical declaration tokens before optimization.
 
-use std::fmt::Write;
+use std::ops::Range;
 use std::result;
 
-use cssparser::{ParseError, Parser, ParserInput, ToCss, Token, TokenSerializationType};
+use cssparser::{ToCss, Token, TokenSerializationType};
+
+use crate::token_tree::{Tokens, opening};
 
 /// One top-level statement or block. Declaration runs retain source order.
 pub(crate) struct Part<'a> {
@@ -99,33 +101,38 @@ pub(crate) fn parts(source: &str) -> result::Result<Vec<Part<'_>>, &'static str>
 }
 
 pub(crate) fn normalize(source: &str) -> String {
-    let mut input = ParserInput::new(source);
-    let mut parser = Parser::new(&mut input);
-    tokens(&mut parser, false)
+    tokens(source, false)
 }
 
 pub(crate) fn opaque(source: &str) -> String {
-    let mut input = ParserInput::new(source);
-    tokens(&mut Parser::new(&mut input), true)
+    tokens(source, true)
 }
 
-fn tokens(parser: &mut Parser<'_, '_>, opaque: bool) -> String {
+fn tokens(source: &str, opaque: bool) -> String {
+    let tokens = Tokens::new(source);
     let mut text = String::new();
-    let mut previous = TokenSerializationType::default();
-    let mut whitespace = false;
-    while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
+    let mut pending = vec![Serialization::new(tokens.root(), 0, None)];
+    while let Some(frame) = pending.last_mut() {
+        let Some(index) = tokens.next(&mut frame.range) else {
+            if let Some(close) = frame.close {
+                text.push(close);
+            }
+            pending.pop();
+            continue;
+        };
+        let token = &tokens.nodes[index].token;
         if matches!(token, Token::WhiteSpace(_)) {
-            whitespace = true;
+            frame.whitespace = true;
             continue;
         }
         if matches!(token, Token::Comment(_)) {
             continue;
         }
         let next = token.serialization_type();
-        if previous.needs_separator_when_before(next)
+        if frame.previous.needs_separator_when_before(next)
             || (opaque
-                && whitespace
-                && !text.is_empty()
+                && frame.whitespace
+                && text.len() > frame.start
                 && !text.ends_with(['{', ';', ':', '(', '['])
                 && matches!(
                     token,
@@ -139,29 +146,39 @@ fn tokens(parser: &mut Parser<'_, '_>, opaque: bool) -> String {
         {
             text.push(' ');
         }
-        whitespace = false;
-        match token {
-            Token::Function(_)
-            | Token::ParenthesisBlock
-            | Token::SquareBracketBlock
-            | Token::CurlyBracketBlock => {
-                let close = match token {
-                    Token::SquareBracketBlock => ']',
-                    Token::CurlyBracketBlock => '}',
-                    _ => ')',
-                };
-                let _ = token.to_css(&mut text);
-                let nested: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|parser| Ok(tokens(parser, opaque)));
-                if let Ok(nested) = nested {
-                    let _ = write!(text, "{nested}{close}");
-                }
-            }
-            _ => {
-                let _ = token.to_css(&mut text);
-            }
+        frame.whitespace = false;
+        frame.previous = next;
+        let _ = token.to_css(&mut text);
+        if let Some(close) = opening(token) {
+            pending.push(Serialization::new(
+                tokens.children(index),
+                text.len(),
+                Some(close),
+            ));
         }
-        previous = next;
     }
     text
+}
+
+/// One block level of serialization. Separator state is local to each level.
+struct Serialization {
+    range: Range<usize>,
+    /// The output length where this level's text starts.
+    start: usize,
+    /// The closer written after this level's tokens; `None` at the top level.
+    close: Option<char>,
+    previous: TokenSerializationType,
+    whitespace: bool,
+}
+
+impl Serialization {
+    fn new(range: Range<usize>, start: usize, close: Option<char>) -> Self {
+        Self {
+            range,
+            start,
+            close,
+            previous: TokenSerializationType::default(),
+            whitespace: false,
+        }
+    }
 }

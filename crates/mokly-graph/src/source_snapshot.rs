@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_model::material::digest;
 use mokly_source_interface::error::Result;
+use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -90,6 +91,17 @@ impl SourceSnapshot {
 }
 
 impl SourceTree for SourceSnapshot {
+    fn observe_pinned_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+        digest: &str,
+    ) -> Result<()> {
+        self.source.observe_pinned_input(path, baseline, digest)
+    }
+    fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
+        self.source.observe_input(path, baseline)
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         self.source.prefetch(paths)
     }

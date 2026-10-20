@@ -11,6 +11,7 @@ import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { ExampleWorkspace } from "../../parts/example_workspace.js";
 import { NavTree } from "../../parts/nav.js";
 import { NAV_TREE_VARIANTS_OPEN } from "../../parts/nav_data.js";
+import { ReasonSentences } from "../../parts/reason_sentences.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
 import { RemovedView } from "../../parts/removed_screen.js";
 import { MiniSaveFailed } from "../../parts/removed_shots.js";
@@ -98,7 +99,12 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
         status="changed"
         title="Save failed"
       />
-      <ExampleWorkspace error subject="welcome" viewport={viewport} />
+      <ExampleWorkspace
+        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        error
+        subject="welcome"
+        viewport={viewport}
+      />
     </Shell>
   );
 }
@@ -140,7 +146,13 @@ function RemovedVariant({
       <PreviousVersionLabel />
       <PreviewWorkspace
         viewport={viewport}
-        inspector={<DetailsPanel comparisonEvidence open subject={subject} />}
+        inspector={
+          <DetailsPanel
+            comparisonEvidence={<ReasonSentences reasons={["removed"]} />}
+            open
+            subject={subject}
+          />
+        }
         render={(previewViewport) => (
           <RemovedView
             address="example.test/welcome"
@@ -196,6 +208,7 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
             Mobile · Dark, Desktop · Dark
           </MockLink>
         }
+        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
         open
         subject="welcome"
         viewport={viewport}

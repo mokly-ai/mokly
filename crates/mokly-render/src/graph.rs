@@ -23,8 +23,8 @@ use crate::declarations;
 use crate::error::{self, RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
-use crate::sources::LeasedTree;
-use crate::stylesheets;
+use crate::source_lease::LeasedTree;
+use crate::{sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -182,6 +182,7 @@ impl JavaScriptGraph {
             inputs,
             tree: Arc::new(LeasedTree {
                 tree: self.runtime.tree.clone(),
+                assets: sources::reader(&self.runtime, config, &side),
                 _base: self.runtime.base.clone(),
             }),
             composer: Arc::new(HtmlComposer { fragments }),

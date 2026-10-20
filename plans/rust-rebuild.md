@@ -1478,6 +1478,18 @@ Tags: ui
     - Pages, documents, and use cases show no reason sentences until a
       design exists. Decision 7 A, approved by the orchestrator on
       2026-10-19.
+    - [x] Keep the viewer and the designs consistent: every Browse design of
+          a changed, added, or removed screen reads its reason sentences;
+          Details show the reasons first, in the designs' order; a `screen`
+          reason has no sentence; every pane frame attribute is checked in
+          each host; and the panes page states where its proofs run, with
+          Serve proving presentation and renewal only. Round 3 items of the
+          D1 delegate, given by the orchestrator on 2026-10-20.
+    - Batch 8 integration keeps the shared Serve alignment, input, and
+      Scroll together cases. The pane attribute checks also run on Serve.
+      The live coverage docs include these retained proofs.
+    - The browser test guide stays one page past 300 lines. Decision 2 A of
+      the D1 round 2 report, approved by the orchestrator on 2026-10-20.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1555,6 +1567,9 @@ The D1 round 2 decisions (1 B, 2 A, 3 B, 4 A, 5 A), the reason sentences in
 the designs, the comparison suites list in the browser test guide, and the
 merge of the rebuild tip `3d2d1535`:
 `.context/rust-rebuild/delegation/m10-d1/report-2.md`.
+The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
+2 at `659eb918` onto the rebuild tip `d857b6cf`:
+`.context/rust-rebuild/delegation/m10-d1/report-3.md`.
 
 - [ ] Commit.
 
@@ -1869,15 +1884,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Design how to capture the bytes that module evaluation and plugins read,
       or supply immutable generation inputs. Paths and rereads after a plugin
       runs cannot establish the consumed bytes. Plugin file dependencies outside
-      roots and bundle modules retain an accepted late baseline until this work.
+      roots and bundle modules without witnesses retain an accepted late baseline.
   - [x] Compare read observers with immutable PostCSS inputs, including native
         plugins, child processes, descriptors, cost, and supported platforms.
-  - [ ] Decide M14-PC1: staged observed-read digests with explicit opaque gaps,
-        enforced immutable inputs, or continued deferral. No runtime change is
-        selected; the full consumed-byte requirement remains open.
+  - [x] Decision 56 A, approved 2026-10-19: add observed-read evidence in
+        stages and keep explicit incomplete coverage and late opaque baselines.
+        Preserve native plugin compatibility. Do not infer complete coverage
+        from one observed read. Alternatives were B, enforced immutable inputs,
+        and C, continued deferral. A improves common reads without new isolation
+        or platform requirements.
+  - [x] Record raw local compiler inputs, observable native module sources,
+        and path-based sync, callback, and promise whole-file reads. Retain
+        distinct witnesses through context reuse, result caches, stylesheet
+        caches, and worker replacement. Check them before document callbacks
+        and final installation through the existing input-change outcome.
+        Compare base source witnesses with pinned Git bytes, separate from head
+        baselines. Custom loader text without raw provenance stays incomplete.
+  - [ ] Complete the remaining coverage: native/helper/worker reads, preloaded
+        file providers, descriptors, streams and ranges, older-runtime transitive ESM loading, private
+        resolution metadata, and read-time path identity. The full M14 item
+        remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
-        Evidence: `.context/rust-rebuild/m14-postcss-digests/` and
-        `.context/rust-rebuild/delegation/m9-compare/report-16.md`.
+        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -2006,6 +2034,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+  - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
+        source Changes, and watched screen, component, and stylesheet edits.
+        Keep the source repository unchanged.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
+  - [ ] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+        Separate retained generation data from allocator residency before
+        changing cache limits or rendering behaviour.
+  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -2017,6 +2053,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
+  - [x] Make the YAML builder and Mokly's CSS scanners iterative, and keep YAML
+        source positions linear in the node count. Child-process depth searches
+        on 2 MiB stacks cover each parser and pipeline.
+        Evidence: `.context/m14-nesting/report.md`.
+  - [x] Keep CSS Modules name ranges after an attribute selector, so
+        `.a[x]:global(.b)` no longer fails the token check.
+  - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
+        serde-derived prop and schema traversal, and schema inference
+        (pending user decision).
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
@@ -2085,6 +2130,7 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
 Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
+Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2278,6 +2324,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Switch the three Serve specs that used the Badge family back to the
         Card family now that decision 6 has landed. Done by `1baf1aa8` on
         2026-10-20.
+  - [x] Batch 8 restores the Card family in the selected comparison,
+        expiry, and renewal-pane journeys after the F5 integration.
   - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
         2026-10-20 as the orchestrator asked:
     1. Expiry emulation could not fail its snapshot checks. Fixed by

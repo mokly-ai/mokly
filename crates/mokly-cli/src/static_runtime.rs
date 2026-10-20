@@ -143,6 +143,7 @@ fn prepare(
         inputs: Some(captured.clone()),
         changes: changes_runtime::service(
             services.runtime.clone(),
+            captured.clone(),
             context.cancellation.clone(),
             pinned,
             context.style.clone(),

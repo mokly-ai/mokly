@@ -1,7 +1,7 @@
 //! Scoped names depend on paths while unrelated CSS identities stay global.
 
 use crate::module_integrity;
-use crate::modules::scope;
+use crate::modules::{scope, scoped_name};
 
 #[test]
 fn declaration_list_at_rules_keep_local_functions_and_identifiers() {
@@ -82,4 +82,61 @@ fn scoping_preserves_comments_spacing_modern_syntax_and_animation_priority() {
     assert!(exports.contains_key("local"));
     assert_eq!(exports["card"].split_ascii_whitespace().count(), 3);
     insta::assert_snapshot!("rename_only", css);
+}
+
+#[test]
+fn names_after_attribute_selectors_keep_their_own_source_ranges() {
+    let path = "ui/form.module.css";
+    let class = |local| scoped_name(path, local);
+    for (source, expected) in [
+        (".a[x]:global(.b){}", format!(".{}[x].b{{}}", class("a"))),
+        (
+            ".a[data-x]#main{}",
+            format!(".{}[data-x]#{}{{}}", class("a"), class("main")),
+        ),
+        (
+            "[type=text]:local(.field){}",
+            format!("[type=text].{}{{}}", class("field")),
+        ),
+    ] {
+        assert_eq!(scope(path, source).unwrap().0, expected, "{source}");
+    }
+    let error = scope(path, ".a[x]:export{}").unwrap_err();
+    assert!(
+        error.to_string().contains(&format!("{path}:1:6: :export")),
+        "{error}"
+    );
+}
+
+#[test]
+fn custom_property_block_values_never_start_a_composition() {
+    let path = "ui/mixin.module.css";
+    let source = ".b{color:red}.a{--mixin:{color:blue} composes: b;}";
+    let (css, exports) = scope(path, source).unwrap();
+    let expected = source
+        .replace(".b{", &format!(".{}{{", scoped_name(path, "b")))
+        .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
+    assert_eq!(css, expected);
+    assert_eq!(exports["a"], scoped_name(path, "a"));
+}
+
+#[test]
+fn value_rules_report_their_own_line_and_column() {
+    let source = ".a{}\n/* note */\n@value x: red;";
+    let error = scope("ui/theme.module.css", source).unwrap_err();
+    assert!(
+        error.to_string().contains("ui/theme.module.css:3:1;"),
+        "{error}"
+    );
+}
+
+#[test]
+fn animation_names_after_functions_keep_their_own_ranges() {
+    let path = "ui/motion.module.css";
+    let source = "@keyframes spin{to{opacity:0}}.a{animation:steps(4)spin 1s}";
+    let (css, _) = scope(path, source).unwrap();
+    let expected = source
+        .replace("spin", &scoped_name(path, "spin"))
+        .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
+    assert_eq!(css, expected);
 }
