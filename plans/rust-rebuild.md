@@ -1567,11 +1567,19 @@ Tags: ui
       The live coverage docs include these retained proofs.
     - The browser test guide stays one page past 300 lines. Decision 2 A of
       the D1 round 2 report, approved by the orchestrator on 2026-10-20.
-- [ ] Complete the M8 browser sweep's comparison UI cases against review v8
+- [x] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
-  - [ ] Port the cases that the shared copied comparison output supports,
+  - [x] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
+  - [x] Port the last rows: whole-page, component, and outside stylesheet
+        Details with their approved designs, the React evidence copy, the
+        removed page's history, and the branch-point cases through Serve and
+        the embedded viewer. Round 4 of the D1 delegate, given by the
+        orchestrator on 2026-10-20.
+    - The branch-point rows run on the branch-point fixtures, not on the
+      example catalogue built with a base, whose build takes about 175
+      seconds. Decision 12 A of the round 4 report, applied as the default.
   - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
   - [x] Port the moved-entry cases with the shared moved fixtures in the
@@ -1653,6 +1661,9 @@ merge of the rebuild tip `3d2d1535`:
 The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
 2 at `659eb918` onto the rebuild tip `d857b6cf`:
 `.context/rust-rebuild/delegation/m10-d1/report-3.md`.
+The D1 round 4 rows, their fixture entries, the branch-point hosts, the
+example build measurement, and the sweep inputs:
+`.context/rust-rebuild/delegation/m10-d1/report-4.md`.
 
 - [ ] Commit.
 
@@ -2515,7 +2526,7 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       own sources. Separate branch.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
-      only on the branch copy. Separate branch.
+      only on the branch copy. Done in round 4 of the D1 delegate.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
@@ -2532,6 +2543,45 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       split rule, with no recorded exception. Separate branch.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
       with no recorded exception. Separate branch.
+    - `tests/browser/serve_generation_collection.ts:63-80`: when the first
+      stable-endpoint request after the failed renewal already asks for a
+      refresh, the next plain request also becomes a refresh. No journey does
+      this. Separate branch.
+  - [x] M10 D1 round 4 review 1, findings 1, 5 and 6: three ports lacked old
+        checks that the current spec requires. Fixed by `303659e9`,
+        `4ee66184` and `8409f7b3`. Findings 3 and 4 corrected sweep reasons
+        in the round 4 report.
+  - M10 D1 round 4 review 1, open finding 2 for the user: the embedded
+    branch-point host checks only the head, so a click that leaves the
+    embedded viewer passes. Severity Low, effort Small. Recommended: C, give
+    each host an address check, also the moved-entry hosts.
+  - M10 D1 round 4 review 1, open finding 7 for the user: two stylesheet
+    Details specs keep their own inspector copy and readers. Severity Low,
+    effort Small. Recommended: A, import the shared copy and readers.
+  - M10 D1 round 4 review 1, open finding 8 for the user: three specs pin
+    the default copy's Changes count. Severity Low, effort Small.
+    Recommended: A, read the count from the index in the two UI specs.
+  - M10 D1 round 4 review 1, open finding 9 for the user: the new
+    `movedPage` key collides with the moved fixture's key in Serve's
+    `changes.paths`. Severity Low, effort Small. Recommended: A, rename it.
+  - M10 D1 round 4 review 2, open finding 10 for the user: the wrapper row's
+    title still says "no consumers". Severity Low, effort Small.
+    Recommended: A, say "no affected consumers" and record the rename.
+  - M10 D1 round 4 decision 11 for the user: two PostCSS evidence tests fail
+    on the Node 22.14.0 viewer runner, which has no `module.registerHooks`.
+    Severity High, effort Small. Recommended: A, raise the lowest supported
+    Node version to 22.15.0.
+  - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
+    list of the old test's assertions, and check each port's title. Severity
+    Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
+    of review 2. Recommended: A, add the step to the gap sweep procedure.
+  - Follow-up: assert the snapshot id format in `snapshotOf` for every
+    caller. Effort Small. Covers review 1 finding 5. Previous examples: none
+    found.
+  - Outside the scope of the M10 D1 round 4 reviews:
+    `docs/protocol/mokly-css-evidence-presentation.md:188` says that a
+    whole-document page consumes no components, but `mokly-pages.md` lets a
+    page use component elements. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:

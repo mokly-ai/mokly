@@ -15,6 +15,7 @@ export interface ComparisonIndexEntry {
   path: string;
   title: string;
   variantOf?: string;
+  previousPath?: string;
   changes?: { included: boolean; kind: string; status: string };
 }
 

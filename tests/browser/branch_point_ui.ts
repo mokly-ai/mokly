@@ -1,4 +1,4 @@
-/** Rendered branch-point facts of the copied branch-point output. */
+/** Rendered branch-point facts that each branch-point host shares. */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
@@ -114,18 +114,43 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("[data-mokly-search]").fill(query);
 }
 
-/** Wait until the head and the address name one entry. */
-export async function expectRouted(page: Page, entry: string): Promise<void> {
+/**
+ * Where the checks open an entry. A routing host shows each entry at its own
+ * address. An embedded viewer's host page owns its own address, so only the
+ * rendered head names the entry there.
+ */
+export interface BranchPointHost {
+  open(page: Page, entry: string): Promise<unknown>;
+  routes: boolean;
+}
+
+/** A standalone shell or Serve, which opens each entry at its route. */
+export const ROUTED_HOST: BranchPointHost = {
+  open: (page, entry) => page.goto(`/view/${entry}/`),
+  routes: true,
+};
+
+/** Wait until the head names one entry, and a routing host's address too. */
+export async function expectRouted(
+  page: Page,
+  host: BranchPointHost,
+  entry: string,
+): Promise<void> {
   await expect(
     page.locator(".mbk-screen-head [data-copy-path]"),
   ).toHaveAttribute("data-copy-path", entry);
-  await expect
-    .poll(() => decodeURIComponent(new URL(page.url()).pathname))
-    .toBe(`/view/${entry}/`);
+  if (host.routes)
+    await expect
+      .poll(() => decodeURIComponent(new URL(page.url()).pathname))
+      .toBe(`/view/${entry}/`);
 }
 
 /** Open an entry and wait for its workspace head. */
-export async function openEntry(page: Page, entry: string): Promise<void> {
-  await page.goto(`/view/${entry}/`);
+export async function openEntry(
+  page: Page,
+  host: BranchPointHost,
+  entry: string,
+): Promise<void> {
+  await host.open(page, entry);
   await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
 }

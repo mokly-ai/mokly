@@ -5,6 +5,11 @@
  */
 
 import {
+  evidencePaths,
+  evidenceStylesheets,
+  writeEvidenceGroups,
+} from "./comparison_evidence_groups.js";
+import {
   scrollPaths,
   scrollStylesheets,
   writeScrollGroups,
@@ -26,6 +31,7 @@ export const groupPaths = {
   atRuleChange: "screens/fade",
   mobileOnlyChange: "screens/compact",
   ...scrollPaths,
+  ...evidencePaths,
 } as const;
 
 /** The groups' stylesheet rules, which come before the catch-all rule. */
@@ -37,6 +43,7 @@ export const groupStylesheets = [
   { match: "screens/fade/index.html", stylesheets: ["fade.css"] },
   { match: "screens/compact/index.html", stylesheets: ["compact.css"] },
   ...scrollStylesheets,
+  ...evidenceStylesheets,
 ];
 
 /**
@@ -117,4 +124,5 @@ export async function writeGroups(root: string, side: Side): Promise<void> {
     '---\ntitle: Compact screen\n---\n<main><h1>Compact screen</h1><button class="auth" mokly-viewport="mobile">Sign in</button></main>',
   );
   await writeScrollGroups(root, side);
+  await writeEvidenceGroups(root, side);
 }
