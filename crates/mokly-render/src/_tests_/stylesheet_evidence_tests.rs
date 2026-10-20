@@ -1,6 +1,7 @@
 //! Both stylesheet caches replay original evidence and reject incompatible reuse.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
@@ -89,7 +90,7 @@ fn local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transf
     assert!(
         records
             .iter()
-            .all(|(path, baseline)| path.to_str() == Some("/repo/tokens.txt")
+            .all(|(path, baseline)| path == Path::new("/repo/tokens.txt")
                 && *baseline == ReadBaseline::ObservedWholeFile("old".into()))
     );
 }
