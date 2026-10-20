@@ -26,7 +26,7 @@ pub(crate) fn prepare(
 }
 
 /// Store effective numeric bounds so every read-model consumer sees the same limits.
-pub(crate) fn effective(
+fn effective(
     schema: &PropSchema,
     controls: &BTreeMap<String, ComponentControl>,
 ) -> BTreeMap<String, ComponentControl> {
@@ -87,7 +87,7 @@ pub(crate) fn normalize(control: &mut ComponentControl) {
     }
 }
 
-pub(crate) fn validate(
+fn validate(
     schema: &PropSchema,
     controls: &BTreeMap<String, ComponentControl>,
     props: &Props,

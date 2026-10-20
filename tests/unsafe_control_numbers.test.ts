@@ -34,7 +34,7 @@ import {defineScreen} from '@mokly/mokly';
 const count=1000000000000000100;
 export default defineScreen({title:'Number',description:'',relatedDocs:[],
   propSchema:{type:'object',additionalProperties:false,properties:{count:${schema}}},
-  props:{},controls:{count:${control}},render:()=>React.createElement('p',null,'Number')});`,
+  props:{},variants:[{slug:'saved',title:'Saved',props:{}}],controls:{count:${control}},render:()=>React.createElement('p',null,'Number')});`,
       });
       const result = await command(
         root,
@@ -52,27 +52,29 @@ export default defineScreen({title:'Number',description:'',relatedDocs:[],
       const live = readLiveDescriptor(
         await (await fetch(`${url}/mokly-viewer/live.json`)).json(),
       );
-      const response = await fetch(`${url}${live.render.url}`, {
-        method: "POST",
-        signal: context.signal,
-        headers: {
-          "content-type": "application/json",
-          origin: url,
-          "x-mokly-render-token": live.render.token,
-        },
-        body: JSON.stringify({
-          entryPath: "number",
-          viewport: "mobile",
-          colorScheme: "light",
-          revision: index.revision,
-          pageId: "a".repeat(32),
-          overrides:
-            name === "text"
-              ? {}
-              : { count: { kind: "set", value: 1000000000000000100 } },
-        }),
-      });
-      assert.equal(response.status, 200, await response.text());
+      for (const entryPath of ["number", "number/saved"]) {
+        const response = await fetch(`${url}${live.render.url}`, {
+          method: "POST",
+          signal: context.signal,
+          headers: {
+            "content-type": "application/json",
+            origin: url,
+            "x-mokly-render-token": live.render.token,
+          },
+          body: JSON.stringify({
+            entryPath,
+            viewport: "mobile",
+            colorScheme: "light",
+            revision: index.revision,
+            pageId: "a".repeat(32),
+            overrides:
+              name === "text"
+                ? {}
+                : { count: { kind: "set", value: 1000000000000000100 } },
+          }),
+        });
+        assert.equal(response.status, 200, await response.text());
+      }
     },
   );
 }

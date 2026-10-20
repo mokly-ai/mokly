@@ -117,7 +117,7 @@ pub(crate) fn prepare(
         }
         if !failed
             && let Some(controls) = &input.controls
-            && let Err(issue) = declared_controls::validate(&schema, controls, &complete, &source)
+            && let Err(issue) = declared_controls::prepare(&schema, controls, &complete, &source)
         {
             issues.push(issue);
             continue;
