@@ -18,9 +18,8 @@ the complete render of an affected consumer without giving that consumer a
 row. A formatting-only edit has no changed rules and produces no record.
 Every independent Changes signal keeps its meaning.
 
-Rule evidence is read from the delivered stylesheets that the composed
-documents link. The analysis compares bytes, so a stylesheet needs no changed
-Git path to be evidence. A link added or removed without a byte change is document material under the
+Rule evidence is read from linked stylesheets and owned or ownerless head
+styles in the composed documents. The analysis compares delivered bytes. A link added or removed without a byte change is document material under the
 [materiality rule](./mokly-comparison.md#materiality) and invents no rule.
 When the bytes change, reachability on either side admits both available
 documents for rule matching, including a side without that link.
@@ -63,10 +62,13 @@ analysis fills it.
   only the entry owner. Ownerless head rules use the same own-page proof,
   with matches restricted to their input owner under
   [style ownership](./mokly-comparison.md#style-ownership).
-- Trusted sidecar rules retain their declared component owners for matched
-  records. Unresolved records keep the entry owner. The page component keeps matches outside every
-  nested registered instance. An instance keeps matches outside different
-  nested components. An owned rule with no kept match emits no record.
+- Trusted sidecar rules join the same unfiltered own-page proof and nested
+  test as linked CSS. Equal identities join across owner sets. A nested copy
+  of the same component never takes its match. Supplied slots keep their
+  supplier's input ancestry. A kept exact-instance match can retain its
+  declared owner under [style ownership](./mokly-comparison.md#style-ownership).
+  Owned, ownerless, and linked sources share the same excluded and unresolved
+  record rules.
 - Records of equal rules in different stylesheets stay separate records,
   because `stylesheet` differs; the rule identity joins their proof, not their
   records.
@@ -114,11 +116,10 @@ changed-component set from the selected entry alone.
 - Records are sorted and unique as stated above. A stylesheet with a
   `matched` or `unresolved` record on a view has no `excluded` record on that
   view.
-- A component owner names a registered component whose own pages keep a
-  match for the same rule identity after nested filtering. Inline slot
+- A component owner names a registered component with a kept own-page match
+  for that rule identity, or a kept trusted exact-instance match. Inline slot
   matches follow their input owner. The producer checks
-  each owner against the recorded own-page match sets, never against the
-  result's own rows and never against consumer-instance matches.
+  each owner against that proof, never against the result's own rows.
 - An `unresolved` record is owned by the entry.
 - A record never carries a private source path or a match node.
 - Serve's background classification, the selected comparison, `build`, and

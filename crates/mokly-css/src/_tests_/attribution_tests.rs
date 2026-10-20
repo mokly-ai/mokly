@@ -24,6 +24,8 @@ fn proof(stylesheet: &str, selector: &str, regions: &[(&str, bool)]) -> RuleObse
                     })
                     .collect(),
                 owner: EvidenceOwner::Entry,
+                input_regions: Vec::new(),
+                trusted_owner: None,
             }],
         }],
     }
@@ -153,4 +155,62 @@ fn the_innermost_changed_component_owns_a_nested_match() {
             path: "inner".into()
         }
     );
+}
+
+#[test]
+fn owned_and_unowned_copies_share_nested_proof_and_one_record_reducer() {
+    let owned = |route: &str, owner: &str, regions: &[(&str, bool)]| {
+        let mut rule = proof(route, ".hit", regions);
+        rule.selectors[0].matches[0].trusted_owner = Some(owner.into());
+        rule
+    };
+    let mut missing = proof("document", ".missing", &[]);
+    missing.selectors[0].matches.clear();
+    let mut unresolved = proof("document", ".hit", &[]);
+    unresolved.selectors[0].unresolved = true;
+    let pages = [
+        PageObservation {
+            component: Some("parent".into()),
+            rules: vec![owned(
+                "parent",
+                "parent",
+                &[("parent", true), ("child", false)],
+            )],
+        },
+        PageObservation {
+            component: Some("child".into()),
+            rules: vec![owned("child", "child", &[("child", true)])],
+        },
+        PageObservation {
+            component: None,
+            rules: vec![proof(
+                "static/linked.css",
+                ".hit",
+                &[("parent", false), ("child", false)],
+            )],
+        },
+        PageObservation {
+            component: None,
+            rules: vec![
+                missing.clone(),
+                missing,
+                unresolved,
+                owned("document", "parent", &[("parent", false)]),
+            ],
+        },
+    ];
+    let result = attribute(&pages);
+    assert_eq!(result.component_pages.into_iter().collect::<Vec<_>>(), [1]);
+    for rules in &result.pages[..3] {
+        assert_eq!(rules.len(), 1);
+        assert_eq!(
+            rules[0].owner,
+            EvidenceOwner::Component {
+                path: "child".into()
+            }
+        );
+    }
+    assert_eq!(result.pages[3].len(), 1);
+    assert_eq!(result.pages[3][0].status, RuleStatus::Unresolved);
+    assert_eq!(result.pages[3][0].owner, EvidenceOwner::Entry);
 }

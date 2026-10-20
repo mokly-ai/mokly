@@ -1,0 +1,51 @@
+//! Shared own-page, nested-component, and exact-owner rule membership.
+
+use std::collections::BTreeSet;
+
+use crate::attribution::MatchProof;
+
+pub(crate) fn own_root(matched: &MatchProof, component: &str) -> bool {
+    matched
+        .trusted_owner
+        .as_deref()
+        .is_none_or(|owner| owner == component)
+        && matched
+            .regions
+            .iter()
+            .any(|region| region.root && region.path == component)
+}
+
+pub(crate) fn kept(
+    matched: &MatchProof,
+    component: &str,
+    unfiltered: Option<&BTreeSet<String>>,
+) -> bool {
+    !matched.regions.iter().any(|region| {
+        !region.root
+            && region.path != component
+            && unfiltered.is_some_and(|paths| paths.contains(&region.path))
+    })
+}
+
+pub(crate) fn owner(
+    matched: &MatchProof,
+    changed: Option<&BTreeSet<String>>,
+    unfiltered: Option<&BTreeSet<String>>,
+) -> Option<String> {
+    if let Some(region) = matched
+        .regions
+        .iter()
+        .rev()
+        .find(|region| changed.is_some_and(|paths| paths.contains(&region.path)))
+    {
+        return Some(region.path.clone());
+    }
+    matched
+        .trusted_owner
+        .as_ref()
+        .filter(|owner| {
+            matched.regions.iter().any(|region| &region.path == *owner)
+                && kept(matched, owner, unfiltered)
+        })
+        .cloned()
+}

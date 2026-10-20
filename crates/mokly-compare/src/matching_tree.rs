@@ -1,6 +1,7 @@
 //! Adapt composed ownership annotations to the pure CSS document arena.
 
 use std::collections::BTreeMap;
+use std::mem;
 
 use mokly_css::match_tree::{Containment, MatchElement, MatchTree};
 use mokly_html::tree::{Node, RegionKind};
@@ -51,6 +52,7 @@ impl Context<'_> {
         owner: &EvidenceOwner,
     ) {
         let mut regions = regions.to_vec();
+        let mut inputs = regions.clone();
         let mut owner = owner.clone();
         let mut pending: Vec<_> = nodes
             .iter()
@@ -60,23 +62,30 @@ impl Context<'_> {
         while let Some(step) = pending.pop() {
             let (node, parent) = match step {
                 Step::Node(node, parent) => (node, parent),
-                Step::Restore(length, previous) => {
+                Step::Restore(length, previous, input) => {
                     regions.truncate(length);
                     owner = previous;
+                    match input {
+                        InputRestore::Truncate(length) => inputs.truncate(length),
+                        InputRestore::Replace(previous) => inputs = previous,
+                    }
                     continue;
                 }
             };
             match node {
                 Node::Region { region, children } => {
                     let length = regions.len();
+                    let mut input = InputRestore::Truncate(inputs.len());
                     let next_owner = match &region.kind {
                         RegionKind::Ignore { .. } => continue,
                         RegionKind::Root { path } | RegionKind::Instance { path, .. } => {
                             let path = mapped(path, self.paths);
-                            regions.push(Containment {
+                            let containment = Containment {
                                 path: path.clone(),
                                 root: matches!(region.kind, RegionKind::Root { .. }),
-                            });
+                            };
+                            regions.push(containment.clone());
+                            inputs.push(containment);
                             EvidenceOwner::Component { path }
                         }
                         RegionKind::Slot {
@@ -88,9 +97,33 @@ impl Context<'_> {
                             .map_or(EvidenceOwner::Entry, |path| EvidenceOwner::Component {
                                 path: path.clone(),
                             }),
-                        RegionKind::Slot { .. } => EvidenceOwner::Entry,
+                        RegionKind::Slot { .. } => regions
+                            .iter()
+                            .find(|region| region.root)
+                            .map_or(EvidenceOwner::Entry, |region| EvidenceOwner::Component {
+                                path: region.path.clone(),
+                            }),
                     };
-                    pending.push(Step::Restore(length, owner));
+                    if let RegionKind::Slot {
+                        owner: supplier, ..
+                    } = &region.kind
+                    {
+                        let mut supplied = inputs.clone();
+                        if matches!(supplier, ComponentInputOwner::Entry) {
+                            supplied.retain(|region| region.root);
+                        } else if let EvidenceOwner::Component { path } = &next_owner {
+                            supplied.truncate(
+                                supplied
+                                    .iter()
+                                    .rposition(|region| &region.path == path)
+                                    .map_or(0, |index| index + 1),
+                            );
+                        } else {
+                            supplied.clear();
+                        }
+                        input = InputRestore::Replace(mem::replace(&mut inputs, supplied));
+                    }
+                    pending.push(Step::Restore(length, owner, input));
                     owner = next_owner;
                     pending.extend(children.iter().rev().map(|node| Step::Node(node, parent)));
                 }
@@ -108,6 +141,7 @@ impl Context<'_> {
                         children: Vec::new(),
                         text: false,
                         regions: regions.to_vec(),
+                        input_regions: inputs.clone(),
                         owner: owner.clone(),
                     });
                     if let Some(parent) = parent {
@@ -136,7 +170,12 @@ impl Context<'_> {
 
 enum Step<'a> {
     Node(&'a Node, Option<usize>),
-    Restore(usize, EvidenceOwner),
+    Restore(usize, EvidenceOwner, InputRestore),
+}
+
+enum InputRestore {
+    Truncate(usize),
+    Replace(Vec<Containment>),
 }
 
 #[cfg(test)]

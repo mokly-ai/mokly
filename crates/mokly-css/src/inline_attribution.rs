@@ -1,6 +1,6 @@
 //! Ownerless head rules share catalogue-wide rule identity and use input ownership.
 
-use mokly_model::evidence::EvidenceOwner;
+use std::mem;
 
 use crate::attribution::{self, RuleObservation};
 use crate::match_tree::MatchTree;
@@ -20,7 +20,7 @@ pub fn observe(
         .flat_map(|rule| &mut rule.selectors)
         .flat_map(|selector| &mut selector.matches)
     {
-        matched.regions.retain(|region| matches!(&matched.owner, EvidenceOwner::Component { path } if path == &region.path));
+        matched.regions = mem::take(&mut matched.input_regions);
     }
     rules
 }

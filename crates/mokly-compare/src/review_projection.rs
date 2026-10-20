@@ -6,8 +6,8 @@ use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::review::{ReviewEntry, ReviewKind, ReviewView};
 
+use crate::comparison_address::address;
 use crate::comparison_types::EntryClassification;
-use crate::comparison_views::address;
 use crate::move_types::Pairing;
 
 pub(crate) fn entries(

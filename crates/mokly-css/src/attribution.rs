@@ -8,9 +8,13 @@ use mokly_model::review_order::rule_key;
 
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
+use crate::{attribution_membership, observation};
 
 /// Path-independent before and after tuples of one changed rule.
 pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, String)>);
+
+/// Catalogue-wide proof before any nested-component filtering.
+pub type OwnPageMatches = BTreeMap<RuleIdentity, BTreeSet<String>>;
 
 /// Proof retained after the parsed document is released.
 #[derive(Clone, Debug)]
@@ -19,6 +23,10 @@ pub struct MatchProof {
     pub regions: Vec<Containment>,
     /// Resolved input owner for the inline-style seam.
     pub owner: EvidenceOwner,
+    /// Inclusive supplier ancestry for inline rules.
+    pub input_regions: Vec<Containment>,
+    /// Explicit sidecar owner, independent of copies on other documents.
+    pub trusted_owner: Option<String>,
 }
 
 /// One selector outcome, detached from its document arena.
@@ -55,9 +63,11 @@ pub struct PageObservation {
 /// Complete own-page and per-entry attribution, with no parsed document retention.
 #[derive(Clone, Debug)]
 pub struct Attribution {
+    /// Unfiltered own-page membership used by exact owned-instance proof.
+    pub own_pages: OwnPageMatches,
     /// Wire evidence corresponding to each input page.
     pub pages: Vec<Vec<RuleEvidence>>,
-    /// Component implementation impact from kept own-root matches.
+    /// Component impact from unowned own-root matches; trusted owners need equal inputs.
     pub changed_components: BTreeSet<String>,
     /// Page indices with a kept own-root match, used for variant reasons.
     pub component_pages: BTreeSet<usize>,
@@ -112,6 +122,8 @@ pub fn observe(
                                     Some(MatchProof {
                                         regions: element.regions.clone(),
                                         owner: element.owner.clone(),
+                                        input_regions: element.input_regions.clone(),
+                                        trusted_owner: None,
                                     })
                                 })
                                 .collect(),
@@ -124,9 +136,16 @@ pub fn observe(
 }
 
 /// Resolve all own-page matches before attributing any entry's records.
-pub fn attribute(pages: &[PageObservation]) -> Attribution {
-    let mut unfiltered: BTreeMap<RuleIdentity, BTreeSet<String>> = BTreeMap::new();
-    for page in pages {
+pub fn attribute(observations: &[PageObservation]) -> Attribution {
+    let pages: Vec<_> = observations
+        .iter()
+        .map(|page| PageObservation {
+            component: page.component.clone(),
+            rules: observation::merge(page.rules.clone()),
+        })
+        .collect();
+    let mut unfiltered = OwnPageMatches::new();
+    for page in &pages {
         let Some(component) = &page.component else {
             continue;
         };
@@ -136,12 +155,7 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .iter()
                 .filter(|selector| !selector.unresolved)
                 .flat_map(|selector| &selector.matches)
-                .any(|matched| {
-                    matched
-                        .regions
-                        .iter()
-                        .any(|region| region.root && &region.path == component)
-                })
+                .any(|matched| attribution_membership::own_root(matched, component))
             {
                 unfiltered
                     .entry(rule.identity.clone())
@@ -151,6 +165,7 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
         }
     }
     let mut changed: BTreeMap<RuleIdentity, BTreeSet<String>> = BTreeMap::new();
+    let mut changed_components = BTreeSet::new();
     let mut component_pages = BTreeSet::new();
     for (index, page) in pages.iter().enumerate() {
         let Some(component) = &page.component else {
@@ -164,17 +179,23 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .filter(|selector| !selector.unresolved)
                 .flat_map(|selector| &selector.matches)
                 .any(|matched| {
-                    matched
-                        .regions
-                        .iter()
-                        .any(|region| region.root && &region.path == component)
-                        && !matched.regions.iter().any(|region| {
-                            !region.root
-                                && &region.path != component
-                                && unfiltered.is_some_and(|paths| paths.contains(&region.path))
-                        })
+                    attribution_membership::own_root(matched, component)
+                        && attribution_membership::kept(matched, component, unfiltered)
                 });
             if kept {
+                if rule
+                    .selectors
+                    .iter()
+                    .filter(|selector| !selector.unresolved)
+                    .flat_map(|selector| &selector.matches)
+                    .any(|matched| {
+                        matched.trusted_owner.is_none()
+                            && attribution_membership::own_root(matched, component)
+                            && attribution_membership::kept(matched, component, unfiltered)
+                    })
+                {
+                    changed_components.insert(component.clone());
+                }
                 changed
                     .entry(rule.identity.clone())
                     .or_default()
@@ -202,14 +223,11 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                             .matches
                             .iter()
                             .map(|matched| {
-                                matched
-                                    .regions
-                                    .iter()
-                                    .rev()
-                                    .find(|region| {
-                                        changed.is_some_and(|paths| paths.contains(&region.path))
-                                    })
-                                    .map(|region| region.path.clone())
+                                attribution_membership::owner(
+                                    matched,
+                                    changed,
+                                    unfiltered.get(&rule.identity),
+                                )
                             })
                             .collect()
                     };
@@ -245,8 +263,9 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
         })
         .collect();
     Attribution {
+        own_pages: unfiltered,
         pages: output,
-        changed_components: changed.into_values().flatten().collect(),
+        changed_components,
         component_pages,
     }
 }

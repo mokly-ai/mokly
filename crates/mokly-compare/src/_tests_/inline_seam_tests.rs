@@ -24,6 +24,7 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
                 path: "card".into(),
                 root: false,
             }],
+            input_regions: vec![],
             owner: EvidenceOwner::Entry,
         }],
     };
@@ -74,6 +75,14 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
                 path: "card".into(),
                 root,
             }],
+            input_regions: if owner == EvidenceOwner::Entry {
+                vec![]
+            } else {
+                vec![Containment {
+                    path: "card".into(),
+                    root,
+                }]
+            },
             owner,
         }],
     };

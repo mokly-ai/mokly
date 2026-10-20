@@ -1,15 +1,21 @@
-//! Trusted sidecar rules retain their owners and per-rule document evidence.
+//! Trusted sidecar rules enter the shared catalogue-wide evidence reducer.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
+use mokly_css::attribution::{OwnPageMatches, RuleObservation};
+use mokly_css::inline_attribution;
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::{DocumentMatching, match_document};
 use mokly_css::rules::{ParsedCss, RuleDiff};
 use mokly_html::tree::{Node, RegionKind};
-use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
-use mokly_model::review_affected::ReviewSide;
+use mokly_model::catalogue::ModelEntry;
+use mokly_model::review::EntryChangeReason;
 
+use crate::comparison_address::address;
+use crate::comparison_types::ViewKey;
 use crate::error::Result;
+use crate::instance_proof::InstanceProof;
 use crate::material::mapped;
 use crate::owned_style_instances;
 use crate::resource_memo::ResourceMemo;
@@ -17,15 +23,10 @@ use crate::view_material::MaterialComparison;
 
 #[derive(Default)]
 pub(crate) struct Changes {
-    owners: BTreeSet<String>,
-    instances: BTreeSet<String>,
-    pub(crate) rules: Vec<RuleEvidence>,
-}
-
-/// Page evidence and exact instance proof have independent ownership reductions.
-struct OwnedRuleProof {
-    records: Vec<RuleEvidence>,
-    instances: BTreeSet<String>,
+    pub(crate) rules: Vec<RuleObservation>,
+    matching: Vec<(String, DocumentMatching)>,
+    indices: Option<[owned_style_instances::Index; 2]>,
+    potential: Vec<InstanceProof>,
 }
 
 pub(crate) fn compare(
@@ -39,7 +40,6 @@ pub(crate) fn compare(
     let after = collect(nodes[1], &BTreeMap::new());
     let owners: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     let mut changes = Changes::default();
-    let mut indices = None;
     for owner in owners {
         let left = before.get(owner).cloned().unwrap_or_default();
         let right = after.get(owner).cloned().unwrap_or_default();
@@ -53,93 +53,97 @@ pub(crate) fn compare(
             continue;
         }
         let matching = match_document(&diff, trees[0], trees[1]);
-        let indices = indices.get_or_insert_with(|| {
-            [
-                owned_style_instances::index(nodes[0], paths),
-                owned_style_instances::index(nodes[1], &BTreeMap::new()),
-            ]
-        });
-        let proof = prove(&matching, owner, trees, indices, route);
-        if !proof.records.is_empty() {
-            changes.owners.insert(owner.clone());
+        let mut rules = inline_attribution::observe(route, &matching, trees[0], trees[1]);
+        for matched in rules
+            .iter_mut()
+            .flat_map(|rule| &mut rule.selectors)
+            .flat_map(|selector| &mut selector.matches)
+        {
+            matched.trusted_owner = Some(owner.clone());
         }
-        changes.rules.extend(proof.records);
-        changes.instances.extend(proof.instances);
+        changes.rules.extend(rules);
+        changes.matching.push((owner.clone(), matching));
+    }
+    if !changes.matching.is_empty() {
+        changes.indices = Some([
+            owned_style_instances::index(nodes[0], paths),
+            owned_style_instances::index(nodes[1], &BTreeMap::new()),
+        ]);
     }
     Ok(changes)
 }
 
-fn prove(
-    matching: &DocumentMatching,
-    owner: &str,
-    trees: [Option<&MatchTree>; 2],
-    indices: &[owned_style_instances::Index; 2],
-    route: &str,
-) -> OwnedRuleProof {
-    OwnedRuleProof {
-        records: records(matching, owner, trees, route),
-        instances: owned_style_instances::matched(matching, owner, indices),
-    }
-}
-
-pub(crate) fn apply(comparison: &mut MaterialComparison, changes: &Changes) {
-    for instance in &mut comparison.instances {
-        instance.render_changed |= changes.instances.contains(&instance.key);
-    }
-}
-
 impl Changes {
+    /// Move admission precedes catalogue attribution and retains its local owner check.
     pub(crate) fn changes_owner(&self, owner: Option<&str>) -> bool {
-        owner.is_some_and(|owner| self.owners.contains(owner))
+        let Some(owner) = owner else {
+            return false;
+        };
+        self.rules
+            .iter()
+            .flat_map(|rule| &rule.selectors)
+            .any(|selector| {
+                selector.unresolved
+                    || selector.matches.iter().any(|matched| {
+                        if matched.trusted_owner.as_deref() != Some(owner) {
+                            return false;
+                        }
+                        let own_page = matched
+                            .regions
+                            .iter()
+                            .any(|region| region.root && region.path == owner);
+                        let nested = matched.regions.iter().rev().find(|region| !region.root);
+                        if own_page {
+                            nested.is_none()
+                        } else {
+                            nested.is_none_or(|region| region.path == owner)
+                        }
+                    })
+            })
     }
-}
 
-fn records(
-    matching: &DocumentMatching,
-    owner: &str,
-    trees: [Option<&MatchTree>; 2],
-    route: &str,
-) -> Vec<RuleEvidence> {
-    let record = |selector: String, status| RuleEvidence {
-        stylesheet: route.into(),
-        selector,
-        owner: if status == RuleStatus::Unresolved {
-            EvidenceOwner::Entry
-        } else {
-            EvidenceOwner::Component { path: owner.into() }
-        },
-        status,
-    };
-    let DocumentMatching::Resolved(rules) = matching else {
-        return vec![record(String::new(), RuleStatus::Unresolved)];
-    };
-    rules
-        .iter()
-        .flat_map(|rule| &rule.selectors)
-        .filter_map(|selector| {
-            if selector.unresolved {
-                return Some(record(selector.selector.clone(), RuleStatus::Unresolved));
-            }
-            let kept = selector.elements.iter().any(|matched| {
-                let side = usize::from(matched.side == ReviewSide::After);
-                let Some(element) = trees[side].and_then(|tree| tree.elements.get(matched.element))
-                else {
-                    return false;
-                };
-                let own_page = element
-                    .regions
-                    .iter()
-                    .any(|region| region.root && region.path == owner);
-                let nested = element.regions.iter().rev().find(|region| !region.root);
-                if own_page {
-                    nested.is_none()
-                } else {
-                    nested.is_none_or(|region| region.path == owner)
-                }
-            });
-            kept.then(|| record(selector.selector.clone(), RuleStatus::Matched))
-        })
-        .collect()
+    /// Retain only paired instances whose caller inputs stayed equal.
+    pub(crate) fn prepare(
+        &mut self,
+        comparison: &MaterialComparison,
+        before: &ModelEntry,
+        after: &ModelEntry,
+        view: ViewKey,
+    ) {
+        if self.matching.is_empty() {
+            return;
+        }
+        self.potential = comparison
+            .instances
+            .iter()
+            .map(|instance| InstanceProof {
+                component: instance.component.clone(),
+                instance: instance.key.clone(),
+                before: address(before),
+                after: address(after),
+                view,
+                reason: EntryChangeReason::Implementation,
+                reference: None,
+            })
+            .collect();
+    }
+
+    /// Resolve exact instance proof with the same unfiltered own-page sets as records.
+    pub(crate) fn proofs(&mut self, own_pages: &OwnPageMatches) -> Vec<InstanceProof> {
+        let Some(indices) = &self.indices else {
+            return Vec::new();
+        };
+        let mut instances = BTreeSet::new();
+        for (owner, matching) in &self.matching {
+            instances.extend(owned_style_instances::matched(
+                matching, owner, indices, own_pages,
+            ));
+        }
+        mem::take(&mut self.potential)
+            .into_iter()
+            .filter(|proof| instances.contains(&proof.instance))
+            .collect()
+    }
 }
 
 /// Repeated sidecar rule copies do not change component material.

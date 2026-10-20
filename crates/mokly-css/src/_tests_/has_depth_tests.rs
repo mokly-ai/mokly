@@ -27,6 +27,7 @@ fn chain(depth: usize) -> MatchTree {
                 },
                 text: false,
                 regions: vec![],
+                input_regions: vec![],
                 owner: EvidenceOwner::Entry,
             })
             .collect(),

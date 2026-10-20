@@ -5,15 +5,15 @@ use std::sync::Arc;
 
 use mokly_css::attribution::PageObservation;
 use mokly_graph::types::RenderGeneration;
-use mokly_model::catalogue::{EntryContent, ModelEntry};
+use mokly_model::catalogue::EntryContent;
 use mokly_model::evidence::ViewEvidence;
 use mokly_model::read_contract::ContractViolation;
 use mokly_model::readers::ReadError;
 use mokly_model::review::{ReviewEntryAddress, ReviewState};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::usage::CatalogueUsage;
-use mokly_model::wire_props;
 
+use crate::comparison_address::address;
 use crate::comparison_error::CompareResult;
 use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
@@ -40,6 +40,7 @@ pub(crate) struct PendingView {
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
     pub(crate) proofs: Vec<InstanceProof>,
+    pub(crate) owned: owned_styles::Changes,
 }
 
 pub(crate) struct PairViews {
@@ -150,7 +151,7 @@ pub(crate) fn collect(
             },
             &mut observation,
         )?;
-        let mut comparison = match (before_document, after_document) {
+        let comparison = match (before_document, after_document) {
             (Some(left), Some(right)) => Some(view_material::compare(
                 left,
                 right,
@@ -167,7 +168,7 @@ pub(crate) fn collect(
             )),
             _ => None,
         };
-        let owned = owned_styles::compare(
+        let mut owned = owned_styles::compare(
             [
                 before_document.map_or(&[], |document| document.tree.as_slice()),
                 after_document.map_or(&[], |document| document.tree.as_slice()),
@@ -183,9 +184,10 @@ pub(crate) fn collect(
             ),
             memo,
         )?;
-        if let Some(comparison) = &mut comparison {
-            owned_styles::apply(comparison, &owned);
+        if let (Some(comparison), Some(before), Some(after)) = (&comparison, previous, current) {
+            owned.prepare(comparison, before, after, key);
         }
+        observation.rules.append(&mut owned.rules);
         let inline = inline_styles::compare(
             before_document.map(|document| document.tree.as_slice()),
             after_document.map(|document| document.tree.as_slice()),
@@ -231,7 +233,7 @@ pub(crate) fn collect(
                 state,
                 ignored_ids,
                 evidence: ViewEvidence {
-                    rules: owned.rules,
+                    rules: Vec::new(),
                     resources: evidence,
                 },
             },
@@ -246,6 +248,7 @@ pub(crate) fn collect(
                 .as_ref()
                 .is_some_and(|comparison| comparison.structure),
             proofs,
+            owned,
             // A view on one side proves a root change only for a one-sided
             // entry; an entry with both sides that gains or loses a view has
             // no paired canonical form for that view.
@@ -273,23 +276,4 @@ pub(crate) fn collect(
         }
     }
     Ok(result)
-}
-
-pub(crate) fn address(entry: &ModelEntry) -> ReviewEntryAddress {
-    let props = match &entry.content {
-        EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
-            Some(wire_props::encode(&visual.props))
-        }
-        _ => None,
-    };
-    let supplied_slots = match &entry.content {
-        EntryContent::Component { supplied_slots, .. } => Some(supplied_slots.clone()),
-        _ => None,
-    };
-    ReviewEntryAddress {
-        path: entry.metadata.path.clone(),
-        title: entry.metadata.title.clone(),
-        props,
-        supplied_slots,
-    }
 }

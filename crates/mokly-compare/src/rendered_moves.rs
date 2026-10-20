@@ -162,7 +162,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 true,
                 self.memo.as_ref(),
             )?;
-            let mut comparison = view_material::compare(
+            let comparison = view_material::compare(
                 left_document,
                 right_document,
                 &format!("static/mokly-generated/{}", left_plan.route),
@@ -190,7 +190,6 @@ impl MoveEvidence for RenderedMoves<'_> {
                     .as_deref()
                     .unwrap_or(&after.metadata.path),
             );
-            owned_styles::apply(&mut comparison, &owned);
             if comparison.changed || owned.changes_owner(owner) {
                 return Ok(false);
             }
