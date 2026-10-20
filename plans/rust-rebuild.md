@@ -960,12 +960,16 @@ renders again.
         source.
   - [x] Port the review-base sentence while a detail loads, on the copied
         comparison output.
-  - [ ] Port the two remaining cases on `tests/browser/serve_comparison_test.ts`:
+  - [x] Port the two remaining cases on `tests/browser/serve_comparison_test.ts`:
         focus on an unchanged Usage link while a Changes completion is
         adopted, which needs a changed component with a consumer; and the
         design library component's Unmodified status after temporary edits
         and Reset, which needs an unchanged component with editable props in
-        the fixture's base commit.
+        the fixture's base commit. Done on 2026-10-20 by `c0c9f0ad`
+        (`serve_usage_focus.spec.ts`, Card and its consumer) and `cbb51db2`
+        (`serve_temporary_props_status.spec.ts`, Tag). The focus case found
+        that the completion replaced Used by rows whose comparison
+        eligibility changed. Fixed by `5d918352`.
   - [x] Publish no new revision for a render completion that changes no detail,
         while recording its route as completed. Restore one index read
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
@@ -2377,11 +2381,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         panes prove each side again by their `.accent` colour (`06158d40`),
         and the plan dates decision 10 again after merge `8fa9f338` kept only
         the f5 line.
-  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
-    check that proves each pane's side. Severity Low, effort Small. Covers
-    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
-    d371e17c. Recommended: B, one helper in
-    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
+  - [x] M10 Serve and moved rows decision 21, Severity Low, effort Small: one
+        shared Card pane check that proves each pane's side. Covers review 7
+        finding 19. Decided B by the orchestrator on 2026-10-20: one helper,
+        `expectCardPane` in `tests/browser/serve_comparison_ui.ts`, checks
+        every Card pane on Serve by its heading and its side's `.accent`
+        colour. Done by `f858cc02`.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
