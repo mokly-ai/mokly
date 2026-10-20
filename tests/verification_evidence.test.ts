@@ -19,7 +19,7 @@ test("viewer discovery includes tooling and viewer tests in sorted order", async
 });
 
 test("aggregate accepts one viewer and four browser reports per runtime", () => {
-  for (const runtimes of [["node-22.14.0"], ["node-22.14.0", "node-24"]])
+  for (const runtimes of [["node-22.15.0"], ["node-22.15.0", "node-24"]])
     validateCiReports(ciReports(runtimes), "a".repeat(40), runtimes);
   const reports = ciReports();
   for (const invalid of [
@@ -28,10 +28,10 @@ test("aggregate accepts one viewer and four browser reports per runtime", () => 
     [reports[0], reports[0]],
   ])
     assert.throws(() =>
-      validateCiReports(invalid, "a".repeat(40), ["node-22.14.0", "node-24"]),
+      validateCiReports(invalid, "a".repeat(40), ["node-22.15.0", "node-24"]),
     );
   assert.throws(
-    () => validateCiReports(reports, "main", ["node-22.14.0"]),
+    () => validateCiReports(reports, "main", ["node-22.15.0"]),
     /full lowercase Git SHA/,
   );
 });
@@ -59,7 +59,7 @@ test("viewer evidence rejects incomplete inventories and unsuccessful test runs"
 
 test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes", () => {
   const validate = (reports: ReturnType<typeof ciReports>) =>
-    validateCiReports(reports, "a".repeat(40), ["node-22.14.0"]);
+    validateCiReports(reports, "a".repeat(40), ["node-22.15.0"]);
   for (const change of [
     (reports: ReturnType<typeof ciReports>) => {
       reports[1]!.observedTests!.pop();
@@ -71,7 +71,7 @@ test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes
       reports[1]!.observedTests![0]!.status = "skipped";
     },
     (reports: ReturnType<typeof ciReports>) => {
-      reports[1]!.nodeVersion = "22.15.0";
+      reports[1]!.nodeVersion = "22.16.0";
     },
     (reports: ReturnType<typeof ciReports>) => {
       reports[1]!.playwrightFiles!.push("tests/browser/extra.spec.ts");
@@ -86,20 +86,20 @@ test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes
       reports[1]!.observedTests![0]!.errors.push({ message: "frame failed" });
     },
   ]) {
-    const reports = structuredClone(ciReports(["node-22.14.0"]));
+    const reports = structuredClone(ciReports(["node-22.15.0"]));
     change(reports);
     assert.throws(() => validate(reports));
   }
 });
 
 test("aggregate names the failing browser runtime and shard detail", () => {
-  const reports = ciReports(["node-22.14.0"]);
+  const reports = ciReports(["node-22.15.0"]);
   reports[1]!.reporterComplete = false;
   assert.throws(
-    () => validateCiReports(reports, "a".repeat(40), ["node-22.14.0"]),
+    () => validateCiReports(reports, "a".repeat(40), ["node-22.15.0"]),
     {
       message:
-        "browser node-22.14.0 evidence failed: reporter did not complete",
+        "browser node-22.15.0 evidence failed: reporter did not complete",
     },
   );
 });

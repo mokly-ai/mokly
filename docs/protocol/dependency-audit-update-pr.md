@@ -3,12 +3,18 @@
 ## Workflow Boundary
 
 `.github/workflows/dependency-audit.yml` runs daily off the hour and on
-`workflow_dispatch`. It has one job on `blacksmith-2vcpu-ubuntu-2404` with a
-30-minute timeout. Use concurrency group `dependency-audit` and do not cancel
-an active run. Grant `contents: write`, `pull-requests: write`, and
-`issues: write`. Actions use immutable revisions with reviewed version comments.
+`workflow_dispatch`. It has two independent jobs on `blacksmith-2vcpu-ubuntu-2404`,
+each with a 30-minute timeout. Use concurrency group `dependency-audit` and do
+not cancel an active run. The npm update job has `contents: write`,
+`pull-requests: write`, and `issues: write`. Actions use immutable revisions
+with reviewed version comments.
 
-Check out `main` with `fetch-depth: 0` and this checkout token:
+The Rust audit job has only `contents: read`. It checks out `main` with full
+history and `persist-credentials: false`. It receives no write token. It
+installs the pinned Rust toolchain and runs the live advisory audit independently
+of the npm job. Third-party Rust build scripts run only in this read-only job.
+
+The npm job checks out `main` with `fetch-depth: 0` and this checkout token:
 
 ```yaml
 token: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}

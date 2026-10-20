@@ -64,7 +64,7 @@ context.
 
 ### 1. Install
 
-Mokly needs Node.js `>=22.14.0 <24.14.0 || >=24.19.0`: 22.14 or newer, except 24.14 through 24.18. The `mokly` binary ships for Linux x64 and
+Mokly needs Node.js `>=22.15.0 <24.14.0 || >=24.19.0`: 22.15 or newer, except 24.14 through 24.18. The `mokly` binary ships for Linux x64 and
 arm64 with glibc, macOS x64 and arm64, and Windows x64. React 19 or newer is
 needed only when screens or components are written in React.
 
@@ -332,6 +332,11 @@ audit stay strict. See the
 [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md),
 and [dependency security](./docs/protocol/dependency-security.md) contracts.
 
+`npm run dependencies:check:rust` installs the pinned Rust advisory tool and
+audits `Cargo.lock` against RustSec. The repository suite, daily audit, and
+release verification run it alongside the npm audit. Rust vulnerabilities and
+audit errors fail in both npm audit modes.
+
 Pull request titles use Conventional Commits and at most 72 Unicode code
 points; see the
 [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
@@ -356,6 +361,10 @@ points; see the
   downloads, logs, and interrupt cleanup.
 - [`scripts/verification`](./scripts/verification) — the verification scripts
   that CI and the gate share.
+- [`scripts/release/inspect-native.mjs`](./scripts/release/inspect-native.mjs) —
+  verifies the packed target and its TLS dependencies. Packed manifest
+  inspection rejects `MOKLY_TEST_` bytes in every native archive. Runtime
+  inspection uses `readelf` on Linux, `otool` on macOS, and `dumpbin` on Windows.
 - [`examples/basic`](./examples/basic/README.md) — the reference consumer and
   design catalogue.
 

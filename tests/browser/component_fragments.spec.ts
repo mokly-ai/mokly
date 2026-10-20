@@ -5,10 +5,10 @@ import { viewRoute } from "@mokly/viewer/data";
 import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
 import { test } from "./browser_test.js";
-import { serveCatalogue } from "./catalogue_fixture.js";
+import { componentFragmentFixture } from "./component_fragment_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 
-let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+let fixture: Awaited<ReturnType<typeof componentFragmentFixture>>;
 test.beforeEach(({ allowBrowserError }) => {
   documentFavicon(allowBrowserError, fixture.url);
 });
@@ -20,19 +20,14 @@ const expectedEntries = [
   "pane/default",
 ];
 test.beforeAll(async () => {
-  fixture = await serveCatalogue(
-    {
-      "specs/index.mockup.tsx": browserSources({
-        body: '<pane.Component><action.Component label="Slot action" /></pane.Component><MockLink to="action/default">Open Action</MockLink>',
-        actionRender:
-          "(props, context) => <button disabled={props.disabled} data-viewport={context.viewport} data-scheme={context.colorScheme}>{props.label}</button>",
-      }),
-    },
-    { colorSchemes: ["light", "dark"] },
-  );
-  const index = await (
-    await fetch(`${fixture.url}/mokly-viewer/index.json`)
-  ).json();
+  fixture = await componentFragmentFixture({
+    "specs/index.mockup.tsx": browserSources({
+      body: '<pane.Component><action.Component label="Slot action" /></pane.Component><MockLink to="action/default">Open Action</MockLink>',
+      actionRender:
+        "(props, context) => <button disabled={props.disabled} data-viewport={context.viewport} data-scheme={context.colorScheme}>{props.label}</button>",
+    }),
+  });
+  const index = fixture.index;
   expect(
     index.components.map((entry: { path: string }) => entry.path).sort(),
   ).toEqual(expectedEntries);
@@ -44,6 +39,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
     test(`${viewport}/${scheme}: parent props and saved component variants have portable documents`, async ({
       page,
     }) => {
+      const networkRequests: string[] = [];
+      page.on("request", (request) => {
+        if (/^https?:/.test(request.url())) networkRequests.push(request.url());
+      });
       const url = (entry: string) =>
         `${fixture.url}/static/mokly-generated/${viewRoute(entry, viewport, scheme)}`;
       await page.goto(url("home"));
@@ -69,6 +68,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
           await expect(
             page.getByText("Saved content", { exact: true }),
           ).toBeVisible();
+      }
+      if (process.env["MOKLY_PLAYWRIGHT_FILE_DIR"]) {
+        expect(new URL(page.url()).protocol).toBe("file:");
+        expect(networkRequests).toEqual([]);
       }
     });
   }

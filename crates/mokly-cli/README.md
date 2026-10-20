@@ -226,8 +226,10 @@ rule and resource records, changed entries, and affected consumers. Independent
 head edits reuse the pinned base generation. Four distinct CSS delivery rules
 share one registered base and one head. Excluded, unresolved, and matched
 shared rules use separate selectors in one head, with exact per-rule evidence.
-The matrix runs only on demand with the `design-matrix` feature. The default
-workspace tests and verification gate exclude this target.
+The matrix runs with the `design-matrix` feature. A separate optional workflow
+runs it nightly and on manual dispatch. The default workspace tests and required
+verification gate exclude this target. Its runner and hang guards follow the
+[CI workflow contract](../../docs/protocol/ci-workflow.md#design-attribution-matrix).
 
 The design behaviour target checks parents' own-props views, stacked frames,
 captions tied to recorded changes, and the Checklist's Changes in the default

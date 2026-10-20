@@ -68,15 +68,18 @@ A missing predecessor or ambiguous rename is treated as new.
 
 ## Public Package Exports
 
-The published packages with a JavaScript surface are the paths under `packages`
-in `release-please-config.json` whose `exports` map has a JavaScript target:
-`.` (`@mokly/mokly`) and `packages/viewer` (`@mokly/viewer`). A platform
+Each Release Please component identifies a public package by `package-name`,
+or by the component directory's manifest name when that field is absent.
+A component under the private root resolves its named public workspace package.
+The root `.` component audits `packages/mokly` (`@mokly/mokly`).
+The viewer component audits `packages/viewer` (`@mokly/viewer`).
+Audit packages whose `exports` map has a JavaScript target. A platform
 package exports no JavaScript and has an empty surface on both sides. Derive
 each tag prefix from that package's release configuration: prepend
 `<component>-` when `include-component-in-tag` is true, then append `v` when
 `include-v-in-tag` is true. The prefixes are therefore `v` and `viewer-v`.
 
-Read the package path's entry in `.release-please-manifest.json` at `HEAD`. An
+Read the component path's entry in `.release-please-manifest.json` at `HEAD`. An
 absent entry or the exact version `0.0.0` means that package has never been
 released, so skip it. For every released package, the baseline is the newest
 tag matching `<prefix>[0-9]*` that is reachable from `HEAD`, equivalent to:

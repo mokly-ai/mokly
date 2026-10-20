@@ -485,6 +485,28 @@ the same copy.
   time and memory budgets of Milestone 14. Milestone 3 records the answer
   before adding any of them.
 
+**CI timeout approval (user, 2026-10-19, decision 5 = D):** browser shards and
+native jobs use 60-minute hang guards. Other jobs keep 30 minutes. The user
+chose longer job limits instead of changing the four-shard browser partition.
+The guards must allow at least three times each job's typical duration.
+
+**Gate approvals (user, 2026-10-19, decision 2 = A):** enable the Rust advisory
+audit, generated-TypeScript byte identity, packed-native `MOKLY_TEST_` scan,
+and CI example checks through static HTTP and `file://`. Approve 2 GiB per
+comparison cache namespace and 120 seconds for base dependency preparation.
+The user chose all six items instead of leaving the checks and bounds pending.
+The gates protect dependency security, generated contracts, release binaries,
+and portable output. The budget values document the existing bounds.
+
+**Node floor, item 60 option C: applied by default (user rule), 2026-10-20.**
+Raise the supported Node floor to 22.15.0. Keep the 24.x range unchanged.
+The PostCSS evidence hooks require `module.registerHooks`, available from
+22.15.0. Apply the floor to package engines, lockfile, shim, CI, Testbox,
+release and verification evidence, and guides. This keeps both evidence
+checks active on every supported runtime. Alternatives were A, skip the two
+checks below 22.15.0, and B, add a fallback without `registerHooks`.
+Evidence: `.context/ci-gates-round2/node-floor-2.log`.
+
 **Review decisions the user gave on 2026-10-12:** every live native engine
 reference is repointed now; head styles, owned and unowned, leave the canonical
 form; the behaviour-table script is written on this branch; the server
@@ -732,15 +754,33 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       hosted macOS and Windows runners.
 - [x] Add `cargo xtask check-generated-types` as a standalone byte-identity
       check. Keep it outside every gate and CI job.
-- [ ] Record the gate approvals from the Status section before adding the gates.
-      The generated-TypeScript byte-identity and Rust advisory audit gates
-      wait for the user.
-- [ ] After user approval, add `cargo xtask check-generated-types` and the
+- [x] Record the gate approvals from the Status section before adding the gates.
+      Decision 2 = A on 2026-10-19 approves all six items recorded above.
+- [x] After user approval, add `cargo xtask check-generated-types` and the
       Rust advisory audit to the Repository suite and CI.
+  - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
+        and release verification, including reused CI evidence.
+  - [x] Add the generated-TypeScript byte-identity gate.
+- [x] Resolve RUSTSEC-2026-0235 with item 58 option B, applied by default (user rule), 2026-10-20.
+      Exempt only this advisory in `.cargo/audit.toml`. `lightningcss`
+      1.0.0-alpha.72 with `bundler` requires `parcel_sourcemap` 2.1.1 and
+      `rkyv` 0.7.46. Mokly never reads or writes source maps. Review by
+      2027-01-31 or at the next lightningcss update, whichever comes first.
+      Keep every other vulnerability failing. The alternative was a dependency
+      repair without a compatible published update. The narrow exception lets
+      the audit protect all other dependencies.
+      Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+- [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
+      approved 2026-10-20, mirrors the trigger in main PR #198. A selected
+      branch runs its own workflow and selects the baseline audit. The
+      alternative was to leave manual dispatch unavailable on the rebuild.
+      Evidence: `.context/ci-gates-round2/manual-dispatch-checks.log`.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
 - [x] Commit.
+
+Merge evidence: `.context/ci-gates-round2/merge-decisions.md`.
 
 Round 3 decision: Required CI only aggregates results and reports. Every job
 that runs checks, and the Testbox, builds the host native artifact.
@@ -1110,6 +1150,16 @@ renders again.
   - [x] Portable design links, shared samples, and inspector disclosures
         directly from real `mokly build` output through `file://` URLs are
         checked by a manual run.
+  - [x] Add a required CI job that builds the example and runs the portable
+        design specs through static HTTP and `file://`. Decision 2 = A on
+        2026-10-19 approves this gate. The complete local and remote gates
+        run the same delivery checks without changing the four browser shards.
+  - [x] Port sweep row `component_fragments.spec.ts:0 [private fixture file:// delivery]`
+        into the delivery job, applied by default (user rule), 2026-10-20.
+        Build the private slot and variant fixture. Open every saved variant
+        through standalone portable links in each viewport and scheme. Disk
+        mode uses no HTTP request and the source is removed before navigation.
+        Evidence: `.context/ci-gates-round2/private-focused-2.log`.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
@@ -1504,10 +1554,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       stylesheet links, the exact per-entry rendered-resource and rule
       records, the exact changed-entry union, no affected consumers for
       unresolved shared rules, and the attribution acceptance matrix.
-      The matrix runs on demand until its CI job is decided.
+      The matrix runs in the separate optional nightly and manual workflow.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
-  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
-        1B, user decision 50). Add no CI job or timeout change before that decision.
+  - [x] Decide the CI home of the on-demand design matrix: item 50 option B,
+        applied by default (user rule), 2026-10-20. Use a separate optional
+        nightly and manual workflow on eight CPUs. Give the job 120 minutes
+        and the test process a 90-minute hang guard. Preserve every matrix
+        assertion. Alternatives were A, further optimization with uncertain
+        results, and C, a smaller fixture with less coverage. The separate job
+        gives the full matrix continuous coverage without extending Required CI.
+        Evidence: `.context/ci-gates-round2/design-measure-2.log`.
 - [x] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
       bound base capture to 256 MiB and retain cached head reads;
       preserve deep props and private trusted records; cover capture timings,
@@ -1990,8 +2046,20 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         a scratch checkout and record the blocked steps.
   - [ ] Complete the seven-package pack, reuse, and smoke with all native
         archives from the hosted target builds.
-- [ ] Settle Release Please selection for core-only commits under the
-      Milestone 15 review decision.
+- [x] Settle Release Please selection for core-only commits: item 20 option C,
+      applied by default (user rule), 2026-10-20. Make the CLI the root `.`
+      component and remove the `node-workspace` plugin. Core-only changes
+      release the CLI and its five native packages. Reuse the pinned published
+      viewer archive and verify its earlier immutable source. A new viewer
+      releases with the CLI and updates its exact dependency. Alternatives were
+      B, require a CLI-directory edit for every core fix, and A, a custom runner.
+      The root component gives core fixes normal release selection without a
+      redundant viewer version.
+  - [x] Fix CI-gates round 2 review finding 1: separate the root release
+        component from its named public workspace package in the export audit.
+        Preserve the CLI baseline and removal checks after core-only releases.
+        Evidence: `.context/ci-gates-round2/review-ratchet-green.log`.
+        Release selection evidence: `.context/ci-gates-round2/release-all.log`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
@@ -2051,9 +2119,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Verify response, operation-count, diagnostic, and IPC closure without sleeps.
       Evidence: `.context/rust-rebuild/delegation/m12-static/part0-done.md`.
 
-- [ ] Obtain user approval for the current 2 GiB per repository cache namespace
+- [x] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.
+  - [x] Record the approved 2 GiB bound for each comparison cache namespace.
+        Decision 2 = A on 2026-10-19 preserves the current runtime bound.
+  - [x] Record the approved shared 120-second dependency preparation allowance.
+        Decision 2 = A on 2026-10-19 covers version discovery and all installs.
 - [x] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
@@ -2365,6 +2437,68 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
+        audit into an independent read-only job. Keep write credentials in the
+        npm update job and disable credential persistence in the Rust checkout.
+        Evidence: `.context/ci-gates-hub-fixes/f1-green.log`.
+  - [x] Fix CI gates hub review finding 5 with option A: overwrite the fixed
+        design-attribution evidence artifact on reruns. The wider upload-policy
+        check remains a user decision.
+  - [x] Fix CI gates hub review finding 6 with option A: align release recovery
+        and packing descriptions with an optional new viewer tag and reuse of
+        the pinned published viewer archive.
+  - [x] Fix CI gates hub review finding 7 with option B: keep the design and
+        private-fixture delivery requirement in the protocol. Move the full
+        spec list to the browser README, split its comparison reference into
+        a linked page, and correct the runtime list's conjunction.
+  - [x] Record the available remote timings for CI gates hub review finding 4.
+        Two successful samples per runtime give these median command minutes
+        for Node 22.15.0 / 24.21.0: repository 13.43 / 11.46, viewer 6.64 /
+        5.71, browser shards 1 to 4 respectively 16.99 / 18.77, 14.33 / 15.33,
+        8.61 / 8.48, and 8.71 / 8.90. Shard 1 includes both delivery modes.
+        Combined delivery test times have medians of 7.45 / 8.15 minutes.
+        These proxies exclude Testbox preparation and are not hosted job times.
+        The repository proxy exceeds the 10-minute ceiling for its 30-minute
+        guard. The local design command took 13.85 minutes on eight CPUs.
+        No complete static-delivery, daily Rust audit, or native job sample is
+        available. The hub owns hosted measurements after integration.
+        Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
+  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
+        update, whichever comes first. CI gates hub review finding 9A tracks
+        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
+        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
+        exposure and the available fixes before retaining the exception.
+  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
+    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
+    viewer version on the release PR when its source differs from its tag.
+    The hub owns the user decision.
+  - CI gates hub review finding 3: viewer-only releases have no publish path.
+    Severity Medium, effort Medium. Recommended: B, reject that release PR
+    before tags exist. The hub owns the user decision with finding 2B.
+  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
+    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
+    The hub owns the user decision.
+  - Follow-up: isolate the release Rust audit from the privileged publish job.
+    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
+    daily audit isolation in finding 1A. The hub owns the user decision.
+  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
+    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
+    the design evidence upload. The hub owns the user decision.
+  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
+    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
+    the npm exception expiry and dependency-path checks. The hub owns the user decision.
+  - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
+        in the parent process. A suppressed reporter failure cannot pass a
+        skipped or incomplete run. Keep the real Playwright regression.
+        Evidence: `.context/ci-gates/review.md` and
+        `.context/ci-gates/review-fix-red.log`.
+  - `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs`:
+    `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`
+    observed zero stop spans instead of one during CI-gates verification.
+    Its exact rerun and the full workspace rerun passed. Suspected source:
+    concurrent tracing-subscriber capture; not proven. Separate branch.
+    Evidence: `.context/ci-gates/repository-remainder.log` and
+    `.context/ci-gates/sidecar-rerun.log`.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
@@ -2649,11 +2783,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
           id format. Done by `054e994d`.
     - [x] Outside-scope item: the CSS evidence pages let a page use
           component elements without usage records. Done by `65179c45`.
-  - M10 D1 round 4 decision 11: two PostCSS evidence tests fail on the Node
-    22.14.0 viewer runner, which has no `module.registerHooks`. Item 60 C on
-    `rebuild/ci-gates` raises the floor to 22.15.0. That branch applied it by
-    default under the user rule. Until it merges here, these two tests are the
-    only accepted failures of this branch's viewer suite.
+  - [x] M10 D1 round 4 decision 11: item 60 C from `rebuild/ci-gates`
+        raises the Node floor to 22.15.0. Both PostCSS evidence tests must
+        pass on that runtime and 24.21.0. The earlier exception has ended.
   - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
     list of the old test's assertions, and check each port's title. Severity
     Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
@@ -2710,9 +2842,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     component counterpart map next to `Lookup::counterpart`. Separate branch.
   - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants
     through the kind-less `Pairing::paths` map next to `Lookup::parent`. Separate branch.
-  - Milestone 12 static review 3, finding 4: the packed native binary scan for
-    `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
-    checks only compiler exclusion of the debug fault module.
+  - Milestone 12 static review 3, finding 4: settled on 2026-10-19 by decision
+    2 = A. Packed-native inspection rejects `MOKLY_TEST_` for all five targets,
+    including reused archives. The module-erasure test remains.
   - Milestone 12 static review 2, finding 6: settle forced build exit during
     install, rollback, and cleanup. Keep the current forced exit until decided.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;

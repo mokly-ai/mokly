@@ -62,7 +62,8 @@ establish any of those package-specific settings.
 The shared GitHub environment remains the main-only OIDC boundary for both
 packages, with no required reviewer. Merging a combined Release Please PR
 authorizes automatic publication; a manual dispatch from `main` may only retry
-an existing immutable tag pair through the same byte and source guards. No npm
+an existing immutable CLI tag and any newly released viewer tag through the
+same byte and source guards. A CLI-only retry leaves `viewer_ref` empty. No npm
 write token belongs in GitHub Actions.
 
 ## Reviewed Source And Archive

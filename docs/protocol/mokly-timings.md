@@ -194,17 +194,18 @@ CI's small correctness fixtures have
 
 ## Budgets
 
-| Budget                                               | Rule                                                                                                |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `usableMs`                                           | under 5000 ms for HTML and under 15000 ms for React, cold and warm, on the acceptance build         |
-| full isolated fixture setup                          | under 60000 ms                                                                                      |
-| isolated setup-family peak RSS                       | under 1.5 GiB, including the setup harness and its descendants                                      |
-| sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
-| dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
-| render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
-| `build` time and peak memory                         | recorded per variant from scenario 1                                                                |
-| `changesReadyMs` and the CSS share                   | recorded per variant from scenarios 2 and 3                                                         |
-| watch edit-to-reload                                 | recorded per edit kind from scenario 4                                                              |
+| Budget                             | Rule                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `usableMs`                         | under 5000 ms for HTML and under 15000 ms for React, cold and warm, on the acceptance build                                    |
+| full isolated fixture setup        | under 60000 ms                                                                                                                 |
+| isolated setup-family peak RSS     | under 1.5 GiB, including the setup harness and its descendants                                                                 |
+| sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
+| base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
+| comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
+| render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
+| `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
+| `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |
+| watch edit-to-reload               | recorded per edit kind from scenario 4                                                                                         |
 
 Startup acceptance uses an optimized release native binary. The harness
 verifies that binary before timing and identifies its profile and digest in
@@ -219,7 +220,7 @@ An observation at or above either setup budget fails isolated setup.
 
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not
-enforced; a number enters the row when the user approves it. The benchmark
-enforces every numeric row and fails when one is exceeded. A startup observation
+enforced; a number enters the row when the user approves it. The runtime enforces cache and dependency-preparation limits. The benchmark
+enforces numeric acceptance thresholds and fails when one is exceeded. A startup observation
 at or above its variant's budget produces a failed result with its measured
 values and reason.

@@ -31,7 +31,7 @@ function runtime(overrides: Partial<ShimRuntime> = {}): ShimRuntime {
 
 test("the shim accepts the complete Node engine range", () => {
   for (const version of [
-    "22.14.0",
+    "22.15.0",
     "22.99.0",
     "23.0.0",
     "24.13.99",
@@ -45,6 +45,8 @@ test("the shim accepts the complete Node engine range", () => {
   for (const version of [
     "20.19.0",
     "22.13.99",
+    "22.14.0",
+    "22.14.99",
     "24.14.0",
     "24.18.99",
     "invalid",
@@ -153,7 +155,7 @@ test("binary startup errors give a safe recovery message", async () => {
 
 test("the dependency-free shim gate agrees with npm engines at every support boundary", () => {
   for (let major = 20; major <= 27; major += 1) {
-    for (const minor of [0, 13, 14, 18, 19, 21, 99]) {
+    for (const minor of [0, 13, 14, 15, 18, 19, 21, 99]) {
       for (const patch of [0, 1, 99]) {
         const version = `${major}.${minor}.${patch}`;
         if (satisfies(version, SUPPORTED_NODE_RANGE))
