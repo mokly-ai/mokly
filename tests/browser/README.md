@@ -27,6 +27,10 @@ callback selects the published copy once per request, before filesystem work.
 Publication changes that selection in one synchronous step. Pending requests
 keep their selected copy until teardown. The deployment test keeps its reload,
 history, frame-content, request-status, and browser-error assertions.
+It waits for the initial previews before publication. It registers a page-load
+wait before navigation and awaits the replacement document before it checks
+the title and page marker. The click can finish before the detail response
+starts that reload.
 
 `tests/static_server_deployment.test.ts` holds an old request while a request
 for the replacement copy completes. Both must return their selected file.
