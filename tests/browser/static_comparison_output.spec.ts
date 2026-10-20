@@ -97,7 +97,7 @@ test("the native comparison copy remains usable after its two-commit source repo
     [comparisonPaths.consumingComponent]: state(false, "unmodified"),
     [comparisonPaths.changedPage]: state(true, "changed"),
     [comparisonPaths.unchangedPage]: state(false, "unmodified"),
-    [comparisonPaths.movedPage]: state(true, "changed"),
+    [comparisonPaths.similarTextPage]: state(true, "changed"),
   });
   const dusk = index.screens.find(
     (entry: { path: string }) => entry.path === comparisonPaths.darkOnly,

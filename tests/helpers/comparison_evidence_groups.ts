@@ -19,13 +19,13 @@ type Side = "Before" | "After";
 export const evidencePaths = {
   changedPage: "pages/handbook",
   unchangedPage: "pages/notes",
-  movedPage: "pages/guidebook",
+  similarTextPage: "pages/guidebook",
   pageComponent: "components/action",
   consumingComponent: "components/toolbar",
 } as const;
 
 /** The moved page's path at the fixture base; it has no removed record. */
-export const movedPageBase = "pages/manual";
+export const similarTextPageBase = "pages/manual";
 
 /** The evidence groups' stylesheet rules, before the catch-all rule. */
 export const evidenceStylesheets = [
@@ -121,14 +121,14 @@ export async function writeEvidenceGroups(
   if (side === "Before")
     await write(
       root,
-      `specs/${movedPageBase}.page.html`,
+      `specs/${similarTextPageBase}.page.html`,
       manual("User manual"),
     );
   else {
-    await fs.rm(path.join(root, `specs/${movedPageBase}.page.html`));
+    await fs.rm(path.join(root, `specs/${similarTextPageBase}.page.html`));
     await write(
       root,
-      `specs/${evidencePaths.movedPage}.page.html`,
+      `specs/${evidencePaths.similarTextPage}.page.html`,
       manual("User guidebook"),
     );
   }

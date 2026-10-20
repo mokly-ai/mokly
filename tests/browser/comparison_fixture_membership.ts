@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { comparisonPaths as paths } from "../helpers/comparison_catalogue.js";
-import { movedPageBase } from "../helpers/comparison_evidence_groups.js";
+import { similarTextPageBase } from "../helpers/comparison_evidence_groups.js";
 import {
   movedFixturePairs,
   movedFixturePaths as moves,
@@ -33,7 +33,7 @@ const defaultStates = {
   [paths.quietVariant]: changed,
   [paths.changedPage]: changed,
   [paths.unchangedPage]: stable,
-  [paths.movedPage]: changed,
+  [paths.similarTextPage]: changed,
   [paths.pageComponent]: changed,
   [paths.consumingComponent]: stable,
 };
@@ -80,7 +80,7 @@ const branchPairs = [
   ["branch/variant/receiver/primary", "branch/variant/donor/primary"],
   ...movedFixturePairs,
   // The default copy's page pairs with its base path by similar text.
-  [paths.movedPage, movedPageBase],
+  [paths.similarTextPage, similarTextPageBase],
 ];
 const removedPaths = [
   paths.removedScreen,
