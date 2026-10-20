@@ -388,6 +388,11 @@ readiness rather than blocking this acceptance round on further startup work.
   nearest binary64 value with a warning before validation and rendering.
   The core and viewer keep the same value. Reject unconditional failure and
   silent rounding to keep recoverable input usable and the precision loss visible.
+- Item 9 A, applied by default (user rule): delete exactly the private build
+  snapshot after success, including an already-published response. Preserve
+  failed-upload snapshots and unrelated files. Cleanup failure warns without
+  changing the accepted publication. Reject retaining every successful snapshot
+  because it leaves unused output behind.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

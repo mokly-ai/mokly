@@ -202,7 +202,10 @@ keeps its pinned merge base, effective ref, and complete generation in that uplo
 Unavailable Changes publishes the valid current catalogue with no generation and
 null comparison metadata. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
-output stays in the private directory after an upload failure. Publish warnings
+output stays in the private directory after an upload failure. Successful and
+already-published outcomes remove exactly that snapshot and its empty parent.
+Sibling files and symlink targets survive cleanup. A cleanup failure reports
+the retained path without changing the successful receipt. Publish warnings
 are fatal only with `--strict`. Without it, the command reports warnings and
 continues with output installation and upload.
 

@@ -43,14 +43,16 @@ pub trait StaticOutput: Send + Sync {
     ) -> Result<Arc<dyn OutputSnapshot>>;
 }
 
-/// Private build directory allocation, never tied to automatic upload cleanup.
+/// Private build allocation and cleanup after a confirmed publication.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DirectoriesMock))]
 pub trait Directories: Send + Sync {
     /// Reserve a private parent outside the repository and return its absent site child.
     fn create(&self, repository_root: &Path) -> Result<PathBuf>;
+    /// Remove only the allocated snapshot, then its parent if that parent is empty.
+    fn remove(&self, directory: &Path) -> Result<()>;
 }
 
-/// Host directory allocator. The output survives both command success and failure.
+/// Host directory allocator. Failed publications retain their output for recovery.
 pub struct SystemDirectories;
 
 impl Directories for SystemDirectories {
@@ -89,6 +91,16 @@ impl Directories for SystemDirectories {
         }
         let _retained = directory.keep();
         Ok(real.join("site"))
+    }
+
+    fn remove(&self, directory: &Path) -> Result<()> {
+        if let Err(source) = std::fs::remove_dir_all(directory) {
+            return Err(directory_error(directory.into(), source));
+        }
+        if let Some(parent) = directory.parent() {
+            let _ = std::fs::remove_dir(parent);
+        }
+        Ok(())
     }
 }
 

@@ -23,11 +23,11 @@ const identity = (pairs: Array<[string, string]>) =>
   digest(canonical(pairs.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))));
 
 export async function checkIdentity(
-  root: string,
+  root: string | ReadonlyMap<string, Buffer>,
   comparisonUrl: string,
   deploymentId: string,
 ) {
-  const inventory = await files(root);
+  const inventory = typeof root === "string" ? await files(root) : root;
   const prefix = comparisonUrl.slice(0, -"review.json".length);
   const generation = prefix.split("/").at(-2)!;
   const comparison: Array<[string, string]> = [];
