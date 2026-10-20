@@ -118,7 +118,7 @@ await import(${JSON.stringify(module("sidecar.js"))});`,
         assert.doesNotMatch(output, new RegExp(`lease-dispose ${previous}`));
         await fs.writeFile(path.join(root, file), screen(label));
         for (;;) {
-          const rendered = await fetch(
+          const rendered: Response = await fetch(
             `${url}/static/mokly-generated/home/index.mobile.html`,
             { signal },
           );
