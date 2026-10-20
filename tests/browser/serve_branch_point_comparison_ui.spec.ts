@@ -2,8 +2,10 @@
  * The branch-point cases' rendered references through Serve at desktop and
  * mobile widths, under the branch-point lookup contract. One Serve per
  * worker serves the shared comparison fixture, whose sources include the
- * branch-point cases. The checks only read it, and Serve renders each
- * selected comparison on demand.
+ * branch-point cases. The checks only read it. Each Side by side waits for
+ * its comparison response. The first Side by side of an entry starts an
+ * on-demand capture, and a later run of that entry reads the stored
+ * comparison while Serve keeps it.
  */
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";

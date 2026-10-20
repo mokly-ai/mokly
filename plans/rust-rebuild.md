@@ -2927,15 +2927,55 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         (`0ef0e0a3`) are applied with reasons: they restore checks that this
         branch dropped, or finish item 6. Finding 28 is corrected in the
         round's sweep rows.
-  - F9b review finding 29 for the user: two test modules export
-    `branchPointCases` with different lists. Severity Low, effort Small.
-    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b review finding 29: two test modules exported
+        `branchPointCases` with different lists. Decided B by the
+        orchestrator on 2026-10-20, as follow-up F15 item 1. The delivery
+        list `branchPointDeliveryCases` reads each removed record's path and
+        parent title from the shared cases and keeps its selectors and
+        texts. It equals the old list, and its guards stop a missing case.
   - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
         `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
-  - F9b re-review finding 30 for the user: the mobile embedded runs do not
-    assert a narrow viewer, so a wide viewer would pass them again. Severity
-    Low, effort Small. Recommended: B, a host marker that makes the search
-    helper expect the compact control or the field.
+  - [x] F9b re-review finding 30: the mobile embedded runs did not assert a
+        narrow viewer. Decided B by the orchestrator on 2026-10-20, as
+        follow-up F15 item 2. Each host's `compactSearch` marker says
+        whether a narrow window shows the compact search control. Opening an
+        entry and searching expect the control or the field from it. Without
+        `responsive=1`, all ten mobile embedded runs fail and the desktop
+        runs pass.
+  - [x] F15 review, on 2026-10-20: finding 32, a Serve spec header that
+        claimed a capture on every run, is fixed by option A. The full
+        report is `.context/m10/f15/review_1.md`.
+  - [x] F15 merge of the rebuild tip `b1f3c86f`, on 2026-10-20: the tip
+        moved the branch-point section of the browser guide to
+        `tests/browser/comparison/README.md`, and F9b item 7 had moved the
+        edited viewer README passages to `packages/viewer/docs/`. The merge
+        carries each side's edits to the passage's new place. Merge
+        decisions: `.context/m10/f15/merge2-decisions.md`.
+  - F15 review finding 33 for the user: the delivery spec selects the
+    reused-parent check by its case name. Severity Low, effort Small.
+    Recommended: A, add the document path to the case's delivery facts.
+  - F15 review finding 34 for the user: the delivery pairs repeat the shared
+    moves. Severity Low, effort Small. Recommended: B, derive each moved
+    pair's previous path and flag from the case's moves.
+  - Outside the F15 review scope:
+    - `packages/viewer/src/viewer/styles.ts`: the `mokly-top-host` container
+      query of the compact search uses `35rem`, so a host page with another
+      root font size leaves the 560px compact search width that
+      `docs/protocol/mokly-viewer.md` requires. Separate branch.
+  - [x] F15 re-review, on 2026-10-20: finding 35, a live plan line that
+        cited a line of `styles.ts` that the merge shifted, is fixed by
+        option B. The line names the rule now. The full report is
+        `.context/m10/f15/review_2.md`.
+  - Outside the F15 re-review scope:
+    - `tests/browser/serve_comparison_ui.ts`: the header says that Serve
+      captures each selected comparison on demand, but Serve returns a kept
+      comparison when the same entry is selected again. Separate branch.
+    - `plans/rust-rebuild.md`: a live line cites
+      `docs/protocol/mokly-component-controls.md:69`, but the tip moved the
+      local storage rule to line 64. Separate branch.
+    - `plans/rust-rebuild.md`: Decision 21 still names entry detail v1, but
+      the tip moved the code and `docs/protocol/mokly-shell-delivery.md` to
+      v2 without an amendment note. Separate branch.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
@@ -2970,6 +3010,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
             `viewer_branch_point.spec.ts` in the embedded viewer through both
             frame adapters. Serve waits for each on-demand comparison, and
             the embedded viewer checks the selected entry without an address.
+      - [x] F15 merge of the rebuild tip `e709a7cd`, on 2026-10-20: round 4
+            of the D1 delegate and F9b item 6 ran the cases on the same three
+            hosts. The merge keeps the D1 specs and their page path checks,
+            moves the F9b checks into them, and removes the two F9b host
+            specs. Merge decisions: `.context/m10/f15/merge-decisions.md`.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
