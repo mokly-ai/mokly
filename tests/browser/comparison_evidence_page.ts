@@ -5,7 +5,9 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const BASE = "Compared with the branch point on fixture-base.";
+/** The branch-point sentence starts so, and the copies name `fixture-base`. */
+export const BRANCH_POINT = "Compared with the branch point";
+export const BASE = `${BRANCH_POINT} on fixture-base.`;
 export const FILES_LEAD = "Changes to these files may affect this screen:";
 export const MATCHED_LEAD = "Changed styles that apply to this screen:";
 export const OUTSIDE_LEAD =
@@ -45,22 +47,35 @@ export const INSPECTOR_VIEWPORTS = [
   ["mobile", { width: 390, height: 844 }],
 ] as const;
 
-/** The one Comparison details heading, then the branch-point sentence. */
-async function expectComparisonDetails(evidence: Locator): Promise<void> {
+/**
+ * The one Comparison details heading, then the branch-point sentence `base`.
+ * An index without a base has no branch-point sentence: pass `null`.
+ */
+async function expectComparisonDetails(
+  evidence: Locator,
+  base: string | null,
+): Promise<void> {
   await expect(evidence).toBeVisible();
   await expect(
     evidence.getByRole("heading", { name: "Comparison details", exact: true }),
   ).toHaveCount(1);
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
+  if (base === null) await expect(evidence).not.toContainText(BRANCH_POINT);
+  else await expect(evidence.locator("p").first()).toHaveText(base);
 }
 
-/** Select the Details tab and return the comparison details it shows. */
-export async function openEvidence(page: Page): Promise<Locator> {
+/**
+ * Select the Details tab and return the comparison details it shows, which
+ * start with the branch-point sentence `base`.
+ */
+export async function openEvidence(
+  page: Page,
+  base: string | null = BASE,
+): Promise<Locator> {
   const tab = page.getByRole("tab", { name: "Details", exact: true });
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   await expect(tab).toHaveAttribute("aria-selected", "true");
   const evidence = page.locator("[data-workspace-evidence]");
-  await expectComparisonDetails(evidence);
+  await expectComparisonDetails(evidence, base);
   return evidence;
 }
 
@@ -74,8 +89,23 @@ export async function openPageEvidence(page: Page): Promise<Locator> {
   if (!(await details.evaluate((element) => element.hasAttribute("open"))))
     await details.locator("summary").click();
   const evidence = page.locator("[data-page-evidence]");
-  await expectComparisonDetails(evidence);
+  await expectComparisonDetails(evidence, BASE);
   return evidence;
+}
+
+/**
+ * Excluded-only Details: `sentences` in order, one examined list that names
+ * `files`, and no changed-files list.
+ */
+export async function expectExcludedOnly(
+  evidence: Locator,
+  sentences: readonly string[],
+  files: readonly string[],
+): Promise<void> {
+  await expect(evidence.locator(":scope > p")).toHaveText([...sentences]);
+  await expect(evidence.locator(":scope > ul")).toHaveCount(1);
+  await expect(evidence.locator(":scope > ul > li")).toHaveText([...files]);
+  await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
 }
 
 /** A listed file: its own path text, then each nested lead and its styles. */
