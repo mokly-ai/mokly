@@ -9,13 +9,15 @@ use mokly_graph::closure::{Closure, GeneratedResourcesMock};
 use mokly_graph::collection::ComparisonCollectorMock;
 use mokly_graph::error::GraphError;
 use mokly_graph::key::{NodeKind, key};
-use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
+use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock};
 use mokly_html::composition::Composed;
 use mokly_html::parse;
 use mokly_model::axes::ColorScheme;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::usage::CatalogueUsage;
 use unimock::{Clause, MockFn, Unimock, matching};
+
+use crate::capture_producer;
 
 use super::{capture, capture_with_bound};
 
@@ -50,20 +52,7 @@ pub(super) fn source_calls(
         })
         .collect::<BTreeMap<_, _>>();
     (
-        RenderGenerationMock::collect_comparison
-            .each_call(matching!(_))
-            .answers(&|mock, collector| {
-                let summary = mock.render_all()?;
-                collector.summary(&summary);
-                let routes: Vec<_> = mock.plans().keys().cloned().collect();
-                for batch in routes.chunks(mock.comparison_parallelism().max(1)) {
-                    for (route, input) in batch.iter().zip(mock.comparison_batch(batch)?) {
-                        mock.check_cancelled()?;
-                        collector.collect(route, input)?;
-                    }
-                }
-                Ok(summary)
-            }),
+        capture_producer::collection(),
         RenderGenerationMock::check_cancelled
             .each_call(matching!())
             .answers(&|_| Ok(())),
@@ -76,14 +65,6 @@ pub(super) fn source_calls(
         RenderGenerationMock::resource_routes
             .each_call(matching!())
             .returns(vec!["styles/shared.CSS".into(), "assets/image.png".into()]),
-        RenderGenerationMock::render_all
-            .each_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                Ok(RenderSummary {
-                    documents: count,
-                    ..Default::default()
-                })
-            })),
         GeneratedResourcesMock::resource
             .each_call(matching!("styles/shared.CSS"))
             .answers(&|_, _| Ok(Some(b"p{color:red}".to_vec()))),

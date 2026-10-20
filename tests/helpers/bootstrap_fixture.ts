@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
 import { viewerPackageReport, type PackageReport } from "./release_fixture.js";
+import { isolatedGitEnvironment } from "./source_tree_types.js";
 
 const execute = promisify(execFile);
 
@@ -103,8 +104,11 @@ ${options.afterBuild ?? ""}`,
     await fs.mkdir(path.dirname(path.join(root, name)), { recursive: true });
     await fs.writeFile(path.join(root, name), content);
   }
+  const env = await isolatedGitEnvironment(
+    path.join(temporaryRoot, "global.gitconfig"),
+  );
   const git = async (...args: string[]) =>
-    (await execute("git", args, { cwd: root })).stdout.trim();
+    (await execute("git", args, { cwd: root, env })).stdout.trim();
   await git("init", "--initial-branch=main");
   await git("config", "user.email", "bootstrap-test@example.com");
   await git("config", "user.name", "Bootstrap Test");

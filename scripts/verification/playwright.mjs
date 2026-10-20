@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { selectBrowserShard } from "./browser-partition.mjs";
 import { runCaptured } from "./process.mjs";
 
 export async function discoverBrowserTests(repositoryRoot, options = {}) {
@@ -7,7 +8,6 @@ export async function discoverBrowserTests(repositoryRoot, options = {}) {
   const cli = path.join(repositoryRoot, "node_modules/@playwright/test/cli.js");
   const args = [cli, "test", "--list", "--reporter=json"];
   if (project) args.push(`--project=${project}`);
-  if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
   const result = await runCaptured(process.execPath, args, {
     cwd: repositoryRoot,
   });
@@ -36,10 +36,13 @@ export async function discoverBrowserTests(repositoryRoot, options = {}) {
   const tests = playwrightTests(report, repositoryRoot);
   if (tests.length === 0)
     throw new Error("Playwright test discovery was empty");
-  return {
+  const inventory = {
     files: [...new Set(tests.map((test) => test.specFile))].sort(),
     tests: tests.sort((left, right) => left.id.localeCompare(right.id)),
   };
+  return shard
+    ? selectBrowserShard(inventory, shard, options.weights)
+    : inventory;
 }
 
 /** Sum observed test durations and counts per spec file, sorted by file. */

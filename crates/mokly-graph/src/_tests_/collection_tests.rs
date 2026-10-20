@@ -125,3 +125,47 @@ fn collection_keeps_full_validation_errors_and_warnings_ahead_of_encoding_failur
         assert_eq!(probe.renders.lock().unwrap().len(), 4);
     }
 }
+
+#[test]
+fn summary_updates_once_per_batch_before_its_first_encoded_view() {
+    let run = |count| {
+        let probe = collection_support::probe(count);
+        let expected_summary = probe.session.render_all().unwrap();
+        probe.renders.lock().unwrap().clear();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let summaries = events.clone();
+        let inputs = events.clone();
+        let mut collector = Unimock::new((
+            ComparisonCollectorMock::summary
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, summary| {
+                    summaries
+                        .lock()
+                        .unwrap()
+                        .push(("summary", summary.warnings.len()));
+                })),
+            ComparisonCollectorMock::collect
+                .each_call(matching!(_, _))
+                .answers_arc(Arc::new(move |_, _, _| {
+                    inputs.lock().unwrap().push(("collect", 0));
+                    Ok(())
+                })),
+        ));
+        let summary = probe.session.collect_comparison(&mut collector).unwrap();
+        assert_eq!(summary.documents, count);
+        assert_eq!(summary.warnings, expected_summary.warnings);
+        assert_eq!(summary.warnings.len(), count + 1);
+        let mut expected = vec![("summary", 1)];
+        for batch in 0..count / 2 {
+            expected.push(("summary", 1 + 2 * (batch + 1)));
+            expected.extend([("collect", 0), ("collect", 0)]);
+        }
+        expected.push(("summary", count + 1));
+        let events = events.lock().unwrap();
+        assert_eq!(*events, expected);
+        events.iter().filter(|(kind, _)| *kind == "summary").count() - 2
+    };
+    let small = run(4);
+    assert!(small > 0);
+    assert_eq!(run(16), 4 * small);
+}

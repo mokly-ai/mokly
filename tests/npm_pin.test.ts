@@ -10,7 +10,11 @@ import { repositoryRoot } from "./helpers/fixture.js";
 /** The first npm release that writes lockfile `libc` fields (npm/cli#9025). */
 const FIRST_NPM_WITH_LOCKFILE_LIBC = "11.11.0";
 /** Workflows whose dependency installs must use the pinned npm. */
-const PINNED_WORKFLOWS = ["ci.yml", "release.yml"] as const;
+const PINNED_WORKFLOWS = [
+  "ci.yml",
+  "release.yml",
+  "release-prepare.yml",
+] as const;
 const NPM_PIN = /npm (?:install|i) (?:--global|-g) npm@(\S+)/gu;
 
 interface WorkflowStep {

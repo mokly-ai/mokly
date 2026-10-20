@@ -20,8 +20,10 @@ fn engine_batches_base_reads_at_one_to_four_sizes_and_keeps_the_head_source() {
         });
         let before = support::generation("base", count, probe.clone(), 0);
         let after = support::generation("head", count, probe.clone(), 0);
-        let result = support::engine()
-            .compare(&support::request(), before, after.clone())
+        let engine = support::engine();
+        let before = engine.capture_base(before).unwrap();
+        let result = engine
+            .compare_prepared(&support::request(), before, after.clone())
             .unwrap();
         assert!(
             Arc::ptr_eq(&result.after, &after),
