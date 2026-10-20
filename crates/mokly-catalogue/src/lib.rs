@@ -24,6 +24,7 @@ mod folder_input;
 mod folders;
 mod front_matter;
 mod globs;
+pub mod html_tokens;
 mod identity;
 pub mod input;
 mod links;

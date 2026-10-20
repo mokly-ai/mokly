@@ -2,7 +2,8 @@
 
 use std::collections::{BTreeMap, VecDeque};
 
-use html5gum::{DefaultEmitter, Token, Tokenizer};
+use html5gum::Token;
+use mokly_catalogue::html_tokens;
 use mokly_catalogue::template_types::Template;
 use mokly_model::catalogue::SourceLocation;
 
@@ -12,13 +13,11 @@ use crate::{parse, source_checks};
 
 pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
     source_checks::validate(&template.body, false)?;
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
     let mut locations: BTreeMap<String, VecDeque<SourceLocation>> = BTreeMap::new();
     let mut cursor = template.source.char_indices().peekable();
     let (mut line, mut column) = (1, 1);
-    for token in Tokenizer::new_with_emitter(template.body.as_str(), emitter).flatten() {
-        if let Token::StartTag(tag) = token {
+    for parsed in html_tokens::parse(&template.body) {
+        if let Token::StartTag(tag) = parsed.token {
             let name = String::from_utf8_lossy(&tag.name);
             let attributes: BTreeMap<_, _> = tag
                 .attributes

@@ -56,9 +56,12 @@ Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
-Ignore wrappers discard unknown attributes after catalogue preparation reports
-`html-ignore-attribute`. Their values are not evaluated. Strict builds fail on
-these warnings. An ignored `slot` attribute cannot move content to a named slot.
+The HTML5 tree sink removes ordinary unknown ignore-wrapper attributes when
+it creates elements. Composition and slot routing never see those attributes.
+Catalogue preparation reports `html-ignore-attribute` once per shared body
+and attribute. Their values are not evaluated. Strict builds fail on these
+warnings. Reserved navigation metadata and duplicate-navigation failures
+retain their existing checks.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
@@ -97,7 +100,7 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 
 ### Key Code
 
-- [Annotated tree](./src/tree.rs) and [HTML5 parser](./src/parse.rs).
+- [Annotated tree](./src/tree.rs), [HTML5 parser](./src/parse.rs), and [tree sink](./src/html_sink.rs).
 - [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
 - [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
 - [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).

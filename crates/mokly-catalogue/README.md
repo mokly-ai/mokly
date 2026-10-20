@@ -97,6 +97,9 @@ HTML checks cover forbidden and unknown elements, reserved names, slots,
 component cycles, template references, and unused props. Unknown ignore-wrapper
 attributes warn once per shared body and attribute. Their values are ignored.
 They do not validate logical links or select component slots.
+The shared token boundary removes these attributes before validation, link
+checks, or source-location collection. It retains their names for warnings
+and preserves reserved-navigation evidence and duplicate-attribute errors.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
@@ -177,6 +180,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
+- [HTML token boundary](./src/html_tokens.rs) filters ignore-wrapper attributes before token consumers run.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).
 

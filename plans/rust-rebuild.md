@@ -2603,10 +2603,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         is not selected because the scoped warning producer completes 6 C.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
-  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing
-    boundaries. Effort Large. Covers defaults review finding 1. No previous
-    examples found. The focused repair applies item 16 B before link and slot
-    consumers. Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
+        boundaries under decision 16 B. The token boundary keeps warning names,
+        reserved-navigation evidence, and duplicate-attribute errors. The
+        HTML5 tree sink filters elements before composition or slot routing.
+        Remove the replaced consumer filters and keep their regressions.
+        This completes the wider fix for CLI defaults review finding 1.
+        Evidence: `.context/f19/` and `.context/defaults-cli/review-1.md`.
+  - [x] F19 gate repair: update `rustls-webpki` to the compatible 0.103.16
+        patch for RUSTSEC-2026-0382. Keep every other lockfile dependency
+        unchanged. Evidence: `.context/f19/repository.log`,
+        `.context/f19/rust-audit-fixed.log`, and `.context/f19/publish-tests.log`.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
