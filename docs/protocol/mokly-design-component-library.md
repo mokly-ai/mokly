@@ -198,7 +198,7 @@ Keep registered definitions/variant fixtures outside the exclusive `.view.tsx`
 implementation; registration/fixture changes are metadata or rendered-output
 changes, not path-based implementation evidence.
 
-Every library component declares its own exclusive public CSS file in
+Every library component declares its own exclusive local CSS delivery root in
 `stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
 links only components actually rendered in a view, including nested components
 and transient prop edits; an absent child adds no link. CSS changes use

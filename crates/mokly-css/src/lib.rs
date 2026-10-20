@@ -33,12 +33,16 @@ mod resolver_tests;
 #[cfg(test)]
 #[path = "_tests_/syntax_tests.rs"]
 mod syntax_tests;
+#[cfg(test)]
+#[path = "_tests_/wrapper_table_tests.rs"]
+mod wrapper_table_tests;
 
 pub mod parsed_cache;
 pub mod rule_collection;
 mod rule_syntax;
 pub mod rules;
 
+pub mod containment;
 pub mod match_tree;
 pub mod rule_matching;
 mod selector_element;

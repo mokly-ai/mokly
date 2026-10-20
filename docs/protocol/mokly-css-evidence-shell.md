@@ -93,7 +93,8 @@ rules:
   comparison toolbar and no stage heading. Its Details hold the same
   comparison details and files list, led by "Changes to these files may affect
   this page:", with the page sentences of the presentation contract under each
-  file. A page consumes no components, so its Details link no changed component.
+  file. A page may use component elements, but it has no usage records, so its
+  Details link no changed component.
   Its status sits beside its title, as a screen's does. The open Details panel
   takes at most 60% of the main region and scrolls, with its bar kept in view,
   so long evidence stays reachable and the document stays visible. On narrow

@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use mokly_css::containment::ContainmentPath;
 use mokly_css::match_tree::{Containment, MatchElement, MatchTree};
 use mokly_html::tree::{Node, RegionKind};
 use mokly_model::evidence::EvidenceOwner;
@@ -17,13 +18,18 @@ pub(crate) fn document(nodes: &[Node], paths: &BTreeMap<String, String>) -> Matc
         instances: &instances,
         paths,
     };
-    context.walk(nodes, None, &[], &EvidenceOwner::Entry);
+    context.walk(
+        nodes,
+        None,
+        &ContainmentPath::default(),
+        &EvidenceOwner::Entry,
+    );
     tree
 }
 
 pub(crate) fn embedded(
     nodes: &[Node],
-    regions: &[Containment],
+    regions: &ContainmentPath,
     owner: &EvidenceOwner,
 ) -> MatchTree {
     let mut tree = MatchTree::default();
@@ -47,10 +53,10 @@ impl Context<'_> {
         &mut self,
         nodes: &[Node],
         parent: Option<usize>,
-        regions: &[Containment],
+        regions: &ContainmentPath,
         owner: &EvidenceOwner,
     ) {
-        let mut regions = regions.to_vec();
+        let mut regions = regions.clone();
         let mut owner = owner.clone();
         let mut pending: Vec<_> = nodes
             .iter()
@@ -60,20 +66,20 @@ impl Context<'_> {
         while let Some(step) = pending.pop() {
             let (node, parent) = match step {
                 Step::Node(node, parent) => (node, parent),
-                Step::Restore(length, previous) => {
-                    regions.truncate(length);
+                Step::Restore(previous_regions, previous) => {
+                    regions = previous_regions;
                     owner = previous;
                     continue;
                 }
             };
             match node {
                 Node::Region { region, children } => {
-                    let length = regions.len();
+                    let previous_regions = regions.clone();
                     let next_owner = match &region.kind {
                         RegionKind::Ignore { .. } => continue,
                         RegionKind::Root { path } | RegionKind::Instance { path, .. } => {
                             let path = mapped(path, self.paths);
-                            regions.push(Containment {
+                            regions = regions.with_region(Containment {
                                 path: path.clone(),
                                 root: matches!(region.kind, RegionKind::Root { .. }),
                             });
@@ -90,7 +96,7 @@ impl Context<'_> {
                             }),
                         RegionKind::Slot { .. } => EvidenceOwner::Entry,
                     };
-                    pending.push(Step::Restore(length, owner));
+                    pending.push(Step::Restore(previous_regions, owner));
                     owner = next_owner;
                     pending.extend(children.iter().rev().map(|node| Step::Node(node, parent)));
                 }
@@ -107,7 +113,7 @@ impl Context<'_> {
                         parent,
                         children: Vec::new(),
                         text: false,
-                        regions: regions.to_vec(),
+                        regions: regions.clone(),
                         owner: owner.clone(),
                     });
                     if let Some(parent) = parent {
@@ -136,7 +142,7 @@ impl Context<'_> {
 
 enum Step<'a> {
     Node(&'a Node, Option<usize>),
-    Restore(usize, EvidenceOwner),
+    Restore(ContainmentPath, EvidenceOwner),
 }
 
 #[cfg(test)]

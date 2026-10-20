@@ -78,7 +78,7 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
 }) => {
   const index = await comparisonIndex(request, baseURL);
   const included = changesPaths(index);
-  expect(included).toHaveLength(26);
+  expect(included).toHaveLength(29);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await expect(
     page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
@@ -142,6 +142,7 @@ test("an affected consumer stays out of Changes while its changed component list
     "Affected screens and components",
   );
   await expect(affected.getByRole("link")).toHaveText([
+    "Toolbar",
     "Changed screen",
     "Consumer screen",
     "Former screen · Removed",

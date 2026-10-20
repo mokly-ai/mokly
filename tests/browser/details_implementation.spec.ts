@@ -13,24 +13,23 @@ import {
 } from "../helpers/implementation_sources.js";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
+import {
+  BASE,
+  EXAMINED_LEAD,
+  INSPECTOR_VIEWPORTS,
+  VARIANT_EXCLUDED_LEAD,
+  openEvidence,
+} from "./comparison_evidence_page.js";
 
 const test = additionsCopyTest(
   "browser-implementation",
   addImplementationSources,
 );
 
-/** Copy fixed by the workspace design and CSS evidence contracts. */
-const BASE = "Compared with the branch point on fixture-base.";
+/** The reason sentence fixed by the workspace design contract. */
 const IMPLEMENTATION = "Rendered content changed where this component is used.";
 /** The shared stylesheet changed too, but none of its changed styles apply. */
-const EXCLUDED = [
-  "This stylesheet changed, but none of the changed styles apply to this variant.",
-  "Examined and excluded:",
-];
-const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
-  ["mobile", { width: 390, height: 844 }],
-] as const;
+const EXCLUDED = [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD];
 
 /** Count the selected comparison's review requests from the page's start. */
 function reviewRequests(page: Page): { count: number } {
@@ -67,8 +66,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     // Its own saved views are unchanged, so it offers no comparison.
     await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-    await inspectorTab(page, "Details");
-    const evidence = page.locator("[data-workspace-evidence]");
+    const evidence = await openEvidence(page);
     await expect
       .poll(() => sentences(evidence))
       .toEqual([BASE, IMPLEMENTATION, ...EXCLUDED]);
@@ -87,7 +85,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     await expect(page.locator("[data-workspace-status]")).toHaveText(
       "Unmodified",
     );
-    await inspectorTab(page, "Details");
+    await openEvidence(page);
     await expect(
       evidence.getByRole("link", { name: "Chip", exact: true }),
     ).toHaveAttribute("href", `/view/${paths.component}/`);

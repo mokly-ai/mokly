@@ -1,5 +1,7 @@
 //! Pure kind-aware branch-point lookup fenced to one accepted generation.
 
+use std::collections::BTreeMap;
+
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::{CatalogueModel, ModelEntry};
 use mokly_model::review_affected::ReviewSide;
@@ -38,13 +40,16 @@ pub enum LookupError {
     PairInvariant,
 }
 
-/// Borrowed immutable lookup inputs for one generation.
+type Key = (EntryKind, String);
+
+/// Indexed immutable lookup inputs borrowed from one generation.
 pub struct Lookup<'a> {
     generation: &'a str,
-    current: &'a CatalogueModel,
-    base: Option<&'a CatalogueModel>,
-    removed: &'a [RemovedEntrySnapshot],
-    moves: &'a [MovePair],
+    current: BTreeMap<Key, &'a ModelEntry>,
+    base: BTreeMap<Key, &'a ModelEntry>,
+    removed: BTreeMap<Key, &'a RemovedEntrySnapshot>,
+    previous: BTreeMap<Key, &'a MovePair>,
+    moved: BTreeMap<Key, &'a MovePair>,
 }
 
 impl<'a> Lookup<'a> {
@@ -56,25 +61,50 @@ impl<'a> Lookup<'a> {
         removed: &'a [RemovedEntrySnapshot],
         moves: &'a [MovePair],
     ) -> Result<Self, LookupError> {
+        let current = entries(current);
+        let mut previous = BTreeMap::new();
+        let mut moved = BTreeMap::new();
         for pair in moves {
-            if current.entries.iter().any(|entry| {
-                entry.content.kind() == pair.kind
-                    && entry
-                        .metadata
-                        .path
-                        .eq_ignore_ascii_case(&pair.previous_path)
-            }) || pair.path.eq_ignore_ascii_case(&pair.previous_path)
+            if current.contains_key(&key(pair.kind, &pair.previous_path))
+                || pair.path.eq_ignore_ascii_case(&pair.previous_path)
             {
                 return Err(LookupError::PairInvariant);
             }
+            previous
+                .entry(key(pair.kind, &pair.previous_path))
+                .or_insert(pair);
+            moved.entry(key(pair.kind, &pair.path)).or_insert(pair);
+        }
+        let mut removals = BTreeMap::new();
+        for record in removed {
+            removals
+                .entry(key(record.entry.kind(), &record.entry.metadata().path))
+                .or_insert(record);
         }
         Ok(Self {
             generation,
             current,
-            base,
-            removed,
-            moves,
+            base: base.map(entries).unwrap_or_default(),
+            removed: removals,
+            previous,
+            moved,
         })
+    }
+
+    /// Read original side metadata without following moves or removals.
+    pub fn entry(
+        &self,
+        generation: &str,
+        side: ReviewSide,
+        kind: EntryKind,
+        path: &str,
+    ) -> Result<Option<&'a ModelEntry>, LookupError> {
+        self.fence(generation)?;
+        let entries = match side {
+            ReviewSide::Before => &self.base,
+            ReviewSide::After => &self.current,
+        };
+        Ok(entries.get(&key(kind, path)).copied())
     }
 
     /// Resolve before references through accepted pairs, current identities, then removals.
@@ -86,15 +116,13 @@ impl<'a> Lookup<'a> {
         path: &str,
     ) -> Result<Option<Destination<'a>>, LookupError> {
         self.fence(generation)?;
+        let identity = key(kind, path);
         if side == ReviewSide::Before
-            && let Some(pair) = self
-                .moves
-                .iter()
-                .find(|pair| pair.kind == kind && pair.previous_path.eq_ignore_ascii_case(path))
+            && let Some(pair) = self.previous.get(&identity)
         {
             return Ok(self.current(kind, &pair.path).map(Destination::Current));
         }
-        if let Some(entry) = self.current(kind, path) {
+        if let Some(entry) = self.current.get(&identity) {
             return Ok(Some(Destination::Current(entry)));
         }
         if side == ReviewSide::After {
@@ -102,11 +130,8 @@ impl<'a> Lookup<'a> {
         }
         Ok(self
             .removed
-            .iter()
-            .find(|record| {
-                record.entry.kind() == kind
-                    && record.entry.metadata().path.eq_ignore_ascii_case(path)
-            })
+            .get(&identity)
+            .copied()
             .map(Destination::Removed))
     }
 
@@ -118,19 +143,16 @@ impl<'a> Lookup<'a> {
         path: &str,
     ) -> Result<Option<&'a str>, LookupError> {
         self.fence(generation)?;
-        if self.current(kind, path).is_none() {
+        let identity = key(kind, path);
+        if !self.current.contains_key(&identity) {
             return Ok(None);
         }
-        if let Some(previous) = self.previous(generation, kind, path)? {
-            return Ok(Some(previous));
+        if let Some(pair) = self.moved.get(&identity) {
+            return Ok(Some(&pair.previous_path));
         }
         Ok(self
             .base
-            .and_then(|base| {
-                base.entries.iter().find(|entry| {
-                    entry.content.kind() == kind && entry.metadata.path.eq_ignore_ascii_case(path)
-                })
-            })
+            .get(&identity)
             .map(|entry| entry.metadata.path.as_str()))
     }
 
@@ -143,9 +165,8 @@ impl<'a> Lookup<'a> {
     ) -> Result<Option<&'a str>, LookupError> {
         self.fence(generation)?;
         Ok(self
-            .moves
-            .iter()
-            .find(|pair| pair.kind == kind && pair.path.eq_ignore_ascii_case(path))
+            .moved
+            .get(&key(kind, path))
             .map(|pair| pair.previous_path.as_str()))
     }
 
@@ -184,9 +205,7 @@ impl<'a> Lookup<'a> {
     }
 
     fn current(&self, kind: EntryKind, path: &str) -> Option<&'a ModelEntry> {
-        self.current.entries.iter().find(|entry| {
-            entry.content.kind() == kind && entry.metadata.path.eq_ignore_ascii_case(path)
-        })
+        self.current.get(&key(kind, path)).copied()
     }
 
     fn fence(&self, generation: &str) -> Result<(), LookupError> {
@@ -205,4 +224,18 @@ fn record_parent(record: &EntryRecord) -> Option<&str> {
         }
         _ => None,
     }
+}
+
+fn entries(model: &CatalogueModel) -> BTreeMap<Key, &ModelEntry> {
+    let mut entries = BTreeMap::new();
+    for entry in &model.entries {
+        entries
+            .entry(key(entry.content.kind(), &entry.metadata.path))
+            .or_insert(entry);
+    }
+    entries
+}
+
+fn key(kind: EntryKind, path: &str) -> Key {
+    (kind, path.to_ascii_lowercase())
 }

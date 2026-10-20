@@ -8,8 +8,8 @@ the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
 
 ## Stylesheet Inputs
 
-Three inputs supply CSS to a composed screen or component document, and the
-Rust core bundles them all:
+Three inputs supply CSS to a composed screen or component document. The
+Rust core bundles every local delivery root:
 
 - configured `stylesheets` rules: local paths, config-relative, or HTTP(S)
   URLs, with the scheme-specific lists and the `$componentStylesheets` marker
@@ -17,7 +17,7 @@ Rust core bundles them all:
 - stylesheets that entry modules and the renderer import, which the
   [sidecar](./mokly-sidecar.md#bundling) reports in the module graph and the
   core delivers under the imported stylesheet contract;
-- component-declared stylesheets under the
+- component-declared local stylesheet roots under the
   [component stylesheets contract](./mokly-component-stylesheets.md).
 
 A local stylesheet, its `@import` chain, and its `url()` assets are transformed by the consumer's PostCSS module when `postcss` is set, then
@@ -58,7 +58,7 @@ Opted-out CSS stays inventoried as a watched source. A `file` loader on
 another JavaScript-imported asset fails `build`. A consumer `css` loader on any
 extension is rejected at config validation because it would emit an
 undelivered sibling stylesheet; rename the input to `.css` or use a
-JavaScript-safe loader. Local configured stylesheet paths and PostCSS inputs
+JavaScript-safe loader. Configured and component-declared local stylesheets and PostCSS inputs
 are protected authored sources: they are never served as files, and they
 cannot escape their side's source root through symlinks. Package CSS and
 JavaScript inside selected dependency roots are also allowed under the

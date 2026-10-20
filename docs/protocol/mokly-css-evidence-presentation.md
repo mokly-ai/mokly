@@ -199,9 +199,13 @@ component, which the review's `affected` records give, a shown view keeps a
 `matched` or `unresolved` rule or a resource that a component owns, or the
 loaded review's `affected` evidence names the entry. It shows in Current and
 in a loaded comparison alike. A saved view whose rules are all owned by the
-entry gains no sentence from those rules. A whole-document page consumes no
-components, so its Details never link a changed component or say that
-sentence.
+entry gains no sentence from those rules.
+
+A whole-document page may use component elements
+under the [pages contract](./mokly-pages.md#authoring), but only screens and
+components have [usage records](./mokly-component-usage-records.md#validation).
+A page is therefore no consumer: its Details never link a changed component
+or say that sentence, and no component's Usage lists it.
 
 The terminal line, “No changes to this screen.”, “No changes to this page.” or
 “No changes to this saved view.”, appears only when the routed entry is
