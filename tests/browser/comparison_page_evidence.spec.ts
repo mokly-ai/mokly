@@ -31,7 +31,12 @@ import {
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { chooseFilter, navRow } from "./comparison_ui.js";
+import {
+  changesPaths,
+  chooseFilter,
+  comparisonIndex,
+  navRow,
+} from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
@@ -195,12 +200,16 @@ test.describe("whole-page evidence across navigation", () => {
 
   test("Changes lists the document and its Details keep the same facts", async ({
     page,
+    request,
+    baseURL,
   }) => {
+    const included = changesPaths(await comparisonIndex(request, baseURL));
+    expect(included).toContain(HANDBOOK);
     await openHandbook(page);
     await chooseFilter(page, "changed");
     await expect(
       page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-    ).toHaveText("29");
+    ).toHaveText(String(included.length));
     await expect(navRow(page, HANDBOOK)).toBeVisible();
     await expect(navRow(page, NOTES)).toBeHidden();
     expect(await evidenceFiles(page.locator("[data-page-evidence]"))).toEqual(

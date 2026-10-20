@@ -22,7 +22,13 @@ import {
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { chooseFilter, modeButton, navRow } from "./comparison_ui.js";
+import {
+  changesPaths,
+  chooseFilter,
+  comparisonIndex,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 /** Status literals of the evidence format never reach the reader. */
@@ -149,7 +155,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
 
     test("an affected-only screen keeps its full styles without a row of its own", async ({
       page,
+      request,
+      baseURL,
     }) => {
+      const included = changesPaths(await comparisonIndex(request, baseURL));
       await page.goto(`/view/${comparisonPaths.consumer}/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
@@ -166,7 +175,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeVisible();
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-      ).toHaveText("29");
+      ).toHaveText(String(included.length));
       if (name === "mobile")
         await page
           .getByRole("button", { name: "Open catalogue navigation" })
