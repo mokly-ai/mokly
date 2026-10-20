@@ -1,7 +1,8 @@
 /**
  * The style-only rule of the CSS evidence presentation: a changed view reads
  * "Styles this … uses changed" only when every reason of its entry is a
- * dependency and each named path has a retained rule on this view.
+ * dependency, each named path has a rule of any status on this view, and at
+ * least one named path has a retained rule on this view.
  */
 
 import assert from "node:assert/strict";
@@ -67,7 +68,7 @@ test("only dependency reasons keep a style change; every other kind is ordinary"
   }
 });
 
-test("a named path without a retained rule on this view keeps the ordinary label", () => {
+test("a named path without a rule on this view keeps the ordinary label", () => {
   const changed = view([rule(SHEET)]);
   assert.equal(
     isStyleOnlyView(changed, [dependency(OTHER), dependency(SHEET)]),
@@ -95,6 +96,28 @@ test("a named path without a retained rule on this view keeps the ordinary label
   assert.equal(isStyleOnlyView(consumed, [dependency(SHEET)]), true);
 });
 
+test("an excluded stylesheet counts while another named stylesheet applies", () => {
+  const reasons = [dependency(OTHER), dependency(SHEET)];
+  assert.equal(
+    isStyleOnlyView(view([rule(OTHER, "excluded"), rule(SHEET)]), reasons),
+    true,
+  );
+  assert.equal(
+    isStyleOnlyView(
+      view([rule(OTHER, "excluded"), rule(SHEET, "unresolved")]),
+      reasons,
+    ),
+    true,
+  );
+  assert.equal(
+    isStyleOnlyView(
+      view([rule(OTHER, "excluded"), rule(SHEET, "excluded")]),
+      reasons,
+    ),
+    false,
+  );
+});
+
 test("an unchanged view and an entry without a reason keep the ordinary label", () => {
   assert.equal(
     isStyleOnlyView(view([rule(SHEET)], "unchanged"), [dependency(SHEET)]),
@@ -110,12 +133,21 @@ const MOBILE: ComparisonPresentation = {
   requestedColorScheme: "light",
   viewport: "mobile",
 };
+const MOBILE_DARK: ComparisonPresentation = {
+  ...MOBILE,
+  colorScheme: "dark",
+  requestedColorScheme: "dark",
+};
 
 /**
  * The selected mobile heading of one loaded entry, as the panes render it,
  * on the entry's own route or the route of a variant it groups.
  */
-function heading(entry: ReviewEntry, route = entry.path): string | undefined {
+function heading(
+  entry: ReviewEntry,
+  route = entry.path,
+  presentation = MOBILE,
+): string | undefined {
   const result = parseReviewResult({
     schemaVersion: 8,
     baseCommit: "a".repeat(40),
@@ -128,12 +160,12 @@ function heading(entry: ReviewEntry, route = entry.path): string | undefined {
     result,
     url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`,
   };
-  const views = selectedComparisonViews(loaded, MOBILE, kind, route);
+  const views = selectedComparisonViews(loaded, presentation, kind, route);
   const markup = renderToStaticMarkup(
     <ComparisonViews
       entryId={route}
       entryKind={kind}
-      presentation={MOBILE}
+      presentation={presentation}
       presentations={new Map()}
       together
       views={views}
@@ -220,4 +252,18 @@ test("a variant's heading reads the variant's own reasons, not its parent's", ()
     heading(parent, "card/compact"),
     "Mobile · Styles this variant uses changed",
   );
+});
+
+test("a stylesheet for dark views only keeps the style heading on light views", () => {
+  const dark = "static/dark.css";
+  const entry: ReviewEntry = {
+    ...changedEntry("screen", [dependency(dark), dependency(SHEET)]),
+    views: [
+      view([rule(dark, "excluded"), rule(SHEET)]),
+      { ...view([rule(dark), rule(SHEET)]), colorScheme: "dark" },
+    ],
+  };
+  const styles = "Mobile · Styles this screen uses changed";
+  assert.equal(heading(entry), styles);
+  assert.equal(heading(entry, entry.path, MOBILE_DARK), styles);
 });

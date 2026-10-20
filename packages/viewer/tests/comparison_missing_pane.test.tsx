@@ -41,14 +41,14 @@ function unavailableMessage(kind: ViewRouteKind): string {
   );
 }
 
-test("a missing pane names a removed or added component variant, not a screen", () => {
+test("a missing pane uses the design catalogue's copy for its entry kind", () => {
   assert.deepEqual(missingMessages("component"), [
-    "This variant was added on this branch.",
-    "This variant was removed on this branch.",
+    "This variant did not exist before.",
+    "This variant has been removed.",
   ]);
   assert.deepEqual(missingMessages("screen"), [
-    "This screen was added on this branch.",
-    "This screen was removed on this branch.",
+    "This screen did not exist before.",
+    "This screen has been removed.",
   ]);
 });
 

@@ -7,6 +7,8 @@ use std::sync::Arc;
 use mokly_git::error;
 use thiserror::Error;
 
+use crate::lookup::LookupError;
+
 /// Base preparation result.
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -134,6 +136,12 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// Accepted comparison references violated the shared lookup contract.
+    #[error("branch-point lookup failed: {source}")]
+    Lookup {
+        /// Original lookup invariant or generation failure.
+        source: LookupError,
+    },
     /// A resource read did not retain its comparison fact.
     #[error("resource fact is missing for {route}")]
     MissingResourceFact {

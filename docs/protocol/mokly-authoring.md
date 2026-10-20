@@ -55,7 +55,7 @@ Each entry provides a title, description and related docs. Changes compares
 rendered output, rendered resources and reviewable metadata, pairs moved
 entries, and propagates directly changed screens to their flows under the
 [Changes contract](./mokly-changes.md). Source paths supply attribution and
-protection only. Components declare public CSS through
+protection only. Components declare local CSS delivery roots through
 [component stylesheets](./mokly-component-stylesheets.md).
 
 ## Entry Kinds

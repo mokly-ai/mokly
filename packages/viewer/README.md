@@ -589,8 +589,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   controlled and uncontrolled selection commits, frame-link misses, and
   navigation events
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
-  [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
-  the routed workspace data and its usage and affected-consumer projection
+  [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
+  routed workspace data and its projection from the index and entry detail
 - [`src/review/result_validation.ts`](./src/review/result_validation.ts) and
   [`src/review/result_order.ts`](./src/review/result_order.ts) — the strict
   review result v8 reader and the canonical record order it requires

@@ -2,6 +2,10 @@
 
 import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
 import { reviewEntry } from "../review/entries.js";
+import {
+  affectedEntry,
+  keepsComponentRecord,
+} from "../review/shared_impact.js";
 import type { ReviewView } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
@@ -12,12 +16,17 @@ import { isStyleOnlyView } from "./workspace_style_evidence.js";
 export interface SelectedComparisonView {
   /** Absolute snapshot address of each side the view has. */
   documents: { after?: string; before?: string };
+  /**
+   * The view is unchanged, yet changed components affect it: it keeps a
+   * component-owned record, or the review's affected records name it.
+   */
+  componentsOnly: boolean;
   /** The mode this view shows; one-sided views fall back to Side by side. */
   mode: ComparisonPresentation["mode"];
   /**
    * The view is changed, its entry has a reason, every reason is a
-   * dependency, and each named path has a matched or unresolved rule on this
-   * view.
+   * dependency, each named path has a rule of any status on this view, and
+   * at least one named path has a matched or unresolved rule on this view.
    */
   styleOnly: boolean;
   view: ReviewView;
@@ -88,6 +97,10 @@ export function selectedComparisonViews(
               }
             : {}),
         },
+        componentsOnly:
+          view.state === "unchanged" &&
+          (keepsComponentRecord(view) ||
+            affectedEntry(loaded.result, entry, view)),
         mode: before && after ? presentation.mode : "side",
         styleOnly: isStyleOnlyView(view, entry.reasons),
         view,

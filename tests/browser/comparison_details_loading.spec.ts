@@ -6,29 +6,19 @@
  * so it shows only after the detail arrives.
  */
 
-import { expect, type Locator, type Page, type Route } from "@playwright/test";
+import { expect, type Page, type Route } from "@playwright/test";
 
+import {
+  BASE,
+  INSPECTOR_VIEWPORTS,
+  openEvidence,
+} from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
 
-const BASE = "Compared with the branch point on fixture-base.";
 /** Only the destination's detail names the changed component. */
 const LOADED = "Changed component: Card";
 const DESTINATION = `/view/${comparisonPaths.changed}/`;
-const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
-  ["mobile", { width: 390, height: 844 }],
-] as const;
-
-/** Open the Details tab and return the comparison details it shows. */
-async function openDetails(page: Page): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  return evidence;
-}
 
 /**
  * Record the first Details paragraph after every DOM change on the
@@ -78,8 +68,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
         },
       );
       await page.goto(`/view/${comparisonPaths.component}/`);
-      const origin = await openDetails(page);
-      await expect(origin.locator("p").first()).toHaveText(BASE);
+      // The heading and the branch point show on the origin.
+      await openEvidence(page);
       await recordFirstParagraphs(page);
 
       if (name === "mobile")
@@ -89,8 +79,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await navRow(page, comparisonPaths.changed).click();
       await expect(page).toHaveURL(new RegExp(`${DESTINATION}$`, "u"));
       await expect.poll(() => held.length).toBe(1);
-      const temporary = await openDetails(page);
-      await expect(temporary.locator("p").first()).toHaveText(BASE);
+      // They show again at once while the destination's detail is held.
+      const temporary = await openEvidence(page);
       await expect(temporary).not.toContainText(LOADED);
 
       await held[0]!.continue();
