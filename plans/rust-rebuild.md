@@ -366,6 +366,36 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**Decision log items applied by default (user rule), 2026-10-20:** the user
+did not answer these items of the orchestrator's decision log, so the named
+option applies under the user's rule. Milestones 10.1 and 10.2 apply them.
+
+- Item 17 A: accept the settled controls copy and states of the design
+  catalogue, and adopt the controls mockup's rows with a label column in the
+  viewer now. This approves the presentation change of the Milestone 10 copy
+  work and the field layout.
+- Item 24 A: below 760px, each use-case step shows its mobile view in a phone
+  frame, as the use-case mockup does; the viewer and the
+  [device chrome contract](../docs/protocol/mokly-shell-device-chrome.md)
+  follow.
+- Item 25 B: the component design and the mockups adopt the viewer's fixed
+  1024px desktop canvas, so a component's desktop view has one layout width
+  in every window.
+- Item 32 A: Details explain a screen or component that only changed
+  components affect when the review lists it in `affected` or a shown view
+  keeps a component-owned record; the records page states that such an entry
+  keeps `unchanged` views; the pane heading of such a view is settled; the
+  design state comes first.
+- Item 35 A: the `implementation` reason reads “Rendered content changed where
+  this component is used.”, and the design catalogue depicts it.
+- Item 38 C: a view reads the style-only heading when the entry has a reason,
+  every reason is a `dependency`, each named path has a rule of any status on
+  the view, and at least one named path has a `matched` or `unresolved` rule
+  on the view.
+- Item 42 A: comparisons adopt the design catalogue's missing-pane copy, and
+  the [pane contract](../docs/protocol/mokly-comparison-panes.md#layout)
+  names it.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -451,7 +481,8 @@ through Decision 27.
   trait seams, `dyn` dispatch,
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
-**Non-goals of this plan:** changing the viewer's presentation;
+**Non-goals of this plan:** changing the viewer's presentation beyond the
+design defaults of decision log items 17, 24, and 32;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -1574,6 +1605,32 @@ The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
 
 - [ ] Commit.
 
+## Milestone 10.1: Decision defaults in the designs
+
+Tags: mockup
+
+- [ ] Item 32 A: depict an unchanged screen that a changed component affects,
+      reached from that component's Affected screens: its comparison pane
+      heading and its Details explanation.
+- [ ] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
+      width, and state it in the component design.
+- [ ] Item 35 A: confirm that the design catalogue depicts the
+      `implementation` sentence.
+- [ ] Run the mockup check and smoke-test the changed pages through Serve.
+
+## Milestone 10.2: Decision defaults in the viewer
+
+Tags: ui
+
+- [ ] Item 42 A: show the design catalogue's missing-pane copy.
+- [ ] Item 38 C: apply the style-only heading rule of any rule status.
+- [ ] Item 32 A: explain affected-only entries in Details and their
+      comparison pane heading; fix the records sentence.
+- [ ] Item 24 A: show each use-case step's mobile view in a phone frame below
+      760px.
+- [ ] Item 17 A: lay out the prop controls as rows with a label column.
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
+
 ## Milestone 11: Watch and incremental rendering
 
 - [x] Reuse unchanged encoded details across watched generation rebuilds
@@ -2485,8 +2542,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
     reload rule, which had no effect.
   - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
-    viewer follow the settled design copy changes the viewer's presentation,
-    a non-goal of this plan; it needs the user's approval.
+    viewer follow the settled design copy changes the viewer's presentation.
+    Settled on 2026-10-20 by decision log item 17 A, applied by default (user
+    rule): the copy, the states, and the mockup's field rows are approved.
   - Milestone 8 example port review 1, finding 6: option B (a component parent
     renders without caller slot content) is documented; decide option C,
     which lets a component parent supply its own slot content (a contract
@@ -2496,11 +2554,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     gone, and its retry link opens the exact paragraph.
   - Example visual check (report 6), open findings for the user:
     1. Use-case steps ignore the mobile layout. Severity Medium, effort
-       Medium. Recommended: A, the shell shows each step's mobile view in a
+       Medium. Settled on 2026-10-20 by decision log item 24 A, applied by
+       default (user rule): the shell shows each step's mobile view in a
        phone frame below 760px, as the use-case mockup does, and
        `mokly-shell-device-chrome.md` follows.
     2. Desktop component canvas width differs. Severity Low, effort Small.
-       Recommended: B, the component design and the mockups adopt the shell's
+       Settled on 2026-10-20 by decision log item 25 B, applied by default
+       (user rule): the component design and the mockups adopt the shell's
        fixed 1024px desktop canvas.
     3. The shell stub declares no icon. Severity Low, effort Small. Settled
        at `da23c1ce`: the stub declares the packaged Browse icon, so no
