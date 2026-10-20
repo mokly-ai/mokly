@@ -2217,10 +2217,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       re-review once, and report the rest.
   - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
         Round every authored number, including schema keywords, with warnings.
-  - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
-    Effort Large. Covers defaults review finding 1. No previous examples found.
-    The focused repair applies item 16 B before link and slot consumers.
-    Evidence: `.context/defaults-cli/review-1.md`.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
+  - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
+  - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
+  - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
     Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
   - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
