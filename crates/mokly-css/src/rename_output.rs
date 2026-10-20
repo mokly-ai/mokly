@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::source_position::{line_column, line_start};
+use crate::source_position::{line_column, utf16_offset};
 
 pub(crate) struct Scoped<'a> {
     pub(crate) source: &'a str,
@@ -12,11 +12,13 @@ pub(crate) struct Scoped<'a> {
 }
 
 impl Scoped<'_> {
-    /// The authored line and column of a zero-based line and one-based column
-    /// in the scoped output, as `lightningcss` reports them.
+    /// The authored line and column of a location in the scoped output, as
+    /// `lightningcss` reports it: a zero-based line and a one-based column in
+    /// UTF-16 code units. A position inside a replacement maps to the start of
+    /// the authored text that it replaced, and a position right after an edit
+    /// maps to the authored text right after it.
     pub(crate) fn original_location(&self, line: u32, column: u32) -> (usize, usize) {
-        let line_start = line_start(&self.css, line as usize);
-        let offset = (line_start + column.saturating_sub(1) as usize).min(self.css.len());
+        let offset = utf16_offset(&self.css, line as usize, column as usize);
         let mut delta: i128 = 0;
         let mut original = offset;
         for (start, end, replacement) in &self.edits {
@@ -26,7 +28,7 @@ impl Scoped<'_> {
                 original = (offset as i128 - delta) as usize;
                 break;
             }
-            if offset <= output_end {
+            if offset < output_end {
                 original = *start;
                 break;
             }

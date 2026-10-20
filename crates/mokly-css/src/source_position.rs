@@ -2,7 +2,8 @@
 //!
 //! CSS breaks lines at a line feed, a carriage return, a CRLF pair, and a form
 //! feed, as cssparser counts them. Mokly's own diagnostics and the syntax
-//! failures that `lightningcss` reports therefore agree on every line.
+//! failures that `lightningcss` reports therefore agree on every line. Every
+//! diagnostic column counts characters.
 
 /// The byte offsets where the lines of `text` start.
 fn line_starts(text: &str) -> impl Iterator<Item = usize> + '_ {
@@ -33,7 +34,19 @@ pub(crate) fn line_column(text: &str, offset: usize) -> (usize, usize) {
     (line + 1, text[start..offset].chars().count() + 1)
 }
 
-/// The byte offset where the zero-based `line` starts, or the end of `text`.
-pub(crate) fn line_start(text: &str, line: usize) -> usize {
-    line_starts(text).nth(line).unwrap_or(text.len())
+/// The byte offset of a zero-based line and a one-based column that counts
+/// UTF-16 code units, as cssparser reports a location. A column past the end
+/// of its line stops at the line break.
+pub(crate) fn utf16_offset(text: &str, line: usize, column: usize) -> usize {
+    let start = line_starts(text).nth(line).unwrap_or(text.len());
+    let mut units = column.saturating_sub(1);
+    let mut offset = start;
+    for character in text[start..].chars() {
+        if units == 0 || matches!(character, '\n' | '\r' | '\x0C') {
+            break;
+        }
+        units = units.saturating_sub(character.len_utf16());
+        offset += character.len_utf8();
+    }
+    offset
 }

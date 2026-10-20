@@ -77,3 +77,34 @@ fn diagnostics_count_every_css_line_break() {
         );
     }
 }
+
+/// A syntax failure points at the authored character, also right after a
+/// renamed name or a removed wrapper, and after characters that UTF-16 or
+/// UTF-8 encode with more than one unit.
+#[test]
+fn syntax_failures_point_at_the_authored_character() {
+    for (source, column) in [
+        (".a!{color:red}", 3),
+        (".x :global(.a)!{}", 15),
+        (".a{content:\"é\"} !{}", 17),
+        (".a{content:\"😀\"} !{}", 17),
+    ] {
+        assert_eq!(
+            syntax_location(source),
+            Some((1, column)),
+            "{source}: {}",
+            error(source)
+        );
+    }
+}
+
+/// Every diagnostic counts columns in characters, `@value` included.
+#[test]
+fn value_rules_count_columns_in_characters() {
+    let expected = format!("@value is unsupported in {PATH}:1:6;");
+    assert!(
+        error("/*😀*/@value x: 1;").contains(&expected),
+        "{}",
+        error("/*😀*/@value x: 1;")
+    );
+}
