@@ -40,6 +40,7 @@ pub fn verify(
             length,
             eof: observed_eof,
             digest,
+            ..
         } = version
         {
             let Some(end) = offset.checked_add(*length) else {

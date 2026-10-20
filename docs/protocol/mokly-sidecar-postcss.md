@@ -29,6 +29,10 @@ an observed read. A declaration or a module path alone is not a read witness.
 Runtime builtins use runtime identity and have no invented file digest.
 Each byte range retains its offset, delivered length, and any observed end of file.
 Never compare a range digest with a whole-file digest or infer unread bytes.
+When available, each witness retains the native identity of the descriptor
+that supplied its bytes. Keep a resolved name only when its metadata matches
+that open descriptor. Compare the retained identity before document callbacks
+and at final installation checks. Equal bytes cannot hide a changed target.
 
 Observe supported local compiler inputs before compilation, including JSON and
 configured loaders. Preserve the original byte digest across BOM handling and
@@ -67,12 +71,15 @@ No file, plugin, or context becomes complete because a witness exists.
 
 Untracked descriptors, unknown offsets, overlapping sequential operations, and
 exotic read options retain native behavior without a guessed range witness.
+Sharing a descriptor with a helper or worker makes its implicit cursor opaque.
+Native descriptor APIs, native addons, and consumer workers can move cursors
+without an observation. Such contexts retain late baselines for implicit reads.
 An explicit position can establish a later range after a cursor becomes unknown.
 FileHandle web streams retain raw witnesses without changing reader, cancellation,
 or buffer-transfer behavior. Custom streams retain witnesses only for underlying observed reads.
 Older Node runtimes without synchronous module customization retain ordinary
 file observation and local compiler witnesses. Unobserved transitive ESM loads,
-private resolution metadata, and read-time path identity remain incomplete.
+private resolution metadata, and unavailable native identities remain incomplete.
 Custom Node loaders can return transformed text. Without raw-byte provenance,
 that text cannot become a whole-file witness.
 Observation precedes consumer preloads. A provider that calls an observed file

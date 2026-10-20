@@ -91,6 +91,10 @@ impl SourceSnapshot {
 }
 
 impl SourceTree for SourceSnapshot {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        self.source.file_object(path)
+    }
+
     fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
         self.source.observe_inputs(path, baselines)
     }

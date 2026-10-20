@@ -5,7 +5,7 @@ use std::path::Path;
 
 use mokly_catalogue::config::relative;
 use mokly_sidecar::postcss_evidence::{Evidence, Read};
-use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
+use mokly_source_interface::read_evidence::{FileIdentity, ReadBaseline, ReadEvidence};
 use mokly_source_interface::tree::SourceTree;
 
 use crate::postcss_inventory::{Inventory, normalize};
@@ -40,15 +40,27 @@ pub(crate) fn collect(
     }
     for read in &evidence.reads {
         let (path, baseline) = match read {
-            Read::WholeFile { path, digest } => {
-                (path, ReadBaseline::ObservedWholeFile(digest.clone()))
-            }
+            Read::WholeFile {
+                path,
+                digest,
+                identity,
+            } => (
+                path,
+                match identity {
+                    Some(identity) => ReadBaseline::ObservedFile {
+                        digest: digest.clone(),
+                        identity: file_identity(identity),
+                    },
+                    None => ReadBaseline::ObservedWholeFile(digest.clone()),
+                },
+            ),
             Read::ByteRange {
                 path,
                 digest,
                 offset,
                 length,
                 eof,
+                identity,
             } => (
                 path,
                 ReadBaseline::ObservedRange {
@@ -56,6 +68,7 @@ pub(crate) fn collect(
                     length: *length,
                     eof: *eof,
                     digest: digest.clone(),
+                    identity: identity.as_ref().map(file_identity),
                 },
             ),
         };
@@ -73,6 +86,16 @@ pub(crate) fn collect(
         }
     }
     result
+}
+
+fn file_identity(identity: &mokly_sidecar::postcss_evidence::FileIdentity) -> FileIdentity {
+    FileIdentity {
+        object: identity.object.clone(),
+        canonical: identity
+            .canonical
+            .as_ref()
+            .map(|name| normalize(Path::new(name))),
+    }
 }
 
 fn logical(file: &str, side: &SideInputs) -> Option<String> {

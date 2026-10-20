@@ -64,15 +64,27 @@ root.append({prop:'range',value:'done'});
     [5, "fg", true],
   ] as const)
     assert.ok(
-      reads.some((read) =>
-        isDeepStrictEqual(read, {
-          kind: "byte-range",
-          path: target,
-          digest: createHash("sha256").update(bytes).digest("hex"),
-          offset,
-          length: Buffer.byteLength(bytes),
-          eof,
-        }),
+      reads.some(
+        (read) =>
+          read.kind === "byte-range" &&
+          isDeepStrictEqual(
+            {
+              kind: read.kind,
+              path: read.path,
+              digest: read.digest,
+              offset: read.offset,
+              length: read.length,
+              eof: read.eof,
+            },
+            {
+              kind: "byte-range",
+              path: target,
+              digest: createHash("sha256").update(bytes).digest("hex"),
+              offset,
+              length: Buffer.byteLength(bytes),
+              eof,
+            },
+          ),
       ),
       `missing range ${offset}: ${bytes}: ${JSON.stringify(reads)}`,
     );
@@ -130,4 +142,64 @@ root.append({prop:'reuse',value:'done'});
       `missing remaining bytes for ${file} at ${offset}`,
     );
   }
+});
+
+test("a descriptor shared with an opaque helper keeps its later implicit offset unknown", async (context) => {
+  const { base } = await sidecarSources(context);
+  const file = path.join(base, "shared.txt");
+  await fs.writeFile(file, "abcdef");
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+export default {plugins:[{postcssPlugin:'shared',Once(root,{result}){
+const fd=fs.openSync('shared.txt','r');
+execFileSync(process.execPath,['-e',"require('node:fs').readSync(3,Buffer.alloc(2),0,2,null)"],{stdio:['ignore','pipe','pipe',fd]});
+const bytes=Buffer.alloc(2);fs.readSync(fd,bytes,0,2,null);fs.closeSync(fd);
+root.append({prop:'value',value:bytes.toString()});result.messages.push({type:'dependency',file:'shared.txt'});
+}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+  );
+  assert.match(result.text, /value: cd/u);
+  assert.deepEqual(
+    result.readEvidence.reads.filter((read) => read.path === file),
+    [],
+  );
+  assert.equal(result.readEvidence.coverage, "incomplete");
+});
+
+test("a worker can share a numeric descriptor without a FileHandle transfer", async (context) => {
+  const { base } = await sidecarSources(context);
+  const file = path.join(base, "worker.txt");
+  await fs.writeFile(file, "abcdef");
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `
+import fs from 'node:fs';
+import {Worker} from 'node:worker_threads';
+export default {plugins:[{postcssPlugin:'worker',async Once(root,{result}){
+const fd=fs.openSync('worker.txt','r');
+await new Promise((resolve,reject)=>new Worker("require('node:fs').readSync(require('node:worker_threads').workerData,Buffer.alloc(2),0,2,null)",{eval:true,workerData:fd}).once('error',reject).once('exit',code=>code===0?resolve():reject(new Error('worker failed'))));
+const bytes=Buffer.alloc(2);fs.readSync(fd,bytes,0,2,null);fs.closeSync(fd);
+root.append({prop:'value',value:bytes.toString()});result.messages.push({type:'dependency',file:'worker.txt'});
+}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+  );
+  assert.match(result.text, /value: cd/u);
+  assert.deepEqual(
+    result.readEvidence.reads.filter((read) => read.path === file),
+    [],
+  );
+  assert.equal(result.readEvidence.coverage, "incomplete");
 });

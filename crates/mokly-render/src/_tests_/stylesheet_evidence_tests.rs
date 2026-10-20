@@ -147,6 +147,7 @@ fn ranged_cache_results_keep_their_late_whole_file_stamp_and_original_ranges() {
     observed.read_evidence.insert(
         "tokens.txt".into(),
         ReadBaseline::ObservedRange {
+            identity: None,
             offset: 7,
             length: 3,
             eof: false,

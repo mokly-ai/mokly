@@ -183,6 +183,9 @@ The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
 before consumer preloads in each owned child.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
 file positions and reuse. FileHandle and Node stream reads share range evidence.
+The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds
+witnesses to opened files. [Descriptor sharing](./src/sidecar/postcss-read-sharing.ts)
+keeps unobservable cursor changes opaque.
 
 On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
 its SIGINT and SIGBREAK listeners alive while the binary receives the shared

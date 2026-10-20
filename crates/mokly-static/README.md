@@ -54,6 +54,7 @@ retain every observed whole-file version and byte range through cache reuse and 
 The [evidence verifier](./src/fingerprint_evidence.rs) checks them before callbacks
 and at final verification. Pinned historical sources use their Git digests
 without reading head aliases. Late baselines remain explicit for opaque reads.
+Descriptor identities detect equal-byte target changes before callbacks and installation.
 Observation never makes PostCSS coverage complete. A missing module
 digest is an internal failure. Other inventoried
 sources and reached resources use that same digest path. Unreadable markers

@@ -31,6 +31,8 @@ JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
 The working tree uses the shared `dunce` path spelling, including Windows
 repository identities, so output confinement and input rechecks use matching paths.
+Its file-object metadata uses the opened device and file identifier. Static
+builds can detect equal-byte replacements and symlink retargets after consumer reads.
 PostCSS path, suffix, and regular-file checks use the catalogued
 `config-invalid` diagnostics before a sidecar starts.
 Git root validation belongs to the Git boundary. Config-relative parent
@@ -168,6 +170,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 
 ### Key Code
 
+- [Opened-file identity](./src/working_tree_identity.rs) supplies portable source evidence.
 - [Configuration](./src/config.rs) and [schema validation](./src/config_validation.rs).
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).

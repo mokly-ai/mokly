@@ -48,6 +48,10 @@ pub struct Child {
 /// Missing and replaced paths project to `None`. Reads preserve their errors.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = SourceTreeMock))]
 pub trait SourceTree: Send + Sync {
+    /// Return a native file-object identity for live inputs, independent of path aliases.
+    fn file_object(&self, _path: &Path) -> Result<Option<String>> {
+        Ok(None)
+    }
     /// Retain a consumer's baseline without rereading or upgrading its coverage.
     /// Static admission observes it; ordinary source adapters need no ledger.
     fn observe_input(&self, _path: &Path, _baseline: &ReadBaseline) -> Result<()> {

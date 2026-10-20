@@ -147,6 +147,8 @@ Changes; Serve's watcher ignores the same paths.
    A conflicting version uses the existing `export-invalid` input-change outcome
    and preserves owned output. Cache hits and worker replacement retain the
    original witnesses. A later scan cannot replace them.
+   Retain observed descriptor identities and verified resolved names. Equal-byte
+   replacements and symlink retargets must not replace those read-time identities.
    PostCSS evidence always carries incomplete coverage. Native addons, helper
    processes, uninstrumented workers, unknown descriptor positions, and private
    loader metadata can escape observation. Known unobserved inputs retain their

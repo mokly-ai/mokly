@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use mokly_source_interface::error::{self, SourceError};
+use mokly_source_interface::identity_evidence;
 use mokly_source_interface::range_evidence;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::tree::SourceTree;
@@ -25,6 +26,9 @@ impl Evidence {
         digest: Option<&str>,
     ) -> error::Result<()> {
         if Some(baseline.digest()) == digest {
+            if baseline.identity().is_some() {
+                self.record(path, baseline);
+            }
             return Ok(());
         }
         self.pinned_failure
@@ -62,6 +66,13 @@ impl Evidence {
             let Some(node) = node.filter(|node| Some(node) == current.as_ref()) else {
                 return Err(Error::InputsChanged { path: path.clone() });
             };
+            if versions
+                .iter()
+                .filter_map(ReadBaseline::identity)
+                .any(|identity| !identity_evidence::matches(live, path, identity))
+            {
+                return Err(Error::InputsChanged { path: path.clone() });
+            }
             let captured = captured.digest(&node.identity).ok();
             let current = live.digest(&node.identity).ok();
             if versions.iter().any(|version| {

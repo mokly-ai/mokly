@@ -6,13 +6,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
+import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
 import type { PostcssRead } from "../generated/sidecar/PostcssRead.js";
 
-const reads = new Map<string, Set<string>>();
+const reads = new Map<string, PostcssRead>();
 const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
 const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
+let physicalReader = originalPromiseRead;
 const require = nodeModule.createRequire(import.meta.url);
 const initialModules = new Set(Object.keys(require.cache));
 type FileReader = typeof fs.readFileSync | typeof promises.readFile;
@@ -34,12 +36,20 @@ export const preloadedCode = [
 );
 
 /** Only equal witnessed versions coalesce; a conflicting version remains evidence. */
-export function observeBytes(file: string, bytes: Uint8Array): void {
+export function observeBytes(
+  file: string,
+  bytes: Uint8Array,
+  identity?: PostcssFileIdentity,
+): void {
   const name = path.resolve(file);
   const digest = createHash("sha256").update(bytes).digest("hex");
-  let versions = reads.get(name);
-  if (!versions) reads.set(name, (versions = new Set()));
-  versions.add(digest);
+  const record: PostcssRead = {
+    kind: "whole-file",
+    path: name,
+    digest,
+    ...(identity ? { identity } : {}),
+  };
+  reads.set(JSON.stringify(record), record);
 }
 
 /** Ranges retain their offsets and never become whole-file digests. */
@@ -48,6 +58,7 @@ export function observeRange(
   offset: number,
   bytes: Uint8Array,
   eof = false,
+  identity?: PostcssFileIdentity,
 ): void {
   if (!Number.isSafeInteger(offset) || offset < 0 || (!bytes.length && !eof))
     return;
@@ -58,6 +69,7 @@ export function observeRange(
     offset,
     length: bytes.length,
     eof,
+    ...(identity ? { identity } : {}),
   };
   ranges.set(JSON.stringify(record), record);
 }
@@ -77,7 +89,7 @@ export async function moduleBytesAsync(
   file: string,
   physicalFile = false,
 ): Promise<Buffer | string> {
-  const reader = physicalFile ? originalPromiseRead : promises.readFile;
+  const reader = physicalFile ? physicalReader : promises.readFile;
   const invoke = reader.bind(promises);
   return compilerBytes(
     file,
@@ -91,6 +103,7 @@ export async function moduleBytesAsync(
 /** Only Mokly's own wrappers can certify the raw read below a text conversion. */
 export function markFileReader(reader: FileReader): void {
   observedReaders.add(reader);
+  if (reader === promises.readFile) physicalReader = reader;
 }
 
 function rawReader(reader: FileReader, original: FileReader): boolean {
@@ -163,15 +176,6 @@ export function readEvidence(loaded: Iterable<string>): PostcssEvidence {
   return {
     coverage: "incomplete",
     modules: [...modules],
-    reads: [
-      ...[...reads].flatMap(([path, versions]) =>
-        [...versions].map((digest): PostcssRead => ({
-          kind: "whole-file",
-          path,
-          digest,
-        })),
-      ),
-      ...ranges.values(),
-    ],
+    reads: [...reads.values(), ...ranges.values()],
   };
 }

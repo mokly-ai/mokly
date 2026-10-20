@@ -108,6 +108,18 @@ impl StylesheetBundler for CachedStylesheets {
         stamp.directories(self.tree.as_ref(), &self.root, &bundle.directories);
         let mut consistent = true;
         for (path, versions) in &bundle.read_evidence.inputs {
+            if versions.iter().any(|version| version.identity().is_some()) {
+                let absolute = self.root.join(path);
+                stamp.identity(self.tree.as_ref(), absolute.clone());
+                consistent &= versions
+                    .iter()
+                    .filter_map(|version| version.identity())
+                    .all(|identity| {
+                        stamp.identities[&absolute]
+                            .as_ref()
+                            .is_some_and(|(_, object)| *object == identity.object)
+                    });
+            }
             let mut versions = versions.iter().filter_map(|version| version.whole_digest());
             if let Some(first) = versions.next() {
                 consistent &= versions.all(|other| other == first);

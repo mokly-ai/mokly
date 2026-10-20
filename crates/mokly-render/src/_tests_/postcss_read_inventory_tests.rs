@@ -60,6 +60,7 @@ fn base_modules_use_selected_dependencies_and_undeclared_reads_stay_outside_the_
         ]
         .iter()
         .map(|path| Read::WholeFile {
+            identity: None,
             path: (*path).into(),
             digest: "observed".into(),
         })
@@ -100,6 +101,7 @@ fn module_witnesses_select_the_ancestor_installation_before_repository_relative_
     let evidence = Evidence {
         modules: vec!["/repo/node_modules/plugin/index.js".into()],
         reads: vec![Read::WholeFile {
+            identity: None,
             path: "/repo/node_modules/plugin/index.js".into(),
             digest: "old".into(),
         }],

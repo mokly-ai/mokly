@@ -7,7 +7,6 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
-use mokly_source_interface::range_evidence;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
@@ -29,7 +28,7 @@ pub(crate) struct SideTree {
     pub(crate) repository_roots: Vec<PathBuf>,
 }
 
-enum SourceOrigin {
+pub(crate) enum SourceOrigin {
     Repository,
     Dependency,
 }
@@ -103,7 +102,7 @@ impl SideTree {
             .find_map(|root| identity.strip_prefix(root).ok())
             .map(|relative| self.root.join(relative))
     }
-    fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
+    pub(crate) fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
         if let Some(source) = source_paths::repository_input(&self.root, path) {
             return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
         }
@@ -139,31 +138,14 @@ impl SideTree {
 }
 
 impl SourceTree for SideTree {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        self.read_identity(path)
+    }
     fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
-        self.observe_inputs(path, &BTreeSet::from([baseline.clone()]))
+        self.record_observations(path, &BTreeSet::from([baseline.clone()]))
     }
     fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
-        let (tree, physical, origin) = self.selected(path)?;
-        if let Some(base) = &self._base
-            && matches!(origin, SourceOrigin::Repository)
-            && let Ok(relative) = physical.strip_prefix(&self.root)
-        {
-            let digest = tree.digest(&physical)?;
-            let ranges_valid = range_evidence::verify(tree, &physical, baselines, &digest);
-            for baseline in baselines {
-                let actual = match baseline.whole_digest() {
-                    Some(_) => Some(digest.as_str()),
-                    None => ranges_valid.then(|| baseline.digest()),
-                };
-                self.dependencies.observe_pinned_input(
-                    &base.sources.directory.join(relative),
-                    baseline,
-                    actual,
-                )?;
-            }
-            return Ok(());
-        }
-        tree.observe_inputs(&physical, baselines)
+        self.record_observations(path, baselines)
     }
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         let mut sources = Vec::new();

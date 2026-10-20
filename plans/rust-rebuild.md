@@ -2216,10 +2216,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         in one streamed pass per path and preserve them through both caches.
   - [ ] Complete the remaining coverage: native/helper/worker reads,
         older-runtime transitive ESM loading, private
-        resolution metadata, and read-time path identity. The full M14 item
+        resolution metadata, and unavailable native identity. The full M14 item
         remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
         Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
+  - [x] Retain descriptor-bound file identity and verified resolved names.
+        Detect equal-byte replacements and symlink retargets before callbacks
+        and installation. Keep helper, worker, and native cursor changes opaque.
+        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence-2/`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

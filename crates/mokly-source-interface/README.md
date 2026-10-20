@@ -30,6 +30,9 @@ versions, exact byte ranges, and late hashes. It keeps coverage incomplete.
 `observe_inputs` forwards all observations for one path together. The
 [range verifier](./src/range_evidence.rs) checks them in one streamed pass.
 It retains hashes and offsets without retaining another file payload.
+`file_object` supplies live native identity separately from a path projection.
+Observed file identities retain an optional verified resolved name. Historical
+bytes keep their Git proof while extracted-file identities remain distinct.
 The byte-reading methods read bytes from an inventoried regular file and reject a replacement symlink.
 Callers project an explicit alias and read its target identity. Paths are private source-tree paths; public catalogue JSON uses
 repository-relative metadata instead.

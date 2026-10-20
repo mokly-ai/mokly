@@ -75,6 +75,8 @@ observer. They never enter the head path ledger.
 Conflicting versions cannot seed cross-generation stylesheet reuse.
 Range digests never replace the whole-file cache stamp. Range admission checks
 one stream per path and keeps the original observations through cache hits.
+File-object stamps invalidate same-byte replacements. Base identity checks
+retain the extracted-file identity beside the pinned Git content proof.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.

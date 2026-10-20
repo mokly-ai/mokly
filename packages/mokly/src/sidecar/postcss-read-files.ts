@@ -2,9 +2,16 @@ import fs from "node:fs";
 import promises from "node:fs/promises";
 import { syncBuiltinESMExports } from "node:module";
 
+import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
+
 import { markFileReader, observeBytes } from "./postcss-evidence.js";
 import { handleDescriptor } from "./postcss-read-handles.js";
 import { filename, options } from "./postcss-read-options.js";
+import {
+  ownedRead,
+  readOwned,
+  readOwnedPromise,
+} from "./postcss-read-owned.js";
 import {
   begin,
   finish,
@@ -19,9 +26,10 @@ function deliver(
   file: string,
   value: unknown,
   encoding?: BufferEncoding,
+  identity?: PostcssFileIdentity,
 ): unknown {
   if (!Buffer.isBuffer(value)) return value;
-  observeBytes(file, value);
+  observeBytes(file, value, identity);
   return encoding ? value.toString(encoding) : value;
 }
 
@@ -44,10 +52,14 @@ export function observeFileReads(): void {
       }
       if (!file || !selected || !nativeSyncReaders())
         return Reflect.apply(sync, fs, args);
-      const bytes: unknown = wholeRead(() =>
-        Reflect.apply(sync, fs, [args[0], selected.raw]),
+      let identity: PostcssFileIdentity | undefined;
+      const bytes: unknown = wholeRead(
+        () => Reflect.apply(sync, fs, [args[0], selected.raw]),
+        (value) => {
+          identity = value;
+        },
       );
-      return deliver(file, bytes, selected.encoding);
+      return deliver(file, bytes, selected.encoding, identity);
     },
   });
   Object.defineProperty(fs, "readFile", {
@@ -65,6 +77,22 @@ export function observeFileReads(): void {
         return Reflect.apply(callback, fs, args);
       }
       const ticket = fd === undefined ? undefined : begin(fd, null);
+      if (file && ownedRead(selected.raw)) {
+        return readOwned(
+          args[0],
+          file,
+          selected.raw,
+          (error, bytes, identity) => {
+            Reflect.apply(
+              done,
+              undefined,
+              error
+                ? [error]
+                : [error, deliver(file, bytes, selected.encoding, identity)],
+            );
+          },
+        );
+      }
       try {
         return Reflect.apply(callback, fs, [
           args[0],
@@ -76,16 +104,22 @@ export function observeFileReads(): void {
                 !error && Buffer.isBuffer(bytes) ? bytes : undefined,
                 true,
               );
-            return Reflect.apply(done, this, [
-              error,
+            return Reflect.apply(
+              done,
+              this,
               error
-                ? bytes
-                : file
-                  ? deliver(file, bytes, selected.encoding)
-                  : Buffer.isBuffer(bytes) && selected.encoding
-                    ? bytes.toString(selected.encoding)
-                    : bytes,
-            ]);
+                ? [error]
+                : [
+                    error,
+                    error
+                      ? bytes
+                      : file
+                        ? deliver(file, bytes, selected.encoding)
+                        : Buffer.isBuffer(bytes) && selected.encoding
+                          ? bytes.toString(selected.encoding)
+                          : bytes,
+                  ],
+            );
           },
         ]);
       } catch (error) {
@@ -104,6 +138,14 @@ export function observeFileReads(): void {
         return Reflect.apply(promise, promises, args);
       }
       const ticket = fd === undefined ? undefined : begin(fd, null);
+      if (file && ownedRead(selected.raw)) {
+        const { bytes, identity } = await readOwnedPromise(
+          args[0],
+          file,
+          selected.raw,
+        );
+        return deliver(file, bytes, selected.encoding, identity);
+      }
       try {
         const bytes: unknown = await Reflect.apply(promise, promises, [
           args[0],

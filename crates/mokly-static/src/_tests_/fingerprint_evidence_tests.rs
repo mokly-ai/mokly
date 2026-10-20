@@ -4,7 +4,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use mokly_graph::source_snapshot::SourceSnapshot;
-use mokly_source_interface::read_evidence::ReadBaseline;
+use mokly_source_interface::read_evidence::{FileIdentity, ReadBaseline};
 use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
@@ -119,4 +119,45 @@ fn pinned_base_witnesses_never_read_or_replace_the_matching_head_path() {
     assert!(
         matches!(tree.verify(), Err(Error::InputsChanged { path: changed }) if changed == path)
     );
+}
+
+#[test]
+fn equal_bytes_cannot_hide_a_replaced_open_file_object() {
+    let object = Arc::new(Mutex::new(String::from("device:old")));
+    let current = object.clone();
+    let live = Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers(&|_, path| {
+                Ok(Some(Node {
+                    identity: path.into(),
+                    lexical_kind: FileKind::File,
+                    kind: FileKind::File,
+                }))
+            }),
+        SourceTreeMock::digest
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok("same-bytes".into())),
+        SourceTreeMock::file_object
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                Ok(Some(current.lock().unwrap().clone()))
+            })),
+    ));
+    let tree = CapturedTree::new(Arc::new(live));
+    let path = Path::new("/repo/tokens.txt");
+    tree.observe_input(
+        path,
+        &ReadBaseline::ObservedFile {
+            digest: "same-bytes".into(),
+            identity: FileIdentity {
+                object: "device:old".into(),
+                canonical: Some(path.into()),
+            },
+        },
+    )
+    .unwrap();
+    tree.verify().unwrap();
+    *object.lock().unwrap() = "device:new".into();
+    assert!(matches!(tree.verify(),Err(Error::InputsChanged{path:changed}) if changed==path));
 }

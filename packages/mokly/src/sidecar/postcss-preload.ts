@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { observeModuleLoads, trustEarlyReaders } from "./postcss-evidence.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
+import { observeDescriptorSharing } from "./postcss-read-sharing.js";
 
 const option = `--require=${JSON.stringify(fileURLToPath(import.meta.url))}`;
 const inherited = process.env.NODE_OPTIONS;
@@ -14,4 +15,5 @@ if (inherited?.startsWith(option)) {
 trustEarlyReaders();
 observeFileReads();
 observeDescriptors();
+observeDescriptorSharing();
 observeModuleLoads();

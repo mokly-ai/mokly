@@ -39,6 +39,11 @@ impl CancellableTree {
 }
 
 impl SourceTree for CancellableTree {
+    fn file_object(&self, path: &Path) -> mokly_source_interface::error::Result<Option<String>> {
+        self.check(path)?;
+        self.inner.file_object(path)
+    }
+
     fn observe_input(
         &self,
         path: &Path,

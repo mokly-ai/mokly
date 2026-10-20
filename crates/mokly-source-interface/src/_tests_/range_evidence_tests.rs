@@ -23,6 +23,7 @@ fn digest(bytes: &[u8]) -> String {
 
 fn range(offset: u64, bytes: &[u8], eof: bool) -> ReadBaseline {
     ReadBaseline::ObservedRange {
+        identity: None,
         offset,
         length: bytes.len() as u64,
         eof,

@@ -3,6 +3,19 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+/// Identity obtained from the open descriptor that supplied the observed bytes.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(rename = "PostcssFileIdentity")]
+pub struct FileIdentity {
+    /// Native device and file identifier, represented without number precision loss.
+    pub object: String,
+    /// A resolved name whose metadata matches the open descriptor, when available.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub canonical: Option<String>,
+}
+
 /// A whole-file read witness; a path alone and a partial read cannot create one.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
@@ -14,6 +27,10 @@ pub enum Read {
         path: String,
         /// SHA-256 of the delivered raw bytes, before decoding or compilation.
         digest: String,
+        /// Descriptor identity when the read boundary exposes it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        identity: Option<FileIdentity>,
     },
     /// Hash of exactly one delivered byte range, without claiming unread bytes.
     ByteRange {
@@ -29,6 +46,10 @@ pub enum Read {
         length: u64,
         /// The read also observed the end of the file at or before its end position.
         eof: bool,
+        /// Descriptor identity when the read boundary exposes it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        identity: Option<FileIdentity>,
     },
 }
 
@@ -63,8 +84,23 @@ impl Evidence {
                 .reads
                 .iter()
                 .map(|read| match read {
-                    Read::WholeFile { path, digest } | Read::ByteRange { path, digest, .. } => {
-                        path.capacity() + digest.capacity()
+                    Read::WholeFile {
+                        path,
+                        digest,
+                        identity,
+                    }
+                    | Read::ByteRange {
+                        path,
+                        digest,
+                        identity,
+                        ..
+                    } => {
+                        path.capacity()
+                            + digest.capacity()
+                            + identity.as_ref().map_or(0, |identity| {
+                                identity.object.capacity()
+                                    + identity.canonical.as_ref().map_or(0, String::capacity)
+                            })
                     }
                 })
                 .sum::<usize>()

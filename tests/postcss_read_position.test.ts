@@ -13,7 +13,7 @@ import {
 test("ambiguous sequential reads never guess offsets and descriptor reuse starts a new generation", () => {
   const first = path.resolve("/inputs/concurrent.txt");
   const second = path.resolve("/inputs/reused.txt");
-  opened(50, first);
+  opened(50, first, () => undefined);
   const a = begin(50, null);
   const b = begin(50, null);
   finish(b, Buffer.from("second"));
@@ -26,7 +26,7 @@ test("ambiguous sequential reads never guess offsets and descriptor reuse starts
   finish(begin(50, 4), Buffer.from("known-position"));
   const pending = begin(50, 0);
   closed(50);
-  opened(50, second);
+  opened(50, second, () => undefined);
   finish(pending, Buffer.from("old-generation"));
   finish(begin(50, null), Buffer.from("new"));
   closed(50);

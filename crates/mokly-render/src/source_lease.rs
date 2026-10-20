@@ -20,6 +20,10 @@ pub(crate) struct LeasedTree {
 }
 
 impl SourceTree for LeasedTree {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        self.tree.file_object(path)
+    }
+
     fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
         self.tree.observe_inputs(path, baselines)
     }
