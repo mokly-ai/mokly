@@ -87,20 +87,21 @@ pub(crate) fn prepare(
             source,
         )?;
         props::validate(&validator, &input.props, None, parsed, source)?;
-        if let Some(controls) = &input.controls {
-            declared_controls::validate(validator.schema(), controls, &input.props, source)?;
+        let controls = input
+            .controls
+            .as_ref()
+            .map(|controls| declared_controls::effective(validator.schema(), controls))
+            .unwrap_or_else(|| controls::derive(validator.schema()));
+        if input.controls.is_some() {
+            declared_controls::validate(validator.schema(), &controls, &input.props, source)?;
         }
-        Ok((schemes, validator))
+        Ok((schemes, validator, controls))
     };
     match result() {
-        Ok((schemes, validator)) => {
+        Ok((schemes, validator, controls)) => {
             parent.visual.color_schemes = schemes;
             parent.visual.prop_schema = validator.schema().clone();
-            parent.visual.controls = input
-                .controls
-                .as_ref()
-                .map(|controls| declared_controls::effective(validator.schema(), controls))
-                .unwrap_or_else(|| controls::derive(validator.schema()));
+            parent.visual.controls = controls;
             parent.visual.control_order = input
                 .control_order
                 .iter()

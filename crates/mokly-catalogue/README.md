@@ -67,6 +67,8 @@ This includes schema keywords. Each unsafe keyword produces one
 `props-unsafe-integer` warning for its parent entry, with its schema pointer.
 Shared schema preparation also normalizes numbers received through JSON, so
 JavaScript's decimal spelling retains its binary64 identity in the core.
+Declared controls and story hints retain the same normalized bounds, lengths,
+and choices for build validation and later live edits.
 Preparation captures explicit control order, schema property order, or first-seen
 inferred prop order before it creates canonical lookup maps. Variants retain it.
 Each affected saved entry reports `props-unsafe-integer`, including nested values

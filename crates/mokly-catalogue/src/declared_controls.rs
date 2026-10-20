@@ -4,9 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::controls::{ComponentControl, ControlInput};
-use mokly_model::data::{DataValue, Props};
+use mokly_model::data::{DataValue, Props, round_unsafe_integer};
 use mokly_model::diagnostic::{AuthoringKind, Context};
-use mokly_model::prop_schema::{JsonType, PropSchema, Types};
+use mokly_model::prop_schema::{JsonType, Primitive, PropSchema, Types};
 use mokly_model::validation::{PropValidator, accepts};
 use serde_json::Number;
 
@@ -19,6 +19,7 @@ pub(crate) fn effective(
 ) -> BTreeMap<String, ComponentControl> {
     let mut effective = controls.clone();
     for (name, control) in &mut effective {
+        normalize(control);
         let Some(property) = schema
             .properties
             .as_ref()
@@ -46,6 +47,34 @@ pub(crate) fn effective(
     effective
 }
 
+/// Keep every stored control number in the same representation as its schema and props.
+pub(crate) fn normalize(control: &mut ComponentControl) {
+    match &mut control.input {
+        ControlInput::Text { max_length } => {
+            if let Some(number) = max_length {
+                *number = round_unsafe_integer(number.clone());
+            }
+        }
+        ControlInput::Number {
+            minimum,
+            maximum,
+            step,
+        } => {
+            for number in [minimum, maximum, step].into_iter().flatten() {
+                *number = round_unsafe_integer(number.clone());
+            }
+        }
+        ControlInput::Select { options } => {
+            for option in options {
+                if let Primitive::Number(number) = &mut option.value {
+                    *number = round_unsafe_integer(number.clone());
+                }
+            }
+        }
+        ControlInput::Boolean => {}
+    }
+}
+
 pub(crate) fn validate(
     schema: &PropSchema,
     controls: &BTreeMap<String, ComponentControl>,
@@ -70,7 +99,10 @@ pub(crate) fn validate(
             ControlInput::Text { max_length } => {
                 if !matches!(property.types, Some(Types::Single(JsonType::String)))
                     || max_length.as_ref().is_some_and(|value| {
-                        value.as_u64().is_none() || greater(value, property.max_length.as_ref())
+                        value
+                            .as_f64()
+                            .is_none_or(|number| number < 0.0 || number.fract() != 0.0)
+                            || greater(value, property.max_length.as_ref())
                     })
                 {
                     return Err(failure());
