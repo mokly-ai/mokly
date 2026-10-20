@@ -207,7 +207,11 @@ details as one snapshot and rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. The element
+shows the loading state, or the unavailable state with retry. A use case's
+stage, in `public_stage.tsx`, shows each step's desktop view in a browser
+frame, or, while `narrow_layout.ts` reports a window at most 760px wide, its
+mobile view in a phone frame, under the
+[device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome). The element
 generation of `frame_source_hook.ts` advances only when a frame's
 `documentKey` changes at the same source, so a publication reloads only the
 frames whose document changed. Saved component view records supplied by prop

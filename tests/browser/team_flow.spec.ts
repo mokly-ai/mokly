@@ -19,8 +19,15 @@ for (const width of [390, 1280])
         "Fill in the invitation",
         "See the invitation",
       ]);
+      // Below 760px each step shows its mobile view in a phone frame.
+      const viewport = width <= 760 ? "mobile" : "desktop";
       const elements = page.locator(".mbk-flow-screen iframe");
       await expect(elements).toHaveCount(3);
+      await expect(
+        page.locator(
+          `.mbk-flow-screen > ${viewport === "mobile" ? ".phone-frame" : ".browser-frame"}`,
+        ),
+      ).toHaveCount(3);
       for (const [step, route] of [
         "members",
         "invite",
@@ -30,7 +37,7 @@ for (const width of [390, 1280])
         await expectFrameSource(
           element,
           new RegExp(
-            `/example/team/${route}/index\\.desktop${scheme === "dark" ? "\\.dark" : ""}\\.html$`,
+            `/example/team/${route}/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html$`,
             "u",
           ),
         );
@@ -73,3 +80,27 @@ for (const width of [390, 1280])
       );
       expect(await hasMarker(page)).toBe(true);
     });
+
+test("resizing across 760px swaps each step between its desktop and mobile view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/view/example/team/invite-teammate/");
+  const elements = page.locator(".mbk-flow-screen iframe");
+  const expectSteps = async (viewport: "desktop" | "mobile") => {
+    await expect(
+      page.locator(
+        `.mbk-flow-screen > ${viewport === "mobile" ? ".phone-frame" : ".browser-frame"}`,
+      ),
+    ).toHaveCount(3);
+    await expectFrameSource(
+      elements.nth(0),
+      new RegExp(`/example/team/members/index\\.${viewport}\\.html$`, "u"),
+    );
+  };
+  await expectSteps("desktop");
+  await page.setViewportSize({ width: 760, height: 900 });
+  await expectSteps("mobile");
+  await page.setViewportSize({ width: 761, height: 900 });
+  await expectSteps("desktop");
+});

@@ -1636,7 +1636,7 @@ Tags: ui
 - [x] Item 38 C: apply the style-only heading rule of any rule status.
 - [x] Item 32 A: explain affected-only entries in Details and their
       comparison pane heading; fix the records sentence.
-- [ ] Item 24 A: show each use-case step's mobile view in a phone frame below
+- [x] Item 24 A: show each use-case step's mobile view in a phone frame below
       760px.
 - [ ] Item 17 A: lay out the prop controls as rows with a label column.
 - [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
