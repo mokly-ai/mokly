@@ -45,12 +45,23 @@ excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
-`ReviewState` has no resource-only variant. A view says “Styles this screen uses
-changed” when its state is `changed`, every reason of its review entry is a
-`dependency` reason, and each named path has a rule on this view. A component
-variant says “Styles this variant uses changed”. Any `material`, `inputs`, or
-`structure` reason, a font or image resource, or a dependency without a rule
-keeps the ordinary changed label.
+Each viewport section of a loaded comparison has one stage heading: “Mobile”
+or “Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
+changed”. A Light view that stands in for a Dark selection adds “ · Light
+only”. `ReviewState` has no resource-only variant. A view says “Styles this
+screen uses changed” when its state is `changed`, every reason of its review
+entry is a `dependency` reason, and each named path has a rule on this view. A
+component variant says “Styles this variant uses changed”. Any `material`,
+`inputs`, or `structure` reason, a font or image resource, or a dependency
+without a rule keeps the ordinary label of the view's state:
+
+| View state     | Screen                          | Component                       |
+| -------------- | ------------------------------- | ------------------------------- |
+| `changed`      | “Screen changed”                | “Variant changed”               |
+| `unchanged`    | “No changes to this screen”     | “No changes to this variant”    |
+| `added`        | “New screen”                    | “New variant”                   |
+| `removed`      | “Screen removed”                | “Variant removed”               |
+| `ignored-only` | “Only excluded content changed” | “Only excluded content changed” |
 
 ## Details Copy
 
