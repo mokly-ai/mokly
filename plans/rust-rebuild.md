@@ -2273,6 +2273,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - CI release checks hub review finding 3: effective severity and target filters
     can hide Rust advisories. Severity Low, effort Small. Recommended: A,
     reject those filters. The hub owns the user decision.
+  - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
+    a healthy Node 22 file-delivery run before report download. Separate branch.
+    The hub must decide the Testbox guard before any timeout change.
+    Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
+    `.context/ci-release-fixes/remote-floor-final.log`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
