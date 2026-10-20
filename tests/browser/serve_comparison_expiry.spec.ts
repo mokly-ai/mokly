@@ -1,6 +1,6 @@
 /**
  * Failed renewals in Serve. A selected generation expires after 60 idle
- * seconds, which a browser spec cannot wait for, so `collectGeneration`
+ * seconds, which a browser spec cannot wait for, so `removeGeneration`
  * emulates the collection: once the panes have loaded, the generation is
  * gone, its renewal answers 404, and every other request for its files is
  * refused. Serve keeps an advertised classification generation's JSON and
@@ -20,7 +20,7 @@ import {
   PANE_SOURCE,
   selectedRequests,
 } from "./serve_comparison_ui.js";
-import { collectGeneration } from "./serve_generation_collection.js";
+import { removeGeneration } from "./serve_generation_removal.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -77,11 +77,7 @@ for (const change of ["theme", "viewport"] as const)
     allowBrowserError(
       responseFailure(changes.url, new URL(review).pathname, 404),
     );
-    const collection = await collectGeneration(
-      page,
-      review,
-      page.locator(panes),
-    );
+    const removal = await removeGeneration(page, review, page.locator(panes));
 
     if (change === "theme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -106,8 +102,8 @@ for (const change of ["theme", "viewport"] as const)
       expect(
         generationOf((await page.locator(pane).getAttribute(PANE_SOURCE))!),
       ).not.toBe(expired);
-    expect(collection.renewed()).toBe(true);
-    expect(collection.refused()).toEqual([]);
+    expect(removal.renewed()).toBe(true);
+    expect(removal.refused()).toEqual([]);
     expect(requests).toHaveLength(2);
     expect(requests[1]!.searchParams.get("path")).toBe(changed);
     expect(requests[1]!.searchParams.has("refresh")).toBe(false);
@@ -134,7 +130,7 @@ test("snapshot recovery keeps the selected saved variant", async ({
   allowBrowserError(
     responseFailure(changes.url, new URL(review).pathname, 404),
   );
-  const collection = await collectGeneration(page, review, page.locator(panes));
+  const removal = await removeGeneration(page, review, page.locator(panes));
   await chooseViewport(page, "mobile");
   await expect(page.locator(after)).toHaveAttribute(
     PANE_SOURCE,
@@ -145,8 +141,8 @@ test("snapshot recovery keeps the selected saved variant", async ({
   expect(
     generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
   ).not.toBe(expired);
-  expect(collection.renewed()).toBe(true);
-  expect(collection.refused()).toEqual([]);
+  expect(removal.renewed()).toBe(true);
+  expect(removal.refused()).toEqual([]);
   expect(requests).toHaveLength(2);
   expect(requests[1]!.searchParams.get("path")).toBe(variant);
   expect(requests[1]!.searchParams.size).toBe(1);
@@ -180,7 +176,7 @@ for (const change of ["scheme", "viewport"] as const)
     page.on("request", (request) => {
       if (request.url() === review) metadata.push(request.method());
     });
-    const collection = await collectGeneration(
+    const removal = await removeGeneration(
       page,
       review,
       page.locator(previews),
@@ -204,8 +200,8 @@ for (const change of ["scheme", "viewport"] as const)
     expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(
       review.replace(/review\.json$/u, ""),
     );
-    expect(collection.renewed()).toBe(true);
-    expect(collection.refused()).toEqual([]);
+    expect(removal.renewed()).toBe(true);
+    expect(removal.refused()).toEqual([]);
     expect(metadata).toEqual(["HEAD", "GET"]);
     expect(selections).toEqual([]);
     expect(failed).toEqual([]);

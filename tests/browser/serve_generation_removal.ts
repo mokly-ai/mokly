@@ -1,16 +1,16 @@
 /**
- * Failed renewals for Serve journeys. Serve collects an idle selected
+ * Removed generations for Serve journeys. Serve collects an idle selected
  * generation after 60 seconds, which a browser spec cannot wait for, so
- * `page.route` makes the generation's files disappear as a collection does.
- * Serve itself keeps no test seam.
+ * `page.route` removes the generation's files as a collection does. Serve
+ * itself keeps no test seam.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { SELECTED_ENDPOINT } from "./serve_comparison_ui.js";
 
-/** One emulated failed renewal. */
-export interface CollectedGeneration {
+/** One emulated removal of a generation. */
+export interface RemovedGeneration {
   /** Whether the shell renewed the generation, which then answered 404. */
   renewed(): boolean;
   /** Each other request that reached the generation while it was gone. */
@@ -31,7 +31,7 @@ async function documentsLoaded(frames: Locator): Promise<void> {
 }
 
 /**
- * Make the generation of `review` gone once every document in `frames` has
+ * Remove the generation of `review` once every document in `frames` has
  * loaded. Its first renewal answers 404, and every other request for one of
  * its files answers 404 too and is refused, so a viewer that reuses an old
  * address fails.
@@ -46,11 +46,11 @@ async function documentsLoaded(frames: Locator): Promise<void> {
  * shell's reacquire of the advertised URL: the generation comes back when
  * the shell reacquires its `review.json` after the renewal.
  */
-export async function collectGeneration(
+export async function removeGeneration(
   page: Page,
   review: string,
   frames: Locator,
-): Promise<CollectedGeneration> {
+): Promise<RemovedGeneration> {
   await documentsLoaded(frames);
   const directory = review.slice(0, review.lastIndexOf("/") + 1);
   const selected = new URL(directory).pathname.includes(
@@ -88,7 +88,7 @@ export async function collectGeneration(
         await route.continue();
         return;
       }
-      // Only the first request after the collection captures anew; Serve
+      // Only the first request after the removal captures anew; Serve
       // retains that capture for the requests that follow.
       replaced = true;
       url.searchParams.set("refresh", "1");

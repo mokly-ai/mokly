@@ -312,7 +312,7 @@ whether the page received each response or cancelled the request first.
 `serve_changes_emulation.ts` rewrites the index body into a pending,
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
-publication, and Serve keeps no test seam. `serve_generation_collection.ts`
+publication, and Serve keeps no test seam. `serve_generation_removal.ts`
 makes a generation gone once the documents of the given frames have loaded:
 its first renewal answers 404, and every other request for its files answers
 404 and is refused. For a selected generation this emulates Serve's collection
