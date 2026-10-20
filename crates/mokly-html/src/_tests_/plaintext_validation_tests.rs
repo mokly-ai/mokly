@@ -67,6 +67,75 @@ fn ignored_nested_form_does_not_activate_raw_text_under_math_text() {
     assert_literal(nodes);
 }
 
+fn raw_style_literal(nodes: Vec<Node>) -> Vec<Node> {
+    let catalogue = support::prepared_html("<p>Home</p>", "<p>Note</p>");
+    let entry = catalogue
+        .model
+        .entries
+        .iter()
+        .find(|entry| entry.metadata.path == "home")
+        .unwrap();
+    reparse(nodes, entry, &catalogue).0
+}
+
+fn assert_style_literal(nodes: Vec<Node>) {
+    let parsed = raw_style_literal(nodes);
+    let html = serialize::html(&parsed);
+    assert!(
+        !walk(&parsed).any(|node| matches!(node, Node::Element(element) if element.name == "img")),
+        "{html}"
+    );
+    assert!(
+        html.contains("&lt;img src=x onerror=alert(1)&gt;"),
+        "{html}"
+    );
+}
+
+#[test]
+fn math_annotation_style_uses_escaped_retry_when_parser_keeps_foreign_style() {
+    let mut nodes = parse::fragment("<math><annotation-xml></annotation-xml></math>");
+    let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
+    annotation.push(element("input", &[], Vec::new()));
+    annotation.push(element(
+        "svg",
+        &[],
+        vec![element(
+            "foreignObject",
+            &[],
+            vec![element(
+                "style",
+                &[],
+                vec![Node::Text(
+                    "a::after{content:\"<img src=x onerror=alert(1)>\"}".into(),
+                )],
+            )],
+        )],
+    ));
+    assert_style_literal(nodes);
+}
+
+#[test]
+fn nested_form_style_uses_escaped_retry_when_parser_ignores_form() {
+    let mut nodes = parse::fragment("<form><math><mi></mi></math></form>");
+    let mi = &mut nodes[0].children_mut().unwrap()[0].children_mut().unwrap()[0];
+    mi.children_mut().unwrap().push(element(
+        "form",
+        &[],
+        vec![element(
+            "mglyph",
+            &[],
+            vec![element(
+                "style",
+                &[],
+                vec![Node::Text(
+                    "a{content:\"<img src=x onerror=alert(1)>\"}".into(),
+                )],
+            )],
+        )],
+    ));
+    assert_style_literal(nodes);
+}
+
 #[test]
 fn later_literal_text_cannot_replace_the_predicted_plaintext_identity() {
     let nodes = vec![element(

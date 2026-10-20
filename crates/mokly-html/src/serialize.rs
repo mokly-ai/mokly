@@ -21,6 +21,16 @@ pub(crate) struct Serialized {
     pub(crate) html: String,
     /// Repair identity of the element that activated predicted plaintext mode.
     pub(crate) plaintext: Option<PlaintextStart>,
+    /// Repair identities and names of elements whose contents were written raw.
+    pub(crate) raw_text: Vec<RawTextStart>,
+}
+
+/// Predicted activation point, before any subsequent raw text is written.
+pub(crate) struct RawTextStart {
+    /// Private repair identity attached to the element.
+    pub(crate) id: String,
+    /// Serialized element name.
+    pub(crate) name: String,
 }
 
 /// Predicted activation point, before any subsequent raw text is written.
@@ -42,6 +52,7 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
         .collect();
     let mut instances: Vec<(&str, &str)> = Vec::new();
     let mut mode = TextMode::default();
+    let mut raw_text_starts = Vec::new();
     while let Some(step) = pending.pop() {
         let (node, raw) = match step {
             Step::Node(node, raw) => (node, raw),
@@ -91,6 +102,14 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
                 let raw = token.is_html()
                     && raw_text(&element.name)
                     && (element.name != "plaintext" || mode.plaintext());
+                if raw {
+                    if let Some(id) = element.get(ATTRIBUTE) {
+                        raw_text_starts.push(RawTextStart {
+                            id: id.into(),
+                            name: element.name.clone(),
+                        });
+                    }
+                }
                 pending.extend(
                     element
                         .children
@@ -129,6 +148,7 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
     Serialized {
         html: output,
         plaintext: plaintext_start,
+        raw_text: raw_text_starts,
     }
 }
 

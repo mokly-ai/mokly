@@ -85,17 +85,17 @@ fn reparse(
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
     let mut parsed = parse::document(&serialized.html);
-    if let Some(start) = &serialized.plaintext {
-        if !confirmed_plaintext(&parsed, &start.id)
-            || !confirmed_plaintext(
+    let plaintext_ok = serialized.plaintext.as_ref().is_none_or(|start| {
+        confirmed_plaintext(&parsed, &start.id)
+            && confirmed_plaintext(
                 &parse::document(&serialized.html[..start.prefix_end]),
                 &start.id,
             )
-        {
-            parsed = parse::document(&serialize::document(&marked, true).html);
-        } else {
-            normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
-        }
+    });
+    if !plaintext_ok || !confirmed_raw_text(&parsed, &serialized.raw_text) {
+        parsed = parse::document(&serialize::document(&marked, true).html);
+    } else if let Some(start) = &serialized.plaintext {
+        normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
     }
     normalized_regions::classify(&parsed, &mut repair);
     parsed = normalized_regions::restore(parsed, &mut repair);
@@ -137,6 +137,20 @@ fn reparse(
         })
         .collect();
     (parsed, warnings)
+}
+
+fn confirmed_raw_text(nodes: &[Node], expected: &[serialize::RawTextStart]) -> bool {
+    expected.iter().all(|raw| {
+        tree::walk(nodes).any(|node| {
+            matches!(
+                node,
+                Node::Element(element)
+                    if element.get(ATTRIBUTE) == Some(raw.id.as_str())
+                        && element.is_html()
+                        && element.name == raw.name
+            )
+        })
+    })
 }
 
 fn confirmed_plaintext(nodes: &[Node], id: &str) -> bool {
