@@ -91,7 +91,7 @@ impl Xtask for Application {
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();
                                 if self.interrupt.requested()
-                                    || matches!(source, error::Error::Interrupted { .. })
+                                    || matches!(source, error::Error::Cancelled)
                                 {
                                     return Err(Error::Remote {
                                         source: error::Error::Interrupted { cleanup: 0 },

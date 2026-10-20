@@ -68,7 +68,9 @@ the HTML adapter omits ignored regions and inert template contents.
 `ContainmentPath` shares immutable parent links between elements, copied
 matching trees, embedded documents, and detached match proof. It visits
 regions innermost first and releases deep paths iteratively. Inline proof
-filters by input owner without copying the physical ancestry.
+filters by input owner without copying the physical ancestry. Callers read
+`MatchProof::regions()` for this filtered view. The physical ancestry and
+input-owner filter flag stay private to the crate.
 
 `attribution::attribute` first collects unfiltered own-page matches. It then
 filters nested component matches and produces per-view owner records. A sheet

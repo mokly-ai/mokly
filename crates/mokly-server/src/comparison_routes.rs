@@ -88,3 +88,7 @@ fn selection(query: &str) -> Option<(String, bool)> {
     }
     Some((path?, refresh.unwrap_or(false)))
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_expiry_tests.rs"]
+mod comparison_expiry_tests;

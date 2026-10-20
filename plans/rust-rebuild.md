@@ -2136,7 +2136,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       route with the M14 Serve budgets. Account for GET and HEAD capture work,
       live response files after worker permits end, and OS temporary storage
       outside process RSS (M14 review 6, finding 5; accepted interim design A).
-- [x] Measure Git opaque-asset digest commands and buffered delivery under
+- [ ] Measure Git opaque-asset digest commands and buffered delivery under
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
       Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
@@ -2505,6 +2505,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
+  - `crates/mokly-compare/src/projection_context.rs:24-38` builds its own
+    component counterpart map next to `Lookup::counterpart`. Separate branch.
+  - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants
+    through the kind-less `Pairing::paths` map next to `Lookup::parent`. Separate branch.
   - Milestone 12 static review 3, finding 4: the packed native binary scan for
     `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
     checks only compiler exclusion of the debug fault module.

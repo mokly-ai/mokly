@@ -17,15 +17,16 @@ pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, Str
 #[derive(Clone, Debug)]
 pub struct MatchProof {
     /// Shared physical containment, visited innermost first.
-    pub regions: ContainmentPath,
+    pub(crate) regions: ContainmentPath,
     /// Restrict inline proof to the component that supplied the matched input.
-    pub input_owner_only: bool,
+    pub(crate) input_owner_only: bool,
     /// Resolved input owner for the inline-style seam.
     pub owner: EvidenceOwner,
 }
 
 impl MatchProof {
-    fn regions(&self) -> impl Iterator<Item = &Containment> {
+    /// Visit retained regions innermost first, restricted to the inline input owner.
+    pub fn regions(&self) -> impl Iterator<Item = &Containment> {
         self.regions.iter().filter(|region| {
             !self.input_owner_only
                 || matches!(&self.owner, EvidenceOwner::Component { path } if path == &region.path)
