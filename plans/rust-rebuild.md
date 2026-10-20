@@ -2293,6 +2293,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Defaults-engine hub review 1, finding 5: unused owned rules lack excluded
     evidence. Severity Low, effort Small. Recommended: A, emit one excluded
     document record when none applies. User pending.
+  - Defaults-engine round 1 smoke: an HTML component's own `plaintext` page
+    loses its root range and fails static detail validation. Severity Medium,
+    effort Medium. Recommended: preserve own-page root ownership after repair;
+    the alternative marks Usage unavailable. User decision pending. Evidence:
+    `.context/defaults-engine-round1/plaintext-own-page-export.md`.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
