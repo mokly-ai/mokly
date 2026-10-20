@@ -27,7 +27,7 @@ import {
   OUTSIDE_LEAD,
   SAVED_VIEW_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
-  SHARED,
+  SHARED_IMPACT,
   UNRESOLVED_LEAD,
   VARIANT_TERMINAL,
   evidenceFiles,
@@ -91,10 +91,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
-      // Its views stay unmodified, so it ends with its terminal line and
-      // never says that shared component changes affect it.
-      await expect(evidence.locator("p").last()).toHaveText(VARIANT_TERMINAL);
-      await expect(evidence).not.toContainText(SHARED);
+      // Its own views stay unmodified, but Card changes the shared preview.
+      // The shared-component sentence replaces the no-changes line.
+      await expect(evidence.locator("p").last()).toHaveText(SHARED_IMPACT);
+      await expect(evidence).not.toContainText(VARIANT_TERMINAL);
       await expect(page.locator(".mbk-diff-view")).toHaveCount(0);
     });
 
