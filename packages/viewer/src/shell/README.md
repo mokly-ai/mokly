@@ -243,10 +243,8 @@ the resolved removed record and route.
 routed screen, component parent, or component variant; component routes retain
 their parent schema separately for controls. The lists of a screen or component
 come from its entry detail's `workspace`, and every value is projected only
-from validated index and detail records. A catalogue without published records
-knows only the context's Changes lists, so its workspace carries statuses and
-the Used by links that `workspace_usage_data.ts` projects from manifest usage,
-and no comparison evidence. `comparison_views.tsx` renders
+from validated index and detail records: every catalogue of a delivery carries
+its published records. `comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 

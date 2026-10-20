@@ -1,11 +1,8 @@
+/** Serializable, source-derived state shared by every delivery's inspector. */
+
 import type { InputChange } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
-/** Serializable, source-derived state shared by every delivery's inspector. */
-import {
-  generatedViews,
-  type GeneratedComponentView,
-} from "../components/views.js";
+import type { GeneratedComponentView } from "../components/views.js";
 import type {
   EntryChangeReason,
   ViewResourceEvidence,
@@ -13,19 +10,11 @@ import type {
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { materialChangedEntries, type ShellContext } from "./context.js";
-import {
-  shownComparisonEligible,
-  type EntryStatus,
-  type ViewStatesBySelection,
-} from "./view_status.js";
-import { workspaceComponent, type WorkspaceEntry } from "./workspace_entry.js";
-import { usedByUsageLinks, type UsageLink } from "./workspace_usage_data.js";
-import {
-  standaloneWorkspaceVariant,
-  workspaceVariants,
-  type WorkspaceVariant,
-} from "./workspace_variants.js";
+import type { ShellContext } from "./context.js";
+import type { EntryStatus, ViewStatesBySelection } from "./view_status.js";
+import type { WorkspaceEntry } from "./workspace_entry.js";
+import type { UsageLink } from "./workspace_usage_data.js";
+import type { WorkspaceVariant } from "./workspace_variants.js";
 import type { ChangedViewsBySelection } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
@@ -78,103 +67,24 @@ export interface WorkspaceData {
 }
 
 /**
- * Entry state and actual saved views stay independent of Changes membership.
- * A published catalogue supplies every comparison fact. A catalogue without
- * published records knows only the context's Changes lists, so its workspace
- * carries statuses and no comparison evidence.
+ * The routed entry's workspace, projected from the published index and the
+ * routed entry's detail. Entry state and actual saved views stay independent
+ * of Changes membership. Every catalogue of a delivery carries its published
+ * records.
  */
 export function workspaceData(
   catalogue: Catalogue,
   context: ShellContext,
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
-  if (catalogue.publicModel)
-    return publicWorkspace(
-      catalogue,
-      catalogue.publicModel,
-      entry,
-      context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
-      context.snapshotId,
-      context.base,
-    );
-  const component = workspaceComponent(catalogue, entry);
-  const orphanVariant =
-    entry.kind === "component" &&
-    isManifestComponentVariant(entry) &&
-    component === undefined;
-  const evidenceEntry = component ?? entry;
-  const removed = !catalogue.manifest.entries.some(
-    (candidate) => candidate.path === entry.path,
-  );
-  const materialChanges = materialChangedEntries(context);
-  const known = context.changedEntries !== undefined;
-  const entryStatus: EntryStatus | undefined = !known
-    ? undefined
-    : removed
-      ? "Removed"
-      : materialChanges?.includes(entry.path)
-        ? "Changed"
-        : "Unmodified";
-  const variantSet = component
-    ? workspaceVariants(
-        catalogue,
-        component,
-        known,
-        !catalogue.manifest.entries.some(
-          (candidate) => candidate.path === component.path,
-        ),
-        entry.path === component.path ? entryStatus : undefined,
-        materialChanges,
-      )
-    : orphanVariant
-      ? standaloneWorkspaceVariant(
-          entry,
-          known,
-          removed,
-          entryStatus,
-          context.snapshotId,
-        )
-      : { current: [], rows: [] };
-  const variants = variantSet.rows;
-  const selectedVariant =
-    entry.kind === "component" && isManifestComponentVariant(entry)
-      ? variants.find((variant) => variant.value.path === entry.path)
-      : undefined;
-  const status = selectedVariant?.status ?? entryStatus;
-  return {
-    ...(catalogue.manifest.schemaVersion === "live-index-2"
-      ? {
-          usageComplete: false,
-        }
-      : {}),
+  const model = catalogue.publicModel;
+  if (!model) throw new Error("The catalogue has no published records.");
+  return publicWorkspace(
+    catalogue,
+    model,
     entry,
-    ...(component ? { component } : {}),
-    removed,
-    comparisons: context.comparisons ?? false,
-    comparisonEligible:
-      selectedVariant?.comparisonEligible ??
-      shownComparisonEligible(status, entry.kind),
-    base: context.base,
-    inputChanges: [],
-    relatedComponents: [],
-    components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
-      .filter(
-        (item): item is ManifestComponent =>
-          item.kind === "component" && !isManifestComponentVariant(item),
-      )
-      .map(({ path, title }) => ({ path, title })),
-    views: component
-      ? variantSet.current.flatMap((variant) => generatedViews(variant))
-      : generatedViews(entry),
-    changedViews:
-      evidenceEntry.kind === "screen" ? { [evidenceEntry.path]: [] } : {},
-    viewStates: {},
-    variants,
-    usedBy: usedByUsageLinks(catalogue, evidenceEntry),
-    affected: [],
-    ...(status ? { status } : {}),
-    ...(context.changedEntries
-      ? { included: context.changedEntries.includes(entry.path) }
-      : {}),
-  };
+    context.comparisons ?? model.comparisonUrl !== null,
+    context.snapshotId,
+    context.base,
+  );
 }
