@@ -5,20 +5,36 @@
  * Serve itself keeps no test seam.
  */
 
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { SELECTED_ENDPOINT } from "./serve_comparison_ui.js";
 
 /** One emulated failed renewal. */
 export interface CollectedGeneration {
-  /** Each request that reached the generation while it was gone. */
+  /** Whether the shell renewed the generation, which then answered 404. */
+  renewed(): boolean;
+  /** Each other request that reached the generation while it was gone. */
   refused(): string[];
 }
 
+/** Wait until every frame's document has loaded, with its subresources. */
+async function documentsLoaded(frames: Locator): Promise<void> {
+  await expect(frames).not.toHaveCount(0);
+  for (const frame of await frames.all())
+    await expect
+      .poll(() =>
+        frame.evaluate(
+          (element: HTMLIFrameElement) => element.contentDocument?.readyState,
+        ),
+      )
+      .toBe("complete");
+}
+
 /**
- * Fail the next renewal of the generation of `review`. That HEAD answers 404,
- * and while the generation is gone every request for one of its files
- * answers 404 too, so a viewer that reuses an old address fails.
+ * Make the generation of `review` gone once every document in `frames` has
+ * loaded. Its first renewal answers 404, and every other request for one of
+ * its files answers 404 too and is refused, so a viewer that reuses an old
+ * address fails.
  *
  * A selected generation stays gone, as after Serve collects it. The next
  * request to the stable endpoint then captures a new generation; the
@@ -28,33 +44,37 @@ export interface CollectedGeneration {
  * index advertises, and recaptures its snapshots on request, so that renewal
  * does not fail in Serve. The emulation fails it only to exercise the
  * shell's reacquire of the advertised URL: the generation comes back when
- * the shell reacquires its `review.json`.
+ * the shell reacquires its `review.json` after the renewal.
  */
 export async function collectGeneration(
   page: Page,
   review: string,
+  frames: Locator,
 ): Promise<CollectedGeneration> {
+  await documentsLoaded(frames);
   const directory = review.slice(0, review.lastIndexOf("/") + 1);
   const selected = new URL(directory).pathname.includes(
     "/generations/selected-",
   );
-  let state: "collected" | "live" | "restored" = "live";
+  let renewed = false;
+  let restored = false;
   const refused: string[] = [];
   await page.route(`${directory}**`, async (route) => {
     const request = route.request();
     const metadata = request.url() === review;
-    if (state === "live" && metadata && request.method() === "HEAD") {
-      state = "collected";
-      await route.fulfill({ status: 404 });
-      return;
-    }
-    if (state !== "collected") {
+    if (restored) {
       await route.continue();
       return;
     }
-    if (!selected && metadata && request.method() === "GET") {
+    if (metadata && request.method() === "HEAD" && !renewed) {
+      // The renewal finds the generation gone, as the journey expects.
+      renewed = true;
+      await route.fulfill({ status: 404 });
+      return;
+    }
+    if (!selected && renewed && metadata && request.method() === "GET") {
       await route.fulfill({ response: await route.fetch() });
-      state = "restored";
+      restored = true;
       return;
     }
     refused.push(`${request.method()} ${request.url()}`);
@@ -64,19 +84,15 @@ export async function collectGeneration(
   if (selected)
     await page.route(`**${SELECTED_ENDPOINT}?*`, async (route) => {
       const url = new URL(route.request().url());
-      if (
-        state === "collected" &&
-        !replaced &&
-        !url.searchParams.has("refresh")
-      ) {
-        // Only the first request after the collection captures anew; Serve
-        // retains that capture for the requests that follow.
-        replaced = true;
-        url.searchParams.set("refresh", "1");
-        await route.continue({ url: url.href });
+      if (replaced) {
+        await route.continue();
         return;
       }
-      await route.continue();
+      // Only the first request after the collection captures anew; Serve
+      // retains that capture for the requests that follow.
+      replaced = true;
+      url.searchParams.set("refresh", "1");
+      await route.continue({ url: url.href });
     });
-  return { refused: () => [...refused] };
+  return { renewed: () => renewed, refused: () => [...refused] };
 }

@@ -1,11 +1,12 @@
 /**
  * Failed renewals in Serve. A selected generation expires after 60 idle
  * seconds, which a browser spec cannot wait for, so `collectGeneration`
- * emulates the collection: the next renewal answers 404 and the generation's
- * files are gone. Serve keeps an advertised classification generation's
- * JSON and recaptures its snapshots, so the removed-preview journeys use the
- * same failed renewal only to exercise the shell's reacquire of the
- * advertised URL. The shell must reacquire the comparison or preview before
+ * emulates the collection: once the panes have loaded, the generation is
+ * gone, its renewal answers 404, and every other request for its files is
+ * refused. Serve keeps an advertised classification generation's JSON and
+ * recaptures its snapshots, so the removed-preview journeys use the same
+ * failed renewal only to exercise the shell's reacquire of the advertised
+ * URL. The shell must renew, then reacquire the comparison or preview before
  * it shows the new view, and never request an old document address.
  */
 
@@ -26,6 +27,9 @@ import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 const after = ".mb-pane--after iframe";
 const before = ".mb-pane--before iframe";
 const stage = "[data-mokly-preview]";
+// The documents that must finish loading before a generation goes.
+const panes = "[data-diff-stage] iframe";
+const previews = `${stage} iframe`;
 
 /** Every snapshot response that failed while the spec ran. */
 function failedSnapshots(page: Page): string[] {
@@ -73,7 +77,11 @@ for (const change of ["theme", "viewport"] as const)
     allowBrowserError(
       responseFailure(changes.url, new URL(review).pathname, 404),
     );
-    const collection = await collectGeneration(page, review);
+    const collection = await collectGeneration(
+      page,
+      review,
+      page.locator(panes),
+    );
 
     if (change === "theme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -98,6 +106,7 @@ for (const change of ["theme", "viewport"] as const)
       expect(
         generationOf((await page.locator(pane).getAttribute(PANE_SOURCE))!),
       ).not.toBe(expired);
+    expect(collection.renewed()).toBe(true);
     expect(collection.refused()).toEqual([]);
     expect(requests).toHaveLength(2);
     expect(requests[1]!.searchParams.get("path")).toBe(changed);
@@ -125,7 +134,7 @@ test("snapshot recovery keeps the selected saved variant", async ({
   allowBrowserError(
     responseFailure(changes.url, new URL(review).pathname, 404),
   );
-  const collection = await collectGeneration(page, review);
+  const collection = await collectGeneration(page, review, page.locator(panes));
   await chooseViewport(page, "mobile");
   await expect(page.locator(after)).toHaveAttribute(
     PANE_SOURCE,
@@ -136,6 +145,7 @@ test("snapshot recovery keeps the selected saved variant", async ({
   expect(
     generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
   ).not.toBe(expired);
+  expect(collection.renewed()).toBe(true);
   expect(collection.refused()).toEqual([]);
   expect(requests).toHaveLength(2);
   expect(requests[1]!.searchParams.get("path")).toBe(variant);
@@ -170,7 +180,11 @@ for (const change of ["scheme", "viewport"] as const)
     page.on("request", (request) => {
       if (request.url() === review) metadata.push(request.method());
     });
-    const collection = await collectGeneration(page, review);
+    const collection = await collectGeneration(
+      page,
+      review,
+      page.locator(previews),
+    );
 
     if (change === "scheme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -190,6 +204,7 @@ for (const change of ["scheme", "viewport"] as const)
     expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(
       review.replace(/review\.json$/u, ""),
     );
+    expect(collection.renewed()).toBe(true);
     expect(collection.refused()).toEqual([]);
     expect(metadata).toEqual(["HEAD", "GET"]);
     expect(selections).toEqual([]);
