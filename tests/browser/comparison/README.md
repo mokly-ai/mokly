@@ -142,8 +142,8 @@ anchors, echoes, and the page mirror.
 `branch_point_test.ts` supplies `test` and the worker fixture `branchCopy`.
 Its `baseURL` serves a separate comparison copy. Use `branchCopy.directory`
 for byte assertions. The source repository is removed before requests start.
-The copy is read-only. Specs import the named case paths, `branchPointPaths`,
-from `tests/helpers/branch_point_sources.ts`.
+The copy is read-only. Import the named case paths, `branchPointPaths`, from
+`tests/helpers/branch_point_sources.ts`.
 
 `createComparisonCatalogue(root, additions?)` calls the optional source hook
 before each of its two commits. The default catalogue has no extra entries.

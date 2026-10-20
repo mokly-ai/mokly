@@ -2913,6 +2913,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - `packages/viewer/src/shell/css_previews.ts`: in the embedded viewer,
       the `24rem` width limit of the preview note follows the host page's
       root font size, but its 13px text does not. Separate branch.
+  - [x] F18 re-review, on 2026-10-20: finding 37, a guide sentence that
+        said specs import `branchPointPaths`, is fixed by option A. The full
+        report is `.context/m10/f18/review_2.md`.
+  - F18 re-review finding 38 for the user: the F18 review decision line has
+    no number. Severity Low, effort Small. Recommended: A, add the number
+    that the F18 final report gives the decision, 39.
+  - Outside the F18 re-review scope:
+    - `xtask/src/check/commands.rs`: the gate runs cargo without `--locked`,
+      so a stale `Cargo.lock` passes the gate and fails only the release
+      build. Separate branch.
   - [x] F15 review finding 33: the delivery spec selected the reused-parent
         check by its case name. Applied A as follow-up F18 item 1, as the
         orchestrator directed on 2026-10-20. The case's delivery facts hold
