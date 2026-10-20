@@ -64,6 +64,9 @@ fn escaping_paths_and_unsupported_suffixes_fail_without_source_access() {
     for path in [
         "../../outside.mjs",
         "/repo/config.mjs",
+        "//host/share/config.mjs",
+        "C:/repo/config.mjs",
+        "C:config.mjs",
         "bad\\path.mjs",
         "file:config.mjs",
     ] {
