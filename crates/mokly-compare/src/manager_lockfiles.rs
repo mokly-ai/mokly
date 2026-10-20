@@ -85,9 +85,20 @@ fn reference(value: &str, project: &str) -> Result<()> {
         if value_range.starts_with("patch:") {
             local_specifications::validate(value_range, &parent, project)?;
         } else {
-            let source = value_range.split("::").next().unwrap_or(value_range);
-            let source = source.split('#').next().unwrap_or(source);
+            let reference = value_range.split("::").next().unwrap_or(value_range);
+            let (source, selector) = reference
+                .split_once('#')
+                .map(|(source, selector)| (source, Some(selector)))
+                .unwrap_or((reference, None));
             local_specifications::validate(source, &parent, project)?;
+            if !source.contains(':') && source.contains('/') {
+                manifest::target(&parent, source)?;
+            }
+            if manifest::local(source).is_some()
+                && let Some(selector) = selector
+            {
+                manifest::target(&parent, selector)?;
+            }
         }
         pending = locator(&value)?;
     }
@@ -100,14 +111,17 @@ fn importer(value: &str, project: &str) -> Result<String> {
     let mut parent = project.to_owned();
     while let Some(value) = pending {
         let value_range = range(&value);
-        let source = value_range.split("::").next().unwrap_or(value_range);
-        let source = source.split('#').next().unwrap_or(source);
+        let reference = value_range.split("::").next().unwrap_or(value_range);
+        let (source, selector) = reference
+            .split_once('#')
+            .map(|(source, selector)| (source, Some(selector)))
+            .unwrap_or((reference, None));
         if let Some(workspace) = source.strip_prefix("workspace:") {
             parent = manifest::target(project, workspace)?;
             break;
         }
         if let Some(local) = manifest::local(source) {
-            paths.push(local.to_owned());
+            paths.push(selector.unwrap_or(local).to_owned());
         }
         pending = locator(&value)?;
     }

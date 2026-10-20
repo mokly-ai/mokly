@@ -133,3 +133,38 @@ fn outside_lockfile_sources_start_no_process_and_read_no_storage() {
         Fallback::LocalOutside
     ));
 }
+
+#[test]
+fn pnpm_bare_directory_and_patch_fields_cannot_escape_the_repository() {
+    for lock in [
+        "packages:\n  ui@1.0.0:\n    resolution: {directory: 'safe/../../outside'}",
+        "patchedDependencies:\n  ui@1.0.0:\n    path: safe/../../outside.patch",
+        "shared: &outside safe/../../outside\npackages:\n  ui@1.0.0:\n    resolution: {directory: *outside}",
+    ] {
+        assert!(
+            matches!(
+                validate(&files("pnpm-lock.yaml", lock)),
+                Err(Error::LocalOutside { .. })
+            ),
+            "{lock}"
+        );
+    }
+}
+
+#[test]
+fn yarn_file_selectors_cannot_escape_an_inside_source_path() {
+    let lock = "__metadata: {version: 8}\nui:\n  resolution: 'ui@file:vendor/ui.tgz#safe/../../outside.tgz::locator=root%40workspace%3A.'";
+    assert!(matches!(
+        validate(&files("yarn.lock", lock)),
+        Err(Error::LocalOutside { .. })
+    ));
+}
+
+#[test]
+fn yarn_locator_selectors_define_the_actual_importer_directory() {
+    let lock = "__metadata: {version: 8}\nui:\n  resolution: 'ui@file:../outside.tgz::locator=root%40file%3Asafe%2Fdeep%23.'";
+    assert!(matches!(
+        validate(&files("yarn.lock", lock)),
+        Err(Error::LocalOutside { .. })
+    ));
+}
