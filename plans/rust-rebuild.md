@@ -510,14 +510,13 @@ the same copy.
   first-seen inferred prop order. Reject key sorting because author order
   communicates the intended editing sequence. Regenerate the shared types.
 
-**Open decision N1 (2026-10-20):** Item 6 settles prop values. Schema keyword
-integers outside the JavaScript safe range still retain exact core values,
-while a browser rounds them during JSON decoding. A live edit can pass the
-viewer and fail in the core. Severity Medium, effort Large for recommended B.
-Options: A keeps exact schema values and documents the limitation; B rounds
-schema integers with a warning; C rejects unsafe schema integers. Recommend B
-to keep core and viewer validation consistent while accepting recoverable input.
-Evidence: `.context/defaults-cli/schema-bounds-probe.log`.
+**Decision 6 C clarification (user, 2026-10-20):** The M4 option covers every
+authored number, including props and schema keywords. Close N1 under 6 C.
+Round unsafe YAML integers before schema validation and warn for schema
+keywords. Numeric choice coercion uses the same rounded values. This restores
+catalogues whose saved props equal an unsafe schema limit. Reject exact core
+keywords and unconditional failure because the core and viewer must agree.
+Evidence: `.context/defaults-cli-fix1/finding1-red.log`.
 
 **Hub review of `rebuild/defaults-viewer`, finding 2, requirement applied by
 default (user rule), 2026-10-20:** the device chrome contract states that an
@@ -2498,6 +2497,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
@@ -2574,12 +2575,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     concurrent tracing-subscriber capture; not proven. Separate branch.
     Evidence: `.context/ci-gates/repository-remainder.log` and
     `.context/ci-gates/sidecar-rerun.log`.
-  - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
-        effort Large. Recommended B: round schema integers with a warning.
-  - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
-    Effort Large. Covers defaults review finding 1. No previous examples found.
-    The focused repair applies item 16 B before link and slot consumers.
-    Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
+        Round every authored number, including schema keywords, with warnings.
+  - CLI defaults fix1 review 3, finding 2: control-only unsafe numbers lack warnings. Severity Medium, effort Medium. Recommended A: agree field paths, messages, and duplicate rules, then warn on authored control numbers. Broader preparation tracking is option B, Large. Wait for the user.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
+  - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
+  - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
+  - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
     Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
   - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
@@ -2882,6 +2884,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         edited viewer README passages to `packages/viewer/docs/`. The merge
         carries each side's edits to the passage's new place. Merge
         decisions: `.context/m10/f15/merge2-decisions.md`.
+  - [x] F18 merge of the rebuild tip `780f84ad`, on 2026-10-20: the tip's
+        batch 15 merge kept the F9b host specs beside the D1 specs, which
+        the first F15 merge had joined under decision 10. This merge keeps
+        the F15 resolution and the `compactSearch` marker. The tip's copies
+        of the F9b specs equal the originals. Merge decisions:
+        `.context/m10/f18/merge-decisions.md`.
   - [x] F15 review finding 33: the delivery spec selected the reused-parent
         check by its case name. Applied A as follow-up F18 item 1, as the
         orchestrator directed on 2026-10-20. The case's delivery facts hold
@@ -3105,6 +3113,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Milestone 4 unsafe prop integers: settled on 2026-10-20 by item 6 C,
         applied by default (user rule). Round to binary64 with a warning.
         Schema keyword precision remains open as N1.
+  - [x] N1 schema keyword precision: closed on 2026-10-20 by the user's
+        clarification that decision 6 C includes every authored number.
   - [x] Milestone 4 review 1, finding 10: bound YAML alias expansion at
         1,000,000 nodes per file with `html-front-matter`, before any copy.
         Decision: item 7 option A, applied by default (user rule), 2026-10-20.

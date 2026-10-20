@@ -26,8 +26,6 @@ pub struct BuildRequest {
     pub no_changes: bool,
     /// The user explicitly requested --strict.
     pub strict: bool,
-    /// Effective policy, resolved by warnings_are_fatal.
-    pub warnings_are_fatal: bool,
     /// Inspected revision and repository metadata used for envelope finalization.
     pub publication: Publication,
 }
@@ -102,11 +100,6 @@ impl Directories for SystemDirectories {
         }
         Ok(())
     }
-}
-
-/// Publish warnings become fatal only when the caller requests strict mode.
-pub fn warnings_are_fatal(strict: bool) -> bool {
-    strict
 }
 
 fn directory_error(temporary_root: PathBuf, source: std::io::Error) -> Error {

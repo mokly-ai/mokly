@@ -175,6 +175,22 @@ impl Style {
     }
 }
 
+/// Format a warning glyph and line while preserving the caller's ANSI truncation order.
+/// Changes bounds styled bytes; Serve bounds plain bytes before coloring its glyph.
+pub fn warning_line(style: &Style, message: &str, color_before_limit: bool) -> String {
+    if style.mode == Mode::Plain {
+        return format!("! {message}\n");
+    }
+    let glyph = if style.color { "\x1b[33m!\x1b[0m" } else { "!" };
+    let line = format!("  ! {message}");
+    let line = if color_before_limit {
+        bounded(&line.replacen('!', glyph, 1), style.columns)
+    } else {
+        bounded(&line, style.columns).replacen('!', glyph, 1)
+    };
+    format!("{line}\n")
+}
+
 /// Truncate by display columns, retaining complete ANSI CSI sequences.
 pub fn bounded(text: &str, columns: usize) -> String {
     let columns = if columns > 0 { columns } else { 80 };

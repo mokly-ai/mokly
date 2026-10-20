@@ -183,8 +183,9 @@ widths on three hosts: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `MovedHost`. `branch_viewer_test.ts` serves the embedded viewer to both
-embedded specs.
+a `MovedHost`. The checks read its `BranchPointHost` part, which keeps the
+`EntryHost` path check and says when comparisons are captured.
+`branch_viewer_test.ts` serves the embedded viewer to both embedded specs.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
