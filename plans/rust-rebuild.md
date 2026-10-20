@@ -1490,11 +1490,16 @@ Tags: ui
       The live coverage docs include these retained proofs.
     - The browser test guide stays one page past 300 lines. Decision 2 A of
       the D1 round 2 report, approved by the orchestrator on 2026-10-20.
-- [ ] Complete the M8 browser sweep's comparison UI cases against review v8
+- [x] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
-  - [ ] Port the cases that the shared copied comparison output supports,
+  - [x] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
+  - [x] Port the last rows: whole-page, component, and outside stylesheet
+        Details with their approved designs, the React evidence copy, the
+        removed page's history, and the branch-point cases through Serve and
+        the embedded viewer. Round 4 of the D1 delegate, given by the
+        orchestrator on 2026-10-20.
   - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
   - [x] Port the moved-entry cases with the shared moved fixtures in the
@@ -1570,6 +1575,9 @@ merge of the rebuild tip `3d2d1535`:
 The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
 2 at `659eb918` onto the rebuild tip `d857b6cf`:
 `.context/rust-rebuild/delegation/m10-d1/report-3.md`.
+The D1 round 4 rows, their fixture entries, the branch-point hosts, the
+example build measurement, and the sweep inputs:
+`.context/rust-rebuild/delegation/m10-d1/report-4.md`.
 
 - [ ] Commit.
 
@@ -2379,7 +2387,7 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       own sources. Separate branch.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
-      only on the branch copy. Separate branch.
+      only on the branch copy. Done in round 4 of the D1 delegate.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
