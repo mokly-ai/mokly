@@ -2890,6 +2890,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the F15 resolution and the `compactSearch` marker. The tip's copies
         of the F9b specs equal the originals. Merge decisions:
         `.context/m10/f18/merge-decisions.md`.
+  - [x] F18 gate, on 2026-10-20: RUSTSEC-2026-0382, published that day,
+        flags `rustls-webpki` 0.103.15, which `mokly publish` uses to verify
+        certificates. The Rust audit then failed on every branch.
+        `Cargo.lock` takes the patched 0.103.16 as a reviewed dependency
+        change, and only that entry changes.
   - [x] F15 review finding 33: the delivery spec selected the reused-parent
         check by its case name. Applied A as follow-up F18 item 1, as the
         orchestrator directed on 2026-10-20. The case's delivery facts hold
