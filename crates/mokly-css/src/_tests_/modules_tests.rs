@@ -129,3 +129,14 @@ fn value_rules_report_their_own_line_and_column() {
         "{error}"
     );
 }
+
+#[test]
+fn animation_names_after_functions_keep_their_own_ranges() {
+    let path = "ui/motion.module.css";
+    let source = "@keyframes spin{to{opacity:0}}.a{animation:steps(4)spin 1s}";
+    let (css, _) = scope(path, source).unwrap();
+    let expected = source
+        .replace("spin", &scoped_name(path, "spin"))
+        .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
+    assert_eq!(css, expected);
+}

@@ -22,6 +22,7 @@ impl Renamer<'_> {
     ) {
         let mut shorthand = Shorthand::default();
         while !parser.is_exhausted() {
+            parser.skip_whitespace();
             let start = offset + parser.position().byte_index();
             let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
                 break;
