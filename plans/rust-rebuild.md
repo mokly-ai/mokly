@@ -2642,10 +2642,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         cases now get the catalogued empty-wrapper message, which the wrapper
         table test pins. In a block where lightningcss reads no rules, such a
         statement stays as authored.
-  - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
-    check always reports line 1, column 1, though its catalogue row shows
-    `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
-    branch.
+  - [x] `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
+        check always reports line 1, column 1, though its catalogue row
+        shows `{line}:{column}`. Found by the M14 nesting round 6 review.
+        Separate branch. Done on 2026-10-20 in nesting round 7, as the
+        orchestrator asked: the failure points at the first authored token
+        that scoping would change, or at the end of the stylesheet when
+        scoping only adds tokens there.
   - `crates/mokly-css/src/rename_selectors.rs:99`: removing a bare `:global`
     or `:local` before an at-keyword turns a rule into an at-rule, for
     example `:global@media all{}` into `@media all{}`, and the token check

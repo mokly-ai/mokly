@@ -6,33 +6,63 @@ use cssparser::Token;
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
+use crate::source_position::line_column;
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::{Tokens, opening};
 
+/// Compare the authored and scoped tokens. A failure points at the first
+/// authored token that scoping would change, or at the end of the stylesheet
+/// when scoping only adds tokens there.
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
     let prefix = format!("mokly_{}_", &digest(path.as_bytes())[..12]);
-    if fingerprint(source, &prefix) == fingerprint(output, &prefix) {
+    let authored = fingerprint(source, &prefix);
+    let scoped = fingerprint(output, &prefix);
+    let changed = authored
+        .iter()
+        .zip(&scoped)
+        .position(|(authored, scoped)| authored.text != scoped.text)
+        .or_else(|| (authored.len() != scoped.len()).then(|| authored.len().min(scoped.len())));
+    let Some(index) = changed else {
         return Ok(());
-    }
+    };
+    let offset = authored
+        .get(index)
+        .map_or(source.len(), |entry| entry.offset);
+    let (line, column) = line_column(source, offset);
     Err(CssError::Transform {
         kind: TransformFailure::Modules,
         message: format!(
-            "CSS Modules scoping would change more than local names in {path}:1:1; move this CSS to a plain stylesheet"
+            "CSS Modules scoping would change more than local names in {path}:{line}:{column}; move this CSS to a plain stylesheet"
         ),
     })
+}
+
+/// One fingerprint token, and the byte offset of the source token it stands for.
+struct Entry {
+    text: String,
+    offset: usize,
+}
+
+impl Entry {
+    fn new(text: impl Into<String>, offset: usize) -> Self {
+        Self {
+            text: text.into(),
+            offset,
+        }
+    }
 }
 
 /// The tokens in authored order, without local-name prefixes, scope wrappers,
 /// or compositions, so only module renames compare equal. Whitespace and
 /// comments carry no CSS meaning and are left out: removing a composition
 /// keeps the comments before it.
-fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
+fn fingerprint(source: &str, prefix: &str) -> Vec<Entry> {
     let tokens = Tokens::new(source);
     let mut output = Vec::new();
     let mut pending = vec![Work::Block(tokens.root(), Grammar::Rules)];
     while let Some(work) = pending.pop() {
         match work {
-            Work::Emit(text) => output.push(text.into()),
+            Work::Emit(text, offset) => output.push(Entry::new(text, offset)),
             Work::Block(mut range, grammar) => {
                 let Some(section) = token_sections::next(&tokens, &mut range, grammar) else {
                     continue;
@@ -40,9 +70,9 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                 pending.push(Work::Block(range, grammar));
                 if let Some(block) = section.block {
                     let names = renamed_prelude(&section.statement);
-                    pending.push(Work::Emit("}"));
+                    pending.push(Work::Emit("}", tokens.offset(block.range.end)));
                     pending.push(Work::Block(block.range, block.grammar));
-                    pending.push(Work::Emit("{"));
+                    pending.push(Work::Emit("{", section.end));
                     pending.push(Work::Tokens(section.prelude, names));
                 } else {
                     let names = match &section.statement {
@@ -57,7 +87,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                         statement => renamed_prelude(statement),
                     };
                     if section.semicolon {
-                        pending.push(Work::Emit(";"));
+                        pending.push(Work::Emit(";", section.end));
                     }
                     pending.push(Work::Tokens(section.prelude, names));
                 }
@@ -84,7 +114,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                         } else {
                             value
                         };
-                        output.push(format!("{kind}:{value}"));
+                        output.push(Entry::new(format!("{kind}:{value}"), node.start));
                     }
                     Token::Colon if names => {
                         let mut lookahead = range.clone();
@@ -103,14 +133,14 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                                 range = lookahead;
                                 child = Some(tokens.children(index));
                             }
-                            _ => output.push(":".into()),
+                            _ => output.push(Entry::new(":", node.start)),
                         }
                     }
                     token => {
-                        output.push(format!("{token:?}"));
+                        output.push(Entry::new(format!("{token:?}"), node.start));
                         if opening(token).is_some() {
                             pending.push(Work::Tokens(range, names));
-                            pending.push(Work::Emit("end"));
+                            pending.push(Work::Emit("end", node.body_end));
                             pending.push(Work::Tokens(tokens.children(index), names));
                             continue;
                         }
@@ -143,6 +173,7 @@ enum Work {
     Block(Range<usize>, Grammar),
     /// Tokens of a range; true where local names lose the scope prefix.
     Tokens(Range<usize>, bool),
-    /// A fixed marker, such as a block boundary.
-    Emit(&'static str),
+    /// A fixed marker, such as a block boundary, and the byte offset of the
+    /// source token it stands for.
+    Emit(&'static str, usize),
 }
