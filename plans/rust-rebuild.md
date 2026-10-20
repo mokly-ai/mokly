@@ -2585,6 +2585,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       responsibility to seven. Evidence: `.context/ci-shard-balance/review.md`,
       `review-cap-red.log`, and `review-cap-green.log`.
 
+- [x] CI round 5 final measurement calibration (2026-10-20): include all
+      three successful browser report sets in the mean per-test scheduling
+      costs. The complete remote gate at `ec47233e` passed seven commands,
+      five reports, and cleanup, but command minutes 15.25, 14.48, 15.98,
+      and 21.63 still missed the 15-percent balance target. Shard 4's median
+      file duration was 1.31 times its prior sample. Its fixture overhead was
+      4.99 minutes, against 2.08 to 2.62 elsewhere. Keep fixture and job times
+      as separate observations rather than distributing one box's overhead
+      across future file costs. The refreshed assignments have 362, 573, 668,
+      and 646 tests under the same 703-test cap. Replaying per-test work gives
+      spreads of 8.4, 10.1, and 4.6 percent for the three measured samples.
+      Actual hosted acceptance stays with the hub. Evidence:
+      `.context/ci-shard-balance/final-calibration.json` and `timings.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public

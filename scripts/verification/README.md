@@ -16,18 +16,18 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They combine the per-test
-observations from hosted run `39455750846` at `b1f3c86f` and remote run
-`20261020T191118Z-972099` at `300c4dae`. Both browser report sets passed.
-The remote complete gate failed its repository audit on a new advisory.
+inputs in estimated milliseconds per test. They combine per-test observations
+from hosted run `39455750846` at `b1f3c86f` and remote runs
+`20261020T191118Z-972099` at `300c4dae` and `20261020T194406Z-997895` at
+`ec47233e`. All three browser report sets passed. The first remote complete
+gate failed its repository audit on a new advisory. The second gate passed.
 
 For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Multiply by the shard report's `durationMs` divided
-by its total observed test duration. This distributes measured fixture and
-runner overhead across the spec costs. Average the available sample costs
-for each file and round to three decimal places. A file present in only one
-sample uses that sample. Refresh from complete, successful browser report
+its observed test count. Average the available per-test sample costs for each
+file and round to three decimal places. A file absent from an older sample
+uses the available samples. Refresh from complete, successful browser report
 sets and retain the source reports and calculations under `.context/`.
+Report fixture and whole-job durations separately to check the actual balance.
 
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
