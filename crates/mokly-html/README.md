@@ -21,6 +21,7 @@ injected `dyn FragmentRenderer`. Screen and component bodies use one render
 path and the [shared template grammar](../../docs/protocol/mokly-html-screens.md#screen-body).
 Literal integer component attributes use the same binary64 rounding and
 `props-unsafe-integer` warnings as saved props.
+Numeric `enum`, `const`, and `oneOf` coercion returns the same rounded values.
 Authenticated JavaScript component instances report the same warning for
 unsafe integer props, including nested React invocations.
 Named slots retain their supplier's props and owner. A repeated slot

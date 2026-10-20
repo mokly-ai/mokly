@@ -12,7 +12,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::settings::Settings;
 
-use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
+use crate::publication::build::{BuildRequest, Directories, StaticOutput};
 use crate::publication::error::{Error, ExchangeResult, Result};
 use crate::publication::mapping::checkout_result;
 
@@ -44,7 +44,7 @@ pub struct Options {
 pub trait BuildReporter: Send + Sync {
     /// Report the private build directory exactly once, before calling the builder.
     fn build_directory(&self, directory: &std::path::Path);
-    /// Explain a retained local snapshot after a successful remote publication.
+    /// Warn with the allocated private root when cleanup fails after publication.
     fn retained_directory(&self, directory: &std::path::Path);
 }
 
@@ -105,7 +105,8 @@ impl Publish for Command {
             ),
             cancellation,
         )?;
-        let directory = self.directories.create(&initial.root)?;
+        let private_directory = self.directories.create(&initial.root)?;
+        let directory = private_directory.join("site");
         self.reporter.build_directory(&directory);
         let request = BuildRequest {
             invocation_directory: options.directory.clone(),
@@ -114,7 +115,6 @@ impl Publish for Command {
             config: options.config.clone(),
             base: options.base.clone(),
             no_changes: options.no_changes,
-            warnings_are_fatal: warnings_are_fatal(options.strict),
             strict: options.strict,
             publication,
         };
@@ -157,8 +157,8 @@ impl Publish for Command {
             .publish(prepared, settings, cancellation)
             .await
             .publication()?;
-        if self.directories.remove(&directory).is_err() {
-            self.reporter.retained_directory(&directory);
+        if self.directories.remove(&private_directory).is_err() {
+            self.reporter.retained_directory(&private_directory);
         }
         Ok(receipt)
     }

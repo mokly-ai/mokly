@@ -13,7 +13,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot, OutputSnapshotMock};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::publication::build::{DirectoriesMock, StaticOutputMock, warnings_are_fatal};
+use crate::publication::build::{DirectoriesMock, StaticOutputMock};
 use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
 use super::support::{active, artifact, publication, settings};
@@ -55,6 +55,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
         (Outcome::Published, false),
         (Outcome::AlreadyPublished, false),
         (Outcome::Published, true),
+        (Outcome::AlreadyPublished, true),
     ] {
         let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
             OutputSnapshotMock::capture
@@ -80,16 +81,16 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
                 .next_call(matching!(_))
                 .returns(Ok(PathBuf::from("/private/publish"))),
             BuildReporterMock::build_directory
-                .next_call(matching!(_))
+                .next_call(matching!((path) if *path == Path::new("/private/publish/site")))
                 .returns(()),
             StaticOutputMock::build
                 .next_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, request, _| {
-                    assert_eq!(request.directory, PathBuf::from("/private/publish"));
+                    assert_eq!(request.directory, PathBuf::from("/private/publish/site"));
                     assert_eq!(request.repository_root, PathBuf::from("/repo"));
                     assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
                     assert!(request.no_changes);
-                    assert!(!request.warnings_are_fatal);
+                    assert!(!request.strict);
                     assert!(request.base.is_none());
                     Ok(snapshot.clone())
                 })),
@@ -130,8 +131,6 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
                 .unwrap(),
             expected
         );
-        assert!(!warnings_are_fatal(false));
-        assert!(warnings_are_fatal(true));
     }
 }
 
@@ -157,7 +156,6 @@ async fn a_dirty_checkout_stops_before_build_or_network() {
 #[tokio::test]
 async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network() {
     for error in [
-        Error::BuildWarnings,
         Error::Exchange {
             source: error::Error::Cancelled,
         },

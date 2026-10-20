@@ -5,7 +5,7 @@ use std::time::Duration;
 use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildSummary;
-use crate::output::{Mode, Style, bounded};
+use crate::output::{Mode, Style, bounded, warning_line};
 use crate::redaction::Redactor;
 use crate::version::VERSION;
 use crate::{build_output, changes_output};
@@ -148,45 +148,28 @@ pub fn changes_unavailable(style: &Style, reason: &str, redactor: &Redactor) -> 
     if style.mode == Mode::Plain {
         return String::new();
     }
-    let line = bounded(
-        &format!("  ! Changes unavailable · {}", redactor.safe(reason)),
-        style.columns,
-    );
-    let line = if style.color {
-        line.replacen('!', "\x1b[33m!\x1b[0m", 1)
-    } else {
-        line
-    };
-    format!("{line}\n")
+    warning_line(
+        style,
+        &format!("Changes unavailable · {}", redactor.safe(reason)),
+        false,
+    )
 }
 
 /// Report one listener backoff period through either terminal mode.
 pub fn accept_failure(style: &Style, reason: &str, redactor: &Redactor) -> String {
-    accept_line(
+    warning_line(
         style,
         &format!(
-            "! Serve cannot accept connections: {}. Retrying.",
+            "Serve cannot accept connections: {}. Retrying.",
             redactor.safe(reason)
         ),
+        false,
     )
 }
 
 /// Report recovery once a listener accepts a connection again.
 pub fn accept_recovery(style: &Style) -> String {
-    accept_line(style, "! Serve can accept connections again.")
-}
-
-fn accept_line(style: &Style, line: &str) -> String {
-    if style.mode == Mode::Plain {
-        return format!("{line}\n");
-    }
-    let line = bounded(&format!("  {line}"), style.columns);
-    let line = if style.color {
-        line.replacen('!', "\x1b[33m!\x1b[0m", 1)
-    } else {
-        line
-    };
-    format!("{line}\n")
+    warning_line(style, "Serve can accept connections again.", false)
 }
 
 pub(crate) fn columns(left: &str, right: &str, width: usize) -> String {

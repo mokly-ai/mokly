@@ -43,9 +43,9 @@ test(
         if (deployment) assert.equal(index.deploymentId, deployment);
         deployment = index.deploymentId;
         await assert.rejects(fs.stat(outputs.at(-1)!), { code: "ENOENT" });
-        assert.deepEqual(await fs.readdir(path.dirname(outputs.at(-1)!)), [
-          ".mokly-export-reservations",
-        ]);
+        await assert.rejects(fs.stat(path.dirname(outputs.at(-1)!)), {
+          code: "ENOENT",
+        });
         if (mode === "rich") {
           const phases = [
             "Loading configuration",
@@ -103,6 +103,13 @@ test(
       assert.equal(server.completed, 0);
       assert.ok(
         (await fs.stat(path.join(output, ".mokly-export-artifact"))).isFile(),
+      );
+      assert.equal(
+        await fs.readFile(
+          path.join(path.dirname(output), ".mokly-export-reservations/.owner"),
+          "utf8",
+        ),
+        "mokly-export-reservations-v1\n",
       );
     } finally {
       await cleanupAll([

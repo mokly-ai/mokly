@@ -22,7 +22,7 @@ file's `argTypes` enrich the derived controls as the sidecar contract states.
 `defineScreen` and `defineComponent` may declare `controls` to replace the
 derived ones; a declared control must name a declared prop, and optionality
 and types come only from the schema. A prop whose shape has no control is
-shown but not editable. The read model carries the result as `controls`:
+shown but not editable. The read model carries the result as `controls`.
 
 The [generated control type](../../packages/viewer/src/generated/catalogue/ComponentControl.ts)
 defines its data shape.

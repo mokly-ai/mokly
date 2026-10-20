@@ -10,10 +10,10 @@ use crate::publish_errors;
 use crate::redaction::Redactor;
 
 #[test]
-fn warning_cancellation_and_recovery_keep_distinct_publication_variants() {
+fn strict_cancellation_and_recovery_keep_the_native_failure() {
     assert!(matches!(
-        build_result::<()>(Err(BuildError::Warnings)),
-        Err(Error::BuildWarnings)
+        build_result::<()>(Err(BuildError::Strict { warnings: vec![] })),
+        Err(Error::Build { failure }) if matches!(failure.native(), Some(BuildError::Strict { .. }))
     ));
     assert!(matches!(
         build_result::<()>(Err(BuildError::Cancelled)),

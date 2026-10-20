@@ -8,16 +8,17 @@ use mokly_model::data::merge_props;
 use serde_json::Value;
 
 use crate::config_types::ResolvedRoot;
-use crate::diagnostic::{Code, Issue};
+use crate::diagnostic::{Code, Issue, Warning};
 use crate::discovery::SourceFile;
 use crate::identity::{derive, segment};
 use crate::input::ParsedEntry;
 use crate::parsing::issue;
-use crate::{declared_controls, prepare_parent, props, variants};
+use crate::{declared_controls, numeric_warnings, prepare_parent, props, variants};
 
 pub(crate) struct PreparedEntries {
     pub(crate) entries: Vec<ModelEntry>,
     pub(crate) issues: Vec<Issue>,
+    pub(crate) warnings: Vec<Warning>,
     pub(crate) failed: bool,
 }
 
@@ -60,6 +61,7 @@ pub(crate) fn prepare(
         return Ok(PreparedEntries {
             entries: vec![ModelEntry { metadata, content }],
             issues: parsed.issues.clone(),
+            warnings: Vec::new(),
             failed: !parsed.issues.is_empty(),
         });
     }
@@ -82,6 +84,9 @@ pub(crate) fn prepare(
         input.use_case_paths.clone(),
     );
     let parent = ModelEntry { metadata, content };
+    let warnings = input.controls.as_ref().map_or_else(Vec::new, |controls| {
+        numeric_warnings::for_controls(controls, &parent)
+    });
     let mut entries = vec![parent.clone()];
     let mut issues = prepared_parent.issues;
     for (index, candidate) in candidates.into_iter().enumerate() {
@@ -117,7 +122,7 @@ pub(crate) fn prepare(
         }
         if !failed
             && let Some(controls) = &input.controls
-            && let Err(issue) = declared_controls::validate(&schema, controls, &complete, &source)
+            && let Err(issue) = declared_controls::prepare(&schema, controls, &complete, &source)
         {
             issues.push(issue);
             continue;
@@ -203,6 +208,7 @@ pub(crate) fn prepare(
     Ok(PreparedEntries {
         entries,
         issues,
+        warnings,
         failed,
     })
 }

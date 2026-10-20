@@ -65,6 +65,11 @@ Anchor checks and JavaScript fragments use the same scoped request mechanism.
 Each generation and each fragment adapter owns an independent registry.
 The final active lease removes its entry even when an old mutex handle still lives.
 
+Complete base validation can stream documents and closures to an ordered
+comparison collector. Each view composes once, including when the artifact
+cache retains nothing. Validation keeps only cross-view facts between batches.
+It preserves aggregate failures and warning order. Inputs stay provisional
+until the final anchor and output-name checks succeed.
 Comparison batches use the same render pool and sidecar count as validation.
 They return transient documents and closures in requested route order.
 The comparison caller limits each batch to the pool's existing worker count.

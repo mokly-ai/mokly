@@ -13,6 +13,7 @@ use mokly_model::material::catalogue_key;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_selection::{BaseLookup, PinnedBase};
+use crate::comparison_capture;
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
@@ -156,22 +157,25 @@ impl ChangesService for Changes {
                     });
                 }
             };
-            if let Err(source) = before.render_all() {
-                if let Some(source) = failures.failure() {
+            let before = match comparison_capture::capture(before) {
+                Ok(before) => before,
+                Err(source) => {
+                    if let Some(source) = failures.failure() {
+                        return Err(Error::Base {
+                            commit: commit.to_string(),
+                            source: Box::new(Error::SourceFailure { source }),
+                        });
+                    }
                     return Err(Error::Base {
                         commit: commit.to_string(),
-                        source: Box::new(Error::SourceFailure { source }),
+                        source: Box::new(Error::Graph { source }),
                     });
                 }
-                return Err(Error::Base {
-                    commit: commit.to_string(),
-                    source: Box::new(Error::Graph { source }),
-                });
-            }
+            };
             base_span.record("status", "ok");
             (before, failures)
         };
-        let result = self.comparison.compare(
+        let result = self.comparison.compare_prepared(
             &ComparisonRequest {
                 base_ref: base.into(),
                 base_commit: commit.to_string(),

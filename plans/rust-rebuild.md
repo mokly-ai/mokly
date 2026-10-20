@@ -502,20 +502,27 @@ the same copy.
   exit while output installation, restoration, or cleanup settles. Exit once
   that operation finishes without another signal. Reject immediate exit in
   these operations because it can strand the earlier site in a backup.
+- User decision 86 (2026-10-20): D. Successful and already-published outcomes
+  delete the whole private directory created by publish, including its site
+  and reservation locks. Use its allocated path held in memory and do not
+  follow symbolic links. Failed or cancelled uploads retain the whole directory.
+  Cleanup failure warns with that path and keeps publication successful.
+  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
+  Evidence: `.context/publish-cleanup/`.
+  Merge decisions: `.context/publish-cleanup/merge-decisions.md`.
 - Item 23 B, applied by default (user rule): preserve control declaration
   order in entry detail v2 and show that order in the viewer. Explicit controls
   use their declaration order. Derived controls use schema property order or
   first-seen inferred prop order. Reject key sorting because author order
   communicates the intended editing sequence. Regenerate the shared types.
 
-**Open decision N1 (2026-10-20):** Item 6 settles prop values. Schema keyword
-integers outside the JavaScript safe range still retain exact core values,
-while a browser rounds them during JSON decoding. A live edit can pass the
-viewer and fail in the core. Severity Medium, effort Large for recommended B.
-Options: A keeps exact schema values and documents the limitation; B rounds
-schema integers with a warning; C rejects unsafe schema integers. Recommend B
-to keep core and viewer validation consistent while accepting recoverable input.
-Evidence: `.context/defaults-cli/schema-bounds-probe.log`.
+**Decision 6 C clarification (user, 2026-10-20):** The M4 option covers every
+authored number, including props and schema keywords. Close N1 under 6 C.
+Round unsafe YAML integers before schema validation and warn for schema
+keywords. Numeric choice coercion uses the same rounded values. This restores
+catalogues whose saved props equal an unsafe schema limit. Reject exact core
+keywords and unconditional failure because the core and viewer must agree.
+Evidence: `.context/defaults-cli-fix1/finding1-red.log`.
 
 **Hub review of `rebuild/defaults-viewer`, finding 2, requirement applied by
 default (user rule), 2026-10-20:** the device chrome contract states that an
@@ -2146,6 +2153,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Remove the duplicate base render between validation and capture through
+      one bounded, ordered collector. Keep aggregate errors, warnings,
+      retention order, cancellation, fallback, and every charge and bound.
+      User decision 62 (2026-10-20): B now, in parallel.
+      Move this item from the post-merge follow-up into Milestone 14.
+      Evidence: `.context/m14-collector/observations.json`,
+      `.context/m14-collector/example-parity.json`, and
+      `.context/m14-collector/final-verification.json`.
+      Integration: `.context/m14-collector/merge-resolution.md`.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2304,6 +2321,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
         User decision 62 (2026-10-20): A, keep the two passes now. B, one
         bounded, ordered collector, is a post-merge follow-up.
+        User decision 62 (2026-10-20): B now, in parallel. This later instruction
+        supersedes the deferral. The collector must not delay the final pull request.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2496,6 +2515,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
@@ -2572,12 +2593,25 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     concurrent tracing-subscriber capture; not proven. Separate branch.
     Evidence: `.context/ci-gates/repository-remainder.log` and
     `.context/ci-gates/sidecar-rerun.log`.
-  - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
-        effort Large. Recommended B: round schema integers with a warning.
-  - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
-    Effort Large. Covers defaults review finding 1. No previous examples found.
-    The focused repair applies item 16 B before link and slot consumers.
-    Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
+        Round every authored number, including schema keywords, with warnings.
+  - [x] CLI defaults item 8, fix1 review 3 finding 2: covered by 6 C, confirmed
+        by the user on 2026-10-20. Apply option A: warn on unsafe numbers in
+        authored control metadata with the existing code, message form, JSON
+        pointer form, and duplicate rule. Strict mode treats them like the
+        other unsafe-integer warnings. Broader preparation tracking, option B,
+        is not selected because the scoped warning producer completes 6 C.
+  - Item 87: the user still decides final warning text. Keep numeric warning
+    text in one formatter so the later wording change needs one edit.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing
+    boundaries. Effort Large. Covers defaults review finding 1. No previous
+    examples found. The focused repair applies item 16 B before link and slot
+    consumers. Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
+        successful private publish directory, including reservation locks.
+        Evidence: `.context/publish-cleanup/`.
+  - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
+  - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
     Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
   - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
@@ -2845,6 +2879,35 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keeps its key alone and beside the current row of its entry, and a
         row keeps its key with and without another entry's row before it.
         Done by `e1ff6c97`.
+  - [x] M10 Serve and moved rows review 10, residual risk, follow-up F9b item
+        1, given by the orchestrator on 2026-10-20: the Usage row key tests
+        still accepted a key with the first link's instance key and a key
+        built from the title. Two cases reject them: a row keeps its key when
+        another instance of its entry comes first, and beside another entry
+        with the same title. A mutation run proves each case.
+  - [x] Follow-up F9b review, on 2026-10-20: finding 27 is fixed by
+        `3038f6de`. Findings 24 (`2a0df638`), 25 (`1b391e86`), and 26
+        (`0ef0e0a3`) are applied with reasons: they restore checks that this
+        branch dropped, or finish item 6. Finding 28 is corrected in the
+        round's sweep rows.
+  - F9b review finding 29 for the user: two test modules export
+    `branchPointCases` with different lists. Severity Low, effort Small.
+    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
+        `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
+  - F9b re-review finding 30 for the user: the mobile embedded runs do not
+    assert a narrow viewer, so a wide viewer would pass them again. Severity
+    Low, effort Small. Recommended: B, a host marker that makes the search
+    helper expect the compact control or the field.
+  - Outside the F9b re-review scope:
+    - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
+      hides the menu button and stays open after a row activation. Separate
+      branch.
+    - `docs/protocol/mokly-viewer.md:302`: no test checks that Close or
+      Escape restores the compact search control and its focus, or that host
+      slots stay mounted. Separate branch.
+    - Commits `2a0df638` and `0ef0e0a3` have titles of 56 and 51 characters,
+      past the 50-character limit. They are pushed, so they stay as they are.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2853,25 +2916,64 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       base commits must feed Rust and browser tests, but Rust reads
       `tests/fixtures/branch_point_cases.json` and the browser writes its
       own sources. Separate branch.
+      - [x] Follow-up F9b item 5: the JSON now holds the browser's five
+            namespaced cases with their pairs, removed titles, and affected
+            consumers. Rust runs each case in its own repository. The browser
+            helper writes every case into both commits, byte for byte as the
+            old generator did. The browser checks are keyed by the case
+            names, and both readers stop on a missing case. No behaviour or
+            protocol change was needed.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Done in round 4 of the D1 delegate.
+      - [x] Follow-up F9b item 6: `branch_point_cases.ts` registers the five
+            cases at desktop and mobile widths on each host:
+            `branch_point_comparison_ui.spec.ts` on the branch copy,
+            `serve_branch_point.spec.ts` on Serve, and
+            `viewer_branch_point.spec.ts` in the embedded viewer through both
+            frame adapters. Serve waits for each on-demand comparison, and
+            the embedded viewer checks the selected entry without an address.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
+      - [x] Follow-up F9b item 4: the unchanged component index
+            `branch/parent` is the folder's own page. The moved parent check
+            now activates its container row, which opens the moved parent,
+            and under the search `secondary` opens the removed sibling.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
+      - [x] Follow-up F9b item 4: the comment now says that each key is the
+            case title that starts each test name.
     - `tests/browser/static_component_comparisons.spec.ts:32`,
       `removed_previews_static.spec.ts:76`, and
       `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`
       colours as literals instead of reading `accentColor`. Separate branch.
+      - [x] Follow-up F9b item 2: the three specs read `accentColor` from
+            `tests/helpers/comparison_catalogue.ts`, which also writes the
+            colours into `theme.css`. With only the fixture's Before colour
+            changed, they and the Serve Card panes still passed.
     - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
       temporary prop edit stays out of local storage. Separate branch.
+      - [x] Follow-up F9b item 3: `serve_temporary_props_status.spec.ts`
+            checks that a temporary edit leaves local storage unchanged and
+            that a reload shows the saved props. A mutation that stores the
+            draft fails it.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
       split rule, with no recorded exception. Separate branch.
+      - Follow-up F9b item 7, decision 23 for the user: a split by subject
+        needs doc-only folders in the source tree or Markdown pages for
+        module mechanics, which belong in code comments. Severity Low,
+        effort Small. Recommended: A, keep one page, add a heading per
+        subject, and record the exception, as decision 2 A did for the
+        browser test guide.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
       with no recorded exception. Separate branch.
+      - [x] Follow-up F9b item 7: the README keeps the overview, the quick
+            start, a guide list, the responsibilities, and development, in
+            285 lines. `docs/concepts`, `docs/api`, `docs/theming`, and
+            `docs/deployment` under `packages/viewer` hold the rest, each as
+            a `README.md` so that the Markdown link check reads it.
   - [x] M10 D1 round 4 review 1, findings 1, 5 and 6: three ports lacked old
         checks that the current spec requires. Fixed by `303659e9`,
         `4ee66184` and `8409f7b3`. Findings 3 and 4 corrected sweep reasons
@@ -2972,6 +3074,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Milestone 4 unsafe prop integers: settled on 2026-10-20 by item 6 C,
         applied by default (user rule). Round to binary64 with a warning.
         Schema keyword precision remains open as N1.
+  - [x] N1 schema keyword precision: closed on 2026-10-20 by the user's
+        clarification that decision 6 C includes every authored number.
   - [x] Milestone 4 review 1, finding 10: bound YAML alias expansion at
         1,000,000 nodes per file with `html-front-matter`, before any copy.
         Decision: item 7 option A, applied by default (user rule), 2026-10-20.
@@ -3183,13 +3287,6 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 - [ ] Run the bookfolio catalogue through build, serve, Changes, and watch
       after the user supplies access. The user took it out of the rebuild
       scope on 2026-10-20.
-
-- [ ] Remove the duplicate base render between validation and capture: one
-      bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B; user decision 62, 2026-10-20). Measured on
-      2026-10-20: React capture 95 s, of which validation 27 s; 5,790
-      JavaScript renders in each pass.
 
 - [ ] Share one verified opaque-asset spool for each Serve generation and
       route, released with its generation, under the M14 Serve budgets (M14

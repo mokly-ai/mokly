@@ -186,7 +186,7 @@ function checkBounds(schema: Record<string, unknown>, at: string): void {
         typeof bound !== "number" ||
         !Number.isFinite(bound) ||
         Object.is(bound, -0) ||
-        (count && (!Number.isSafeInteger(bound) || bound < 0))
+        (count && (!Number.isInteger(bound) || bound < 0))
       )
         invalidData(
           `${at}.${key}`,

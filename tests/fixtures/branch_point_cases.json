@@ -2,88 +2,96 @@
   {
     "name": "moved-consumers",
     "base": {
-      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>Before {{label}}</p>",
-      "specs/old-consumer.component.html": "---\ntitle: Consumer\nelement: ui-consumer\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<ui-card label=\"Nested\"></ui-card>",
-      "specs/old-screen.screen.html": "---\ntitle: Screen\n---\n<ui-card label=\"Screen\"></ui-card>"
+      "branch-assets.css": ".branch-badge { background-image: url(\"./branch-mark.svg\"); padding: 24px; display: inline-block; }",
+      "branch-mark.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\"><title>Before branch asset</title><rect width=\"24\" height=\"24\" fill=\"red\"/></svg>",
+      "specs/branch/consumers/badge.component.html": "---\ntitle: Badge\nelement: bp-badge\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Badge}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<span class=\"branch-badge\">Before {{label}}</span>",
+      "specs/branch/consumers/receipt.screen.html": "---\ntitle: Receipt\n---\n<h1>Receipt</h1><bp-badge label=\"Paid\"></bp-badge>",
+      "specs/branch/consumers/status.component.html": "---\ntitle: Status\nelement: bp-status\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Status}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<section><bp-badge label=\"{{label}}\"></bp-badge></section>"
     },
     "head": {
-      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>After {{label}}</p>",
-      "specs/old-consumer.component.html": null,
-      "specs/old-screen.screen.html": null,
-      "specs/new-consumer.component.html": "---\ntitle: Consumer\nelement: ui-consumer\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<ui-card label=\"Nested\"></ui-card>",
-      "specs/new-screen.screen.html": "---\ntitle: Screen\n---\n<ui-card label=\"Screen\"></ui-card>"
+      "specs/branch/consumers/receipt.screen.html": null,
+      "specs/branch/consumers/status.component.html": null,
+      "branch-mark.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\"><title>After branch asset</title><rect width=\"24\" height=\"24\" fill=\"blue\"/></svg>",
+      "specs/branch/consumers/archive/receipt.screen.html": "---\ntitle: Receipt\nmovedFrom: branch/consumers/receipt\n---\n<h1>Receipt</h1><bp-badge label=\"Paid\"></bp-badge>",
+      "specs/branch/consumers/archive/status.component.html": "---\ntitle: Status\nelement: bp-status\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Status}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\nmovedFrom: branch/consumers/status\n---\n<section><bp-badge label=\"{{label}}\"></bp-badge></section>",
+      "specs/branch/consumers/badge.component.html": "---\ntitle: Badge\nelement: bp-badge\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Badge}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<span class=\"branch-badge\">After {{label}}</span>"
     },
     "moves": {
-      "new-consumer": "old-consumer",
-      "new-screen": "old-screen"
+      "branch/consumers/archive/receipt": "branch/consumers/receipt",
+      "branch/consumers/archive/status": "branch/consumers/status",
+      "branch/consumers/archive/status/default": "branch/consumers/status/default"
     },
     "removed": {},
-    "affected": ["new-consumer", "new-screen"]
+    "affected": [
+      "branch/consumers/archive/status",
+      "branch/consumers/archive/receipt"
+    ]
   },
   {
-    "name": "parent-move-removed-variant",
+    "name": "moved-parent",
     "base": {
-      "specs/card.component.html": "---\ntitle: Base Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: kept, title: Kept, props: {label: Kept}}, {slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>"
+      "specs/branch/parent/action.component.html": "---\ntitle: Action\nelement: bp-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"secondary\",\"title\":\"secondary\",\"props\":{\"label\":\"Cancel\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/parent/index.component.html": "---\ntitle: Parent\nelement: bp-parent\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Parent}\n---\n<aside>{{label}}</aside>"
     },
     "head": {
-      "specs/card.component.html": null,
-      "specs/new-card.component.html": "---\ntitle: Current Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nmovedFrom: card\nvariants: [{slug: kept, title: Kept, props: {label: New}}]\n---\n<p>{{label}}</p>"
+      "specs/branch/parent/action.component.html": null,
+      "specs/branch/parent/archive/action.component.html": "---\ntitle: Action\nelement: bp-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"}}]\nmovedFrom: branch/parent/action\n---\n<button>{{label}}</button>"
     },
     "moves": {
-      "new-card": "card",
-      "new-card/kept": "card/kept"
+      "branch/parent/archive/action": "branch/parent/action",
+      "branch/parent/archive/action/primary": "branch/parent/action/primary"
     },
     "removed": {
-      "card/removed": "Base Card"
+      "branch/parent/action/secondary": "Action"
     },
     "affected": []
   },
   {
-    "name": "variant-between-parents",
+    "name": "moved-variant",
     "base": {
-      "specs/donor.component.html": "---\ntitle: Donor\nelement: ui-donor\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: moving, title: Moving, props: {label: Moving}}, {slug: stay, title: Stay, props: {label: Stay}}]\n---\n<p>{{label}}</p>",
-      "specs/receiver.component.html": "---\ntitle: Receiver\nelement: ui-receiver\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>{{label}}</p>"
+      "specs/branch/variant/donor.component.html": "---\ntitle: Donor\nelement: bp-donor\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Donor}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"spare\",\"title\":\"spare\",\"props\":{\"label\":\"Later\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/variant/receiver.component.html": "---\ntitle: Receiver\nelement: bp-receiver\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Receiver}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Accept\"}}]\n---\n<button>{{label}}</button>"
     },
     "head": {
-      "specs/donor.component.html": "---\ntitle: Donor\nelement: ui-donor\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: stay, title: Stay, props: {label: Stay}}]\n---\n<p>{{label}}</p>",
-      "specs/receiver.component.html": "---\ntitle: Receiver\nelement: ui-receiver\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: arrived, title: Moving, movedFrom: donor/moving, props: {label: Edited}}]\n---\n<p>{{label}}</p>"
+      "specs/branch/variant/donor.component.html": "---\ntitle: Donor\nelement: bp-donor\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Donor}\nvariants: [{\"slug\":\"spare\",\"title\":\"spare\",\"props\":{\"label\":\"Later\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/variant/receiver.component.html": "---\ntitle: Receiver\nelement: bp-receiver\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Receiver}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Accept\"}},{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"},\"movedFrom\":\"branch/variant/donor/primary\"}]\n---\n<button>{{label}}</button>"
     },
     "moves": {
-      "receiver/arrived": "donor/moving"
+      "branch/variant/receiver/primary": "branch/variant/donor/primary"
     },
     "removed": {},
     "affected": []
   },
   {
-    "name": "case-only-identities",
+    "name": "case-renames",
     "base": {
-      "specs/Card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: Large, title: Large, props: {label: Large}}, {slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>",
-      "specs/Home.screen.html": "---\ntitle: Home\n---\n<ui-card label=\"Use\"></ui-card>"
+      "specs/branch/case/Action.component.html": "---\ntitle: Case action\nelement: bp-case-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Case action}\nvariants: [{\"slug\":\"Primary\",\"title\":\"Primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"secondary\",\"title\":\"secondary\",\"props\":{\"label\":\"Cancel\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/case/Receipt.screen.html": "---\ntitle: Case receipt\n---\n<h1>Case receipt</h1>"
     },
     "head": {
-      "specs/Card.component.html": null,
-      "specs/Home.screen.html": null,
-      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: large, title: Large, props: {label: Large}}]\n---\n<p>{{label}}</p>",
-      "specs/home.screen.html": "---\ntitle: Home\n---\n<ui-card label=\"Use\"></ui-card>"
+      "specs/branch/case/Action.component.html": null,
+      "specs/branch/case/Receipt.screen.html": null,
+      "specs/branch/case/action.component.html": "---\ntitle: Case action\nelement: bp-case-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Case action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/case/receipt.screen.html": "---\ntitle: Case receipt\n---\n<h1>Case receipt</h1>"
     },
     "moves": {},
     "removed": {
-      "Card/removed": "Card"
+      "branch/case/Action/secondary": "Case action"
     },
     "affected": []
   },
   {
-    "name": "kind-reuse-parent-title",
+    "name": "reused-parent",
     "base": {
-      "specs/card.component.html": "---\ntitle: Historical Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>"
+      "specs/branch/reused/action.component.html": "---\ntitle: Former action\nelement: bp-former\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Former action}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Go\"}}]\n---\n<button>{{label}}</button>"
     },
     "head": {
-      "specs/card.component.html": null,
-      "specs/card.md": "# Replacement document\n"
+      "specs/branch/reused/action.component.html": null,
+      "specs/branch/reused/action.md": "# Action guide\n\nReplacement document\n"
     },
     "moves": {},
     "removed": {
-      "card/removed": "Historical Card"
+      "branch/reused/action/default": "Former action"
     },
     "affected": []
   }
