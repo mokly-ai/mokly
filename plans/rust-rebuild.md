@@ -2256,6 +2256,30 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         private-fixture delivery requirement in the protocol. Move the full
         spec list to the browser README, split its comparison reference into
         a linked page, and correct the runtime list's conjunction.
+  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
+        update, whichever comes first. CI gates hub review finding 9A tracks
+        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
+        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
+        exposure and the available fixes before retaining the exception.
+  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
+    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
+    viewer version on the release PR when its source differs from its tag.
+    The hub owns the user decision.
+  - CI gates hub review finding 3: viewer-only releases have no publish path.
+    Severity Medium, effort Medium. Recommended: B, reject that release PR
+    before tags exist. The hub owns the user decision with finding 2B.
+  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
+    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
+    The hub owns the user decision.
+  - Follow-up: isolate the release Rust audit from the privileged publish job.
+    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
+    daily audit isolation in finding 1A. The hub owns the user decision.
+  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
+    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
+    the design evidence upload. The hub owns the user decision.
+  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
+    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
+    the npm exception expiry and dependency-path checks. The hub owns the user decision.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
