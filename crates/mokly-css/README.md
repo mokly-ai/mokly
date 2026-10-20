@@ -77,18 +77,18 @@ Plugin dependency inputs use digests, separate from parsed CSS bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 
 Mokly's CSS scanners read a flat token arena with matched block extents. URL
-references, HTML boundary stripping, CSS Modules scoping, and its token check
+references, HTML boundary stripping, CSS Modules renaming, and its token check
 keep nesting on the heap; a 100,000-level stylesheet uses an ordinary worker
 thread in each of them. The rule walk also keeps its frames on the heap, but
 each rule copies its inherited conditions, so its work grows with the square
 of the depth. Selector broadening and nesting substitution use cssparser 0.38,
 whose 75-level nested-block allowance bounds their recursion. `lightningcss`
 recurses once per nesting level while it parses, prints, and drops a sheet.
-Compilation, bundling, CSS Modules scoping, and rule collection, which runs
-`lightningcss` before the rule walk, therefore stop at its limit. That limit
-depends on the nesting form and the build profile. Every measured form
-survives at least 32 levels on a 2 MiB worker stack, far more than authored
-stylesheets nest.
+Compilation and bundling stop at its limit. So do CSS Modules scoping, which
+parses the renamed sheet with `lightningcss`, and rule collection, which runs
+`lightningcss` before the rule walk. That limit depends on the nesting form
+and the build profile. Every measured form survives at least 32 levels on a
+2 MiB worker stack, far more than authored stylesheets nest.
 
 ## Quick Start
 
