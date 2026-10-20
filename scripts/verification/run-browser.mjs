@@ -2,6 +2,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
+import {
+  browserFileArguments,
+  selectBrowserShard,
+} from "./browser-partition.mjs";
 import { parseShardArgument } from "./browser-shard.mjs";
 import { browserWorkerCount } from "./concurrency.mjs";
 import {
@@ -34,9 +38,7 @@ await Promise.all([
 await requirePrepared(repositoryRoot, { browser: true });
 const full = await discoverBrowserTests(repositoryRoot, { project });
 const complete = full;
-const assigned = shard
-  ? await discoverBrowserTests(repositoryRoot, { project, shard })
-  : full;
+const assigned = shard ? selectBrowserShard(full, shard) : full;
 
 const args = [
   path.join(repositoryRoot, "node_modules/@playwright/test/cli.js"),
@@ -44,7 +46,7 @@ const args = [
   `--project=${project}`,
   "--reporter=./scripts/verification/playwright-reporter.mjs",
 ];
-if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
+if (shard) args.push(...browserFileArguments(assigned.files));
 console.log(`${suite} Playwright workers: ${workers}`);
 const started = performance.now();
 let evidenceError;

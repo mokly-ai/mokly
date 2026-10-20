@@ -47,18 +47,19 @@ keeps the checkout and box comparison bases equal. The checkout's `HEAD`,
 index, and files do not change. The checkout and snapshot fingerprints must
 match before warmup.
 
-Xtask warms up six boxes in parallel with a 30-minute idle timeout, probes
+Xtask warms up seven boxes in parallel with a 30-minute idle timeout, probes
 every box within the 10-minute readiness bound, then starts the
-[six suite commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
+[seven commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
 in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
-`browser-4-of-4`. The suite wrapper stages the synced tree after its
+`browser-4-of-4`, plus `static-delivery`. The delivery command builds the source
+and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
 fingerprint check, so index readers see the same tree as a committed
 checkout. When a command ends, its worker downloads its report and cleans up
 its box at once. Only the viewer command and the four browser shards produce
-reports; the repository outcome is its exit code. After all commands end,
+suite reports; repository and delivery outcomes use their exit codes. After all commands end,
 xtask cleans up the remaining boxes, runs the local aggregate over the five
 reports with the base commit and `node-22.15.0`, computes the local
-fingerprint again, and removes the snapshot. A successful check needs six
+fingerprint again, and removes the snapshot. A successful check needs seven
 commands that exit 0, five downloads, a valid aggregate, and the same local
 fingerprint as before the run.
 
@@ -99,7 +100,7 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   [`policy.rs`](../src/remote/policy.rs) own the ordered availability checks.
   [`runner.rs`](../src/remote/runner.rs) owns the remote phase order,
   [`verdict.rs`](../src/remote/verdict.rs) attaches the final cleanup count,
-  [`plan.rs`](../src/remote/plan.rs) owns the six-command inventory,
+  [`plan.rs`](../src/remote/plan.rs) owns the seven-command inventory,
   [`phases.rs`](../src/remote/phases.rs) parallel warmup and the all-probes
   barrier, and [`suites.rs`](../src/remote/suites.rs) concurrent suite
   execution and report downloads.

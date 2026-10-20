@@ -2600,6 +2600,108 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
+      all discovered browser specs to four whole-file shards in hosted CI and
+      the remote executor. Keep the 1.25 test-count share limit. Use the
+      current inventory for membership and a median cost for new specs.
+      The assignment target is within 15 percent by duration. Tests check
+      assignments and coverage, not elapsed time. Hosted confirmation belongs
+      to the hub. Scheduling inputs come from run `39455750846` at `b1f3c86f`.
+      Evidence: `.context/ci-shard-balance/partition.json` and
+      `.context/ci-shard-balance/shard-green.log`.
+
+- [x] CI round 5, item 2 (2026-10-20): move static HTTP and file delivery
+      from browser box 1 to an independent seventh Testbox command. Build
+      the source there before delivery. Require all seven command results
+      and the same five browser/viewer reports. Keep four browser shards,
+      current runner sizes, and the 30-minute Testbox job limit. User item
+      100 owns any runner or limit change. Tests cover the new command,
+      failure propagation, the all-probes barrier, and per-box cleanup.
+      Evidence: `.context/ci-shard-balance/delivery-green-node.log` and
+      `.context/ci-shard-balance/delivery-green-rust.log`.
+
+- [x] CI round 5, item 3 (2026-10-20): record hosted and remote duration
+      observations against their current guards. These measurements do not
+      change a limit, assertion, runner, or test inventory. User item 100
+      owns the remaining guard and runner decision.
+
+      Hosted run `39455750846`, commit `b1f3c86f`, observed these job minutes:
+
+      | Job | Observed minutes | Limit minutes | Three times observation |
+      | --- | ---: | ---: | ---: |
+      | Repository | 24.15 | 30 | 72.45 |
+      | Viewer | 11.27 | 30 | 33.80 |
+      | Static delivery | 18.88 | 60 | 56.65 |
+      | Browser 1 | 18.42 | 60 | 55.25 |
+      | Browser 2 | 25.22 | 60 | 75.65 |
+      | Browser 3 | 11.50 | 60 | 34.50 |
+      | Browser 4 | 19.67 | 60 | 59.00 |
+
+      Repository, Viewer, and Browser 2 lack the required three-times margin.
+      The native jobs failed and do not establish successful typical durations.
+      The latest previous Node 22 remote run at `a3ede4bd` observed repository
+      16.20, viewer 7.16, and browser 1 to 4 at 18.55, 23.70, 9.97, and 9.63
+      minutes against 30-minute job guards. Browser 1 included both delivery
+      modes. Browser 2 failed in the unrelated React watch test. A prior
+      browser-1 command at `3d07196e` ended after 30.55 minutes when Testbox
+      reached its job limit. These command observations exclude preparation
+      and are not successful gate acceptance.
+      The new current-inventory assignments contain 339, 515, 695, and 700 tests
+      against a 703-test cap. Estimated test work is 10.258 minutes each,
+      with a 0.005-percent maximum/minimum difference. Two new specs use
+      the median cost. Hosted confirmation belongs to the hub.
+      Evidence, exact trees, source reports, and final remote observations:
+      `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
+
+- [x] CI round 5 audit follow-up (2026-10-20): update `rustls-webpki` from
+      0.103.15 to 0.103.16 for newly published RUSTSEC-2026-0382. The live
+      remote audit reproduced the certificate-verification advisory. Keep
+      every exception and unrelated lockfile edge unchanged. The live audit
+      and publication/TLS tests pass with the patch.
+      Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
+      `webpki-dependents.log`, and `webpki-green.log`.
+
+- [x] CI round 5 measurement follow-up (2026-10-20): calibrate scheduling
+      costs with both the hosted per-test observations and remote run
+      `20261020T191118Z-972099` at `300c4dae`. Include each report's measured
+      fixture overhead in its cost allocation. The first placement passed
+      all 2,249 browser tests but missed the 15-percent duration target.
+      Its browser command minutes were 20.83, 16.43, 14.04, and 17.36 against
+      30-minute Testbox guards. Playwright minutes were 15.90, 13.15, 10.24,
+      and 13.88. Viewer passed in 9.75 command minutes. Independent delivery
+      passed both 645-case modes in 17.70 command minutes. Repository stopped
+      on the new Rust advisory after 6.60 minutes. These command observations
+      exclude preparation. The five-report aggregate passed and cleanup left
+      zero boxes, but the complete gate failed the repository command.
+      Updated assignments contain 445, 649, 641, and 514 tests under the same
+      703-test cap. Replaying their test costs gives a 10.9-percent spread for
+      the hosted sample and 9.1 percent for the remote sample. These estimates
+      require the final run and the hub's hosted measurement for confirmation.
+      Evidence: `.context/ci-shard-balance/remote-summary.json`,
+      `calibration-candidates.json`, and `calibrated-partition.json`.
+
+- [x] CI round 5 review finding 1B: repair a feasible count-cap overflow
+      with deterministic whole-file capacity search. Preserve measured-cost
+      placement when it fits. Keep every test and the existing cap failure
+      when no valid placement exists. The five-file regression failed before
+      the fix and passed afterward. Finding 2A corrects the stale six-Testbox
+      responsibility to seven. Evidence: `.context/ci-shard-balance/review.md`,
+      `review-cap-red.log`, and `review-cap-green.log`.
+
+- [x] CI round 5 final measurement calibration (2026-10-20): include all
+      three successful browser report sets in the mean per-test scheduling
+      costs. The complete remote gate at `ec47233e` passed seven commands,
+      five reports, and cleanup, but command minutes 15.25, 14.48, 15.98,
+      and 21.63 still missed the 15-percent balance target. Shard 4's median
+      file duration was 1.31 times its prior sample. Its fixture overhead was
+      4.99 minutes, against 2.08 to 2.62 elsewhere. Keep fixture and job times
+      as separate observations rather than distributing one box's overhead
+      across future file costs. The refreshed assignments have 362, 573, 668,
+      and 646 tests under the same 703-test cap. Replaying per-test work gives
+      spreads of 8.4, 10.1, and 4.6 percent for the three measured samples.
+      Actual hosted acceptance stays with the hub. Evidence:
+      `.context/ci-shard-balance/final-calibration.json` and `timings.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public

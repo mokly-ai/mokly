@@ -1,5 +1,6 @@
 # Browser fixtures
 
+Strict shards use [measured whole-file placement](../../scripts/verification/README.md#browser-partitioning).
 Specs import `test` from `browser_test.ts` or one of its host fixtures. The
 automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.
@@ -266,4 +267,4 @@ The `team_screens`, `team_components`, `team_links`, `team_pages`, and `team_flo
 specs read the shared Serve example. They do not edit its files. They cover the
 HTML team screens, slot components, saved variants, canonical invitation page,
 Markdown role guide, YAML flow, and native links in Browse and direct documents.
-Each file has at most four cases so Playwright can balance whole files.
+Each file has at most four cases so the scheduler can balance whole files.

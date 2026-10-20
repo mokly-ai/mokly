@@ -25,7 +25,7 @@ internal binary and is not published to npm or crates.io.
   tags. Check the committed public API reports.
 - Keep local gate coverage equal to CI checks on the host platform. Every
   Native command has local coverage; `npm run build` covers the host build.
-- Run explicit and automatic remote checks on six Testboxes with complete
+- Run explicit and automatic remote checks on seven Testboxes with complete
   shard evidence.
 - Stop warmed boxes on success, failure, SIGINT, SIGTERM, and SIGHUP.
 
@@ -64,8 +64,9 @@ complete gate. A local run stops at the first failed suite. A remote run
 reports every failed suite. Rerun one failed suite with `--suite <name>`.
 The complete local gate also runs `npm run test:delivery:prepared` after the
 browser suite. It builds the example and checks portable design specs through
-static HTTP and file URLs. Remote verification runs this command after browser
-shard 1. Hosted CI has a separate required static-delivery job.
+static HTTP and file URLs. Remote verification runs this command on a
+separate seventh Testbox after building the source. Hosted CI has a separate
+required static-delivery job.
 The local gate gets native build coverage from Viewer and Rust checks from
 Repository. It does not repeat them in Native. Hosted native jobs repeat that
 coverage on their own operating systems and are required by `Required CI`.
@@ -165,7 +166,7 @@ executor selection and child environments.
 ### Remote Runs
 
 The [remote verification reference](./remote/README.md#remote-runs) describes
-snapshots, six-box execution, reports, and cleanup.
+snapshots, seven-box execution, reports, and cleanup.
 
 ## Quick Start
 
