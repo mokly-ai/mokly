@@ -2764,8 +2764,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       that behaviour in `mokly-viewer.md` and test it.
     - Follow-up: a use-case route whose step detail fails while the use
       case detail reports another deployment still shows the unavailable
-      stage before the page load. Effort Small. Covers F12 review finding 2.
-      Previous examples: F11 and `89f8f6cd` for a route with one detail.
+      stage before the page load. Severity Low (estimate), effort Small.
+      Recommended (estimate): keep the destination's loading stage until the
+      page load when any detail of the route reports another deployment, as
+      `89f8f6cd` does for a route with one detail. Covers F12 review
+      finding 2. Previous examples: F11 and `89f8f6cd` for a route with one
+      detail.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
