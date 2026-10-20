@@ -2323,6 +2323,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     received 0, then passed all five isolated repeats. Suspected source:
     scripted scroll races history persistence. Separate branch.
     Evidence: `.context/integration-6/scroll-flake.md`.
+    - [x] Resolve in F6 by waiting for each scripted position in history state
+          before navigation. Retain every offset and route assertion.
+          Evidence: `.context/f6/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
