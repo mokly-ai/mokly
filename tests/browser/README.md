@@ -118,6 +118,8 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 
 These suites prove the comparison panes, scrolling, and region pairing
 contracts on the native comparison copy and in the embedded comparison viewer.
+`serve_changes_comparison.spec.ts` proves the Serve part on the smaller Serve
+Changes fixture.
 
 | Suite                                | Cases                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -130,6 +132,7 @@ contracts on the native comparison copy and in the embedded comparison viewer.
 | `comparison_regions_input.spec.ts`   | Every listed key after a pointer press, focus moving into a panel, a touch drag, a scroll the browser made in the lower version, and anchors through a panel and then the page                                                                                                                                                                                                                                                |
 | `comparison_regions_keys.spec.ts`    | Keys from focus, a key falling back to the page at a region's end, right-to-left arrows, and instant two-axis writes under smooth-scroll CSS                                                                                                                                                                                                                                                                                  |
 | `removed_previews.spec.ts`           | Space scrolls a previous version while a link holds focus                                                                                                                                                                                                                                                                                                                                                                     |
+| `serve_changes_comparison.spec.ts`   | In Serve, a selected comparison presents both versions with their styles and renews them after a watched edit; a removed component opens with only its before side                                                                                                                                                                                                                                                            |
 
 The Scroll together contract names its own suites. In
 `packages/viewer/tests/`, `comparison_region_identity.test.ts` proves the

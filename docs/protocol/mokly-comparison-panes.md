@@ -164,11 +164,13 @@ each request to its immutable generation and configured sides.
 
 Browser regressions, listed in the
 [browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
-every item below in live Serve through the selected comparison path. A static
-build and an embedded viewer through both frame adapters also prove stack
-alignment, frame attributes, and inert links and anchors; the static build also
-proves Side by side mirroring, and the static build and the cross-origin adapter
-prove the pane failure path. Unit tests cover the controllers.
+the items below on the copied output of a static build with comparisons. An
+embedded viewer through both frame adapters also proves stack alignment, frame
+attributes, and inert links and anchors, and through the cross-origin adapter,
+the pane failure path. In Serve, regressions prove that a selected comparison
+presents both versions and renews them after a watched edit. The other items
+are not proved again in Serve, because they depend only on the viewer, which
+every delivery shares. Unit tests cover the controllers and the loader.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
