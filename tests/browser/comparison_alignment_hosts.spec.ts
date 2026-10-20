@@ -1,11 +1,13 @@
 /**
  * Comparison panes outside Serve, under the comparison panes contract. On the
  * copied comparison output and in an embedded viewer through both frame
- * adapters, a stack scrolls as one, Side by side mirrors, each pane presents
- * its version as a script-free `srcdoc` document, links and forms do
- * nothing, and the anchor moves the shared viewports. A pane document that
- * cannot be presented fails the comparison with Try again, and Try again
- * presents it, in both hosts.
+ * adapters, an Overlay stack scrolls as one, each pane frame carries the
+ * contract's attributes and presents its version as a script-free `srcdoc`
+ * document, links and forms do nothing, and the anchor moves the shared
+ * viewports. On the copied output, Side by side also mirrors. A pane document
+ * that cannot be presented fails the comparison with Try again, and Try again
+ * presents it, on the copied output and through the cross-origin adapter,
+ * which also reports the failure to its host.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
