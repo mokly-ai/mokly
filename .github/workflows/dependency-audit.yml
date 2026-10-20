@@ -75,5 +75,7 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Install audit tooling dependencies
+        run: npm ci --ignore-scripts
       - name: Audit Rust dependencies
         run: npm run dependencies:check:rust

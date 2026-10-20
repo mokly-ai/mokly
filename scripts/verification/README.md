@@ -4,6 +4,36 @@ These scripts support the Rust verification task runner in
 [`xtask`](../../xtask/README.md). Public test commands and strict evidence
 rules live in the [verification contract](../../docs/protocol/ci-verification.md).
 
+## Rust audit tool
+
+`npm run dependencies:check:rust` calls
+[`rust-audit-tool.mjs`](./rust-audit-tool.mjs). It downloads cargo-audit 0.22.2
+from crates.io and verifies the release archive's pinned SHA-256 before
+extraction. It uses the reviewed dependency graph in
+[the tool lockfile](../../.cargo/audit-tool/Cargo.lock), isolates the source
+from the parent Cargo workspace, and builds with `cargo install --locked`.
+
+The tool lives under `.context/rust-audit-tool/{identity}/bin/`. Its identity
+includes the host platform and architecture, source version, source checksum,
+and complete lockfile bytes.
+The installer writes its completion marker only after a successful build.
+Failed or interrupted installs cannot become cache hits. It removes the
+temporary source tree after installation. Compiled dependencies use
+`target/rust-audit-tool/`. Both locations stay ignored.
+
+Every invocation runs the live workspace advisory query, including cache
+hits. `ensureRustAuditTool(root)` returns the exact installed executable for
+callers that need cargo-audit's JSON output. It does not change the caller's
+advisory policy. The daily read-only audit job installs the existing npm
+dependencies with lifecycle scripts disabled before it uses the installer.
+
+To update tool dependencies, extract the pinned source into an isolated
+workspace, apply Cargo updates with the repository's Rust toolchain, and
+review the resulting lockfile. Audit it explicitly with
+`cargo audit --file .cargo/audit-tool/Cargo.lock`, then build and exercise the
+tool through `npm run dependencies:check:rust`. The tool source stays pinned
+unless its version and archive checksum are updated together.
+
 ## Browser partitioning
 
 The strict runner discovers the complete Playwright inventory before selecting

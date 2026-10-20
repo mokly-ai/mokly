@@ -60,6 +60,14 @@ test("the daily Rust audit cannot access the update job's write credentials", as
   assert.equal(record(checkout.with)["persist-credentials"], false);
   assert.equal(record(checkout.with).token, undefined);
   assert.match(commands(job), /rustup toolchain install/);
+  const rustSteps = steps(job);
+  const install = rustSteps.findIndex(
+    (step) => step.run === "npm ci --ignore-scripts",
+  );
+  const audit = rustSteps.findIndex(
+    (step) => step.run === "npm run dependencies:check:rust",
+  );
+  assert.ok(install >= 0 && install < audit);
   const automation = jobs.filter(({ job }) =>
     commands(job).includes("dependency-audit-pr.mjs"),
   );
