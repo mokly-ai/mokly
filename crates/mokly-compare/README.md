@@ -131,13 +131,12 @@ matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
-Owned rules emit selector evidence under the containing public document route.
-Page components keep matches outside nested registered instances. Instance
-proof excludes matches inside different nested components. Unresolved owned
-rules use the conservative entry record and supply no instance proof. Unused
-rules change no view.
-Page records and exact instance proof are reduced independently. A nested
-instance can supply implementation evidence even when its page keeps no rule.
+Owned rules enter the same catalogue-wide evidence reducer as linked and
+ownerless head CSS. Equal rule identities join across document routes and
+owner sets. The shared nested test keeps supplier input ancestry and
+self-nested copies. Each source uses matched, unresolved, or excluded records.
+Exact owned-instance proof uses the same unfiltered own-page sets after the
+catalogue pass, and retains only paired instances with unchanged caller inputs.
 Own render, resource, and rule impact share one unchanged-input check. Saved
 prop edits retain their view records without marking unchanged consumers affected.
 It releases parsed documents after collecting canonical and containment proof.
@@ -214,6 +213,7 @@ run. It needs no registry.
 
 - [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).
 - [Removed projection](./src/projection_removed.rs).
+- [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
 - [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).

@@ -97,10 +97,11 @@ excluded stylesheet. A view without either carries no record.
    predicates stay in force. An unsupported selector or a matcher compilation
    failure stays unresolved; stripping state never strips a shadow or global
    keep construct.
-3. **Reduce.** A rule with at least one match is kept with status `matched`.
+3. **Reduce.** Owned head styles, ownerless head styles, and linked CSS use
+   one evidence reducer. A rule with a kept match has status `matched`.
    A rule with no match on either side produces no record. Any unresolved
    rule is kept with status `unresolved`, even when another rule matched. When
-   no changed rule of the stylesheet is kept on this view, the stylesheet is
+   no changed rule of a source is kept on this view, that source is
    examined and excluded: one record with status `excluded` marks it, and it
    supplies no reason for the view. A failed stylesheet parse yields no
    partial selector evidence.

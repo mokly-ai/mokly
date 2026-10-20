@@ -71,16 +71,15 @@ eightfold safety factor. It leaves room for caller and selector frames.
 `MatchTree` preserves parsed element relationships and component containment;
 the HTML adapter omits ignored regions and inert template contents.
 
-`attribution::attribute` first collects unfiltered own-page matches. It then
-filters nested component matches and produces per-view owner records. A sheet
-with no kept rule has one empty-selector `excluded` record. `MemoryParsedCss`
-shares equal bytes across paths and sides. Eviction changes work only.
-`inline_attribution` retains input-owner proof for ownerless head rules.
-The comparison engine joins their rule identities with catalogue-wide own-page
-matches. Slot matches follow their supplier. Body styles and owned head styles
-are excluded from this collector. Evidence uses the containing public document
-route. Linked selectors emit one
-record per innermost changed component owner, plus outside entry evidence.
+`attribution::attribute` joins equal rule observations, collects unfiltered
+own-page matches, and filters nested components before one record reduction.
+Owned head styles, ownerless head styles, and linked CSS share that reducer.
+A source with no kept rule has one empty-selector `excluded` record.
+Unresolved proof takes precedence for the same selector and source.
+`inline_attribution` retains supplier input ancestry for head rules. Explicit
+sidecar owners remain available for exact unchanged-input instance proof.
+`MemoryParsedCss` shares equal bytes across paths and sides; eviction changes
+work only. Evidence retains each source's public route.
 
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed

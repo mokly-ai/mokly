@@ -30,6 +30,8 @@ pub struct MatchElement {
     pub text: bool,
     /// Inclusive physical component regions, from outermost to innermost.
     pub regions: Vec<Containment>,
+    /// Inclusive input ancestry, with supplied slots attached to their supplier.
+    pub input_regions: Vec<Containment>,
     /// Nearest input owner, including slot suppliers.
     pub owner: EvidenceOwner,
 }

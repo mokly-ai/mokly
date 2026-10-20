@@ -129,7 +129,7 @@ fn matched_owned_rules_share_the_document_with_unused_ownerless_rules() {
 }
 
 #[test]
-fn self_nested_owned_rules_keep_actual_instance_proof_without_changing_own_views() {
+fn self_nested_owned_rules_keep_actual_instance_proof_and_own_views() {
     let base = consumer("'red'");
     let head = consumer("'blue'");
     for (consumer, color) in [(&base, "red"), (&head, "blue")] {
@@ -158,12 +158,17 @@ fn self_nested_owned_rules_keep_actual_instance_proof_without_changing_own_views
     assert!(
         card.documents
             .iter()
-            .all(|view| view.state == ReviewState::Unchanged)
+            .all(|view| view.state == ReviewState::Changed)
     );
     assert!(
         card.documents
             .iter()
-            .all(|view| view.evidence.rules.is_empty())
+            .all(|view| view.evidence.rules.len() == 1
+                && view.evidence.rules[0].status == RuleStatus::Matched
+                && view.evidence.rules[0].owner
+                    == EvidenceOwner::Component {
+                        path: "card".into()
+                    })
     );
 }
 

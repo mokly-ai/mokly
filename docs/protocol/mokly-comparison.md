@@ -82,34 +82,32 @@ element belongs to those components. Composition retains trusted owner
 annotations through HTML normalization and graph caching on both sides. An
 authored `data-mokly-owners` attribute does not create that annotation.
 Compare normalized rule sets per owner; formatting and duplicate copies do
-not change material. A rule changes the page component only when it matches
-outside every nested registered instance. An owned instance keeps matches
-outside its nested instances of other components. Unresolved rules use the
-conservative entry record. A changed rule that matches nothing on either side produces no
-record and changes no view. Collected rules use the per-rule records of the
-[membership contract](./mokly-css-attribution-membership.md). Rule evidence
-supplies their material and affected-consumer effects under the
-[component change rules](./mokly-component-changes.md). Linked stylesheets
-use the same [CSS attribution](./mokly-css-attribution.md) rules.
-Page-component filtering does not discard independent actual-instance proof,
-including proof from a nested instance of the same component.
+not change material. Owned, ownerless head, and linked CSS use one
+[catalogue-wide proof and evidence reduction](./mokly-css-attribution.md).
+Equal rule identities join across documents, even with different owner sets.
+For component X, drop a match inside a different nested component Y only when
+the same rule matches on Y's own pages before nested filtering. A self-nested
+copy of X never takes X's match. Supplied slot content keeps the input ancestry
+of its supplier; the receiving component cannot claim that content.
 
-Head `<style>` elements without owners use the same rule identities and
-catalogue-wide own-page proof as linked CSS. Diff their rules between the
-sides and match changed selectors against both trees. A component owns a
-match only when its own pages keep a match for that rule after nested
-filtering. Inline matches follow input ownership: caller-supplied slot
-content cannot prove the receiving component. Other matches belong to the
-entry. Unresolved rules belong to the entry.
+Owned rules retain their declared owner as exact-instance evidence when no
+own-page proof applies. That proof requires a paired instance with unchanged
+caller inputs and a kept match under the same nested-component test. It can
+change the component's implementation without changing its own views.
+Unresolved rules use the conservative entry record and supply no instance proof.
 
-Collect only ownerless head styles. Body styles and styles with
-nonempty trusted owner records do not enter this analysis. A rule with no match on either
-side produces no record. A document whose changed inline rules all match
-nothing has one `excluded` record with an empty selector and the entry owner.
-An excluded record never makes a view material. The `stylesheet` address is
-the containing public document route. Equal rule identities join own-page
-proof across document routes; consumer routes add no reasons to a component.
-Omit an excluded document record when that route has any kept owned or ownerless rule.
+Head styles without trusted owners use own-page proof to assign component
+records. Other matches belong to the entry. Authored body styles do not enter
+this head-style analysis. Linked stylesheets retain their actual reachability.
+The [membership contract](./mokly-css-attribution-membership.md) defines every
+source's per-rule records and their material and affected-consumer effects.
+
+A changed rule without a match produces no matched record. When a source has
+no kept changed rule on a view, emit one `excluded` record with an empty
+selector and the entry owner. Owned and ownerless head styles use the containing
+public document route. Omit its excluded record when that route has any kept
+rule. Excluded evidence changes no view. Consumer document routes add no
+own-page reason to a component.
 
 ## Resources
 

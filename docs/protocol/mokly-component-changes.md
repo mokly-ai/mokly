@@ -29,7 +29,7 @@ owns the membership list. This page states how a component edit is attributed.
 
 | CSS delivery path                   | Direct Changes entries                                                                           | Secondary impact                      |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| Styles a sidecar render returned    | Declared owners with kept matches outside nested instances, or unresolved rules                  | Consumers of those components         |
+| Styles a sidecar render returned    | Owners with matches kept by the shared nested test; entry-owned unresolved rules                 | Consumers of those components         |
 | Unowned head `<style>` elements     | The owner that the inline rule of [style ownership](./mokly-comparison.md#style-ownership) names | Consumers of a component owner        |
 | Configured stylesheet               | Components with kept own-page matches; entries with outside matches or unresolved rules          | Consumers of those changed components |
 | Component `stylesheets` declaration | The same rule; declaring the file grants no ownership                                            | The same affected-consumer rule       |
@@ -163,17 +163,17 @@ record. Per-rule facts are kept before any merging by stylesheet. See the
 [rule contract](./mokly-css-attribution-rules.md) and the
 [evidence schema](./mokly-css-attribution-membership.md).
 
-Styles a [sidecar](./mokly-sidecar.md#style-collection) render returned are
-owned by the rendered component by construction, written into the head with
-their owners, and deduplicated by rule identity. A changed owned rule changes
-the page component only when it matches outside every nested registered
-instance. Instance proof excludes matches inside a different nested component.
-Matched rules emit per-rule evidence with their declared owners. Unresolved
-rules use the conservative entry record.
-An owned rule that matches nothing on either side emits no record.
-Unowned head styles of a whole-screen render follow the
-inline rule of [style ownership](./mokly-comparison.md#style-ownership). Mokly
-derives no stylesheet ownership from files: a renderer `resources` record for
+Styles a [sidecar](./mokly-sidecar.md#style-collection) render returned keep
+trusted owners and normalized rule identities. Owned rules use the same
+catalogue-wide unfiltered own-page sets and nested test as linked CSS. A
+self-nested copy never takes its own component's match. Supplied slot content
+keeps its supplier's input ancestry. Equal rules join proof across documents
+with different owners. Kept own-page matches give component reasons; a kept
+exact-instance match can still prove an implementation change with unchanged
+caller inputs. Unresolved rules keep entry ownership. Owned, ownerless head,
+and linked CSS share one reducer, including one excluded source record when
+none of its changed rules applies on a view.
+Mokly derives no stylesheet ownership from files: a renderer `resources` record for
 a stylesheet is ignored with the stylesheet-owner warning after the public
 path checks, and a component's `stylesheets` declaration controls links only.
 Adding or removing a declaration changes material only when the composed

@@ -425,6 +425,28 @@ readiness rather than blocking this acceptance round on further startup work.
 
 **Comparison filter follow-up (2026-10-20):**
 
+- User decision 73 (2026-10-20): apply hub finding 1 C. Owned rules use
+  linked-CSS catalogue-wide own-page proof. A different nested component takes
+  a match only when its unfiltered own-page set for the same rule is nonempty.
+  Self-nested copies keep their matches. Slots retain supplier input ownership.
+  Equal identities join across document owners. This preserves parent edits
+  without duplicate child-only consumer rows. Alternatives A, B, and D retain
+  lost cases, fix only slots and self-nesting, or remove registry owners.
+- User decision 75 (2026-10-20): apply hub finding 5 C. Owned, ownerless head,
+  and linked CSS share one evidence reducer for matched, unresolved, and
+  excluded records. Build decision 73 on this reducer. This removes delivery
+  path drift. Alternatives A and B add the missing record locally or document
+  an owned-style exception.
+- User decision 74 (2026-10-20): apply hub finding 3 C in
+  `rebuild/defaults-engine-deps`. Compare only dependency identities that govern
+  the directories in use. That workspace owns the change; this round retains
+  dependency identity code. Alternatives A and B keep the broad scan or skip
+  it only when head CSS uses no dependency directory.
+- User decision 76 (2026-10-20): option B for the `noscript` follow-up waits
+  until the plaintext helper lands. Do not implement that follow-up in this
+  round. The helper's foreign-content correction keeps the current `noscript`
+  behavior.
+
 - Orchestrator item 11 A is the selected default under the user rule.
   Implementation waits for the further decision below. The default requires
   checkout conversion without network access and equality on Git clean form.
@@ -2290,12 +2312,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Defaults-engine hub review 1, finding 1: owned nested filtering loses
-    parent edits. Severity High, effort Large. Recommended: C, share the
-    linked-CSS nested test and preserve slot-supplier ownership. User pending.
+  - [x] Defaults-engine hub review 1, finding 1: apply user decision 73 C
+        through catalogue-wide rule proof and supplier input ancestry.
   - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`
     can expose markup in scripting-enabled browsers. Severity Medium, effort
-    Small. Recommended: C, escape raw closing tags. User pending.
+    Small. User decision 76 selects a later follow-up after the helper lands.
   - [x] Defaults-engine hub review 1, finding 3: scope HTML dependency
         warnings to exact governing paths. User decision 74 selected C.
         Cover unrelated edits, strict lockfile warnings, exact Git commands,
@@ -2311,9 +2332,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         no usage. Extensionless stylesheets and cached bundles retain usage.
         Evidence: `.context/defaults-engine-deps/review-red.log` and
         `.context/defaults-engine-deps/serve-observed-red.log`.
-  - Defaults-engine hub review 1, finding 5: unused owned rules lack excluded
-    evidence. Severity Low, effort Small. Recommended: A, emit one excluded
-    document record when none applies. User pending.
+  - [x] Defaults-engine hub review 1, finding 5: apply user decision 75 C
+        through one reducer for owned, ownerless head, and linked CSS.
   - Defaults-engine round 1 smoke: an HTML component's own `plaintext` page
     loses its root range and fails static detail validation. Severity Medium,
     effort Medium. Recommended: preserve own-page root ownership after repair;
