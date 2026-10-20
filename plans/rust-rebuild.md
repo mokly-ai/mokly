@@ -2252,6 +2252,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Fix CI gates hub review finding 6 with option A: align release recovery
         and packing descriptions with an optional new viewer tag and reuse of
         the pinned published viewer archive.
+  - [x] Fix CI gates hub review finding 7 with option B: keep the design and
+        private-fixture delivery requirement in the protocol. Move the full
+        spec list to the browser README, split its comparison reference into
+        a linked page, and correct the runtime list's conjunction.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.

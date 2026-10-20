@@ -47,7 +47,7 @@ directory from another job.
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
 - one viewer job on Node 22.15.0;
-- four browser shards on Node 22.15.0; and
+- four browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
 - native jobs on macOS and Windows at Node 22.15.0.
 

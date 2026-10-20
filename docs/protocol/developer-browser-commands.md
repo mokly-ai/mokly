@@ -42,16 +42,9 @@ MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser
 
 `npm run test:delivery:prepared` builds a fresh example after `npm run build`
 and checks both delivery modes. It runs in CI and the complete gate.
-Supported specs under `tests/browser/`
-are `comparison_design`, `component_controls`, `component_design`,
-`component_design_inspection`, `component_design_selection`, `component_evidence`,
-`component_inspector`, `component_surfaces`, `component_workspace`,
-`design_comparison_eligibility` (and `_2`, `_3`, `_4`),
-`design_comparison_scrolling`, `design_comparison_stacks`,
-`design_component_stacks`, `design_index_entries`, `design_library`,
-`design_modern_controls`, `design_portable`, `design_scroll_together`,
-`design_stylesheet_evidence`, `design_top_bar`, `example_links`, and
-`phone_chrome`; each name has the `.spec.ts` suffix. File mode opens exact
-output bytes without an HTTP fallback.
+The design journeys and the private component fixture run through static HTTP
+and file delivery. File mode opens exact output bytes without an HTTP fallback.
+The [browser fixture guide](../../tests/browser/README.md#delivery-spec-inventory)
+lists the delivery specs.
 
 Browser traces and screenshots stay under `.context/playwright-results/`.
