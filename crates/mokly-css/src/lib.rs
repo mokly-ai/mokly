@@ -51,6 +51,10 @@ pub mod attribution;
 #[path = "_tests_/rule_tests.rs"]
 mod rule_tests;
 
+#[cfg(test)]
+#[path = "_tests_/has_depth_tests.rs"]
+mod has_depth_tests;
+
 pub mod inline_attribution;
 
 pub mod observation;

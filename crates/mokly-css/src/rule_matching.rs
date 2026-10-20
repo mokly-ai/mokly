@@ -17,6 +17,11 @@ use crate::selector_impl::SelectorParser;
 use crate::selector_nesting::combine;
 use crate::selector_scope::broaden;
 
+/// Bound recursive :has() subtree matching with margin on a 2 MiB worker stack.
+/// Measured dev frames use 288 bytes; an eightfold factor permits 910 levels.
+/// Rounding down to 512 leaves room for selector matching and caller frames.
+pub const MAX_HAS_TREE_DEPTH: usize = 512;
+
 /// Actual element match, kept only until catalogue-wide attribution ends.
 #[derive(Clone, Debug)]
 pub struct ElementMatch {
@@ -74,6 +79,11 @@ pub fn match_document(
     };
     let invalid_tree =
         before.is_some_and(|tree| !tree.valid()) || after.is_some_and(|tree| !tree.valid());
+    let deep_tree = !invalid_tree
+        && before
+            .into_iter()
+            .chain(after)
+            .any(|tree| tree.exceeds_depth(MAX_HAS_TREE_DEPTH));
     DocumentMatching::Resolved(
         added
             .iter()
@@ -116,6 +126,7 @@ pub fn match_document(
                             || change.conservative()
                             || rule.selectors.is_empty()
                             || scope.unresolved
+                            || (deep_tree && scope.relational)
                         {
                             record.unresolved = true;
                             continue;

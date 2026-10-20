@@ -42,6 +42,29 @@ pub struct MatchTree {
 }
 
 impl MatchTree {
+    /// Check element depth iteratively after validating arena references.
+    pub(crate) fn exceeds_depth(&self, limit: usize) -> bool {
+        let mut pending: Vec<_> = self
+            .elements
+            .iter()
+            .enumerate()
+            .filter(|(_, element)| element.parent.is_none())
+            .map(|(index, _)| (index, 1usize))
+            .collect();
+        while let Some((index, depth)) = pending.pop() {
+            if depth > limit {
+                return true;
+            }
+            pending.extend(
+                self.elements[index]
+                    .children
+                    .iter()
+                    .map(|child| (*child, depth + 1)),
+            );
+        }
+        false
+    }
+
     /// Check arena references before matching. Invalid inputs produce unresolved evidence.
     pub fn valid(&self) -> bool {
         let mut incoming = vec![0usize; self.elements.len()];

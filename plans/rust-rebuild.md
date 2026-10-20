@@ -377,6 +377,12 @@ readiness rather than blocking this acceptance round on further startup work.
   A changed owned rule with no match on either side emits no record and
   changes no view. This keeps Details aligned with the rule contract.
   Alternative B retains the direct material path and changes the contract.
+- Orchestrator item 48 B (2026-10-20, applied by default (user rule)): matching
+  trees deeper than 512 elements keep changed `:has()` selectors as unresolved
+  evidence. A measured 288-byte recursive frame on a 2 MiB worker stack,
+  with an eightfold margin, permits 910 levels; round down to 512.
+  This prevents deep-page aborts while preserving honest evidence.
+  Alternatives: A, retain the gap; C, replace the recursive matcher.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

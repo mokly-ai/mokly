@@ -63,6 +63,11 @@ name and an `@scope` selector.
 failure. `rules::diff` cancels equal occurrences before pairing declaration
 edits. `rule_matching::match_document` uses Servo `selectors` against both
 available document arenas. It keeps every matching element until attribution.
+The matcher checks element depth once with an explicit stack. When either
+tree exceeds 512 levels, changed `:has()` selectors produce unresolved evidence.
+Other selectors retain their normal matching. The limit rounds down from a
+2 MiB worker stack divided by a measured 288-byte recursive frame and an
+eightfold safety factor. It leaves room for caller and selector frames.
 `MatchTree` preserves parsed element relationships and component containment;
 the HTML adapter omits ignored regions and inert template contents.
 

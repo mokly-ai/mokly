@@ -9,6 +9,7 @@ pub(crate) struct Scope {
     pub(crate) text: String,
     pub(crate) unresolved: bool,
     pub(crate) dynamic: bool,
+    pub(crate) relational: bool,
 }
 
 pub(crate) fn broaden(source: &str) -> Scope {
@@ -20,6 +21,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
         text: String::new(),
         unresolved: false,
         dynamic: false,
+        relational: false,
     };
     let mut colons = 0;
     let mut previous = None;
@@ -54,10 +56,12 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
                     text: String::new(),
                     unresolved: true,
                     dynamic: false,
+                    relational: false,
                 });
                 scope.unresolved |= nested.unresolved
                     || matches!(name.as_str(), "host" | "host-context" | "part" | "slotted");
                 scope.dynamic |= nested.dynamic;
+                scope.relational |= nested.relational || (colons == 1 && name == "has");
                 if ((name == "not" || name.starts_with("nth-")) && nested.dynamic)
                     || (colons == 2 && pseudo_element(&name))
                 {

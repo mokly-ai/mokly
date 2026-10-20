@@ -111,6 +111,10 @@ changed rules is kept on the view.
 An unresolved rule always gives every eligible page an entry-owned record and
 a row. A known component match from another rule cannot suppress it. A whole
 stylesheet parse failure follows this rule with no partial selector claim.
+When either matching tree exceeds 512 element levels, changed selectors that
+contain `:has()` are unresolved on that page. Other selectors keep their normal
+matching. This bounds native stack use with a safety margin instead of risking
+a process abort on deeply nested pages.
 Every independent material, metadata, input, structure, addition, removal,
 non-CSS resource, or use case reason stays. An affected-only screen does not
 propagate a direct screen reason to its use cases.
