@@ -22,7 +22,10 @@ const VARIANT_TERMINAL = "No changes to this saved view.";
 const COMPONENT_FILES_LEAD =
   "Changes to these files may affect this component:";
 const COMPONENT_LEAD = "Changed styles that apply to this component:";
+const SAVED_VIEW_UNRESOLVED_LEAD =
+  "This change can apply anywhere on the saved view, so the saved view stays in Changes:";
 const THEME = "static/mokly-generated/styles/theme.css";
+const CARD_CSS = "static/mokly-generated/styles/card.css";
 const CHANGED_CSS = "static/mokly-generated/styles/changed.css";
 const DUSK_CSS = "static/mokly-generated/styles/dusk.css";
 const INSPECTOR_VIEWPORTS = [
@@ -206,7 +209,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeVisible();
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-      ).toHaveText("26");
+      ).toHaveText("29");
       if (name === "mobile")
         await page
           .getByRole("button", { name: "Open catalogue navigation" })
@@ -253,7 +256,16 @@ test("the comparison heading leads with the style outcome", async ({
   const evidence = await openEvidence(page);
   await expect
     .poll(() => evidenceFiles(evidence))
-    .toEqual([[THEME, [[COMPONENT_LEAD, [".accent"]]]]]);
+    .toEqual([
+      [
+        CARD_CSS,
+        [
+          [COMPONENT_LEAD, [".accent"]],
+          [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
+        ],
+      ],
+      [THEME, [[COMPONENT_LEAD, [".accent"]]]],
+    ]);
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toBeVisible();
