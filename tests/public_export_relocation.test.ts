@@ -57,3 +57,56 @@ test("a relocated package compares its published exports at the tagged source lo
   await writeNotes(fixture.root, "Removed `removed`.\n");
   assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
 });
+
+test("a root release component audits its named public workspace package", async (t) => {
+  const fixture = await createPublicExportFixture({
+    sources: {
+      "src/index.ts": "export const kept = 1; export const removed = 2;\n",
+    },
+  });
+  t.after(() => fs.rm(fixture.root, { recursive: true, force: true }));
+  const manifest = await fs.readFile(
+    path.join(fixture.root, "package.json"),
+    "utf8",
+  );
+  await writeSource(fixture.root, "packages/cli/package.json", manifest);
+  await writeSource(
+    fixture.root,
+    "packages/cli/src/index.ts",
+    "export const kept = 1;\n",
+  );
+  await writeSource(
+    fixture.root,
+    "package.json",
+    JSON.stringify({
+      name: "private-workspace",
+      private: true,
+      workspaces: ["packages/cli"],
+    }),
+  );
+  await writeSource(
+    fixture.root,
+    "release-please-config.json",
+    JSON.stringify({
+      packages: {
+        ".": {
+          "release-type": "node",
+          "package-name": "@fixture/package",
+          "include-component-in-tag": false,
+          "include-v-in-tag": true,
+        },
+      },
+    }),
+  );
+  commitFixture(
+    fixture.root,
+    "test: separate component and public package roots",
+  );
+  const missing = publicPackageExportAudit(fixture.root);
+  assert.match(
+    missing.findings.join("\n"),
+    /removed export removed since v1\.0\.0/,
+  );
+  await writeNotes(fixture.root, "Removed `removed`.\n");
+  assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
+});

@@ -1868,7 +1868,12 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       releases with the CLI and updates its exact dependency. Alternatives were
       B, require a CLI-directory edit for every core fix, and A, a custom runner.
       The root component gives core fixes normal release selection without a
-      redundant viewer version. Evidence: `.context/ci-gates-round2/release-all.log`.
+      redundant viewer version.
+  - [x] Fix CI-gates round 2 review finding 1: separate the root release
+        component from its named public workspace package in the export audit.
+        Preserve the CLI baseline and removal checks after core-only releases.
+        Evidence: `.context/ci-gates-round2/review-ratchet-green.log`.
+        Release selection evidence: `.context/ci-gates-round2/release-all.log`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.

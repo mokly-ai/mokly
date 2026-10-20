@@ -10,7 +10,8 @@ Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
 not publish. The CLI is the root `.` component. Rust-only changes under `crates/` select
-a CLI release. The single
+a CLI release. Its package name remains `@mokly/mokly`, so the export audit
+checks the public CLI directory. The single
 release PR owns the CLI version, which the private root and five platform
 packages share, the viewer version, both changelogs, the root
 lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags

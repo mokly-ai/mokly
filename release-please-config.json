@@ -98,7 +98,8 @@
           "type": "generic",
           "path": "/docs/guides/ci/github-action.md"
         }
-      ]
+      ],
+      "package-name": "@mokly/mokly"
     },
     "packages/viewer": {
       "release-type": "node",
