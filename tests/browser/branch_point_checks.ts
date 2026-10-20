@@ -62,13 +62,21 @@ function bar(
   ];
 }
 
+/** A parent, its primary variant, and its removed sibling. */
+interface Family {
+  title: string;
+  parent: string;
+  primary: string;
+  removed: string;
+}
+
 /**
  * A removed sibling opens inside the comparison mode its siblings use, with
  * the base folder titles as text crumbs and its parent's heading.
  */
 async function removedSibling(
   page: Page,
-  family: { title: string; parent: string; primary: string; removed: string },
+  family: Family,
   removedCrumbs: readonly string[],
 ): Promise<void> {
   const { title, parent, primary, removed } = family;
@@ -91,19 +99,25 @@ async function removedSibling(
 }
 
 /**
- * A parent that keeps its own Changes row opens itself; a search keeps the
- * removed sibling's row in its list, and that row opens the sibling.
+ * A parent that keeps its own Changes row opens itself, also while a search
+ * shows only its removed sibling; the search keeps the removed sibling's row
+ * in its list, and that row opens the sibling with its text crumbs.
  */
 async function activation(
   page: Page,
-  parent: string,
-  removed: string,
+  family: Family,
+  removedCrumbs: readonly string[],
 ): Promise<void> {
+  const { title, parent, removed } = family;
   await activateRow(page, parent);
   await expectRouted(page, parent);
   await search(page, "secondary");
   await activateRow(page, removed);
   await expectRouted(page, removed);
+  await expectHead(page, title, removedCrumbs);
+  // Each activation starts on another route, so each one must navigate.
+  await activateRow(page, parent);
+  await expectRouted(page, parent);
 }
 
 async function movedConsumers(page: Page): Promise<void> {
@@ -160,8 +174,7 @@ async function movedParent(page: Page): Promise<void> {
   };
   const removedCrumbs = ["Branch [text]", "Parent [text]"];
   await removedSibling(page, family, removedCrumbs);
-  await activation(page, paths.movedParent, paths.removedChild);
-  await expectHead(page, "Action", removedCrumbs);
+  await activation(page, family, removedCrumbs);
 }
 
 async function movedVariant(page: Page): Promise<void> {
@@ -203,8 +216,9 @@ async function caseRenames(page: Page): Promise<void> {
     primary: paths.caseVariant,
     removed: paths.caseRemoved,
   };
-  await removedSibling(page, family, ["Branch [text]", "Case [text]"]);
-  await activation(page, paths.caseParent, paths.caseRemoved);
+  const removedCrumbs = ["Branch [text]", "Case [text]"];
+  await removedSibling(page, family, removedCrumbs);
+  await activation(page, family, removedCrumbs);
 }
 
 async function reusedParent(page: Page): Promise<void> {
