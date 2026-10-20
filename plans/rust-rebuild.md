@@ -489,7 +489,7 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, and 32;
+design defaults of decision log items 17, 24, 32, 38, and 42;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
