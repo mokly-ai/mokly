@@ -2627,6 +2627,20 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         entry and searching expect the control or the field from it. Without
         `responsive=1`, all ten mobile embedded runs fail and the desktop
         runs pass.
+  - [x] F15 review, on 2026-10-20: finding 32, a Serve spec header that
+        claimed a capture on every run, is fixed by option A. The full
+        report is `.context/m10/f15/review_1.md`.
+  - F15 review finding 33 for the user: the delivery spec selects the
+    reused-parent check by its case name. Severity Low, effort Small.
+    Recommended: A, add the document path to the case's delivery facts.
+  - F15 review finding 34 for the user: the delivery pairs repeat the shared
+    moves. Severity Low, effort Small. Recommended: B, derive each moved
+    pair's previous path and flag from the case's moves.
+  - Outside the F15 review scope:
+    - `packages/viewer/src/viewer/styles.ts:26`: the compact search query
+      uses `35rem`, so a host page with another root font size leaves the
+      560px that `docs/protocol/mokly-viewer.md:302` requires. Separate
+      branch.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
