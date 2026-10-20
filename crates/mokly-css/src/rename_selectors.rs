@@ -117,8 +117,8 @@ impl Renamer<'_> {
         Ok(None)
     }
 
-    /// Rename local keyframes names, including names inside `:local()`. An
-    /// empty wrapper fails, as in a selector.
+    /// Rename local keyframes names, including names inside `:local()`. As in
+    /// a selector, the innermost wrapper decides, and an empty wrapper fails.
     pub(crate) fn keyframes(&mut self, tokens: &Tokens<'_>, range: Range<usize>) -> Result<()> {
         let mut pending = vec![Keyframes {
             range,
@@ -163,16 +163,11 @@ impl Renamer<'_> {
                         return Err(self.empty_wrapper(node.start, name, Wrapped::KeyframesName));
                     }
                     frame.local = false;
-                    let wrapper = Wrapper::new(node, function);
-                    if *name == "local" {
-                        pending.push(Keyframes {
-                            range: child,
-                            local: true,
-                            wrapper: Some(wrapper),
-                        });
-                    } else {
-                        self.remove_wrapper(wrapper);
-                    }
+                    pending.push(Keyframes {
+                        range: child,
+                        local: *name == "local",
+                        wrapper: Some(Wrapper::new(node, function)),
+                    });
                 }
                 _ => {}
             }
@@ -270,7 +265,7 @@ enum Wrapped {
     KeyframesName,
 }
 
-/// One keyframes-name level: the prelude or a `:local()` argument.
+/// One keyframes-name level: the prelude or a wrapper's argument.
 struct Keyframes {
     range: Range<usize>,
     local: bool,

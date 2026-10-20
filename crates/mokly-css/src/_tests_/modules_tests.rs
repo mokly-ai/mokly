@@ -136,6 +136,23 @@ fn custom_property_values_keep_their_blocks_to_the_semicolon() {
     );
 }
 
+/// Nested wrappers in a keyframes name work as in a selector: the innermost
+/// wrapper decides, and an empty inner wrapper fails.
+#[test]
+fn keyframes_names_follow_nested_wrappers_as_selectors_do() {
+    let path = "ui/motion.module.css";
+    let spin = scoped_name(path, "spin");
+    let (css, exports) = scope(path, "@keyframes :global(:local(spin)){to{opacity:0}}").unwrap();
+    assert_eq!(css, format!("@keyframes {spin}{{to{{opacity:0}}}}"));
+    assert_eq!(exports.keys().collect::<Vec<_>>(), ["spin"]);
+    let (css, exports) = scope(path, "@keyframes :local(:global(spin)){to{opacity:0}}").unwrap();
+    assert_eq!(css, "@keyframes spin{to{opacity:0}}");
+    assert!(exports.is_empty());
+    let error = scope(path, "@keyframes :global(:local()){to{opacity:0}}").unwrap_err();
+    let expected = "CSS Modules :local() has no keyframes name in ui/motion.module.css:1:20";
+    assert!(error.to_string().contains(expected), "{error}");
+}
+
 #[test]
 fn nested_group_rules_scope_animation_names_like_their_rule() {
     let path = "ui/motion.module.css";
