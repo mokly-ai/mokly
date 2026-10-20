@@ -50,7 +50,7 @@ test("the native comparison copy remains usable after its two-commit source repo
   );
   // The comparison UI specs rely on each entry's classification.
   const changes = Object.fromEntries(
-    [...index.screens, ...index.components].map(
+    [...index.screens, ...index.components, ...index.pages].map(
       (entry: { path: string; changes: unknown }) => [
         entry.path,
         entry.changes,
@@ -93,6 +93,12 @@ test("the native comparison copy remains usable after its two-commit source repo
     [comparisonPaths.quietParent]: state(false, "unmodified"),
     [comparisonPaths.quietSibling]: state(false, "unmodified"),
     [comparisonPaths.quietVariant]: state(true, "changed"),
+    [comparisonPaths.pageComponent]: state(true, "changed"),
+    [comparisonPaths.consumingComponent]: state(false, "unmodified"),
+    [comparisonPaths.changedPage]: state(true, "changed"),
+    [comparisonPaths.unchangedPage]: state(false, "unmodified"),
+    [comparisonPaths.similarTextPage]: state(true, "changed"),
+    [comparisonPaths.componentPage]: state(false, "unmodified"),
   });
   const dusk = index.screens.find(
     (entry: { path: string }) => entry.path === comparisonPaths.darkOnly,

@@ -54,6 +54,7 @@ export function registerComponentEvidence(
             ["implementation"],
           ],
           ["design/components/states/shared-impact/style-outside", []],
+          ["design/components/states/shared-impact/affected-screen", []],
           ["design/components/states/shared-impact/shared-impact", []],
         ] as const satisfies readonly (readonly [
           string,

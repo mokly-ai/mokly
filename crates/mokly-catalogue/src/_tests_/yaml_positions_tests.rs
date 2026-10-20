@@ -3,6 +3,7 @@
 use mokly_model::catalogue::SourceLocation;
 
 use crate::yaml;
+use crate::yaml_limits::MAX_DEPTH;
 use crate::yaml_positions::{Positions, ROOT};
 
 fn at(line: usize) -> SourceLocation {
@@ -53,7 +54,7 @@ fn subtrees_and_grafts_copy_locations_below_a_slot() {
 #[test]
 fn storage_grows_with_nodes_not_pointer_length() {
     let mut sizes = Vec::new();
-    for depth in [1_000, 4_000] {
+    for depth in [32, MAX_DEPTH] {
         let source = format!("{}leaf\n", "- ".repeat(depth));
         let document = yaml::parse(&source, "p.yaml", 1).unwrap();
         let slots = &document.positions.slots;
@@ -64,5 +65,5 @@ fn storage_grows_with_nodes_not_pointer_length() {
             .sum();
         sizes.push((slots.len(), segments));
     }
-    assert_eq!(sizes, [(1_001, 1_000), (4_001, 4_000)]);
+    assert_eq!(sizes, [(33, 32), (MAX_DEPTH + 1, MAX_DEPTH)]);
 }

@@ -10,16 +10,17 @@ with the fragment and written into the head as
 `<style data-mokly-owners="<component paths>">` elements, one rule list per
 owner set, before the configured stylesheets; every rule inside such an
 element belongs to those components by construction, under the
-[comparison contract](./mokly-comparison.md#style-ownership). Public CSS
-files that a component declares through `stylesheets` are linked with
-`<link rel="stylesheet">` in every document that renders an instance of the
-component, and their rules are attributed like every linked stylesheet's
+[comparison contract](./mokly-comparison.md#style-ownership). Local CSS files
+that a component declares through `stylesheets` are bundled as delivery roots.
+Their generated bundles are linked with `<link rel="stylesheet">` in every
+document that renders an instance of the component. Their rules are attributed
+like every linked stylesheet's
 through [CSS attribution](./mokly-css-attribution.md), never through the
 declaration. This page defines the declarations, their placement, and their
 delivery. An HTML component declares no stylesheets; its CSS is configured or
 collected.
 
-## Declaration And Public Files
+## Declaration And Local Inputs
 
 `defineComponent` accepts an optional `stylesheets` array. It is independent
 of the configured route-to-stylesheet rules. An absent array means no
@@ -41,15 +42,15 @@ export const action = defineComponent({
 
 Each value is a nonempty, normalized POSIX path, relative to the
 configuration file like a configured local stylesheet, to an existing,
-regular, publicly servable file inside `repoRoot` with a case-insensitive
+regular stylesheet input inside `repoRoot` with a case-insensitive
 `.css` suffix. Reject absolute paths, backslashes, empty, dot, or parent segments,
 query or fragment suffixes, other URL schemes, HTTP(S) URLs, non-CSS files,
 missing files, directories, protected source, and paths whose real targets
-escape the public root. A CSS parse or bundle failure uses the diagnostics of
+escape the repository. A CSS parse or bundle failure is fatal and uses the diagnostics of
 [imported styles](./mokly-imported-styles-errors.md). The
-[public closure policy](./mokly-public-closure.md) decides public eligibility
+[public closure policy](./mokly-public-closure.md) governs path admission
 before a declaration is accepted; it rejects a symbolic link at every
-component of a public path, even when the target stays confined, for declared
+path component, even when the target stays confined, for declared
 CSS and configured CSS alike. A file private through an entry root, a module import, or another authoring
 input cannot be declared, except for the configured CSS overlap below.
 
@@ -58,7 +59,7 @@ component lists the same validated file twice, keep its first position, link
 it once, and issue the [duplicate warning](#warning-messages). Different
 components may declare the same file. Validate the input shape when the
 registry accepts the definition, including untyped inputs; check existence,
-real-path identity, and public eligibility after the configuration resolves.
+real-path identity, and path eligibility after the configuration resolves.
 A missing or invalid file fails `build` and Serve's rebuild.
 Declarations stay in the private registry. Their CSS and asset inputs enter
 the stylesheet source inventory; they do not enter entry metadata. This
@@ -83,7 +84,7 @@ reserved for tokens, and this is the only token.
 }
 ```
 
-The shared `stylesheets` list of a configured rule accepts public or HTTP(S) strings or that token, at most once. `lightStylesheets` and
+The shared `stylesheets` list of a configured rule accepts local paths, HTTP(S) URLs, or that token, at most once. `lightStylesheets` and
 `darkStylesheets` accept strings only; a marker there or a second marker in the
 shared list fails loading with `config-invalid`. Matching route rules stay unique. With a marker, the
 declared links take its position in the matching shared list. Without one,
@@ -91,7 +92,7 @@ they follow all shared links and precede the matching scheme-specific links.
 No marker emits a literal `<link>`. A rule for another route has no effect.
 
 A local file may be both configured and declared through the same validated
-public file. On a matching route the document carries one link, at the
+input. It supplies one delivery root. On a matching route the document carries one link, at the
 configured position. A declaration whose configured rule does not match the route
 follows ordinary component linking. Configuration supplies placement;
 declarations supply required links, not CSS ownership. This overlap is not an
@@ -110,7 +111,7 @@ Walk the rendered instances in first-render order, root first for a component
 document. Within each first-seen component append its authored stylesheet
 list. Group repeated declarations by their validated file. Emit one link per
 file. The first occurrence decides the link's position within the component
-block and the declared public path its href uses. A component absent from this
+block and the input path used for its generated bundle route. A component absent from this
 render contributes no link; the union of registered or saved
 components is never linked. This order is stable in Serve, `build`,
 on-demand renders, and both sides of a comparison.
@@ -136,8 +137,8 @@ the rule diff and selector matching of
 to the one component whose regions contain every matched element, else to the
 entry; declaring the file grants no ownership. An unlinked declaration has no
 CSS evidence. The link element belongs to the entry like every head element
-outside a region, and the stylesheet's `url()` and `@import` closure is
-resource evidence under the
+outside a region. Imports are bundled, and the delivered stylesheet's `url()`
+assets supply resource evidence under the
 [comparison contract](./mokly-comparison.md#resources). Collected
 `data-mokly-owners` styles need no matching: their owner is the rendering
 component. Head styles leave the canonical form; a declared or collected rule
@@ -156,12 +157,13 @@ renders use the same linking and warning rules as `build`. A
 missing or newly non-public file fails validation; Serve keeps its last good
 documents.
 
-The [source policy](./mokly-source-protection.md) treats declared stylesheets
-as public assets, never as permission to serve authoring sources. The
-resource closure requires each reachable file to be confined and regular;
+The [source policy](./mokly-source-protection.md) keeps declared stylesheet
+sources, their imports, and imported asset inputs private. Declarations grant
+no permission to serve those source paths. Generated bundles and delivered
+assets enter the same validated resource closure as configured local CSS;
 `build` writes the declared CSS bundles and their delivered assets into
 `--out` through the same generated resource set. Publish uploads those
-bytes. Authored CSS and imported asset sources stay private. No special list exists for declared CSS. A path
+bytes. No special delivery list exists for declared CSS. A path
 outside the public boundary is an error, not an omission.
 
 ## Related Contracts

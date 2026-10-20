@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all fifty component design entries (forty-eight screens and two variants), their
+all fifty-one component design entries (forty-nine screens and two variants), their
 owning folders, and stylesheet scopes.
 
 ## Component Pages
@@ -37,7 +37,7 @@ a depiction. The Additions story, the stylesheet stories, and the controls limit
 pages each depict a story of their own: on their pages every option except the
 shown entry is a depiction, and no option on another page links into them.
 Navigation variant rows follow the same rule.
-The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
+The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context keeps the shell's fixed 1024px layout width in every window, so a component's desktop view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
 The same `ActionExample` and `ToolbarExample` are reused in consuming screens.
 
@@ -99,11 +99,16 @@ It also links the Loading and recovery child gallery. That gallery shows
 `Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
 `Try again` button. Loading and failed states never reuse validated-empty or
 unavailable-metadata copy.
-Its Stylesheet evidence child gallery holds three stories that change only
-`styles/actions.css`. In Component with changed styles, the changed rule styles
-only Action's own output: Action and its three saved variants have four Changes
-rows, Side by side reads "Default variant · Styles this variant uses changed",
-and Welcome and Details appear only under Affected screens. In Styles outside a
+Its Stylesheet evidence child gallery holds four screens of three stories that
+change only `styles/actions.css`. In Component with changed styles, the changed
+rule styles only Action's own output: Action and its three saved variants have
+four Changes rows, Side by side reads "Default variant · Styles this variant uses
+changed", and Welcome and Details appear only under Affected screens. Screen
+affected by a changed component opens Welcome from that list, under All, where
+Welcome stays Unmodified with no comparison band. Its Details list the
+stylesheet with the styles that apply to Welcome, link Action, and end with
+"Shared component changes affect this preview. This page has no independent
+entry in Changes." In Styles outside a
 changed component, the rule also styles Welcome's own Not now link, so Welcome
 has its own row beside Action, five in all, and Details links Action to the
 first story. Variants own no artboard there, so their rows and options stay
@@ -148,7 +153,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
 shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the fifty
+Route-scoped rules link the required mixed/global sheets from the fifty-one
 component design routes. Registered components declare exclusive CSS through
 `stylesheets`; the `$componentStylesheets` marker keeps those links between base
 and layout sheets. Shared metadata supplies related docs, while folder records
@@ -158,7 +163,7 @@ configured and declared CSS. Shared fixtures and screen parts live beside their
 owning screen modules.
 
 The on-demand Rust attribution matrix over the design catalogue classifies all nine shared
-sheets once per scenario. Rendered stylesheet links pin 50, 20, 0, or all
+sheets once per scenario. Rendered stylesheet links pin 51, 20, 0, or all
 `design/` screens and 69 component saved-variant entries. A parent component
 renders its own views from its own props. The tests keep exact per-entry
 rendered-resource records and rule records, the exact changed-entry union, and

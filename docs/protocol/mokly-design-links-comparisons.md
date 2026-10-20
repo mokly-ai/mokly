@@ -93,8 +93,11 @@ their own Changes lists under the [component design
 contract](./mokly-component-design.md#component-pages): Styles outside a changed
 component links Action, from its row and from Details, to
 `design/components/states/shared-impact/style-changed`, whose Affected screens
-open the existing Welcome and Details inspection screens; their unlinked variant
-rows stay depictions.
+open Welcome, `design/components/states/shared-impact/affected-screen`, and the
+existing Details inspection screen; their unlinked variant rows stay
+depictions. Welcome shows the same story under All: its Action row and its
+Details link open `design/components/states/shared-impact/style-changed`, and
+its other rows are depictions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

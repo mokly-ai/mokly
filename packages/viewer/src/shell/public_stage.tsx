@@ -14,6 +14,7 @@ import { VIEWPORTS } from "../registry/views.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { DocumentStageFrame } from "./document_stage_frame.js";
+import { useNarrowLayout } from "./narrow_layout.js";
 import { StageFrame } from "./stage_frame.js";
 
 /** Render current frames without giving consumer documents script capability. */
@@ -92,6 +93,10 @@ export function PublicStage({
   );
 }
 
+/**
+ * Each step shows its screen's desktop view in a browser frame, or below
+ * 760px its mobile view in a phone frame.
+ */
 function UseCaseFlow({
   catalogue,
   entry,
@@ -103,6 +108,7 @@ function UseCaseFlow({
   fragment?: string;
   hasDarkFragments: boolean;
 }) {
+  const viewport = useNarrowLayout() ? "mobile" : "desktop";
   return (
     <div className="mbk-flow" data-mokly-scroll="flow">
       <div className="flow-track">
@@ -129,10 +135,10 @@ function UseCaseFlow({
                   entry={screen}
                   flow
                   hasDarkFragments={hasDarkFragments}
-                  key={`${screen.path}:${index}`}
+                  key={`${screen.path}:${index}:${viewport}`}
                   stepIndex={index}
                   views={screen.views}
-                  viewport="desktop"
+                  viewport={viewport}
                   {...(index === 0 && fragment ? { fragment } : {})}
                 />
               ) : null}

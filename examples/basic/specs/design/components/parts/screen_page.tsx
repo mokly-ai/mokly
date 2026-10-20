@@ -33,7 +33,9 @@ export function ScreenPage({
       ? "screen"
       : state === "style-outside"
         ? "styles-outside"
-        : "all";
+        : state === "affected-screen"
+          ? "styles-all"
+          : "all";
   const comparison = screenComparison(state);
   const identity = screenIdentity(state);
   const { title, path } = SCREENS[identity];

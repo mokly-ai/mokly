@@ -25,7 +25,10 @@ export {
   type ValidatedControlDraft,
 } from "./control_values.js";
 
-/** Native form fields for every control of the shown entry. */
+/**
+ * Native form fields for every control of the shown entry, one row each: the
+ * field's name in a label column, then its value, help, and error.
+ */
 export function ComponentControlFields({
   disabled,
   draft,
@@ -41,7 +44,7 @@ export function ComponentControlFields({
 }) {
   const identifier = useShellIdentifierScope();
   return (
-    <div className="mbk-control-grid">
+    <div className="mbk-control-rows">
       {controlEntries(target).map(([key, control]) => {
         const field = draft[key]!;
         const label =
@@ -79,59 +82,63 @@ export function ComponentControlFields({
         return (
           <div className="mbk-control-field" key={key}>
             {named ? (
-              <span className="mbk-control-name">{name}</span>
+              <span className="mbk-control-label">{name}</span>
             ) : (
-              <label htmlFor={id}>{name}</label>
-            )}
-            {optional ? (
-              <label className="mbk-control-set">
-                <input
-                  checked={field.supplied}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    onChange(
-                      key,
-                      { ...field, supplied: event.currentTarget.checked },
-                      true,
-                    )
-                  }
-                  type="checkbox"
-                />
-                <span>{CONTROLS_COPY.set(label)}</span>
+              <label className="mbk-control-label" htmlFor={id}>
+                {name}
               </label>
-            ) : null}
-            <ControlInput
-              control={shown}
-              describedBy={
-                error !== undefined
-                  ? `${id}-error`
-                  : help
-                    ? `${id}-help`
-                    : undefined
-              }
-              disabled={disabled}
-              field={field}
-              id={id}
-              invalid={error !== undefined}
-              {...(named ? { label } : {})}
-              name={key}
-              onChange={(value, immediate) =>
-                onChange(key, { ...field, value }, immediate)
-              }
-            />
-            {field.supplied ? null : (
-              <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
             )}
-            <small hidden={!help || error !== undefined} id={`${id}-help`}>
-              {help}
-            </small>
-            <small
-              className="mbk-control-error"
-              hidden={error === undefined}
-              id={`${id}-error`}
-            >
-              {error}
-            </small>
+            <div className="mbk-control-value">
+              {optional ? (
+                <label className="mbk-control-set">
+                  <input
+                    checked={field.supplied}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      onChange(
+                        key,
+                        { ...field, supplied: event.currentTarget.checked },
+                        true,
+                      )
+                    }
+                    type="checkbox"
+                  />
+                  <span>{CONTROLS_COPY.set(label)}</span>
+                </label>
+              ) : null}
+              <ControlInput
+                control={shown}
+                describedBy={
+                  error !== undefined
+                    ? `${id}-error`
+                    : help
+                      ? `${id}-help`
+                      : undefined
+                }
+                disabled={disabled}
+                field={field}
+                id={id}
+                invalid={error !== undefined}
+                {...(named ? { label } : {})}
+                name={key}
+                onChange={(value, immediate) =>
+                  onChange(key, { ...field, value }, immediate)
+                }
+              />
+              {field.supplied ? null : (
+                <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
+              )}
+              <small hidden={!help || error !== undefined} id={`${id}-help`}>
+                {help}
+              </small>
+              <small
+                className="mbk-control-error"
+                hidden={error === undefined}
+                id={`${id}-error`}
+              >
+                {error}
+              </small>
+            </div>
           </div>
         );
       })}

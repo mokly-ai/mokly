@@ -13,7 +13,9 @@ use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::projection_affected;
 use crate::projection_context::Context;
 
-use super::support::{classified, entry, paired_result, result, transferred_variant_result};
+use super::support::{
+    classified, entry, paired_result, result, transferred_variant_result, with_lookup,
+};
 
 fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
     AffectedUsageEvidence {
@@ -41,6 +43,7 @@ fn links(
     consumer: &str,
     evidence: Vec<AffectedUsageEvidence>,
 ) -> Vec<UsageLink> {
+    with_lookup(result);
     result.review.affected = vec![AffectedConsumer {
         changed_component_id: "badge".into(),
         consumer: AffectedConsumerAddress {

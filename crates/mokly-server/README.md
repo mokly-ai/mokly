@@ -194,8 +194,13 @@ cargo test -p mokly-server
 cargo clippy -p mokly-server --all-targets -- -D warnings
 ```
 
-Unit tests use injected boundaries and fake time. Integration tests use a real
-HTML graph and loopback sockets. They cover route bytes, headers, fences,
+Unit tests use injected boundaries and fake time.
+[Comparison route tests](./src/_tests_/comparison_expiry_tests.rs) advance the
+server clock through the retention boundary. They cover HEAD renewal,
+collection, and recovery of selected screen and component comparisons with
+both sides' original documents and resources.
+Integration tests use a real HTML graph and loopback sockets.
+They cover route bytes, headers, fences,
 public-file replacement, encoded attacks, previews, and event-stream shutdown.
 
 ### Key Code

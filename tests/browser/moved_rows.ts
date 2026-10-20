@@ -4,48 +4,40 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
+import { embeddedHost, routedHost, type EntryHost } from "./entry_hosts.js";
+
 /** How one host runs the moved cases. */
-export interface MovedHost {
-  /** Open one entry. */
-  open(page: Page, entry: string): Promise<unknown>;
+export interface MovedHost extends EntryHost {
   /** Serve captures comparisons on demand; a copy publishes them. */
   comparisons: "on demand" | "published";
-  /** The page address follows the selected entry as `/view/{path}/`. */
-  routes: boolean;
   /** The window widths of the Moved-row case. */
   widths: readonly number[];
 }
 
-const openRoute = (page: Page, entry: string) => page.goto(`/view/${entry}/`);
-
 /** The private Serve fixture. */
 export const serveMovedHost: MovedHost = {
-  open: openRoute,
+  ...routedHost,
   comparisons: "on demand",
-  routes: true,
   widths: [390, 1280],
 };
 
 /** The branch copy. */
 export const copyMovedHost: MovedHost = {
-  open: openRoute,
+  ...routedHost,
   comparisons: "published",
-  routes: true,
   widths: [390, 1280],
 };
 
 /**
  * An embedded viewer over the branch copy through one frame adapter. Its
- * host page opens an entry by query and gives the viewer the window width,
- * so a narrow window shows a narrow viewer. The Moved-row case runs this host
- * at one width, as the old suite did.
+ * host page opens an entry by query, keeps its own address, and gives the
+ * viewer the window width. The Moved-row case runs this host at one width,
+ * as the old suite did.
  */
 export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
   return {
-    open: (page, entry) =>
-      page.goto(`/viewer.html?adapter=${adapter}&responsive=1&entry=${entry}`),
+    ...embeddedHost(adapter),
     comparisons: "published",
-    routes: false,
     widths: [1280],
   };
 }

@@ -40,11 +40,11 @@ afterwards. `resolve` requires an explicit before/after side and kind.
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
 that entry, in record order. `previousPath` gives only accepted move pairs.
-Results retain current entries or complete removed records. The baseline
-inventory is supplied per call from `componentChanges.baseline`; it adds
-same-path and case-only counterparts, while pairs alone prove moved
-counterparts, so the embedded viewer never needs one. Usage links, the variant
-bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
+Results retain current entries or complete removed records. A caller may
+supply a baseline inventory per call; it adds same-path and case-only
+counterparts, while pairs alone prove moved counterparts. No shell module
+supplies one: the entry detail already carries the paired input changes. Usage
+links, the variant bar, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
 fails when a shell or viewer module outside the lookup reads `previousPaths`,
@@ -140,12 +140,12 @@ including Dark-to-Light fallback, and carries the matching status, comparison
 eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
 uses that effective scheme while retaining the requested scheme as the control
 state, so navigation and controlled-host updates cannot leave stale indicators.
-`workspace_views_data.ts` derives the changed views themselves, preferring a
-ready comparison result and falling back to the lightweight screen-view
-evidence a screen-only catalogue records. Workspace data keys those lists by
-component variant path or screen path, so every reader must
-select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
-the dot and clips its wording.
+`../viewer/public_workspace_views.ts` derives the changed views themselves from
+the published catalogue's ready per-view comparisons. Workspace data keys
+those lists by component variant path or screen path, and
+`workspace_views_data.ts` reads the list of the shown selection, so every
+reader selects the evidence that belongs to the preview;
+`css_workspace_marks.ts` draws the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
@@ -207,7 +207,11 @@ details as one snapshot and rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. The element
+shows the loading state, or the unavailable state with retry. A use case's
+stage, in `public_stage.tsx`, shows each step's desktop view in a browser
+frame, or, while `narrow_layout.ts` reports a window at most 760px wide, its
+mobile view in a phone frame, under the
+[device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome). The element
 generation of `frame_source_hook.ts` advances only when a frame's
 `documentKey` changes at the same source, so a publication reloads only the
 frames whose document changed. Saved component view records supplied by prop
@@ -235,12 +239,14 @@ validated query/parser/resolver carries it through the first render,
 controlled hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved removed record and route.
 
-`workspace_data.ts` describes shell data, while `workspace_usage_data.ts`
-projects use and affected-consumer links. Its `entry` is always the exact routed
-screen, component parent, or component variant; component routes retain their
-parent schema separately for controls. The lists of a screen or component
+`workspace_data.ts` describes shell data. Its `entry` is always the exact
+routed screen, component parent, or component variant; component routes retain
+their parent schema separately for controls. The lists of a screen or component
 come from its entry detail's `workspace`, and every value is projected only
-from validated index and detail records. `comparison_views.tsx` renders
+from validated index and detail records. A catalogue without published records
+knows only the context's Changes lists, so its workspace carries statuses and
+the Used by links that `workspace_usage_data.ts` projects from manifest usage,
+and no comparison evidence. `comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 
@@ -260,7 +266,14 @@ same markup. `workspace_evidence.tsx` follows the designs' order: the reason
 sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
-design places, and the no-changes line follow, in that order. The heading names
+design places, and the no-changes line follow, in that order.
+`workspace_evidence_data.ts` shows the shared-component sentence in place of
+the no-changes line when Changes does not list the routed entry and changed
+components affect it, by the facts of `../review/shared_impact.ts`: the
+detail's related components, a component-owned record on a shown view, or the
+loaded review's `affected` evidence. The same facts give an unchanged view in
+`comparison_selection.ts` its "Components this screen uses changed" pane
+heading. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its
@@ -298,7 +311,11 @@ removed-entry route whose snapshot record leaves a refreshed index shows the
 missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
-frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
+frame internals. `component_controls.tsx` owns cancellable temporary prop edits,
+and `component_control_fields.tsx` lays out each control as a row, its name in
+a label column and then its value, help, and error, as the
+[controls design](../../../../docs/protocol/mokly-component-controls-design.md)
+draws them;
 the focused `workspace_*` components render evidence, usage, instances and
 supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
 interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
@@ -378,7 +395,9 @@ section per viewport, sharing one last-scrolled version
 (`comparison_scroll_owner.ts`) between them, and chooses `comparison_stack.tsx`
 for Overlay and Difference (one chrome whose viewport holds the Before layer
 and the blended Current layer) or `comparison_side.tsx` for Side by side and
-for views missing a side. `comparison_chrome.tsx` picks the browser, phone or
+for views missing a side, whose message is the design copy that the
+[pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout)
+names. `comparison_chrome.tsx` picks the browser, phone or
 bordered component frame, `comparison_viewport.tsx` renders the shared
 viewport, its sticky device-sized box and range spacer, and
 `comparison_frame.tsx` reuses `preview_frame.tsx` and the read-only guard for

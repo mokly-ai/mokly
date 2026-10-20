@@ -2,18 +2,16 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { expectHostPath, type EntryHost } from "./entry_hosts.js";
 import type { MovedHost } from "./moved_rows.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
 
 /**
  * How one host runs the branch-point checks. The hosts of the moved cases
- * fit: Serve and the branch copy route by address, the embedded viewer opens
- * an entry by query, and only Serve captures comparisons on demand.
+ * fit: each says how it opens an entry and which page path it shows for
+ * that entry, and only Serve captures comparisons on demand.
  */
-export type BranchPointHost = Pick<
-  MovedHost,
-  "comparisons" | "open" | "routes"
->;
+export type BranchPointHost = Pick<MovedHost, "comparisons" | "open" | "path">;
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -144,25 +142,22 @@ export async function search(page: Page, query: string): Promise<void> {
   if (opened) await page.getByRole("button", { name: "Close search" }).click();
 }
 
-/** Wait until the head, and the address on a routing host, name one entry. */
+/** Wait until the head and the host's page path name one entry. */
 export async function expectRouted(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await expect(
     page.locator(".mbk-screen-head [data-copy-path]"),
   ).toHaveAttribute("data-copy-path", entry);
-  if (host.routes)
-    await expect
-      .poll(() => decodeURIComponent(new URL(page.url()).pathname))
-      .toBe(`/view/${entry}/`);
+  await expectHostPath(page, host, entry);
 }
 
 /** Open an entry on `host` and wait for its workspace head. */
 export async function openEntry(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await host.open(page, entry);

@@ -144,3 +144,43 @@ test("a select edit renders at once, and a negative zero keeps its sign", async 
     await closeServe(page, server);
   }
 });
+
+test("each prop field is a row with its name in a label column", async ({
+  page,
+}) => {
+  const server = await serveLiveCatalogue({
+    files: { "specs/card.component.html": BOUNDED },
+  });
+  try {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const props = await openProps(page, server.url, {
+      query: "?viewport=desktop",
+    });
+    /** The name's and the value's boxes of one field. */
+    const row = async (control: string) => {
+      const field = props.locator(".mbk-control-field", {
+        has: page.locator(`[data-prop-control="${control}"]`),
+      });
+      const name = await field.locator(".mbk-control-label").boundingBox();
+      const value = await field
+        .locator(`[data-prop-control="${control}"]`)
+        .boundingBox();
+      return { name: name!, value: value! };
+    };
+    // Desktop: a 120px label column, then the value 12px to its right.
+    const label = await row("label");
+    expect(label.name.width).toBe(120);
+    expect(label.value.x).toBe(label.name.x + 120 + 12);
+    // Each field has its own row, so the names share one column.
+    const count = await row("count");
+    expect(count.name.x).toBe(label.name.x);
+    expect(Math.abs(count.name.y - label.name.y)).toBeGreaterThanOrEqual(
+      label.name.height,
+    );
+    // Below 900px the inspector is a sheet, and the label column is 100px.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect.poll(async () => (await row("label")).name.width).toBe(100);
+  } finally {
+    await closeServe(page, server);
+  }
+});

@@ -31,6 +31,8 @@ export function registerComponentControls(
         componentDesignUrl("design/components/overview", viewport),
       );
       const saved = await page.locator(".ce-canvas:visible").boundingBox();
+      // The desktop canvas keeps the shell's fixed 1024px layout width.
+      if (viewport === "desktop") expect(saved?.width).toBe(1024);
       await page.goto(
         componentDesignUrl("design/components/controls/controls", viewport),
       );
