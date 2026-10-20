@@ -20,7 +20,7 @@ fn suite_panic_and_cleanup_reporter_panics_still_stop_every_warmed_box() {
         .iter()
         .filter_map(|event| event.strip_prefix("warm:"))
         .collect();
-    assert_eq!(warmed.len(), 6);
+    assert_eq!(warmed.len(), 7);
     for id in warmed {
         let status = events
             .iter()
@@ -41,6 +41,6 @@ fn suite_panic_and_cleanup_reporter_panics_still_stop_every_warmed_box() {
     }
     assert_eq!(
         events.iter().filter(|event| *event == "cancel:123").count(),
-        6
+        7
     );
 }

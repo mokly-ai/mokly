@@ -40,3 +40,33 @@ Playwright selection keep their complete or requested inventories.
   its observed test IDs against independent discovery.
 - [`shard-balance.mjs`](./shard-balance.mjs) enforces the existing test-count
   share limit when evidence is aggregated.
+
+## Remote delivery
+
+[`testbox-suite.mjs`](./testbox-suite.mjs) accepts `--suite static-delivery`
+as a separate remote command. It shares the fingerprint, staging, history,
+and dependency preparation used by the other commands. It builds with
+`npm run build` and then runs `npm run test:delivery:prepared`. Build failures,
+signals, and either delivery failure produce a nonzero command result.
+
+No browser command also runs delivery. The remote plan gives static delivery
+its own seventh Testbox and requires its exit result. Browser and viewer
+reports retain the existing five-report aggregate. The delivery parent
+validates its own HTTP and file reports before returning success.
+
+### Testbox workflow reference
+
+[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
+executes the lockfile stamp step and the environment step on Linux hosts with
+controlled inputs and asserts the written files. The environment run redirects
+`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
+pins are review-owned literals.
+
+Pin each action to these immutable revisions. Keep the version comments.
+
+| Action                        | Commit                                     | Comment    |
+| ----------------------------- | ------------------------------------------ | ---------- |
+| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
+| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
+| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
+| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |

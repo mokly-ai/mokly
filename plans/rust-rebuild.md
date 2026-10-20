@@ -2507,6 +2507,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Evidence: `.context/ci-shard-balance/partition.json` and
       `.context/ci-shard-balance/shard-green.log`.
 
+- [x] CI round 5, item 2 (2026-10-20): move static HTTP and file delivery
+      from browser box 1 to an independent seventh Testbox command. Build
+      the source there before delivery. Require all seven command results
+      and the same five browser/viewer reports. Keep four browser shards,
+      current runner sizes, and the 30-minute Testbox job limit. User item
+      100 owns any runner or limit change. Tests cover the new command,
+      failure propagation, the all-probes barrier, and per-box cleanup.
+      Evidence: `.context/ci-shard-balance/delivery-green-node.log` and
+      `.context/ci-shard-balance/delivery-green-rust.log`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
