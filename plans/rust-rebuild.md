@@ -2423,6 +2423,14 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         built from the title. Two cases reject them: a row keeps its key when
         another instance of its entry comes first, and beside another entry
         with the same title. A mutation run proves each case.
+  - [x] Follow-up F9b review, on 2026-10-20: finding 27 is fixed by
+        `3038f6de`. Findings 24 (`2a0df638`), 25 (`1b391e86`), and 26
+        (`0ef0e0a3`) are applied with reasons: they restore checks that this
+        branch dropped, or finish item 6. Finding 28 is corrected in the
+        round's sweep rows.
+  - F9b review finding 29 for the user: two test modules export
+    `branchPointCases` with different lists. Severity Low, effort Small.
+    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
