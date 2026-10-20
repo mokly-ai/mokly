@@ -64,7 +64,7 @@ test("an optional field says Optional and Set {name}; unset, it shows Not set", 
   const unset = fields(optional);
   assert.match(
     unset,
-    /<label for="mb-prop-components\/action-label">label <span aria-hidden="true" class="mbk-control-optional">Optional<\/span><\/label><label class="mbk-control-set"><input type="checkbox"\/><span>Set label<\/span><\/label><input[^>]*hidden=""[^>]*\/><p class="mbk-control-unset">Not set<\/p>/,
+    /<label class="mbk-control-label" for="mb-prop-components\/action-label">label <span aria-hidden="true" class="mbk-control-optional">Optional<\/span><\/label><div class="mbk-control-value"><label class="mbk-control-set"><input type="checkbox"\/><span>Set label<\/span><\/label><input[^>]*hidden=""[^>]*\/><p class="mbk-control-unset">Not set<\/p>/,
   );
   const set = fields(target);
   assert.match(
@@ -157,9 +157,9 @@ test("an optional toggle names its value check box; a required one keeps its lab
   const set = fields(toggle(false, true));
   assert.match(
     set,
-    /^<div class="mbk-control-grid"><div class="mbk-control-field"><span class="mbk-control-name">Muted <span aria-hidden="true" class="mbk-control-optional">Optional<\/span><\/span><label class="mbk-control-set"><input type="checkbox" checked=""\/><span>Set Muted<\/span><\/label><label class="mbk-control-check"><input data-prop-control="muted" id="mb-prop-components\/action-muted" type="checkbox" checked=""\/><span>Muted<\/span><\/label>/,
+    /^<div class="mbk-control-rows"><div class="mbk-control-field"><span class="mbk-control-label">Muted <span aria-hidden="true" class="mbk-control-optional">Optional<\/span><\/span><div class="mbk-control-value"><label class="mbk-control-set"><input type="checkbox" checked=""\/><span>Set Muted<\/span><\/label><label class="mbk-control-check"><input data-prop-control="muted" id="mb-prop-components\/action-muted" type="checkbox" checked=""\/><span>Muted<\/span><\/label>/,
   );
-  assert.doesNotMatch(set, /<label for=/);
+  assert.doesNotMatch(set, /<label[^>]* for=/);
   assert.match(
     fields(toggle(false)),
     /<label class="mbk-control-check" hidden="">.*<span>Muted<\/span><\/label><p class="mbk-control-unset">Not set<\/p>/,
@@ -167,7 +167,7 @@ test("an optional toggle names its value check box; a required one keeps its lab
   const required = fields(toggle(true, false));
   assert.match(
     required,
-    /<label for="mb-prop-components\/action-muted">Muted<\/label><input data-prop-control="muted"/,
+    /<label class="mbk-control-label" for="mb-prop-components\/action-muted">Muted<\/label><div class="mbk-control-value"><input data-prop-control="muted"/,
   );
   assert.doesNotMatch(required, /mbk-control-check|Optional/);
 });
@@ -200,4 +200,13 @@ test("help reads negative bounds with words and takes missing bounds from the sc
     "2–8 in steps of 2",
   );
   assert.equal(help({ type: "integer", minimum: 0 }, {}), "0 or more");
+});
+
+test("each field is a row: its name in the label column, then its value", () => {
+  const markup = fields(target);
+  assert.match(
+    markup,
+    /^<div class="mbk-control-rows">(<div class="mbk-control-field"><(label|span) class="mbk-control-label"[^>]*>.*?<\/(label|span)><div class="mbk-control-value">.*?<\/div><\/div>)+<\/div>$/,
+  );
+  assert.doesNotMatch(markup, /mbk-control-grid|mbk-control-name/);
 });

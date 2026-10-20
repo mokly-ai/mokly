@@ -25,8 +25,10 @@ Each field has a visible label, associated input, and concise help where needed.
 Optional props have a supplied/unset choice; unset differs from an empty string.
 Numeric controls show their supported range. Invalid fields retain the entered
 value and show a nearby error; the preview retains the last valid values.
-Controls fit one column on mobile and a compact grid on desktop. Focus indicators
-and error text remain legible, and controls do not rely on color alone.
+Each control is a row: its name in a label column, 120px wide on desktop and
+100px on mobile, with Optional beneath an optional name, then its value, help,
+and error. Focus indicators and error text remain legible, and controls do not
+rely on color alone.
 
 The Edit props link opens the controls of the entry it is on: the parent's own
 entry from the component page, or a saved variant from that variant's page.

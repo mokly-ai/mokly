@@ -1638,7 +1638,8 @@ Tags: ui
       comparison pane heading; fix the records sentence.
 - [x] Item 24 A: show each use-case step's mobile view in a phone frame below
       760px.
-- [ ] Item 17 A: lay out the prop controls as rows with a label column.
+- [x] Item 17 A: lay out the prop controls as rows with a label column. The
+      settled copy and states were already in the viewer.
 - [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
       move the copy checks that reached Details through it to live inputs.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.

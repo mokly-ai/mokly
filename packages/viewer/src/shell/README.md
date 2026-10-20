@@ -309,7 +309,11 @@ removed-entry route whose snapshot record leaves a refreshed index shows the
 missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
-frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
+frame internals. `component_controls.tsx` owns cancellable temporary prop edits,
+and `component_control_fields.tsx` lays out each control as a row, its name in
+a label column and then its value, help, and error, as the
+[controls design](../../../../docs/protocol/mokly-component-controls-design.md)
+draws them;
 the focused `workspace_*` components render evidence, usage, instances and
 supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
 interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
