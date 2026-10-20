@@ -551,7 +551,16 @@ merges; the freeze applies to it from 2026-10-12.
   - [x] CI, verification, and release.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
-- [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
+  - [x] #135: closed unmerged by the user's decision on 2026-10-20, because
+        #168 replaced its behaviour.
+  - [x] #182: merged on 2026-10-20 as `b19d4433`. It released
+        `@mokly/mokly` 0.15.0 and `@mokly/viewer` 0.6.0.
+  - [x] #198: merged on 2026-10-20 as `d9f421d1` by the user's decision. CI
+        also runs on a manual dispatch for any branch.
+  - [ ] The test and CI housekeeping pull requests: the user decides each
+        open pull request.
+- [x] Tag the last TypeScript backend commit on `main` as `ts-backend-final`:
+      `b19d4433`, the 0.15.0 release, tagged on 2026-10-20.
 - [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
       captured scenario to the JSON table that the rebuild procedures define.
 - [x] Capture reference outputs with the old CLI under
