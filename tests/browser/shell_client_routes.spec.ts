@@ -7,6 +7,8 @@
 
 import { expect, type Route } from "@playwright/test";
 
+import { historyScrolls } from "../../packages/viewer/src/shell/store_scroll.js";
+
 import { desktopFrame, mobileFrame } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { networkFailure, responseFailure } from "./shell_error_allowances.js";
@@ -93,6 +95,12 @@ test.describe("with a clean console", () => {
         }),
       )
       .toBe(160);
+    await expect
+      .poll(
+        async () =>
+          historyScrolls(await page.evaluate(() => history.state))["stage"],
+      )
+      .toBe(160);
     await openFolder(page, "example/team");
     await navLink(page, MEMBERS).click();
     await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
@@ -106,6 +114,13 @@ test.describe("with a clean console", () => {
           element.scrollTop = 120;
           return element.scrollTop;
         }),
+      )
+      .toBe(120);
+    // The scroll offset changes before the scroll event saves it in history.
+    await expect
+      .poll(
+        async () =>
+          historyScrolls(await page.evaluate(() => history.state))["stage"],
       )
       .toBe(120);
     await page.goBack();
