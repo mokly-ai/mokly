@@ -163,8 +163,11 @@ before each of its two commits. The default catalogue has no extra entries.
 screen and component consumers, a moved parent with a removed sibling, a
 transferred variant, case-only renames, and a document that reuses a removed
 component's path. The moved consumers also retain distinct base and head SVG
-bytes. The case-only entries use no changed styles. Both hosts below use the
-same authored sources.
+bytes. The case-only entries use no changed styles. The moved parent's folder
+has its own page, an unchanged component index. Both hosts below use the
+same authored sources. The cases come from `tests/fixtures/branch_point_cases.json`,
+the shared set that `crates/mokly-compare/tests/branch_point_cases_tests.rs`
+also runs, each case in its own repository.
 
 `addComparisonFixtureSources` composes `addBranchPointSources` with
 `addMovedFixtureSources`. The second hook adds the `branch/moves/` entries:

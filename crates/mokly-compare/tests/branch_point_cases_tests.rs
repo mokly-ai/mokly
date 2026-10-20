@@ -1,4 +1,5 @@
-//! Shared data fixtures are suitable for Rust, Serve, build, and later browser verification.
+//! The shared branch-point cases through real Git commits. The browser
+//! fixtures write the same cases for Serve, `build`, and the embedded viewer.
 
 use std::collections::BTreeMap;
 
@@ -32,6 +33,18 @@ fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
         "../../../tests/fixtures/branch_point_cases.json"
     ))
     .unwrap();
+    // The browser checks and the case blocks below name exactly these cases.
+    let names: Vec<_> = cases.iter().map(|case| case.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "moved-consumers",
+            "moved-parent",
+            "moved-variant",
+            "case-renames",
+            "reused-parent"
+        ]
+    );
     for case in cases {
         let base: Vec<_> = case
             .base
@@ -101,51 +114,60 @@ fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
                 .parent("generation", Destination::Removed(removed))
                 .unwrap();
             assert!(parent.is_some());
-            if case.name == "parent-move-removed-variant" {
+            if case.name == "moved-parent" {
                 assert!(
-                    matches!(parent, Some(Parent::Entry(Destination::Current(entry))) if entry.metadata.path == "new-card" && entry.metadata.title == "Current Card")
+                    matches!(parent, Some(Parent::Entry(Destination::Current(entry))) if entry.metadata.path == "branch/parent/archive/action" && entry.metadata.title == "Action")
                 );
             }
-            if case.name == "case-only-identities" {
+            if case.name == "case-renames" {
                 assert!(
-                    matches!(parent, Some(Parent::Entry(Destination::Current(entry))) if entry.metadata.path == "card")
+                    matches!(parent, Some(Parent::Entry(Destination::Current(entry))) if entry.metadata.path == "branch/case/action")
                 );
             }
-            if case.name == "kind-reuse-parent-title" {
-                assert!(matches!(parent, Some(Parent::Title("Historical Card"))));
+            if case.name == "reused-parent" {
+                assert!(matches!(parent, Some(Parent::Title("Former action"))));
             }
         }
-        if case.name == "variant-between-parents" {
+        if case.name == "moved-variant" {
             let variant = result
                 .after
                 .catalogue()
                 .model
                 .entries
                 .iter()
-                .find(|entry| entry.metadata.path == "receiver/arrived")
+                .find(|entry| entry.metadata.path == "branch/variant/receiver/primary")
                 .unwrap();
             assert!(
-                matches!(lookup.parent("generation", Destination::Current(variant)).unwrap(), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "receiver")
+                matches!(lookup.parent("generation", Destination::Current(variant)).unwrap(), Some(Parent::Entry(Destination::Current(parent))) if parent.metadata.path == "branch/variant/receiver")
             );
         }
 
-        if case.name == "case-only-identities" {
+        if case.name == "case-renames" {
             assert_eq!(
                 lookup
-                    .counterpart("generation", EntryKind::Component, "card/large")
+                    .counterpart(
+                        "generation",
+                        EntryKind::Component,
+                        "branch/case/action/primary"
+                    )
                     .unwrap(),
-                Some("Card/Large")
+                Some("branch/case/Action/Primary")
             );
             assert_eq!(
                 lookup
-                    .previous("generation", EntryKind::Screen, "home")
+                    .previous("generation", EntryKind::Screen, "branch/case/receipt")
                     .unwrap(),
                 None
             );
         }
         assert!(
             lookup
-                .reference("superseded", ReviewSide::Before, EntryKind::Screen, "home")
+                .reference(
+                    "superseded",
+                    ReviewSide::Before,
+                    EntryKind::Screen,
+                    "branch/case/receipt"
+                )
                 .is_err()
         );
     }

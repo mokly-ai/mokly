@@ -2431,6 +2431,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       base commits must feed Rust and browser tests, but Rust reads
       `tests/fixtures/branch_point_cases.json` and the browser writes its
       own sources. Separate branch.
+      - [x] Follow-up F9b item 5: the JSON now holds the browser's five
+            namespaced cases with their pairs, removed titles, and affected
+            consumers. Rust runs each case in its own repository. The browser
+            helper writes every case into both commits, byte for byte as the
+            old generator did. The browser checks are keyed by the case
+            names, and both readers stop on a missing case. No behaviour or
+            protocol change was needed.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.

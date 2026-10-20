@@ -6,7 +6,10 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
+import {
+  branchPointCases,
+  branchPointPaths as paths,
+} from "../helpers/branch_point_sources.js";
 
 import {
   activateRow,
@@ -248,11 +251,25 @@ async function reusedParent(page: Page): Promise<void> {
   ).toHaveCount(0);
 }
 
-/** Every case's checks, keyed by the case title that starts each test name. */
-export const BRANCH_POINT_CHECKS = {
-  "moved consumers": movedConsumers,
-  "moved parent": movedParent,
-  "moved variant": movedVariant,
-  "case renames": caseRenames,
-  "reused parent": reusedParent,
-} as const;
+/** Every case's checks, keyed by its name in the shared case set. */
+const CHECKS: Readonly<Record<string, (page: Page) => Promise<void>>> = {
+  "moved-consumers": movedConsumers,
+  "moved-parent": movedParent,
+  "moved-variant": movedVariant,
+  "case-renames": caseRenames,
+  "reused-parent": reusedParent,
+};
+
+/**
+ * Each case of `tests/fixtures/branch_point_cases.json` with its checks and
+ * the title that starts its test names. A case without checks, or checks
+ * without a case, stops the spec from loading, so the browser runs every
+ * shared case.
+ */
+export const BRANCH_POINT_CHECKS = branchPointCases.map(({ name }) => {
+  const check = CHECKS[name];
+  if (!check) throw new Error(`No browser checks for the case ${name}`);
+  return { title: name.replaceAll("-", " "), check };
+});
+if (BRANCH_POINT_CHECKS.length !== Object.keys(CHECKS).length)
+  throw new Error("Browser checks name a case that the shared set lacks");
