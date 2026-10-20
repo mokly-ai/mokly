@@ -60,16 +60,36 @@ impl Token {
 }
 
 /// Region annotations are transparent; both tree walks enter and leave only elements.
-#[derive(Default)]
 pub(crate) struct TextMode {
     open: Vec<Frame>,
     names: BTreeMap<String, Vec<usize>>,
     html: Vec<usize>,
     next: usize,
     plaintext: bool,
+    allow_plaintext: bool,
+}
+
+impl Default for TextMode {
+    fn default() -> Self {
+        Self {
+            open: Vec::new(),
+            names: BTreeMap::new(),
+            html: Vec::new(),
+            next: 0,
+            plaintext: false,
+            allow_plaintext: true,
+        }
+    }
 }
 
 impl TextMode {
+    /// Create parser context that never predicts the obsolete plaintext state.
+    pub(crate) fn without_plaintext() -> Self {
+        Self {
+            allow_plaintext: false,
+            ..Self::default()
+        }
+    }
     /// Whether the parser consumes every later byte as literal text.
     pub(crate) fn plaintext(&self) -> bool {
         self.plaintext
@@ -109,7 +129,8 @@ impl TextMode {
                 _ => Namespace::Html,
             },
         };
-        self.plaintext = namespace == Namespace::Html && name == "plaintext";
+        self.plaintext =
+            self.allow_plaintext && namespace == Namespace::Html && name == "plaintext";
         let integration = match (namespace, name.as_str()) {
             (Namespace::Svg, "foreignobject" | "desc" | "title") => Integration::Html,
             (Namespace::Math, "mi" | "mo" | "mn" | "ms" | "mtext") => Integration::MathText,

@@ -81,6 +81,7 @@ fn reparse(
     entry: &ModelEntry,
     catalogue: &PreparedCatalogue,
 ) -> (Vec<Node>, Vec<Warning>) {
+    let source = nodes.clone();
     let mut repair = Repair::default();
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
@@ -93,7 +94,9 @@ fn reparse(
             )
     });
     if !plaintext_ok || !confirmed_raw_text(&parsed, &serialized.raw_text) {
-        parsed = parse::document(&serialize::document(&marked, true).html);
+        repair = Repair::default();
+        let retry = normalization_annotate::annotate_with_plaintext(source, &mut repair, false);
+        parsed = parse::document(&serialize::document_with_options(&retry, true, false).html);
     } else if let Some(start) = &serialized.plaintext {
         normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
     }
@@ -139,6 +142,15 @@ fn reparse(
     (parsed, warnings)
 }
 
+fn confirmed_plaintext(nodes: &[Node], id: &str) -> bool {
+    tree::walk(nodes)
+        .find_map(|node| match node {
+            Node::Element(element) if element.get(ATTRIBUTE) == Some(id) => Some(element),
+            _ => None,
+        })
+        .is_some_and(|element| element.is_html() && element.name == "plaintext")
+}
+
 fn confirmed_raw_text(nodes: &[Node], expected: &[serialize::RawTextStart]) -> bool {
     expected.iter().all(|raw| {
         tree::walk(nodes).any(|node| {
@@ -151,15 +163,6 @@ fn confirmed_raw_text(nodes: &[Node], expected: &[serialize::RawTextStart]) -> b
             )
         })
     })
-}
-
-fn confirmed_plaintext(nodes: &[Node], id: &str) -> bool {
-    tree::walk(nodes)
-        .find_map(|node| match node {
-            Node::Element(element) if element.get(ATTRIBUTE) == Some(id) => Some(element),
-            _ => None,
-        })
-        .is_some_and(|element| element.is_html() && element.name == "plaintext")
 }
 
 pub(crate) fn marker(node: &Node) -> Option<(&str, bool)> {

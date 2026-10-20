@@ -23,6 +23,15 @@ struct Frame {
 }
 
 pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
+    annotate_with_plaintext(nodes, repair, true)
+}
+
+/// Annotate a fresh tree while optionally disabling plaintext prediction.
+pub(crate) fn annotate_with_plaintext(
+    nodes: Vec<Node>,
+    repair: &mut Repair,
+    allow_plaintext: bool,
+) -> Vec<Node> {
     let mut frames = vec![Frame {
         parent: "document".into(),
         parent_name: "document".into(),
@@ -31,7 +40,11 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
         output: Vec::new(),
         finish: Finish::Root,
     }];
-    let mut mode = TextMode::default();
+    let mut mode = if allow_plaintext {
+        TextMode::default()
+    } else {
+        TextMode::without_plaintext()
+    };
     while let Some(frame) = frames.last_mut() {
         if let Some(mut node) = frame.remaining.next() {
             match &mut node {

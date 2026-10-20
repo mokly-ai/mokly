@@ -3,7 +3,7 @@
 use crate::parse;
 use crate::serialize;
 use crate::support;
-use crate::tree::{Node, element, walk};
+use crate::tree::{Node, Region, RegionKind, element, walk};
 
 use super::reparse;
 
@@ -134,6 +134,76 @@ fn nested_form_style_uses_escaped_retry_when_parser_ignores_form() {
         )],
     ));
     assert_style_literal(nodes);
+}
+
+#[test]
+fn escaped_retry_keeps_regions_and_later_element_metadata() {
+    let mut nodes = parse::fragment("<math><annotation-xml></annotation-xml></math>");
+    let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
+    annotation.push(element("input", &[], Vec::new()));
+    annotation.push(element(
+        "style",
+        &[],
+        vec![Node::Text("a{content:\"<img src=x>\"}".into())],
+    ));
+    nodes.push(Node::Region {
+        region: Region {
+            id: "later".into(),
+            kind: RegionKind::Instance {
+                key: "instance".into(),
+                path: "component".into(),
+                local_id: "later".into(),
+                props_key: "props".into(),
+            },
+        },
+        children: vec![element("p", &[], vec![Node::Text("later".into())])],
+    });
+    let repaired = raw_style_literal(nodes);
+    assert!(walk(&repaired).any(|node| matches!(
+        node,
+        Node::Region { region, .. } if region.id == "later"
+    )));
+    assert!(walk(&repaired).any(|node| matches!(
+        node,
+        Node::Element(element) if element.name == "p"
+    )));
+}
+
+#[test]
+fn escaped_plaintext_retry_keeps_later_regions_and_end_tags() {
+    let mut nodes = parse::fragment("<math><annotation-xml></annotation-xml></math>");
+    let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
+    annotation.push(element("input", &[], Vec::new()));
+    annotation.push(element(
+        "svg",
+        &[],
+        vec![element(
+            "foreignObject",
+            &[],
+            vec![element("plaintext", &[], vec![Node::Text("Note".into())])],
+        )],
+    ));
+    nodes.push(Node::Region {
+        region: Region {
+            id: "after-plaintext".into(),
+            kind: RegionKind::Instance {
+                key: "instance".into(),
+                path: "component".into(),
+                local_id: "after-plaintext".into(),
+                props_key: "props".into(),
+            },
+        },
+        children: vec![element("p", &[], vec![Node::Text("after".into())])],
+    });
+    let repaired = raw_style_literal(nodes);
+    assert!(walk(&repaired).any(|node| matches!(
+        node,
+        Node::Region { region, .. } if region.id == "after-plaintext"
+    )));
+    assert!(walk(&repaired).any(|node| matches!(
+        node,
+        Node::Element(element) if element.name == "p"
+    )));
 }
 
 #[test]

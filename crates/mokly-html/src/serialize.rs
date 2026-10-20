@@ -26,14 +26,6 @@ pub(crate) struct Serialized {
 }
 
 /// Predicted activation point, before any subsequent raw text is written.
-pub(crate) struct RawTextStart {
-    /// Private repair identity attached to the element.
-    pub(crate) id: String,
-    /// Serialized element name.
-    pub(crate) name: String,
-}
-
-/// Predicted activation point, before any subsequent raw text is written.
 pub(crate) struct PlaintextStart {
     /// Private repair identity attached to the predicted element.
     pub(crate) id: String,
@@ -41,8 +33,25 @@ pub(crate) struct PlaintextStart {
     pub(crate) prefix_end: usize,
 }
 
+/// One raw-text element written under the predicted HTML parser context.
+pub(crate) struct RawTextStart {
+    /// Private repair identity attached to the element.
+    pub(crate) id: String,
+    /// Serialized element name.
+    pub(crate) name: String,
+}
+
 /// Escape every text node on a conservative retry, including normally raw text.
 pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
+    document_with_options(nodes, escape_text, true)
+}
+
+/// Serialize with an optional plaintext prediction for a conservative retry.
+pub(crate) fn document_with_options(
+    nodes: &[Node],
+    escape_text: bool,
+    predict_plaintext: bool,
+) -> Serialized {
     let mut output = String::new();
     let mut plaintext_start = None;
     let mut pending: Vec<_> = nodes
@@ -51,7 +60,11 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
         .map(|node| Step::Node(node, false))
         .collect();
     let mut instances: Vec<(&str, &str)> = Vec::new();
-    let mut mode = TextMode::default();
+    let mut mode = if predict_plaintext {
+        TextMode::default()
+    } else {
+        TextMode::without_plaintext()
+    };
     let mut raw_text_starts = Vec::new();
     while let Some(step) = pending.pop() {
         let (node, raw) = match step {
