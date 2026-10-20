@@ -132,6 +132,8 @@ rules use the conservative entry record and supply no instance proof. Unused
 rules change no view.
 Page records and exact instance proof are reduced independently. A nested
 instance can supply implementation evidence even when its page keeps no rule.
+Own render, resource, and rule impact share one unchanged-input check. Saved
+prop edits retain their view records without marking unchanged consumers affected.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership

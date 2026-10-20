@@ -166,3 +166,53 @@ fn self_nested_owned_rules_keep_actual_instance_proof_without_changing_own_views
             .all(|view| view.evidence.rules.is_empty())
     );
 }
+
+#[test]
+fn saved_component_props_do_not_give_unchanged_consumers_style_impact() {
+    saved_props("Own", "card");
+}
+
+#[test]
+fn saved_variant_props_do_not_give_unchanged_consumers_style_impact() {
+    saved_props("Other", "card/other");
+}
+
+fn saved_props(previous: &str, changed: &str) {
+    let base = consumer("'red'");
+    let head = consumer("'red'");
+    head.replace(
+        "owned/card.mockup.tsx",
+        &format!("props:{{label:'{previous}'}}"),
+        "props:{label:'New'}",
+    );
+    let result = compare(&base, &head);
+    assert_eq!(result.snapshot.changed_entries, [changed]);
+    assert!(result.review.affected.is_empty());
+    let home = result
+        .entries
+        .iter()
+        .find(|entry| entry.path == "home")
+        .unwrap();
+    assert!(
+        home.documents
+            .iter()
+            .all(|view| view.state == ReviewState::Unchanged)
+    );
+    let changed = result
+        .entries
+        .iter()
+        .find(|entry| entry.path == changed)
+        .unwrap();
+    assert!(
+        changed
+            .documents
+            .iter()
+            .all(|view| view.state == ReviewState::Changed)
+    );
+    assert!(
+        changed
+            .documents
+            .iter()
+            .all(|view| !view.evidence.rules.is_empty())
+    );
+}

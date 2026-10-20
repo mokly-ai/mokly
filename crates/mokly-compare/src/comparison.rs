@@ -151,32 +151,32 @@ impl Engine {
                 view.document.evidence.rules.dedup();
                 instance_proofs.append(&mut view.proofs);
                 if let Some(component) = &component
-                    && view.root_changed
                     && same_inputs
                 {
-                    impact.insert(component.clone());
-                    own_impact.render.insert(component.clone());
-                }
-                for resource in &view.document.evidence.resources {
-                    if let EvidenceOwner::Component { path } = &resource.owner
-                        && Some(path) == component.as_ref()
-                        && same_inputs
-                    {
-                        impact.insert(path.clone());
-                        own_impact
-                            .dependencies
-                            .insert((path.clone(), resource.path.clone()));
+                    if view.root_changed {
+                        impact.insert(component.clone());
+                        own_impact.render.insert(component.clone());
                     }
-                }
-                for rule in &view.document.evidence.rules {
-                    if let EvidenceOwner::Component { path } = &rule.owner
-                        && Some(path) == component.as_ref()
-                        && rule.status != RuleStatus::Excluded
-                    {
-                        impact.insert(path.clone());
-                        own_impact
-                            .dependencies
-                            .insert((path.clone(), rule.stylesheet.clone()));
+                    for resource in &view.document.evidence.resources {
+                        if let EvidenceOwner::Component { path } = &resource.owner
+                            && path == component
+                        {
+                            impact.insert(path.clone());
+                            own_impact
+                                .dependencies
+                                .insert((path.clone(), resource.path.clone()));
+                        }
+                    }
+                    for rule in &view.document.evidence.rules {
+                        if let EvidenceOwner::Component { path } = &rule.owner
+                            && path == component
+                            && rule.status != RuleStatus::Excluded
+                        {
+                            impact.insert(path.clone());
+                            own_impact
+                                .dependencies
+                                .insert((path.clone(), rule.stylesheet.clone()));
+                        }
                     }
                 }
                 let direct = attributed.component_pages.contains(&index)

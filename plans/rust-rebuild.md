@@ -1188,6 +1188,11 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
       Self-nested style changes retain implementation evidence without changing
       the component's own view states.
       Evidence: `.context/defaults-engine/implementation-review-1.md`.
+- [x] Apply defaults-engine review finding 2, High, option B. Put own render,
+      resource, and owned-rule impact under one unchanged-input condition.
+      Saved component and variant prop edits keep Details evidence and direct
+      view states without marking unchanged consumers affected.
+      Evidence: `.context/defaults-engine/implementation-review-3.md`.
 - Outside scope: `tests/sidecar_postcss_loader_evidence.test.ts` and
   `tests/static_postcss_base_evidence.test.ts` require loader hooks absent on
   Node 22.14.0. Both files pass all seven tests on Node 24.21.0. Separate branch.
