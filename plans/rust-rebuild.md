@@ -2420,6 +2420,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - [x] Resolve in F6 by waiting for each scripted position in history state
           before navigation. Retain every offset and route assertion.
           Evidence: `.context/f6/report.md`.
+  - [x] Resolve F7's watched-update disclosure flake. Wait for unfiltered folder
+        clicks to save their choice before the next action. Keep all assertions
+        and the filter's pre-search baseline. Evidence: `.context/f7/report.md`.
+  - [x] Fix F7 review 1: record folder and section choices during activation,
+        so a delayed native toggle cannot put the close after search. Keep
+        native fallback behavior and a controlled mouse/keyboard regression.
+        Evidence: `.context/f7/post-push-review.md` and `.context/f7/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
