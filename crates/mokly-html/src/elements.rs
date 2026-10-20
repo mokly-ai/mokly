@@ -19,7 +19,7 @@ impl Engine<'_> {
         mut element: Element,
         context: Arc<Context>,
     ) -> Result<Expansion> {
-        ignore_checks::attributes(&element)?;
+        ignore_checks::attributes(&mut element);
         let viewport = match self.request.viewport {
             Viewport::Mobile => "mobile",
             Viewport::Desktop => "desktop",

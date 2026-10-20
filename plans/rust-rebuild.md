@@ -371,6 +371,10 @@ readiness rather than blocking this acceptance round on further startup work.
 - Item 4 A, applied by default (user rule): publish warnings are fatal only
   with `--strict`. Reject always-fatal warnings so recoverable authoring
   warnings do not block publication. Align the publish and exit-status guides.
+- Item 16 B, applied by default (user rule): unknown attributes on ignore
+  wrappers warn and are ignored. `--strict` turns the warning into a failure.
+  Reject unconditional failure and silent ignoring to catch spelling errors
+  while keeping recoverable input usable.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

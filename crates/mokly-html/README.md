@@ -51,7 +51,9 @@ Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
-Ignore scopes resolve during composition. Ignore and link comments do not
+Ignore wrappers discard unknown attributes after catalogue preparation reports
+`html-ignore-attribute`. Their values are not evaluated. Strict builds fail on
+these warnings. Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
 checks exact payloads, parent relationships, complete consumption, and returned

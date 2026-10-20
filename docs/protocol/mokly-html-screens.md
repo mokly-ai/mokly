@@ -133,17 +133,17 @@ and protocol-relative `//` URLs.
 - `<mokly-ignore id="…" material-key="…">` marks a Review-ignore region and
   `<mokly-ignore-scope enabled="true|false">` a scope, with the semantics of
   `ReviewIgnore` and `ReviewIgnoreScope`. An ignore region becomes an ignored
-  region of the composed tree under the
-  [comparison contract](./mokly-comparison.md). A scope is resolved while the
-  screen is composed and leaves nothing in the output: a disabled scope
-  suppresses the ignore regions inside it, and the innermost scope wins. A
-  component element inside a scope renders with that scope state, the
-  component's own scopes nest inside it, and slot content takes the state at
-  its placeholder.
+  region under the [comparison contract](./mokly-comparison.md). Scopes leave
+  nothing in the output. Disabled scopes suppress their ignore regions, and
+  the innermost scope wins. Components inherit that state and nest their own
+  scopes inside it. Slot content takes the state at its placeholder.
 
 Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
-and `mokly-viewport`. Other attributes or invalid ids fail with `html-element`.
+and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
+are ignored with one `html-ignore-attribute` warning per shared body and attribute.
+Their values are not evaluated. `--strict` makes these warnings fatal.
+Warnings catch spelling errors while letting ordinary builds continue.
 
 ## Variants
 

@@ -74,7 +74,9 @@ are checked once, and their warnings name the parent. `Inventory::default()`
 provides an empty inventory for injected adapters and tests.
 
 HTML checks cover forbidden and unknown elements, reserved names, slots,
-component cycles, template references, and unused props. Composition owns
+component cycles, template references, and unused props. Unknown ignore-wrapper
+attributes warn once per shared body and attribute. Their values are ignored.
+Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.

@@ -9,7 +9,7 @@ use mokly_model::prop_schema::PropSchema;
 use crate::diagnostic::{Code, Issue, Warning, WarningSubject};
 use crate::locations::at;
 use crate::references::{boolean, reference, substitutions, use_reference};
-use crate::template_types::{ElementRegistry, Template};
+use crate::template_types::{ElementRegistry, Template, ignore_attribute_allowed};
 
 pub(crate) struct Validation {
     pub(crate) issues: Vec<Issue>,
@@ -213,6 +213,18 @@ impl Checker<'_> {
         }
         for (attribute, value) in &tag.attributes {
             let attribute = String::from_utf8_lossy(attribute);
+            if !ignore_attribute_allowed(&name, &attribute) {
+                self.result.warnings.push(Warning {
+                    code: "html-ignore-attribute",
+                    subject: if self.slots.is_some() {
+                        WarningSubject::Component(self.path.into())
+                    } else {
+                        WarningSubject::Entry(self.path.into())
+                    },
+                    message: format!("unknown attribute {attribute} on <{name}> is ignored"),
+                });
+                continue;
+            }
             let text = String::from_utf8_lossy(&value.value);
             self.substitutions(&text, value.span.start);
             if attribute == "mokly-if" {
