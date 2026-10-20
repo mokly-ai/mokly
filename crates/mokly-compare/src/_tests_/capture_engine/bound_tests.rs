@@ -1,11 +1,14 @@
 //! Byte reservations reject excess Rust metadata and preserve fallback review bytes.
 
+use std::mem;
 use std::sync::Arc;
+
+use mokly_graph::types::RenderSummary;
 
 use mokly_model::canonical;
 
-use crate::capture_weight::{Budget, DEFAULT_BASE_CAPTURE_BYTES};
-use crate::comparison_capture::capture_with_bound;
+use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES};
+use crate::comparison_capture::{CapturedGeneration, capture_with_bound};
 
 use super::support::{self, Probe};
 
@@ -23,25 +26,31 @@ fn exact_byte_bound_is_never_exceeded() {
 
 #[test]
 fn zero_and_partial_captures_fall_back_with_identical_review_bytes() {
+    let fixed = mem::size_of::<CapturedGeneration>()
+        + capture_weight::summary(&RenderSummary {
+            documents: 4,
+            closure: (0..128)
+                .map(|index| format!("public/{index}.svg"))
+                .collect(),
+            ..Default::default()
+        });
     let run = |bound| {
         let probe = Arc::new(Probe {
-            capture_base: bound > 1,
+            capture_base: bound >= fixed,
             forbid_base_after_head: bound == DEFAULT_BASE_CAPTURE_BYTES,
             ..Default::default()
         });
         let source = support::generation("base", 4, probe.clone(), 128);
         let before = capture_with_bound(source.clone(), bound).unwrap();
-        if bound == 0 {
+        if bound < fixed {
             assert!(Arc::ptr_eq(&source, &before));
         }
-        if bound > 1 {
+        if bound >= fixed {
             let retained = before.comparison_capture().unwrap();
             assert!(retained.retained_bytes <= bound);
             assert!(retained.encoded_bytes <= retained.retained_bytes);
-            if bound == 32 * 1024 {
-                assert_eq!(retained.views, 0);
-            } else if bound == 96 * 1024 {
-                assert_eq!(retained.views, 2);
+            if bound == 96 * 1024 {
+                assert_eq!(retained.views, 1);
             }
         }
         let after = support::generation("head", 4, probe.clone(), 128);
