@@ -7,7 +7,7 @@ use cssparser::Token;
 
 use crate::error::Result;
 use crate::rename::{Renamer, grouping};
-use crate::token_sections::{self, Section};
+use crate::token_sections::{self, Grammar, Section};
 use crate::token_tree::Tokens;
 
 impl Renamer<'_> {
@@ -18,11 +18,12 @@ impl Renamer<'_> {
             body: None,
         }];
         while let Some(frame) = pending.last_mut() {
-            let Some(section) = token_sections::next(tokens, &mut frame.range) else {
+            let grammar = frame.grammar();
+            let Some(section) = token_sections::next(tokens, &mut frame.range, grammar) else {
                 pending.pop();
                 continue;
             };
-            let nested = match &mut frame.body {
+            let nested = match &frame.body {
                 Some(body) => self.statement(tokens, body, section)?,
                 None => self.rule(tokens, section)?,
             };
@@ -52,42 +53,29 @@ impl Renamer<'_> {
         } else if at.is_none() {
             own = self.selector(tokens, section.prelude, true)?;
         }
-        let body = (!at.as_deref().is_some_and(grouping)).then_some(Body {
-            own,
-            earlier,
-            unread: None,
-        });
+        let body = (!at.as_deref().is_some_and(grouping)).then_some(Body { own, earlier });
         Ok(section.body.map(|range| Frame { range, body }))
     }
 
-    /// One statement in a style rule's block: a nested rule or a declaration.
+    /// One statement in a declaration block: a nested rule or a declaration.
+    /// A custom property's `{}` values stay inside its declaration.
     fn statement(
         &mut self,
         tokens: &Tokens<'_>,
-        body: &mut Body,
+        body: &Body,
         section: Section,
     ) -> Result<Option<Frame>> {
-        let start = body.unread.take().unwrap_or(section.start);
-        let text = &tokens.source[start..section.end];
-        let custom = text.trim_start().starts_with("--");
         if let Some(range) = section.body {
-            if !custom {
-                let earlier = self.defined.clone();
-                let own = self.selector(tokens, section.prelude, true)?;
-                return Ok(Some(Frame {
-                    range,
-                    body: Some(Body {
-                        own,
-                        earlier,
-                        unread: None,
-                    }),
-                }));
-            }
-            body.unread = Some(tokens.offset(range.start));
+            let earlier = self.defined.clone();
+            let own = self.selector(tokens, section.prelude, true)?;
+            return Ok(Some(Frame {
+                range,
+                body: Some(Body { own, earlier }),
+            }));
         }
         self.declaration(
-            text,
-            start,
+            section.text(tokens),
+            section.start,
             section.end,
             section.semicolon,
             body.own.as_deref(),
@@ -104,11 +92,19 @@ struct Frame {
     body: Option<Body>,
 }
 
+impl Frame {
+    /// Rule-context blocks hold declarations; the others hold rules.
+    fn grammar(&self) -> Grammar {
+        if self.body.is_some() {
+            Grammar::Declarations
+        } else {
+            Grammar::Rules
+        }
+    }
+}
+
 /// The owning style rule's local class and the classes defined before it.
 struct Body {
     own: Option<String>,
     earlier: BTreeSet<String>,
-    /// A custom property's unread `{}` value starts the next statement's text,
-    /// as the authored-order scanner has always read it.
-    unread: Option<usize>,
 }

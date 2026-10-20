@@ -7,7 +7,7 @@ use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
 use crate::rename::grouping;
-use crate::token_sections;
+use crate::token_sections::{self, Grammar};
 use crate::token_tree::{Tokens, opening};
 
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
@@ -28,15 +28,15 @@ pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
 fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
     let tokens = Tokens::new(source);
     let mut output = Vec::new();
-    let mut pending = vec![Work::Block(tokens.root(), false)];
+    let mut pending = vec![Work::Block(tokens.root(), Grammar::Rules)];
     while let Some(work) = pending.pop() {
         match work {
             Work::Emit(text) => output.push(text.into()),
-            Work::Block(mut range, declarations) => {
-                let Some(section) = token_sections::next(&tokens, &mut range) else {
+            Work::Block(mut range, grammar) => {
+                let Some(section) = token_sections::next(&tokens, &mut range, grammar) else {
                     continue;
                 };
-                pending.push(Work::Block(range, declarations));
+                pending.push(Work::Block(range, grammar));
                 let mut header = section.prelude.clone();
                 let first = tokens
                     .next_significant(&mut header)
@@ -49,7 +49,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                     let names = at
                         .as_deref()
                         .is_none_or(|name| name.ends_with("keyframes") || name == "scope");
-                    let nested = at.as_deref().is_none_or(|name| !grouping(name));
+                    let nested = grammar.nested(at.as_deref().is_some_and(grouping));
                     pending.push(Work::Emit("}"));
                     pending.push(Work::Block(body, nested));
                     pending.push(Work::Emit("{"));
@@ -59,7 +59,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                         .next_significant(&mut header)
                         .is_some_and(|index| matches!(tokens.nodes[index].token, Token::Colon));
                     let property = match first {
-                        Some(Token::Ident(name)) if declarations && colon => {
+                        Some(Token::Ident(name)) if grammar == Grammar::Declarations && colon => {
                             Some(name.to_ascii_lowercase())
                         }
                         _ => None,
@@ -148,8 +148,9 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
 
 /// Pending fingerprint work, popped in authored order.
 enum Work {
-    /// Statements of a block; true where declarations are fingerprinted as such.
-    Block(Range<usize>, bool),
+    /// Statements of a block and their grammar. Declarations are fingerprinted
+    /// as such, so composition and animation names compare by local name.
+    Block(Range<usize>, Grammar),
     /// Tokens of a range; true where local names lose the scope prefix.
     Tokens(Range<usize>, bool),
     /// A fixed marker, such as a block boundary.
