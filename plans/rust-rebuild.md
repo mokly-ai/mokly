@@ -2896,6 +2896,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       query of the compact search uses `35rem`, so a host page with another
       root font size leaves the 560px compact search width that
       `docs/protocol/mokly-viewer.md` requires. Separate branch.
+      - [x] Follow-up F18 item 3: the rule switches at a container width of
+            560px, in pixels. `tests/browser/viewer_layout.spec.ts` sets a
+            10px and a 20px root font size and expects the compact control
+            at 560px and the field at 561px. Both cases failed before the
+            fix.
   - [x] F15 re-review, on 2026-10-20: finding 35, a live plan line that
         cited a line of `styles.ts` that the merge shifted, is fixed by
         option B. The line names the rule now. The full report is
