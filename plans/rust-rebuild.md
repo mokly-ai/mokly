@@ -2540,6 +2540,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         five tests, and remove the operation counting helper section of
         `docs/protocol/ci-test-timing.md`. Done in F20 item 2. Search record:
         `.context/m10/f20/item2-searches.txt`.
+  - [x] F20 item 4, under the user rule of 2026-10-20 that deleting unused
+        code needs no permission: the F18 measurement found 47 unused exports
+        in `tests/helpers`, `tests/browser`, and `packages/viewer/tests`.
+        Item 2 removed five with the watched helpers. Of the other 42, 21
+        items are deleted, and 21 keep their declaration without `export`.
+        `tests/fixtures` and the export check stay as they are. The wider
+        check is item 109 for the user. Search record:
+        `.context/m10/f20/item4-searches.txt`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
