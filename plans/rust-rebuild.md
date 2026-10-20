@@ -1911,7 +1911,8 @@ Tags: ui
       design library spec now registers one viewport, and a `_mobile` spec
       beside it registers the other. Evidence:
       `.context/defaults-viewer-82b/shards/`.
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Evidence: `.context/defaults-viewer-82b/gate.log`.
 
 ## Milestone 11: Watch and incremental rendering
 
