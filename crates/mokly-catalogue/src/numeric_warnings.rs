@@ -1,12 +1,22 @@
 //! Warn on binary64 normalization after final entry paths are known.
 
+use std::collections::BTreeMap;
+
 use mokly_model::catalogue::{EntryContent, ModelEntry};
+use mokly_model::controls::{ComponentControl, ControlInput};
 use mokly_model::data::{Props, unsafe_integer_paths};
 use mokly_model::limits::pointer;
 use mokly_model::prop_schema::{Primitive, PropSchema};
 use serde_json::Number;
 
 use crate::diagnostic::{Warning, WarningSubject};
+use crate::render_sources::StoryControlHint;
+
+enum Field {
+    Prop,
+    Schema,
+    Control,
+}
 
 pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
     let mut warnings = Vec::new();
@@ -20,7 +30,7 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
             warnings.extend(
                 schema_paths(&visual.prop_schema)
                     .into_iter()
-                    .map(|path| warning("schema keyword", &path, entry)),
+                    .map(|path| warning(Field::Schema, &path, entry)),
             );
         }
     }
@@ -31,11 +41,16 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
 pub fn for_entry(props: &Props, entry: &ModelEntry) -> Vec<Warning> {
     unsafe_integer_paths(props)
         .into_iter()
-        .map(|path| warning("prop", &path, entry))
+        .map(|path| warning(Field::Prop, &path, entry))
         .collect()
 }
 
-fn warning(kind: &str, path: &str, entry: &ModelEntry) -> Warning {
+fn warning(field: Field, path: &str, entry: &ModelEntry) -> Warning {
+    let kind = match field {
+        Field::Prop => "prop",
+        Field::Schema => "schema keyword",
+        Field::Control => "control",
+    };
     let subject = if matches!(entry.content, EntryContent::Component { .. }) {
         WarningSubject::Component(entry.metadata.path.clone())
     } else {
@@ -47,6 +62,97 @@ fn warning(kind: &str, path: &str, entry: &ModelEntry) -> Warning {
         message: format!(
             "{kind} {path:?} is outside the JavaScript safe integer range and uses the nearest binary64 value"
         ),
+    }
+}
+
+/// Authored control metadata is checked once, before schema defaults are added.
+pub(crate) fn for_controls(
+    controls: &BTreeMap<String, ComponentControl>,
+    entry: &ModelEntry,
+) -> Vec<Warning> {
+    let mut paths = Vec::new();
+    for (key, control) in controls {
+        let path = pointer("", key);
+        match &control.input {
+            ControlInput::Text { max_length } => {
+                record(max_length.as_ref(), pointer(&path, "maxLength"), &mut paths);
+            }
+            ControlInput::Number {
+                minimum,
+                maximum,
+                step,
+            } => {
+                bounds(&path, minimum, maximum, step, &mut paths);
+            }
+            ControlInput::Select { options } => {
+                choices(
+                    &path,
+                    options.iter().map(|option| &option.value),
+                    &mut paths,
+                );
+            }
+            ControlInput::Boolean => {}
+        }
+    }
+    paths
+        .into_iter()
+        .map(|path| warning(Field::Control, &path, entry))
+        .collect()
+}
+
+/// Applied story hints keep the same control paths as explicit declarations.
+pub(crate) fn for_story_hints(
+    hints: &BTreeMap<String, StoryControlHint>,
+    entry: &ModelEntry,
+) -> Vec<Warning> {
+    let controls = match &entry.content {
+        EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
+            &visual.controls
+        }
+        _ => return Vec::new(),
+    };
+    let mut paths = Vec::new();
+    for (key, hint) in hints {
+        let Some(control) = controls.get(key) else {
+            continue;
+        };
+        let path = pointer("", key);
+        if let Some(options) = &hint.options {
+            choices(&path, options.iter(), &mut paths);
+        } else if matches!(control.input, ControlInput::Number { .. }) {
+            bounds(&path, &hint.minimum, &hint.maximum, &hint.step, &mut paths);
+        }
+    }
+    paths
+        .into_iter()
+        .map(|path| warning(Field::Control, &path, entry))
+        .collect()
+}
+
+fn bounds(
+    path: &str,
+    minimum: &Option<Number>,
+    maximum: &Option<Number>,
+    step: &Option<Number>,
+    paths: &mut Vec<String>,
+) {
+    for (key, number) in [("minimum", minimum), ("maximum", maximum), ("step", step)] {
+        record(number.as_ref(), pointer(path, key), paths);
+    }
+}
+
+fn choices<'a>(path: &str, values: impl Iterator<Item = &'a Primitive>, paths: &mut Vec<String>) {
+    for (index, value) in values.enumerate() {
+        if let Primitive::Number(value) = value {
+            record(
+                Some(value),
+                pointer(
+                    &pointer(&pointer(path, "options"), &index.to_string()),
+                    "value",
+                ),
+                paths,
+            );
+        }
     }
 }
 
