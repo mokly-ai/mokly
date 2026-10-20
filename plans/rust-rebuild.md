@@ -421,6 +421,14 @@ follow-up list, not the architecture decisions above.
   settings under option B. Defer option C, a byte-bounded cache of unused
   compiled recipes revalidated before reuse, to the post-merge follow-up.
 
+**F8 explicit user approvals:**
+
+- **13 A:** approved by the user, decision 13 A, 2026-10-20. Delete the unused
+  former catalogue fixtures `docs/protocol/fixtures/catalogue-v4.json`,
+  `catalogue-v5.json`, and `catalogue-v6.json`. Architecture decisions 4 and 28
+  replaced these formats. Remove their `.prettierignore` entries and settle
+  the pending plan item. Searches found no live test, script, or README reference.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -2529,10 +2537,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
-  - Milestone 7 review 1, finding 12: decide whether to delete the
-    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
-    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
-    user.
+  - Milestone 7 review 1, finding 12: settled by F8 decision 13 A. Delete the
+    unused former catalogue fixtures and their `.prettierignore` entries.
   - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
     2026-10-15. `.prettierrc.json` stays: Prettier's Angular parser rewrites
     `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
