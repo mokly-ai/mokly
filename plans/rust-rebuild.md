@@ -2095,9 +2095,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
         Private source snapshots pin these bytes without a byte bound. Preserve
         generation consistency when choosing how to limit retained data.
-- [ ] Review the CSS matching tree's per-element containment-list copies.
+- [x] Review the CSS matching tree's per-element containment-list copies.
       Retention grows with element count times nesting depth. Decide on shared
       containment storage with the CSS attribution work (M14 review 5, finding 2).
+      Shared parent links preserve attribution and remove the copies.
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/containment.md`.
 - [x] Make opaque CSS assets digest-only inputs: store the route, path, and
       digest instead of the bytes; use the digest in the cache keys; stream the
       bytes at delivery and check them against the digest; one entry per asset
