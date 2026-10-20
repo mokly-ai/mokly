@@ -403,14 +403,13 @@ readiness rather than blocking this acceptance round on further startup work.
   first-seen inferred prop order. Reject key sorting because author order
   communicates the intended editing sequence. Regenerate the shared types.
 
-**Open decision N1 (2026-10-20):** Item 6 settles prop values. Schema keyword
-integers outside the JavaScript safe range still retain exact core values,
-while a browser rounds them during JSON decoding. A live edit can pass the
-viewer and fail in the core. Severity Medium, effort Large for recommended B.
-Options: A keeps exact schema values and documents the limitation; B rounds
-schema integers with a warning; C rejects unsafe schema integers. Recommend B
-to keep core and viewer validation consistent while accepting recoverable input.
-Evidence: `.context/defaults-cli/schema-bounds-probe.log`.
+**Decision 6 C clarification (user, 2026-10-20):** The M4 option covers every
+authored number, including props and schema keywords. Close N1 under 6 C.
+Round unsafe YAML integers before schema validation and warn for schema
+keywords. Numeric choice coercion uses the same rounded values. This restores
+catalogues whose saved props equal an unsafe schema limit. Reject exact core
+keywords and unconditional failure because the core and viewer must agree.
+Evidence: `.context/defaults-cli-fix1/finding1-red.log`.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -2216,8 +2215,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
-        effort Large. Recommended B: round schema integers with a warning.
+  - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
+        Round every authored number, including schema keywords, with warnings.
   - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
     Effort Large. Covers defaults review finding 1. No previous examples found.
     The focused repair applies item 16 B before link and slot consumers.
@@ -2541,6 +2540,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Milestone 4 unsafe prop integers: settled on 2026-10-20 by item 6 C,
         applied by default (user rule). Round to binary64 with a warning.
         Schema keyword precision remains open as N1.
+  - [x] N1 schema keyword precision: closed on 2026-10-20 by the user's
+        clarification that decision 6 C includes every authored number.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
