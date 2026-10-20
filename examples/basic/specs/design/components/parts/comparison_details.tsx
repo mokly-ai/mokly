@@ -117,18 +117,12 @@ export function ComparisonDetails({
           </table>
         </>
       ) : null}
-      {changedComponents?.length ? (
-        <>
-          <h4>Changed components used here</h4>
-          <ul className="ce-usage-list">
-            {changedComponents.map((component) => (
-              <li key={component.to}>
-                <MockLink to={component.to}>{component.title}</MockLink>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+      {changedComponents?.map((component) => (
+        <p key={component.to}>
+          Changed component:{" "}
+          <MockLink to={component.to}>{component.title}</MockLink>
+        </p>
+      ))}
       {affected ? <p>{SCREEN_STYLE_COPY.sharedImpact}</p> : null}
       {excludedStylesheets ? <p>No changes to this saved view.</p> : null}
     </section>
