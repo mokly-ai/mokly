@@ -2597,6 +2597,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
+  - Follow-up: classify CSS statements without a block once in the section
+    reader, for the module check, the renamer, and the token check. Effort
+    Medium. Covers M14 nesting report finding 22: a wrapper left open at the
+    end of input in a declaration block gets the generic syntax message,
+    which the wrapper table test pins (option A, kept by the orchestrator on
+    2026-10-20). Previous examples: `.c{}.y`, where the token check fired
+    instead of the syntax check.
 
 ## Post-merge follow-up (non-blocking)
 
