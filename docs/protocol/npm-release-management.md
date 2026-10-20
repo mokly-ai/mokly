@@ -53,6 +53,14 @@ the exact viewer dependency, and their lockfile edges. They preserve the private
 root native `file:` links. Release PR checks must pass `npm ci` and the version
 agreement gate. The CLI keeps the root changelog and its full release history.
 
+Before merge and tag creation, a release PR compares its proposed CLI and viewer
+versions with the PR base. A viewer version change requires a CLI version change.
+If the viewer version stays unchanged, its tracked package files must match the
+existing viewer tag, except for the viewer's tests. This includes source changes
+already present on the PR base. A failed check requires a release PR correction.
+The check runs before tags exist so an invalid release cannot create an
+unpublishable viewer tag or an untested CLI and viewer pair.
+
 The release workflow then:
 
 1. Selects the root CLI action outputs and an optional new viewer tag.

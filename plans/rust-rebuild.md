@@ -2273,13 +2273,14 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
         `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
         exposure and the available fixes before retaining the exception.
-  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
-    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
-    viewer version on the release PR when its source differs from its tag.
-    The hub owns the user decision.
-  - CI gates hub review finding 3: viewer-only releases have no publish path.
-    Severity Medium, effort Medium. Recommended: B, reject that release PR
-    before tags exist. The hub owns the user decision with finding 2B.
+  - [x] User decision 77 (2026-10-20): apply option B for CI gates hub review
+        findings 2 and 3. Reject release PRs that keep a changed viewer's version
+        or release the viewer without the CLI. Compare reused viewer source
+        with its existing tag, excluding tests. Reject before tags exist instead
+        of rejecting publication, relying on commit discipline, or adding a
+        viewer-only publish path. Tests cover stale base changes and both valid
+        release forms. Evidence: `.context/ci-release-checks/decision77-red.log`
+        and `.context/ci-release-checks/decision77-green.log`.
   - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
     hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
     The hub owns the user decision.

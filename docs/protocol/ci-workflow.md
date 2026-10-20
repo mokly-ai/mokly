@@ -57,6 +57,10 @@ only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
 
+The same trusted release PR profile requires the
+[release component and viewer-source check](./npm-release-management.md#release-management)
+in Repository before downstream verification. A failure blocks Required CI before tags exist.
+
 The repository job resolves floating Node 24 once. An explicit shell step reads
 `process.versions.node` and exposes that exact version, the selected matrix,
 and the report-runtime identities as job outputs. Every viewer and browser job
