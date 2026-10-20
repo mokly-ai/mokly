@@ -50,8 +50,9 @@ changed by that rule. This page test includes all nested output inside each
 changed component's occurrence. It also gets a row when Mokly cannot resolve the rule,
 such as a global style or a custom property change. Otherwise the screen is
 under the changed components' Affected screens. Those links show usage, not
-proof that every use looks different, and each one opens that screen's
-comparison.
+proof that every use looks different. In Serve and in a static build, each one
+opens that screen's comparison in Side by side. An embedded viewer opens the
+screen in Current, where the comparison band offers the same comparison.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead
