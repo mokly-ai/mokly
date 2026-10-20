@@ -13,9 +13,47 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::composition::{ComposeRequest, Composer, HtmlComposer};
 use crate::fragment::{Fragment, FragmentMarker, FragmentMarkerKind, FragmentRendererMock};
-use crate::serialize;
+use crate::{fragment_validation, serialize};
 
 use super::support;
+
+#[test]
+fn every_returned_instance_is_rechecked_against_its_registered_schema() {
+    let catalogue = support::prepared("<p>Home</p>");
+    let instance = |order, value| {
+        let props = serde_json::from_value(value).unwrap();
+        let id = format!("instance-{order}");
+        ComponentInstanceRecord {
+            key: instance_key(&ComponentInputOwner::Entry, None, &id).unwrap(),
+            id,
+            component_id: "components/js".into(),
+            owner: ComponentInputOwner::Entry,
+            slot_key: None,
+            order,
+            props: wire_props::encode(&props),
+            props_key: props_key(&props).unwrap(),
+            source: None,
+        }
+    };
+    for invalid in [
+        json!({"label": 42}),
+        json!({}),
+        json!({"label": "Valid", "extra": true}),
+    ] {
+        for position in 0..2 {
+            let mut fragment = Fragment {
+                instances: (0..2)
+                    .map(|order| instance(order, json!({"label": "Valid"})))
+                    .collect(),
+                ..Default::default()
+            };
+            fragment_validation::records(&fragment, &catalogue).unwrap();
+            fragment.instances[position] = instance(position as u64, invalid.clone());
+            let error = fragment_validation::records(&fragment, &catalogue).unwrap_err();
+            assert!(error.to_string().contains("component-props"), "{error}");
+        }
+    }
+}
 
 #[test]
 fn supplied_html_slots_use_the_placeholder_scope_and_the_supplier_props() {

@@ -4,6 +4,7 @@ import { validatePropSchema, validateProps } from "@mokly/viewer/data";
 
 import type { InstanceDraft } from "../generated/sidecar/InstanceDraft.js";
 import type { SlotDraft } from "../generated/sidecar/SlotDraft.js";
+import { SidecarError, detail } from "../sidecar/errors.js";
 
 import { copyData, digest, encodeData, reviewMaterialKey } from "./data.js";
 import { validateDestination } from "./links.js";
@@ -76,8 +77,15 @@ export function componentWrapper(definition: object, data: DefinitionData) {
     }
     const normalized = copyData(props) as Record<string, unknown>;
     const schema = data.input.propSchema;
-    validatePropSchema(schema, registered.path);
-    validateProps(schema, normalized, registered.path);
+    try {
+      validatePropSchema(schema, registered.path);
+      validateProps(schema, normalized, registered.path);
+    } catch (error) {
+      throw new SidecarError(
+        "component-props",
+        `${session.location}: ${detail(error)}`,
+      );
+    }
     const source = invocationSource(
       __moklySource,
       session.sourceRoot,

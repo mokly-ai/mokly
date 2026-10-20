@@ -45,7 +45,11 @@ test("dynamic wrapper props fail the profile before the adapter runs", async (co
     await assert.rejects(
       sidecar.call("renderScreen", { ...params, props: { value } }),
       (error: Error) => {
-        assert.equal(Reflect.get(error, "code"), "render-failed");
+        assert.equal(Reflect.get(error, "code"), "component-props");
+        assert.match(
+          error.message,
+          /specs\/callbacks\.mockup\.tsx export screen/u,
+        );
         assert.match(error.message, /leaf/u);
         return true;
       },
