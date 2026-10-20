@@ -2431,6 +2431,21 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - F9b review finding 29 for the user: two test modules export
     `branchPointCases` with different lists. Severity Low, effort Small.
     Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
+        `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
+  - F9b re-review finding 30 for the user: the mobile embedded runs do not
+    assert a narrow viewer, so a wide viewer would pass them again. Severity
+    Low, effort Small. Recommended: B, a host marker that makes the search
+    helper expect the compact control or the field.
+  - Outside the F9b re-review scope:
+    - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
+      hides the menu button and stays open after a row activation. Separate
+      branch.
+    - `docs/protocol/mokly-viewer.md:302`: no test checks that Close or
+      Escape restores the compact search control and its focus, or that host
+      slots stay mounted. Separate branch.
+    - Commits `2a0df638` and `0ef0e0a3` have titles of 56 and 51 characters,
+      past the 50-character limit. They are pushed, so they stay as they are.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
