@@ -1905,6 +1905,12 @@ Tags: ui
       names, with "Components this screen uses changed", so Serve's selected
       comparison heads a component's markup change too. Applied by default;
       see the Serve pane heading record.
+- [x] Keep each browser shard within its share limit. This milestone's new
+      specs put browser shard 3 one test over its limit, because
+      `static_design_library.spec.ts` (150 tests) ended that shard. Each
+      design library spec now registers one viewport, and a `_mobile` spec
+      beside it registers the other. Evidence:
+      `.context/defaults-viewer-82b/shards/`.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
