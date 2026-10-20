@@ -2545,6 +2545,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and `.context/native-ci-fixes-2/merge-decisions.md`.
         The hub must dispatch hosted macOS and Windows Native jobs on
         `rebuild/native-ci-fixes-2`; Linux checks cannot prove those adapters.
+  - [x] Native CI round 2 verification found RUSTSEC-2026-0382, published on
+        2026-10-20. Update the existing TLS verifier to `rustls-webpki` 0.103.16.
+        Keep the live audit and its existing exception policy unchanged.
   - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
     Windows executable suffixes. Selected Native bypasses this path.
     Separate branch before claiming Windows remote-executor support.
