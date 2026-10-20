@@ -36,12 +36,13 @@ fn names(cases: &[Case]) -> Vec<&str> {
     cases.iter().map(|case| case.name.as_str()).collect()
 }
 
+/// The five shared cases. Their names match the browser checks, and `check`
+/// selects the extra assertions of some cases by name.
 #[test]
 fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
     let cases = cases(include_str!(
         "../../../tests/fixtures/branch_point_cases.json"
     ));
-    // The browser checks and the case blocks below name exactly these cases.
     assert_eq!(
         names(&cases),
         [
@@ -56,7 +57,8 @@ fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
 }
 
 /// A moved parent with a new title, a variant that moves under a new slug,
-/// and consumer moves that the detector pairs without `movedFrom`.
+/// and consumer moves that the detector pairs without `movedFrom`. `check`
+/// selects the extra assertions of the first two by name.
 #[test]
 fn rust_only_shapes_keep_base_titles_new_slugs_and_detected_moves() {
     let cases = cases(include_str!("fixtures/branch_point_shapes.json"));
