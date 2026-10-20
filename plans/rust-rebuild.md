@@ -375,6 +375,9 @@ readiness rather than blocking this acceptance round on further startup work.
   wrappers warn and are ignored. `--strict` turns the warning into a failure.
   Reject unconditional failure and silent ignoring to catch spelling errors
   while keeping recoverable input usable.
+- Item 8 A, applied by default (user rule): publish trusts bundled Mozilla
+  roots in addition to the operating system certificate store. Reject OS-only
+  trust so minimal containers can publish through public HTTPS endpoints.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

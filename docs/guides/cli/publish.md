@@ -63,6 +63,9 @@ incomplete upload can start a new Plan. Rerunning the command reuses content
 that the receiver already stored. Redirects are never followed, and bearer
 credentials stay on the endpoint's origin.
 
+HTTPS trusts both the operating system certificate store and Mokly's bundled
+Mozilla roots. Minimal containers can publish without an OS CA package.
+
 The receiver keeps the first completed publication for a commit and config
 path. Success prints uploaded and unchanged counts, or says that this commit
 is already published. An accepted viewer URL appears on its own line.
