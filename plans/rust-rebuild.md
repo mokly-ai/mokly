@@ -2075,6 +2075,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       Design and verification: `.context/base-pnpm-yarn/`.
       Implementation of default decision 10 B on 2026-10-20 replaces the
       npm-only install limit for these supported manager families.
+- [x] Update the inherited rustls-webpki dependency to its fixed patch release
+      for RUSTSEC-2026-0382. Keep the existing TLS verification requirement.
+      Gate evidence: `.context/base-pnpm-yarn/early-repository.log`.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
