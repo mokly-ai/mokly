@@ -2612,9 +2612,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         (`0ef0e0a3`) are applied with reasons: they restore checks that this
         branch dropped, or finish item 6. Finding 28 is corrected in the
         round's sweep rows.
-  - F9b review finding 29 for the user: two test modules export
-    `branchPointCases` with different lists. Severity Low, effort Small.
-    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b review finding 29: two test modules exported
+        `branchPointCases` with different lists. Decided B by the
+        orchestrator on 2026-10-20, as follow-up F15 item 1. The delivery
+        list `branchPointDeliveryCases` reads each removed record's path and
+        parent title from the shared cases and keeps its selectors and
+        texts. It equals the old list, and its guards stop a missing case.
   - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
         `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
   - F9b re-review finding 30 for the user: the mobile embedded runs do not
