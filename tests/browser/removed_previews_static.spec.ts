@@ -12,6 +12,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   comparisonIndex,
   snapshotOf,
   type ComparisonIndex,
@@ -40,6 +41,7 @@ async function openRemoved(
     "Removed",
   );
   await expect(page.locator("#mb-main")).not.toContainText("was removed");
+  await awaitRoutedDetail(page, entryPath);
   await expect(
     page.locator(
       "[data-diff-stage], [data-diff-mode], [data-diff-refresh], .mbk-diff-toolbar",

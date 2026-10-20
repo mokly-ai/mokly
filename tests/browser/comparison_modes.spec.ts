@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   chooseFilter,
   comparisonIndex,
   modeButton,
@@ -82,6 +83,7 @@ test("unchanged views omit comparisons while changed views retain all modes", as
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(page, comparisonPaths.darkOnly);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await chooseScheme(page, "dark");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
@@ -101,6 +103,7 @@ test("unchanged views omit comparisons while changed views retain all modes", as
   await expect(page.locator(`${stage} iframe`)).toHaveCount(4);
   await navRow(page, comparisonPaths.unchanged).click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  await awaitRoutedDetail(page, comparisonPaths.unchanged);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
 });
@@ -115,6 +118,7 @@ test("added and removed screens stay current without comparison controls", async
   await chooseFilter(page, "changed");
   await expect(navRow(page, comparisonPaths.added)).toBeVisible();
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
+  await awaitRoutedDetail(page, comparisonPaths.added);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
     page
@@ -129,6 +133,7 @@ test("added and removed screens stay current without comparison controls", async
   await chooseFilter(page, "changed");
   await expect(navRow(page, comparisonPaths.removedScreen)).toBeVisible();
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
+  await awaitRoutedDetail(page, comparisonPaths.removedScreen);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator("[data-current-screen]")).toHaveCount(0);
   await expect(page.locator(".mbk-previous")).toHaveText(

@@ -8,7 +8,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
-import { chooseFilter, navRow } from "./comparison_ui.js";
+import { awaitRoutedDetail, chooseFilter, navRow } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 
 /** One removed entry, the current entry beside it in Changes, and their titles. */
@@ -43,6 +43,7 @@ async function expectHistorical(page: Page, entry: HistoryEntry) {
       `a[data-nav-row][data-route="${entry.previousPath}/index.html"]`,
     ),
   ).toHaveAttribute("aria-current", "page");
+  await awaitRoutedDetail(page, entry.previousPath);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   if (entry.kind === "screen") {

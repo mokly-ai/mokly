@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
-import { modeButton, showMode } from "./comparison_ui.js";
+import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
   chooseVariant,
   chooseViewport,
@@ -27,9 +27,11 @@ function dotStyle(page: Page, selector: string) {
 
 async function expectShownStatus(
   page: Page,
+  path: string,
   status: "Changed" | "Unmodified",
   comparison: boolean,
 ): Promise<void> {
+  await awaitRoutedDetail(page, path);
   await expect(page.locator("[data-workspace-status]")).toHaveText(status);
   if (comparison) await expect(page.locator(TOOLBAR)).toBeVisible();
   else await expect(page.locator(TOOLBAR)).toBeHidden();
@@ -60,7 +62,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   );
   await expect(page.locator(VIEWPORT_DOT)).toBeHidden();
   // The deep link asked for Side by side, but the Light views are unmodified.
-  await expectShownStatus(page, "Unmodified", false);
+  await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -75,10 +77,10 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
     "both",
   );
-  await expectShownStatus(page, "Changed", true);
+  await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
 
   await scheme.selectOption("light");
-  await expectShownStatus(page, "Unmodified", false);
+  await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
   expect(await dotStyle(page, SCHEME_DOT)).toEqual({
     display: "block",
     radius: "50%",
@@ -101,7 +103,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   await expect(page.locator(SCHEME_DOT)).toBeHidden();
   await expect(scheme).not.toHaveAttribute("aria-describedby", /.*/);
   await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
-  await expectShownStatus(page, "Changed", true);
+  await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
 
   await page.goto(
     `/view/${comparisonPaths.darkOnly}/?viewport=mobile&scheme=dark&comparison=side`,
@@ -109,7 +111,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
     "mobile",
   );
-  await expectShownStatus(page, "Changed", true);
+  await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -139,7 +141,7 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     "data-color-scheme-fallback",
     "",
   );
-  await expectShownStatus(page, "Unmodified", false);
+  await expectShownStatus(page, comparisonPaths.unchanged, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -188,6 +190,7 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "Fresh · Added",
   );
+  await awaitRoutedDetail(page, comparisonPaths.addedVariant);
   await expect(page.locator(TOOLBAR)).toBeHidden();
   await expect(
     page

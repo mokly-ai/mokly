@@ -38,6 +38,7 @@ import {
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   changesPaths,
   chooseFilter,
   comparisonIndex,
@@ -112,6 +113,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       const evidence = await openHandbook(page);
       await expect(headStatus(page)).toHaveText("Changed");
+      await awaitRoutedDetail(page, HANDBOOK);
       await expect(
         page.locator(
           "#mb-main [data-diff-screen], #mb-main [data-viewport-option], .mbk-diff-toolbar",

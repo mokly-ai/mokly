@@ -24,6 +24,7 @@ import {
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   changesPaths,
   chooseFilter,
   comparisonIndex,
@@ -134,6 +135,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
+      await awaitRoutedDetail(page, comparisonPaths.unchanged);
       await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
       const evidence = await openEvidence(page);
       // The paragraphs come from the entry detail; then the list stays empty.
