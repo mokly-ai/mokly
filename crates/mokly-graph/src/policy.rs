@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::result;
 use std::sync::{Arc, Mutex};
 
+use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::protection::{ProtectedBy, SourcePolicy};
 use mokly_css::dependencies::PluginInput;
@@ -243,6 +244,14 @@ impl FilePolicy {
                 .any(|private| node.identity.starts_with(private))
             {
                 return Err(PublicDenial::Private);
+            }
+            if node.kind == FileKind::File
+                && let Some(cause) = self
+                    .sources
+                    .denial(path, Some(&relative(&node.identity, &self.repo_root)))
+                && !(input_root && cause == ProtectedBy::ListedInput)
+            {
+                return Err(self.source_reason(path, cause));
             }
             final_kind = node.kind;
         }

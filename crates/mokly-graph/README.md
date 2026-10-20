@@ -94,6 +94,8 @@ Tests exercise capture reuse; production callers supply fresh base generations.
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Private output and package directories keep their physical identities.
 Repository aliases and case aliases do not make their files public.
+Private-source checks also use each file's physical identity. Watch-input
+fingerprints use repository-relative POSIX names on every platform.
 It stops at declared catalogue documents. The working-tree adapter implements
 `mokly-source-interface::tree::SourceTree`. Historical rendering supplies the
 same boundary through the comparison adapter. `mokly-render` supplies the
