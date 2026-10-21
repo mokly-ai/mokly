@@ -25,7 +25,8 @@ later work; a later request starts a new child for the context.
 When a PostCSS request reaches its deadline, the timeout diagnostic includes
 deterministic timings for child spawn, configuration load, plugin construction,
 and the latest stylesheet run. Each phase reports its elapsed milliseconds or
-its running state. The diagnostic does not include authored paths or CSS text.
+its running state. A running timeout also names the last module URL observed by
+the child. The diagnostic does not include authored CSS text.
 
 ## Read Evidence
 

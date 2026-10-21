@@ -36,3 +36,17 @@ fn resetting_a_stylesheet_run_preserves_setup_phases() {
         ),
     );
 }
+
+#[test]
+fn phase_summary_names_the_last_module_url() {
+    let phases = PhaseState::default();
+    assert!(phases.record(
+        r#"[mokly:postcss-phase] {"phase":"module","event":"module","elapsedMs":4,"moduleUrl":"file:///C:/fixture/postcss.mjs"}"#,
+    ));
+    assert!(
+        phases
+            .summary()
+            .unwrap()
+            .contains("; last module URL: file:///C:/fixture/postcss.mjs")
+    );
+}

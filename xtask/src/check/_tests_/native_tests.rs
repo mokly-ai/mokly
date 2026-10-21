@@ -20,6 +20,7 @@ fn every_native_command_stays_covered_by_the_local_gate() {
         .collect();
     if local.contains(&CommandSpec::new("npm").args(["run", "build"])) {
         local.push(CommandSpec::new("cargo").args(["xtask", "build-native"]));
+        local.push(CommandSpec::new("cargo").args(["test", "--workspace", "--no-fail-fast"]));
     }
     for command in commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline) {
         assert!(
@@ -44,7 +45,7 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
             "cargo clippy --workspace --all-targets -- -D warnings",
             "npm run build --workspace \"@mokly/viewer\"",
             "npm run build --workspace \"@mokly/mokly\"",
-            "cargo test --workspace",
+            "cargo test --workspace --no-fail-fast",
         ]
     );
     let runner = DefaultCheckRunner::new(
@@ -61,7 +62,7 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
             CommandRunnerRunMock
-                .next_call(matching!((command) if command.display() == "cargo test --workspace"))
+                .next_call(matching!((command) if command.display() == "cargo test --workspace --no-fail-fast"))
                 .returns(Ok(())),
         ))),
         Arc::new(Unimock::new(())),

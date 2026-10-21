@@ -40,8 +40,8 @@ process.once("message", (workerData: WorkerData) => {
   initializeReadEvidenceGeneration(workerData.context);
   if (!preloadedObserver()) {
     observeFileReads();
-    observeModuleLoads();
   }
+  observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,

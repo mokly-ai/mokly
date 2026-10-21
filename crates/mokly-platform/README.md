@@ -23,7 +23,11 @@ guard releases the lock and leaves the lock file intact.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership
 guard immediately after spawn. The caller retains the child and its pipes.
-The Unix implementation sends signals to the whole group. The Windows
+The Unix implementation starts a new session and sends signals to the whole
+group. A missing group is already stopped. On macOS, a permission result
+counts as stopped only after enumeration confirms no live member. An
+unreadable process status keeps the original signal error.
+The Windows
 implementation starts the child suspended, attaches a kill-on-close job, and
 resumes its primary thread. This keeps descendants inside the job from their
 first instruction. It requests a console break for

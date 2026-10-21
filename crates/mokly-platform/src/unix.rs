@@ -9,6 +9,8 @@ use std::process::{Child, Command};
 
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::processes::ProcessGroup;
+#[cfg(target_os = "macos")]
+use crate::unix_group_members::{self, SystemMembers};
 
 pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::Result<()>> {
     let source = path_string(source)?;
@@ -46,7 +48,17 @@ fn path_string(path: &Path) -> Result<CString> {
 }
 
 pub(crate) fn configure(command: &mut Command) {
-    command.process_group(0);
+    // SAFETY: The child runs this async-signal-safe call before exec. A new
+    // session gives shells and their descendants one process group.
+    unsafe {
+        command.pre_exec(|| {
+            if libc::setsid() == -1 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(())
+            }
+        });
+    }
 }
 
 pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
@@ -65,17 +77,30 @@ struct UnixGroup {
 impl UnixGroup {
     fn signal(&self, signal: i32) -> Result<()> {
         // SAFETY: The positive child PID identifies the process group created
-        // by CommandExt::process_group(0). No memory is accessed by kill.
+        // by setsid in the child pre-exec hook. No memory is accessed by kill.
         let result = unsafe { libc::kill(-self.pid, signal) };
         if result == 0 {
             return Ok(());
         }
         let source = io::Error::last_os_error();
-        if source.raw_os_error() == Some(libc::ESRCH) {
+        if group_is_gone(&source, self.pid) {
             return Ok(());
         }
         Err(source).platform()
     }
+}
+
+fn group_is_gone(source: &io::Error, pid: i32) -> bool {
+    #[cfg(not(target_os = "macos"))]
+    let _ = pid;
+    if source.raw_os_error() == Some(libc::ESRCH) {
+        return true;
+    }
+    #[cfg(target_os = "macos")]
+    if source.raw_os_error() == Some(libc::EPERM) {
+        return unix_group_members::stopped(&SystemMembers, pid);
+    }
+    false
 }
 
 impl ProcessGroup for UnixGroup {
@@ -86,3 +111,7 @@ impl ProcessGroup for UnixGroup {
         self.signal(libc::SIGKILL)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/unix_tests.rs"]
+mod unix_tests;

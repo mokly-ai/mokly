@@ -1,15 +1,17 @@
 /** Stable phase names for the PostCSS child timeout diagnostic. */
 export type PostcssPhase =
   "spawn" | "config-load" | "plugin-construction" | "stylesheet-run";
+type PhaseLineName = PostcssPhase | "module";
 
 type PhaseEvent = "start" | "end";
 
-interface PhaseRecord {
-  phase: PostcssPhase;
-  event: PhaseEvent;
+export interface PhaseRecord {
+  phase: PhaseLineName;
+  event: PhaseEvent | "module";
   elapsedMs: number;
   durationMs?: number;
   status?: "ok" | "error";
+  moduleUrl?: string;
 }
 
 interface Clock {
@@ -64,5 +66,21 @@ export class PostcssPhases {
         }),
       );
     };
+  }
+
+  moduleUrl(url: string): void {
+    const safe = url.startsWith("data:")
+      ? "data:"
+      : url.length > 512
+        ? `${url.slice(0, 512)}…`
+        : url;
+    this.write(
+      phaseLine({
+        phase: "module",
+        event: "module",
+        elapsedMs: Math.round(this.clock.now() - this.origin),
+        moduleUrl: safe,
+      }),
+    );
   }
 }

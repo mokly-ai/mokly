@@ -24,6 +24,7 @@ type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
+const moduleUrlObservers = new Set<(url: string) => void>();
 const observerKey = Symbol.for("mokly.postcss.readEvidence");
 const generationKey = Symbol.for("mokly.postcss.readEvidenceGeneration");
 const generationInitKey = Symbol.for(
@@ -203,7 +204,10 @@ function compilerBytes(
 }
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
-export function observeModuleLoads(): void {
+export function observeModuleLoads(
+  onModuleUrl: (url: string) => void = () => {},
+): void {
+  moduleUrlObservers.add(onModuleUrl);
   if (
     moduleHooksInstalled ||
     asynchronousLoader ||
@@ -215,6 +219,8 @@ export function observeModuleLoads(): void {
   const hooks = nodeModule.registerHooks({
     resolve(specifier, context, nextResolve) {
       const result = nextResolve(specifier, context);
+      if (typeof result.url === "string")
+        for (const observer of moduleUrlObservers) observer(result.url);
       for (const file of resolutionMetadata(
         specifier,
         context.parentURL,
@@ -225,6 +231,7 @@ export function observeModuleLoads(): void {
     },
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
+      for (const observer of moduleUrlObservers) observer(url);
       if (!url.startsWith("file:")) return result;
       const file = fileURLToPath(url);
       modules.add(file);
