@@ -3781,7 +3781,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       review of 89 B and 90 C: the replacement also ends the live
       connection, so no index loads after it. Evidence:
       `.context/viewer-90c/` and `.context/viewer-139a-140b/`.
-  - [ ] Resolve user item 139 (90 C decision 1): what the replaced stage
+  - [x] Resolve user item 139 (90 C decision 1): what the replaced stage
         shows. The replaced delivery status of 90 C shows the loading stage
         in both hosts, which is the stage that 89 B gives an embedded host.
         The spec has no words for a replaced catalogue. Severity Low, effort
@@ -3794,6 +3794,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         version…", Large. Recommended: A.
     - User decision 139 (2026-10-21): A. Work: W1 on
       `rebuild/viewer-139a-140b`.
+    - Done in `57c2ca36` on `rebuild/viewer-139a-140b`: the `preview-loading`
+      design description and the shell design inventory say that the same
+      loading stage covers a replaced catalogue. The code already showed it.
+      Evidence: `.context/viewer-139a-140b/`.
   - [ ] Resolve user item 140 (90 C decision 2): when a use case shows a
         step failure. A use-case route loads the use case detail and each
         step detail at once. A step failure that arrives before any detail
