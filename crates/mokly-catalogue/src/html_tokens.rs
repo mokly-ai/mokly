@@ -172,7 +172,7 @@ pub fn ignore_source_signature(
 }
 
 /// Format one ignore-wrapper attribute warning with reserved metadata wording.
-pub fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
+pub(crate) fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
     let (label, ending) = if reserved_navigation_attribute(attribute.as_bytes()) {
         ("reserved navigation metadata", "is rejected")
     } else {
