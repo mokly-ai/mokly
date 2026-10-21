@@ -2737,7 +2737,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - User decision 117 (2026-10-21): A now, and C after the merge, in
     parallel if possible, without blocking the merge. Work: the new
     PostCSS follow-ups workspace.
-- [ ] Resolve user item 118 (W6 review finding 3): each file open probes
+- [x] Resolve user item 118 (W6 review finding 3): each file open probes
       identity twice. Every tracked open runs one wasted `fstat`,
       `realpath`, and `stat` probe. Severity Low, effort Small. Performance
       findings wait for the user. Options: A, probe in `opened()` only when
@@ -2747,6 +2747,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       the probes of each read at two sizes, Medium. Recommended: A.
   - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
     workspace.
+  - Completed by `4739f11a`: retain one identity probe per tracked read.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
