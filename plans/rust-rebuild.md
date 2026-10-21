@@ -2418,22 +2418,27 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
-  - [ ] Run the default full-size watch fixture three times per variant and
+  - [x] Run the default full-size watch fixture three times per variant and
         record screen, component, and stylesheet edit-to-reload values with
         medians. HTML completed on the 16 GiB Amazon Linux host with release
         binary, two sidecars, and the 6 GiB safety stop: screen
         4,070.7/5,562.1/5,892.3 ms, median 5,562.1 ms; component
         4,024.2/4,155.3/4,262.7 ms, median 4,155.3 ms; stylesheet
-        4,300.5/3,788.7/3,929.3 ms, median 3,929.3 ms. React did not reach
-        the first edit: the initial full-catalogue render exceeded the
-        required 6,291,456 KiB whole-harness RSS guard before delivery.
-        Evidence: `.context/m14-watch-run/watch-report.json` and raw
-        records under `.context/m14-watch-run/html-1/`, `html-2/`,
-        `html-3/`, and `react-1/`. The item stays open because both variants
-        were not measured. Decision needed for the missing React record:
-        A, run on a larger-memory host while retaining the 6 GiB guard;
-        B, raise the guard, which changes the safety bound; or C, leave React
-        watch unmeasured. Recommend A. No option is applied.
+        4,300.5/3,788.7/3,929.3 ms, median 3,929.3 ms. React used the same
+        release binary, two sidecars, default deadlines, and a 12,582,912 KiB
+        safety stop. React screen values were 11,707.2/8,756.7/9,038.9 ms,
+        median 9,038.9 ms; component values were 11,589.0/9,009.8/9,209.7
+        ms, median 9,209.7 ms; stylesheet values were 3,601.5/2,587.5/3,012.7
+        ms, median 3,012.7 ms. Initial-generation whole-harness peaks were
+        3,780,684/4,483,220/4,784,216 KiB. Screen edit peaks were
+        5,599,440/5,691,836/5,199,424 KiB. Component edit peaks were
+        6,714,816/6,246,476/6,520,948 KiB. Stylesheet edit peaks were
+        6,951,776/6,944,100/7,109,928 KiB. The maximum whole-harness peak was
+        7,335,216 KiB. The 12 GiB stop did not trigger. Evidence:
+        `.context/m14-watch-run/watch-report.json`,
+        `.context/m14-watch-run/react12-observations.json`, and raw records
+        under `html-1/`, `html-2/`, `html-3/`, `react-1/`, `react-2/`, and
+        `react-3/`. Every edit restored its original bytes.
   - [x] Drain browser measurements and restore sources before reporting failure
         when Serve stops, including runs with a caller-owned browser.
         Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
