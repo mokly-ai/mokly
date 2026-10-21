@@ -3338,6 +3338,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] Release lockstep completion review finding 1: fixed test versions
+        block the next release. Severity High, effort Medium. Recommended:
+        B, use fixed input fixtures for exact-version tests and derive live
+        expectations from generated versions and selected tags. Previous
+        example: `6658493c`. Await the user. Evidence:
+        `.context/release-audit-completion/review.md`.
   - [ ] Resolve user item 132 (actionlint review finding): the label
         coverage test misses workflow labels. `tests/actionlint_config.test.ts`
         scans only `.yml` workflows. It also ignores a job's own `runs-on`
