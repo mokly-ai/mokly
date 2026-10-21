@@ -9,7 +9,11 @@ import { expect } from "@playwright/test";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
 import { comparisonPaths } from "./comparison_test.js";
-import { changesPaths, comparisonIndex } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  changesPaths,
+  comparisonIndex,
+} from "./comparison_ui.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 const test = additionsCopyTest("browser-head-baseline", undefined, "HEAD");
@@ -39,6 +43,7 @@ test("the owning catalogue stays usable when HEAD is the unchanged baseline", as
     await expect(page.locator("[data-workspace-status]")).toHaveText(
       "Unmodified",
     );
+    await awaitRoutedDetail(page, comparisonPaths.changed);
     await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
     await expect(
       page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),

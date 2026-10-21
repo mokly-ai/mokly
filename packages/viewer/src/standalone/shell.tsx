@@ -127,10 +127,6 @@ function ReadyShell({
           ? { kind: "live" }
           : { kind: "pinned", comparisonUrl: index.comparisonUrl },
       fetch: (input, init) => win.fetch(input, init),
-      initialMode: () =>
-        new URL(win.location.href).searchParams.get("comparison") === "side"
-          ? "side"
-          : undefined,
       scrollTogether: storedScrollTogether(() => win.localStorage),
     }),
     [index, win],

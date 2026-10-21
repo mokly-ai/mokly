@@ -37,7 +37,7 @@ function stateAfter(
   const before = initialSnapshot(index);
   const state = createInitialShellState(
     before.catalogue,
-    viewerContext(before.catalogue.publicModel!, defaultSelection),
+    viewerContext(before.catalogue.publicModel, defaultSelection),
     routeFromUrl(before.catalogue, new URL(path, "https://catalogue.test")),
     undefined,
   );

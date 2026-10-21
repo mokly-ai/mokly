@@ -10,14 +10,24 @@
 import { expect, type Page } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, modeButton, snapshotOf } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  comparisonIndex,
+  modeButton,
+  snapshotOf,
+} from "./comparison_ui.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 const PREVIEW = "[data-mokly-preview]";
 
 /** The stage shows a removed screen's previous version and no comparison. */
-async function expectRemovedPrevious(page: Page, heading: string) {
+async function expectRemovedPrevious(
+  page: Page,
+  path: string,
+  heading: string,
+) {
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
+  await awaitRoutedDetail(page, path);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(
     page.locator("[data-current-screen], [data-diff-stage]"),
@@ -50,6 +60,7 @@ test("added and removed screens stay current while a light-only comparison keeps
     })
     .toEqual([`/view/${comparisonPaths.added}/`, false, false]);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
+  await awaitRoutedDetail(page, comparisonPaths.added);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
     page.frameLocator('iframe[data-workspace-frame="mobile"]').locator("h1"),
@@ -63,7 +74,11 @@ test("added and removed screens stay current while a light-only comparison keeps
       "u",
     ),
   );
-  await expectRemovedPrevious(page, "Historical screen");
+  await expectRemovedPrevious(
+    page,
+    comparisonPaths.removedScreen,
+    "Historical screen",
+  );
   await expect(page.locator(`${PREVIEW} .mbk-frame-mobile iframe`)).toHaveCount(
     1,
   );
@@ -110,8 +125,16 @@ test("removed affected-screen links and legacy comparison URLs stay current", as
   await expect(page).toHaveURL(
     new RegExp(`/view/${comparisonPaths.removedLightOnly}/\\?`, "u"),
   );
-  await expectRemovedPrevious(page, "Former screen");
+  await expectRemovedPrevious(
+    page,
+    comparisonPaths.removedLightOnly,
+    "Former screen",
+  );
 
   await page.goto(`/view/${comparisonPaths.removedLightOnly}/?comparison=side`);
-  await expectRemovedPrevious(page, "Former screen");
+  await expectRemovedPrevious(
+    page,
+    comparisonPaths.removedLightOnly,
+    "Former screen",
+  );
 });

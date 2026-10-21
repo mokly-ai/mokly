@@ -25,7 +25,7 @@ import {
   FILES_LEAD,
   INSPECTOR_VIEWPORTS,
   OUTSIDE_LEAD,
-  SAVED_VIEW_UNRESOLVED_LEAD,
+  VARIANT_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
   SHARED_IMPACT,
   UNRESOLVED_LEAD,
@@ -36,6 +36,7 @@ import {
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
+import { awaitRoutedDetail } from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
@@ -45,7 +46,7 @@ const CARD_FILES: EvidenceFile[] = [
     sheets.card,
     [
       [COMPONENT_LEAD, [".accent"]],
-      [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
+      [VARIANT_UNRESOLVED_LEAD, [":root"]],
     ],
   ],
   [sheets.theme, [[COMPONENT_LEAD, [".accent"]]]],
@@ -156,6 +157,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
       await expect(evidence.locator("li")).toHaveText([sheets.theme]);
       await expect(page.locator("[data-current-screen]")).toBeVisible();
+      await awaitRoutedDetail(page, comparisonPaths.unchanged);
       await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
       await expect(
         page.getByRole("button", { name: "Side by side", exact: true }),

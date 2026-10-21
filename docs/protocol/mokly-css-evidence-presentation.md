@@ -28,7 +28,7 @@ pending or unavailable.
 One inspector renderer merges classification evidence with a loaded selected
 comparison. Classification evidence is the review entry's `reasons`, the
 projected records, and the live comparison's views of the selected screen or
-saved view, so Current shows the same files and sentences as a loaded
+variant, so Current shows the same files and sentences as a loaded
 comparison. Records merge by stylesheet and selector, with sorted selector
 unions and unresolved precedence. Keep each rule's owner. A retained file
 suppresses its exclusion across all selected views; rendered-resource and
@@ -83,7 +83,7 @@ view keeps the ordinary label below.
 
 ## Details Copy
 
-Screens, component saved views and whole-document pages use one shared
+Screens, component variants and whole-document pages use one shared
 comparison heading in Details. Show “Compared with the branch point on
 \<name\>.” only when the name is known. The name is the `base` ref of the
 catalogue index; an empty or blank name is unknown, and an index without
@@ -109,6 +109,10 @@ For a component entry, the shared wording helper selects:
 | One excluded stylesheet      | “This stylesheet changed, but none of the changed styles apply to this variant.”      |
 | Several excluded stylesheets | “These stylesheets changed, but none of the changed styles apply to this variant.”    |
 
+Component copy names the shown entry a variant, as the
+[variants contract](./mokly-variants.md) and the saved-variant strip do. The
+parent's own entry uses the same word.
+
 Screen Details lists only the sorted retained files beneath “Changes to these files may affect this screen:”. Excluded stylesheet evidence remains available for unchanged entries in All.
 
 A whole-document page uses the screen sentences with “page” in place of
@@ -131,11 +135,11 @@ bundle paths as the real public evidence. Escape paths and selectors as text.
 
 Use these exact sentences when the page selector list is nonempty:
 
-| Page                 | At least one component changed by these rules                                        | No component changed by these rules             |
-| -------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Screen               | “These changed styles also apply outside the changed components on this screen:”     | “Changed styles that apply to this screen:”     |
-| Component saved view | “These changed styles also apply outside the changed components in this saved view:” | “Changed styles that apply to this saved view:” |
-| Whole-document page  | “These changed styles also apply outside the changed components on this page:”       | “Changed styles that apply to this page:”       |
+| Page                | At least one component changed by these rules                                     | No component changed by these rules          |
+| ------------------- | --------------------------------------------------------------------------------- | -------------------------------------------- |
+| Screen              | “These changed styles also apply outside the changed components on this screen:”  | “Changed styles that apply to this screen:”  |
+| Component variant   | “These changed styles also apply outside the changed components in this variant:” | “Changed styles that apply to this variant:” |
+| Whole-document page | “These changed styles also apply outside the changed components on this page:”    | “Changed styles that apply to this page:”    |
 
 Choose the column by whether any record with one of the displayed selectors
 has a component owner. The technical details stay in this
@@ -146,7 +150,7 @@ product copy. A whole-document page still has no comparison controls.
 When the stylesheet has an `unresolved` rule owned by the entry, show a
 separate paragraph under that same path. Use the unresolved screen and component sentences of the Details Copy table,
 with
-“saved view” in place of “component” for a component page reason, and “page” in
+“variant” in place of “component” for a component page reason, and “page” in
 place of “screen” for a whole-document page. A component page reason is an
 unresolved rule whose owner is not the workspace's component; one owned by it
 keeps the component sentence. The exact base sentences are:
@@ -170,8 +174,8 @@ matches are inside an unchanged component invocation.
 Component-only rules keep the matched-component copy and affected consumer
 links. They do not get an outside-component paragraph. An affected-only
 screen can retain its full matched-style evidence without an entry-owned rule.
-A component saved view whose rules are all owned by the entry gets the
-saved-view copy above and no Affected screens from those rules.
+A component variant whose rules are all owned by the entry gets the
+variant copy above and no Affected screens from those rules.
 
 Across all compared views of the selected entry, merge records by stylesheet
 and selector. Union page selectors separately from component-only and
@@ -194,7 +198,7 @@ empty selector list uses the full-stop form and no list.
    owns read “Changed styles that apply to this component:”. Unresolved rules
    that it owns read the component unresolved sentence.
 2. Page selectors from every rule, in the column chosen above.
-3. Other unresolved rules, with the screen or saved-view unresolved sentence.
+3. Other unresolved rules, with the screen or variant unresolved sentence.
 4. Only if none of these apply, every rule is `matched` and owned by changed
    components on this page. The item keeps its full matched evidence: the
    screen or component matched sentence with every selector of its rules.
@@ -214,7 +218,7 @@ components affect it: its detail's `relatedComponents` names a changed
 component, which the review's `affected` records give, a shown view keeps a
 `matched` or `unresolved` rule or a resource that a component owns, or the
 loaded review's `affected` evidence names the entry. It shows in Current and
-in a loaded comparison alike. A saved view whose rules are all owned by the
+in a loaded comparison alike. A variant whose rules are all owned by the
 entry gains no sentence from those rules.
 
 A whole-document page may use component elements
@@ -224,9 +228,9 @@ A page is therefore no consumer: its Details never link a changed component
 or say that sentence, and no component's Usage lists it.
 
 The terminal line, “No changes to this screen.”, “No changes to this page.” or
-“No changes to this saved view.”, appears only when the routed entry is
+“No changes to this variant.”, appears only when the routed entry is
 unmodified and the shared-component sentence does not apply; that sentence
-takes its place. In a component workspace, the selected saved view must also
+takes its place. In a component workspace, the selected variant must also
 be unmodified.
 
 A current whole-document page shows Added, Changed or Unmodified beside its

@@ -13,7 +13,12 @@ import { expect, type Page, type Request } from "@playwright/test";
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, navRow, snapshotOf } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  comparisonIndex,
+  navRow,
+  snapshotOf,
+} from "./comparison_ui.js";
 import {
   comparisonViewerHost,
   type ComparisonViewerHost,
@@ -81,6 +86,10 @@ for (const adapter of ["same-origin", "cross"] as const) {
     await expect(historicalPage(page)).toHaveText("Historical page");
     await navRow(page, comparisonPaths.removedScreen).click();
     await expect(historicalScreen(page)).toHaveText("Historical screen");
+    await awaitRoutedDetail(
+      page.locator("#viewer"),
+      comparisonPaths.removedScreen,
+    );
     await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
     // No review read carries a query: each reads the pinned generation's file.
     expect(

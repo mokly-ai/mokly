@@ -2995,10 +2995,21 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
       stage with retry after another deployment, which the viewer contract
       does not name. Severity Medium, effort Small. Recommended: A, state
       that behaviour in `mokly-viewer.md` and test it.
-    - Follow-up: a use-case route whose step detail fails while the use
-      case detail reports another deployment still shows the unavailable
-      stage before the page load. Effort Small. Covers F12 review finding 2.
+    - Follow-up, user item 90: a use-case route whose step detail fails
+      while the use case detail reports another deployment still shows the
+      unavailable stage before the page load. Severity Low, effort Small.
+      Option A: after a deployment outcome, clear the route's failed marks
+      and ignore later failures for every source. Option B: do A only when
+      the source reloads the page. Option C: a separate "replaced" delivery
+      status, effort Large. Recommended: B. Covers F12 review finding 2.
       Previous examples: F11 and `89f8f6cd` for a route with one detail.
+    - [x] Outside the scope of F12 review 1, line 93, and review 2, line 86:
+          component copy used both "variant" and "saved view". The stage
+          read "No changes to this variant", and Details read "No changes
+          to this saved view." Fixed on 2026-10-21 by
+          `rebuild/viewer-followups-v2` (`09d38589`): every component
+          sentence says "variant", the term of the variants contract, and
+          the protocol, guides, design copy and tests follow.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
@@ -3507,7 +3518,7 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        Severity Medium, effort Medium. The affected records name the parent
        as the consumer for every view of a component, so `projection_affected.rs`
        gives `relatedComponents` to the parent's detail only. A variant page
-       without a loaded review then reads "No changes to this saved view."
+       without a loaded review then reads "No changes to this variant."
        while its preview changed. A parent page whose variant alone uses the
        changed component claims a shared change in its own preview (hub
        review finding 1, merged here by the orchestrator on 2026-10-20).
@@ -3547,6 +3558,27 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
     components under "Affected screens and components". Separate branch.
+  - [x] Hub review of `rebuild/defaults-viewer-82b`, fixed on 2026-10-21 in
+        `rebuild/defaults-viewer-82b-fix1`: finding 2, a Serve update
+        reopened Side by side (`5c761b5d`, B); finding 3, the affected
+        artboard kept highlighting on in Side by side (`1a5ac4df`, B);
+        finding 4, React hosts open Affected links in Current (`62136520`,
+        A); finding 5, a check that the band is absent could pass before the
+        routed detail arrived (`4670bced`, B); and finding 6, the shell
+        README cited a plan decision (`295b6253`, A). The orchestrator also
+        assigned two problems outside its scope: the design and the viewer
+        now say that a comparison is selected when highlighting is off, and
+        the shell README no longer cites "implemented in M31" (`8bf3cc4c`).
+  - Hub review of `rebuild/defaults-viewer-82b`, finding 1 for the user:
+    Affected links ask for refused comparisons. A consumer that Changes
+    lists as a pure move, a component variant consumer, and a consumer in
+    Changes whose linked view is Unmodified each open Current with no band,
+    against the intent rule of `docs/protocol/mokly-changes-controls.md`.
+    Severity Medium, effort Large. Recommended: C, every Affected
+    destination offers the band for the view that its link names, with
+    `relatedComponents` and detail eligibility keyed by the entry that each
+    evidence item names. If the user declines C, apply A: add the intent
+    only when the destination will show the band.
   - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
     user: `HistoricalManifest` has no user and no published export since
     `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
@@ -3554,12 +3586,15 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     delete the alias and list `Manifest`, `ManifestV10`, and
     `HistoricalManifest` with the names that `@mokly/viewer/data` stops
     exporting. Option A keeps the alias and corrects only the release note.
-  - Outside the scope of the hub review of `rebuild/defaults-viewer`, found
-    by its fix round: eleven shell and viewer modules, such as
-    `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a catalogue
-    without published records, which no delivery builds. Making
-    `publicModel` required in the shell catalogue type would show which are
-    dead. Separate branch.
+  - [x] Outside the scope of the hub review of `rebuild/defaults-viewer`,
+        found by its fix round: eleven shell and viewer modules, such as
+        `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a
+        catalogue without published records, which no delivery builds. Making
+        `publicModel` required in the shell catalogue type would show which
+        are dead. Separate branch. Done on 2026-10-21:
+        `rebuild/viewer-followups-v1` deleted the fallbacks (`3525d264`), and
+        `rebuild/viewer-followups-v2` made `publicModel` required
+        (`8f3db91b`).
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.

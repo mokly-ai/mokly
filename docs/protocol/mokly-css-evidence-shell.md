@@ -11,7 +11,7 @@ language, for example "This stylesheet changed, but none of the changed styles
 apply to this screen"; selector text appears only in the details list. Excluded
 resources never produce Changes rows.
 
-In Details for screens, component saved views and whole-document pages, show
+In Details for screens, component variants and whole-document pages, show
 “Compared with the branch point on \<name\>.” only when the name is known.
 The name is the `base` ref of the catalogue index; an index without `base`
 has no name, so omit that sentence. Keep the “Comparison details” heading
@@ -65,7 +65,7 @@ rules:
   under an "Examined and excluded" heading. An excluded-only screen is not in
   Changes, offers no comparison, and shows no stage heading; its evidence panel
   ends with the terminal status line "No changes to this screen." A component
-  variant's terminal line reads "No changes to this saved view." The wording
+  variant's terminal line reads "No changes to this variant." The wording
   follows the entry kind through one shared helper.
 - Linked Excluded and Matched screens show the same changed Welcome in All
   and Changes. They use one shared Details card with the retained file, its
