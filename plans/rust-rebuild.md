@@ -3811,11 +3811,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         The M14 isolated rerun passed; its missing epoch let idle cleanup take
         the asserted slot. Evidence: M14 `report-3.md` and
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
-  - M8 browser review 3 finding 1, High severity, Medium effort: approve two
-    hosted PR measurements with fresh and restored caches before Required CI.
-    Keep four shards, the job timeout, and the 60-second test timeout until
-    the user decides from measured setup, shard, and slow-case durations.
-    Recommended A: measure.
+  - [ ] M8 browser review 3 finding 1, High severity, Medium effort: approve
+        two hosted PR measurements with fresh and restored caches before
+        Required CI. Keep four shards, the job timeout, and the 60-second test
+        timeout until the user decides from measured setup, shard, and
+        slow-case durations. Recommended A: measure.
+    - Covered by user decision 124 (2026-10-21): A, three controlled hosted
+      repeats of one commit and assignment, which the CI gates workspace
+      runs. Tick this line when 124 A lands.
   - [x] M10 shard follow-up: both cases of `design_modern_controls.spec.ts`
         "every selected screen uses one icon footer and one view toolbar"
         timed out once under load in shard 2. Fixed by `f81b7744`, which
