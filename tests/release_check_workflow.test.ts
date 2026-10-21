@@ -95,6 +95,11 @@ test("tag-free release checks stay read-only and cover all seven packages", asyn
     "node scripts/release/pack.mjs .context/release-artifact --reuse",
   );
   assert.equal(
+    aggregateSteps.find((step) => step.name === "Install Chromium for smoke")
+      ?.run,
+    "npx playwright install --with-deps chromium",
+  );
+  assert.equal(
     aggregateSteps.find(
       (step) => step.name === "Smoke-test seven release packages",
     )?.run,

@@ -114,6 +114,8 @@ jobs:
         run: node scripts/release/pack.mjs .context/release-artifact
       - name: Recheck seven release packages
         run: node scripts/release/pack.mjs .context/release-artifact --reuse
+      - name: Install Chromium for smoke
+        run: npx playwright install --with-deps chromium
       - name: Smoke-test seven release packages
         run: node scripts/release/smoke.mjs .context/release-artifact
       - name: Preserve release-check evidence
