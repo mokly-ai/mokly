@@ -227,6 +227,8 @@ internet. Tests cover script suppression, timing tiers, registry access,
 comparison output, cache reuse, executable selection, and fallback reasons.
 Command tests pin every manager's complete scripts-off argument list. Enabling
 scripts removes only its script-suppression argument from that list.
+The script-tree cancellation test waits for a child PID through a named pipe,
+so process startup speed cannot exhaust its readiness wait.
 
 ### Key Code
 

@@ -3106,6 +3106,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         the fixed install lists and remove them only for scripts-on installs.
         Pin every manager's complete scripts-off arguments in tests.
         Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 48 A: wait for the cancellation
+        fixture's child PID through a named pipe. Keep its cancellation and
+        child-exit assertions. Evidence: `.context/base-install-scripts-review/`.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The
