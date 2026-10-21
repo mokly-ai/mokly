@@ -220,9 +220,22 @@ fn forwarded_slots_keep_the_exact_supplier_through_a_repeated_component() {
     }
     for view in &entry("whole").documents {
         assert_eq!(view.state, ReviewState::Unchanged);
-        assert!(view.evidence.rules.iter().all(|rule| rule.owner
-            == EvidenceOwner::Component {
-                path: "child".into()
-            }));
+        let owners: Vec<_> = view
+            .evidence
+            .rules
+            .iter()
+            .map(|rule| rule.owner.clone())
+            .collect();
+        assert_eq!(
+            owners,
+            [
+                EvidenceOwner::Component {
+                    path: "child".into()
+                },
+                EvidenceOwner::Component {
+                    path: "parent".into()
+                }
+            ]
+        );
     }
 }

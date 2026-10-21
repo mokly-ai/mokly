@@ -13,6 +13,7 @@ export function ownedStyles(
   html: string,
   session: RenderSession,
   records: readonly StyleOwnerRecord[] = [],
+  usePhysicalOwners = true,
 ): CollectedStyle[] {
   if (!css) return [];
   const owners = classOwners(html, session);
@@ -22,9 +23,10 @@ export function ownedStyles(
   } catch {
     return [{ css, owners: [] }];
   }
+  const occurrences = new Map<string, number>();
   const styles = root.nodes.map((node) => ({
     css: node.toString(),
-    owners: nodeOwners(node, owners, records),
+    owners: nodeOwners(node, owners, records, usePhysicalOwners, occurrences),
   }));
   if (styles.length) styles.at(-1)!.css += root.raws.after ?? "";
   else styles.push({ css, owners: [] });
@@ -35,6 +37,8 @@ function nodeOwners(
   node: ChildNode,
   classes: Map<string, Set<string>>,
   records: readonly StyleOwnerRecord[],
+  usePhysicalOwners: boolean,
+  occurrences: Map<string, number>,
 ): string[] {
   const selectors = node.type === "rule" ? [node.selector] : [];
   if (node.type === "atrule" && node.nodes)
@@ -46,24 +50,27 @@ function nodeOwners(
         )
         .map((child) => child.selector),
     );
-  const candidates = selectors
-    .flatMap((selector) => [
-      selectorOwner(selector, classes),
-      injectedOwner(selector, records),
-    ])
+  const injected = selectors
+    .map((selector) => injectedOwner(selector, records, occurrences))
     .filter((owner): owner is string => owner !== undefined);
-  return candidates.length &&
-    candidates.every((owner) => owner === candidates[0])
-    ? [candidates[0]!]
+  if (injected.length && injected.every((owner) => owner === injected[0]))
+    return [injected[0]!];
+  if (!usePhysicalOwners) return [];
+  const physical = selectors
+    .map((selector) => selectorOwner(selector, classes))
+    .filter((owner): owner is string => owner !== undefined);
+  return physical.length && physical.every((owner) => owner === physical[0])
+    ? [physical[0]!]
     : [];
 }
 
 function injectedOwner(
   selector: string,
   records: readonly StyleOwnerRecord[],
+  occurrences: Map<string, number>,
 ): string | undefined {
   const normalized = selector.replace(/\s+/g, "").trim();
-  const owners = new Set<string>();
+  const owners: string[] = [];
   for (const record of records) {
     let root: Root;
     try {
@@ -73,10 +80,12 @@ function injectedOwner(
     }
     root.walkRules((rule) => {
       if (rule.selector.replace(/\s+/g, "").trim() === normalized)
-        owners.add(record.owner);
+        owners.push(record.owner);
     });
   }
-  return owners.size === 1 ? owners.values().next().value : undefined;
+  const occurrence = occurrences.get(normalized) ?? 0;
+  occurrences.set(normalized, occurrence + 1);
+  return owners[occurrence];
 }
 
 function selectorOwner(

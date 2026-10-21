@@ -13,6 +13,7 @@ import { registryStyles } from "./registry-styles.js";
 import { ownedStyles } from "./style-ownership.js";
 
 interface StyledInstance {
+  hasNameForId: (id: string, name: string) => boolean;
   insertRules: (id: string, name: string, rules: string[]) => unknown;
 }
 
@@ -162,7 +163,7 @@ function addSheet(
 ) {
   for (const element of sheet.getStyleElement()) {
     const text = element.props?.dangerouslySetInnerHTML?.__html;
-    if (text) styles.push(...ownedStyles(text, html, session, records));
+    if (text) styles.push(...ownedStyles(text, html, session, records, false));
   }
 }
 
@@ -172,9 +173,11 @@ function styleSheet(
   records: StyleOwnerRecord[],
 ): StyledInstance {
   const proxy = Object.create(root) as StyledInstance;
+  proxy.hasNameForId = () => false;
   proxy.insertRules = (id, name, rules) => {
     records.push({ owner, css: rules.join("\n") });
-    return root.insertRules(id, name, rules);
+    if (!root.hasNameForId(id, name)) return root.insertRules(id, name, rules);
+    return undefined;
   };
   return proxy;
 }
