@@ -4767,7 +4767,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         orchestrator asked: the failure points at the first authored token
         that scoping would change, or at the end of the stylesheet when
         scoping only adds tokens there.
-  - [ ] Resolve user item 111 (M14 nesting report item 24, round 7 review
+  - [x] Resolve user item 111 (M14 nesting report item 24, round 7 review
         finding 1): cssparser skips an HTML comment token (`<!--` or `-->`)
         before a stylesheet statement, but the section reader keeps it. So
         the scanners read `<!-- @value x: 1;` and `-->@keyframes k{…}` as
@@ -4780,9 +4780,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         because it aligns the scanners with lightningcss and with the
         `@value` rule. B makes such a stylesheet fail, and it builds today,
         so keep the behaviour until the user decides.
-    - User decision 111 (2026-10-21): A now, and C after the merge, in
-      parallel if possible, without blocking the merge. Work: the new CSS
-      Modules workspace.
+    - User decision 111 (2026-10-21): A now, C after the merge, in parallel.
+      Option A records the gap in the CSS Modules README and protocol page
+      and narrows the README parity claim. Option C remains a non-blocking
+      post-merge follow-up.
   - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
         differential): removing a bare `:global` or `:local` at
         `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
@@ -4834,6 +4835,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     keyframes name as text.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Resolve user item 111 with option C: take each statement's start and
+      kind from cssparser's parsers so the CSS Modules scanners align with
+      `lightningcss`. Keep the iterative, heap-only depth guarantee and add
+      differential coverage for repository stylesheets and a generated corpus.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution
