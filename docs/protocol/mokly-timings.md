@@ -180,8 +180,12 @@ sets `MOKLY_SIDECAR_TIMEOUT_MS` for the child. Each report records this option,
 the inherited timeout variable, exact `NODE_OPTIONS`, Node heap limit,
 `GOMAXPROCS`, and `GOMEMLIMIT`. Overrides affect measurements and must accompany
 any comparison. Build and listening waits have 300-second liveness deadlines.
-Browser operations allow 60 seconds. A deadline fails the run and preserves
-its diagnostic. Shutdown sends SIGTERM, then SIGKILL after 10 seconds if needed.
+Browser operations allow 60 seconds. The full-size watch scenario uses a
+30-minute browser liveness allowance for initial rendering, delivered Changes,
+review fetches, and source restoration. This allowance is a harness liveness
+guard, not an edit-to-reload budget or a product timeout. A deadline fails the
+run and preserves its diagnostic. Shutdown sends SIGTERM, then SIGKILL after
+10 seconds if needed.
 
 Fixtures and logs belong in ignored directories. The CLI checks `git check-ignore`
 and warns when the chosen root is not confirmed ignored. It rejects options
