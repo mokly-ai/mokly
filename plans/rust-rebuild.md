@@ -131,9 +131,8 @@ more than re-deriving the behaviour from the requirements.
     widened 2026-10-13): an identical lockfile uses the working tree's
     dependencies; a different lockfile installs the base's dependencies into
     a bounded content-addressed cache with lifecycle scripts disabled under a
-    time limit by default; user decision 135 B adds a working-tree and CLI
-    opt-in; an impossible install uses the working tree's dependencies with a
-    warning.
+    time limit; an impossible install uses the working tree's dependencies
+    with a warning.
 13. Markers (2026-10-12): the core attaches ownership and ignore regions to
     tree nodes; comment markers exist only in the fragments a sidecar
     returns; ignore scopes resolve at render time; the `mokly-` prefix is
@@ -910,10 +909,6 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `braces` remains 3.0.3. `metro-file-map` 0.87.1 is available, but the
       locked dev-only path remains `metro-file-map` 0.84.6 through
       `micromatch` 4.0.8, so no update was applied.
-  - User decision 72 (2026-10-20), in full: A. The audit exception for
-    GHSA-vfj7-8cjw-p6xm ends on 2026-11-03 and is not renewed. From
-    2026-11-04 UTC the strict audit and the release checks fail on it; that
-    failure is known and accepted. Never add or extend an exception.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The
@@ -1474,21 +1469,6 @@ Review 11 fixes, the negative zero fix of live edit renders, and the merge of
 the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
 decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
-- [ ] Resolve user item 133 (integration batch 19 decision 1, widened by
-      batch 21): JavaScript document keys depend on the checkout folder and
-      the root manifest. `packages/mokly/src/sidecar/bundle.ts` hashes the
-      absolute source, dependency, and repository roots, and every parent
-      `package.json` of each bundled module, into the bundle identity, which
-      feeds every JavaScript document key. Builds of one commit from two
-      folders differ in 545 keys and in the deployment identity. A
-      devDependency edit in the root `package.json` re-keys all 223
-      JavaScript-rendered entries. Severity Medium, effort Medium. Options:
-      A, document that these are render inputs, effort not recorded; B, keep
-      them in the compiled-code cache key, and compute the published
-      document keys from folder-independent data: module digests by
-      repository path, class maps, and bindings, Medium; C, make the bundle
-      identity itself folder-independent, Large. Recommended: B.
-
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -1633,12 +1613,6 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Medium; C, a counted test at two catalogue sizes, Medium (estimate).
         Recommended: B, because it removes a memory regression that
         `rebuild/defaults-engine` adds.
-  - [ ] Resolve user item 101 (engine review auto-fix): an HTML component's
-        own plaintext page lost its root range after parser repair and
-        failed static detail validation. Severity Medium, product bug.
-        `rebuild/defaults-engine` fixes it as a review auto-fix in
-        `3387f236`, and the fix lands when that branch merges. Tick this TODO
-        at that merge.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -2252,17 +2226,10 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 - [x] Verify that watching prunes build outputs and reservation paths by path,
       without ownership-marker parsing.
 
-- [ ] Resolve user item 134 (M11 plan TODO): event-loss recovery for macOS
-      and Windows watches. Native watchers can drop events: macOS FSEvents
-      batches, and Windows buffer overflows. Do the work after the first
-      hosted macOS and Windows runs, with tests. The hosted native jobs do
-      not pass yet, so no measurement exists. Severity Medium, effort Medium
-      (estimate). Options: A, a repository-root rescan after each macOS
-      batch and an exact-input stamp check on Windows, Medium (estimate);
-      B, one recursive watch per root on both systems, effort not recorded.
-      Recommended: A (estimate). This TODO replaces the M11 TODO "After the
-      first hosted macOS and Windows runs, make event loss recoverable
-      there", which held the same choice.
+- [ ] After the first hosted macOS and Windows runs, make event loss recoverable
+      there: choose a repository-root rescan after each macOS batch and an
+      exact-input stamp check on Windows, or one recursive watch per root on both
+      systems; tests.
 - [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
@@ -2842,27 +2809,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
-  - [x] Run the default full-size watch fixture three times per variant and
-        record screen, component, and stylesheet edit-to-reload values with
-        medians. HTML completed on the 16 GiB Amazon Linux host with release
-        binary, two sidecars, and the 6 GiB safety stop: screen
-        4,070.7/5,562.1/5,892.3 ms, median 5,562.1 ms; component
-        4,024.2/4,155.3/4,262.7 ms, median 4,155.3 ms; stylesheet
-        4,300.5/3,788.7/3,929.3 ms, median 3,929.3 ms. React used the same
-        release binary, two sidecars, default deadlines, and a 12,582,912 KiB
-        safety stop. React screen values were 11,707.2/8,756.7/9,038.9 ms,
-        median 9,038.9 ms; component values were 11,589.0/9,009.8/9,209.7
-        ms, median 9,209.7 ms; stylesheet values were 3,601.5/2,587.5/3,012.7
-        ms, median 3,012.7 ms. Initial-generation whole-harness peaks were
-        3,780,684/4,483,220/4,784,216 KiB. Screen edit peaks were
-        5,599,440/5,691,836/5,199,424 KiB. Component edit peaks were
-        6,714,816/6,246,476/6,520,948 KiB. Stylesheet edit peaks were
-        6,951,776/6,944,100/7,109,928 KiB. The maximum whole-harness peak was
-        7,335,216 KiB. The 12 GiB stop did not trigger. Evidence:
-        `.context/m14-watch-run/watch-report.json`,
-        `.context/m14-watch-run/react12-observations.json`, and raw records
-        under `html-1/`, `html-2/`, `html-3/`, `react-1/`, `react-2/`, and
-        `react-3/`. Every edit restored its original bytes.
   - [x] Drain browser measurements and restore sources before reporting failure
         when Serve stops, including runs with a caller-owned browser.
         Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
@@ -2989,6 +2935,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
+  - [ ] Run the watch scenario on the default large fixture and record its
+        edit-to-reload time for each edit kind: one screen, one component,
+        and one stylesheet. The budget table in `mokly-timings.md` requires
+        this record. Found in plan bookkeeping pass 1 on 2026-10-21: the plan
+        records only the watch smoke run in `.context/m14-harness/watch-smoke/`.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -3300,7 +3251,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
 
-- [x] Resolve user item 100: CI jobs exceed the three-times rule of the CI
+- [ ] Resolve user item 100: CI jobs exceed the three-times rule of the CI
       timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
       its 30 minutes and Viewer took 11.3 of its 30 minutes. Severity Medium,
       effort Small. Options: A, raise the limits to at least three times the
@@ -3311,17 +3262,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       example Rust tests apart from lint, types, and audits, and keep the
       30-minute limits, Medium. Recommended: B, with A as the safety margin,
       to be confirmed by a second measured run.
-  - [x] User decision 100 (2026-10-21): apply option A to the CI job limits
-        using the same three hosted repeats. The median job durations are
-        Repository 15.92, Viewer 10.63, Static delivery 11.68, and browser
-        shards 13.05, 13.42, 12.65, and 13.05 minutes. Repository now has a
-        75-minute limit and Viewer 40 minutes. Static delivery and browser jobs
-        retain 60 minutes because those guards already exceed three times their
-        medians. Native jobs are excluded from the median calculation: Windows
-        failed in all three runs and macOS failed in two. Native limits stay at
-        60 minutes. Required CI stays at 30 minutes because it was not a suite
-        timing sample. Evidence: `.context/ci-timing/hosted-timing.md`.
-- [x] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
+  - User decision 100 (2026-10-21): A. Work: the CI gates workspace.
+- [ ] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
       browser shards. The same files vary above 15 percent in 208 of 267
       comparisons between two hosted runs, so these data do not separate
       runner noise from cache, fixture, and order effects. Severity Medium,
@@ -3331,19 +3273,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       (estimate). Recommended: A, because it is the smallest way to separate
       stable costs from run variation. The unmerged
       `rebuild/ci-shard-hosted-2` records the measurements.
-  - [x] User decision 124 (2026-10-21): apply option A for CI round 8. Use
-        three controlled hosted repeats of commit `cdb32803` with one four-shard
-        assignment. The median per-test duration from runs `39581933162`,
-        `39586827857`, and `39592076732` now drives the whole-file weights.
-        The resulting weighted work is 429429, 429334, 410238, and 402429 ms
-        for shards 1 to 4, a 6.71 percent range. The assignment has 342, 493,
-        696, and 696 tests under the 696-test cap. Keep the four shards and every
-        test. The observed shard job medians are 13.05, 13.42, 12.65, and 13.05
-        minutes, a 6.06 percent range. Evidence:
-        `.context/ci-timing/hosted-analysis.json` and
-        `.context/ci-timing/hosted-timing.md`. These medians are the target from
-        the fixed assignment. The new weighted assignment needs hosted
-        confirmation after integration.
+  - User decision 124 (2026-10-21): A. Work: the CI gates workspace.
 - [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
@@ -3366,12 +3296,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Recommended: B. B is a new lint, so it needs the user.
   - User decision 126 (2026-10-21): A. No check for plan words is added.
 
-- [ ] Run the complete gate with both executors on the final tree: local,
-      `cargo xtask check --executor local` on Node 24.21.0, and remote,
-      `cargo xtask check --executor remote` with `MOKLY_TESTBOX_REF` on Node
-      22.15.0. Fix anything either reports until both pass.
-  - Every earlier round and batch runs one complete gate with one executor
-    (user, 2026-10-21).
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
       for the package placeholder, justify each merge decision with its paths,
@@ -3408,26 +3333,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         them. Bare paths and resolutions keep the Classic root, and lockfile
         values keep the lockfile folder. Branch
         `rebuild/base-classic-manifest-paths`.
-  - [ ] Apply the base-install security review on `rebuild/base-env-secrets`:
-        finding 1, a base configuration can read an inherited secret such as
-        `MOKLY_TOKEN` through its manager configuration, and finding 2, a Yarn
-        Berry `injectEnvironmentFiles` reads a file outside the repository.
-        Review and evidence: `.context/review-base-pnpm-yarn/`.
-  - [x] User decision 145 (2026-10-21): B, the wider fix of finding 1. Each
-        base install starts from an allowed list of environment variables, not
-        the inherited environment, so no `MOKLY_` variable and no other
-        inherited secret reaches a manager child. The `MOKLY_` prefix rule is
-        part of the allowed list. A private registry whose token comes only
-        from the environment uses tier three with the install-failed reason.
-        Finding 2 sets `YARN_INJECT_ENVIRONMENT_FILES` so Berry reads no base
-        environment file. Tests: `tests/static_base_secrets.test.ts`.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
-  - [x] Fix watch review finding 1 with option A: document the 30-minute
-        full-size watch liveness exception beside the 60-second default in
-        `docs/protocol/mokly-timings.md`. Evidence: commit `1f1b4334` and
-        `.context/m14-watch-run/review-final.md`.
   - [x] F16: repair hosted native verification startup. Use portable terminal
         pointers, resolve Windows Node shims at both xtask process boundaries,
         and bypass the checkout cache on non-Linux native runners. Replace
@@ -3735,18 +3643,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         pointer form, and duplicate rule. Strict mode treats them like the
         other unsafe-integer warnings. Broader preparation tracking, option B,
         is not selected because the scoped warning producer completes 6 C.
-  - User item 85: withdrawn on 2026-10-20, because decision 6 C already
-    rounds every authored number, including props and schema keywords. It
-    needs no TODO.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
-  - [x] User decision 135 (2026-10-21): B. Resolve user item 135. Keep base
-        lifecycle scripts disabled by default and adds `review.baseInstallScripts`
-        plus `--base-install-scripts` and `--no-base-install-scripts` overrides.
-        The setting comes from the working tree only. Scripts-on cache keys add
-        Node version and platform, `MOKLY_TOKEN` stays out of installs, and the
-        existing process-tree owner stops script children. Evidence is recorded
-        under `.context/base-install-scripts/`.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The
@@ -3818,23 +3716,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the plan.
     - Saved slots skip the forbidden and unknown element checks, because a
       new build error needs the user's yes (item 128 is open).
-  - [ ] Resolve user item 129 (F21 review finding 5): the empty-slot
-        regression test no longer tests its fix. After `22657ea0`, both
-        wrappers in the plaintext-repair test have positions, so the test
-        passes with the old code. Severity Low, test, effort Small. Options:
-        A, call `parse::located` directly with a trailing plaintext and one
-        positioned wrapper, and assert that the other has no position, Small;
-        B, the source-identity redesign of the HTML pipeline, user decision
-        98 B, Large. Recommended: A until phase 2 of 98 B lands.
-  - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
-        commits that do not build. `mokly-catalogue` does not compile from
-        `06742270` to `c7260846` on `rebuild/followups-f21`. One test expects
-        the wrong position until `b1cc2dd6`, and two commit messages
-        misdescribe their change. Severity Low, process, effort Small.
-        Options: A, keep the history and record the range in the plan,
-        Small; B, rewrite the branch so that every commit builds, effort not
-        recorded; C, add a per-commit build step to delegate briefs, effort
-        not recorded. Recommended: A. C best protects later branches.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
@@ -4857,7 +4738,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         orchestrator asked: the failure points at the first authored token
         that scoping would change, or at the end of the stylesheet when
         scoping only adds tokens there.
-  - [x] Resolve user item 111 (M14 nesting report item 24, round 7 review
+  - [ ] Resolve user item 111 (M14 nesting report item 24, round 7 review
         finding 1): cssparser skips an HTML comment token (`<!--` or `-->`)
         before a stylesheet statement, but the section reader keeps it. So
         the scanners read `<!-- @value x: 1;` and `-->@keyframes k{…}` as
@@ -4870,10 +4751,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         because it aligns the scanners with lightningcss and with the
         `@value` rule. B makes such a stylesheet fail, and it builds today,
         so keep the behaviour until the user decides.
-    - User decision 111 (2026-10-21): A now, C after the merge, in parallel.
-      Option A records the gap in the CSS Modules README and protocol page
-      and narrows the README parity claim. Option C remains a non-blocking
-      post-merge follow-up.
+    - User decision 111 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: the new CSS
+      Modules workspace.
   - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
         differential): removing a bare `:global` or `:local` at
         `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
@@ -4925,11 +4805,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     keyframes name as text.
 
 ## Post-merge follow-up (non-blocking)
-
-- [ ] Resolve user item 111 with option C: take each statement's start and
-      kind from cssparser's parsers so the CSS Modules scanners align with
-      `lightningcss`. Keep the iterative, heap-only depth guarantee and add
-      differential coverage for repository stylesheets and a generated corpus.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution

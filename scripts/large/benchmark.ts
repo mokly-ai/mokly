@@ -16,7 +16,7 @@ import { start, stop, waitFor } from "./process.js";
 import { finishRun } from "./run_output.js";
 import type { PreparedFixture } from "./setup.js";
 import { startupBudget } from "./startup_budget.js";
-import { WATCH_BROWSER_TIMEOUT_MS, watch } from "./watch.js";
+import { watch } from "./watch.js";
 import type { WatchMeasurement } from "./watch.js";
 
 export type Scenario = "build" | "serve" | "changes" | "watch" | "startup";
@@ -162,10 +162,8 @@ export async function benchmark(
             const context = await browser.newContext({
               viewport: { width: 1440, height: 1000 },
             });
-            const browserTimeout =
-              scenario === "watch" ? WATCH_BROWSER_TIMEOUT_MS : 60_000;
-            context.setDefaultTimeout(browserTimeout);
-            context.setDefaultNavigationTimeout(browserTimeout);
+            context.setDefaultTimeout(60_000);
+            context.setDefaultNavigationTimeout(60_000);
             const measured = await browserMeasurement(
               context,
               running.done,

@@ -21,8 +21,7 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 - Store source and dependency caches outside the repository.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
-- Install base dependencies with scripts disabled by default, a deadline, and a
-  size bound. The working-tree configuration or CLI can opt into scripts.
+- Install base dependencies with scripts disabled, a deadline, and a size bound.
 - Return bundle settings and a configuration warning when an install fails.
 
 ## What This Crate Does
@@ -78,12 +77,8 @@ It checks catalog and package-extension ranges like manifest specifications,
 and it requires the `npm:` default protocol.
 Classic reads its project and user configuration. Command-line flags and
 environment settings fix its folders, mirror, and lock file inside the private
-entry, and a confined committed mirror stays in use. Each install starts from
-an allowed list of environment variables — paths, proxies, certificates,
-process-start names, and the names that Mokly fixes — and Mokly removes every
-other inherited variable, so no base configuration can read an inherited
-secret such as `MOKLY_TOKEN` or `GITHUB_TOKEN`. Yarn Berry also reads no
-project environment file.
+entry, and a confined committed mirror stays in use. Each fixed environment
+setting replaces every inherited spelling of its name.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
@@ -246,7 +241,6 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [command supervision](./src/commands.rs).
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
-  [the install environment allowlist](./src/manager_environment.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
   [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and

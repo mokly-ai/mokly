@@ -82,8 +82,6 @@ fn preflight(arguments: &[String]) -> Result<(), Failure> {
                 "--strict",
                 "--no-changes",
                 "--debug-timings",
-                "--base-install-scripts",
-                "--no-base-install-scripts",
                 "--help",
                 "--version",
             ]
@@ -101,8 +99,6 @@ fn preflight(arguments: &[String]) -> Result<(), Failure> {
                 "--strict",
                 "--no-changes",
                 "--debug-timings",
-                "--base-install-scripts",
-                "--no-base-install-scripts",
                 "--help",
                 "--version",
             ]

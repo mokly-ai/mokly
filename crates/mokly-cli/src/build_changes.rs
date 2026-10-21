@@ -31,12 +31,10 @@ impl CatalogueBuild {
         let changes = if options.no_changes {
             BuildChanges::Disabled
         } else {
-            match self.changes.classify(
-                config,
-                options.common.base.as_deref(),
-                generation,
-                options.common.base_install_scripts_override(),
-            ) {
+            match self
+                .changes
+                .classify(config, options.common.base.as_deref(), generation)
+            {
                 Ok(result) => {
                     warnings.extend(result.warnings.iter().cloned());
                     BuildChanges::Ready(Arc::new(result))
@@ -78,7 +76,6 @@ impl CatalogueBuild {
 
 fn changed_input(error: &Error) -> Option<&Path> {
     match error {
-        Error::BaseInstallScripts { source } => changed_input(source),
         Error::Base { source, .. } => changed_input(source),
         Error::SourceFailure { source } => changed_input(source),
         Error::Graph {

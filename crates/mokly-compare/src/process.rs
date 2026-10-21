@@ -11,7 +11,6 @@ use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 use crate::commands::{Child, Command, Output, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::manager_command;
-use crate::manager_environment;
 use crate::programs::command;
 
 const OUTPUT_LIMIT: usize = 1024 * 1024;
@@ -33,13 +32,16 @@ impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
         let mut command = command(request)?;
         let variables = manager_command::variables(request);
-        // Start each install from an allowed list of variables, not the
-        // inherited environment, so no base configuration can read an
-        // inherited secret such as MOKLY_TOKEN or GITHUB_TOKEN. Mokly's own
-        // fixed names follow, and the sanitized PATH that `programs` set
-        // overrides the inherited one.
+        let names = variables
+            .iter()
+            .map(|(name, _)| *name)
+            .chain(manager_command::removed(request).iter().copied())
+            .collect::<Vec<_>>();
         for (inherited, _) in env::vars_os() {
-            if !manager_environment::allowed(&inherited) {
+            if names
+                .iter()
+                .any(|name| manager_command::same(&inherited, name))
+            {
                 command.env_remove(inherited);
             }
         }

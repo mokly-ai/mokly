@@ -102,7 +102,6 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         working_config: &config,
         repository: Arc::new(Unimock::new(())),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
-        install_scripts: false,
         sources: HistoricalSources {
             tree,
             sources: Arc::new(Unimock::new(())),

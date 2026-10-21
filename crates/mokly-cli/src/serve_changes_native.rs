@@ -146,7 +146,6 @@ impl Source {
             &self.config,
             self.services.base.as_deref(),
             self.head.clone(),
-            self.services.install_scripts,
         ) {
             Ok(result) if !cancel.cancelled() => Ok(result),
             Ok(_) => Err(ServerError::ChangesReplaced),

@@ -47,7 +47,6 @@ fn static_base_admits_only_a_verified_prepared_generation() {
             working_config: &config,
             repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
-            install_scripts: false,
             sources: HistoricalSources {
                 tree: Arc::new(Unimock::new(())),
                 sources: Arc::new(Unimock::new(())),

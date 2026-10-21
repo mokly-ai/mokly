@@ -152,5 +152,3 @@ defines clean identities, supported managers, and installation cache keys.
 The [dependency contract](./mokly-base-dependencies.md#installation-and-bundle-settings)
 defines npm, pnpm, and Yarn installs, their registry access and configuration,
 version discovery, manager fallback reasons, and sidecar directory mappings.
-Lifecycle scripts stay off by default. The working-tree `review.baseInstallScripts`
-setting or its command-line override enables them for one invocation.

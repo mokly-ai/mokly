@@ -55,13 +55,8 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
     ]);
     let mut plans = roots(&base, &[]).unwrap();
     plans[0].validate_version(b"10.34.7\n").unwrap();
-    let key = install::key(&base, "commit", &plans, false, "");
-    assert_ne!(key, install::key(&base, "other-commit", &plans, false, ""));
-    assert_ne!(key, install::key(&base, "commit", &plans, true, "v24.21.0"));
-    assert_ne!(
-        install::key(&base, "commit", &plans, true, "v24.21.0"),
-        install::key(&base, "commit", &plans, true, "v22.15.0")
-    );
+    let key = install::key(&base, "commit", &plans);
+    assert_ne!(key, install::key(&base, "other-commit", &plans));
     for changed in [
         Root {
             version: "10.0.0".into(),
@@ -76,7 +71,7 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
             ..plans[0].clone()
         },
     ] {
-        assert_ne!(key, install::key(&base, "commit", &[changed], false, ""));
+        assert_ne!(key, install::key(&base, "commit", &[changed]));
     }
     for path in [
         "package.json",
@@ -88,7 +83,7 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
         changed
             .files
             .insert(RepoPath::parse(path).unwrap(), b"changed".to_vec());
-        assert_ne!(key, install::key(&changed, "commit", &plans, false, ""));
+        assert_ne!(key, install::key(&changed, "commit", &plans));
     }
 }
 

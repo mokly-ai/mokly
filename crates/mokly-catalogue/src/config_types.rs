@@ -113,9 +113,6 @@ pub struct StylesheetRule {
 pub struct ReviewConfig {
     /// Git base ref, default origin/main.
     pub base: Option<String>,
-    /// Run lifecycle scripts during base dependency installation when enabled.
-    #[serde(rename = "baseInstallScripts")]
-    pub base_install_scripts: Option<bool>,
 }
 
 /// Additional watched authored inputs.

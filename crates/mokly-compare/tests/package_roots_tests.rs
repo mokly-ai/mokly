@@ -149,7 +149,6 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                 source_root: sources.directory,
                 unmapped_directories: vec![],
                 used_directories: Vec::new(),
-                install_scripts: false,
                 source_identity: commit.to_string(),
                 head_root: root,
                 configuration: RepoPath::parse("mokly.config.json").unwrap(),

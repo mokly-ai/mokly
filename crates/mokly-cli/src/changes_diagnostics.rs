@@ -13,7 +13,6 @@ use crate::{changes_policy, render_errors};
 
 pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
     match error {
-        Error::BaseInstallScripts { source } => details(source),
         Error::Catalogue {
             source: CatalogueError::Invalid { issues, .. },
         } => issues
@@ -54,7 +53,6 @@ pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
 
 pub(crate) fn warnings(error: &Error) -> Vec<Warning> {
     let records = match error {
-        Error::BaseInstallScripts { source } => warnings(source),
         Error::Base { source, .. } => warnings(source),
         Error::Catalogue {
             source: CatalogueError::Invalid { warnings, .. },
@@ -101,7 +99,6 @@ pub(crate) fn failure_code(error: &Error) -> Code {
         Error::Graph { source } => changes_policy::failure_code(source),
         Error::Cancelled => Code::BuildInvalid,
         Error::Base { source, .. } => failure_code(source),
-        Error::BaseInstallScripts { source } => failure_code(source),
         Error::SourceFailure { source } => failure_code(source),
         _ => Code::ReviewInvalid,
     }
@@ -111,7 +108,6 @@ fn limit_detail(error: &Error) -> Option<String> {
     match error {
         Error::Limit { path, source } => Some(format!("{path}: {}", plain(&source.to_string()))),
         Error::Base { source, .. } => limit_detail(source),
-        Error::BaseInstallScripts { source } => limit_detail(source),
         Error::SourceFailure { source } => limit_detail(source),
         _ => None,
     }
@@ -125,7 +121,7 @@ fn plain(message: &str) -> &str {
 }
 
 pub(crate) fn failure_detail(error: &Error) -> String {
-    let detail = match error {
+    match error {
         Error::Git {
             source: error::Error::CommandFailed { status, stderr },
         } => {
@@ -141,7 +137,6 @@ pub(crate) fn failure_detail(error: &Error) -> String {
         }
         Error::Git { source } => plain(&source.to_string()).into(),
         Error::Base { commit, source } => format!("base {commit}: {}", failure_detail(source)),
-        Error::BaseInstallScripts { source } => failure_detail(source),
         Error::SourceFailure { source } => failure_detail(source),
         Error::Catalogue {
             source: CatalogueError::Runtime { source },
@@ -153,12 +148,5 @@ pub(crate) fn failure_detail(error: &Error) -> String {
             .join("\n"),
         Error::Cancelled => "build cancelled".into(),
         _ => error.to_string(),
-    };
-    if matches!(error, Error::BaseInstallScripts { .. }) {
-        format!(
-            "{detail}. If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`"
-        )
-    } else {
-        detail
     }
 }

@@ -38,7 +38,6 @@ fn build(yarnrc: &str, mirror: &'static str, removed: &'static [&'static str]) {
         source_root: "/base".into(),
         unmapped_directories: vec![],
         used_directories: Vec::new(),
-        install_scripts: false,
         source_identity: "commit".into(),
         head_root: "/repo".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),

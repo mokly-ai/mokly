@@ -77,7 +77,6 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
             },
             redactor: Arc::new(Redactor::default()),
             base: None,
-            install_scripts: None,
         },
     };
     for expected in ["base-1", "base-1", "base-1", "base-2", "base-1", "base-1"] {

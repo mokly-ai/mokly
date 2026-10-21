@@ -28,7 +28,6 @@ mod local_specifications;
 mod manager;
 mod manager_classic;
 mod manager_command;
-mod manager_environment;
 mod manager_local;
 mod manager_lockfiles;
 mod manager_plan;

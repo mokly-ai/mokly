@@ -18,7 +18,7 @@ fn schema_and_core_accept_the_configuration_examples() {
         json!({"colorSchemes":["dark","light"],"renderer":"specs/renderer.tsx","postcss":"postcss.config.mjs",
             "stylesheets":[{"match":"**","stylesheets":["theme.css","$componentStylesheets","https://example.com/fonts.css"],"darkStylesheets":["dark.css"]}],
             "moduleResolution":{"aliases":{"ui":"@app/ui","@scope/ui":"@scope/package"},"conditions":["browser"],"mainFields":["module","main"],"resolveExtensions":[".tsx",".ts"],"packageRoots":["packages/ui"],"loaders":{".css":"empty",".module.css":"empty",".svg":"text"}},
-            "review":{"base":"origin/main","baseInstallScripts":true},"watch":{"debounceMs":75,"rules":[{"action":"reload","paths":["assets/**"]}]}}),
+            "review":{"base":"origin/main"},"watch":{"debounceMs":75,"rules":[{"action":"reload","paths":["assets/**"]}]}}),
     ] {
         assert!(validator.is_valid(&value), "schema rejected {value}");
         assert!(

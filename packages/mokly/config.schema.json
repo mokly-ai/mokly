@@ -230,10 +230,6 @@
           "type": "string",
           "minLength": 1,
           "pattern": "\\S"
-        },
-        "baseInstallScripts": {
-          "type": "boolean",
-          "default": false
         }
       }
     },

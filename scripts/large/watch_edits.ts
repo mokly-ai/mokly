@@ -8,10 +8,7 @@ import type { Page } from "@playwright/test";
 import { firstScreen } from "./changes.js";
 import type { PreparedFixture } from "./setup.js";
 
-export async function fixtureEdits(
-  fixture: PreparedFixture,
-  timeoutMs = 60_000,
-) {
+export async function fixtureEdits(fixture: PreparedFixture) {
   const html = fixture.variant === "html";
   const definitions = [
     {
@@ -26,7 +23,7 @@ export async function fixtureEdits(
         await expect(
           page.frameLocator('[data-workspace-frame="desktop"]').locator("h1"),
         ).toHaveText(edited ? "Benchmark screen" : "Activity 1", {
-          timeout: timeoutMs,
+          timeout: 60_000,
         });
       },
     },
@@ -48,7 +45,7 @@ export async function fixtureEdits(
               name: edited ? "New record benchmark" : "New record",
               exact: true,
             }),
-        ).toBeVisible({ timeout: timeoutMs });
+        ).toBeVisible({ timeout: 60_000 });
       },
     },
     {
@@ -63,7 +60,7 @@ export async function fixtureEdits(
             .frameLocator('[data-workspace-frame="desktop"]')
             .locator(".scale-screen"),
         ).toHaveCSS("border-top-width", edited ? "7px" : "0px", {
-          timeout: timeoutMs,
+          timeout: 60_000,
         });
       },
     },

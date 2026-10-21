@@ -108,7 +108,6 @@ fn outside_lockfile_sources_start_no_process_and_read_no_storage() {
         head: Inputs::default(),
         source_root: "/base".into(),
         head_root: "/working".into(),
-        install_scripts: false,
         source_identity: "commit".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),
         resolution: ModuleResolution::default(),

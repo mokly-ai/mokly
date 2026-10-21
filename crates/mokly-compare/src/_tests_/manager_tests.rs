@@ -36,7 +36,6 @@ fn request(manager: &str, lock: &str, content: &str, config: Option<&str>) -> Re
         },
         head: Inputs::default(),
         source_root: "/sources".into(),
-        install_scripts: false,
         source_identity: "commit".into(),
         head_root: "/head".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),

@@ -22,12 +22,6 @@ Options:
       --base <BASE>
           Comparison base ref; overrides review.base (default origin/main)
 
-      --base-install-scripts
-          Run lifecycle scripts during base dependency installation
-
-      --no-base-install-scripts
-          Keep lifecycle scripts disabled during base dependency installation
-
       --sidecars <SIDECARS>
           Sidecar count; defaults to MOKLY_SIDECARS or the core count
 

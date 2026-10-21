@@ -2,25 +2,24 @@
 //!
 //! Installs may download from the registry that the base and user
 //! configuration select, as npm does. Mokly still pins every cache, store,
-//! mirror, and state folder inside the private entry, keeps lifecycle scripts
-//! off unless the working tree or the command line opts in, keeps hooks, Git
-//! transports, and Corepack downloads off, and starts each install from an
-//! allowed list of variables, so no base configuration or lifecycle script
-//! can read an inherited secret.
+//! mirror, and state folder inside the private entry, keeps scripts, hooks,
+//! Git transports, and Corepack downloads off, and gives every variable it
+//! sets precedence over each inherited spelling of the same name.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::path::Path;
 
 use crate::commands::Command;
 use crate::manager::{Manager, Root};
 
-pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<OsString> {
+pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
     let directory = destination.join(&root.directory);
     let flags: &[&str] = match root.manager {
-        Manager::Npm => &["ci", "--no-audit", "--no-fund"],
+        Manager::Npm => &["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
         Manager::Pnpm => &[
             "install",
             "--frozen-lockfile",
+            "--ignore-scripts",
             "--ignore-pnpmfile",
             "--config.pm-on-fail=ignore",
             "--config.global=false",
@@ -37,22 +36,13 @@ pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<O
         Manager::YarnClassic => &[
             "install",
             "--frozen-lockfile",
+            "--ignore-scripts",
             "--non-interactive",
             "--no-progress",
         ],
-        Manager::YarnBerry => &["install", "--immutable"],
+        Manager::YarnBerry => &["install", "--immutable", "--mode=skip-build"],
     };
     let mut args = flags.iter().map(OsString::from).collect::<Vec<_>>();
-    if !scripts {
-        match root.manager {
-            Manager::Npm => args.insert(1, "--ignore-scripts".into()),
-            Manager::Pnpm | Manager::YarnClassic => {
-                let index = args.iter().position(|arg| arg == "install").unwrap_or(1);
-                args.insert(index + 1, "--ignore-scripts".into());
-            }
-            Manager::YarnBerry => args.push("--mode=skip-build".into()),
-        }
-    }
     let paths: &[(&str, &str)] = match root.manager {
         Manager::Npm => &[
             ("--cache", ".npm-cache"),
@@ -123,21 +113,12 @@ pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {
 /// Variables that the install receives. Each replaces every inherited
 /// spelling of its name.
 pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
-    let scripts = request.args.first().is_some_and(|arg| {
-        matches!(arg.to_string_lossy().as_ref(), "ci" | "install")
-            && request
-                .args
-                .iter()
-                .all(|arg| arg != "--ignore-scripts" && arg != "--mode=skip-build")
-    });
     let mut variables = fixed(&[
+        ("npm_config_ignore_scripts", "true"),
         ("npm_config_audit", "false"),
         ("npm_config_fund", "false"),
         ("npm_config_update_notifier", "false"),
     ]);
-    if !scripts {
-        variables.push(("npm_config_ignore_scripts", "true".into()));
-    }
     if request.program != "pnpm" && request.program != "yarn" {
         return variables;
     }
@@ -165,21 +146,15 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         variables.extend(fixed(&[
             ("YARN_RC_FILENAME", ".yarnrc.yml"),
             ("YARN_ENABLE_CONSTRAINTS_CHECKS", "0"),
+            ("YARN_ENABLE_SCRIPTS", "0"),
             ("YARN_ENABLE_GLOBAL_CACHE", "0"),
             ("YARN_ENABLE_MIRROR", "0"),
             ("YARN_ENABLE_HARDENED_MODE", "0"),
             ("YARN_NODE_LINKER", "node-modules"),
             ("YARN_NM_MODE", "classic"),
         ]));
-        if !scripts {
-            variables.push(("YARN_ENABLE_SCRIPTS", "0".into()));
-        }
         let cache = request.cache.clone();
         variables.extend([
-            (
-                "YARN_INJECT_ENVIRONMENT_FILES",
-                no_environment_files(request),
-            ),
             (
                 "YARN_CACHE_FOLDER",
                 cache
@@ -211,27 +186,24 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         ]);
     } else if request.args == ["--version"] {
         variables.extend(fixed(&[("YARN_RC_FILENAME", ".mokly-unused-yarnrc.yml")]));
-        variables.push((
-            "YARN_INJECT_ENVIRONMENT_FILES",
-            no_environment_files(request),
-        ));
     }
     variables
 }
 
-/// The single optional environment-file path that replaces Yarn Berry's own
-/// list, so no base environment file is injected. The path sits above the
-/// private entry, where a base cannot commit a file, and the trailing `?`
-/// marks it optional, so Berry injects nothing.
-fn no_environment_files(request: &Command) -> OsString {
-    let anchor = request
-        .size_root
-        .as_deref()
-        .and_then(Path::parent)
-        .unwrap_or(&request.directory);
-    let mut value = anchor.join(".mokly-no-environment-file").into_os_string();
-    value.push("?");
-    value
+/// Inherited variables that the install never receives.
+pub(crate) fn removed(request: &Command) -> &'static [&'static str] {
+    if request.program == "yarn" {
+        &["YARN_PLUGINS"]
+    } else {
+        &[]
+    }
+}
+
+/// Whether an inherited name spells `name`. Managers read variable names
+/// without case, and Yarn reads a dash as an underscore.
+pub(crate) fn same(inherited: &OsStr, name: &str) -> bool {
+    let spelling = |value: &str| value.to_ascii_lowercase().replace('-', "_");
+    spelling(&inherited.to_string_lossy()) == spelling(name)
 }
 
 fn fixed(values: &[(&'static str, &str)]) -> Vec<(&'static str, OsString)> {

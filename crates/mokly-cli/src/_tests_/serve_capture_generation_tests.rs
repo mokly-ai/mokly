@@ -80,7 +80,6 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             },
             redactor: Arc::new(Redactor::default()),
             base: None,
-            install_scripts: None,
         },
     };
     let tree = Arc::new(Unimock::new((
@@ -101,7 +100,6 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             working_config: &source.config,
             repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
-            install_scripts: false,
             sources: HistoricalSources {
                 tree,
                 sources: Arc::new(Unimock::new(())),

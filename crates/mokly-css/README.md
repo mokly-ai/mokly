@@ -52,13 +52,9 @@ retain their values. An independent token check rejects scoping that changes
 anything beyond local names and the module scope/composition syntax.
 
 The renamer, the module check, and the token check share one statement
-grammar. The section reader classifies each statement once for all three,
-matching `lightningcss` for the supported statement starts and block grammar.
-There is a known parity gap for an HTML comment token (`<!--` or `-->`) before
-a stylesheet statement: cssparser skips the token, but the section reader
-keeps it. Such a statement can receive a different kind in the scanners and
-in `lightningcss`; post-merge work will align the scanners. The grammar of a
-block depends on its statement and on the block around it:
+grammar. The section reader classifies each statement once for all three, as
+`lightningcss` reads the block that holds it. The grammar of a block depends
+on its statement and on the block around it:
 
 - The stylesheet is a rule list. The block of a conditional, layer, scope, or
   starting-style rule in a rule list is a rule list too. Every statement in a
@@ -81,10 +77,10 @@ block depends on its statement and on the block around it:
 - Every other block is a declarations block, for example `@font-face`, a
   keyframe, an unknown at-rule, or a rule's block in a keyframes or
   `@document` block. A rule that starts with an HTML comment token also opens
-  one in the section reader. `lightningcss` skips that token before reading
-  the statement. It keeps, drops, or rejects the text of a declarations block.
-  A statement without a block there is a declaration or text that stays as
-  authored, except that `@value` fails.
+  one, because cssparser skips that token in the stylesheet. `lightningcss`
+  keeps, drops, or rejects the text of a declarations block. A statement
+  without a block there is a declaration or text that stays as authored,
+  except that `@value` fails.
 
 Declaration-only at-rules such as `@font-face` end a non-custom statement at
 its first `{}` block, as postcss does. A nested at-rule keeps its prelude as

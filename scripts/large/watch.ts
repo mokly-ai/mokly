@@ -14,7 +14,6 @@ import { fixtureEdits, withFixtureEdit } from "./watch_edits.js";
 
 type Edit = Awaited<ReturnType<typeof fixtureEdits>>[number];
 export type WatchMeasurement = Awaited<ReturnType<typeof measureEdit>>;
-export const WATCH_BROWSER_TIMEOUT_MS = 1_800_000;
 
 async function measureEdit(
   page: Page,
@@ -29,34 +28,22 @@ async function measureEdit(
     previousGeneration: before.index.live!.generation,
   };
   const [publication, frameReloadMs] = await Promise.all([
-    delivered(page, {
-      ...fence,
-      ready: false,
-      timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
-    }),
+    delivered(page, { ...fence, ready: false }),
     (async () => {
       await edit.verify(page, true);
       await expect
-        .poll(navigationCount, { timeout: WATCH_BROWSER_TIMEOUT_MS })
+        .poll(navigationCount, { timeout: 60_000 })
         .toBeGreaterThan(0);
       return page.evaluate((start) => performance.now() - start, beginning);
     })(),
   ]);
-  const ready = await delivered(page, {
-    ...fence,
-    timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
-  });
-  await changesVisible(page, ready.index, WATCH_BROWSER_TIMEOUT_MS);
+  const ready = await delivered(page, fence);
+  await changesVisible(page, ready.index);
   const changesReadyMs = await page.evaluate(
     (start) => performance.now() - start,
     beginning,
   );
-  const review = await availableReview(
-    page,
-    fixture,
-    ready,
-    WATCH_BROWSER_TIMEOUT_MS,
-  );
+  const review = await availableReview(page, fixture, ready);
   const reviewAvailableMs = await page.evaluate(
     (start) => performance.now() - start,
     beginning,
@@ -93,11 +80,9 @@ export async function watch(
   await observeDelivery(page);
   await page.goto(`${url}/view/${firstScreen}/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
-  for (const edit of await fixtureEdits(fixture, WATCH_BROWSER_TIMEOUT_MS)) {
+  for (const edit of await fixtureEdits(fixture)) {
     await edit.verify(page, false);
-    const before = await delivered(page, {
-      timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
-    });
+    const before = await delivered(page);
     if (!before.index.live) throw new Error("Watch needs a live generation");
     const frame = page.locator('[data-workspace-frame="desktop"]');
     const previousSrc = await frame.getAttribute("src");
@@ -134,9 +119,8 @@ export async function watch(
     const restored = await delivered(page, {
       afterRevision: measured.changesRevision,
       previousGeneration: measured.generation,
-      timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
     });
-    await changesVisible(page, restored.index, WATCH_BROWSER_TIMEOUT_MS);
+    await changesVisible(page, restored.index);
     if (changedEntries(restored.index).length)
       throw new Error(`Restoring ${edit.file} left Changes`);
   }

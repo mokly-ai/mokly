@@ -1,6 +1,7 @@
 //! Classic installs pin a confined committed or private mirror and folders.
 
 use std::collections::BTreeMap;
+use std::ffi::OsStr;
 use std::path::Path;
 use std::time::Duration;
 
@@ -10,7 +11,7 @@ use crate::commands::Command;
 use crate::error::Error;
 use crate::inputs::Inputs;
 use crate::manager_classic::Configuration;
-use crate::manager_command::variables;
+use crate::manager_command::{same, variables};
 
 fn inputs(config: &str) -> Inputs {
     Inputs {
@@ -81,14 +82,16 @@ fn classic_pins_its_mirror_and_folders_against_every_inherited_spelling() {
         cache: Some("/private/offline".into()),
     };
     let pinned = variables(&request);
-    let pins = |name: &str| pinned.iter().any(|(set, _)| *set == name);
-    // Mokly sets the canonical name. The allowed list removes every inherited
-    // spelling of these, so Mokly no longer matches inherited spellings.
+    let pins = |inherited: &str| {
+        pinned
+            .iter()
+            .any(|(name, _)| same(OsStr::new(inherited), name))
+    };
     for name in [
         "YARN_YARN_OFFLINE_MIRROR",
+        "yarn_yarn_offline_mirror",
         "npm_config_yarn_offline_mirror",
-        "YARN_CACHE_FOLDER",
-        "YARN_GLOBAL_FOLDER",
+        "yarn_cache_folder",
         "YARN_OFFLINE_CACHE_FOLDER",
     ] {
         assert!(pins(name), "{name}");

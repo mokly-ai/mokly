@@ -69,7 +69,6 @@ export async function delivered(
     afterRevision?: number;
     previousGeneration?: string;
     ready?: boolean;
-    timeoutMs?: number;
   } = {},
 ) {
   const handle = await page.waitForFunction(
@@ -111,7 +110,7 @@ export async function delivered(
       return { value, publication, indexReceivedMs: state.index.receivedMs };
     },
     options,
-    { timeout: options.timeoutMs ?? 60_000 },
+    { timeout: 60_000 },
   );
   const observed = await handle.jsonValue();
   await handle.dispose();
@@ -139,17 +138,13 @@ export function changedEntries(index: CatalogueReadModel) {
   );
 }
 
-export async function changesVisible(
-  page: Page,
-  index: CatalogueReadModel,
-  timeoutMs = 60_000,
-) {
+export async function changesVisible(page: Page, index: CatalogueReadModel) {
   await expect(page.locator("[data-mokly-filter]")).toHaveAttribute(
     "data-changes-status",
     "ready",
-    { timeout: timeoutMs },
+    { timeout: 60_000 },
   );
   await expect(
     page.locator("[data-filter=changed] .mbk-nav-filter-count"),
-  ).toHaveText(String(changedEntries(index).length), { timeout: timeoutMs });
+  ).toHaveText(String(changedEntries(index).length), { timeout: 60_000 });
 }

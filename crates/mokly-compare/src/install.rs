@@ -22,22 +22,9 @@ pub(crate) struct Install<'a> {
     pub(crate) deadline: Duration,
 }
 
-pub(crate) fn key(
-    inputs: &Inputs,
-    identity: &str,
-    roots: &[Root],
-    install_scripts: bool,
-    node_version: &str,
-) -> String {
+pub(crate) fn key(inputs: &Inputs, identity: &str, roots: &[Root]) -> String {
     let mut hash = Sha256::new();
-    hash.update(inputs.key("manager-install-v3", identity).as_bytes());
-    hash.update([u8::from(install_scripts)]);
-    if install_scripts {
-        hash.update((node_version.len() as u64).to_le_bytes());
-        hash.update(node_version.as_bytes());
-        hash.update(std::env::consts::OS.as_bytes());
-        hash.update(std::env::consts::ARCH.as_bytes());
-    }
+    hash.update(inputs.key("manager-install-v2", identity).as_bytes());
     for root in roots {
         for value in [&root.directory, root.manager.identity(), &root.version] {
             hash.update((value.len() as u64).to_le_bytes());
@@ -74,7 +61,7 @@ impl Builder for Install<'_> {
             }
             self.owner.commands.run(&Command {
                 program: root.manager.program().into(),
-                args: manager_command::arguments(root, destination, self.request.install_scripts),
+                args: manager_command::arguments(root, destination),
                 directory: destination.join(&root.directory),
                 timeout,
                 byte_limit: Some(self.owner.install_bytes),
