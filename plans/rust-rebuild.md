@@ -1960,13 +1960,15 @@ Tags: ui
 
 Tags: mockup
 
-- [ ] User decision 84 B: word the design copy's shared-component sentence
+- [x] User decision 84 B: word the design copy's shared-component sentence
       for each kind. A screen reads "Changed components that this screen uses
       affect its preview.", and a component and its variants read "Changed
       components that this variant uses affect its preview." A page has no
       such sentence. `design/components/states/shared-impact/affected-screen`
       shows the screen sentence.
-- [ ] Run the mockup check and smoke-test the changed page through Serve.
+- [x] Run the mockup check and smoke-test the changed page through Serve.
+      Evidence: `.context/viewer-84b/` (mockup check log, smoke log, and
+      shots).
 
 ## Milestone 10.6: Shared-impact sentence per kind in the viewer
 

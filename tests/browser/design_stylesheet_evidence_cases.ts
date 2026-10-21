@@ -232,7 +232,7 @@ export function registerDesignStylesheetEvidence(
           evidence.locator(".mbk-evidence-files > li > p"),
         ).toHaveText(["Changed styles that apply to this screen:"]);
         await expect(evidence.locator(":scope > p").last()).toHaveText(
-          "Shared component changes affect this preview. This page has no independent entry in Changes.",
+          "Changed components that this screen uses affect its preview.",
         );
         await expect(evidence).not.toContainText("No changes to this screen.");
         await expect(
