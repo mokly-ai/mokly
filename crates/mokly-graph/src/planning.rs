@@ -216,7 +216,7 @@ pub(crate) fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<
                     .slot_fragments
                     .get(&path)
                     .into_iter()
-                    .flat_map(|slots| slots.values().map(String::as_str)),
+                    .flat_map(|slots| slots.values().map(|slot| slot.body.as_str())),
             );
         for body in bodies {
             for component in component_keys::direct(body, catalogue) {

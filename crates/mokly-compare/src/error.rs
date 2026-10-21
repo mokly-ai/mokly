@@ -122,6 +122,12 @@ pub enum Error {
     /// No supported manager or lockfile is available.
     #[error("[mokly-compare/install] unsupported package manager or lockfile")]
     UnsupportedManager,
+    /// The available executable cannot use the requested manager dialect or pin.
+    #[error("[mokly-compare/install] package manager version unsupported")]
+    UnsupportedVersion,
+    /// The sidecar has no Yarn Plug'n'Play resolver.
+    #[error("[mokly-compare/install] Yarn Plug'n'Play is unsupported")]
+    YarnPnp,
     /// A requested dependency input was not a regular confined source.
     #[error("[mokly-compare/dependencies] invalid dependency input {path:?}")]
     InvalidInput {

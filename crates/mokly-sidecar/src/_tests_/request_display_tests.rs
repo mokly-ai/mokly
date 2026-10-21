@@ -25,10 +25,39 @@ fn timeout_diagnostic_names_the_entry_axes_and_deadline() {
     assert_eq!(
         Error::RequestTimeout {
             call: Box::new(call),
-            deadline_ms: 71
+            deadline_ms: 71,
+            phase: None,
         }
         .to_string(),
         "[mokly-sidecar/render-timeout] entry.tsx export screen (mobile, dark) exceeded 71ms"
+    );
+}
+
+#[test]
+fn postcss_timeout_diagnostic_includes_last_known_phases() {
+    let call: Call = serde_json::from_value(json!({
+        "method": "processCss",
+        "params": {
+            "context": "c",
+            "sourceRoot": "/physical/repo",
+            "repositoryRoots": [],
+            "moduleResolution": {},
+            "postcss": "postcss.mjs",
+            "sourcePath": "styles/input.css",
+            "text": ""
+        }
+    }))
+    .unwrap();
+    assert_eq!(
+        Error::RequestTimeout {
+            call: Box::new(call),
+            deadline_ms: 60_000,
+            phase: Some("PostCSS phases: stylesheet-run=running at 123ms".into()),
+        }
+        .diagnostic()
+        .unwrap()
+        .message,
+        "postcss.mjs for styles/input.css exceeded 60000ms; PostCSS phases: stylesheet-run=running at 123ms"
     );
 }
 

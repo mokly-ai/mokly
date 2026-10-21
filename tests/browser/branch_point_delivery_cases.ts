@@ -136,6 +136,16 @@ const FACTS: Readonly<Record<string, DeliveryFacts>> = {
     document: paths.reusedParent,
     removedText: "Go",
   },
+  "affected-destinations": {
+    name: "affected destinations of a changed component",
+    pairs: [
+      {
+        after: paths.impactMoved,
+        selector: "h1",
+        text: ["Slip", "Slip"],
+      },
+    ],
+  },
 };
 
 /**
