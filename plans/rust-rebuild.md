@@ -2100,6 +2100,7 @@ fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
       pages, documents, and use cases, Small. Recommended: B, because it
       catches the class of gap that round 3 review 1 found. B is a new
       catalogue-wide check, so it needs the user.
+  - User decision 71 (2026-10-21): B. Work: W2.
 - [ ] Commit.
 
 ## Milestone 10.1: Decision defaults in the designs
