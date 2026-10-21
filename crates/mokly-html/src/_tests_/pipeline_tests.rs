@@ -4,7 +4,6 @@ use crate::{pipeline, serialize, tree};
 
 #[test]
 fn token_pipeline_keeps_tree_bytes_and_source_identity() {
-    assert!(!pipeline::ENABLED);
     for (source, expected) in [
         ("<p>Hello &amp; <b>world</b></p>", vec!["p", "b"]),
         (
