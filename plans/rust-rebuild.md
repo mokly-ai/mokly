@@ -3098,6 +3098,10 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         Node version and platform, `MOKLY_TOKEN` stays out of installs, and the
         existing process-tree owner stops script children. Evidence is recorded
         under `.context/base-install-scripts/`.
+  - [x] User item 135 B review finding 44 A: retain the scripts opt-in hint as
+        a separate base diagnostic when build or publish makes Changes
+        unavailable. Capture failures and a typed hint field remain outside
+        this fix. Evidence: `.context/base-install-scripts-review/`.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The
