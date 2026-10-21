@@ -29,6 +29,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                     Err(Error::RequestTimeout {
                         call: Box::new(call),
                         deadline_ms: 60_000,
+                        phase: None,
                     })
                 })),
             PoolMock::release_context

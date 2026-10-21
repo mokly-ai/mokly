@@ -76,6 +76,7 @@ impl Wait for SystemClock {
             Ok(result) => result,
             Err(RecvTimeoutError::Timeout) => Err(Error::Timeout {
                 deadline_ms: timeout_ms,
+                phase: None,
             }),
             Err(RecvTimeoutError::Disconnected) => Err(Error::Crashed),
         }

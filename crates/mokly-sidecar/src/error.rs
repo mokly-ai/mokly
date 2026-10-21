@@ -75,22 +75,35 @@ pub enum Error {
         message: String,
     },
     /// A request exceeded the deadline on both attempts.
-    #[error("[mokly-sidecar/render-timeout] {call} exceeded {deadline_ms}ms")]
+    #[error(
+        "[mokly-sidecar/render-timeout] {call} exceeded {deadline_ms}ms{phase}",
+        phase = option_display(phase)
+    )]
     RequestTimeout {
         /// Complete source and view attribution.
         call: Box<Call>,
         /// Applied deadline.
         deadline_ms: u64,
+        /// Last known PostCSS phase timings, when this was a stylesheet request.
+        phase: Option<String>,
     },
     /// A single process exchange exceeded its deadline.
     #[error("[mokly-sidecar/render-timeout] request exceeded {deadline_ms}ms")]
     Timeout {
         /// Applied deadline.
         deadline_ms: u64,
+        /// Last known PostCSS phase timings.
+        phase: Option<String>,
     },
     /// The transport implementation failed.
     #[error("[mokly-sidecar/internal] {0}")]
     Internal(#[from] InternalError),
+}
+
+fn option_display(value: &Option<String>) -> String {
+    value
+        .as_deref()
+        .map_or_else(String::new, |value| format!("; {value}"))
 }
 
 /// Error category retained after a sidecar crashes twice.

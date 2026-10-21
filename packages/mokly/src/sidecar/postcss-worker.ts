@@ -1,3 +1,5 @@
+import { performance } from "node:perf_hooks";
+
 import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
@@ -11,6 +13,7 @@ import {
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
+import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
@@ -21,15 +24,23 @@ type WorkerData = Pick<
 
 guardParentOutput();
 const parent = parentInput();
+const phases = new PostcssPhases(
+  { now: () => performance.now() },
+  (line) =>
+    process.env.MOKLY_POSTCSS_PHASES === "1" &&
+    process.send?.({ event: "postcss-phase", line }),
+);
 parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());
+const spawned = phases.start("spawn");
 process.once("message", (workerData: WorkerData) => {
+  spawned("ok");
   if (!preloadedObserver()) {
     observeFileReads();
     observeModuleLoads();
   }
   const configuration = configureResolution(workerData).then((paths) =>
-    loadPostcss(workerData.postcss, paths).then((loaded) => ({
+    loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,
       paths,
     })),
@@ -40,14 +51,16 @@ process.once("message", (workerData: WorkerData) => {
     async ({ id, params }: { id: number; params: ProcessCssParams }) => {
       try {
         const { processor, modules, paths } = await configuration;
-        const result = await processor
-          .process(params.text, {
-            from: params.sourcePath,
-            map: false,
-          })
-          .catch((error: unknown) => {
-            throw pluginFailure(error, paths.name(params.sourcePath));
-          });
+        const result = await phases.run("stylesheet-run", () =>
+          processor
+            .process(params.text, {
+              from: params.sourcePath,
+              map: false,
+            })
+            .catch((error: unknown) => {
+              throw pluginFailure(error, paths.name(params.sourcePath));
+            }),
+        );
         const dependencies: CssResult["dependencies"] = [
           ...new Set([
             ...modules,
