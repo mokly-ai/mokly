@@ -8,6 +8,9 @@ use crate::error::{Error, Result};
 use crate::manifest;
 
 pub(crate) fn validate(value: &str, parent: &str, project: &str) -> Result<()> {
+    if value.strip_prefix("exec:").is_some() {
+        return Err(Error::InvalidInput { path: value.into() });
+    }
     let mut pending = value.to_owned();
     loop {
         let Some(patch) = pending.strip_prefix("patch:") else {

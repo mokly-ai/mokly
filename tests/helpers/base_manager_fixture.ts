@@ -17,7 +17,14 @@ const script = `node -e "require('node:fs').writeFileSync('lifecycle-ran', 'unex
 export async function baseManagerFixture(
   manager: Manager,
   context: TestContext,
-  mode: "installed" | "missing" | "version" | "pnp" | "paths" = "installed",
+  mode:
+    | "installed"
+    | "missing"
+    | "version"
+    | "pnp"
+    | "paths"
+    | "exec"
+    | "constraints" = "installed",
 ) {
   const fixture = await coldBaseFixture(2, context);
   const { root } = fixture;
@@ -39,6 +46,18 @@ export async function baseManagerFixture(
     );
   } else {
     await write(root, ".yarnrc", "disable-self-update-check true\n");
+  }
+  if (mode === "constraints") {
+    await write(
+      root,
+      ".yarnrc.yml",
+      "nodeLinker: node-modules\nenableNetwork: false\nenableGlobalCache: false\nenableTelemetry: false\nenableConstraintsChecks: true\n",
+    );
+    await write(
+      root,
+      "yarn.config.cjs",
+      "require('node:fs').writeFileSync('historical-constraints-ran', 'unexpected'); module.exports = {};\n",
+    );
   }
   await write(
     root,
@@ -63,7 +82,7 @@ import value from 'local-workspace';
 export const page = definePage({title: 'Workspace', description: '', relatedDocs: [],
 render: () => '<!doctype html><html><head><title>Workspace</title></head><body><h1>' + value + '</h1></body></html>'});`,
   );
-  const manifest = (version: string) =>
+  const manifest = (version: string, includeExec = mode === "exec") =>
     JSON.stringify({
       name: "cold-base-fixture",
       version: "1.0.0",
@@ -74,12 +93,34 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
         "mokly-cold-dependency": `file:vendor/dependency-${version}.tgz`,
         "local-workspace":
           manager.name === "Yarn Classic" ? "*" : "workspace:*",
+        ...(includeExec
+          ? { generator: "exec:./historical-generator.cjs" }
+          : {}),
       },
       scripts: { preinstall: script, postinstall: script },
       dependenciesMeta: { "mokly-cold-dependency": { built: true } },
     });
-  await write(root, "package.json", manifest("1.0.0"));
+  await write(root, "package.json", manifest("1.0.0", false));
+  if (mode === "exec") {
+    await write(
+      root,
+      "packages/generator/package.json",
+      JSON.stringify({ name: "generator", version: "1.0.0" }),
+    );
+    await write(
+      root,
+      "historical-generator.cjs",
+      "require('node:fs').writeFileSync('historical-exec-ran', 'unexpected'); module.exports = {};\n",
+    );
+  }
   await installFixture(root, manager, fixture.env);
+  if (mode === "exec") {
+    await write(root, "package.json", manifest("1.0.0"));
+  }
+  if (mode === "constraints")
+    await fs.rm(path.join(root, "historical-constraints-ran"), { force: true });
+  if (mode === "exec")
+    await fs.rm(path.join(root, "historical-exec-ran"), { force: true });
   if (mode === "paths")
     await write(
       root,
@@ -104,7 +145,7 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
   await git(root, "add", "-A");
   await git(root, "commit", "-qm", "manager base fixture");
   const base = await git(root, "rev-parse", "HEAD");
-  await write(root, "package.json", manifest("2.0.0"));
+  await write(root, "package.json", manifest("2.0.0", false));
   if (mode === "paths") {
     await write(root, ".npmrc", "offline=true\n");
     await write(root, "pnpm-workspace.yaml", "packages:\n  - packages/*\n");
@@ -116,11 +157,15 @@ render: () => '<!doctype html><html><head><title>Workspace</title></head><body><
       "nodeLinker: node-modules\nenableNetwork: false\nenableGlobalCache: false\nenableTelemetry: false\n",
     );
   await installFixture(root, manager, fixture.env);
+  if (mode === "constraints")
+    await fs.rm(path.join(root, "historical-constraints-ran"), { force: true });
   await write(
     root,
     "specs/source-value.ts",
     "export const value = 'Working source';",
   );
+  if (mode === "exec")
+    await fs.rm(path.join(root, "historical-exec-ran"), { force: true });
   await write(
     root,
     "packages/local/index.js",

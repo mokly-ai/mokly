@@ -126,3 +126,40 @@ fn project_relative_patches_use_the_governing_yarn_lockfile_root() {
         assert_eq!(validate(&files).is_ok(), valid, "{patch}");
     }
 }
+
+#[test]
+fn berry_exec_descriptors_fall_back_before_the_manager_runs() {
+    for (path, bytes) in [
+        (
+            "package.json",
+            br#"{"dependencies":{"generator":"exec:./generator.cjs"}}"#.to_vec(),
+        ),
+        (
+            "yarn.lock",
+            b"__metadata: {version: 8}\ngenerator:\n  resolution: 'generator@exec:./generator.cjs::locator=root%40workspace%3A.'".to_vec(),
+        ),
+    ] {
+        let files = BTreeMap::from([(RepoPath::parse(path).unwrap(), bytes)]);
+        assert!(matches!(validate(&files), Err(Error::InvalidInput { .. })), "{path}");
+    }
+}
+
+#[test]
+fn workspace_brace_alternatives_are_confined_individually() {
+    for (path, bytes) in [
+        (
+            "package.json",
+            br#"{"workspaces":["packages/{ui,../../outside}"]}"#.to_vec(),
+        ),
+        (
+            "pnpm-workspace.yaml",
+            b"packages:\n  - packages/{ui,../../outside}".to_vec(),
+        ),
+    ] {
+        let files = BTreeMap::from([(RepoPath::parse(path).unwrap(), bytes)]);
+        assert!(
+            matches!(validate(&files), Err(Error::LocalOutside { .. })),
+            "{path}"
+        );
+    }
+}

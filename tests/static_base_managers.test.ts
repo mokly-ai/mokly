@@ -161,6 +161,43 @@ test(
   },
 );
 
+test(
+  "a cold Yarn Berry base with exec dependencies falls back without running the generator",
+  { timeout: 120_000 },
+  async (context) => {
+    const fixture = await baseManagerFixture(managers[2], context, "exec");
+    const result = await build(fixture, context.signal);
+    assert.equal(result.tier, 3);
+    assert.match(result.diagnostics, /invalid dependency input/u);
+    assert.equal(await fs.readFile(fixture.calls, "utf8"), "");
+    await assert.rejects(
+      fs.stat(path.join(fixture.root, "historical-exec-ran")),
+      {
+        code: "ENOENT",
+      },
+    );
+  },
+);
+
+test(
+  "a cold Yarn Berry base disables constraints code from the historical tree",
+  { timeout: 120_000 },
+  async (context) => {
+    const fixture = await baseManagerFixture(
+      managers[2],
+      context,
+      "constraints",
+    );
+    const result = await build(fixture, context.signal);
+    assert.equal(result.tier, 2, result.diagnostics);
+    assert.equal(result.diagnostics, "");
+    await assert.rejects(
+      fs.stat(path.join(fixture.root, "historical-constraints-ran")),
+      { code: "ENOENT" },
+    );
+  },
+);
+
 for (const manager of [managers[0], managers[3], managers[4]]) {
   test(
     `a ${manager.name} base keeps configured install paths inside its private entry`,
