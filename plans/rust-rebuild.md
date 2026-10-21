@@ -4190,6 +4190,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `relatedComponents` by the entry whose views each evidence item
         names, in place of the parent, and update the Status Lines rule,
         Small. Recommended: B. User item 103 option C includes B.
+    - Covered by user decision 103 (2026-10-21): C, which includes 83 B.
+      Work: `rebuild/viewer-103c`.
   - [ ] Resolve user item 84 (review finding 6): the shared-component
         sentence calls a screen "this page". "Shared component changes
         affect this preview. This page has no independent entry in
@@ -4267,6 +4269,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `relatedComponents` and detail eligibility keyed by the entry that
         each evidence item names, Large. C includes user item 83 B.
         Recommended: C. If the user declines C, apply A.
+    - User decision 103 (2026-10-21): C, which includes 83 B. Work:
+      `rebuild/viewer-103c`.
   - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
         of an affected-only entry comes from view usage. Severity Low.
         Option B is applied by default (user rule): see the record "Serve
