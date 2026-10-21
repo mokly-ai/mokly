@@ -4208,6 +4208,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         components that this screen uses affect its preview.", with the
         design copy, the contract, the Details guide, and the tests, Large.
         Recommended: B.
+    - User decision 84 (2026-10-21): B. Work: `rebuild/viewer-84b`, in the W2
+      workspace.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
         2026-10-20: no artboard shows the pane heading “Components this
         screen uses changed”. Severity Low. Milestone 10.3 closes it: the
