@@ -136,6 +136,7 @@ impl NativeDependencies {
             used_directories: used_directories.to_vec(),
             unmapped_directories: unmapped_directories.to_vec(),
             source_identity: request.commit.to_string(),
+            install_scripts: request.install_scripts,
             head_root: config.repo_root.clone(),
             configuration,
             resolution: resolution(config)?,

@@ -109,6 +109,8 @@ pub struct Request {
     pub source_root: PathBuf,
     /// Pinned commit identity.
     pub source_identity: String,
+    /// Whether lifecycle scripts are enabled for this base installation.
+    pub install_scripts: bool,
     /// Working repository root for tier one and three third-party dependencies.
     pub head_root: PathBuf,
     /// Build warning subject.

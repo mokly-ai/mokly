@@ -12,14 +12,13 @@ use std::path::Path;
 use crate::commands::Command;
 use crate::manager::{Manager, Root};
 
-pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
+pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<OsString> {
     let directory = destination.join(&root.directory);
     let flags: &[&str] = match root.manager {
-        Manager::Npm => &["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+        Manager::Npm => &["ci", "--no-audit", "--no-fund"],
         Manager::Pnpm => &[
             "install",
             "--frozen-lockfile",
-            "--ignore-scripts",
             "--ignore-pnpmfile",
             "--config.pm-on-fail=ignore",
             "--config.global=false",
@@ -36,13 +35,22 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
         Manager::YarnClassic => &[
             "install",
             "--frozen-lockfile",
-            "--ignore-scripts",
             "--non-interactive",
             "--no-progress",
         ],
-        Manager::YarnBerry => &["install", "--immutable", "--mode=skip-build"],
+        Manager::YarnBerry => &["install", "--immutable"],
     };
     let mut args = flags.iter().map(OsString::from).collect::<Vec<_>>();
+    if !scripts {
+        match root.manager {
+            Manager::Npm => args.insert(1, "--ignore-scripts".into()),
+            Manager::Pnpm | Manager::YarnClassic => {
+                let index = args.iter().position(|arg| arg == "install").unwrap_or(1);
+                args.insert(index + 1, "--ignore-scripts".into());
+            }
+            Manager::YarnBerry => args.push("--mode=skip-build".into()),
+        }
+    }
     let paths: &[(&str, &str)] = match root.manager {
         Manager::Npm => &[
             ("--cache", ".npm-cache"),
@@ -113,12 +121,21 @@ pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {
 /// Variables that the install receives. Each replaces every inherited
 /// spelling of its name.
 pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
+    let scripts = request.args.first().is_some_and(|arg| {
+        matches!(arg.to_string_lossy().as_ref(), "ci" | "install")
+            && request
+                .args
+                .iter()
+                .all(|arg| arg != "--ignore-scripts" && arg != "--mode=skip-build")
+    });
     let mut variables = fixed(&[
-        ("npm_config_ignore_scripts", "true"),
         ("npm_config_audit", "false"),
         ("npm_config_fund", "false"),
         ("npm_config_update_notifier", "false"),
     ]);
+    if !scripts {
+        variables.push(("npm_config_ignore_scripts", "true".into()));
+    }
     if request.program != "pnpm" && request.program != "yarn" {
         return variables;
     }
@@ -146,13 +163,15 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         variables.extend(fixed(&[
             ("YARN_RC_FILENAME", ".yarnrc.yml"),
             ("YARN_ENABLE_CONSTRAINTS_CHECKS", "0"),
-            ("YARN_ENABLE_SCRIPTS", "0"),
             ("YARN_ENABLE_GLOBAL_CACHE", "0"),
             ("YARN_ENABLE_MIRROR", "0"),
             ("YARN_ENABLE_HARDENED_MODE", "0"),
             ("YARN_NODE_LINKER", "node-modules"),
             ("YARN_NM_MODE", "classic"),
         ]));
+        if !scripts {
+            variables.push(("YARN_ENABLE_SCRIPTS", "0".into()));
+        }
         let cache = request.cache.clone();
         variables.extend([
             (
@@ -193,9 +212,9 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
 /// Inherited variables that the install never receives.
 pub(crate) fn removed(request: &Command) -> &'static [&'static str] {
     if request.program == "yarn" {
-        &["YARN_PLUGINS"]
+        &["MOKLY_TOKEN", "YARN_PLUGINS", "YARN_ENABLE_SCRIPTS"]
     } else {
-        &[]
+        &["MOKLY_TOKEN", "npm_config_ignore_scripts"]
     }
 }
 

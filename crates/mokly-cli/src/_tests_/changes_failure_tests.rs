@@ -49,7 +49,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
         graphs,
         changes: Arc::new(Unimock::new(
             ChangesServiceMock::classify
-                .next_call(matching!(_, _, _))
+                .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Base {
                     commit: "a".repeat(40),
                     source: Box::new(Error::Catalogue {
@@ -92,7 +92,7 @@ fn an_invalid_internal_review_is_a_fatal_build_error() {
         graphs,
         changes: Arc::new(Unimock::new(
             ChangesServiceMock::classify
-                .next_call(matching!(_, _, _))
+                .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Review {
                     source: ReadError::Contract {
                         boundary: "review",

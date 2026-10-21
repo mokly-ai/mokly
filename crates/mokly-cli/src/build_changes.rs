@@ -31,10 +31,12 @@ impl CatalogueBuild {
         let changes = if options.no_changes {
             BuildChanges::Disabled
         } else {
-            match self
-                .changes
-                .classify(config, options.common.base.as_deref(), generation)
-            {
+            match self.changes.classify(
+                config,
+                options.common.base.as_deref(),
+                generation,
+                options.common.base_install_scripts_override(),
+            ) {
                 Ok(result) => {
                     warnings.extend(result.warnings.iter().cloned());
                     BuildChanges::Ready(Arc::new(result))

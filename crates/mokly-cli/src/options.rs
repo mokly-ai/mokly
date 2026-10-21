@@ -1,5 +1,6 @@
 //! Pure option normalization and environment fallbacks.
 
+use mokly_catalogue::config_types::{ResolvedConfig, ReviewConfig};
 use url::Url;
 
 use crate::errors::Failure;
@@ -54,6 +55,19 @@ pub fn validate(cli: &mut Cli, environment: &Environment) -> Result<(), Failure>
         validate_publish(publish, environment)?;
     }
     Ok(())
+}
+
+/// Apply a one-run CLI override without reading the historical configuration.
+pub fn apply_base_install_scripts(config: &mut ResolvedConfig, override_value: Option<bool>) {
+    if let Some(value) = override_value {
+        config.input.review.get_or_insert_with(|| ReviewConfig {
+            base: None,
+            base_install_scripts: None,
+        });
+        if let Some(review) = &mut config.input.review {
+            review.base_install_scripts = Some(value);
+        }
+    }
 }
 
 fn validate_publish(publish: &mut Publish, environment: &Environment) -> Result<(), Failure> {

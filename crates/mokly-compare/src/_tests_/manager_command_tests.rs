@@ -37,7 +37,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
             classic: None,
             berry_cache: None,
         };
-        let args = arguments(&root, Path::new("/private"));
+        let args = arguments(&root, Path::new("/private"), false);
         for flag in ["--offline", "--no-default-rc", "--use-yarnrc"] {
             assert!(!args.iter().any(|arg| arg == flag), "{manager:?} {flag}");
         }
@@ -137,6 +137,42 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
 }
 
 #[test]
+fn scripts_on_install_commands_omit_only_script_suppression_flags() {
+    for manager in [
+        Manager::Npm,
+        Manager::Pnpm,
+        Manager::YarnClassic,
+        Manager::YarnBerry,
+    ] {
+        let root = Root {
+            directory: "frontend".into(),
+            manager,
+            requested: None,
+            version: String::new(),
+            classic: None,
+            berry_cache: None,
+        };
+        let args = arguments(&root, Path::new("/private"), true);
+        assert!(
+            !args.iter().any(|arg| arg == "--ignore-scripts"),
+            "{manager:?}"
+        );
+        assert!(
+            !args.iter().any(|arg| arg == "--mode=skip-build"),
+            "{manager:?}"
+        );
+        let captured = variables(&request(manager, args))
+            .into_iter()
+            .collect::<BTreeMap<_, _>>();
+        assert!(
+            !captured.contains_key("npm_config_ignore_scripts"),
+            "{manager:?}"
+        );
+        assert!(!captured.contains_key("YARN_ENABLE_SCRIPTS"), "{manager:?}");
+    }
+}
+
+#[test]
 fn pinned_variables_replace_every_inherited_spelling_and_keep_user_settings() {
     for (inherited, name) in [
         ("yarn_yarn_offline_mirror", "YARN_YARN_OFFLINE_MIRROR"),
@@ -159,7 +195,10 @@ fn pinned_variables_replace_every_inherited_spelling_and_keep_user_settings() {
     }
     assert_eq!(
         removed(&request(Manager::YarnBerry, vec![])),
-        ["YARN_PLUGINS"]
+        ["MOKLY_TOKEN", "YARN_PLUGINS", "YARN_ENABLE_SCRIPTS"]
     );
-    assert!(removed(&request(Manager::Pnpm, vec![])).is_empty());
+    assert_eq!(
+        removed(&request(Manager::Pnpm, vec![])),
+        ["MOKLY_TOKEN", "npm_config_ignore_scripts"]
+    );
 }
