@@ -174,10 +174,14 @@ for (const { tier, title } of cases) {
       relative && !relative.startsWith("..") && !path.isAbsolute(relative),
       namespace,
     );
-    assert.deepEqual(await children(path.join(namespace, "sources/entries")), [
-      base,
-    ]);
-    const extracted = path.join(namespace, "sources/entries", base, "data");
+    const sources = path.join(namespace, "sources/entries");
+    const sourceEntries = await children(sources);
+    assert.equal(sourceEntries.length, 1);
+    const sourceKey = sourceEntries[0];
+    assert.ok(sourceKey);
+    assert.match(sourceKey, /^[a-f0-9]{64}$/u);
+    assert.notEqual(sourceKey, base);
+    const extracted = path.join(sources, sourceKey, "data");
     assert.equal(
       await fs.readFile(path.join(extracted, "specs/source-value.ts"), "utf8"),
       "export const value = 'Base source';",
@@ -209,6 +213,16 @@ for (const { tier, title } of cases) {
     await absent(
       path.join(root, "node_modules/mokly-cold-dependency/lifecycle-ran"),
     );
+    const repeated = await command(
+      root,
+      "build",
+      ["--base=HEAD", "--out=.context/repeated", "--sidecars=1"],
+      "plain",
+      env,
+      context.signal,
+    ).result;
+    assert.equal(repeated.code, 0, repeated.stderr);
+    assert.deepEqual(await children(sources), sourceEntries);
     assert.equal(await git(root, "status", "--porcelain"), working);
   });
 }
