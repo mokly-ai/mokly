@@ -3,9 +3,9 @@ import fs from "node:fs";
 import promises from "node:fs/promises";
 import nodeModule from "node:module";
 import path from "node:path";
-import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { MessageChannel } from "node:worker_threads";
+import type { MessagePort } from "node:worker_threads";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
@@ -29,6 +29,10 @@ const observerKey = Symbol.for("mokly.postcss.readEvidence");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
 let asyncHookInstalled = false;
 let asyncHookRegistering = false;
+let asyncHookActive = false;
+let asyncPathsPort: MessagePort | undefined;
+let asyncFlushId = 0;
+const pendingAsyncFlushes = new Map<number, () => void>();
 
 function isObserver(value: unknown): value is Observer {
   return typeof value === "function";
@@ -66,15 +70,46 @@ export function observeAsyncModuleLoads(): void {
 
 /** Let loader-thread messages arrive before the result frame is sent. */
 export async function flushAsyncModulePaths(): Promise<void> {
-  if (asynchronousLoader) await setImmediate();
+  if (!asyncHookActive || !asyncPathsPort) return;
+  const id = ++asyncFlushId;
+  await new Promise<void>((resolve) => {
+    pendingAsyncFlushes.set(id, resolve);
+    asyncPathsPort?.postMessage({ kind: "flush", id });
+  });
 }
 
 function registerAsyncHook(): void {
   if (asyncHookRegistering) return;
   asyncHookRegistering = true;
+  asyncHookActive = true;
   const { port1, port2 } = new MessageChannel();
-  port1.on("message", (url: unknown) => {
-    if (typeof url === "string") recordModulePath(url);
+  asyncPathsPort = port1;
+  port1.on("message", (message: unknown) => {
+    if (
+      message &&
+      typeof message === "object" &&
+      "kind" in message &&
+      message.kind === "flushed" &&
+      "id" in message &&
+      typeof message.id === "number"
+    ) {
+      pendingAsyncFlushes.get(message.id)?.();
+      pendingAsyncFlushes.delete(message.id);
+      return;
+    }
+    if (
+      message &&
+      typeof message === "object" &&
+      "kind" in message &&
+      message.kind === "path" &&
+      "url" in message &&
+      typeof message.url === "string"
+    )
+      recordModulePath(message.url);
+  });
+  port1.on("close", () => {
+    for (const resolve of pendingAsyncFlushes.values()) resolve();
+    pendingAsyncFlushes.clear();
   });
   port1.unref();
   try {

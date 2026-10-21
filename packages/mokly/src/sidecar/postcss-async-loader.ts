@@ -4,6 +4,17 @@ let paths: MessagePort | undefined;
 
 export function initialize(data: { paths: MessagePort }): void {
   paths = data.paths;
+  paths.on("message", (message: unknown) => {
+    if (
+      message &&
+      typeof message === "object" &&
+      "kind" in message &&
+      message.kind === "flush" &&
+      "id" in message &&
+      typeof message.id === "number"
+    )
+      paths?.postMessage({ kind: "flushed", id: message.id });
+  });
 }
 
 export async function resolve(
@@ -16,6 +27,6 @@ export async function resolve(
 ): Promise<Record<string, unknown>> {
   const result = await nextResolve(specifier, context);
   if (typeof result.url === "string" && result.url.startsWith("file:"))
-    paths?.postMessage(result.url);
+    paths?.postMessage({ kind: "path", url: result.url });
   return result;
 }
