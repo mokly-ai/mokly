@@ -3290,9 +3290,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     2026-10-21 in nesting round 8, as the orchestrator asked: the
     classification test doc now names the text case in a style block, an
     at-rule without a block under an unknown keyframes name.
-  - `crates/mokly-css/src/_tests_/wrapper_table_tests.rs:61`: the
-    `STYLE_RULE` doc does not say that an at-rule without a block under an
-    unknown keyframes name is text in a style rule's block. Separate branch.
+  - `crates/mokly-css/src/_tests_/wrapper_table_tests.rs:61`: settled on
+    2026-10-21 in nesting round 8, as the orchestrator asked: the
+    `STYLE_RULE` doc now names an at-rule without a block under an unknown
+    keyframes name as text.
 
 ## Post-merge follow-up (non-blocking)
 

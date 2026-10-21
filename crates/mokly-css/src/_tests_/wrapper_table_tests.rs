@@ -59,7 +59,10 @@ const GROUPING: Level = Level {
     close: "}",
 };
 /// A style rule's block: a statement in it without a block is still a rule
-/// or an at-rule unless it starts with an identifier and a colon.
+/// or an at-rule unless it starts with an identifier and a colon. The
+/// exception is an at-rule without a block under a keyframes name that
+/// lightningcss does not know, such as `@-khtml-keyframes`: it is text, which
+/// the scanners keep as authored.
 const STYLE_RULE: Level = Level {
     open: ".p{",
     close: "}",
