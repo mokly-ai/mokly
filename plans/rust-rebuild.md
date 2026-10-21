@@ -4269,19 +4269,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         orchestrator asked: the failure points at the first authored token
         that scoping would change, or at the end of the stylesheet when
         scoping only adds tokens there.
-  - [ ] Resolve user item 111 (M14 nesting report item 24, round 7 review
+  - [x] Resolve user item 111 (M14 nesting report item 24, round 7 review
         finding 1): cssparser skips an HTML comment token (`<!--` or `-->`)
         before a stylesheet statement, but the section reader keeps it. So
         the scanners read `<!-- @value x: 1;` and `-->@keyframes k{…}` as
         style rules, while lightningcss reads them as at-rules. The `@value`
         ships, and the keyframes keep `k` while its references are renamed.
-        Severity Low. Options: A, record the gap and narrow the README parity
-        claim, Small; B, skip those tokens before a stylesheet statement
-        through a root grammar, Medium; C, read each statement's start and
-        kind from cssparser's own parsers, Large and blocked. Recommended: B,
-        because it aligns the scanners with lightningcss and with the
-        `@value` rule. B makes such a stylesheet fail, and it builds today,
-        so keep the behaviour until the user decides.
+        Severity Low. User decision 111 (2026-10-21): A now, C after the merge, in parallel.
+        Option C is complete here: each scanner takes starts and
+        kinds from cssparser's parsers, keeps iterative heap-only traversal,
+        and has differential coverage for repository and generated stylesheets.
   - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
         differential): removing a bare `:global` or `:local` at
         `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.

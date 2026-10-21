@@ -52,9 +52,10 @@ retain their values. An independent token check rejects scoping that changes
 anything beyond local names and the module scope/composition syntax.
 
 The renamer, the module check, and the token check share one statement
-grammar. The section reader classifies each statement once for all three, as
-`lightningcss` reads the block that holds it. The grammar of a block depends
-on its statement and on the block around it:
+grammar. The section reader takes each statement's start and kind from
+cssparser's own rule parsers, so all three scanners agree with `lightningcss`.
+It reads one block level at a time and keeps nested work on the heap. The
+grammar of a block depends on its statement and on the block around it:
 
 - The stylesheet is a rule list. The block of a conditional, layer, scope, or
   starting-style rule in a rule list is a rule list too. Every statement in a
@@ -76,11 +77,11 @@ on its statement and on the block around it:
   declarations block, also an `@-moz-document` block.
 - Every other block is a declarations block, for example `@font-face`, a
   keyframe, an unknown at-rule, or a rule's block in a keyframes or
-  `@document` block. A rule that starts with an HTML comment token also opens
-  one, because cssparser skips that token in the stylesheet. `lightningcss`
-  keeps, drops, or rejects the text of a declarations block. A statement
-  without a block there is a declaration or text that stays as authored,
-  except that `@value` fails.
+  `@document` block. A rule that starts with an HTML comment token follows the
+  stylesheet parser's skipped-token rule before its kind and block are read.
+  `lightningcss` keeps, drops, or rejects the text of a declarations block. A
+  statement without a block there is a declaration or text that stays as
+  authored, except that `@value` fails.
 
 Declaration-only at-rules such as `@font-face` end a non-custom statement at
 its first `{}` block, as postcss does. A nested at-rule keeps its prelude as

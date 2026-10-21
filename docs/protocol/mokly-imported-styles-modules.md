@@ -61,6 +61,10 @@ guard runs before scoping. `lightningcss` bundles the scoped text and is
 never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
+CSS Modules scanners and the bundler use the same statement start and kind at
+each nesting level. The `<!--` and `-->` tokens before a stylesheet statement
+do not change that classification.
+
 ### Composition And Exports
 
 Authored `@value` fails at every rule level. Authored `:import(...)` and
