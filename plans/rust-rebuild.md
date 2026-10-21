@@ -1891,6 +1891,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       with a clear offline rule. Raw-blob comparison stays until the user
       decides. `rebuild/defaults-engine` records this decision and is not
       merged yet.
+  - User decision 69 (2026-10-21): C. This line lists only options A and B
+    of the engine record, so the hub record holds the text of option C.
+    Work: the new Git base reads workspace, `rebuild/git-base-reads`.
 - [ ] Resolve user item 127 (integration batch 18 decision 1): blobless
       clones fail comparison base reads. Mokly reads base files with several
       `git cat-file` processes at once. In a blobless partial clone, Git's
@@ -1901,6 +1904,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and show the recovery fetch command on this failure, Small (estimate);
       C, document that comparisons need a full clone, Small (estimate).
       Recommended: A.
+  - User decision 127 (2026-10-21): A. Work: the new Git base reads
+    workspace, `rebuild/git-base-reads`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
