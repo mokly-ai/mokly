@@ -212,4 +212,5 @@ test("the repository public surface has complete release notes", () => {
   const result = publicPackageExportAudit(process.cwd());
   assert.deepEqual(result.findings, []);
   assert.match(result.summary, /@mokly\/mokly: v0\.15\.0/u);
+  assert.match(result.summary, /@mokly\/viewer: viewer-v[0-9]/u);
 });

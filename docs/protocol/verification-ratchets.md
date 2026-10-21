@@ -78,9 +78,11 @@ Audit packages whose `exports` map has a JavaScript target. A platform
 package exports no JavaScript and has an empty surface on both sides. Derive
 each tag prefix from that package's release configuration: prepend
 `<component>-` when `include-component-in-tag` is true, then append `v` when
-`include-v-in-tag` is true. The tags use shared version numbers with prefixes `v` and `viewer-v`.
+`include-v-in-tag` is true. The shared root release retains the CLI's `v` and
+the viewer's `viewer-v` histories, including their independent older versions.
 
-Read the root component entry in `.release-please-manifest.json` at `HEAD`. An
+Read each component entry in `.release-please-manifest.json` at `HEAD`.
+For the shared viewer, use its historical entry or the root entry when absent. An
 absent entry or the exact version `0.0.0` means that package has never been
 released, so skip it. For every released package, the baseline is the newest
 tag matching `<prefix>[0-9]*` that is reachable from `HEAD`, equivalent to:

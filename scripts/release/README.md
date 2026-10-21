@@ -15,8 +15,11 @@ defines version selection and publication requirements.
 
 `release.yml` calls `release-prepare.yml` at the caller's workflow revision.
 The reusable workflow receives only tag, verification, and artifact inputs.
-The root Release Please component owns the CLI and viewer versions. It derives
-the matching `viewer-vX.Y.Z` tag, so every release builds both packages.
+The root Release Please component owns the CLI and viewer versions.
+The `release-tags` job creates `viewer-vX.Y.Z` at the root `vX.Y.Z` commit
+before native builds or preparation. It uses only the GitHub API with contents
+write permission, without a checkout or dependency builds. Reruns accept the
+same commit and never update a tag. Manual retries only verify existing tags.
 It has read-only permissions and no inherited secrets. It runs live audits,
 verification, packing, and clean-consumer smokes. It returns the checked artifact
 run and name, plus the exact Node version selected during preparation.

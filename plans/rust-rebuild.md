@@ -3126,6 +3126,19 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 Release lockstep completion merge decisions: `.context/release-audit-completion/lockstep-merge.md`.
 
+- [x] Complete user decisions 93 D and 92 ignore (2026-10-21). The root
+      component's extra-files update all seven package versions and viewer
+      dependency edges. This uses one existing Node updater without a
+      workspace plugin or independent viewer version calculation. Source
+      metadata retains CLI 0.15.0 and viewer 0.6.0 until the next root release.
+      The breaking-change release fixture gives both packages 0.16.0 without
+      a manual version edit. This corrects the earlier synchronized-source
+      wording without changing published versions. Restore the viewer export
+      audit and release-selection regressions. Complete the matching immutable
+      viewer tag before native builds, without a checkout or build in that
+      write-permission job. Keep source, archive, audit, and publication checks.
+      Evidence: `.context/release-audit-completion/`.
+
 - [x] User decisions 93 (2026-10-21): D, and 92: ignore. Keep the CLI root
       component from decision 20 C, and use its Release Please extra-files to
       update the viewer package and every lockfile dependency edge. One root
@@ -3498,7 +3511,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `statuses: write` and adds a gate, Medium. Recommended: A.
     - User decision 92 (2026-10-21): ignore. The finding is closed with no
       change, because user decision 93 D removes the check.
-  - [ ] Resolve user item 93 (CI release checks hub review finding 2): the
+  - [x] Resolve user item 93 (CI release checks hub review finding 2): the
         viewer check compares the wrong file set. It misses viewer build
         inputs outside `packages/viewer`, such as React and React DOM from
         the root lockfile, which bundle into `dist/browser/shell.js`, and
