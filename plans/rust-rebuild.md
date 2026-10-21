@@ -2815,6 +2815,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Finding: `tests/actionlint_config.test.ts` scans only `.yml` workflows.
+    Include `.yaml` in the label coverage test. Severity Low, effort Small.
+    Recommended: A. User decision required because this is a missing-test
+    finding.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
