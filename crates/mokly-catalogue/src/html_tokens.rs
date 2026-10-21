@@ -148,6 +148,19 @@ pub fn ignore_source_signature(
     ))
 }
 
+/// Format one ignore-wrapper attribute warning with reserved metadata wording.
+pub fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
+    let (label, ending) = if reserved_navigation_attribute(attribute.as_bytes()) {
+        ("reserved navigation metadata", "is rejected")
+    } else {
+        ("unknown attribute", "is ignored")
+    };
+    format!(
+        "{label} {attribute} on <{}> {ending}",
+        String::from_utf8_lossy(tag)
+    )
+}
+
 /// Navigation attributes that authored markup cannot supply, including future control fields.
 pub fn reserved_navigation_attribute(name: &[u8]) -> bool {
     name == b"data-mokly-link" || name.starts_with(b"data-mokly-link-control")

@@ -58,18 +58,7 @@ pub(crate) fn validate(
                         } else {
                             WarningSubject::Entry(path.into())
                         },
-                        message: if html_tokens::reserved_navigation_attribute(attribute.as_bytes())
-                        {
-                            format!(
-                                "reserved navigation metadata {attribute} on <{}> is rejected",
-                                String::from_utf8_lossy(&tag.name)
-                            )
-                        } else {
-                            format!(
-                                "unknown attribute {attribute} on <{}> is ignored",
-                                String::from_utf8_lossy(&tag.name)
-                            )
-                        },
+                        message: html_tokens::ignore_warning_message(&attribute, &tag.name),
                     });
                 }
                 for (i, name) in ["html", "head", "body"].iter().enumerate() {
