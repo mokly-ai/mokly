@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
-use mokly_model::evidence::{EvidenceOwner, RuleEvidence};
+use mokly_model::evidence::RuleEvidence;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::attribution_membership::Boundary;
@@ -25,8 +25,6 @@ pub struct MatchProof {
     pub(crate) regions: ContainmentPath,
     /// Supplier ancestry used only to protect a trusted owner's supplied content.
     pub(crate) inputs: Option<ContainmentPath>,
-    /// Resolved input owner for the inline-style seam.
-    pub owner: EvidenceOwner,
     /// Explicit sidecar owner, independent of copies on other documents.
     pub trusted_owner: Option<String>,
 }
@@ -144,7 +142,6 @@ pub fn observe_owned(
                                     Some(MatchProof {
                                         regions: element.regions.clone(),
                                         inputs: owner.map(|_| element.input_regions.clone()),
-                                        owner: element.owner.clone(),
                                         trusted_owner: owner.map(str::to_owned),
                                     })
                                 })
