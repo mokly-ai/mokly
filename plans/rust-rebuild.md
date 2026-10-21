@@ -553,7 +553,9 @@ the routed entry's detail arrives, because only the detail carries their
 declared order. Until then it shows "Loading props…" and no fields, so the
 fields never move from the index's name order to the declared order. A failed
 detail shows "Props couldn’t be loaded." with Try again, as Usage does. The
-hub decision log holds the rejected options.
+rejected option B kept the sorted fallback and stated it in the controls
+contract. The rejected option C carried `controlOrder` in the catalogue index,
+which makes index v8.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
