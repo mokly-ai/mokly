@@ -233,8 +233,11 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [install commands](./src/manager_command.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
-- [Lockfile source confinement](./src/manager_lockfiles.rs) and
-  [Yarn Classic scalar inputs](./src/manager_classic.rs).
+- [Lockfile source confinement](./src/manager_lockfiles.rs) checks each
+  lockfile value from the folder its manager reads it from.
+  [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its
+  importer or lockfile folder, and
+  [Yarn Classic scalar inputs](./src/manager_classic.rs) read Classic tokens.
 
 ### Related Docs
 

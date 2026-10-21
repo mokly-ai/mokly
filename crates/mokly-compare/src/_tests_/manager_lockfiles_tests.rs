@@ -194,24 +194,36 @@ fn lockfile_values_use_position_context_not_matching_text() {
 }
 
 #[test]
-fn classic_file_patterns_reuse_the_manifest_importer_context() {
-    let files = BTreeMap::from([
-        (
-            RepoPath::parse("packages/app/package.json").unwrap(),
-            br#"{"dependencies":{"ui":"file:../vendor/ui.tgz"}}"#.to_vec(),
-        ),
-        (
-            RepoPath::parse("yarn.lock").unwrap(),
-            b"# yarn lockfile v1\n\"ui@file:../vendor/ui.tgz\":\n  resolved \"file:../vendor/ui.tgz\""
-                .to_vec(),
-        ),
-    ]);
-    let result = super::manager_lockfiles::validate_with_context(
-        files.get(&RepoPath::parse("yarn.lock").unwrap()).unwrap(),
-        "yarn.lock",
-        &[("packages/app".into(), vec!["file:../vendor/ui.tgz".into()])],
+fn classic_lockfile_patterns_resolve_from_the_lockfile_folder() {
+    let lock =
+        b"# yarn lockfile v1\n\"ui@file:../vendor/ui.tgz\":\n  resolved \"file:../vendor/ui.tgz\"";
+    let result = super::manager_lockfiles::validate(lock, "yarn.lock");
+    assert!(
+        matches!(result, Err(Error::LocalOutside { .. })),
+        "{result:?}"
     );
-    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn descriptor_lists_and_url_text_cannot_hide_a_local_range() {
+    for (path, lock) in [
+        (
+            "yarn.lock",
+            "# yarn lockfile v1\n\"ui@file:../../outside.tgz#://\":\n  version \"1.0.0\"",
+        ),
+        (
+            "yarn.lock",
+            "__metadata: {version: 8}\n\"ui@npm:1.0.0, ui@file:../../outside.tgz::locator=root%40workspace%3A.\":\n  resolution: \"ui@npm:1.0.0\"",
+        ),
+    ] {
+        assert!(
+            matches!(
+                validate(&files(path, lock)),
+                Err(Error::LocalOutside { .. })
+            ),
+            "{path}: {lock}"
+        );
+    }
 }
 
 #[test]

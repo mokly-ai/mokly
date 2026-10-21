@@ -33,6 +33,7 @@ mod manager_plan;
 mod manager_yaml;
 mod manifest;
 mod npm_lockfiles;
+mod pnpm_lockfile;
 mod programs;
 
 #[cfg(windows)]
@@ -151,6 +152,10 @@ mod manager_lockfiles_tests;
 #[cfg(test)]
 #[path = "_tests_/manager_classic_tests.rs"]
 mod manager_classic_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pnpm_lockfile_tests.rs"]
+mod pnpm_lockfile_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]

@@ -186,3 +186,31 @@ fn npm_lockfile_paths_cannot_escape_the_repository() {
         );
     }
 }
+
+#[test]
+fn classic_workspace_specifications_resolve_from_the_classic_root() {
+    for (lock, valid) in [
+        ("# yarn lockfile v1\n", false),
+        ("__metadata:\n  version: 8\n", true),
+    ] {
+        let files = BTreeMap::from([
+            (
+                RepoPath::parse("package.json").unwrap(),
+                br#"{"private":true,"workspaces":["packages/*"]}"#.to_vec(),
+            ),
+            (
+                RepoPath::parse("packages/app/package.json").unwrap(),
+                br#"{"dependencies":{"ui":"../vendor/ui.tgz"}}"#.to_vec(),
+            ),
+            (
+                RepoPath::parse("yarn.lock").unwrap(),
+                lock.as_bytes().to_vec(),
+            ),
+        ]);
+        let result = validate(&files);
+        assert_eq!(result.is_ok(), valid, "{lock}: {result:?}");
+        if !valid {
+            assert!(matches!(result, Err(Error::LocalOutside { .. })), "{lock}");
+        }
+    }
+}

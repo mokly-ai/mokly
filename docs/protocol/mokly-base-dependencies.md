@@ -66,8 +66,17 @@ select local archives, patches, and workspace sources. Recognize
 `file:`, `link:`, Yarn `portal:` and patch paths, pnpm overrides and workspace
 paths, bare relative and absolute paths, home paths and local
 `.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from
-the declaring manifest. Yarn patch references validate each patch and its
-source. Their `~/` prefix is relative to the Yarn project, not the home
+the declaring manifest. Yarn Classic resolves bare local paths from its
+lockfile folder, so every specification in a Classic project normalizes from
+that folder. A nested `file:../x` that leaves that folder therefore falls back.
+Normalize each lockfile value from the folder that its manager reads it from:
+pnpm importer specifiers and `link:` versions from their importer, other pnpm
+values and all Yarn Classic values from the lockfile folder, and Yarn Berry
+values from the workspace that their locator names. A pnpm value whose
+position an alias, a merge key, or a complex key can change normalizes from
+the repository root. Equal text in another position gets no exemption,
+because the manager reads that position from another folder. Yarn patch
+references validate each patch and its source. Their `~/` prefix is relative to the Yarn project, not the home
 directory. Built-in patches need no local path. A local path outside the repository, including a home
 or absolute path, uses a typed fallback reason when an install is needed.
 No install reads it.

@@ -5,7 +5,7 @@ use crate::error::{Error, Result};
 use crate::inputs::Inputs;
 use crate::local_packages;
 use crate::manager::{Manager, Root, version_major};
-use crate::manager_classic::Configuration;
+use crate::manager_classic::{self, Configuration};
 use crate::manager_yaml;
 use crate::manifest;
 
@@ -118,10 +118,7 @@ fn yarn(inputs: &Inputs, root: &str) -> Result<Manager> {
     let Some(lock) = file(inputs, root, "yarn.lock") else {
         return Err(Error::UnsupportedManager);
     };
-    if lock
-        .split(|byte| *byte == b'\n')
-        .any(|line| line.trim_ascii() == b"# yarn lockfile v1")
-    {
+    if manager_classic::lockfile(lock) {
         return Ok(Manager::YarnClassic);
     }
     if !manager_yaml::fields(lock, &path(root, "yarn.lock"))?.contains_key("__metadata") {

@@ -70,6 +70,13 @@ impl Configuration {
     }
 }
 
+/// Whether lockfile bytes carry the Yarn Classic version 1 header line.
+pub(crate) fn lockfile(bytes: &[u8]) -> bool {
+    bytes
+        .split(|byte| *byte == b'\n')
+        .any(|line| line.trim_ascii() == b"# yarn lockfile v1")
+}
+
 pub(crate) fn strings(text: &str, path: &str) -> Result<Vec<String>> {
     let mut remaining = text;
     let mut values = Vec::new();

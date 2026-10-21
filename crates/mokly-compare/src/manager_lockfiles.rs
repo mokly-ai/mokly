@@ -1,4 +1,8 @@
 //! Local lockfile references use the same confinement rules as manifest inputs.
+//!
+//! Each value resolves from the folder its manager uses. pnpm values follow
+//! their YAML position, Yarn Classic values use the lockfile folder, and Yarn
+//! Berry values use the workspace that their locator names.
 
 use percent_encoding::percent_decode_str;
 use yaml_rust2::parser::{Event, Parser};
@@ -7,42 +11,36 @@ use crate::error::{Error, Result};
 use crate::local_specifications;
 use crate::manager_classic;
 use crate::manifest;
+use crate::pnpm_lockfile;
 
-type ManifestContext<'a> = &'a [(String, Vec<String>)];
-
-pub(crate) fn validate_with_context(
-    bytes: &[u8],
-    path: &str,
-    manifests: ManifestContext<'_>,
-) -> Result<()> {
-    let text = match str::from_utf8(bytes) {
-        Ok(text) => text,
-        Err(_) => return Err(Error::InvalidInput { path: path.into() }),
+pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
+    let Ok(text) = str::from_utf8(bytes) else {
+        return Err(Error::InvalidInput { path: path.into() });
     };
-    let parent = path
+    let folder = path
         .rsplit_once('/')
         .map(|(parent, _)| parent)
         .unwrap_or("");
-    let classic =
-        path.ends_with("yarn.lock") && text.lines().any(|line| line.trim() == "# yarn lockfile v1");
-    let importers = if path.ends_with("pnpm-lock.yaml") {
-        pnpm_importers(text, parent, path)?
-    } else {
-        Vec::new()
-    };
-    match yaml_strings(text, path) {
-        Ok(values) => {
-            for value in values {
-                reference(&value, parent, &importers, manifests, classic)?;
+    if path.rsplit('/').next() == Some("pnpm-lock.yaml") {
+        return pnpm_lockfile::walk(text, folder, path, &mut |value, base, field| {
+            if field && !value.is_empty() {
+                manifest::target(base, value)?;
             }
-        }
-        Err(_) if classic => {}
-        Err(error) => return Err(error),
+            descriptors(value, |descriptor| plain(descriptor, base, folder))
+        });
     }
-    if classic {
-        for value in manager_classic::strings(text, path)? {
-            reference(&value, parent, &importers, manifests, classic)?;
+    if manager_classic::lockfile(bytes) {
+        for value in yaml_strings(text, path)
+            .unwrap_or_default()
+            .into_iter()
+            .chain(manager_classic::strings(text, path)?)
+        {
+            descriptors(&value, |descriptor| plain(descriptor, folder, folder))?;
         }
+        return Ok(());
+    }
+    for value in yaml_strings(text, path)? {
+        descriptors(&value, |descriptor| berry(descriptor, folder))?;
     }
     Ok(())
 }
@@ -60,11 +58,25 @@ fn yaml_strings(text: &str, path: &str) -> Result<Vec<String>> {
     }
 }
 
+fn descriptors(value: &str, check: impl FnMut(&str) -> Result<()>) -> Result<()> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|descriptor| !descriptor.is_empty())
+        .try_for_each(check)
+}
+
+fn url(value: &str) -> bool {
+    value.split_once("://").is_some_and(|(scheme, _)| {
+        scheme.starts_with(|character: char| character.is_ascii_alphabetic())
+            && scheme.chars().all(|character| {
+                character.is_ascii_alphanumeric() || matches!(character, '+' | '-' | '.')
+            })
+    })
+}
+
 fn range(value: &str) -> &str {
-    if value.contains("://") {
-        return value;
-    }
-    if manifest::local(value).is_some() || value.starts_with("patch:") {
+    if url(value) || manifest::local(value).is_some() || value.starts_with("patch:") {
         return value;
     }
     value
@@ -91,13 +103,32 @@ fn locator(value: &str) -> Result<Option<String>> {
     }
 }
 
-fn reference(
-    value: &str,
-    project: &str,
-    importers: &[(String, String)],
-    manifests: ManifestContext<'_>,
-    classic: bool,
-) -> Result<()> {
+fn plain(value: &str, base: &str, project: &str) -> Result<()> {
+    let value = range(value);
+    if value.starts_with("patch:") {
+        return local_specifications::validate(value, base, project);
+    }
+    source(value, base, project)
+}
+
+fn source(value: &str, base: &str, project: &str) -> Result<()> {
+    let (source, selector) = value
+        .split_once('#')
+        .map(|(source, selector)| (source, Some(selector)))
+        .unwrap_or((value, None));
+    local_specifications::validate(source, base, project)?;
+    if !source.contains(':') && source.contains('/') {
+        manifest::target(base, source)?;
+    }
+    if manifest::local(source).is_some()
+        && let Some(selector) = selector
+    {
+        manifest::target(base, selector)?;
+    }
+    Ok(())
+}
+
+fn berry(value: &str, project: &str) -> Result<()> {
     let mut pending = Some(value.to_owned());
     while let Some(value) = pending {
         let parent = importer(&value, project)?;
@@ -106,92 +137,11 @@ fn reference(
             local_specifications::validate(value_range, &parent, project)?;
         } else {
             let reference = value_range.split("::").next().unwrap_or(value_range);
-            let (source, selector) = reference
-                .split_once('#')
-                .map(|(source, selector)| (source, Some(selector)))
-                .unwrap_or((reference, None));
-            let importer_paths = importers
-                .iter()
-                .filter(|(reference, _)| reference == source)
-                .map(|(_, parent)| parent.as_str())
-                .collect::<Vec<_>>();
-            if !importer_paths.is_empty() {
-                for parent in importer_paths {
-                    local_specifications::validate(source, parent, project)?;
-                }
-                return Ok(());
-            }
-            if classic {
-                for (parent, specifications) in manifests {
-                    if specifications
-                        .iter()
-                        .any(|specification| specification == source)
-                    {
-                        local_specifications::validate(source, parent, project)?;
-                        return Ok(());
-                    }
-                }
-            }
-            local_specifications::validate(source, &parent, project)?;
-            if !source.contains(':') && source.contains('/') {
-                manifest::target(&parent, source)?;
-            }
-            if manifest::local(source).is_some()
-                && let Some(selector) = selector
-            {
-                manifest::target(&parent, selector)?;
-            }
+            source(reference, &parent, project)?;
         }
         pending = locator(&value)?;
     }
     Ok(())
-}
-
-fn pnpm_importers(text: &str, project: &str, path: &str) -> Result<Vec<(String, String)>> {
-    let mut active = false;
-    let mut importer = None;
-    let mut values = Vec::new();
-    for line in text.lines() {
-        let indent = line.bytes().take_while(|byte| *byte == b' ').count();
-        let value = line.trim();
-        if indent == 0 && value == "importers:" {
-            active = true;
-            importer = None;
-            continue;
-        }
-        if !active {
-            continue;
-        }
-        if indent < 2 && value != "importers:" {
-            if indent == 0 {
-                active = false;
-                importer = None;
-            }
-            continue;
-        }
-        let key = value
-            .split_once('#')
-            .map(|(key, _)| key.trim())
-            .unwrap_or(value);
-        if indent == 2 && key.ends_with(':') {
-            let name = key[..key.len() - 1].trim_matches(['"', '\'']);
-            importer = Some(manifest::target(project, name)?);
-            continue;
-        }
-        let Some((_, raw)) = value.split_once(':') else {
-            continue;
-        };
-        let raw = raw.trim().trim_matches(['"', '\'']);
-        if raw.starts_with("link:")
-            && let Some(parent) = &importer
-        {
-            values.push((raw.to_owned(), parent.clone()));
-        }
-    }
-    if text.contains("importers:") && values.is_empty() {
-        let _ = path;
-    }
-    Ok(values)
 }
 
 fn importer(value: &str, project: &str) -> Result<String> {
