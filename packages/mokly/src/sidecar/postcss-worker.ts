@@ -100,7 +100,7 @@ process.once("message", (workerData: WorkerData) => {
             ...(typeof message.glob === "string" ? { glob: message.glob } : {}),
           });
         }
-        await flushAsyncModulePaths();
+        flushAsyncModulePaths();
         process.send?.({
           id,
           result: {
