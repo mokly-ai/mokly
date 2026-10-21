@@ -2726,6 +2726,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Follow-up: share a parsed dependency-input model for identity and source validation.
     Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
     Review and regression evidence: `.context/base-pnpm-yarn/`.
+  - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
+        Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
+        `7e6ae9ad`, and `9855feb1`.
+  - User item 120: Berry protocol allowlist for findings 1 and 2. Wider option B.
+  - User item 121: typed lockfile model for finding 3. Wider option B.
+  - User item 122: typed lockfile model for finding 4. Wider option B.
+  - User item 123: typed lockfile model for findings 3 and 4. Wider option B.
+  - pnpm/Yarn finding 6: offline installs rarely reach tier two. Severity Medium.
+    Recommended A, keep offline installs and avoid the wasted copy when registry data is absent.
+  - pnpm/Yarn finding 7: manager guard regressions lack fixtures. Severity Medium.
+    Recommended B, add marker fixtures for every script and hook guard.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
