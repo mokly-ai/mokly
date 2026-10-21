@@ -7,7 +7,9 @@ const StackStyles = createGlobalStyle`
   .stack > * + * { margin-top: 8px; }
 `;
 const StackEmotionStyles = css`
-  .stack-emotion > * + * { margin-top: 9px; }
+  .stack-emotion > * + * {
+    margin-top: 9px;
+  }
 `;
 const LayoutStyles = createGlobalStyle`
   .layout { border: 1px solid red; }
