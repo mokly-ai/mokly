@@ -3729,7 +3729,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
           `rebuild/viewer-followups-v2` (`09d38589`): every component
           sentence says "variant", the term of the variants contract, and
           the protocol, guides, design copy and tests follow.
-  - [ ] Resolve user item 89 (F12 decision 6): what an embedded host shows
+  - [x] Resolve user item 89 (F12 decision 6): what an embedded host shows
         after another deployment. `mokly-viewer.md` says that a different
         `deploymentId` emits one `onError` and leaves the installed state in
         place, but not what the stage shows. Today the embedded host shows
@@ -3743,6 +3743,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         which needs new copy, a mockup, and spec rows, Large. Recommended: B,
         because it shows no action that cannot work.
     - User decision 89 (2026-10-21): B. Work: W1 on `rebuild/viewer-89b`.
+    - Done in `4980c9c4` on `rebuild/viewer-89b`: a detail of another
+      deployment no longer fails the entry, so an embedded host keeps the
+      loading stage until it replaces `index`. 89 B kept the loading stage by
+      removing the `reloadsOnDeployment` flag, not by setting it on the
+      embedded source as option B said. `mokly-viewer.md` and the shell
+      delivery contract state the rule. Evidence: `.context/viewer-89b/`.
   - [ ] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
         each entry kind's sentences from one word.
         `packages/viewer/src/shell/entry_wording.ts` writes the sentences of
