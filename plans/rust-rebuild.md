@@ -1543,11 +1543,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         sheets are owned by the rendered parent in the code, so a child-only
         rule edit can create a direct parent change. Keep this behaviour until
         the user chooses the ownership rule.
+    - Replaced by user decisions 73 C and 96 C of 2026-10-20 and 110 C of
+      2026-10-21, which `rebuild/defaults-engine` implements. Tick this TODO
+      when that branch merges.
   - [ ] Resolve user item 40 (review 6b finding 3): owned styles set material
         flags without per-rule records in the code. Consumer-instance matches
         of owned styles also supply implementation proof without those records.
         Keep the approved rule-evidence specification. Decide both evidence
         paths before adding records or changing the documented view-state rule.
+    - User decision 131 (2026-10-21) keeps option 40 A, which
+      `rebuild/defaults-engine` implements. Tick this TODO when that branch
+      merges.
   - [ ] Resolve user item 108 (engine round 4 own review finding 3): nested
         matches changed own previews. After decision 96 C, a component can
         hold a record for a match inside a nested copy of itself: X renders
