@@ -66,13 +66,20 @@ impl Worker for ProcessWorker {
     }
 }
 
-pub(super) struct ForwardEvents(pub(super) Arc<dyn Diagnostics>);
+pub(super) struct ForwardEvents {
+    pub(super) diagnostics: Arc<dyn Diagnostics>,
+    pub(super) phases: PhaseState,
+}
 
 impl Events for ForwardEvents {
     fn emit(&mut self, event: Event) {
         match event {
-            Event::Diagnostic { message } => self.0.emit(&message),
-            Event::Operation { operation, pid } => self.0.operation(operation, pid),
+            Event::Diagnostic { message } => {
+                if !self.phases.record(&message) {
+                    self.diagnostics.emit(&message);
+                }
+            }
+            Event::Operation { operation, pid } => self.diagnostics.operation(operation, pid),
         }
     }
 }

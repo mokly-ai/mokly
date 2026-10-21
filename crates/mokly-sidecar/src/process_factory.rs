@@ -84,6 +84,7 @@ impl WorkerFactory for NodeFactory {
             .arg(&launch.entry)
             .current_dir(&repository)
             .env("PWD", &repository)
+            .env("MOKLY_POSTCSS_PHASES", "1")
             .env_remove("INIT_CWD")
             .env_remove("npm_package_json")
             .env_remove("npm_config_local_prefix")
@@ -168,7 +169,10 @@ impl WorkerFactory for NodeFactory {
         };
         let client = Client::new(
             Box::new(transport),
-            Box::new(ForwardEvents(Arc::clone(&self.diagnostics))),
+            Box::new(ForwardEvents {
+                diagnostics: Arc::clone(&self.diagnostics),
+                phases: phases.clone(),
+            }),
             launch.version.clone(),
         )
         .with_timings(self.timings);

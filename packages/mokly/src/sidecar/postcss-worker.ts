@@ -20,8 +20,11 @@ type WorkerData = Pick<
 
 guardParentOutput();
 const parent = parentInput();
-const phases = new PostcssPhases({ now: () => performance.now() }, (line) =>
-  process.stderr.write(`${line}\n`),
+const phases = new PostcssPhases(
+  { now: () => performance.now() },
+  (line) =>
+    process.env.MOKLY_POSTCSS_PHASES === "1" &&
+    process.send?.({ event: "postcss-phase", line }),
 );
 parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());

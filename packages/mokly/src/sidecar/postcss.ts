@@ -24,6 +24,7 @@ export class PostcssWorkers {
     private readonly diagnostic: (message: string) => void,
     private readonly operation: (operation: Operation) => void = () => {},
     private readonly launch: typeof fork = fork,
+    private readonly phase: (line: string) => void = () => {},
   ) {}
 
   async process(params: ProcessCssParams): Promise<CssResult> {
@@ -85,7 +86,7 @@ export class PostcssWorkers {
       const closed = () => {
         if (this.workers.get(key) === worker) this.workers.delete(key);
       };
-      worker = new PostcssProcess(child, closed);
+      worker = new PostcssProcess(child, closed, this.phase);
       child.stdout?.setEncoding("utf8");
       child.stderr?.setEncoding("utf8");
       observePostcssProcess(child, closed, this.operation);

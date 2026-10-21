@@ -13,6 +13,11 @@ interface Reply {
   postcss?: PostcssFailure;
 }
 
+interface PhaseMessage {
+  event: "postcss-phase";
+  line: string;
+}
+
 /** Failure state outlives individual requests, including asynchronous source lookup. */
 export class PostcssProcess {
   private failure: SidecarError | undefined;
@@ -27,6 +32,7 @@ export class PostcssProcess {
   constructor(
     readonly child: ChildProcess,
     private readonly failed: () => void,
+    private readonly phase: (line: string) => void = () => {},
   ) {
     child.on("error", (error) => this.fail(error));
     child.once("exit", (code, signal) =>
@@ -35,7 +41,11 @@ export class PostcssProcess {
     child.once("disconnect", () =>
       this.fail(new Error("PostCSS worker disconnected")),
     );
-    child.on("message", (message: Reply) => {
+    child.on("message", (message: Reply | PhaseMessage) => {
+      if (!("id" in message)) {
+        this.phase(message.line);
+        return;
+      }
       const pending = this.pending.get(message.id);
       if (!pending) return;
       this.pending.delete(message.id);
