@@ -140,3 +140,31 @@ test("runtime style adapters follow consumer package aliases", async (context) =
     /rgba\(4,5,6,1.00\)/,
   );
 });
+
+test("registry rules are attributed to the component that rendered them", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["registry-ownership.mockup.tsx"],
+      renderer: null,
+      storiesFiles: [],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await installBindings(sidecar, generation);
+  const result = await sidecar.call<RenderResult>("renderScreen", {
+    generation,
+    handle: "registry-ownership.mockup.tsx#default",
+    entry: { path: "home", title: "Home" },
+    props: {},
+    viewport: "desktop",
+    colorScheme: "light",
+  });
+  const style = (needle: string) =>
+    result.styles.find((item) => item.css.includes(needle));
+  assert.deepEqual(style(".stack > * + *")?.owners, ["stack"]);
+  assert.deepEqual(style(".stack-emotion > * + *")?.owners, ["stack"]);
+  assert.deepEqual(style(".layout {")?.owners, ["layout"]);
+});
