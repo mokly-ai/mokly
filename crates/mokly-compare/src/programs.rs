@@ -10,7 +10,7 @@ use crate::commands::Command;
 use crate::error::{Error, Result};
 
 pub(crate) fn command(request: &Command) -> Result<process::Command> {
-    if !["npm", "pnpm", "yarn", "corepack"]
+    if !["npm", "pnpm", "yarn"]
         .iter()
         .any(|name| request.program == *name)
     {
@@ -79,7 +79,7 @@ fn windows_manager(directories: &[PathBuf], manager: &str) -> Result<process::Co
                     "node_modules/@yarnpkg/cli-dist/bin/yarn.js",
                     "node_modules/corepack/dist/yarn.js",
                 ],
-                _ => &["node_modules/corepack/dist/corepack.js"],
+                _ => return Err(Error::UnsupportedManager),
             };
             let Some(cli) = candidates
                 .iter()
