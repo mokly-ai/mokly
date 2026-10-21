@@ -3148,7 +3148,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       (estimate). Recommended: A, because it is the smallest way to separate
       stable costs from run variation. The unmerged
       `rebuild/ci-shard-hosted-2` records the measurements.
-- [ ] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
+- [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
       `7cfc4895`, and the plan line that was then at line 2125. Severity Low,
@@ -3156,6 +3156,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       (estimate); B, a Node test next to `tests/markdown_links.test.ts` that
       fails on a ticked item with an open child, Medium. Recommended: B. B
       adds a gate, so it needs the user's approval.
+  - User decision 68 (2026-10-21): A. No plan check is added.
 - [ ] Resolve user item 126 (audit item 5, wider fix C): a check for
       milestone and history words in protocol pages. Three protocol passages
       used plan words against the end-state rule: "Compilation redesign is
