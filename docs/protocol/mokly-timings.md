@@ -137,7 +137,8 @@ defaults are four sheets and a share of 0.5, rounded up to whole screens.
 The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
 stylesheet, so classification exercises real rule evidence and attribution
-excludes the unrelated rule from every linked screen; the benchmark expects
+excludes the unrelated rule from every linked screen. With `--stylesheets 0` the
+fixture has no shared stylesheet, so setup adds no rule. The benchmark expects
 zero Changes, including use cases. `--toolchain install` archives the CLI,
 viewer, native package, and consumer lockfile, then installs head dependencies.
 `--toolchain workspace` reuses the workspace dependencies and saves their
@@ -215,8 +216,8 @@ Startup acceptance uses an optimized release native binary. The harness
 verifies that binary before timing and identifies its profile and digest in
 the results. Build preparation is outside the startup measurement.
 Decision: React startup keeps complete-catalogue readiness under its own
-budget. Usable navigation before every entry is ready was rejected because it
-changes the readiness and validation order and needs pending entries and
+budget. Usable navigation before every entry is ready was not chosen because
+it changes the readiness and validation order and needs pending entries and
 delayed errors.
 
 Isolated setup includes catalogue generation, package archives, dependency

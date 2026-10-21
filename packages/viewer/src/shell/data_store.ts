@@ -10,7 +10,6 @@ import {
   type SetStateAction,
 } from "react";
 
-import { detailKey } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 
@@ -21,9 +20,9 @@ import {
 import { ShellDataController } from "./data_controller.js";
 import type { LiveEditingStatus } from "./data_descriptor.js";
 import {
+  routeDetailDelivery,
   routeDetailRequests,
   routeKey,
-  routeReady,
   type DetailDelivery,
 } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
@@ -100,23 +99,28 @@ export function useShellDataStore(input: {
 
   const failed = controller.failed;
   const refreshFailed = controller.refreshFailed;
-  const routeDelivery = useMemo<DetailDelivery | undefined>(() => {
-    if (!requests.length) return undefined;
-    if (refreshFailed === routeKey(input.state.route))
-      return { status: "failed", retry: controller.retryRefresh };
-    if (routeReady(snapshot.details, requests)) return { status: "ready" };
-    const keys = requests.map(detailKey);
-    if (keys.some((key) => failed.has(key)))
-      return { status: "failed", retry: () => controller.retry(keys) };
-    return { status: "loading" };
-  }, [
-    controller,
-    failed,
-    input.state.route,
-    refreshFailed,
-    requests,
-    snapshot.details,
-  ]);
+  const replaced = controller.replaced;
+  const routeDelivery = useMemo<DetailDelivery | undefined>(
+    () =>
+      routeDetailDelivery({
+        details: snapshot.details,
+        failed,
+        refreshFailed: refreshFailed === routeKey(input.state.route),
+        replaced,
+        requests,
+        retry: (keys) => controller.retry(keys),
+        retryRefresh: controller.retryRefresh,
+      }),
+    [
+      controller,
+      failed,
+      input.state.route,
+      refreshFailed,
+      replaced,
+      requests,
+      snapshot.details,
+    ],
+  );
   const descriptor = controller.descriptor;
   const editing = controller.editing;
   const live = useMemo<ShellLiveState>(

@@ -24,6 +24,8 @@ thiserror = "2.0.21"
 tracing = "0.1.44"
 unimock = { version = "0.6.8", optional = true }
 flate2 = "1.1.10"
+yaml-rust2 = "0.13.0"
+percent-encoding = "2.3.2"
 
 [features]
 mock = ["dep:unimock"]

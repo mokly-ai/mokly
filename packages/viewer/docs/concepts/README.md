@@ -24,8 +24,8 @@ must carry the generation that `comparisonUrl` names and the removed record's
 `snapshotId`. On a revision mismatch the viewer fetches the index once more; a
 detail that disagrees after that leaves the entry unavailable with a retry
 control. A different `deploymentId` means another deployment replaced the
-files: the viewer emits one `onError` and keeps its state. A React host
-supplies newer data by replacing `index`.
+files: the viewer emits one `onError` and keeps its state, and the entry's
+stage keeps loading. A React host supplies newer data by replacing `index`.
 
 Keep the `index` object, the URL value, the `detail` function, and the frame
 adapter identities stable while the viewer is mounted. Replacing one remounts

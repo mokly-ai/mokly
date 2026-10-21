@@ -51,8 +51,10 @@ changed component's occurrence. It also gets a row when Mokly cannot resolve the
 such as a global style or a custom property change. Otherwise the screen is
 under the changed components' Affected screens. Those links show usage, not
 proof that every use looks different. In Serve and in a static build, each one
-opens that screen's comparison in Side by side. An embedded viewer opens the
-screen in Current, where the comparison band offers the same comparison.
+opens that screen's comparison in Side by side, also when Changes lists the
+screen for another reason, such as a move. A saved variant that uses the
+changed component has its own link. An embedded viewer opens the screen in
+Current, where the comparison band offers the same comparison.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead
@@ -129,9 +131,10 @@ labelled Removed.
 A shown view with Changed status offers Current, Side by side, Overlay and
 Difference beneath its heading, from All as well as from Changes, and starts in
 Current. A shown view known to be unchanged reads Unmodified with no comparison,
-unless changed components affect the screen or component: then it reads
-Unmodified and stays out of Changes, but still offers the comparison, and each
-view that uses a changed component reads "Components this screen uses changed".
+unless it uses a changed component: then it reads Unmodified but still offers
+the comparison, whether or not Changes lists the screen or component, and it
+reads "Components this screen uses changed". A screen that only changed
+components affect stays out of Changes.
 
 Comparison snapshots are generated when you select one of those options, not
 while you browse, and they capture the selected screen and its resources

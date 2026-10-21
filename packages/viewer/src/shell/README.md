@@ -148,10 +148,12 @@ unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
 provenance together; missing or partial matching evidence retains the selected
 entry's fallback status and eligibility. `publicWorkspace` sets
-`affectedComparison` when Changes does not list the routed entry but its entry
-detail marks it comparison-eligible, because changed components affect it, and
-`workspace_views.ts` then keeps the comparison eligible while the shown views
-read Unmodified.
+`affectedComparison` when the routed entry's detail marks it
+comparison-eligible and names the changed components that affect it, in or out
+of Changes. `workspace_views.ts` then keeps the comparison eligible for each
+shown view that reads Unmodified while its usage holds one of those
+components, so a pure move, a component variant, and an entry whose other
+views changed compare as an affected-only entry does.
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
@@ -210,16 +212,24 @@ event stream, and the live descriptor. `data_requests.ts` lists the details a
 route renders from (the routed entry's, plus each step screen's for a use
 case), loads one detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
-and loads a publication refresh. `data_commit.ts` adopts a new index and its
-details as one snapshot and rebinds the route and the disclosures to it;
+and loads a publication refresh; `data_refresh.ts` runs one such refresh at a
+time for the controller and keeps the route whose refresh failed.
+`data_commit.ts` adopts a new index and its details as one snapshot and
+rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. A detail of
-another deployment is not a failed load in the standalone shell, whose source
-declares that it reloads the page: its stage keeps the loading state until the
-full page load. An embedded host keeps its state and shows the unavailable
-state with retry. The element generation of `frame_source_hook.ts` advances
+shows the loading state, or the unavailable state with retry. A use case
+shows the unavailable state only after each of its details has arrived,
+failed, or been replaced, because a detail that still loads can show another
+deployment. Until then the stage keeps loading, while an embedded host still
+hears of each failure at once. A detail of
+another deployment is not a failed load: the controller stops every load,
+ends the live connection as a disconnect does, and ignores later failures,
+the source reports the change once, and a route that
+still waits has the `replaced` delivery. Its stage keeps the loading state
+until the new data arrives, from the standalone shell's full page load or from
+the `index` that an embedded host supplies. The element generation of `frame_source_hook.ts` advances
 only when a frame's `documentKey` changes at the same source, so a publication
 reloads only the frames whose document changed. Saved component view records
 supplied by prop controls keep their index `documentKey`. Only a temporary

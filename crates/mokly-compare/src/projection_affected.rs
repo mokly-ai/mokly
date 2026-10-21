@@ -1,4 +1,6 @@
 //! Index affected consumers and preserve first-seen ordering with one key per link.
+//! Each consumer is the entry whose views its evidence names, so a component
+//! variant's own detail names the changed component and can compare.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -26,28 +28,30 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
     let mut related_seen = BTreeSet::new();
     let mut links_seen = BTreeSet::new();
     for effect in &result.review.affected {
-        let consumer = &effect.consumer.path;
-        output.consumers.insert(consumer.clone());
-        if related_seen.insert((consumer.as_str(), effect.changed_component_id.as_str())) {
-            output
-                .related
-                .entry(consumer.clone())
-                .or_default()
-                .push(RelatedComponent {
-                    path: effect.changed_component_id.clone(),
-                    title: context
-                        .metadata
-                        .get(effect.changed_component_id.as_str())
-                        .map_or(effect.changed_component_id.as_str(), |metadata| {
-                            metadata.title.as_str()
-                        })
-                        .into(),
-                });
-        }
         let mut projected = Vec::new();
         for evidence in &effect.evidence {
             if let Some(target) = references.affected(effect, evidence)? {
                 projected.push((evidence, target));
+            }
+        }
+        for (_, target) in &projected {
+            let consumer = target.metadata.path.as_str();
+            output.consumers.insert(consumer.into());
+            if related_seen.insert((consumer, effect.changed_component_id.as_str())) {
+                output
+                    .related
+                    .entry(consumer.into())
+                    .or_default()
+                    .push(RelatedComponent {
+                        path: effect.changed_component_id.clone(),
+                        title: context
+                            .metadata
+                            .get(effect.changed_component_id.as_str())
+                            .map_or(effect.changed_component_id.as_str(), |metadata| {
+                                metadata.title.as_str()
+                            })
+                            .into(),
+                    });
             }
         }
         let after: BTreeSet<_> = projected
