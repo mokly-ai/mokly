@@ -79,6 +79,14 @@ starts that reload. The outgoing document records in session storage, which
 survives the page load, whether it ever showed a stage that could not be
 shown; the test requires that it never did.
 
+`static_deployment_flow.spec.ts` opens a use case after the next deployment
+removed one of its step screens. It holds the full page load and answers the
+removed step only after that, so the step's answer always arrives after the
+deployment change. The outgoing document runs no test script while its page
+load waits. It therefore records its stage in session storage and requests
+one test URL when the shell has handled the step's answer. The test requires
+a busy stage and no stage that could not be shown.
+
 `tests/static_server_deployment.test.ts` holds an old request while a request
 for the replacement copy completes. Both must return their selected file.
 
