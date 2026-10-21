@@ -3082,6 +3082,15 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     checks and states the rule in `mokly-html-components.md`; option B keeps
     only the required `html-ignore-attribute` and `html-foster-parented`
     warnings. Recommended: A. Apply B until the user answers.
+  - Item 131: unknown attributes on ignore wrappers returned by a
+    JavaScript `renderPage` callback. The HTML screens protocol requires
+    this warning for authored bodies, but the sidecar render-record
+    contract does not define warning transport for callback HTML.
+    Option A adds one `html-ignore-attribute` warning per page callback
+    body and attribute. Option B keeps callback HTML warning-free and
+    limits the warning to authored catalogue bodies. Recommended: A,
+    because page output follows the page HTML rules. No option is applied
+    until the user answers.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
