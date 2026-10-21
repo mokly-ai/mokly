@@ -14,7 +14,7 @@ import { fixtureEdits, withFixtureEdit } from "./watch_edits.js";
 
 type Edit = Awaited<ReturnType<typeof fixtureEdits>>[number];
 export type WatchMeasurement = Awaited<ReturnType<typeof measureEdit>>;
-export const WATCH_BROWSER_TIMEOUT_MS = 180_000;
+export const WATCH_BROWSER_TIMEOUT_MS = 600_000;
 
 async function measureEdit(
   page: Page,
