@@ -2679,6 +2679,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+- [x] Configure plain actionlint runs (2026-10-21). Declare the five exact
+      Blacksmith runner labels in the repository configuration without ignore
+      rules. Document the manual command. No tracked invocation uses a label
+      ignore pattern, and no gate changes. Evidence:
+      `.context/ci-actionlint-config/`.
+
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
