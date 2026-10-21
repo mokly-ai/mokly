@@ -22,6 +22,8 @@ Boolean options take no value. There are no silent positional arguments.
 | -------------------------------- | ------------------ | ------------------------------------------------- |
 | `--config {path}`                | all                | Use an explicit JSON configuration file.          |
 | `--base {ref}`                   | all                | Override the comparison base.                     |
+| `--base-install-scripts`         | all                | Run lifecycle scripts during base dependency installation. |
+| `--no-base-install-scripts`      | all                | Keep lifecycle scripts disabled during base dependency installation. |
 | `--sidecars {count}`             | all                | Set the positive JavaScript worker count.         |
 | `--debug-timings`                | all                | Select plain output and print timing records.     |
 | `--port {port}`                  | `serve`            | Select a starting port. Zero selects a free port. |

@@ -26,6 +26,8 @@ is the receiver's Plan URL. For Mokly Cloud it is
 | `--token {token}`                | Override `MOKLY_TOKEN`. Prefer the environment for secrets.  |
 | `--repository {host/owner/name}` | Override repository identity detection.                      |
 | `--base {ref}`                   | Override `review.base`, whose default is `origin/main`.      |
+| `--base-install-scripts`         | Run lifecycle scripts during base dependency installation.   |
+| `--no-base-install-scripts`      | Keep lifecycle scripts disabled during base dependency installation. |
 | `--no-changes`                   | Publish current content without base history or comparisons. |
 | `--upload-concurrency {count}`   | Send 1 to 32 missing blobs at once. The default is 8.        |
 | `--strict`                       | Fail on build warnings before output installation or upload. |

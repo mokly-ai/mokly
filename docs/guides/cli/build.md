@@ -20,6 +20,8 @@ npx mokly build --config tools/mokly.config.json --base origin/main
 | `--config {path}`    | Load a JSON configuration file. Omission searches upward.                                           |
 | `--out {directory}`  | Write beside the config for a relative path. The default is `mokly-static/` at the repository root. |
 | `--base {ref}`       | Override `review.base`, whose default is `origin/main`.                                             |
+| `--base-install-scripts` | Run lifecycle scripts during base dependency installation.                                       |
+| `--no-base-install-scripts` | Keep lifecycle scripts disabled during base dependency installation.                            |
 | `--no-changes`       | Build current content without Git history or a comparison.                                          |
 | `--strict`           | Fail on warnings before output installation.                                                        |
 | `--sidecars {count}` | Set the positive JavaScript worker count.                                                           |

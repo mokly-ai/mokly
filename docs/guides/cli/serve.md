@@ -22,6 +22,8 @@ that URL in your default browser as soon as the server is ready.
 | `--config <path>` | Use an explicit `mokly.config` file                                 |
 | `--port <port>`   | Starting port; advances if occupied, `0` selects any free port      |
 | `--base <ref>`    | Git base ref used to find the branch point                          |
+| `--base-install-scripts` | Run lifecycle scripts during base dependency installation.       |
+| `--no-base-install-scripts` | Keep lifecycle scripts disabled during base dependency installation. |
 | `--watch`         | Watch your inputs; this is the default                              |
 | `--no-watch`      | Serve one deterministic snapshot                                    |
 | `--build`         | Write `mokly-generated/` after each successful complete compilation |
