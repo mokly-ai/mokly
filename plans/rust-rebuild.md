@@ -3798,7 +3798,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       design description and the shell design inventory say that the same
       loading stage covers a replaced catalogue. The code already showed it.
       Evidence: `.context/viewer-139a-140b/`.
-  - [ ] Resolve user item 140 (90 C decision 2): when a use case shows a
+  - [x] Resolve user item 140 (90 C decision 2): when a use case shows a
         step failure. A use-case route loads the use case detail and each
         step detail at once. A step failure that arrives before any detail
         shows the new deployment makes the route show the unavailable stage
@@ -3811,6 +3811,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         (estimate). Recommended: B.
     - User decision 140 (2026-10-21): B. Work: W1 on
       `rebuild/viewer-139a-140b`.
+    - Done in `d77cb6de` on `rebuild/viewer-139a-140b`: a route fails only
+      after each of its details has arrived, failed, or been replaced, and
+      the embedded host still gets each failure's `onError` at once. A unit
+      test, a controller test, and a browser test that answers the removed
+      step first cover it. Evidence: `.context/viewer-139a-140b/`.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
