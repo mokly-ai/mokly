@@ -24,14 +24,10 @@ export interface ShellDataSource {
   /**
    * Another deployment replaced the files or another server process answers.
    * The standalone shell performs a full page load; an embedded host is told
-   * once and keeps its state.
+   * once, keeps its state, and supplies newer data by replacing `index`. The
+   * stage keeps loading until the new data arrives.
    */
   deploymentChanged(): void;
-  /**
-   * Whether `deploymentChanged` replaces the document with a full page load.
-   * The stage of such a source keeps loading until the new document arrives.
-   */
-  readonly reloadsOnDeployment?: boolean;
   /**
    * A detail could not be loaded or accepted; the entry shows its unavailable
    * state with retry. An embedded host is told once per failed load.
