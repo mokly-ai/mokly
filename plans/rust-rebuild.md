@@ -2828,11 +2828,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
-  - Open watch review finding 1: `docs/protocol/mokly-timings.md` still states
-    a 60-second browser allowance without the full-size watch exception.
-    Severity Low, effort Small. Options A, add the exception beside the
-    default, or B, add a scenario timeout table. Recommend A. User decision
-    required. Separate documentation follow-up.
+  - [x] Fix watch review finding 1 with option A: document the 30-minute
+        full-size watch liveness exception beside the 60-second default in
+        `docs/protocol/mokly-timings.md`. Evidence: commit `1f1b4334` and
+        `.context/m14-watch-run/review-final.md`.
   - [x] F16: repair hosted native verification startup. Use portable terminal
         pointers, resolve Windows Node shims at both xtask process boundaries,
         and bypass the checkout cache on non-Linux native runners. Replace
