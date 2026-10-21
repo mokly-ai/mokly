@@ -8,7 +8,13 @@ use crate::local_specifications;
 use crate::manager_classic;
 use crate::manifest;
 
-pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
+type ManifestContext<'a> = &'a [(String, Vec<String>)];
+
+pub(crate) fn validate_with_context(
+    bytes: &[u8],
+    path: &str,
+    manifests: ManifestContext<'_>,
+) -> Result<()> {
     let text = match str::from_utf8(bytes) {
         Ok(text) => text,
         Err(_) => return Err(Error::InvalidInput { path: path.into() }),
@@ -19,10 +25,15 @@ pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
         .unwrap_or("");
     let classic =
         path.ends_with("yarn.lock") && text.lines().any(|line| line.trim() == "# yarn lockfile v1");
+    let importers = if path.ends_with("pnpm-lock.yaml") {
+        pnpm_importers(text, parent, path)?
+    } else {
+        Vec::new()
+    };
     match yaml_strings(text, path) {
         Ok(values) => {
             for value in values {
-                reference(&value, parent)?;
+                reference(&value, parent, &importers, manifests, classic)?;
             }
         }
         Err(_) if classic => {}
@@ -30,7 +41,7 @@ pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
     }
     if classic {
         for value in manager_classic::strings(text, path)? {
-            reference(&value, parent)?;
+            reference(&value, parent, &importers, manifests, classic)?;
         }
     }
     Ok(())
@@ -50,6 +61,9 @@ fn yaml_strings(text: &str, path: &str) -> Result<Vec<String>> {
 }
 
 fn range(value: &str) -> &str {
+    if value.contains("://") {
+        return value;
+    }
     if manifest::local(value).is_some() || value.starts_with("patch:") {
         return value;
     }
@@ -77,7 +91,13 @@ fn locator(value: &str) -> Result<Option<String>> {
     }
 }
 
-fn reference(value: &str, project: &str) -> Result<()> {
+fn reference(
+    value: &str,
+    project: &str,
+    importers: &[(String, String)],
+    manifests: ManifestContext<'_>,
+    classic: bool,
+) -> Result<()> {
     let mut pending = Some(value.to_owned());
     while let Some(value) = pending {
         let parent = importer(&value, project)?;
@@ -90,6 +110,28 @@ fn reference(value: &str, project: &str) -> Result<()> {
                 .split_once('#')
                 .map(|(source, selector)| (source, Some(selector)))
                 .unwrap_or((reference, None));
+            let importer_paths = importers
+                .iter()
+                .filter(|(reference, _)| reference == source)
+                .map(|(_, parent)| parent.as_str())
+                .collect::<Vec<_>>();
+            if !importer_paths.is_empty() {
+                for parent in importer_paths {
+                    local_specifications::validate(source, parent, project)?;
+                }
+                return Ok(());
+            }
+            if classic {
+                for (parent, specifications) in manifests {
+                    if specifications
+                        .iter()
+                        .any(|specification| specification == source)
+                    {
+                        local_specifications::validate(source, parent, project)?;
+                        return Ok(());
+                    }
+                }
+            }
             local_specifications::validate(source, &parent, project)?;
             if !source.contains(':') && source.contains('/') {
                 manifest::target(&parent, source)?;
@@ -103,6 +145,49 @@ fn reference(value: &str, project: &str) -> Result<()> {
         pending = locator(&value)?;
     }
     Ok(())
+}
+
+fn pnpm_importers(text: &str, project: &str, path: &str) -> Result<Vec<(String, String)>> {
+    let mut active = false;
+    let mut importer = None;
+    let mut values = Vec::new();
+    for line in text.lines() {
+        let indent = line.bytes().take_while(|byte| *byte == b' ').count();
+        let value = line.trim();
+        if indent == 0 && value == "importers:" {
+            active = true;
+            importer = None;
+            continue;
+        }
+        if !active {
+            continue;
+        }
+        if indent < 2 && value != "importers:" {
+            if indent == 0 {
+                active = false;
+                importer = None;
+            }
+            continue;
+        }
+        if indent == 2 && value.ends_with(':') {
+            let name = value[..value.len() - 1].trim_matches(['"', '\'']);
+            importer = Some(manifest::target(project, name)?);
+            continue;
+        }
+        let Some((_, raw)) = value.split_once(':') else {
+            continue;
+        };
+        let raw = raw.trim().trim_matches(['"', '\'']);
+        if (raw.starts_with("link:") || raw.starts_with("file:"))
+            && let Some(parent) = &importer
+        {
+            values.push((raw.to_owned(), parent.clone()));
+        }
+    }
+    if text.contains("importers:") && values.is_empty() {
+        let _ = path;
+    }
+    Ok(values)
 }
 
 fn importer(value: &str, project: &str) -> Result<String> {

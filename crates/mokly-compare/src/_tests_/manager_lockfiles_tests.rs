@@ -168,3 +168,40 @@ fn yarn_locator_selectors_define_the_actual_importer_directory() {
         Err(Error::LocalOutside { .. })
     ));
 }
+
+#[test]
+fn pnpm_importer_links_use_the_importer_directory_and_registry_urls_are_not_paths() {
+    let lock = "importers:\n  packages/a:\n    dependencies:\n      b:\n        specifier: workspace:*\n        version: link:../b\npackages:\n  b@1.0.0:\n    resolution: {tarball: 'https://registry.example/@scope%2fb/-/b-1.0.0.tgz'}";
+    let result = validate(&files("pnpm-lock.yaml", lock));
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn classic_file_patterns_reuse_the_manifest_importer_context() {
+    let files = BTreeMap::from([
+        (
+            RepoPath::parse("packages/app/package.json").unwrap(),
+            br#"{"dependencies":{"ui":"file:../vendor/ui.tgz"}}"#.to_vec(),
+        ),
+        (
+            RepoPath::parse("yarn.lock").unwrap(),
+            b"# yarn lockfile v1\n\"ui@file:../vendor/ui.tgz\":\n  resolved \"file:../vendor/ui.tgz\""
+                .to_vec(),
+        ),
+    ]);
+    let result = super::manager_lockfiles::validate_with_context(
+        files.get(&RepoPath::parse("yarn.lock").unwrap()).unwrap(),
+        "yarn.lock",
+        &[("packages/app".into(), vec!["file:../vendor/ui.tgz".into()])],
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn classic_colon_delimited_keys_still_validate_quoted_paths() {
+    let lock = "# yarn lockfile v1\nui@1.0.0:\n  resolved:\"file:../../outside.tgz#hash\"";
+    assert!(matches!(
+        validate(&files("yarn.lock", lock)),
+        Err(Error::LocalOutside { .. })
+    ));
+}

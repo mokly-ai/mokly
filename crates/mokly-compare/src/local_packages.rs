@@ -28,7 +28,21 @@ pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<
 }
 
 pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
-    for (directory, manifest) in manifests(files)? {
+    let package_manifests = manifests(files)?;
+    let contexts = package_manifests
+        .iter()
+        .map(|(directory, manifest)| {
+            (
+                directory.clone(),
+                manifest
+                    .specifications()
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
+    for (directory, manifest) in package_manifests {
         let project = ancestor_roots::directories(&directory)
             .into_iter()
             .find(|root| {
@@ -44,7 +58,7 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
             local_specifications::validate(value, &directory, &project)?;
         }
         for workspace in manifest.workspaces() {
-            manifest::target(&directory, workspace)?;
+            manifest::targets(&directory, workspace)?;
         }
         for patch in manifest.patches() {
             manifest::target(&directory, patch)?;
@@ -54,7 +68,7 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
         match path.as_str().rsplit('/').next() {
             Some("pnpm-workspace.yaml") => manager_local::validate(bytes, path.as_str())?,
             Some("pnpm-lock.yaml" | "yarn.lock") => {
-                manager_lockfiles::validate(bytes, path.as_str())?
+                manager_lockfiles::validate_with_context(bytes, path.as_str(), &contexts)?
             }
             _ => {}
         }
