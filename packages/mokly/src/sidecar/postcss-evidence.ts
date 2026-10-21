@@ -23,6 +23,7 @@ type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
+const moduleUrlObservers = new Set<(url: string) => void>();
 const observerKey = Symbol.for("mokly.postcss.readEvidence");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
 
@@ -156,6 +157,7 @@ function compilerBytes(
 export function observeModuleLoads(
   onModuleUrl: (url: string) => void = () => {},
 ): void {
+  moduleUrlObservers.add(onModuleUrl);
   if (
     moduleHooksInstalled ||
     asynchronousLoader ||
@@ -167,7 +169,8 @@ export function observeModuleLoads(
   const hooks = nodeModule.registerHooks({
     resolve(specifier, context, nextResolve) {
       const result = nextResolve(specifier, context);
-      if (typeof result.url === "string") onModuleUrl(result.url);
+      if (typeof result.url === "string")
+        for (const observer of moduleUrlObservers) observer(result.url);
       for (const file of resolutionMetadata(
         specifier,
         context.parentURL,
@@ -178,7 +181,7 @@ export function observeModuleLoads(
     },
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
-      onModuleUrl(url);
+      for (const observer of moduleUrlObservers) observer(url);
       if (!url.startsWith("file:")) return result;
       const file = fileURLToPath(url);
       modules.add(file);

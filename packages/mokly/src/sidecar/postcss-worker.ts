@@ -37,8 +37,8 @@ process.once("message", (workerData: WorkerData) => {
   spawned("ok");
   if (!preloadedObserver()) {
     observeFileReads();
-    observeModuleLoads((url) => phases.moduleUrl(url));
   }
+  observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,
