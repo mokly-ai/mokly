@@ -1467,6 +1467,21 @@ Review 11 fixes, the negative zero fix of live edit renders, and the merge of
 the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
 decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
+- [ ] Resolve user item 133 (integration batch 19 decision 1, widened by
+      batch 21): JavaScript document keys depend on the checkout folder and
+      the root manifest. `packages/mokly/src/sidecar/bundle.ts` hashes the
+      absolute source, dependency, and repository roots, and every parent
+      `package.json` of each bundled module, into the bundle identity, which
+      feeds every JavaScript document key. Builds of one commit from two
+      folders differ in 545 keys and in the deployment identity. A
+      devDependency edit in the root `package.json` re-keys all 223
+      JavaScript-rendered entries. Severity Medium, effort Medium. Options:
+      A, document that these are render inputs, effort not recorded; B, keep
+      them in the compiled-code cache key, and compute the published
+      document keys from folder-independent data: module digests by
+      repository path, class maps, and bindings, Medium; C, make the bundle
+      identity itself folder-independent, Large. Recommended: B.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -2224,10 +2239,17 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 - [x] Verify that watching prunes build outputs and reservation paths by path,
       without ownership-marker parsing.
 
-- [ ] After the first hosted macOS and Windows runs, make event loss recoverable
-      there: choose a repository-root rescan after each macOS batch and an
-      exact-input stamp check on Windows, or one recursive watch per root on both
-      systems; tests.
+- [ ] Resolve user item 134 (M11 plan TODO): event-loss recovery for macOS
+      and Windows watches. Native watchers can drop events: macOS FSEvents
+      batches, and Windows buffer overflows. Do the work after the first
+      hosted macOS and Windows runs, with tests. The hosted native jobs do
+      not pass yet, so no measurement exists. Severity Medium, effort Medium
+      (estimate). Options: A, a repository-root rescan after each macOS
+      batch and an exact-input stamp check on Windows, Medium (estimate);
+      B, one recursive watch per root on both systems, effort not recorded.
+      Recommended: A (estimate). This TODO replaces the M11 TODO "After the
+      first hosted macOS and Windows runs, make event loss recoverable
+      there", which held the same choice.
 - [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
@@ -3640,6 +3662,23 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the plan.
     - Saved slots skip the forbidden and unknown element checks, because a
       new build error needs the user's yes (item 128 is open).
+  - [ ] Resolve user item 129 (F21 review finding 5): the empty-slot
+        regression test no longer tests its fix. After `22657ea0`, both
+        wrappers in the plaintext-repair test have positions, so the test
+        passes with the old code. Severity Low, test, effort Small. Options:
+        A, call `parse::located` directly with a trailing plaintext and one
+        positioned wrapper, and assert that the other has no position, Small;
+        B, the source-identity redesign of the HTML pipeline, user decision
+        98 B, Large. Recommended: A until phase 2 of 98 B lands.
+  - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
+        commits that do not build. `mokly-catalogue` does not compile from
+        `06742270` to `c7260846` on `rebuild/followups-f21`. One test expects
+        the wrong position until `b1cc2dd6`, and two commit messages
+        misdescribe their change. Severity Low, process, effort Small.
+        Options: A, keep the history and record the range in the plan,
+        Small; B, rewrite the branch so that every commit builds, effort not
+        recorded; C, add a per-commit build step to delegate briefs, effort
+        not recorded. Recommended: A. C best protects later branches.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
