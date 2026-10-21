@@ -4145,7 +4145,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] M10 D1 round 4 decision 11: item 60 C from `rebuild/ci-gates`
         raises the Node floor to 22.15.0. Both PostCSS evidence tests must
         pass on that runtime and 24.21.0. The earlier exception has ended.
-  - [ ] Resolve user item 70 (M10 D1 round 4 decision 13): list every old
+  - [x] Resolve user item 70 (M10 D1 round 4 decision 13): list every old
         assertion in the sweep procedure. Reviews found sweep reasons that
         missed or misstated old checks inside helpers and host branches, and
         a title that no longer states what its port proves. Covers findings
@@ -4156,6 +4156,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         states what it proves, Small; B, keep the current rule, Small.
         Recommended: A, because it covers the whole class that the two
         reviews found.
+    - User decision 70 (2026-10-21): A. Done in plan bookkeeping pass 3: step
+      2 of the gap sweep procedure in `docs/protocol/rust-rebuild-procedures.md`
+      lists every old assertion and protocol section, marks each one proved
+      or not proved, and checks the title of each port.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
