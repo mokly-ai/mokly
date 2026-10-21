@@ -852,15 +852,18 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       0.103.15 may accept distrusted intermediate certificates. It reaches
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
-      failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17
-      and CI round 5 made the same lockfile change on 2026-10-20, and this
-      line now records all three.
+      failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17,
+      CI round 5, native CI round 2, F18, and F19 made the same lockfile
+      change on 2026-10-20, and this line records all six.
       Evidence: `.context/m14-nesting/r7/audit-before.txt` and
       `.context/m14-nesting/r7/audit-after.txt`; batch 17:
       `.context/integration-17/security-audit.log` and
       `.context/integration-17/security-publish-tests.log`; CI round 5:
       `.context/ci-shard-balance/webpki-advisory.md`,
-      `webpki-dependents.log`, and `webpki-green.log`.
+      `webpki-dependents.log`, and `webpki-green.log`; F19:
+      `.context/f19/repository.log`, `.context/f19/rust-audit-fixed.log`,
+      and `.context/f19/publish-tests.log`. The native CI round 2 and F18
+      records named no evidence file.
 - [x] Keep the braces audit exception through 2026-11-03 UTC. User decision
       72 (2026-10-20): A. Do not renew or extend the exception, and leave
       `rebuild/audit-braces` unmerged. From 2026-11-04 UTC, the strict audit
@@ -2671,6 +2674,7 @@ Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 Integration batch 11 decisions: `.context/integration-11-merge-decisions.md`.
+Integration batch 18 decisions: `.context/integration-18-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2822,9 +2826,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and `.context/native-ci-fixes-2/merge-decisions.md`.
         The hub must dispatch hosted macOS and Windows Native jobs on
         `rebuild/native-ci-fixes-2`; Linux checks cannot prove those adapters.
-  - [x] Native CI round 2 verification found RUSTSEC-2026-0382, published on
-        2026-10-20. Update the existing TLS verifier to `rustls-webpki` 0.103.16.
-        Keep the live audit and its existing exception policy unchanged.
   - [x] Native CI round 2 review finding 1: share protected-location checks
         for requested and physical paths. Apply option B so dependency case
         aliases stay private during admission and live rechecks.
@@ -3060,10 +3061,6 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         Remove the replaced consumer filters and keep their regressions.
         This completes the wider fix for CLI defaults review finding 1.
         Evidence: `.context/f19/` and `.context/defaults-cli/review-1.md`.
-  - [x] F19 gate repair: update `rustls-webpki` to the compatible 0.103.16
-        patch for RUSTSEC-2026-0382. Keep every other lockfile dependency
-        unchanged. Evidence: `.context/f19/repository.log`,
-        `.context/f19/rust-audit-fixed.log`, and `.context/f19/publish-tests.log`.
   - [x] F19 review findings 1 and 2: count warning names once per shared body
         across both wrapper kinds. Preserve wrapper source positions through
         filtering, HTML table repair, and plaintext reparsing with opaque
@@ -3397,11 +3394,6 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         the F15 resolution and the `compactSearch` marker. The tip's copies
         of the F9b specs equal the originals. Merge decisions:
         `.context/m10/f18/merge-decisions.md`.
-  - [x] F18 gate, on 2026-10-20: RUSTSEC-2026-0382, published that day,
-        flags `rustls-webpki` 0.103.15, which `mokly publish` uses to verify
-        certificates. The Rust audit then failed on every branch.
-        `Cargo.lock` takes the patched 0.103.16 as a reviewed dependency
-        change, and only that entry changes.
   - [x] F18 review, on 2026-10-20: finding 36, a re-export of
         `branchPointPaths` in `tests/browser/branch_point_test.ts` that item
         1 left without a reader, is fixed by option A. The full report is
