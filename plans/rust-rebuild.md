@@ -3114,6 +3114,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         installs on Node's version, operating system, and architecture. Put
         the probed executable's folder first on the install PATH while keeping
         the selected manager. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 49 A: state the scripts mode in both
+        protocol cache-key descriptions. Scripts-on keys also include the
+        install Node's version, operating system, and processor architecture.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The

@@ -67,7 +67,9 @@ npm does, with that configuration's credentials. Scripts, pnpmfile hooks, Git
 transports, and Corepack downloads stay off, and Yarn Berry Git and GitHub
 sources fall back. Managers use installed executables or cached Corepack shims and check
 exact `packageManager` pins. Yarn Plug'n'Play retains a specific fallback reason. The key includes the exact
-lockfiles, manifests, manager configurations, manager families, and actual versions. Local file dependencies and workspaces also
+lockfiles, manifests, manager configurations, manager families, actual versions,
+and scripts mode. Scripts-on keys also include the install Node's version,
+operating system, and processor architecture. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.

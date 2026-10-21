@@ -158,9 +158,10 @@ Third-party dependencies follow three tiers:
    through the module resolution settings.
 2. They differ: the base's dependencies are installed, with lifecycle scripts
    disabled by default and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
-   the package manager and its version, manager configuration, selected install roots, and the immutable source
+   the package manager and its version, manager configuration, selected install roots, the scripts mode, and the immutable source
    identity when local packages or workspaces participate, and the bundle resolves
-   third-party dependencies from there.
+   third-party dependencies from there. When scripts run, the key also includes
+   the Node version, operating system, and processor architecture used for the install.
 3. The install cannot run, because the machine is offline, the package
    manager is unsupported, or the time limit passes; the install lacks a used
    dependency directory; or an importer's directory lookup is not mapped:

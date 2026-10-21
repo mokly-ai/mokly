@@ -57,9 +57,11 @@ manager or Corepack shim must already supply the selected version. Corepack
 network access, remote version refresh, automatic pinning, and project
 environment files are disabled.
 
-The install key length-frames all manifest and lockfile paths and bytes, the
+The install key includes all manifest and lockfile paths and bytes, the
 manager families and actual versions, manager configuration inputs, and the
-selected install roots. Local package paths, archives, overrides and
+selected install roots, plus the scripts mode. When scripts run, the key also
+includes the Node version, operating system, and processor architecture used
+for the install. Local package paths, archives, overrides and
 workspaces also add the immutable source identity. pnpm and Yarn installs
 always include it because their lockfiles and configurations can select local
 archives, patches, and workspace sources.
