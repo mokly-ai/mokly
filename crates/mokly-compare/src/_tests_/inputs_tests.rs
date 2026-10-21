@@ -22,7 +22,6 @@ fn inputs(lock: &[u8], manifest: &[u8]) -> Inputs {
 #[test]
 fn keys_cover_lock_manifest_manager_version_and_local_sources() {
     let a = inputs(b"lock", b"{}");
-    assert!(a.supports_npm());
     assert_eq!(a.key("1", "a"), a.key("1", "b"));
     assert_ne!(a.key("1", "a"), a.key("2", "a"));
     assert_ne!(a.key("1", "a"), inputs(b"edit", b"{}").key("1", "a"));
@@ -41,7 +40,6 @@ fn keys_cover_lock_manifest_manager_version_and_local_sources() {
             .as_str(),
         "package-lock.json"
     );
-    assert!(!inputs(b"lock", br#"{"packageManager":"pnpm@10"}"#).supports_npm());
 }
 
 #[test]

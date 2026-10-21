@@ -95,24 +95,6 @@ impl Inputs {
             })
     }
 
-    /// Whether this snapshot can be installed with npm's lockfile contract.
-    pub fn supports_npm(&self) -> bool {
-        let Some(lockfile) = self.lockfile() else {
-            return false;
-        };
-        if !matches!(
-            lockfile.as_str().rsplit('/').next(),
-            Some("npm-shrinkwrap.json" | "package-lock.json")
-        ) {
-            return false;
-        }
-        self.manifests().all(|manifest| {
-            manifest
-                .package_manager
-                .is_none_or(|manager| manager.starts_with("npm@"))
-        })
-    }
-
     /// Cache key includes exact manifests, lockfiles, manager version and local-source identity.
     pub fn key(&self, version: &str, source_identity: &str) -> String {
         let mut hash = Sha256::new();
