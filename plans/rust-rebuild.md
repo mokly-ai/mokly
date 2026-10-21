@@ -2445,6 +2445,16 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
         D, fall back whenever the base configuration selects a registry or a
         scope, Medium. Recommended: C.
+  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+        scope): a base `.npmrc` can choose npm's git program. npm gets the
+        base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
+        Git dependency can run a committed program. Severity High
+        (estimate), security, effort Small. Options: A, pin `git` to the
+        absolute program that Mokly resolves, Small (estimate); B, A, and
+        also no Git transport for npm base installs, as for pnpm and Yarn
+        under 120 C, so npm repositories with Git dependencies get tier
+        three, Small; C, fall back when the base npm configuration sets
+        `git`, Small (estimate). Recommended: B.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
