@@ -21,6 +21,8 @@ export const COMPONENT_PAGES = {
   removed: "design/components/states/removed",
   "usage-loading": "design/components/states/loading/usage-loading",
   "usage-failed": "design/components/states/loading/usage-failed",
+  "props-loading": "design/components/states/loading/props-loading",
+  "props-failed": "design/components/states/loading/props-failed",
   "shared-impact": "design/components/states/shared-impact/shared-impact",
 } as const satisfies Record<ComponentPageState, string>;
 

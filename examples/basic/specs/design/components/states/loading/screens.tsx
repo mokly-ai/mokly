@@ -29,6 +29,22 @@ export function UsageFailedMobile() {
   return <ComponentPage state="usage-failed" viewport="mobile" />;
 }
 
+export function PropsLoadingDesktop() {
+  return <ComponentPage state="props-loading" viewport="desktop" />;
+}
+
+export function PropsLoadingMobile() {
+  return <ComponentPage state="props-loading" viewport="mobile" />;
+}
+
+export function PropsFailedDesktop() {
+  return <ComponentPage state="props-failed" viewport="desktop" />;
+}
+
+export function PropsFailedMobile() {
+  return <ComponentPage state="props-failed" viewport="mobile" />;
+}
+
 export const usageLoadingScreen = defineScreen({
   ...componentDesignMetadata,
   slug: "usage-loading",
@@ -62,5 +78,28 @@ export const usageFailedScreen = defineScreen({
   ...artboards({
     desktop: <UsageFailedDesktop />,
     mobile: <UsageFailedMobile />,
+  }),
+});
+export const propsLoadingScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "props-loading",
+  title: "Props loading",
+  colorSchemes: ["light"],
+  description: "A component page while its props are loading.",
+  ...artboards({
+    desktop: <PropsLoadingDesktop />,
+    mobile: <PropsLoadingMobile />,
+  }),
+});
+export const propsFailedScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "props-failed",
+  title: "Props failed to load",
+  colorSchemes: ["light"],
+  description:
+    "A component page that could not load its props and offers another attempt.",
+  ...artboards({
+    desktop: <PropsFailedDesktop />,
+    mobile: <PropsFailedMobile />,
   }),
 });

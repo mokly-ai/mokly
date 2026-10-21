@@ -55,7 +55,9 @@ between the published Default and Disabled examples keeps both views read-only.
 While no live descriptor is installed, the fields are read-only under
 `Preparing to edit props…`; a refetch keeps the installed capability, so the
 fields stay editable. When editing cannot start, `Editing could not start.`
-offers Try again, which fetches the live descriptor again. A removed entry, a
+offers Try again, which fetches the live descriptor again. Until the entry's
+detail arrives, the tab shows `Loading props…` and no fields; a failed load
+shows `Props couldn’t be loaded.` with Try again. A removed entry, a
 component without declared controls, and an entry without props show read-only
 text, not fields. Merged props that fail as a whole highlight no field; the
 alert names the failure, and the heading's Reset is the one action. An expired

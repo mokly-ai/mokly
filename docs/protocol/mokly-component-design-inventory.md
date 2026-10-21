@@ -55,9 +55,11 @@ mobile component and desktop component; none is a user-flow page.
 | `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
 | `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |
 | `design/components/states/loading/usage-failed` | Usage read failure with a Try again action |
+| `design/components/states/loading/props-loading` | Component Props waiting for the entry's declared order |
+| `design/components/states/loading/props-failed` | Props read failure with a Try again action |
 
 The Loading and recovery folder sits below Empty and change states and contains
-exactly these three states. Each entry's files derive from its path under the
+exactly these five states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
 membership is the entry's folder. All forty-nine component

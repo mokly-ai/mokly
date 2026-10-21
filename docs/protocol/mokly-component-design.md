@@ -97,7 +97,9 @@ entry, preserving the five-screen limit in its parent and the existing unused st
 It also links the Loading and recovery child gallery. That gallery shows
 `Loading usage…` without counts or lists, screen inspection with
 `Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
-`Try again` button. Loading and failed states never reuse validated-empty or
+`Try again` button. Its Props loading and Props failed states show the Props
+tab with `Loading props…` and no fields, and with `Props couldn’t be loaded.`
+and `Try again`. Loading and failed states never reuse validated-empty or
 unavailable-metadata copy.
 Its Stylesheet evidence child gallery holds four screens of three stories that
 change only `styles/actions.css`. In Component with changed styles, the changed

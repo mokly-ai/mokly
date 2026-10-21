@@ -28,7 +28,8 @@ function characters(count: number): string {
  * one-sided bounds, steps, whole numbers, and text lengths. The Read-only
  * and recovery gallery draws the removed entry, read-only props, an entry
  * without props, merged props that fail without one field to highlight, and
- * an expired preview.
+ * an expired preview. The component Loading and recovery gallery draws the
+ * tab while the entry's detail loads and after its load failed.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -41,6 +42,8 @@ export const CONTROLS_COPY = {
   updating: "Updating preview…",
   preparing: "Preparing to edit props…",
   preparingFailed: "Editing could not start.",
+  loading: "Loading props…",
+  loadFailed: "Props couldn’t be loaded.",
   comparison: "Comparisons show the saved props.",
   switchToCurrent: "Switch to Current",
   published: "Open this catalogue locally to edit props.",
