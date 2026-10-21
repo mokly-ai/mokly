@@ -53,6 +53,7 @@ The parsed element must confirm the predicted HTML plaintext start. If it
 does not, composition retries with all text escaped so authored text stays inert.
 The retry re-annotates the source with plaintext prediction disabled, so end
 tags, region markers, and repair identities remain available for restoration.
+Inside HTML `noscript`, raw text escapes every case-insensitive `</noscript` to `&lt;/noscript`, preserving case but changing authored characters to prevent browser markup activation.
 Serialization omits private markers and attributes inside plaintext mode. Other
 HTML text modes follow the parser-context namespace, including component grafts
 inside SVG and MathML. Foreign raw-text tag names keep text escaped.

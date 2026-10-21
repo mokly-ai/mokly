@@ -64,6 +64,7 @@ pub(crate) struct TextMode {
     open: Vec<Frame>,
     names: BTreeMap<String, Vec<usize>>,
     html: Vec<usize>,
+    noscript: usize,
     next: usize,
     plaintext: bool,
     allow_plaintext: bool,
@@ -75,6 +76,7 @@ impl Default for TextMode {
             open: Vec::new(),
             names: BTreeMap::new(),
             html: Vec::new(),
+            noscript: 0,
             next: 0,
             plaintext: false,
             allow_plaintext: true,
@@ -93,6 +95,37 @@ impl TextMode {
     /// Whether the parser consumes every later byte as literal text.
     pub(crate) fn plaintext(&self) -> bool {
         self.plaintext
+    }
+
+    /// Raw text cannot end an HTML noscript in a scripting-enabled browser.
+    /// Include the last nine bytes so adjacent raw writes cannot split the tag.
+    pub(crate) fn write_raw(&self, value: &str, output: &mut String) {
+        let mut start = output.len().saturating_sub("</noscript".len() - 1);
+        while !output.is_char_boundary(start) {
+            start += 1;
+        }
+        output.push_str(value);
+        if self.noscript == 0 {
+            return;
+        }
+        let mut escaped = String::new();
+        let mut from = start;
+        for (offset, _) in output[start..].match_indices('<') {
+            let at = start + offset;
+            if output[at..]
+                .get(.."</noscript".len())
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case("</noscript"))
+            {
+                escaped.push_str(&output[from..at]);
+                escaped.push_str("&lt;");
+                from = at + 1;
+            }
+        }
+        if from != start {
+            escaped.push_str(&output[from..]);
+            output.truncate(start);
+            output.push_str(&escaped);
+        }
     }
 
     /// Advance the effective parser context for a serialized start tag.
@@ -153,6 +186,9 @@ impl TextMode {
             .push(token.index);
         if namespace == Namespace::Html {
             self.html.push(token.index);
+            if name == "noscript" {
+                self.noscript += 1;
+            }
         }
         self.open.push(Frame {
             token,
@@ -210,6 +246,9 @@ impl TextMode {
             }
             if frame.namespace == Namespace::Html {
                 self.html.pop();
+                if frame.name == "noscript" {
+                    self.noscript -= 1;
+                }
             }
         }
     }
