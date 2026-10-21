@@ -14,7 +14,9 @@ mod unix {
         let groups: &dyn ProcessGroups = &SystemProcessGroups;
         let mut command = Command::new("sh");
         command
-            .args(["-c", r#"sh -c 'trap "printf \"descendant-stopped\n\"; exit 0" TERM; sleep 60 & printf "ready\n"; wait' & wait"#])
+            .args(["-c", "sh -c \"$MOKLY_TEST_PARENT\" <&0 & wait"])
+            .env("MOKLY_TEST_PARENT", r#"trap 'printf "descendant-stopped\n"; exit 0' TERM; sh -c "$MOKLY_TEST_LEAF" <&0 & wait"#)
+            .env("MOKLY_TEST_LEAF", r#"trap 'printf "leaf-stopped\n"; exit 0' TERM; printf "ready\n"; read hold; printf "unexpected-eof\n""#)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
         groups.configure(&mut command).unwrap();
@@ -28,7 +30,9 @@ mod unix {
         assert!(!child.wait().unwrap().success());
         let mut remaining = String::new();
         reader.read_to_string(&mut remaining).unwrap();
-        assert_eq!(remaining.trim(), "descendant-stopped");
+        let mut lines: Vec<_> = remaining.lines().collect();
+        lines.sort();
+        assert_eq!(lines, ["descendant-stopped", "leaf-stopped"]);
         group.kill().unwrap();
     }
 }
