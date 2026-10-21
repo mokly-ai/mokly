@@ -1120,9 +1120,17 @@ renders again.
   - [x] Add the shared `RenderGeneration::render_props` path with Rust prop
         validation, fragment caching, document composition, and closure checks.
   - [x] Wire the Serve live render route to the shared JavaScript runtime.
-- [ ] Restore the example catalogue, the design catalogue, and a packed
+- [x] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all six children are
+      done. The example is `examples/basic/mokly.config.json`, the design
+      catalogue is `examples/basic/specs/design`, and
+      `tests/design_catalogue.test.ts` checks the served design catalogue.
+      The packed consumer smokes are `scripts/release/smoke_example.mjs`
+      (`npm run package:smoke`) and `scripts/release/smoke.mjs`, which
+      hosted release check run `39529350934` passed. Gap sweeps:
+      `.context/rust-rebuild/sweeps/m8-core.md` and `m9-references.md` there.
   - [x] Read and classify the previous rendering and component rules and tests
         for the core integration gap sweep.
   - [x] Compare captured example and large scenarios after the example port
