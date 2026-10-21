@@ -1,7 +1,7 @@
 //! Real regressions for unusual names, shallow history and streaming archives.
 
 use std::fs;
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "macos")))]
 use std::os::unix::ffi::OsStringExt;
 use std::process::Command;
 #[cfg(unix)]
@@ -41,6 +41,8 @@ fn unusual_and_nested_untracked_names_do_not_fail_queries_or_extraction() {
     fixture.write("docs/2024-01-01T10:00.md", b"date");
     fixture.write("specs/notes:draft.txt", b"notes");
     fixture.write("specs/back\\slash.txt", b"backslash");
+    #[cfg(not(target_os = "macos"))]
+    // APFS rejects names whose bytes are not valid UTF-8 with EILSEQ.
     fs::write(
         fixture.root().join(std::ffi::OsString::from_vec(vec![253])),
         b"tracked non-utf-8",
@@ -57,6 +59,8 @@ fn unusual_and_nested_untracked_names_do_not_fail_queries_or_extraction() {
         .output()
         .unwrap();
     fs::write(nested.join("file"), b"nested").unwrap();
+    #[cfg(not(target_os = "macos"))]
+    // APFS rejects names whose bytes are not valid UTF-8 with EILSEQ.
     fs::write(
         fixture.root().join(std::ffi::OsString::from_vec(vec![255])),
         b"non-utf-8",
