@@ -12,7 +12,8 @@ Tracked base files beneath `node_modules` supply their base bytes and keep
 their dependency role in attribution.
 
 PostCSS children retain raw whole-file and byte-range witnesses beside dependency reports.
-Coverage remains incomplete for opaque readers. See the
+Coverage remains incomplete for opaque readers and for ESM modules supplied
+after observation starts by asynchronous loaders. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
 Observation starts before consumer preloads. File providers retain their
 transformed output and the raw witnesses of underlying observed reads.
@@ -186,7 +187,9 @@ terminal child state.
 The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
 before consumer preloads in each owned child.
 Its CommonJS build supports asynchronous loaders on Node 22 and shares one
-observation ledger with the worker. Loader-transformed source stays opaque.
+observation ledger with the worker. An asynchronous loader can supply an ESM
+module without a module path or raw witness after observation starts.
+Loader-transformed source stays opaque.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
 file positions and reuse. FileHandle and Node stream reads share range evidence.
 The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds

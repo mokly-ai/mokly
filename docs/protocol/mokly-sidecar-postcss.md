@@ -72,6 +72,9 @@ Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
 This includes native scanners, memory maps, inherited or transferred handles,
 and asynchronous loader workers. Such reads retain their late opaque baseline.
+An asynchronous loader can also supply an ESM module after observation starts
+without exposing its module path or a read witness. That module retains its late
+opaque baseline.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
