@@ -82,11 +82,9 @@ fn repeated_supplier_path_preserves_exact_owned_proof_and_physical_head_proof() 
             let mut expected = vec![EvidenceOwner::Component {
                 path: "child".into(),
             }];
-            if path == "home" {
-                expected.push(EvidenceOwner::Component {
-                    path: "parent".into(),
-                });
-            }
+            expected.push(EvidenceOwner::Component {
+                path: "parent".into(),
+            });
             assert_eq!(owners, expected);
         }
     }
