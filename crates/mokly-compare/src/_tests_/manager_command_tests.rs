@@ -19,6 +19,7 @@ fn manager_install_flags_disable_network_scripts_and_external_storage() {
             requested: None,
             version: String::new(),
             classic: None,
+            berry_cache: None,
         };
         let args = arguments(&root, Path::new("/private"));
         if manager == Manager::Pnpm {
@@ -51,6 +52,7 @@ fn manager_install_flags_disable_network_scripts_and_external_storage() {
             timeout: Duration::from_secs(10),
             byte_limit: Some(1000),
             size_root: Some("/private".into()),
+            berry_cache: None,
         };
         let mut command = process::Command::new(manager.program());
         environment(&request, &mut command);
@@ -68,6 +70,10 @@ fn manager_install_flags_disable_network_scripts_and_external_storage() {
             assert_eq!(captured[OsStr::new(key)], Some(OsStr::new("0")));
         }
         if manager == Manager::YarnBerry {
+            assert_eq!(
+                captured[OsStr::new("YARN_ENABLE_CONSTRAINTS_CHECKS")],
+                Some(OsStr::new("0"))
+            );
             for key in [
                 "YARN_ENABLE_NETWORK",
                 "YARN_ENABLE_SCRIPTS",

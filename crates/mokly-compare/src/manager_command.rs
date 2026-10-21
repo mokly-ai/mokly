@@ -132,13 +132,20 @@ pub(crate) fn environment(request: &Command, command: &mut process::Command) {
                 .env("YARN_RC_FILENAME", ".yarnrc.yml")
                 .env("YARN_ENABLE_NETWORK", "0")
                 .env("YARN_ENABLE_TELEMETRY", "0")
+                .env("YARN_ENABLE_CONSTRAINTS_CHECKS", "0")
                 .env("YARN_ENABLE_SCRIPTS", "0")
                 .env("YARN_ENABLE_GLOBAL_CACHE", "0")
                 .env("YARN_ENABLE_MIRROR", "0")
                 .env("YARN_ENABLE_HARDENED_MODE", "0")
                 .env("YARN_NODE_LINKER", "node-modules")
                 .env("YARN_NM_MODE", "classic")
-                .env("YARN_CACHE_FOLDER", request.directory.join(".yarn/cache"))
+                .env(
+                    "YARN_CACHE_FOLDER",
+                    request
+                        .berry_cache
+                        .clone()
+                        .unwrap_or_else(|| request.directory.join(".yarn/cache")),
+                )
                 .env("YARN_GLOBAL_FOLDER", request.directory.join(".yarn/global"))
                 .env(
                     "YARN_INSTALL_STATE_PATH",
