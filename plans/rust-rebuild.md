@@ -765,6 +765,10 @@ merges; the freeze applies to it from 2026-10-12.
         also runs on a manual dispatch for any branch.
   - [ ] The test and CI housekeeping pull requests: the user decides each
         open pull request.
+    - [x] User decision 63 (2026-10-20): A. On 2026-10-20 the hub closed
+          #136, #153, #158, #186, #187, #188, #189, #190, #192, #194, and
+          #196 unmerged, each with a comment that names its replacement.
+          #174 waits for user item 66, and #197 waits for user item 65.
 - [x] Tag the last TypeScript backend commit on `main` as `ts-backend-final`:
       `b19d4433`, the 0.15.0 release, tagged on 2026-10-20.
 - [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
