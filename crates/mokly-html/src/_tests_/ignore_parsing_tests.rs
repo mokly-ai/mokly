@@ -106,6 +106,34 @@ fn select_wrappers_keep_their_original_locations() {
     );
 }
 
+#[test]
+fn plaintext_reparse_keeps_unbound_noscript_wrapper_slots_empty() {
+    let source = "<noscript><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></noscript>\n<mokly-ignore-scope enabled='true'>B</mokly-ignore-scope><plaintext>";
+    let nodes = source_locations::template(&Template {
+        source_path: "specs/example.screen.html".into(),
+        source: source.into(),
+        body: source.into(),
+        body_offset: 0,
+        page: false,
+    })
+    .unwrap();
+    let scopes: Vec<_> = tree::walk(&nodes)
+        .filter_map(|node| match node {
+            Node::Element(element) if element.name == "mokly-ignore-scope" => Some(element),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(scopes.len(), 2);
+    assert!(scopes[0].source.is_none());
+    assert_eq!(
+        scopes[1]
+            .source
+            .as_ref()
+            .map(|source| (source.line, source.column)),
+        Some((2, 1))
+    );
+}
+
 fn check_repaired_locations(body: &str, expected: &[(&str, usize, usize)]) {
     for page in [false, true] {
         for suffix in ["", "<plaintext>Raw text"] {
