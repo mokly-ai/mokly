@@ -4180,10 +4180,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     that setup always adds the unrelated rule to the first shared
     stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
     close-out review. Separate branch.
-  - `plans/rust-rebuild.md:2305`: the open PostCSS TODO still names "supply
-    immutable generation inputs" as a design path, but decision 56 A and the
-    PostCSS page reject enforced immutable inputs. Found by the gap sweep
-    close-out review. Separate branch.
+  - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
+    consumed-byte digests for the PostCSS module graph": it still names
+    "supply immutable generation inputs" as a design path, but decision 56 A
+    and the PostCSS page reject enforced immutable inputs. Found by the gap
+    sweep close-out review. Separate branch.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
