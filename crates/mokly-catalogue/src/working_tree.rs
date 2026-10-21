@@ -8,12 +8,18 @@ use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
-use crate::{working_tree_read, working_tree_stream};
+use crate::{working_tree_identity, working_tree_read, working_tree_stream};
 
 /// Source tree backed by the host filesystem.
 pub struct WorkingTree;
 
 impl SourceTree for WorkingTree {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        match self.project(path)? {
+            Some(node) => working_tree_identity::read(&node.identity),
+            None => Ok(None),
+        }
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let lexical_kind = match fs::symlink_metadata(path) {
             Ok(metadata) => kind(metadata.file_type()),

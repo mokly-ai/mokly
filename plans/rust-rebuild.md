@@ -2295,12 +2295,54 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         and final installation through the existing input-change outcome.
         Compare base source witnesses with pinned Git bytes, separate from head
         baselines. Custom loader text without raw provenance stays incomplete.
-  - [ ] Complete the remaining coverage: native/helper/worker reads, preloaded
-        file providers, descriptors, streams and ranges, older-runtime transitive ESM loading, private
-        resolution metadata, and read-time path identity. The full M14 item
+  - [x] Start observation before consumer preloads. Preserve transformed provider
+        output and record raw reads below the provider. Synthetic bytes and
+        providers that bypass observed APIs retain incomplete coverage.
+  - [x] Retain scalar, vector, and whole-file descriptor reads as exact byte
+        ranges. Track FileHandle, Node streams, and FileHandle web streams.
+        Keep unknown or overlapping sequential positions opaque. Verify ranges
+        in one streamed pass per path and preserve them through both caches.
+  - [ ] Complete the remaining coverage: native/helper/worker reads,
+        private resolution metadata, unknown descriptor positions, opaque
+        providers and options, and unavailable native identity. The full M14 item
         remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
         Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
+  - [x] Retain descriptor-bound file identity and verified resolved names.
+        Detect equal-byte replacements and symlink retargets before callbacks
+        and installation. Keep helper, worker, and native cursor changes opaque.
+        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence-2/`.
+  - [x] Verify native transitive ESM, CommonJS, JSON, dynamic imports, and
+        conditional import/require loading on Node 22.15.0 and 24.21.0.
+        The older-runtime ESM gap no longer applies after decision 60 C.
+  - [x] Retain known native resolution manifests as late inputs. Public hooks
+        do not expose the bytes used by private `exports` and `imports` reads.
+        Preserve native resolution and its cache. Do not manufacture read receipts.
+  - [ ] Closure decision M14-PC2, proposed 2026-10-20, remains pending.
+        A: change the parent acceptance to the observed-read guarantee and tick
+        that scope with the recorded incomplete coverage. Effort Small.
+        B: keep the full parent open until an approved confined-domain design
+        can cover opaque reads. Effort Large. Recommend B because native reads
+        can still produce CSS from bytes that differ from their late baseline.
+        Neither option is applied. The user reserved the parent checkbox.
+  - [x] Measure cumulative range-ledger growth during repeated Serve-style
+        updates. A 1 MiB file read in 4 KiB chunks with unique bytes on every
+        update reached 31,426,890 JSON bytes at 400 updates on Node 24.21.0.
+        Growth was linear at 78,316 bytes per update and projects a 64 MiB
+        response at about 856 updates. Node 22.15.0 reached 7,533,952 bytes
+        at 100 updates. Evidence:
+        .context/rust-rebuild/m14-postcss-read-evidence-3/ledger-boundary-node24-unique.log,
+        ledger-100x1m-4k-fd-node22.log, and
+        ledger-100x1m-4k-fd-node24.log.
+  - [ ] Decision 119, proposed 2026-10-21, remains pending for cumulative
+        range evidence that can exceed the existing 64 MiB frame limit.
+        A: add a per-context evidence cap below the frame limit and retain an
+        explicit incomplete or late class after the cap. Effort Medium.
+        B: send evidence deltas or an out-of-band ledger while keeping each
+        frame below 64 MiB. Effort Large. Recommend B because it preserves
+        exact evidence for long Serve sessions without changing the frame
+        limit. C: keep the current cumulative response and document the
+        projected session bound. Effort Small. No option is applied.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

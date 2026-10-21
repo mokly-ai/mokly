@@ -2,6 +2,7 @@ import { fork } from "node:child_process";
 import { once } from "node:events";
 import type { EventEmitter } from "node:events";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { Operation } from "../generated/sidecar/Operation.js";
@@ -75,6 +76,12 @@ export class PostcssWorkers {
             INIT_CWD: undefined,
             npm_package_json: undefined,
             npm_config_local_prefix: undefined,
+            NODE_OPTIONS: [
+              `--require=${JSON.stringify(fileURLToPath(new URL("./postcss-preload.cjs", import.meta.url)))}`,
+              process.env.NODE_OPTIONS,
+            ]
+              .filter(Boolean)
+              .join(" "),
             NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
               .filter(Boolean)
               .join(path.delimiter),

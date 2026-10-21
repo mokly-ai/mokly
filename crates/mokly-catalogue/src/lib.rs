@@ -57,4 +57,5 @@ pub mod yaml_limits;
 mod yaml_positions;
 mod yaml_value;
 
+mod working_tree_identity;
 mod working_tree_stream;
