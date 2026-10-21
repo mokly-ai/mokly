@@ -1,6 +1,7 @@
+import { performance } from "node:perf_hooks";
+
 import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
-import { performance } from "node:perf_hooks";
 
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
