@@ -3298,7 +3298,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         in the existing native release workflow test. Preserve build behavior.
         Evidence: `.context/ci-release-fixes/native-checkout-red.log` and
         `.context/ci-release-fixes/native-checkout-green.log`.
-  - [ ] Resolve user item 92 (CI release checks hub review finding 1): the
+  - [x] Resolve user item 92 (CI release checks hub review finding 1): the
         release PR check can pass on a stale base. Release Please does not
         update an open release PR for a non-releasable commit, and a re-run
         keeps the old merge commit. So a CLI-only release PR can merge with
@@ -3311,6 +3311,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         version, Small (estimate); C, on each push to `main`, run the check
         for the open release PR and post a required status: it needs
         `statuses: write` and adds a gate, Medium. Recommended: A.
+    - User decision 92 (2026-10-21): ignore. The finding is closed with no
+      change, because user decision 93 D removes the check.
   - [ ] Resolve user item 93 (CI release checks hub review finding 2): the
         viewer check compares the wrong file set. It misses viewer build
         inputs outside `packages/viewer`, such as React and React DOM from
