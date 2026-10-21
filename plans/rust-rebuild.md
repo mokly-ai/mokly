@@ -1660,21 +1660,27 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/m9-round16a/` and
         `.context/rust-rebuild/delegation/m9-compare/report-16a.md`.
         Merge decisions: `.context/rust-rebuild/delegation/m9-compare/merge-decisions-15.md`.
-- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+- [x] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
       assertions. Keep the duplicate component-explorer cases in one suite.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all three children
+      are done.
   - [x] Add one native HTML fixture with five cases in four Serve Changes specs.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log`.
   - [x] Supply a shared private Serve comparison fixture with a pinned base,
         moved and removed entries, CSS evidence, watched edits, and base-ref
         moves. Cover readiness, membership, retained bytes, and renewal.
         Evidence: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
-  - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
+  - [x] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
         `next-assignments.md` item 7b.
         Cold base-source preparation uses real offline builds in
         `tests/static_cold_base_tiers.test.ts` for all three dependency tiers.
         Evidence: `.context/cold-base-tiers/inventory.md` and `.context/cold-base-tiers/`.
+        Ticked on 2026-10-21 in plan bookkeeping pass 1: browser sweep round
+        14 found no open row. The last three branch-point rows came with F15
+        (`06de37d7`), which integration batch 17 merged in `bb78a8f3`. Hub
+        record: `.context/rust-rebuild/delegation/m8-browser/report-14.md`.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
