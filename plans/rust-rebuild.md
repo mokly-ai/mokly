@@ -1286,10 +1286,12 @@ renders again.
       `examples/basic/specs/example/team`, including native HTML screen links.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-14.md`.
 
-- [ ] Add the design catalogue checks that the verification and adoption
+- [x] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+      Ticked on 2026-10-21 in plan bookkeeping pass 2: all eleven children
+      are done.
   - [x] Restore current design artboards, library samples, the frozen screen
         inventory, shared component consumers and ownership, portable links,
         controls, and both viewport layouts through Serve.
@@ -1306,9 +1308,24 @@ renders again.
         through standalone portable links in each viewport and scheme. Disk
         mode uses no HTTP request and the source is removed before navigation.
         Evidence: `.context/ci-gates-round2/private-focused-2.log`.
-  - [ ] Complete the remaining design checks with their feature owners:
+  - [x] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
+        Ticked on 2026-10-21 in plan bookkeeping pass 2. Live props:
+        `design_library_props.spec.ts` edits a design library component on
+        Serve, unsets and sets an optional prop, resets the saved variant,
+        and writes no source file. `component_controls.spec.ts` and
+        `static_component_controls.spec.ts` check the editable and the
+        published read-only controls. Stylesheet attribution and comparison
+        output: the design attribution matrix in
+        `crates/mokly-cli/tests/design_attribution_tests.rs`,
+        `design_behaviour_tests.rs` there, and the design comparison specs
+        `comparison_design.spec.ts`, `design_comparison_*.spec.ts`,
+        `design_stylesheet_evidence.spec.ts`, and
+        `static_comparison_design.spec.ts`. Static build acceptance: the
+        `static_design_*.spec.ts` specs, `review_snapshot_links.spec.ts` for
+        the Review snapshot link fallback, and the static delivery job over
+        HTTP and `file://`. The specs are under `tests/browser`.
   - [x] Check one served example in `tests/design_catalogue.test.ts`: the
         frozen inventory, the shared components and their consumers, family
         adoption, owner chains, stylesheet links and scopes, scripts, link
