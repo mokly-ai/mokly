@@ -48,6 +48,7 @@ mod normalized_keys;
 mod normalized_plaintext;
 mod normalized_regions;
 mod normalized_usage;
+mod noscript_text;
 mod placeholders;
 mod raw_markers;
 mod regions;

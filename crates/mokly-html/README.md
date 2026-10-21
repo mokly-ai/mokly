@@ -127,7 +127,8 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 
 - [Annotated tree](./src/tree.rs), [HTML5 parser](./src/parse.rs), and [tree sink](./src/html_sink.rs).
 - [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
-  share plaintext activation and guard raw HTML `noscript` text.
+  share plaintext activation. The [noscript guard](./src/noscript_text.rs)
+  escapes raw HTML `noscript` closing text.
 - [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
 - [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
 - [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).

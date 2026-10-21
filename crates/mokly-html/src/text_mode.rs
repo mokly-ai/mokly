@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::noscript_text;
 use crate::tree::Element;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
@@ -97,35 +98,9 @@ impl TextMode {
         self.plaintext
     }
 
-    /// Raw text cannot end an HTML noscript in a scripting-enabled browser.
-    /// Include the last nine bytes so adjacent raw writes cannot split the tag.
+    /// Write raw text, guarding the closing text of an open HTML noscript.
     pub(crate) fn write_raw(&self, value: &str, output: &mut String) {
-        let mut start = output.len().saturating_sub("</noscript".len() - 1);
-        while !output.is_char_boundary(start) {
-            start += 1;
-        }
-        output.push_str(value);
-        if self.noscript == 0 {
-            return;
-        }
-        let mut escaped = String::new();
-        let mut from = start;
-        for (offset, _) in output[start..].match_indices('<') {
-            let at = start + offset;
-            if output[at..]
-                .get(.."</noscript".len())
-                .is_some_and(|prefix| prefix.eq_ignore_ascii_case("</noscript"))
-            {
-                escaped.push_str(&output[from..at]);
-                escaped.push_str("&lt;");
-                from = at + 1;
-            }
-        }
-        if from != start {
-            escaped.push_str(&output[from..]);
-            output.truncate(start);
-            output.push_str(&escaped);
-        }
+        noscript_text::write_raw(self.noscript > 0, value, output);
     }
 
     /// Advance the effective parser context for a serialized start tag.
