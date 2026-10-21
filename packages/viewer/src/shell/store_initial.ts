@@ -84,7 +84,7 @@ export function viewRoute(
   const snapshot =
     snapshotId ??
     (view.kind === "target"
-      ? resolveCatalogueEntry(catalogue.publicModel!, {
+      ? resolveCatalogueEntry(catalogue.publicModel, {
           path: view.target.entry.path,
           kind: view.target.entry.kind,
         })?.snapshotId

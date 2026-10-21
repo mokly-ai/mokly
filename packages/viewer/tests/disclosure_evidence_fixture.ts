@@ -112,7 +112,7 @@ export function initialState(
   const selected = route === "/" ? null : "product/browse/home";
   return createInitialShellState(
     catalogue,
-    viewerContext(catalogue.publicModel!, {
+    viewerContext(catalogue.publicModel, {
       ...defaultSelection,
       screenPath: selected,
     }),

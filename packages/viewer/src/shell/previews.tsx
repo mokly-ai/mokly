@@ -51,7 +51,7 @@ export function removedPreviewData(
     entry.kind !== "screen"
   )
     return undefined;
-  const model = catalogue.publicModel!;
+  const model = catalogue.publicModel;
   const removed = model.removedEntries.find(
     (removed) => removed.entry.path === entry.path,
   );

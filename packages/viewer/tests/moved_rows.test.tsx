@@ -3,9 +3,6 @@ import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
 import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
@@ -13,62 +10,80 @@ import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
 
-const entry = (
-  kind: "document" | "screen",
-  path: string,
-  title: string,
-  variantOf?: string,
-): ManifestEntry =>
-  ({
-    colorSchemes: ["light"],
-    description: title,
-    kind,
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.${kind === "document" ? "md" : "mockup.tsx"}`,
-    tags: [],
-    title,
-    ...(kind === "screen" ? { useCasePaths: [] } : { resources: [] }),
-    ...(variantOf ? { variantOf } : {}),
-  }) as unknown as ManifestEntry;
+import {
+  movedEntry,
+  publishedCatalogue,
+  publishedDocument,
+  publishedScreen,
+  removedScreenVariant,
+} from "./published_entries_fixture.js";
 
-/** Billing moved under Account; its Paid variant was deleted on the way. */
-const manifest: ManifestV10 = currentManifest({
-  entries: [
-    entry("screen", "account/billing/invoice", "Invoice"),
-    entry(
-      "screen",
-      "account/billing/invoice/overdue",
-      "Overdue",
-      "account/billing/invoice",
+/**
+ * Billing moved under Account; its Paid variant was deleted on the way. A
+ * published index pairs each move through the current entry's previous path.
+ */
+const catalogue = publishedCatalogue({
+  documents: [
+    movedEntry(
+      publishedDocument("account/billing/payment-terms", "Payment terms"),
+      "billing/payment-terms",
     ),
-    entry("screen", "account/billing/receipt", "Receipt"),
-    entry("document", "account/billing/payment-terms", "Payment terms"),
-    entry("screen", "home", "Home"),
   ],
-  folders: [],
-  generatedBy: "mokly",
-  schemaVersion: 10,
-  sourceFiles: [],
+  removedEntries: [
+    removedScreenVariant(
+      "billing/invoice/paid",
+      "Paid",
+      { path: "billing/invoice", title: "Invoice" },
+      ["Billing"],
+    ),
+  ],
+  screens: [
+    movedEntry(
+      publishedScreen("account/billing/invoice", "Invoice"),
+      "billing/invoice",
+    ),
+    movedEntry(
+      publishedScreen(
+        "account/billing/invoice/overdue",
+        "Overdue",
+        "unmodified",
+        "account/billing/invoice",
+      ),
+      "billing/invoice/overdue",
+    ),
+    movedEntry(
+      publishedScreen("account/billing/receipt", "Receipt"),
+      "billing/receipt",
+    ),
+    publishedScreen("home", "Home"),
+  ],
+  tree: [
+    {
+      children: [
+        {
+          children: [
+            {
+              children: [
+                { kind: "entry", path: "account/billing/invoice/overdue" },
+              ],
+              kind: "entry",
+              path: "account/billing/invoice",
+            },
+            { kind: "entry", path: "account/billing/receipt" },
+            { kind: "entry", path: "account/billing/payment-terms" },
+          ],
+          kind: "folder",
+          path: "account/billing",
+          title: "Billing",
+        },
+      ],
+      kind: "folder",
+      path: "account",
+      title: "Account",
+    },
+    { kind: "entry", path: "home" },
+  ],
 });
-const paid = entry("screen", "billing/invoice/paid", "Paid", "billing/invoice");
-const catalogue = createCatalogue(
-  manifest,
-  [{ entry: paid, folderTitles: ["Billing"], parentTitle: "Invoice" }],
-  [
-    { path: "account/billing/invoice", previousPath: "billing/invoice" },
-    {
-      path: "account/billing/invoice/overdue",
-      previousPath: "billing/invoice/overdue",
-    },
-    { path: "account/billing/receipt", previousPath: "billing/receipt" },
-    {
-      path: "account/billing/payment-terms",
-      previousPath: "billing/payment-terms",
-    },
-    { path: "gone", previousPath: "old/gone" },
-  ],
-);
 
 function leaves(nodes: readonly NavNode[]): NavLeafNode[] {
   return nodes.flatMap((node) =>

@@ -183,7 +183,7 @@ export function viewerView(
 ): ShellView {
   if (selection.screenPath === null) return { kind: "home" };
   const selected = resolveCatalogueSelection(
-    catalogue.publicModel!,
+    catalogue.publicModel,
     selection.screenPath,
     selection.snapshotId,
   );

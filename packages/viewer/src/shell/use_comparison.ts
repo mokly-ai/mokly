@@ -79,9 +79,9 @@ export function useComparison({
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
   // A publication returns an active comparison to Current.
-  const evidenceKey = String(store?.catalogue.publicModel!.revision ?? 0);
+  const evidenceKey = String(store?.catalogue.publicModel.revision ?? 0);
   const comparisonUrl = historical
-    ? (store?.catalogue.publicModel!.comparisonUrl ?? null)
+    ? (store?.catalogue.publicModel.comparisonUrl ?? null)
     : undefined;
   const scope = useMemo<ComparisonScope>(
     () => ({

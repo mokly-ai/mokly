@@ -114,7 +114,7 @@ export function announceNavigation(
   const entry =
     typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
-          catalogue.publicModel!,
+          catalogue.publicModel,
           selection.screenPath,
           selection.snapshotId,
         )?.entry

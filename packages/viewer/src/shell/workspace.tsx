@@ -61,7 +61,7 @@ export function ComponentWorkspace({
     effectiveColorScheme: resolvedView.colorScheme,
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
     eligibilityKnown: comparisonEligibilityKnown(
-      catalogue.publicModel!.changesStatus,
+      catalogue.publicModel.changesStatus,
       workspace.usageDelivery,
     ),
     historical: data.removed || variant?.removed === true,

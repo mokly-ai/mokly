@@ -244,7 +244,7 @@ export function ViewerHostBridge({
   if (!registry) return <div data-mokly-label-layer="" />;
   return (
     <ViewerInspectionLayer
-      model={store.catalogue.publicModel!}
+      model={store.catalogue.publicModel}
       onError={reportFrameError}
       onSelect={(session, key, boxes) =>
         receiveInstance(session, key, boxes, "click")

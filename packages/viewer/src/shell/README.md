@@ -184,7 +184,9 @@ paths.
 
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
-selects its exact removed record.
+selects its exact removed record. The `Catalogue` type requires `publicModel`:
+`createCatalogue` builds the lookup, and `viewerCatalogue` adds the published
+records that complete it.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
 An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the picker callback's focus handling.

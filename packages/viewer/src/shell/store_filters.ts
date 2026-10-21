@@ -35,7 +35,7 @@ export function withRoute(
   else delete selection.snapshotId;
   if (route.viewport) selection.viewport = route.viewport;
   selection = revealSelection(
-    catalogue.publicModel!,
+    catalogue.publicModel,
     folderTitleLookup(catalogue.hierarchy),
     selection,
   );

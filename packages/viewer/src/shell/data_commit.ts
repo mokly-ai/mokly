@@ -110,7 +110,7 @@ export function shellStateWithCatalogue(
   const filterBaseline = state.filterBaseline
     ? reconcileDisclosures(defaults, state.filterBaseline, "default")
     : undefined;
-  const status = catalogue.publicModel!.changesStatus;
+  const status = catalogue.publicModel.changesStatus;
   return {
     ...state,
     route,

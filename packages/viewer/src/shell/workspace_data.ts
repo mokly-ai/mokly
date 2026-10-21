@@ -84,7 +84,7 @@ export function workspaceData(
   context: ShellContext,
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
-  const model = catalogue.publicModel!;
+  const model = catalogue.publicModel;
   return publicWorkspace(
     catalogue,
     model,
