@@ -2769,6 +2769,25 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         busy process per CPU pushed it past 300 seconds. Evidence:
         `.context/f17/investigation.md`. The full report is
         `.context/m10/f20/review_1.md`.
+  - [x] F20 review, on 2026-10-21: finding 41 is fixed by option A. The path
+        identity release note says that the viewer data release note lists
+        the names that this release removes from `@mokly/viewer/data`.
+  - F20 review finding 42 for the user: the merged plan keeps a settled line
+    open. Severity Low, effort Small. Recommended: A, rewrite the React
+    large watch timeout line as one checked record of user decision 105 and
+    delete its child line.
+  - F20 review finding 43 for the user: the premise of item 109 is stale
+    after item 4. Severity Low, effort Small. Recommended: A, add to the item
+    4 record that the three trees now have no unused runtime export, so
+    option B of item 109 needs no baseline entries.
+  - Outside the F20 review scope:
+    - `docs/protocol/ci-test-timing.md`: the duration helper section and the
+      fixture budget sentence name test helper files and functions, which
+      belong in a README. Separate branch.
+    - `docs/protocol/npm-release-notes.md`: the viewer data note says that
+      its listed names have no public replacement, but the root
+      `@mokly/viewer` entry still exports `ComponentControl` and
+      `ComponentControlLabel`. Separate branch.
   - [x] Fix CI release checks hub review finding 4 with option A: name read-only
         release preparation as the npm and Rust audit owner in the three
         affected verification documents. Publication uses the checked archives.

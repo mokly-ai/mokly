@@ -193,7 +193,7 @@ The released manifest and review result types, such as `ManifestV7` (0.13.0),
 `ManifestV9` (0.14.0), `ReviewResultV6`, and `ScreenReviewV6`, have no public
 replacement. The
 [viewer data release note](#breaking-viewer-data-release-note) lists the
-removed names. Replace
+names that this release removes from `@mokly/viewer/data`. Replace
 `isEntryId` and `isCatalogueId` with `isPathSegment` and `isEntryPath`;
 `isWindowsDeviceName` is unchanged.
 
