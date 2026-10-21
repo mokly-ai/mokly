@@ -907,6 +907,10 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `braces` remains 3.0.3. `metro-file-map` 0.87.1 is available, but the
       locked dev-only path remains `metro-file-map` 0.84.6 through
       `micromatch` 4.0.8, so no update was applied.
+  - User decision 72 (2026-10-20), in full: A. The audit exception for
+    GHSA-vfj7-8cjw-p6xm ends on 2026-11-03 and is not renewed. From
+    2026-11-04 UTC the strict audit and the release checks fail on it; that
+    failure is known and accepted. Never add or extend an exception.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The
