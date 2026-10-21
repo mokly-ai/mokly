@@ -3432,7 +3432,7 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        Severity Medium, effort Medium. The affected records name the parent
        as the consumer for every view of a component, so `projection_affected.rs`
        gives `relatedComponents` to the parent's detail only. A variant page
-       without a loaded review then reads "No changes to this saved view."
+       without a loaded review then reads "No changes to this variant."
        while its preview changed. A parent page whose variant alone uses the
        changed component claims a shared change in its own preview (hub
        review finding 1, merged here by the orchestrator on 2026-10-20).

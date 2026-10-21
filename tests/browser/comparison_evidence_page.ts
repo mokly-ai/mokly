@@ -28,10 +28,10 @@ export const SHARED_IMPACT =
 export const COMPONENT_FILES_LEAD =
   "Changes to these files may affect this component:";
 export const COMPONENT_LEAD = "Changed styles that apply to this component:";
-export const SAVED_VIEW_LEAD = "Changed styles that apply to this saved view:";
-export const SAVED_VIEW_UNRESOLVED_LEAD =
-  "This change can apply anywhere on the saved view, so the saved view stays in Changes:";
-export const VARIANT_TERMINAL = "No changes to this saved view.";
+export const VARIANT_LEAD = "Changed styles that apply to this variant:";
+export const VARIANT_UNRESOLVED_LEAD =
+  "This change can apply anywhere on the variant, so the variant stays in Changes:";
+export const VARIANT_TERMINAL = "No changes to this variant.";
 export const SHARED = "Shared component changes affect this preview.";
 export const PAGE_FILES_LEAD = "Changes to these files may affect this page:";
 export const PAGE_MATCHED_LEAD = "Changed styles that apply to this page:";

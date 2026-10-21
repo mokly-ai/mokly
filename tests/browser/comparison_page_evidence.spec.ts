@@ -129,7 +129,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         afterList: "14px",
       });
       await expect(evidence).not.toContainText(
-        /Changed component|Shared component changes|this screen|saved view|[0-9a-f]{64}/u,
+        /Changed component|Shared component changes|this screen|saved view|this variant|[0-9a-f]{64}/u,
       );
       await expect(page.locator(".mbk-screen-head")).not.toContainText(
         /\.action|article h2|:root|\.css/u,

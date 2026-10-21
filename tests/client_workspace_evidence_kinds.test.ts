@@ -35,11 +35,11 @@ const EVIDENCE_COPY = {
     files: "Changes to these files may affect this component:",
     matched: "Changed styles that apply to this component:",
     matchedWithoutSelectors: "Changed styles that apply to this component.",
-    /** An unresolved record belongs to the saved view's own page. */
+    /** An unresolved record belongs to the variant's own page. */
     unresolved:
-      "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
+      "This change can apply anywhere on the variant, so the variant stays in Changes:",
     unresolvedWithoutSelectors:
-      "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
+      "This change can apply anywhere on the variant, so the variant stays in Changes.",
     oneExcluded:
       "This stylesheet changed, but none of the changed styles apply to this variant.",
     severalExcluded:

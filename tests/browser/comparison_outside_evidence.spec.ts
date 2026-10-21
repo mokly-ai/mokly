@@ -25,7 +25,7 @@ import {
   FILES_LEAD,
   INSPECTOR_VIEWPORTS,
   OUTSIDE_LEAD,
-  SAVED_VIEW_UNRESOLVED_LEAD,
+  VARIANT_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
   SHARED_IMPACT,
   UNRESOLVED_LEAD,
@@ -46,7 +46,7 @@ const CARD_FILES: EvidenceFile[] = [
     sheets.card,
     [
       [COMPONENT_LEAD, [".accent"]],
-      [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
+      [VARIANT_UNRESOLVED_LEAD, [":root"]],
     ],
   ],
   [sheets.theme, [[COMPONENT_LEAD, [".accent"]]]],
