@@ -244,8 +244,7 @@ base dependencies at "<lockfile>" lack "<directory>"; using working-tree depende
 base dependency lookup cannot preserve "<directory>"; using working-tree dependencies (configure moduleResolution.packageRoots)
 ```
 
-Other typed reasons are `installation failed`, `cache size limit`,
-`local package outside the repository`, `invalid dependency input` and
+Other typed reasons are `installation failed`, `cache size limit`, `local package outside the repository`, `invalid dependency input` and
 `cache unavailable`. The [build warning contract](./mokly-build-warnings.md)
 owns strict mode and terminal presentation. Warnings never enter documents
 or catalogue JSON.
