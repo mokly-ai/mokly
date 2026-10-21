@@ -3068,7 +3068,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       The resulting weighted work is 429429, 429334, 410238, and 402429 ms
       for shards 1 to 4, a 6.71 percent range. The assignment has 342, 493,
       696, and 696 tests under the 696-test cap. Keep the four shards and every
-      test. Evidence: `.context/ci-timing/hosted-analysis.json` and
+      test. The observed shard job medians are 13.05, 13.42, 12.65, and 13.05
+      minutes, a 6.06 percent range. Evidence:
+      `.context/ci-timing/hosted-analysis.json` and
       `.context/ci-timing/hosted-timing.md`.
 - [ ] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
