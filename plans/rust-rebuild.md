@@ -548,6 +548,16 @@ usage holds an instance of a changed component that the entry detail's
 so a component's markup change left its affected consumer's views reading "No
 changes to this screen" beside a band that offers their comparison.
 
+**User decision 84 (2026-10-21): B.** The Details sentence of an entry that only
+changed components affect follows the entry's kind, through the shared entry
+wording: "Changed components that this screen uses affect its preview." for a
+screen, and "Changed components that this variant uses affect its preview."
+for a component and its variants. The replaced sentence, "Shared component
+changes affect this preview. This page has no independent entry in Changes.",
+named a page, but in Mokly a page is a whole-document page entry. A page has
+no usage records, so it never shows the sentence. Item 119, building each
+kind's sentences from one noun, stays open, so only this sentence changes.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -656,8 +666,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
-82;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decisions
+82 and 84;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -1945,6 +1955,28 @@ Tags: ui
       `.context/defaults-viewer-82b/shards/`.
 - [x] Pass the complete gate on the final commit, push the branch, and report.
       Evidence: `.context/defaults-viewer-82b/gate.log`.
+
+## Milestone 10.5: Shared-impact sentence per kind in the designs
+
+Tags: mockup
+
+- [ ] User decision 84 B: word the design copy's shared-component sentence
+      for each kind. A screen reads "Changed components that this screen uses
+      affect its preview.", and a component and its variants read "Changed
+      components that this variant uses affect its preview." A page has no
+      such sentence. `design/components/states/shared-impact/affected-screen`
+      shows the screen sentence.
+- [ ] Run the mockup check and smoke-test the changed page through Serve.
+
+## Milestone 10.6: Shared-impact sentence per kind in the viewer
+
+Tags: ui
+
+- [ ] User decision 84 B: end the Details of a screen or a component that
+      only changed components affect with the sentence of its kind, from the
+      shared entry wording. Update the CSS evidence contracts, the Details
+      guide, and the tests.
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
 
