@@ -242,6 +242,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its
   importer or lockfile folder, and
   [Yarn Classic scalar inputs](./src/manager_classic.rs) read Classic tokens.
+- [npm lockfile confinement](./src/npm_lockfiles.rs) checks package folders,
+  link targets, and versions from the npm lockfile folder.
 
 ### Related Docs
 

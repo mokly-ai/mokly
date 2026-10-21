@@ -72,7 +72,9 @@ that folder. A nested `file:../x` that leaves that folder therefore falls back.
 Normalize each lockfile value from the folder that its manager reads it from:
 pnpm importer specifiers and `link:` versions from their importer, other pnpm
 values and all Yarn Classic values from the lockfile folder, and Yarn Berry
-values from the workspace that their locator names. A pnpm value whose
+values from the workspace that their locator names. npm `packages` keys, link
+targets, `resolved` values, and v1 `version` values use the lockfile folder.
+A lockfile that does not parse uses the `invalid dependency input` fallback. A pnpm value whose
 position an alias, a merge key, or a complex key can change normalizes from
 the repository root. Equal text in another position gets no exemption,
 because the manager reads that position from another folder. Yarn patch

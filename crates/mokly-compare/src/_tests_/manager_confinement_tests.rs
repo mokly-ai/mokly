@@ -180,7 +180,11 @@ fn workspace_brace_alternatives_are_confined_individually() {
 fn npm_lockfile_paths_cannot_escape_the_repository() {
     for value in [
         r#"{"packages":{"node_modules/ui":{"resolved":"file:../outside.tgz"}}}"#,
-        r#"{"packages":{"node_modules/ui":{"link":"../../outside"}}}"#,
+        r#"{"packages":{"node_modules/ui":{"resolved":"../../outside","link":true}}}"#,
+        r#"{"packages":{"node_modules/ui":{"resolved":"packages/../../outside","link":"yes"}}}"#,
+        r#"{"packages":{"packages/../../outside":{"version":"1.0.0"}}}"#,
+        r#"{"dependencies":{"ui":{"version":"file:../outside"}}}"#,
+        r#"{"dependencies":{"a":{"version":"1.0.0","dependencies":{"ui":{"version":"file:../outside.tgz"}}}}}"#,
     ] {
         let files = BTreeMap::from([
             (
@@ -225,4 +229,25 @@ fn classic_workspace_specifications_resolve_from_the_classic_root() {
             assert!(matches!(result, Err(Error::LocalOutside { .. })), "{lock}");
         }
     }
+}
+
+#[test]
+fn npm_lockfiles_that_do_not_parse_fall_back_and_a_byte_order_mark_parses() {
+    let check = |bytes: &[u8]| {
+        validate(&BTreeMap::from([(
+            RepoPath::parse("package-lock.json").unwrap(),
+            bytes.to_vec(),
+        )]))
+    };
+    for bytes in [
+        b"lock".as_slice(),
+        b"<<<<<<< HEAD\n{}\n=======\n{\"packages\":{}}\n>>>>>>> branch\n",
+    ] {
+        assert!(
+            matches!(check(bytes), Err(Error::InvalidInput { .. })),
+            "{bytes:?}"
+        );
+    }
+    let result = check(b"\xEF\xBB\xBF{\"packages\":{\"node_modules/ui\":{\"resolved\":\"packages/ui\",\"link\":true}}}");
+    assert!(result.is_ok(), "{result:?}");
 }
