@@ -104,6 +104,14 @@ pub enum Error {
     /// A checkout conversion command exceeded its bounded filter deadline.
     #[error("[mokly-git/checkout] checkout filter reached its time limit")]
     CheckoutTimeout,
+    /// A failed conversion leaves this exact historical path unavailable.
+    #[error("[mokly-git/checkout] {path}: {source}")]
+    Conversion {
+        /// Repository path that did not convert.
+        path: String,
+        /// Original bounded command or conversion failure.
+        source: Box<Error>,
+    },
     /// A checkout filter returned a failure diagnostic.
     #[error("[mokly-git/checkout] checkout filter failed")]
     CheckoutFailed {
@@ -117,7 +125,8 @@ pub enum Error {
     FetchFailed {
         remote: String,
         object: String,
-        stderr: Vec<u8>,
+        /// Original fetch failure.
+        source: Box<Error>,
     },
     /// A required object is absent and no promisor remote is configured.
     #[error("[mokly-git/fetch] base object {object} is missing; run `git fetch origin {object}`")]

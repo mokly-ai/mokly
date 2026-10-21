@@ -20,6 +20,9 @@ struct CancelledCopy {
     runner: Arc<dyn Runner>,
 }
 impl Runner for CancelledCopy {
+    fn checkpoint(&self) -> Result<()> {
+        self.runner.checkpoint()
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         self.runner.run(request)
     }
@@ -35,6 +38,29 @@ impl Runner for CancelledCopy {
     }
     fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
         self.runner.copy(request, output, bytes)
+    }
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<String> {
+        self.runner.digest_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
+    }
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+    ) -> Result<Output> {
+        self.runner
+            .run_cancellable_with_environment(request, cancellation, environment)
     }
     fn run_cancellable_with_environment_timeout(
         &self,

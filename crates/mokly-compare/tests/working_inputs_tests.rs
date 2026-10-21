@@ -72,7 +72,11 @@ fn ignored_packages_nested_clones_and_clean_crlf_do_not_change_dependency_identi
         .read(repository.as_ref(), &base, Limits::default())
         .unwrap();
     assert_eq!(head, base);
-    assert!(!head.files.values().any(|bytes| bytes.contains(&b'\r')));
+    assert_eq!(
+        head.files[&mokly_git::identity::RepoPath::parse("package.json").unwrap()],
+        b"{\r\n\"name\":\"base\"\r\n}\r\n"
+    );
+    assert_eq!(head.objects, base.objects);
     assert_eq!(head.files.len(), 2);
     fs::create_dir(root.join("frontend")).unwrap();
     fs::write(root.join("frontend/package.json"), b"{}").unwrap();

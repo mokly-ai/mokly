@@ -140,7 +140,9 @@ impl ChangeSource for Source {
                 result
                     .warnings
                     .iter()
-                    .filter(|warning| warning.code == "base-dependencies")
+                    .filter(|warning| {
+                        matches!(warning.code, "base-dependencies" | "base-conversion")
+                    })
                     .cloned(),
             );
         }

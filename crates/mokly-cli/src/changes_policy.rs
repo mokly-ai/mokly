@@ -13,6 +13,9 @@ const VALIDATION: &str = "base validation failed";
 
 pub(crate) fn unavailable(error: &Error) -> Option<&'static str> {
     match error {
+        Error::Git {
+            source: mokly_git::error::Error::Conversion { .. },
+        } => Some("base resource unavailable"),
         Error::Catalogue { source } => match source {
             CatalogueError::Runtime { source } => runtime(source.code),
             CatalogueError::Internal(_) => None,
@@ -66,7 +69,7 @@ fn graph(error: &GraphError) -> Option<&'static str> {
             | CssError::Transform { .. }
             | CssError::PostcssUnavailable { .. } => Some(VALIDATION),
         },
-        GraphError::Invalid { .. } => Some(VALIDATION),
+        GraphError::Invalid { .. } | GraphError::ResourceUnavailable { .. } => Some(VALIDATION),
     }
 }
 

@@ -41,6 +41,8 @@ pub struct Output {
 /// Git process execution boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RunnerMock))]
 pub trait Runner: Send + Sync {
+    /// Check generation cancellation between converted disk-copy chunks.
+    fn checkpoint(&self) -> Result<()>;
     /// Execute one bounded Git invocation and require a successful exit.
     fn run(&self, request: &Request) -> Result<Output>;
     /// Stream standard output into SHA-256 without retaining the blob bytes.
@@ -50,16 +52,21 @@ pub trait Runner: Send + Sync {
     /// Execute with explicit command cancellation and process-tree cleanup.
     fn run_cancellable(&self, request: &Request, cancellation: &dyn Cancellation)
     -> Result<Output>;
+    /// Stream a converted digest with the same timeout and environment as byte reads.
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, OsString)],
+        timeout: Duration,
+    ) -> Result<String>;
     /// Execute with temporary Git environment entries and cancellation.
     fn run_cancellable_with_environment(
         &self,
         request: &Request,
         cancellation: &dyn Cancellation,
         environment: &[(&str, OsString)],
-    ) -> Result<Output> {
-        let _ = environment;
-        self.run_cancellable(request, cancellation)
-    }
+    ) -> Result<Output>;
     /// Execute with a bounded filter deadline and temporary Git environment.
     fn run_cancellable_with_environment_timeout(
         &self,
@@ -67,10 +74,7 @@ pub trait Runner: Send + Sync {
         cancellation: &dyn Cancellation,
         environment: &[(&str, OsString)],
         timeout: Duration,
-    ) -> Result<Output> {
-        let _ = timeout;
-        self.run_cancellable_with_environment(request, cancellation, environment)
-    }
+    ) -> Result<Output>;
 }
 
 /// Cancellation observed only while this Git operation is active.

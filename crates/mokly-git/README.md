@@ -42,25 +42,31 @@ before `merge-base`. Changed paths include committed, staged, unstaged, and
 untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
 
-Tree queries use literal pathspecs and NUL records. Base reads check missing
-object ids first and fetch them in one promisor request before conversion. A
-private index applies the base commit's attributes, configured smudge filters,
-line-ending rules, and Git LFS. Tree listings retain directory and link modes.
+Tree queries use literal pathspecs and NUL records. Requested files and their
+ancestor attribute files share a missing-object preflight. `rev-list --missing=print`
+finds absent objects with lazy fetch disabled. One serialized `fetch --stdin`
+request retrieves each missing set before conversion. Failed fetches name the
+remote and a recovery command. Tree listings retain directory and link modes.
 Regular files and all metadata nodes have independent count bounds.
-The commit source reader indexes requested roots and exact paths. Nonrecursive
-path lookups avoid enumerating unrelated directories. `digest` streams blob
-stdout through SHA-256 with bounded memory and the same cancellation and exit
-checks; stderr retains its capture limit. Working inputs compare
-bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
-proved entries and reads their converted files through bounded batches. A
-failed filter, timeout, or converted-byte bound leaves that resource
-unavailable with a warning while independent reads continue. Extraction has a
-total disk byte bound.
-It streams oversized files to disk and writes smaller files one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
-and submodules. Unsupported host names and non-UTF-8 candidates are traced
-and skipped. Ordinary colons and backslashes remain in Git path identities.
-Archive-only attributes never change source bytes. A destination
-must be fresh; a failed extraction removes its partial directory.
+
+Byte reads build a private path-scoped index with `update-index --index-info`.
+`checkout-index --temp` applies the base commit's attributes and the user's
+configuration. The real index and working files stay intact. Conversion includes
+line endings, smudge filters, encodings, and Git LFS downloads. A disk-size
+monitor and a 120-second deadline supervise checkout output. Failed optional
+filters also return typed `Conversion` errors instead of fallback pointer bytes.
+Callers can warn and retain independent resources.
+
+Opaque digests use `cat-file --filters --path` with `--attr-source` pinned to
+the base commit. Stdout streams into SHA-256 without a temporary blob spool.
+Stderr, cancellation, and filter deadlines keep the same supervision. Working
+dependency inputs retain Git clean normalization through `hash-object --stdin-paths`.
+Extraction copies regular converted files in bounded batches and preserves
+executable mode. It omits links and submodules. Copying checks cancellation
+after each 64 KiB chunk. Unsupported host names and non-UTF-8 candidates are
+traced and skipped. Archive-only attributes never change source bytes.
+A destination must be fresh. A failed extraction removes its partial directory.
+Recoverable conversion failures omit individual files and retain warnings.
 
 The runner writes and closes stdin concurrently with both output readers.
 Input is bounded to 64 MiB. Cancellation before spawn starts nothing. Active
@@ -95,7 +101,9 @@ extraction cleanup after cancellation during a streamed copy.
 - [Batch coordinator](./src/batches.rs).
 - [Host adapter](./src/system.rs), [control](./src/control.rs), and
   [repository operations](./src/repository.rs).
-- [Tree metadata](./src/tree.rs), [extraction](./src/disk.rs), and
+- [Checkout conversion](./src/checkout.rs), [batch fetch](./src/fetch.rs), and
+  [source cache identity](./src/source_key.rs).
+- [Tree metadata](./src/tree.rs), [extraction](./src/extraction.rs), and
   [errors](./src/error.rs).
 
 ### Related Docs

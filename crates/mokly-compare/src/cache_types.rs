@@ -47,6 +47,10 @@ pub struct Record {
 /// Builder invoked for a missing entry under its exclusive entry lock.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BuilderMock))]
 pub trait Builder: Send + Sync {
+    /// Whether a completed build can be reused in a later generation.
+    fn reusable(&self) -> bool {
+        true
+    }
     /// Populate a fresh `data` directory. Never modify the repository.
     fn build(&self, destination: &Path) -> Result<()>;
 }

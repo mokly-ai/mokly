@@ -25,8 +25,9 @@ HTML, Markdown, YAML and CSS need no extraction. JavaScript, a renderer module
 and consumer PostCSS acquire an extraction lease. Keep that lease while a
 sidecar uses its root. A source archive copies checkout-converted regular files
 with the pinned commit's attributes, including line endings, smudge filters,
-and Git LFS. Missing objects are fetched once in a bounded promisor request
-before these reads. It writes and releases each batch before reading the next. A
+and Git LFS downloads. Network access is allowed within the existing limits.
+Missing blobs and required attribute objects are fetched together before
+parallel conversion reads. It writes and releases each batch before reading the next. A
 converted blob larger than one batch streams directly to disk. The total disk
 bound follows the source cache capacity; memory stays bounded independently of
 repository size.
@@ -38,8 +39,12 @@ If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.
 The current build remains valid. Genuine Git command and object failures
 remain fatal `git-failed` errors. A failed, timed out, or oversized conversion
-makes that resource unavailable with a warning, while other base resources
-continue. A failed batch fetch names the recovery command.
+makes that resource unavailable with a `base-conversion` warning, while other
+base resources continue. Unavailable bytes cannot prove a resource change.
+User-configured filters run with the same Git configuration as dependency
+clean conversion. Raw blobs and offline-only smudge are not substitutes for
+checkout bytes. Each conversion uses the existing 120-second preparation
+allowance. A failed batch fetch names the recovery command.
 
 ## Shared Render Runtime
 
@@ -88,59 +93,10 @@ failures use error blocks and fail the command.
 
 ## Cache Location And Ownership
 
-Both cache kinds live in a SHA-256 namespace under the operating system's
-cache directory. Windows honors an absolute `LOCALAPPDATA` value. The key
-hashes the canonical repository path's OS encoding.
-Resolve the complete namespace path once at composition, including links at
-or above it. A cache location inside the repository is invalid. Below that
-canonical root, directory links are rejected before writes. Dependency links
-remain data entries; traversal does not follow them.
-
-Source and dependency namespaces have separate byte bounds. Each complete
-entry reserves 1,024 bytes for its receipt. Retained size counts regular-file
-bytes and link targets without following links. Hits check the bounded
-completion receipt and recount data bytes. Only receipt schema 1 is valid;
-another schema or unknown field is incomplete. Hits do not hash file contents.
-Data and directory metadata are flushed before receipt publication. Linux
-uses one `syncfs` barrier for the entry's filesystem. macOS uses plain `fsync`
-for each data file and directory, then the completion receipt's drive-cache
-barrier. Windows flushes each file and uses a write-through rename. Unix
-flushes the receipt directory before and after rename. Cache hits update
-access order by atomic replacement with no file or directory flushes. This
-completion boundary replaces repeated
-content verification. A valid entry may retain consumer cache files as long
-as its recounted size fits the bound. An entry that exceeds the bound rebuilds.
-
-Readers hold shared `mokly-platform` locks. Any number of callers may lease
-one completed entry. Build and repair take the exclusive entry lock, then
-recheck completion. They release the namespace lock before extraction, copy,
-installation, counting and data flushes. An unfinished key does not block
-access to another key. Namespace mutation, receipt access order and eviction
-use the short exclusive namespace lock. A waiter holds no namespace lock.
-
-Eviction acquires each candidate's exclusive entry lock without waiting.
-Shared leases and active builds are never evicted. Least-recently-used order
-uses a sequence, independent of wall-clock timestamps. Active entries that
-leave insufficient room cause the typed cache-limit result. Each concurrent
-build has its own staged disk bound; completed entries obey the namespace
-bound at adoption. Staging cleanup selects only names whose entry lock is
-free. Under the
-namespace lock, eviction and cleanup rename victims into unique trash names.
-They delete trash outside that lock, with cancellation checks at each node.
-Later cache opens sweep any trash left by cancellation or an interrupted
-process. Unrecognized names such as `.DS_Store` are ignored. A symlinked entry
-is rejected. Every traversal checks cancellation and tolerates vanished
-nodes when it measures a changing install.
-
-Sources publish a complete staged directory by rename. Installs build at
-their final locked location so local links remain valid. Receipt rename
-publishes completion. Missing, damaged or incomplete receipts and missing
-data roots rebuild under the entry lock. Failed builds remove partial data.
-OS locks release on close; lock files remain. Deleting the cache is safe.
-
-One reporter guard covers both caches and reports the directory once per process. Plain stdout is exactly
-`Mokly cache: <directory>` followed by LF. Rich output follows the
-[terminal rule](./mokly-terminal-output.md#cache-directory).
+Source and dependency leases use separate bounded namespaces outside the
+repository. The [cache contract](./mokly-base-cache.md) defines ownership,
+completion, reuse, and cleanup. Converted source reuse follows the effective
+checkout settings. Partial extractions never publish a reusable receipt.
 
 ## Dependency Identity
 
@@ -156,7 +112,7 @@ bytes reuse the base identity without a Git process. Hash the remaining
 confined paths in one `hash-object --stdin-paths` call, without writing objects,
 and compare their Git clean identities with the corresponding base blob ids.
 This applies line ending and
-clean-filter conversion. Equal identities use the base blob bytes in the
+clean-filter conversion. Equal identities use the converted base bytes in the
 input set. A changed file or path set differs. Clean normalization is for
 dependency identity. Checkout conversion supplies the base render and
 resource bytes before dependency selection.

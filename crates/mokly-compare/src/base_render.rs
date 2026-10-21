@@ -190,7 +190,10 @@ impl ChangesService for Changes {
                 source: Box::new(Error::SourceFailure { source }),
             });
         }
-        result
+        let mut result = result?;
+        result.warnings.extend(failures.warnings());
+        mokly_catalogue::diagnostic::normalize_warnings(&mut result.warnings);
+        Ok(result)
     }
 }
 

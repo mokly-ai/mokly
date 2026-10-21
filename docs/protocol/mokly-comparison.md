@@ -110,11 +110,17 @@ References are read from the tree with the owner of the referencing element:
 `src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
 `url()` and `@import` chains. The closure follows them through the
 [public closure policy](./mokly-public-closure.md) and embedded documents; the
-head side reads files from the working tree, the base side from Git blobs, and
+head side reads files from the working tree, the base side from checkout-converted Git blobs, and
 bytes are compared.
 A changed referenced resource is conservative evidence of a rendering change
 for every view that reaches it, attributed to the owner of the reference. A
 resource is never discovered by joining text across a removed region.
+
+A base resource that cannot complete checkout conversion is unavailable with
+one `base-conversion` warning. Failed filters, timeouts, and converted-byte
+limits have this outcome. Its unknown bytes prove neither equality nor a
+change. Other resource and document comparisons continue. Working-side
+resource validation keeps its existing failure behavior.
 
 ## Changes Membership
 
@@ -129,9 +135,16 @@ owns the removed-entry presentation.
 
 ## Sides
 
+Base conversion applies the base commit's attributes and the user's Git
+configuration. It includes line endings, custom filters, and Git LFS downloads.
+Network access is allowed within the existing preparation bounds. Missing
+promisor blobs are fetched in one batch before parallel reads. A failed fetch
+names a recovery command. The [base preparation contract](./mokly-base-preparation.md)
+also defines the matching Git clean rule for dependency identities.
+
 The base is the merge base of the configured `review.base` and `HEAD`. The
 head side renders from the working tree. The base side renders from the base
-commit's Git tree through the same render graph, with sources read from blobs;
+commit's Git tree through the same render graph, with checkout-converted sources;
 HTML screens, components, and documents need no checkout. Both sides render
 with the current Mokly version, so a Mokly upgrade alone lists no change, and
 the render cache keeps a side's views until their inputs change.

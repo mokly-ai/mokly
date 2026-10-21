@@ -2,7 +2,7 @@
 
 use std::ffi::OsString;
 use std::io::Write;
-use std::process::{Command, Stdio};
+
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -10,10 +10,12 @@ use std::time::Duration;
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
 use crate::cancellation::signal;
+use crate::checkout_bounds::filter_failed;
 use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
 use crate::control::{Cancellation, Clock, Shutdown};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::pipes::{capture, copy, digest};
+use crate::system_command::git_command;
 
 enum OutputMode<'a> {
     Capture,
@@ -32,6 +34,13 @@ pub struct SystemRunner {
 }
 
 impl Runner for SystemRunner {
+    fn checkpoint(&self) -> Result<()> {
+        if self.cancellation.cancelled() {
+            Err(Error::Cancelled)
+        } else {
+            Ok(())
+        }
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         self.execute(request, None, OutputMode::Capture, &[], None)
     }
@@ -55,6 +64,31 @@ impl Runner for SystemRunner {
         cancellation: &dyn command::Cancellation,
     ) -> Result<Output> {
         self.execute(request, Some(cancellation), OutputMode::Capture, &[], None)
+    }
+
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, OsString)],
+        timeout: Duration,
+    ) -> Result<String> {
+        let output = self.execute(
+            request,
+            Some(cancellation),
+            OutputMode::Digest,
+            environment,
+            Some(timeout),
+        )?;
+        if filter_failed(&output.stderr) {
+            return Err(Error::CheckoutFailed {
+                stderr: output.stderr,
+            });
+        }
+        match String::from_utf8(output.stdout) {
+            Ok(hash) => Ok(hash),
+            Err(_) => Err(Error::MalformedOutput),
+        }
     }
 
     fn run_cancellable_with_environment(
@@ -253,38 +287,6 @@ fn joined(result: thread::Result<Result<Vec<u8>>>) -> Result<Vec<u8>> {
         Ok(value) => value,
         Err(_) => Err(Error::Internal(InternalError::Worker)),
     }
-}
-
-fn git_command(request: &Request, environment: &[(&str, OsString)]) -> Command {
-    let mut command = Command::new("git");
-    command
-        .args(&request.args)
-        .current_dir(&request.directory)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    for variable in [
-        "GIT_DIR",
-        "GIT_WORK_TREE",
-        "GIT_INDEX_FILE",
-        "GIT_COMMON_DIR",
-        "GIT_OBJECT_DIRECTORY",
-        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-        "GIT_NAMESPACE",
-        "GIT_PREFIX",
-        "GIT_SHALLOW_FILE",
-        "GIT_GRAFT_FILE",
-        "GIT_REPLACE_REF_BASE",
-        "GIT_NO_REPLACE_OBJECTS",
-        "GIT_IMPLICIT_WORK_TREE",
-    ] {
-        command.env_remove(variable);
-    }
-    command.env("GIT_NO_LAZY_FETCH", "1");
-    for (name, value) in environment {
-        command.env(name, value);
-    }
-    command
 }
 
 #[cfg(test)]

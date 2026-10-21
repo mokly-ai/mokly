@@ -3,7 +3,8 @@
 use std::path::PathBuf;
 
 use mokly_git::tree::Limits;
-use mokly_source_interface::error::Result;
+use mokly_source_interface::error::{Result, SourceError};
+use mokly_source_interface::tree::SourceTree;
 
 use crate::git_tree::GitTree;
 
@@ -63,6 +64,21 @@ impl GitTree {
         for paths in batches {
             let bytes = match self.sources.read_many(&paths, Limits::default()) {
                 Ok(bytes) => bytes,
+                Err(
+                    source @ crate::error::Error::Git {
+                        source: mokly_git::error::Error::Conversion { .. },
+                    },
+                ) => {
+                    let _ = source;
+                    for path in paths {
+                        let absolute = self.root.join(path.as_str());
+                        match self.read(&absolute) {
+                            Ok(_) | Err(SourceError::Unavailable { .. }) => {}
+                            Err(error) => return Err(error),
+                        }
+                    }
+                    continue;
+                }
                 Err(source) => return Err(self.failed("prefetch", &self.root, source)),
             };
             let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());

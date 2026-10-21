@@ -73,6 +73,7 @@ pub(crate) fn summary(summary: &RenderSummary) -> usize {
 /// Charge every owned closure record, string, and container.
 pub(crate) fn closure(closure: &Closure) -> usize {
     mem::size_of::<Closure>()
+        + warnings(&closure.warnings)
         + closure
             .files
             .iter()

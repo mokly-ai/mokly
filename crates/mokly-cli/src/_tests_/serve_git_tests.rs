@@ -31,6 +31,7 @@ fn closed_admission_rejects_every_runner_operation() {
     let git = ServeGit::new(Arc::new(runners.clone()));
     let runner = git.runner(Arc::new(ChangeToken::default()));
     git.cancel();
+    assert!(matches!(runner.checkpoint(), Err(Error::Cancelled)));
     assert!(matches!(runner.run(&request()), Err(Error::Cancelled)));
     assert!(matches!(runner.digest(&request()), Err(Error::Cancelled)));
     assert!(matches!(
@@ -58,18 +59,30 @@ fn closed_admission_rejects_every_runner_operation() {
         ),
         Err(Error::Cancelled)
     ));
+    assert!(matches!(
+        runner.digest_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+        ),
+        Err(Error::Cancelled)
+    ));
 }
 
 #[test]
 fn checkout_environment_and_timeout_reach_the_inner_runner() {
-    let inner = Unimock::new(
+    let inner = Unimock::new((
         RunnerMock::run_cancellable_with_environment_timeout
-            .next_call(matching!(_))
+            .next_call(matching!((req, _, environment, timeout) if **req == request() && *environment == [("GIT_INDEX_FILE", "index".into())] && *timeout == Duration::from_secs(1)))
             .returns(Ok(Output {
                 stdout: Vec::new(),
                 stderr: Vec::new(),
             })),
-    );
+        RunnerMock::digest_cancellable_with_environment_timeout
+            .next_call(matching!((req, _, environment, timeout) if **req == request() && *environment == [("LC_ALL", "C".into())] && *timeout == Duration::from_secs(120)))
+            .returns(Ok("converted-digest".into())),
+    ));
     let inner: Arc<dyn Runner> = Arc::new(inner);
     let runners = Unimock::new(
         GitRunnersMock::create
@@ -86,6 +99,17 @@ fn checkout_environment_and_timeout_reach_the_inner_runner() {
             Duration::from_secs(1),
         )
         .unwrap();
+    assert_eq!(
+        runner
+            .digest_cancellable_with_environment_timeout(
+                &request(),
+                &Unimock::new(()),
+                &[("LC_ALL", "C".into())],
+                Duration::from_secs(120),
+            )
+            .unwrap(),
+        "converted-digest"
+    );
 }
 
 #[test]

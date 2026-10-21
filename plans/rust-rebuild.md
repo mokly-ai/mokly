@@ -3086,28 +3086,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Finding 1: checkout filter failures still abort Changes instead of making
-    one resource unavailable with a warning. Severity High, effort Large.
-    Recommended: B, return per-resource conversion results. User decision
-    required.
-  - Finding 2: checkout conversion writes all filter output before applying
-    byte bounds. Severity High, effort Medium. Recommended: A, monitor the
-    temporary directory and stop at the selected bound. Auto-fix.
-  - Finding 3: optional filter failures can return pointer bytes. Severity
-    Medium, effort Small. Recommended: A, classify filter diagnostics as a
-    conversion failure. Auto-fix.
-  - Finding 4: dependency identity text still described raw base bytes.
-    Severity Medium, effort Small. Fixed in the working tree. Auto-fix.
-  - Finding 6: digest conversion had no temporary disk bound. Severity
-    Medium, effort Medium. Fixed by applying the raw entry size or 64 MiB
-    bound, whichever is larger. Auto-fix.
-  - Finding 7: each converted read rebuilds a full commit index. Severity
-    Medium, effort Large. Recommended: a path-scoped temporary index. User
-    decision required.
-  - [x] Finding 5: Serve did not forward checkout environment and timeout.
-    Fixed by forwarding both calls through `Tracked`. Severity High.
-  - Outside scope: remote browser host setup failures. Separate branch.
-  - Outside scope: remote sidecar lifecycle readiness failure. Separate branch.
+  - [x] Git base-read findings 1 and 7: implement the already approved
+        decision 69 C with typed unavailable resources and a path-scoped index.
+        Independent comparisons continue. No additional product decision is needed.
+  - [x] Git base-read findings 2, 3, 5, and 6: bound converted temporary output,
+        recognize optional filter failure, forward every Serve runner option,
+        and stream digests without an unbounded temporary spool.
+  - [x] Git base-read finding 4: align dependency identity text with converted
+        source bytes and retained clean object identities.
+  - [x] Preserve extraction limits and cancellation after disk-copy writes.
+        Keep partial extraction leases transient and invalidate sources when
+        effective checkout settings change. External filters rerun per preparation.
+  - Git base-read check evidence: `.context/git-base-reads/verification.md`.
+    Earlier remote attempts used the wrong workflow ref and Node 22.14.0.
+    These attempts are failed checks, not evidence of unrelated product defects.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
@@ -3998,9 +3990,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and reject incompatible declared steps.
   - Milestone 9 part 1 review 1, finding 11: settled by F8 decision 10 A now,
     with pnpm and Yarn support under option B required before the first release.
-  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
-    conversion for base render/resource bytes; retain raw Git blob bytes.
-    User item 69 holds the remaining decision.
+  - [x] Milestone 9 part 1 review 1, finding 12: User decision 69 (2026-10-21): C.
+        Apply Git checkout conversion, including network-enabled LFS smudge.
+        This replaces the unbuilt offline default 11 A.
   - `crates/mokly-compare/src/projection_context.rs:24-38` builds its own
     component counterpart map next to `Lookup::counterpart`. Separate branch.
   - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants

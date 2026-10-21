@@ -38,6 +38,9 @@ Callers project an explicit alias and read its target identity. Paths are privat
 repository-relative metadata instead.
 
 `SourceError` retains the source operation, path, and original IO error.
+`Unavailable` identifies a recoverable historical checkout failure. It carries
+the affected path and warning. It is distinct from a missing source and from
+fatal repository IO.
 Its `Internal` variant retains adapter-specific errors without converting
 those errors to IO errors. Discovery treats `ENOENT` and `ENOTDIR` as benign
 races. Unix `ELOOP` and `ENAMETOOLONG` retain their codes. Other failures keep
@@ -60,7 +63,7 @@ operation. It reads bounded chunks into private destination storage and
 returns `SourceError::Changed` on a digest or length mismatch. Callers expose
 the destination only after success. Working-tree streams open the captured
 physical identity through non-following directory handles. Git streams use
-immutable blobs under the existing bounded Git IO contract.
+checkout-converted immutable sources under the bounded Git IO contract.
 Opening a non-regular asset returns `SourceError::Changed`. Other open failures
 retain their IO cause. `is_symlink_error` identifies stopped symbolic-link
 resolution and loops. Checked copies retry interrupted reads. Cancellation

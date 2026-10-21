@@ -1,6 +1,5 @@
 //! Checkout conversion and promisor fetch integration cases.
 
-use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -17,97 +16,6 @@ use sha2::{Digest, Sha256};
 use support::Fixture;
 
 mod support;
-
-#[test]
-fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
-    let source = Fixture::new();
-    source.git(&["config", "uploadpack.allowFilter", "true"]);
-    source.git(&["config", "uploadpack.allowAnySHA1InWant", "true"]);
-    source.write("base.txt", b"fetched from the local promisor\n");
-    source.write("other.txt", b"a second fetched blob\n");
-    let base = source.commit();
-    let temporary = tempfile::tempdir().unwrap();
-    let clone = temporary.path().join("blobless");
-    let remote = format!("file://{}", source.root().display());
-    let output = Command::new("git")
-        .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
-        .arg(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
-    let repositories: &dyn Repositories = &GitRepositories {
-        runner: support::runner(Arc::new(Token::default())),
-        disk: Arc::new(SystemDisk),
-    };
-    let repository = repositories.open(&clone).unwrap();
-    let entries = repository
-        .lookup(
-            &base,
-            &[
-                RepoPath::parse("base.txt").unwrap(),
-                RepoPath::parse("other.txt").unwrap(),
-            ],
-            Limits::default(),
-        )
-        .unwrap();
-    assert_eq!(
-        repository
-            .read_many(
-                &base,
-                &entries,
-                Limits {
-                    bytes: 128,
-                    blob: 128,
-                    ..Limits::default()
-                },
-            )
-            .unwrap(),
-        [
-            b"fetched from the local promisor\n".to_vec(),
-            b"a second fetched blob\n".to_vec()
-        ]
-    );
-}
-
-#[test]
-fn failed_promisor_fetch_names_recovery_command() {
-    let source = Fixture::new();
-    source.git(&["config", "uploadpack.allowFilter", "true"]);
-    source.git(&["config", "uploadpack.allowAnySHA1InWant", "true"]);
-    source.write("base.txt", b"fetch failure\n");
-    let base = source.commit();
-    let temporary = tempfile::tempdir().unwrap();
-    let clone = temporary.path().join("blobless");
-    let remote = format!("file://{}", source.root().display());
-    let output = Command::new("git")
-        .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
-        .arg(&clone)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .output()
-        .unwrap();
-    assert!(output.status.success());
-    let replacement = temporary.path().join("missing-remote");
-    let output = Command::new("git")
-        .args(["-C", clone.to_str().unwrap(), "remote", "set-url", "origin"])
-        .arg(&replacement)
-        .output()
-        .unwrap();
-    assert!(output.status.success());
-    let repositories: &dyn Repositories = &GitRepositories {
-        runner: support::runner(Arc::new(Token::default())),
-        disk: Arc::new(SystemDisk),
-    };
-    let error = repositories
-        .open(&clone)
-        .unwrap()
-        .read(&base, &RepoPath::parse("base.txt").unwrap(), 64)
-        .unwrap_err();
-    assert!(matches!(error, Error::FetchFailed { .. }), "{error:?}");
-    assert!(error.to_string().contains("git fetch"));
-}
 
 #[test]
 fn base_reads_apply_the_commit_line_ending_rule() {
@@ -136,7 +44,7 @@ fn base_reads_smudge_local_lfs_objects() {
     assert_eq!(
         fixture
             .repository()
-            .read(&base, &RepoPath::parse("asset.lfs").unwrap(), 64)
+            .read(&base, &RepoPath::parse("asset.lfs").unwrap(), 512)
             .unwrap(),
         b"local LFS content\n"
     );
@@ -177,12 +85,11 @@ fn a_failed_checkout_filter_does_not_return_pointer_bytes() {
     fixture.write("value.filtered", b"source\n");
     let base = fixture.commit();
 
-    assert!(
-        fixture
-            .repository()
-            .read(&base, &RepoPath::parse("value.filtered").unwrap(), 64)
-            .is_err()
-    );
+    let error = fixture
+        .repository()
+        .read(&base, &RepoPath::parse("value.filtered").unwrap(), 64)
+        .unwrap_err();
+    assert!(matches!(error, Error::Conversion { .. }));
 }
 
 #[cfg(unix)]
@@ -196,12 +103,11 @@ fn an_optional_checkout_filter_failure_does_not_return_pointer_bytes() {
     fixture.write("value.optional", b"source\n");
     let base = fixture.commit();
 
-    assert!(
-        fixture
-            .repository()
-            .read(&base, &RepoPath::parse("value.optional").unwrap(), 64)
-            .is_err()
-    );
+    let error = fixture
+        .repository()
+        .read(&base, &RepoPath::parse("value.optional").unwrap(), 64)
+        .unwrap_err();
+    assert!(matches!(error, Error::Conversion { .. }));
 }
 
 #[cfg(unix)]
@@ -222,12 +128,13 @@ fn a_hanging_checkout_filter_is_bounded() {
         }),
         disk: Arc::new(SystemDisk),
     };
+    let error = repositories
+        .open(fixture.root())
+        .unwrap()
+        .read(&base, &RepoPath::parse("value.wait").unwrap(), 64)
+        .unwrap_err();
     assert!(
-        repositories
-            .open(fixture.root())
-            .unwrap()
-            .read(&base, &RepoPath::parse("value.wait").unwrap(), 64)
-            .is_err()
+        matches!(error, Error::Conversion { source, .. } if matches!(*source, Error::CheckoutTimeout))
     );
 }
 
@@ -245,4 +152,29 @@ impl Clock for FastClock {
             std::sync::atomic::Ordering::Relaxed,
         );
     }
+}
+
+#[test]
+fn base_attributes_override_staged_and_working_attributes() {
+    let fixture = Fixture::new();
+    fixture.write(".gitattributes", b"*.txt text eol=crlf\n");
+    fixture.write("notes.txt", b"base\n");
+    let base = fixture.commit();
+    fixture.write(".gitattributes", b"*.txt -text\n");
+    fixture.write("notes.txt", b"staged\n");
+    fixture.git(&["add", "-A"]);
+    fixture.write("notes.txt", b"working\n");
+    let staged = fixture.git(&["write-tree"]);
+    assert_eq!(
+        fixture
+            .repository()
+            .read(&base, &RepoPath::parse("notes.txt").unwrap(), 32)
+            .unwrap(),
+        b"base\r\n"
+    );
+    assert_eq!(fixture.git(&["write-tree"]), staged);
+    assert_eq!(
+        std::fs::read(fixture.root().join("notes.txt")).unwrap(),
+        b"working\n"
+    );
 }

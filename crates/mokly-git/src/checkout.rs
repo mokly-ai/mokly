@@ -3,19 +3,18 @@
 use std::ffi::OsString;
 use std::fs;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
-use sha2::{Digest, Sha256};
-
 use crate::checkout_bounds::{SizeBound, filter_failed};
+use crate::checkout_output::{conversion, parse_output};
 use crate::command::{self, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
 use crate::error::{Error, IoResult, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{Entry, Limits};
 
-const FILTER_TIMEOUT: Duration = Duration::from_secs(30);
+const FILTER_TIMEOUT: Duration = Duration::from_secs(120);
 const MAX_CHECKOUT_OUTPUT: usize = DEFAULT_OUTPUT_LIMIT;
 
 struct NeverCancelled;
@@ -34,14 +33,34 @@ impl GitRepository {
         limits: Limits,
     ) -> Result<Vec<Vec<u8>>> {
         validate_entries(entries, limits)?;
+        for entry in entries {
+            if entry.size > limits.blob {
+                return Err(Error::ByteLimit { limit: limits.blob });
+            }
+        }
+        if entries
+            .iter()
+            .fold(0usize, |total, entry| total.saturating_add(entry.size))
+            > limits.bytes
+        {
+            return Err(Error::ByteLimit {
+                limit: limits.bytes,
+            });
+        }
         if entries.is_empty() {
             return Ok(Vec::new());
         }
-        let checkout = Checkout::new(self, commit, entries, Some(limits.bytes))?;
+        let checkout = conversion(
+            Checkout::new(self, commit, entries, Some(limits.bytes)),
+            entries,
+        )?;
         let mut total = 0usize;
         let mut result = Vec::with_capacity(entries.len());
         for entry in entries {
-            let bytes = checkout.read(&entry.path, limits.blob)?;
+            let bytes = conversion(
+                checkout.read(&entry.path, limits.blob),
+                std::slice::from_ref(entry),
+            )?;
             total = total.saturating_add(bytes.len());
             if total > limits.bytes {
                 return Err(Error::ByteLimit {
@@ -55,28 +74,30 @@ impl GitRepository {
 
     pub(crate) fn checkout_digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
         validate_entries(std::slice::from_ref(entry), Limits::default())?;
-        let checkout = Checkout::new(
-            self,
-            commit,
+        self.checkout_index(commit, std::slice::from_ref(entry))?;
+        let request = Request {
+            directory: self.directory.clone(),
+            args: vec![
+                "--no-optional-locks".into(),
+                format!("--attr-source={commit}").into(),
+                "cat-file".into(),
+                "--filters".into(),
+                format!("--path={}", entry.path).into(),
+                entry.object.as_str().into(),
+            ],
+            stdin: Vec::new(),
+            output_limit: DEFAULT_OUTPUT_LIMIT,
+            stderr_limit: DEFAULT_STDERR_LIMIT,
+        };
+        conversion(
+            self.runner.digest_cancellable_with_environment_timeout(
+                &request,
+                &NeverCancelled,
+                &[("LC_ALL", "C".into())],
+                FILTER_TIMEOUT,
+            ),
             std::slice::from_ref(entry),
-            Some(entry.size.max(DEFAULT_OUTPUT_LIMIT)),
-        )?;
-        let path = checkout.file(&entry.path)?;
-        let mut input = fs::File::open(path).git()?;
-        let mut digest = Sha256::new();
-        let mut buffer = [0; 64 * 1024];
-        loop {
-            let count = input.read(&mut buffer).git()?;
-            if count == 0 {
-                break;
-            }
-            digest.update(&buffer[..count]);
-        }
-        Ok(digest
-            .finalize()
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect())
+        )
     }
 }
 
@@ -108,7 +129,7 @@ impl Checkout {
         entries: &[Entry],
         byte_limit: Option<usize>,
     ) -> Result<Self> {
-        repository.ensure_objects(entries)?;
+        let index_input = repository.checkout_index(commit, entries)?;
         let root = tempfile::Builder::new()
             .prefix("mokly-git-checkout-")
             .tempdir()
@@ -125,8 +146,8 @@ impl Checkout {
         run(
             repository.runner.as_ref(),
             repository,
-            &["read-tree", "--reset", commit.as_str()],
-            Vec::new(),
+            &["update-index", "-z", "--index-info"],
+            index_input,
             &environment,
             &cancellation,
             MAX_CHECKOUT_OUTPUT,
@@ -205,7 +226,10 @@ impl GitRepository {
         limits: Limits,
     ) -> Result<Checkout> {
         validate_entries(entries, limits)?;
-        Checkout::new(self, commit, entries, Some(limits.bytes))
+        conversion(
+            Checkout::new(self, commit, entries, Some(limits.bytes)),
+            entries,
+        )
     }
 }
 
@@ -239,42 +263,4 @@ fn run(
         ),
         None => runner.run_cancellable_with_environment(&request, cancellation, environment),
     }
-}
-
-fn parse_output(
-    output: &[u8],
-    worktree: &Path,
-    entries: &[Entry],
-) -> Result<std::collections::BTreeMap<RepoPath, PathBuf>> {
-    let expected: std::collections::BTreeSet<_> =
-        entries.iter().map(|entry| entry.path.clone()).collect();
-    let mut files = std::collections::BTreeMap::new();
-    for record in output
-        .split(|byte| *byte == 0)
-        .filter(|record| !record.is_empty())
-    {
-        let Some(tab) = record.iter().position(|byte| *byte == b'\t') else {
-            return Err(Error::MalformedOutput);
-        };
-        let temporary = std::str::from_utf8(&record[..tab]).map_err(|_| Error::PathEncoding)?;
-        let path = RepoPath::parse(
-            std::str::from_utf8(&record[tab + 1..]).map_err(|_| Error::PathEncoding)?,
-        )?;
-        if !expected.contains(&path) || files.contains_key(&path) {
-            return Err(Error::MalformedOutput);
-        }
-        let temporary = Path::new(temporary);
-        if temporary.is_absolute()
-            || temporary
-                .components()
-                .any(|component| matches!(component, std::path::Component::ParentDir))
-        {
-            return Err(Error::MalformedOutput);
-        }
-        files.insert(path, worktree.join(temporary));
-    }
-    if files.len() != expected.len() {
-        return Err(Error::MalformedOutput);
-    }
-    Ok(files)
 }

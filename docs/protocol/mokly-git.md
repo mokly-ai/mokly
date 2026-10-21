@@ -86,9 +86,9 @@ A base file read first proves exact regular-file mode from the pinned commit's
 tree. A missing path and a nonregular path have distinct errors. Symbolic
 links are not followed. Git checkout conversion applies the pinned commit's
 attributes with the user's Git configuration, including line endings, built-in
-encodings, custom smudge filters, and local Git LFS objects. The working file
+encodings, custom smudge filters, and Git LFS downloads. Network access is allowed within the existing bounds. The working file
 is never compared with the raw pointer blob. Converted bytes stay within the
-selected file and batch bounds.
+selected file and batch bounds. Raw source admission also keeps those bounds.
 Opaque public resources instead use a streamed SHA-256 digest: stdout feeds
 the hash through a 64 KiB buffer, and stderr keeps its capture bound. The
 stream keeps process-tree ownership, cancellation, and exit validation.
@@ -100,12 +100,16 @@ Extraction checks leaf count and total converted bytes before file writes.
 The aggregate is a disk bound; base extraction sets it from the source cache
 capacity. Files are written one batch at a time, so a commit larger than one
 batch does not require its full contents in memory. Converted files larger than
-one batch stream directly to disk through a 64 KiB buffer. The stream checks
-the converted file size, exit status, and cancellation; stderr keeps its
+one batch stream directly to disk through a 64 KiB buffer. The copy checks
+the converted file size and cancellation after each chunk; stderr keeps its
 capture bound. Extraction preserves executable files and omits links and
 submodules. It does not apply archive-only substitutions. If a conversion
 filter fails, reaches its time limit, or exceeds a byte bound, that resource is
-unavailable with a warning and independent resources continue.
+unavailable with a `base-conversion` warning and independent resources continue.
+Conversions have the existing 120-second preparation allowance. Optional
+filter failures also make the resource unavailable; raw fallback bytes are not
+valid comparison evidence. Partial archives retain these warnings and do not
+become reusable cache entries.
 The destination must not exist. A partial extraction is removed on failure.
 Git metadata directories are never extracted. A name unsupported by the host
 is skipped with a trace: Windows cannot store colon or backslash names,

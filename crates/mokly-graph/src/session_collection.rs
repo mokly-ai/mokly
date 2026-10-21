@@ -83,6 +83,11 @@ pub(crate) fn view(route: &str, input: &ComparisonDocument) -> Result<ValidatedV
         anchors: references::anchors(&document.tree),
         links: document.links.clone(),
         closure: input.closure.files.clone(),
-        warnings: document.warnings.clone(),
+        warnings: document
+            .warnings
+            .iter()
+            .chain(&input.closure.warnings)
+            .cloned()
+            .collect(),
     })
 }

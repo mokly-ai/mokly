@@ -124,6 +124,10 @@ impl Tracked {
     }
 }
 impl Runner for Tracked {
+    fn checkpoint(&self) -> Result<()> {
+        let _active = self.enter()?;
+        self.inner.checkpoint()
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         let _active = self.enter()?;
         self.inner.run(request)
@@ -143,6 +147,21 @@ impl Runner for Tracked {
     ) -> Result<Output> {
         let _active = self.enter()?;
         self.inner.run_cancellable(request, cancellation)
+    }
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<String> {
+        let _active = self.enter()?;
+        self.inner.digest_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
     }
     fn run_cancellable_with_environment(
         &self,

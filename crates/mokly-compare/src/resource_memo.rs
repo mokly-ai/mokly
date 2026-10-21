@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use mokly_css::parsed_cache::ParsedCssCache;
 use mokly_css::rules::RuleDiff;
 use mokly_css::syntax;
+use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGeneration;
 use mokly_graph::urls::local_target;
 use mokly_model::material::digest;
@@ -34,6 +35,7 @@ pub struct ResourceWork {
 
 #[derive(Clone)]
 pub(crate) struct ResourceFact {
+    pub(crate) unavailable: bool,
     pub(crate) digest: Option<String>,
     pub(crate) imports: Vec<String>,
     pub(crate) references: Vec<String>,
@@ -101,8 +103,13 @@ impl ResourceMemo for Memo {
             } else {
                 &self.after
             };
+            let (digest, unavailable) = match generation.resource_digest(route) {
+                Err(GraphError::ResourceUnavailable { .. }) => (None, true),
+                other => (other.compare()?, false),
+            };
             let fact = ResourceFact {
-                digest: generation.resource_digest(route).compare()?,
+                unavailable,
+                digest,
                 imports: Vec::new(),
                 references: Vec::new(),
             };
@@ -146,10 +153,10 @@ impl ResourceMemo for Memo {
         } else {
             &self.after
         };
-        let bytes = generation
-            .resource_bytes(route)
-            .compare()?
-            .map(Arc::<[u8]>::from);
+        let (bytes, unavailable) = match generation.resource_bytes(route) {
+            Err(GraphError::ResourceUnavailable { .. }) => (None, true),
+            other => (other.compare()?.map(Arc::<[u8]>::from), false),
+        };
         let references = bytes
             .as_deref()
             .filter(|_| route.ends_with(".css"))
@@ -166,6 +173,7 @@ impl ResourceMemo for Memo {
             .filter_map(|reference| local_target(route, &reference.value).ok().flatten())
             .collect();
         let fact = ResourceFact {
+            unavailable,
             digest: bytes.as_deref().map(digest),
             imports,
             references,

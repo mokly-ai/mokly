@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+use mokly_catalogue::diagnostic::Warning;
 use mokly_css::attribution::PageObservation;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
@@ -43,6 +44,7 @@ pub(crate) struct PendingView {
 }
 
 pub(crate) struct PairViews {
+    pub(crate) warnings: Vec<Warning>,
     pub(crate) views: Vec<PendingView>,
     pub(crate) usage: Vec<UsageView>,
 }
@@ -82,6 +84,7 @@ pub(crate) fn collect(
         })
     });
     let mut result = PairViews {
+        warnings: Vec::new(),
         views: Vec::new(),
         usage: Vec::new(),
     };
@@ -123,6 +126,9 @@ pub(crate) fn collect(
             pair.moved,
             memo,
         )?;
+        result
+            .warnings
+            .extend(resources.before.warnings.iter().cloned());
         let before_tree =
             before_document.map(|document| matching_tree::document(&document.tree, paths));
         let after_tree = after_document

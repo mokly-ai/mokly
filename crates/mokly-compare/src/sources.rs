@@ -21,6 +21,10 @@ pub struct TreeIndex {
 /// Confined source enumeration and byte reads.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = SourcesMock))]
 pub trait Sources: Send + Sync {
+    /// Conversion warnings retained by extraction in the same repository session.
+    fn warnings(&self) -> Vec<(String, String)> {
+        Vec::new()
+    }
     /// List regular files below exact roots; `None` explicitly selects all files.
     fn list(&self, roots: &[Option<RepoPath>], limits: Limits) -> Result<Vec<Entry>>;
     /// Read one regular source without querying tree metadata again.
@@ -62,6 +66,9 @@ impl GitSources {
 }
 
 impl Sources for GitSources {
+    fn warnings(&self) -> Vec<(String, String)> {
+        self.repository.conversion_warnings()
+    }
     fn list(&self, roots: &[Option<RepoPath>], limits: Limits) -> Result<Vec<Entry>> {
         if roots.is_empty() {
             return Ok(vec![]);

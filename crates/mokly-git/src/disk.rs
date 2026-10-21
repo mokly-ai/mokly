@@ -9,22 +9,9 @@ use std::path::{Path, PathBuf};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::identity::RepoPath;
 
-/// One regular file of a bounded source batch.
-#[derive(Debug)]
-pub struct ArchiveFile {
-    /// Confined repository-relative path.
-    pub path: RepoPath,
-    /// Exact unconverted blob bytes.
-    pub bytes: Vec<u8>,
-    /// Whether Git marks the source executable.
-    pub executable: bool,
-}
-
 /// An owned fresh extraction, removed on failure until `finish` succeeds.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ArchiveMock))]
 pub trait Archive: Send + Sync {
-    /// Write one batch without retaining previous batch contents.
-    fn write(&mut self, files: &[ArchiveFile]) -> Result<()>;
     /// Open a new regular blob sink; unsupported host paths return none.
     fn file(&mut self, path: &RepoPath, executable: bool) -> Result<Option<Box<dyn Write + Send>>>;
     /// Keep the complete extraction.
@@ -40,8 +27,6 @@ pub trait Disk: Send + Sync {
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
     /// Start incremental extraction in a fresh directory.
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>>;
-    /// Extract a single batch through the same ownership rules.
-    fn extract(&self, destination: &Path, files: &[ArchiveFile]) -> Result<()>;
 }
 
 /// Host source IO adapter.
@@ -110,24 +95,9 @@ impl Disk for SystemDisk {
             complete: false,
         }))
     }
-
-    fn extract(&self, destination: &Path, files: &[ArchiveFile]) -> Result<()> {
-        let mut archive = self.archive(destination)?;
-        archive.write(files)?;
-        archive.finish()
-    }
 }
 
 impl Archive for Extraction {
-    fn write(&mut self, files: &[ArchiveFile]) -> Result<()> {
-        for file in files {
-            if let Some(mut output) = self.file(&file.path, file.executable)? {
-                output.write_all(&file.bytes).git()?;
-            }
-        }
-        Ok(())
-    }
-
     fn file(&mut self, path: &RepoPath, executable: bool) -> Result<Option<Box<dyn Write + Send>>> {
         if path
             .as_str()

@@ -1,11 +1,17 @@
-//! Checkout-converted source extraction into a bounded fresh directory.
+//! Bounded checkout batches preserve independent sources when a filter fails.
 
+use std::fs;
+use std::io::{Read, Write};
+
+use crate::command::Runner;
 use std::path::Path;
 
+use crate::checkout::Checkout;
+use crate::disk::Archive;
 use crate::error::{Error, IoResult, Result};
 use crate::identity::ObjectId;
 use crate::repository::{GitRepository, Repository};
-use crate::tree::Limits;
+use crate::tree::{Entry, Limits};
 
 impl GitRepository {
     pub(crate) fn extract_sources(
@@ -19,27 +25,103 @@ impl GitRepository {
             .into_iter()
             .filter(|entry| entry.mode.regular())
             .collect();
-        let checkout = self.checkout(&entries, commit, limits)?;
-        let mut archive = self.disk.archive(destination)?;
-        let mut bytes = 0usize;
-        for entry in &entries {
-            let source = checkout.file(&entry.path)?;
-            let size = std::fs::metadata(&source).git()?.len();
-            let size = usize::try_from(size).map_err(|_| Error::ByteLimit {
+        let raw_bytes = entries
+            .iter()
+            .fold(0usize, |total, entry| total.saturating_add(entry.size));
+        if raw_bytes > limits.bytes {
+            return Err(Error::ByteLimit {
                 limit: limits.bytes,
-            })?;
-            if size > limits.bytes.saturating_sub(bytes) {
-                return Err(Error::ByteLimit {
-                    limit: limits.bytes,
-                });
-            }
-            bytes += size;
-            let Some(mut output) = archive.file(&entry.path, entry.mode.executable())? else {
-                continue;
-            };
-            let mut input = std::fs::File::open(source).git()?;
-            std::io::copy(&mut input, &mut output).git()?;
+            });
         }
+        let mut archive = self.disk.archive(destination)?;
+        let mut bytes = 0;
+        let mut start = 0;
+        while start < entries.len() {
+            let mut end = start + 1;
+            let mut estimate = entries[start].size;
+            while end < entries.len()
+                && end - start < 4096
+                && estimate.saturating_add(entries[end].size) <= 48 * 1024 * 1024
+            {
+                estimate = estimate.saturating_add(entries[end].size);
+                end += 1;
+            }
+            let batch = &entries[start..end];
+            let remaining = limits;
+            match self.checkout(batch, commit, remaining) {
+                Ok(checkout) => copy_batch(
+                    &checkout,
+                    batch,
+                    archive.as_mut(),
+                    &mut bytes,
+                    limits.bytes,
+                    self.runner.as_ref(),
+                )?,
+                Err(Error::Conversion { .. }) => {
+                    for entry in batch {
+                        let one = std::slice::from_ref(entry);
+                        match self.checkout(one, commit, limits) {
+                            Ok(checkout) => copy_batch(
+                                &checkout,
+                                one,
+                                archive.as_mut(),
+                                &mut bytes,
+                                limits.bytes,
+                                self.runner.as_ref(),
+                            )?,
+                            Err(error @ Error::Conversion { .. }) => {
+                                self.unavailable
+                                    .lock()
+                                    .unwrap_or_else(|error| error.into_inner())
+                                    .insert(
+                                        entry.path.to_string(),
+                                        format!(
+                                            "base resource {} is unavailable: {error}",
+                                            entry.path
+                                        ),
+                                    );
+                            }
+                            Err(error) => return Err(error),
+                        }
+                    }
+                }
+                Err(error) => return Err(error),
+            }
+            start = end;
+        }
+        self.runner.checkpoint()?;
         archive.finish()
     }
+}
+
+fn copy_batch(
+    checkout: &Checkout,
+    entries: &[Entry],
+    archive: &mut dyn Archive,
+    total: &mut usize,
+    limit: usize,
+    runner: &dyn Runner,
+) -> Result<()> {
+    for entry in entries {
+        let source = checkout.file(&entry.path)?;
+        let size = fs::metadata(&source).git()?.len();
+        if size > limit.saturating_sub(*total) as u64 {
+            return Err(Error::ByteLimit { limit });
+        }
+        *total += size as usize;
+        let Some(mut output) = archive.file(&entry.path, entry.mode.executable())? else {
+            continue;
+        };
+        let mut input = fs::File::open(source).git()?;
+        let mut buffer = [0; 64 * 1024];
+        loop {
+            runner.checkpoint()?;
+            let count = input.read(&mut buffer).git()?;
+            if count == 0 {
+                break;
+            }
+            output.write_all(&buffer[..count]).git()?;
+        }
+    }
+    Ok(())
 }

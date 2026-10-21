@@ -16,6 +16,19 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
+        let entries = self.lookup_metadata(commit, paths, limits)?;
+        if self.ensure_checkout_objects(commit, &entries)? {
+            return self.lookup_metadata(commit, paths, limits);
+        }
+        Ok(entries)
+    }
+
+    pub(crate) fn lookup_metadata(
+        &self,
+        commit: &ObjectId,
+        paths: &[RepoPath],
+        limits: Limits,
+    ) -> Result<Vec<Entry>> {
         let prefix: Vec<_> = [
             "--no-optional-locks",
             "--literal-pathspecs",

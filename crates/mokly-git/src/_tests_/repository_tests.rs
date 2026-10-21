@@ -25,6 +25,8 @@ fn output(bytes: &[u8]) -> Result<Output> {
 }
 fn repository(mock: Unimock) -> GitRepository {
     GitRepository {
+        fetch_lock: std::sync::Mutex::new(()),
+        unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         directory: "/repo".into(),
         runner: Arc::new(mock),
         disk: Arc::new(Unimock::new(())),
@@ -124,13 +126,6 @@ fn malformed_status_and_tree_records_are_rejected() {
     ] {
         assert!(tree::parse(bytes, Limits::default()).is_err());
     }
-    let entry = Entry {
-        path: RepoPath::parse("file").unwrap(),
-        object: id(),
-        mode: Mode::File,
-        size: 1,
-    };
-    assert_eq!(entry.size, 1);
 }
 
 #[test]
@@ -170,6 +165,50 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
             }
         ),
         Err(Error::FileCount { limit: 1 })
+    ));
+}
+
+#[test]
+fn raw_source_bounds_and_modes_are_checked_before_checkout_io() {
+    let repo = repository(Unimock::new(()));
+    let entry = Entry {
+        path: RepoPath::parse("asset.bin").unwrap(),
+        object: id(),
+        mode: Mode::File,
+        size: 3,
+    };
+    assert!(matches!(
+        repo.read_many(
+            &id(),
+            std::slice::from_ref(&entry),
+            Limits {
+                blob: 2,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::ByteLimit { limit: 2 })
+    ));
+    assert!(matches!(
+        repo.read_many(
+            &id(),
+            std::slice::from_ref(&entry),
+            Limits {
+                bytes: 2,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::ByteLimit { limit: 2 })
+    ));
+    assert!(matches!(
+        repo.read_many(
+            &id(),
+            &[Entry {
+                mode: Mode::Symlink,
+                ..entry
+            }],
+            Limits::default()
+        ),
+        Err(Error::NotRegular { .. })
     ));
 }
 
