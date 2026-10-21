@@ -17,7 +17,7 @@ commit. It publishes a changed viewer or reuses the exact existing viewer pin:
 
 `packages/mokly/package.json` describes the public ESM package `@mokly/mokly`: managed
 version, MIT license, Mokly authorship, exact repository metadata, Node range
-`>=22.15.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
+`>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
 its types, the configuration JSON Schema at `config.schema.json`, and the file
 allowlist. It lists the five platform packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact
@@ -91,7 +91,7 @@ Native jobs install npm dependencies with lifecycle scripts disabled.
 Each native release job has a 60-minute hang guard. It must allow at least
 three times the job's typical duration, including setup and builds.
 
-The publish job downloads the five archives, verifies that each archive's
+Read-only preparation downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
 for its target, prepares the viewer and then packs the CLI from the release checkout,
 validates every packed manifest and inventory plus the runtime license closure,

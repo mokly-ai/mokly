@@ -34,7 +34,7 @@ impl Collector {
             let Some((route, view)) = self.views.pop_last() else {
                 break;
             };
-            self.retained -= charge(&route, &view);
+            self.retained -= view.charge(&route);
         }
     }
 }
@@ -51,7 +51,7 @@ impl ComparisonCollector for Collector {
             document,
             closure: input.closure,
         };
-        let cost = charge(route, &view);
+        let cost = view.charge(route);
         if cost
             <= self
                 .bound
@@ -63,10 +63,6 @@ impl ComparisonCollector for Collector {
         }
         Ok(())
     }
-}
-
-fn charge(route: &str, view: &CapturedView) -> usize {
-    256 + route.len() + view.document.retained_bytes() + capture_weight::closure(&view.closure)
 }
 
 #[cfg(test)]

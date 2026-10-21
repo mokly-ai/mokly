@@ -25,6 +25,7 @@ export default defineConfig({
     "design_component_stacks",
     "design_index_entries",
     "design_library",
+    "design_library_mobile",
     "design_modern_controls",
     "design_portable",
     "design_scroll_together",

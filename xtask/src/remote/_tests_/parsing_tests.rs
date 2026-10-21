@@ -46,10 +46,10 @@ fn completed_status_requires_one_matching_table_row() {
 }
 
 #[test]
-fn command_inventory_has_six_unique_commands_and_five_reports() {
+fn command_inventory_has_seven_unique_commands_and_five_reports() {
     let baseline = commands(DependencyAudit::Baseline);
     let commands = commands(DependencyAudit::Strict);
-    assert_eq!(commands.len(), 6);
+    assert_eq!(commands.len(), 7);
     assert_eq!(commands.iter().filter(|command| command.report).count(), 5);
     assert_eq!(
         commands
@@ -62,7 +62,8 @@ fn command_inventory_has_six_unique_commands_and_five_reports() {
             "browser-1-of-4",
             "browser-2-of-4",
             "browser-3-of-4",
-            "browser-4-of-4"
+            "browser-4-of-4",
+            "static-delivery"
         ]
     );
     assert!(
@@ -80,7 +81,7 @@ fn command_inventory_has_six_unique_commands_and_five_reports() {
             .shell_command("sha256:abc")
             .contains("--dependency-audit")
     }));
-    for (offset, command) in commands[2..].iter().enumerate() {
+    for (offset, command) in commands[2..6].iter().enumerate() {
         assert_eq!(
             command.shell_command("sha256:abc"),
             format!(
@@ -89,6 +90,11 @@ fn command_inventory_has_six_unique_commands_and_five_reports() {
             )
         );
     }
+    assert_eq!(
+        commands[6].shell_command("sha256:abc"),
+        "node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite static-delivery"
+    );
+    assert!(!commands[6].report);
     assert!(
         baseline[0]
             .shell_command("sha256:abc")

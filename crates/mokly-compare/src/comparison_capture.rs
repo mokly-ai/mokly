@@ -28,6 +28,12 @@ pub(crate) struct CapturedView {
     pub(crate) closure: Closure,
 }
 
+impl CapturedView {
+    pub(crate) fn charge(&self, route: &str) -> usize {
+        256 + route.len() + self.document.retained_bytes() + capture_weight::closure(&self.closure)
+    }
+}
+
 pub(crate) struct CapturedGeneration {
     source: Arc<dyn RenderGeneration>,
     views: BTreeMap<String, CapturedView>,
@@ -83,11 +89,7 @@ pub(crate) fn capture_with_bound(
         .map(EncodedResource::encoded_bytes)
         .sum::<usize>();
     for (route, view) in collector.views {
-        let cost = 256
-            + route.len()
-            + view.document.retained_bytes()
-            + capture_weight::closure(&view.closure);
-        if budget.retain(cost) {
+        if budget.retain(view.charge(&route)) {
             encoded_bytes += view.document.bytes();
             views.insert(route, view);
         }

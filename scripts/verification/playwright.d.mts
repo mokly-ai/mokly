@@ -1,3 +1,4 @@
+import type { BrowserShardWeights } from "./browser-partition.mjs";
 import type { VerificationShard } from "./evidence.mjs";
 
 /** One Playwright test identity from a JSON list report. */
@@ -22,9 +23,10 @@ export interface BrowserTestInventory {
 export interface BrowserDiscoveryOptions {
   project?: string;
   shard?: VerificationShard;
+  weights?: BrowserShardWeights;
 }
 
-/** List one Playwright project, optionally sharded, as Playwright assigns it. */
+/** Discover one Playwright project, then optionally select a weighted shard. */
 export function discoverBrowserTests(
   repositoryRoot: string,
   options?: BrowserDiscoveryOptions,

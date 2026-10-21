@@ -151,9 +151,6 @@ impl RenderGeneration for Session {
     ) -> Vec<Result<ComparisonDocument>> {
         self.state.workers.comparison(routes, worker)
     }
-    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
-        self.schedule_comparison(routes, self).into_iter().collect()
-    }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.raw(route)?;
         if let Some(document) = &artifact.document {

@@ -7,7 +7,7 @@ import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_read
 import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { expectBadgeAffected } from "./branch_point_affected.js";
-import { branchPointCases } from "./branch_point_delivery_cases.js";
+import { branchPointDeliveryCases } from "./branch_point_delivery_cases.js";
 import { branchPointPaths, test } from "./branch_point_test.js";
 import {
   copiedBytes,
@@ -17,7 +17,7 @@ import {
 import { missingResourceNotice } from "./document_error_allowance.js";
 
 for (const width of [390, 1280]) {
-  for (const scenario of branchPointCases) {
+  for (const scenario of branchPointDeliveryCases) {
     test(`${width}px: copied branch-point files retain ${scenario.name}`, async ({
       page,
       request,
@@ -122,7 +122,7 @@ for (const width of [390, 1280]) {
         expect(historical.before?.path).toBe(removed.entry.path);
         expect(historical.after).toBeUndefined();
       }
-      if (scenario.name.startsWith("document")) {
+      if (scenario.case === "reused-parent") {
         expect(index.documents.map((entry) => entry.path)).toContain(
           branchPointPaths.reusedParent,
         );

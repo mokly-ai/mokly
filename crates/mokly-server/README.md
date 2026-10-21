@@ -96,11 +96,10 @@ It rejects changed public bytes or an inconsistent document after cache eviction
 before a capture can install a mixed generation.
 Its `comparison_capture` method returns `None` so capture creation and smaller
 budgets cannot bypass these checks through the wrapped generation.
-Comparison batches use the wrapped generation's existing worker pool. Each
-worker applies this wrapper's document and resource checks before its input
-returns. Validated collection checks the supplied document and closure before
+Validated collection uses the wrapped generation's existing worker pool.
+It checks the supplied document and closure before
 forwarding them to the encoder. It preserves these checks without requesting
-another document. Scheduling does not bypass the wrapper or add a second pool.
+another document or adding a second pool.
 
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after

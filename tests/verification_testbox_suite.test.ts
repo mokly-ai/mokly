@@ -56,15 +56,6 @@ test("six commands derive exact cargo arguments, report names and streamed outpu
           ],
           captureOutput: false,
         },
-        ...(shard === "1/4"
-          ? [
-              {
-                file: "npm",
-                args: ["run", "test:delivery:prepared"],
-                captureOutput: false,
-              },
-            ]
-          : []),
       ],
     );
     const cargo = harness.commands.find((command) => command.file === "cargo")!;
@@ -76,6 +67,20 @@ test("six commands derive exact cargo arguments, report names and streamed outpu
     assert.equal(cargo.env.PATH, "/tools");
     assert.deepEqual(harness.writes, []);
   }
+});
+
+test("static delivery builds and runs in an independent Testbox command", async () => {
+  const harness = testboxHarness();
+  const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", "static-delivery"];
+  assert.equal(parseTestboxArguments(args).commandName, "static-delivery");
+  assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
+  assert.deepEqual(
+    harness.commands.slice(2).map(({ file, args }) => [file, ...args]),
+    [
+      ["npm", "run", "build"],
+      ["npm", "run", "test:delivery:prepared"],
+    ],
+  );
 });
 
 const REPOSITORY = ["--expect", TESTBOX_FINGERPRINT, "--suite", "repository"];
@@ -277,7 +282,7 @@ test("the wrapper returns the exact cargo exit code", async () => {
 });
 
 test("only browser accepts shard requests", () => {
-  for (const suite of ["viewer", "repository"])
+  for (const suite of ["viewer", "repository", "static-delivery"])
     assert.throws(
       () =>
         parseTestboxArguments([

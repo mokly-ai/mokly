@@ -70,11 +70,10 @@ comparison collector. Each view composes once, including when the artifact
 cache retains nothing. Validation keeps only cross-view facts between batches.
 It preserves aggregate failures and warning order. Inputs stay provisional
 until the final anchor and output-name checks succeed.
-Comparison batches use the same render pool and sidecar count as validation.
-They return transient documents and closures in requested route order.
-The comparison caller limits each batch to the pool's existing worker count.
-Other generation adapters use sequential batches unless they forward scheduling
-and their cancellation checks together.
+Validated collection schedules batches through the generation's existing
+render pool and sidecar count. It records each batch's validation facts before
+reporting its summary charge and forwarding inputs in route order.
+Each batch contains at most one transient input per render worker.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides require complete, valid closures. A missing referenced

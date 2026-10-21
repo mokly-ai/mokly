@@ -33,7 +33,7 @@ test("the shim accepts the complete Node engine range", () => {
   for (const version of [
     "22.15.0",
     "22.99.0",
-    "23.0.0",
+    "24.0.0",
     "24.13.99",
     "24.19.0",
     "24.21.0",
@@ -52,6 +52,25 @@ test("the shim accepts the complete Node engine range", () => {
     "invalid",
   ]) {
     assert.throws(() => assertNodeVersion(version), /Install a supported Node/);
+  }
+});
+
+test("Node 23 is excluded before package lookup or native execution", async () => {
+  for (const version of ["23.0.0", "23.4.0", "23.5.0", "23.11.1", "23.99.0"]) {
+    assert.equal(satisfies(version, SUPPORTED_NODE_RANGE), false);
+    assert.throws(() => assertNodeVersion(version), /Install a supported Node/);
+    await assert.rejects(
+      runShim(
+        [],
+        runtime({
+          nodeVersion: version,
+          cliPackage: () => assert.fail("package lookup must not run"),
+          nativePackage: () => assert.fail("native lookup must not run"),
+          execute: () => assert.fail("native execution must not run"),
+        }),
+      ),
+      /requires Node.js/,
+    );
   }
 });
 
