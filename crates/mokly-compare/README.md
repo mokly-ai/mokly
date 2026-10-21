@@ -40,7 +40,13 @@ Compose a reader and cancellation graph for each comparison generation. The cata
 these files. HTML reads require no extraction or package manager.
 HTML-only comparison uses working dependencies for package stylesheets on both
 sides. The CLI compares dependency identities through Git and emits
-`base-dependencies` when they differ, including a package-only upgrade.
+`base-dependencies` when governing inputs differ, including a package-only upgrade.
+`dependency_paths::governing` selects manifests and lockfiles beside the
+head's used dependency directories and their repository ancestors. The
+`read_paths` methods on `InputReader` and `WorkingInputs` read only those
+paths. They preserve Git clean identities without repository inventories.
+An HTML comparison uses its head generation's completed dependency inventory.
+With no used dependency directory, it reads no dependency inputs.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency

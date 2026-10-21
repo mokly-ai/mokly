@@ -110,6 +110,7 @@ pub(super) fn probe(count: usize) -> Probe {
         },
         inventory: Default::default(),
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         templates: BTreeMap::new(),
         documents: BTreeMap::new(),
         slot_fragments: BTreeMap::new(),

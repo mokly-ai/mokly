@@ -12,6 +12,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
 use mokly_compare::base_render::{BaseProvider, BaseRequest};
+use mokly_compare::dependency_paths;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
 use mokly_compare::inputs::{InputReader, SourceInputs};
@@ -79,7 +80,17 @@ impl BaseProvider for NativeBase {
         let warning = if needs_sidecar {
             None
         } else {
-            html_dependencies(request, &config)?
+            html_dependencies(
+                request,
+                &config,
+                &request
+                    .head
+                    .catalogue()
+                    .dependency_directories
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            )?
         };
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
@@ -148,11 +159,21 @@ impl BaseProvider for NativeBase {
 fn html_dependencies(
     request: &BaseRequest<'_>,
     config: &ResolvedConfig,
+    used: &[String],
 ) -> Result<Option<Warning>> {
+    let paths = dependency_paths::governing(used)?;
+    if paths.is_empty() {
+        return Ok(None);
+    }
     let reader: &dyn InputReader = &SourceInputs;
-    let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
+    let base = reader.read_paths(request.sources.sources.as_ref(), &paths, Limits::default())?;
     let working: &dyn WorkingInputs = &SystemWorkingInputs;
-    let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
+    let head = working.read_paths(
+        request.repository.as_ref(),
+        &base,
+        &paths,
+        Limits::default(),
+    )?;
     Ok((base != head).then(|| Warning {
         code: "base-dependencies",
         subject: WarningSubject::Configuration(relative(&config.file, &config.repo_root)),

@@ -7,10 +7,9 @@ use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
-use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
-use mokly_git::repository::RepositoryMock;
 use mokly_graph::error::GraphError;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::runtime_diagnostic::RuntimeCode;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeCancellation, ChangeToken};
@@ -23,7 +22,7 @@ use crate::serve_capture_cancel::CaptureCancellation;
 use crate::serve_changes::{ServeChanges, Source};
 use crate::serve_changes_base::CombinedCancel;
 use crate::serve_pool::PoolSchedulingMock;
-use crate::warning_support::{config, scopes};
+use crate::warning_support::{catalogue, config, scopes};
 
 #[test]
 fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_command() {
@@ -100,27 +99,18 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
     };
     let generation = provider
         .prepare(&BaseRequest {
-            working_config: &source.config,
-            repository: Arc::new(Unimock::new((
-                RepositoryMock::working_paths
+            head: &Unimock::new(
+                RenderGenerationMock::catalogue
                     .next_call(matching!())
-                    .returns(Ok(vec![])),
-                RepositoryMock::working_hashes
-                    .next_call(matching!((paths, _) if paths.is_empty()))
-                    .returns(Ok(vec![])),
-            ))),
+                    .returns(catalogue(vec![])),
+            ),
+            working_config: &source.config,
+            repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             install_scripts: false,
             sources: HistoricalSources {
                 tree,
-                sources: Arc::new(Unimock::new((
-                    SourcesMock::list
-                        .next_call(matching!([None], _))
-                        .returns(Ok(vec![])),
-                    SourcesMock::read_many
-                        .next_call(matching!((paths, _) if paths.is_empty()))
-                        .returns(Ok(vec![])),
-                ))),
+                sources: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
             },
         })

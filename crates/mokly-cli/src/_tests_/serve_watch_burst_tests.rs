@@ -104,6 +104,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                     elements: Default::default(),
                     deferred_modules: vec![],
                     javascript: Default::default(),
+                    dependency_directories: Default::default(),
                     warnings: vec![],
                 })
             })

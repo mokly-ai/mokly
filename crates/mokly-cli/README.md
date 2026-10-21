@@ -107,6 +107,8 @@ needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
 HTML-only base comparison follows the [HTML package styles policy](../../docs/protocol/mokly-comparison.md#html-package-styles).
+It reads exact governing paths from the head generation's completed dependency
+inventory. Unrelated manifest edits and retired Serve imports do not warn.
 Static builds keep the input-change outcome when historical PostCSS evidence
 disagrees with its pinned Git source. They preserve the earlier output.
 They also check selected base package inputs before base document callbacks.

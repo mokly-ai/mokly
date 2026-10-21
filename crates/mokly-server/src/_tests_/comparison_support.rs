@@ -176,6 +176,7 @@ pub(crate) fn historical_inputs() -> (PreparedCatalogue, BTreeMap<String, Docume
         elements: BTreeMap::new(),
         deferred_modules: Vec::new(),
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         warnings: Vec::new(),
     };
     let route = "sample/index.html".to_owned();

@@ -13,19 +13,18 @@ it never splices document text.
 
 ## Markers
 
-The core attaches ownership and ignore regions to tree nodes while it
-composes a document. A fragment a sidecar returns carries its regions as the
-comment markers below, and the core reads them into node annotations when it
-grafts the fragment. Served and built documents keep the `mokly-instance` and
-`mokly-slot` markers of every region the core composed, whatever rendered the
-instance, so the [published inspector](./mokly-published-inspector.md)
-resolves each `r-n` region in the live page. Ignore regions resolve at
-composition. Private `mokly-output` pairs mark adapter output inside renderer
-wrappers; the core consumes them when it attaches a component root.
-`mokly-link` pairs are consumed by
-[link adaptation](./mokly-link-controls.md); these private pairs are not written. The canonical
-form below removes every marker before comparison. Every comment name with
-the `mokly-` prefix is reserved for markers.
+The core attaches ownership and ignore regions to tree nodes while it composes a
+document. A fragment a sidecar returns carries its regions as the comment
+markers below, and the core reads them into node annotations when it grafts the
+fragment. Served and built documents keep the `mokly-instance` and `mokly-slot`
+markers of every region the core composed, whatever rendered the instance, so
+the [published inspector](./mokly-published-inspector.md) resolves each `r-n`
+region in the live page. Ignore regions resolve at composition. Private
+`mokly-output` pairs mark adapter output inside renderer wrappers; the core
+consumes them when it attaches a component root. `mokly-link` pairs are consumed
+by [link adaptation](./mokly-link-controls.md); these private pairs are not
+written. The canonical form below removes every marker before comparison. Every
+comment name with the `mokly-` prefix is reserved for markers.
 
 | Marker                                                                 | Meaning                                                                         |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -67,11 +66,10 @@ component keeps the view affected, and an excluded rule changes nothing.
 Ignored regions pair by id across sides. A region whose id exists on one side
 only is ordinary content. A changed material key on a paired region is a
 material change even when the region's content is ignored. A view whose only
-differences lie inside paired ignored regions is `ignored-only`.
-
-View states are `unchanged`, `changed`, `added`, `removed`, and
-`ignored-only`. Snapshots served to the viewer keep the real bytes of both
-sides; the canonical form exists only to decide equality.
+differences lie inside paired ignored regions is `ignored-only`. View states are
+`unchanged`, `changed`, `added`, `removed`, and `ignored-only`. Snapshots served
+to the viewer keep the real bytes of both sides; the canonical form exists only
+to decide equality.
 
 ## Style Ownership
 
@@ -112,14 +110,13 @@ own-page reason to a component.
 ## Resources
 
 References are read from the tree with the owner of the referencing element:
-`src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
-`url()` and `@import` chains. The closure follows them through the
-[public closure policy](./mokly-public-closure.md) and embedded documents; the
-head side reads files from the working tree, the base side from Git blobs, and
-bytes are compared.
-A changed referenced resource is conservative evidence of a rendering change
-for every view that reaches it, attributed to the owner of the reference. A
-resource is never discovered by joining text across a removed region.
+`src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet `url()`
+and `@import` chains. The closure follows them through the [public closure
+policy](./mokly-public-closure.md) and embedded documents; the head side reads
+files from the working tree, the base side from Git blobs, and bytes are
+compared. A changed referenced resource is conservative evidence of a rendering
+change for every view that reaches it, attributed to the owner of the reference.
+A resource is never discovered by joining text across a removed region.
 
 ## Changes Membership
 
@@ -151,11 +148,17 @@ names, keyed by the commit, and the sidecar bundles from that directory.
 
 An HTML-only catalogue without a renderer or PostCSS uses working-tree
 dependencies for package stylesheets on both sides. It needs no extraction,
-Node process, or package installation. Compare dependency identities with Git.
-When they differ, emit a configuration-subject `base-dependencies` warning.
-Under `--strict`, that warning fails the build. Equal Git clean identities
-produce no warning. The warning makes a package-only upgrade visible even
-when both sides render the same installed CSS.
+Node process, or package installation. Compare Git clean identities only for
+manifests and lockfiles beside each `node_modules` directory used by the head,
+and its repository ancestors. Read exact paths on both sides without tree listing.
+Without a used dependency directory, read no dependency inputs and emit no warning.
+When these identities differ, emit a configuration-subject `base-dependencies`
+warning, including when both sides render the same installed CSS. Equal
+identities stay silent. Under `--strict`, the warning fails the build:
+
+```text
+Base dependencies differ. HTML comparison uses working-tree dependencies.
+```
 
 ### JavaScript Package Selection
 
@@ -169,21 +172,19 @@ This covers npm, pnpm, Yarn and Bun workspaces and local `file:` packages,
 while nested `node_modules` keep the selected third-party dependencies.
 Third-party dependencies follow three tiers:
 
-1. The base's lockfile and package manifest identities equal the working tree's
-   under Git's clean conversion: the
-   bundle resolves third-party dependencies from the working tree's `node_modules`
-   through the module resolution settings.
+1. The base's lockfile and manifest identities equal the working tree's under
+   Git's clean conversion: the bundle resolves third-party dependencies from the
+   working tree's `node_modules` through the module resolution settings.
 2. They differ: the base's dependencies are installed, with lifecycle scripts
    disabled by default and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
    the package manager and its version, manager configuration, selected install roots, and the immutable source
    identity when local packages or workspaces participate, and the bundle resolves
    third-party dependencies from there.
-3. The install cannot run, because the machine is offline, the package
-   manager is unsupported, or the time limit passes; the install lacks a used
-   dependency directory; or an importer's directory lookup is not mapped:
-   working dependencies apply and the
-   `base-dependencies` warning names the selected lockfile when one exists and
-   gives the fallback reason.
+3. The install cannot run, because the machine is offline, the package manager
+   is unsupported, or the time limit passes; the install lacks a used dependency
+   directory; or an importer's directory lookup is not mapped: working
+   dependencies apply and the `base-dependencies` warning names the selected
+   lockfile when one exists and gives the fallback reason.
 
 Base dependency installation supports npm, pnpm 10 through 12, Yarn Classic 1, and Yarn
 Berry 4 with `nodeLinker: node-modules`. Lifecycle scripts stay disabled unless
@@ -236,11 +237,10 @@ evidence record names its owner. The catalogue change snapshot v4 pairs
 review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 
-`ignoredIds` lists the sorted unique ids of paired ignore regions removed
-for canonical equality, including equal regions in an `unchanged` view.
-
-Git subprocess environment, bounds, and cancellation follow the
-[Git command runtime](./mokly-git.md).
+`ignoredIds` lists the sorted unique ids of paired ignore regions removed for
+canonical equality, including equal regions in an `unchanged` view. Git
+subprocess environment, bounds, and cancellation follow the [Git command
+runtime](./mokly-git.md).
 
 ## Related Docs
 

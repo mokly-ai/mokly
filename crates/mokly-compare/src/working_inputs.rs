@@ -1,6 +1,7 @@
 //! Dependency candidates and clean identities from Git's working-tree view.
 
 use mokly_git::error;
+use mokly_git::identity::RepoPath;
 use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
 
@@ -12,6 +13,14 @@ use crate::inputs::{Inputs, manager_lock, selected};
 pub trait WorkingInputs: Send + Sync {
     /// Read tracked and nonignored inputs, using base bytes for clean-equal files.
     fn read(&self, repository: &dyn Repository, base: &Inputs, limits: Limits) -> Result<Inputs>;
+    /// Read and normalize only the supplied confined paths, without working-tree enumeration.
+    fn read_paths(
+        &self,
+        repository: &dyn Repository,
+        base: &Inputs,
+        paths: &[RepoPath],
+        limits: Limits,
+    ) -> Result<Inputs>;
 }
 
 /// Git candidate adapter. It does not traverse ignored trees or submodules.
@@ -19,17 +28,32 @@ pub struct SystemWorkingInputs;
 
 impl WorkingInputs for SystemWorkingInputs {
     fn read(&self, repository: &dyn Repository, base: &Inputs, limits: Limits) -> Result<Inputs> {
+        let paths = repository.working_paths().base()?;
+        let manager_config = paths.iter().any(|path| manager_lock(path.as_str()));
+        let paths = paths
+            .into_iter()
+            .filter(|path| {
+                selected(path.as_str(), manager_config)
+                    && !path.as_str().split('/').any(|part| part == "node_modules")
+            })
+            .collect::<Vec<_>>();
+        self.read_paths(repository, base, &paths, limits)
+    }
+
+    fn read_paths(
+        &self,
+        repository: &dyn Repository,
+        base: &Inputs,
+        paths: &[RepoPath],
+        limits: Limits,
+    ) -> Result<Inputs> {
+        if paths.is_empty() {
+            return Ok(Inputs::default());
+        }
         let mut inputs = Inputs::default();
         let mut total = 0usize;
         let mut changed = Vec::new();
-        let paths = repository.working_paths().base()?;
-        let manager_config = paths.iter().any(|path| manager_lock(path.as_str()));
-        for path in paths {
-            if !selected(path.as_str(), manager_config)
-                || path.as_str().split('/').any(|part| part == "node_modules")
-            {
-                continue;
-            }
+        for path in paths.iter().cloned() {
             let bytes = match repository.working_bytes(&path, limits.blob) {
                 Ok(Some(bytes)) => bytes,
                 Ok(None) => continue,

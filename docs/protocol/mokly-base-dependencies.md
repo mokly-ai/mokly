@@ -8,14 +8,16 @@ leases, cancellation, and completion.
 
 ## Dependency Identity
 
-The base input set contains every tracked repository package manifest and
-lockfile from blobs, including workspace manifests. With pnpm or Yarn lockfiles,
+For JavaScript, the base input set contains every tracked repository package
+manifest and lockfile from blobs, including workspace manifests. With pnpm or Yarn lockfiles,
 additional manager configuration inputs include `pnpm-workspace.yaml`, `.yarnrc.yml`, `.yarnrc`, and `.npmrc`.
 Npm-only repositories keep manifest and lockfile identity. The working input set
 comes from `git ls-files -z --cached --others --exclude-standard`. It does
 not walk ignored trees, nested clones or submodules. Dependency trees under
-`node_modules` are excluded on both sides. There is no application-specific
-list of excluded build directories.
+`node_modules` are excluded on both sides. The
+[HTML dependency policy](./mokly-comparison.md#html-package-styles) uses exact
+governing paths. There is no application-specific list of excluded build
+directories.
 
 Each working input must be a confined regular file. Equal working and base
 bytes reuse the base identity without a Git process. Hash the remaining

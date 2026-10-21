@@ -44,6 +44,8 @@ pub struct PreparedCatalogue {
     pub deferred_modules: Vec<String>,
     /// Private JavaScript handles, bundle inputs, and saved React slots.
     pub javascript: JavaScriptCatalogue,
+    /// Repository-relative dependency directories reached by this generation's completed bundles.
+    pub dependency_directories: BTreeSet<String>,
     /// Sorted unique non-fatal warnings.
     pub warnings: Vec<Warning>,
 }
@@ -110,6 +112,7 @@ impl Builder {
             elements: BTreeMap::new(),
             deferred_modules: Vec::new(),
             javascript: JavaScriptCatalogue::default(),
+            dependency_directories: BTreeSet::new(),
             warnings: Vec::new(),
         };
         let mut failed = BTreeSet::new();

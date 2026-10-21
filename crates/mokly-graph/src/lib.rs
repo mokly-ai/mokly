@@ -5,6 +5,7 @@ pub mod cache;
 pub mod closure;
 pub mod collection;
 pub mod delivery_inputs;
+mod dependency_inputs;
 pub mod error;
 pub mod fragments;
 pub mod graph;

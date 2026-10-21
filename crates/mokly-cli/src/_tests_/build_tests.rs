@@ -84,6 +84,7 @@ pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
         .collect();
     PreparedCatalogue {
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         model: CatalogueModel {
             entries,
             folders: Vec::new(),

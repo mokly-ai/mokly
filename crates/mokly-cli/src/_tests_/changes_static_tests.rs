@@ -44,6 +44,7 @@ fn static_base_admits_only_a_verified_prepared_generation() {
             authored_inputs: Vec::new(),
         };
         let result = provider.prepare(&BaseRequest {
+            head: &Unimock::new(()),
             working_config: &config,
             repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
