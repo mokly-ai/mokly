@@ -155,7 +155,8 @@ Operation events count each fork and its terminal event once.
 PostCSS child failures settle pending requests when startup, IPC, or exit fails.
 The child lifetime retains errors raised before the request is attached.
 PostCSS timeout diagnostics include the elapsed phase records for child spawn,
-configuration load, plugin construction, and the latest stylesheet run.
+configuration load, plugin construction, and the latest stylesheet run. A
+running timeout also names the last module URL observed by the child.
 The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 Sidecars and PostCSS children set `PWD` to their source directory and omit

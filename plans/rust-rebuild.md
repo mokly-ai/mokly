@@ -2841,6 +2841,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         phase timings to timeout diagnostics. Evidence:
         `.context/native-ci-fixes-4/`. The hub must dispatch hosted macOS and
         Windows CI on `rebuild/native-ci-fixes-4`.
+  - [x] Native CI round 5: start Unix commands in new sessions, treat empty
+        process groups as stopped, add the last PostCSS module URL to timeout
+        diagnostics, and run native workspace tests with `--no-fail-fast`.
+        Linux forced-WASI design tests passed, so the Windows configuration
+        hang remains open for hosted diagnosis. Evidence:
+        `.context/native-ci-fixes-5/`. The hub must dispatch hosted macOS and
+        Windows CI on `rebuild/native-ci-fixes-5`.
   - [x] F17: align remote executable discovery with the shared Node shim
         resolver and Windows native `.exe` names. Keep explicit extensions
         and Unix names. Evidence: `.context/f17/windows-red.log` and
