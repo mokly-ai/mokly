@@ -131,6 +131,8 @@ Markdown documents, imported CSS, and images, with configurable sizes. A small
 instance of the generator runs in automated tests; a full-sized instance is
 smoke-tested with the opt-in benchmark. It is a repeatable workload for
 locating scaling costs, not a claim of identical production data or timings.
+Shared stylesheets have a configurable count and per-area screen share. The
+defaults are four sheets and a share of 0.5, rounded up to whole screens.
 
 The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
