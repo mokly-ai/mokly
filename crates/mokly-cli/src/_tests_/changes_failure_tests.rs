@@ -206,3 +206,25 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
         );
     }
 }
+
+#[test]
+fn scripts_off_limit_diagnostic_keeps_the_opt_in_hint() {
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        source: Box::new(Error::BaseInstallScripts {
+            source: Box::new(Error::Limit {
+                path: "specs/large.html".into(),
+                source: mokly_git::error::Error::ByteLimit { limit: 64 },
+            }),
+        }),
+    };
+    let Some(BuildChanges::Unavailable { diagnostics, .. }) =
+        changes_diagnostics::unavailable(&error, "fixture-base")
+    else {
+        panic!("limit must be unavailable");
+    };
+    assert_eq!(diagnostics.len(), 2);
+    assert!(diagnostics[0].message.contains("specs/large.html"));
+    assert!(diagnostics[1].message.contains("review.baseInstallScripts"));
+    assert!(diagnostics[1].message.contains("--base-install-scripts"));
+}

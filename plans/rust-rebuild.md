@@ -3721,8 +3721,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         under `.context/base-install-scripts/`.
   - [x] User item 135 B review finding 44 A: retain the scripts opt-in hint as
         a separate base diagnostic when build or publish makes Changes
-        unavailable. Capture failures and a typed hint field remain outside
-        this fix. Evidence: `.context/base-install-scripts-review/`.
+        unavailable, including the comparison-limit path. Capture failures and
+        a typed hint field remain outside this fix. Evidence:
+        `.context/base-install-scripts-review/`.
   - [x] User item 135 B review finding 50 B: keep script-suppression flags in
         the fixed install lists and remove them only for scripts-on installs.
         Pin every manager's complete scripts-off arguments in tests.

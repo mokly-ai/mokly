@@ -82,14 +82,21 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
         return None;
     };
     if let Some(detail) = limit_detail(source) {
+        let mut diagnostics = vec![ChangeDiagnostic {
+            code: Code::BuildInvalid,
+            message: detail,
+        }];
+        if matches!(&**source, Error::BaseInstallScripts { .. }) {
+            diagnostics.push(ChangeDiagnostic {
+                code: Code::BuildInvalid,
+                message: SCRIPTS_HINT.into(),
+            });
+        }
         return Some(BuildChanges::Unavailable {
             base_ref: base_ref.into(),
             base_commit: commit.clone(),
             reason: "comparison limit reached".into(),
-            diagnostics: vec![ChangeDiagnostic {
-                code: Code::BuildInvalid,
-                message: detail,
-            }],
+            diagnostics,
         });
     }
     let reason = changes_policy::unavailable(source)?;
