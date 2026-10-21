@@ -1,6 +1,9 @@
 name: Native diagnosis
 on:
   workflow_dispatch:
+  push:
+    branches: [rebuild/native-ci-fixes-5]
+    paths: [.github/workflows/native-diagnosis.yml]
 permissions:
   contents: read
 jobs:
