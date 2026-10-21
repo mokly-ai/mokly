@@ -81,15 +81,66 @@ impl UnixGroup {
             return Ok(());
         }
         let source = io::Error::last_os_error();
-        if group_is_gone(&source) {
+        if group_is_gone(&source, self.pid) {
             return Ok(());
         }
         Err(source).platform()
     }
 }
 
-fn group_is_gone(source: &io::Error) -> bool {
-    matches!(source.raw_os_error(), Some(libc::ESRCH | libc::EPERM))
+fn group_is_gone(source: &io::Error, pid: i32) -> bool {
+    #[cfg(not(target_os = "macos"))]
+    let _ = pid;
+    if source.raw_os_error() == Some(libc::ESRCH) {
+        return true;
+    }
+    #[cfg(target_os = "macos")]
+    if source.raw_os_error() == Some(libc::EPERM) {
+        return matches!(macos_group_has_live_member(pid), Some(false));
+    }
+    false
+}
+
+#[cfg(target_os = "macos")]
+fn macos_group_has_live_member(pgid: i32) -> Option<bool> {
+    let mut pids = vec![0 as libc::pid_t; 256];
+    let bytes = unsafe {
+        libc::proc_listpgrppids(
+            pgid,
+            pids.as_mut_ptr().cast(),
+            (pids.len() * std::mem::size_of::<libc::pid_t>()) as i32,
+        )
+    };
+    if bytes < 0 {
+        return None;
+    }
+    let count = (bytes as usize) / std::mem::size_of::<libc::pid_t>();
+    if count == 0 {
+        return Some(false);
+    }
+    if count >= pids.len() {
+        return Some(true);
+    }
+    for pid in pids.into_iter().take(count) {
+        let mut info = std::mem::MaybeUninit::<libc::proc_bsdinfo>::uninit();
+        let size = unsafe {
+            libc::proc_pidinfo(
+                pid,
+                libc::PROC_PIDTBSDINFO,
+                0,
+                info.as_mut_ptr().cast(),
+                std::mem::size_of::<libc::proc_bsdinfo>() as i32,
+            )
+        };
+        if size < 0 {
+            return None;
+        }
+        let info = unsafe { info.assume_init() };
+        if info.pbi_status != libc::SZOMB {
+            return Some(true);
+        }
+    }
+    Some(false)
 }
 
 impl ProcessGroup for UnixGroup {
@@ -109,8 +160,14 @@ mod tests {
 
     #[test]
     fn missing_process_groups_include_permission_denied() {
-        assert!(group_is_gone(&io::Error::from_raw_os_error(libc::ESRCH)));
-        assert!(group_is_gone(&io::Error::from_raw_os_error(libc::EPERM)));
-        assert!(!group_is_gone(&io::Error::from_raw_os_error(libc::EINVAL)));
+        assert!(group_is_gone(&io::Error::from_raw_os_error(libc::ESRCH), 1));
+        assert!(!group_is_gone(
+            &io::Error::from_raw_os_error(libc::EPERM),
+            1
+        ));
+        assert!(!group_is_gone(
+            &io::Error::from_raw_os_error(libc::EINVAL),
+            1
+        ));
     }
 }
