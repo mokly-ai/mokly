@@ -65,6 +65,10 @@ fn failure(operation: Operation) -> Error {
     }
 }
 
+fn display_path(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 /// A pure valid mock process result.
 pub(super) fn output(stdout: String) -> Output {
     Output {
@@ -172,7 +176,7 @@ pub(super) fn fixture(case: Case) -> Fixture {
                 .answers_arc(Arc::new(move |_, cwd| {
                     event(
                         &fingerprint_events,
-                        &format!("fingerprint:{}", cwd.display()),
+                        &format!("fingerprint:{}", display_path(cwd)),
                     );
                     if case == Case::FingerprintFailure {
                         return Err(failure(Operation::Fingerprint));
