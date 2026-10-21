@@ -3327,6 +3327,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         which needs a reproducible viewer build and registry access, Medium;
         D, release a new viewer with every CLI release, which changes the
         versioning, Large. Recommended: C.
+    - User decision 93 (2026-10-21): D, "keep them on the same version".
+      The CLI and the viewer release together with one version. Work:
+      `rebuild/release-lockstep`, in the CI gates workspace.
   - [ ] Resolve user item 94 (CI release checks hub review finding 3): the
         Rust audit guard misses other report filters. It checks only ignored
         advisory IDs, but a severity threshold or a target list in the audit
