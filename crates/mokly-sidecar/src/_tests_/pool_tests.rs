@@ -66,7 +66,10 @@ fn a_timeout_kills_and_retries_once_on_a_fresh_process() {
             .returns(Ok(())),
         WorkerMock::request
             .next_call(matching!(_, 71))
-            .returns(Err(Error::Timeout { deadline_ms: 71 })),
+            .returns(Err(Error::Timeout {
+                deadline_ms: 71,
+                phase: None,
+            })),
         ControlMock::kill.next_call(matching!()).returns(Ok(())),
     ));
     let second = Unimock::new((
@@ -136,6 +139,7 @@ fn second_timeout_fails_and_protocol_failures_are_not_retried() {
                     } else {
                         Error::Timeout {
                             deadline_ms: 60_000,
+                            phase: None,
                         }
                     })),
                 ControlMock::kill.next_call(matching!()).returns(Ok(())),
@@ -180,7 +184,7 @@ fn second_timeout_fails_and_protocol_failures_are_not_retried() {
         } else {
             assert!(matches!(
                 pool.request(call()),
-                Err(Error::RequestTimeout { deadline_ms:60_000, call }) if call.to_string() == "postcss.mjs for x.css"
+                Err(Error::RequestTimeout { deadline_ms:60_000, call, phase: None }) if call.to_string() == "postcss.mjs for x.css"
             ));
         }
     }

@@ -11,6 +11,12 @@ use unimock::{MockFn, Unimock, matching};
 use super::{StopPool, preparation_lock};
 
 #[test]
+fn copied_catalogue_keeps_ignore_rules_for_scans() {
+    let directory = super::super::fixture::copy();
+    assert!(directory.path().join(".gitignore").is_file());
+}
+
+#[test]
 fn preparation_poison_names_the_prior_failure() {
     let shared = Mutex::new(Weak::new());
     let original = catch_unwind(|| {
