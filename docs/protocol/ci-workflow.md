@@ -98,6 +98,8 @@ jobs. Every cargo-running CI and release job runs `rustup toolchain install`
 before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.95.0 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout.
+Native jobs run workspace tests with `--no-fail-fast` so one job reports every
+failing test binary.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no
