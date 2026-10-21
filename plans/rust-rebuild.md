@@ -2376,6 +2376,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         protocol, and Berry git and GitHub dependencies kept on the fallback
         tier, a network-access decision, Medium (estimate). Recommended: A.
         C best meets F8 decision 10 B.
+    - User decision 120 (2026-10-21): C. pnpm and Yarn base installs use
+      registry access, as npm does. Work: the pnpm and Yarn fix round in the
+      W7 workspace.
   - [ ] Resolve user item 121 (pnpm and Yarn review finding 7): marker
         fixtures for every script and hook guard. No test asserts
         `--ignore-pnpmfile`, `YARN_IGNORE_PATH=1`, `--no-default-rc`, or the
