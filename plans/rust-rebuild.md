@@ -368,6 +368,14 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**User decision 131 (2026-10-21): keep.** The user keeps every option that
+the old default rule applied so far, and reviewed the list. This covers each
+line in this plan that says "applied by default" or "the hub's default",
+including item 20 C, and the defaults on the unmerged
+`rebuild/defaults-engine`, such as items 37 B, 40 A, 45 B, and 48 B. Items 102
+and 108 stay open for the user. From 2026-10-21, no default settles an
+unanswered decision; only the user's own decisions apply.
+
 **Follow-up decision defaults (F8):** These numbers identify the orchestrator's
 follow-up list, not the architecture decisions above.
 
@@ -1461,7 +1469,8 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
       not read. Keep the span and the M12 tick pending the decision.
   - Item 45 B is in the code on the unmerged `rebuild/defaults-engine` from
     an earlier default: it removes `review.changed-paths` and the claimed
-    Git changed-path comparison input. It stays until the user decides.
+    Git changed-path comparison input. User decision 131 (2026-10-21) keeps
+    it. Tick this TODO when that branch merges.
 
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
@@ -2799,8 +2808,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         decision before implementation (M14 review 5, finding 1).
     - Item 48 B is in the code on the unmerged `rebuild/defaults-engine`
       from an earlier default: matching trees deeper than 512 elements keep
-      changed `:has()` selectors as unresolved evidence. It stays until the
-      user decides.
+      changed `:has()` selectors as unresolved evidence. User decision 131
+      (2026-10-21) keeps it. Tick this TODO when that branch merges.
   - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
@@ -2862,9 +2871,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       keep its escaping rules until approved (M14 review 1a finding 1B).
   - Item 37 B is in the code on the unmerged `rebuild/defaults-engine` from
     an earlier default: it writes all text raw while plaintext mode is
-    active. It stays until the user decides. User decision 76 B covers the
-    `noscript` case: the unmerged `rebuild/followups-f14` escapes raw
-    `noscript` closing text in `4beca842`.
+    active. User decision 131 (2026-10-21) keeps it. User decision 76 B
+    covers the `noscript` case: the unmerged `rebuild/followups-f14` escapes
+    raw `noscript` closing text in `4beca842`. Tick this TODO when both
+    branches merge.
 - [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
       decision): let the parser choose the plaintext point. Four cases of
       serializer-versus-parser divergence so far: hub review 1 finding 2,
@@ -2985,10 +2995,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
       recursion of `:has()` and for the raw characters of reconstructed
       `plaintext` text wait for `rebuild/defaults-engine` to merge. The
-      `noscript` case also waits for `rebuild/followups-f14`. Their options
-      are in the code on those branches from earlier defaults, so both TODOs
-      also wait for the user's decisions. Tick this line when both TODOs
-      are ticked.
+      `noscript` case also waits for `rebuild/followups-f14`. User decision
+      131 (2026-10-21) keeps their options, so both TODOs wait only for those
+      merges. Tick this line when both TODOs are ticked.
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
