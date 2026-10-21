@@ -1,19 +1,19 @@
 import nodeModule from "node:module";
 import { setImmediate } from "node:timers/promises";
 import { MessageChannel } from "node:worker_threads";
-import type { MessagePort } from "node:worker_threads";
 
 import { recordModulePath } from "./postcss-evidence.js";
 
 const flushKey = Symbol.for("mokly.postcss.asyncFlush");
 let installed = false;
 let registering = false;
+let nextFlush = 0;
 type PortState = {
-  port: MessagePort;
-  pathSequence: number;
-  acknowledgedSequence: number;
+  state: Int32Array;
+  receivedSequence: number;
 };
 const ports = new Set<PortState>();
+let flushQueue: Promise<void> = Promise.resolve();
 
 const asynchronousLoader = [
   ...process.execArgv,
@@ -49,27 +49,34 @@ export async function flushAsyncModulePaths(): Promise<void> {
   const value: unknown = Reflect.get(globalThis, flushKey);
   if (typeof value === "function" && value !== flushAsyncModulePaths)
     return value();
+  const next = flushQueue.then(flushOwnAsyncModulePaths);
+  flushQueue = next.catch(() => {});
+  return next;
+}
+
+async function flushOwnAsyncModulePaths(): Promise<void> {
   while (ports.size) {
     const snapshot = [...ports];
-    await setImmediate();
+    for (const state of snapshot) {
+      const id = ++nextFlush;
+      Atomics.store(state.state, 0, id);
+      Atomics.notify(state.state, 0);
+      while (
+        ports.has(state) &&
+        (Atomics.load(state.state, 3) < id ||
+          state.receivedSequence < Atomics.load(state.state, 2))
+      )
+        await setImmediate();
+      if (ports.has(state)) {
+        Atomics.store(state.state, 0, 0);
+        Atomics.notify(state.state, 0);
+      }
+    }
     if (
       ports.size === snapshot.length &&
-      snapshot.every(
-        (state) =>
-          ports.has(state) && state.acknowledgedSequence >= state.pathSequence,
-      )
-    ) {
-      await setImmediate();
-      if (
-        ports.size === snapshot.length &&
-        snapshot.every(
-          (state) =>
-            ports.has(state) &&
-            state.acknowledgedSequence >= state.pathSequence,
-        )
-      )
-        return;
-    }
+      snapshot.every((state) => ports.has(state))
+    )
+      return;
   }
 }
 
@@ -78,9 +85,8 @@ function registerAsyncHook(): void {
   registering = true;
   const { port1, port2 } = new MessageChannel();
   const state: PortState = {
-    port: port1,
-    pathSequence: 0,
-    acknowledgedSequence: 0,
+    state: new Int32Array(new SharedArrayBuffer(16)),
+    receivedSequence: 0,
   };
   ports.add(state);
   port1.on("message", (message: unknown) => {
@@ -88,19 +94,16 @@ function registerAsyncHook(): void {
       message &&
       typeof message === "object" &&
       "kind" in message &&
-      (message.kind === "path" || message.kind === "ack") &&
+      message.kind === "path" &&
       "sequence" in message &&
       typeof message.sequence === "number"
     ) {
-      if (message.kind === "path") {
-        state.pathSequence = Math.max(state.pathSequence, message.sequence);
-        if ("url" in message && typeof message.url === "string")
-          recordModulePath(message.url);
-      } else
-        state.acknowledgedSequence = Math.max(
-          state.acknowledgedSequence,
-          message.sequence,
-        );
+      state.receivedSequence = Math.max(
+        state.receivedSequence,
+        message.sequence,
+      );
+      if ("url" in message && typeof message.url === "string")
+        recordModulePath(message.url);
       return;
     }
   });
@@ -112,7 +115,7 @@ function registerAsyncHook(): void {
   try {
     nodeModule.register("./postcss-async-loader.mjs", {
       parentURL: import.meta.url,
-      data: { paths: port2 },
+      data: { paths: port2, state: state.state.buffer },
       transferList: [port2],
     });
     registered = true;

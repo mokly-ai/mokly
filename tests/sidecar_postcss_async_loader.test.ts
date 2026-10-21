@@ -4,11 +4,36 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
+import { MessageChannel } from "node:worker_threads";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
+import {
+  initialize,
+  resolve as resolveAsyncModule,
+} from "../packages/mokly/src/sidecar/postcss-async-loader.js";
 
 import { cssParams, startSidecar } from "./helpers/sidecar.js";
 import { command, publicationFixture } from "./helpers/static_publication.js";
+
+test("async loader resolves wait for a flush release", async () => {
+  const { port1, port2 } = new MessageChannel();
+  const shared = new SharedArrayBuffer(16);
+  const state = new Int32Array(shared);
+  initialize({ paths: port1, state: shared });
+  Atomics.store(state, 0, 1);
+  Atomics.notify(state, 0);
+  let called = false;
+  const pending = resolveAsyncModule("module", {}, async () => {
+    called = true;
+    return { url: "file:///module.mjs" };
+  });
+  assert.equal(called, false);
+  Atomics.store(state, 0, 0);
+  Atomics.notify(state, 0);
+  assert.deepEqual(await pending, { url: "file:///module.mjs" });
+  port1.close();
+  port2.close();
+});
 
 for (const flag of ["--loader", "--experimental-loader", "--import"])
   test(`${flag} preserves transformed PostCSS output without a false raw witness`, async (context) => {
