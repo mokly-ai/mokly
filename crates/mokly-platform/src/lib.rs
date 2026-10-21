@@ -9,5 +9,7 @@ pub mod processes;
 pub mod rename;
 #[cfg(unix)]
 mod unix;
+#[cfg(all(unix, any(target_os = "macos", test)))]
+mod unix_group_members;
 #[cfg(windows)]
 mod windows;
