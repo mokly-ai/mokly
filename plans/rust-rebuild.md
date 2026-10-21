@@ -3183,6 +3183,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       example Rust tests apart from lint, types, and audits, and keep the
       30-minute limits, Medium. Recommended: B, with A as the safety margin,
       to be confirmed by a second measured run.
+  - User decision 100 (2026-10-21): A. Work: the CI gates workspace.
 - [ ] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
       browser shards. The same files vary above 15 percent in 208 of 267
       comparisons between two hosted runs, so these data do not separate
@@ -3193,6 +3194,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       (estimate). Recommended: A, because it is the smallest way to separate
       stable costs from run variation. The unmerged
       `rebuild/ci-shard-hosted-2` records the measurements.
+  - User decision 124 (2026-10-21): A. Work: the CI gates workspace.
 - [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
