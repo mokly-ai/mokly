@@ -1799,7 +1799,14 @@ Tags: ui
 - [x] Add user-facing wording for the review v8 `implementation` reason under
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
-- [ ] Run the viewer suite against Milestone 9 output.
+- [x] Run the viewer suite against Milestone 9 output.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. The browser suite runs the comparison specs on copied
+      `mokly build --base` output, for example
+      `static_comparison_output.spec.ts`, and on Serve Changes in
+      `serve_comparison_*.spec.ts`. The complete gate passed on tree
+      `02e84b0e`, the tip `d044deaf` of `rebuild/defaults-viewer-82b-fix1`,
+      which integration batch 18 merged.
   - [x] Run the comparison UI in Chrome against `mokly build --base` output
         and a removed-entry fixture, and fix the viewer defects that it finds.
   - [x] Settle how Details shows the review reasons, including
