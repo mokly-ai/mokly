@@ -29,12 +29,7 @@ export async function savePackage(packed, identity) {
 }
 
 /** Verify the downloaded bytes, manifest, version, and immutable source. */
-export async function inspectReleasePackage(
-  root,
-  directory,
-  descriptor,
-  {} = {},
-) {
+export async function inspectReleasePackage(root, directory, descriptor) {
   const artifact = path.join(directory, descriptor.artifact);
   const report = JSON.parse(
     await fs.readFile(path.join(artifact, "pack-report.json"), "utf8"),

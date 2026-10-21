@@ -9,7 +9,6 @@ import { releasePackages } from "./targets.mjs";
 export async function requireUnpublishedRelease(
   root,
   execute = runCommandResult,
-  {} = {},
 ) {
   for (const { directory, name } of releasePackages()) {
     const { version } = JSON.parse(
