@@ -137,6 +137,7 @@ fn markup_context_tracker_keeps_tree_raw_text_and_integration_points() {
         "<noscript><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></noscript>",
         "<svg/><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style>",
         "<svg><foreignObject><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></foreignObject></svg>",
+        "<svg><foreignObject><div></div><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></foreignObject></svg>",
     ] {
         let wrappers: Vec<_> = html_tokens::parse(source)
             .filter_map(|parsed| match parsed.token {

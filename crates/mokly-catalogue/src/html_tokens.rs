@@ -86,22 +86,22 @@ fn collapse_raw_elements(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<u
 
 fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
     let mut output = Vec::new();
-    let mut foreign_stack: Vec<bool> = Vec::new();
+    let mut foreign_stack = Vec::new();
     let mut raw_context: Option<(Vec<u8>, bool)> = None;
     for token in tokens {
         match &token {
             Token::StartTag(tag) => {
                 let name = tag.name.as_ref();
-                let in_foreign = foreign_stack
-                    .last()
-                    .is_some_and(|integration| !*integration);
+                let in_foreign = foreign_stack.last().is_some_and(ContextFrame::is_foreign);
                 let integration = in_foreign && is_integration_point(name);
-                if !tag.self_closing
-                    && (matches!(name, b"svg" | b"math") || in_foreign && !integration)
-                {
-                    foreign_stack.push(false);
-                } else if integration && !tag.self_closing {
-                    foreign_stack.push(true);
+                if !tag.self_closing {
+                    if integration {
+                        foreign_stack.push(ContextFrame::Integration(name.to_owned()));
+                    } else if in_foreign || matches!(name, b"svg" | b"math") {
+                        foreign_stack.push(ContextFrame::Foreign(name.to_owned()));
+                    } else if foreign_stack.last().is_some_and(ContextFrame::is_html) {
+                        foreign_stack.push(ContextFrame::Html(name.to_owned()));
+                    }
                 }
                 let markup_context = (name == b"noscript" && !in_foreign)
                     || (in_foreign && !integration && matches!(name, b"style" | b"title"));
@@ -151,8 +151,11 @@ fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<
                 {
                     raw_context = None;
                 }
-                if !foreign_stack.is_empty() {
-                    foreign_stack.pop();
+                if let Some(index) = foreign_stack
+                    .iter()
+                    .rposition(|frame| frame.name() == tag.name.as_ref())
+                {
+                    foreign_stack.truncate(index);
                 }
                 output.push(token);
             }
@@ -160,6 +163,28 @@ fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<
         }
     }
     output
+}
+
+enum ContextFrame {
+    Foreign(Vec<u8>),
+    Integration(Vec<u8>),
+    Html(Vec<u8>),
+}
+
+impl ContextFrame {
+    fn name(&self) -> &[u8] {
+        match self {
+            Self::Foreign(name) | Self::Integration(name) | Self::Html(name) => name,
+        }
+    }
+
+    fn is_foreign(&self) -> bool {
+        matches!(self, Self::Foreign(_))
+    }
+
+    fn is_html(&self) -> bool {
+        matches!(self, Self::Integration(_) | Self::Html(_))
+    }
 }
 
 fn is_integration_point(name: &[u8]) -> bool {

@@ -107,7 +107,9 @@ checks, or source-location collection. It retains their names for warnings
 and preserves reserved-navigation evidence and duplicate-attribute errors.
 Token checks follow markup contexts inside `noscript` and foreign `style` or
 `title` elements. Saved variant slot fragments use the same HTML checks as
-entry bodies.
+entry bodies except for forbidden and unknown element checks while plan item
+128 remains open. They keep the required slot, template, link, and warning
+checks during this interim rule.
 Opaque wrapper signatures retain source identity without exposing discarded values.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
