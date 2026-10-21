@@ -46,9 +46,9 @@ fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<
                     .last()
                     .is_some_and(|integration| !*integration);
                 let integration = in_foreign && is_integration_point(name);
-                if matches!(name, b"svg" | b"math") && !tag.self_closing {
-                    foreign_stack.push(false);
-                } else if in_foreign && !integration && !tag.self_closing {
+                if !tag.self_closing
+                    && (matches!(name, b"svg" | b"math") || in_foreign && !integration)
+                {
                     foreign_stack.push(false);
                 } else if integration && !tag.self_closing {
                     foreign_stack.push(true);

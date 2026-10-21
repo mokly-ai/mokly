@@ -105,7 +105,7 @@ impl Engine<'_> {
                     name.clone(),
                     Slot {
                         nodes: Arc::new(source_locations::slot(
-                            body,
+                            &body.body,
                             &self.request.entry.metadata.path,
                             name,
                         )),
