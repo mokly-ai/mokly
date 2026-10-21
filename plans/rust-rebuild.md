@@ -2390,6 +2390,34 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
     - User decision 120 (2026-10-21): C. pnpm and Yarn base installs use
       registry access, as npm does. Work: the pnpm and Yarn fix round in the
       W7 workspace.
+  - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
+        and 2): allowlist Berry dependency protocols. Accept only `npm:`,
+        `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
+        resolutions, fall back for every other protocol, such as the `exec:`
+        generators, and force off a fixed list of Berry settings that load
+        project code. Cached git
+        dependencies then stop installing. Effort Medium. It is a wider fix,
+        so the hub grades no severity, and it is stricter validation, so it
+        needs the user. Options: A, keep only the targeted fixes of findings
+        1 and 2, Small (estimate); B, the allowlist and the forced-off
+        settings, Medium. Recommended: B.
+  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+        send unscoped tokens elsewhere. Severity High, security, effort
+        Small. Options: A, document it only, Small (estimate); B, clear
+        unscoped Yarn credentials for base installs, Small (estimate); C, B,
+        and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
+        D, fall back whenever the base configuration selects a registry or a
+        scope, Medium. Recommended: C.
+  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+        scope): a base `.npmrc` can choose npm's git program. npm gets the
+        base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
+        Git dependency can run a committed program. Severity High
+        (estimate), security, effort Small. Options: A, pin `git` to the
+        absolute program that Mokly resolves, Small (estimate); B, A, and
+        also no Git transport for npm base installs, as for pnpm and Yarn
+        under 120 C, so npm repositories with Git dependencies get tier
+        three, Small; C, fall back when the base npm configuration sets
+        `git`, Small (estimate). Recommended: B.
   - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
     `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
     only `percent-encoding` and `yaml-rust2`.
@@ -4753,19 +4781,6 @@ user item 146: open items move after the merge.
       an ancestor Classic `yarn-path`, that write a marker file that the
       test requires to be absent, Medium. Recommended: B.
 
-- [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
-      and 2): allowlist Berry dependency protocols. Accept only `npm:`,
-      `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
-      resolutions, fall back for every other protocol, such as the `exec:`
-      generators, and force off a fixed list of Berry settings that load
-      project code. Cached git
-      dependencies then stop installing. Effort Medium. It is a wider fix,
-      so the hub grades no severity, and it is stricter validation, so it
-      needs the user. Options: A, keep only the targeted fixes of findings
-      1 and 2, Small (estimate); B, the allowlist and the forced-off
-      settings, Medium. Recommended: B.
-  - Security: the hub recommends a decision before the first npm release.
-
 - [ ] Resolve user item 123 (wider fix of pnpm and Yarn review findings 3
       and 4): one typed lockfile model. Parse pnpm and Yarn lockfiles into
       a typed model with importer and locator context, check only path
@@ -4840,27 +4855,6 @@ user item 146: open items move after the merge.
       Recommended: A (estimate). This TODO replaces the M11 TODO "After the
       first hosted macOS and Windows runs, make event loss recoverable
       there", which held the same choice.
-
-- [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
-      send unscoped tokens elsewhere. Severity High, security, effort
-      Small. Options: A, document it only, Small (estimate); B, clear
-      unscoped Yarn credentials for base installs, Small (estimate); C, B,
-      and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
-      D, fall back whenever the base configuration selects a registry or a
-      scope, Medium. Recommended: C.
-  - Security: the hub recommends a decision before the first npm release.
-
-- [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
-      scope): a base `.npmrc` can choose npm's git program. npm gets the
-      base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
-      Git dependency can run a committed program. Severity High
-      (estimate), security, effort Small. Options: A, pin `git` to the
-      absolute program that Mokly resolves, Small (estimate); B, A, and
-      also no Git transport for npm base installs, as for pnpm and Yarn
-      under 120 C, so npm repositories with Git dependencies get tier
-      three, Small; C, fall back when the base npm configuration sets
-      `git`, Small (estimate). Recommended: B.
-  - Security: the hub recommends a decision before the first npm release.
 
 - [ ] Resolve user item 143 (89 B and 90 C review finding 2): a
       deployment spec never delivers its step failure. On
