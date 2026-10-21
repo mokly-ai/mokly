@@ -5,7 +5,7 @@ use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
 
 use crate::error::{Error, GitResult, Result};
-use crate::inputs::{Inputs, selected};
+use crate::inputs::{Inputs, manager_lock, selected};
 
 /// Working-side dependency inventory boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = WorkingInputsMock))]
@@ -22,8 +22,10 @@ impl WorkingInputs for SystemWorkingInputs {
         let mut inputs = Inputs::default();
         let mut total = 0usize;
         let mut changed = Vec::new();
-        for path in repository.working_paths().base()? {
-            if !selected(path.as_str())
+        let paths = repository.working_paths().base()?;
+        let manager_config = paths.iter().any(|path| manager_lock(path.as_str()));
+        for path in paths {
+            if !selected(path.as_str(), manager_config)
                 || path.as_str().split('/').any(|part| part == "node_modules")
             {
                 continue;

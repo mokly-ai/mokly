@@ -58,13 +58,27 @@ compares clean object identities. It reuses base bytes for equal inputs. `Depend
 uses working third-party dependencies when both sets are equal. In every tier,
 the sidecar maps resolved repository-owned paths into that side's sources.
 Different inputs use
-npm's locked install at the root, configuration ancestors, and each explicit package
-root in the dependency cache. They share one deadline. Successful installs
-remove their private npm download cache before publication. The key includes the exact
-lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
+locked npm, pnpm 10 through 12, Yarn Classic 1, or Yarn Berry 4 node-modules installs at
+configuration and package-root ancestors in the dependency cache. They share one deadline. Successful installs
+remove their private download caches before publication. Every manager may
+download from the registry that the base and user configuration select, as
+npm does, with that configuration's credentials. Scripts, pnpmfile hooks, Git
+transports, and Corepack downloads stay off, and Yarn Berry Git and GitHub
+sources fall back. Managers use installed executables or cached Corepack shims and check
+exact `packageManager` pins. Yarn Plug'n'Play retains a specific fallback reason. The key includes the exact
+lockfiles, manifests, manager configurations, manager families, and actual versions. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.
+
+Yarn planning collects repository ancestor settings. Berry uses the nearest
+linker setting and rejects the existing restricted keys anywhere in that chain.
+It checks catalog and package-extension ranges like manifest specifications,
+and it requires the `npm:` default protocol.
+Classic reads its project and user configuration. Command-line flags and
+environment settings fix its folders, mirror, and lock file inside the private
+entry, and a confined committed mirror stays in use. Each fixed environment
+setting replaces every inherited spelling of its name.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
@@ -205,9 +219,13 @@ cargo clippy -p mokly-compare --all-targets -- -D warnings
 ```
 
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
-isolated Git repositories, OS locks, and a local `file:` npm package. The
-fixture enables npm's offline mode and checks that lifecycle scripts did not
-run. It needs no registry.
+isolated Git repositories, OS locks, and local packages. The Node tests in
+`tests/static_base_managers.test.ts` run cold builds with pnpm and both Yarn
+families from local archives. `tests/static_base_registry.test.ts` runs one
+cold build per manager from a local registry that requires the user token.
+Pinned test CLIs come from development dependencies, and no test uses the
+internet. Tests cover script suppression, timing tiers, registry access,
+comparison output, cache reuse, executable selection, and fallback reasons.
 
 ### Key Code
 
@@ -221,10 +239,28 @@ run. It needs no registry.
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and
   [command supervision](./src/commands.rs).
+- [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
+  [install commands](./src/manager_command.rs), and
+  [local path confinement](./src/manager_local.rs), and
+  [wrapped package specifications](./src/local_specifications.rs).
+  [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and
+  package-extension settings.
+  [Workspace patterns](./src/workspace_patterns.rs) confine every brace and
+  `**` expansion in one linear pass.
+  [Berry Git sources](./src/berry_sources.rs) detect the Git and GitHub ranges
+  that fall back.
+- [Lockfile source confinement](./src/manager_lockfiles.rs) checks each
+  lockfile value from the folder its manager reads it from.
+  [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its
+  importer or lockfile folder, and
+  [Yarn Classic scalar inputs](./src/manager_classic.rs) read Classic tokens.
+- [npm lockfile confinement](./src/npm_lockfiles.rs) checks package folders,
+  link targets, and versions from the npm lockfile folder.
 
 ### Related Docs
 
-- [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Base preparation](../../docs/protocol/mokly-base-preparation.md) and
+  [dependency installation](../../docs/protocol/mokly-base-dependencies.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md#sides).
 - [Git runtime](../../docs/protocol/mokly-git.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).

@@ -889,8 +889,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
       failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17,
-      CI round 5, native CI round 2, F18, and F19 made the same lockfile
-      change on 2026-10-20, and this line records all six.
+      CI round 5, native CI round 2, F18, F19, and the pnpm and Yarn base
+      install made the same lockfile change on 2026-10-20, and this line
+      records all seven.
       Evidence: `.context/m14-nesting/r7/audit-before.txt` and
       `.context/m14-nesting/r7/audit-after.txt`; batch 17:
       `.context/integration-17/security-audit.log` and
@@ -898,8 +899,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `.context/ci-shard-balance/webpki-advisory.md`,
       `webpki-dependents.log`, and `webpki-green.log`; F19:
       `.context/f19/repository.log`, `.context/f19/rust-audit-fixed.log`,
-      and `.context/f19/publish-tests.log`. The native CI round 2 and F18
-      records named no evidence file.
+      and `.context/f19/publish-tests.log`; pnpm and Yarn base install:
+      `.context/base-pnpm-yarn/early-repository.log`. The native CI round 2
+      and F18 records named no evidence file.
 - [x] Keep the braces audit exception through 2026-11-03 UTC. User decision
       72 (2026-10-20): A. Do not renew or extend the exception, and leave
       `rebuild/audit-braces` unmerged. From 2026-11-04 UTC, the strict audit
@@ -2390,10 +2392,14 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
 
 ## Milestone 13: Release packaging
 
-- [ ] Add pnpm and Yarn base dependency installation before the first release,
-      under F8 decision 10 option B. Keep the current npm-only limit documented
-      until that support is implemented and verified.
-  - [ ] Resolve user item 120 (pnpm and Yarn review finding 6): offline-only
+- [x] Add pnpm and Yarn base dependency installation before the first release,
+      under F8 decision 10 option B. Support offline pnpm 10 through 12, Yarn Classic 1,
+      and Yarn Berry 4 with node modules. Keep Plug'n'Play on its typed fallback.
+      Match exact manager pins and preserve bounded caches and script suppression.
+      Design and verification: `.context/base-pnpm-yarn/`.
+      Implementation of default decision 10 B on 2026-10-20 replaces the
+      npm-only install limit for these supported manager families.
+  - [x] Resolve user item 120 (pnpm and Yarn review finding 6): offline-only
         pnpm and Yarn installs rarely reach tier two. pnpm gets an empty
         private store, Berry reads only a committed `.yarn/cache`, and
         Classic needs a committed mirror. So most repositories fail the
@@ -2408,9 +2414,15 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         protocol, and Berry git and GitHub dependencies kept on the fallback
         tier, a network-access decision, Medium (estimate). Recommended: A.
         C best meets F8 decision 10 B.
-    - User decision 120 (2026-10-21): C. pnpm and Yarn base installs use
-      registry access, as npm does. Work: the pnpm and Yarn fix round in the
-      W7 workspace.
+    - [x] User decision 120 (2026-10-21): C, for pnpm/Yarn finding 6, offline
+          installs rarely reach tier two. pnpm and Yarn base installs use the
+          registry that the base and user configuration select, with its
+          credentials, as npm base installs do. Scripts, pnpmfile hooks, Git
+          transports, and Corepack downloads stay off. Yarn Berry Git and
+          GitHub sources fall back. Yarn Classic now reads its project and user
+          configuration, with fixed private folders, mirror, and lock file.
+          Fix round 2 implements it; the local registry tests are in
+          `tests/static_base_registry.test.ts`.
   - [ ] Resolve user item 121 (pnpm and Yarn review finding 7): marker
         fixtures for every script and hook guard. No test asserts
         `--ignore-pnpmfile`, `YARN_IGNORE_PATH=1`, `--no-default-rc`, or the
@@ -2420,6 +2432,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         fixtures, `.pnpmfile.cjs` and `.mjs`, a Berry `yarnPath` script, and
         an ancestor Classic `yarn-path`, that write a marker file that the
         test requires to be absent, Medium. Recommended: B.
+    - Fix round 2 finding 5 joins it: the marker fixtures in
+      `tests/static_base_managers.test.ts` and
+      `tests/helpers/base_manager_fixture.ts` look in the wrong place.
   - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
@@ -2430,6 +2445,8 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         needs the user. Options: A, keep only the targeted fixes of findings
         1 and 2, Small (estimate); B, the allowlist and the forced-off
         settings, Medium. Recommended: B.
+    - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
+      2 finding 2.
   - [ ] Resolve user item 123 (wider fix of pnpm and Yarn review findings 3
         and 4): one typed lockfile model. Parse pnpm and Yarn lockfiles into
         a typed model with importer and locator context, check only path
@@ -3271,6 +3288,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     Include `.yaml` in the label coverage test. Severity Low, effort Small.
     Recommended: A. User decision required because this is a missing-test
     finding.
+  - Follow-up: share a parsed dependency-input model for identity and source validation.
+    Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
+    Review and regression evidence: `.context/base-pnpm-yarn/`.
+  - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
+        Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
+        `7e6ae9ad`, and `9855feb1`.
+  - [ ] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
+        fix them only in part. Fix round 2 on `rebuild/base-pnpm-yarn-fix2`
+        completes them when it lands: Berry `exec:` sources (finding 1),
+        lockfile paths by position (finding 3), bounded workspace pattern
+        walks (finding 5), and the nested Berry cache path (finding 9).
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
