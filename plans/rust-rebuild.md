@@ -2559,8 +2559,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Severity Low, effort Large. Recommended: A, remove per-asset process
         startup and the extra full-blob buffer. Preserve all existing bounds.
         Option B retains the measured adapter. No option is applied.
-- [ ] Complete the gap sweep: every triage decision is in a spec or recorded
-      as an accepted difference for the release note.
+- [x] Complete the gap sweep: every triage decision is in a spec or recorded
+      as an accepted difference for the release note. Done on 2026-10-21.
+      Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
