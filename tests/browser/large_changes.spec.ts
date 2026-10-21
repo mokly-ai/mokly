@@ -52,11 +52,18 @@ for (const variant of ["html", "react"] as const) {
           const directory = result.basePreparation.cacheDirectory;
           assert.ok(typeof directory === "string");
           cacheDirectories.push(directory);
+          const sourceEntries = await fs.readdir(
+            path.join(directory, "sources/entries"),
+          );
+          assert.equal(sourceEntries.length, 1);
+          const sourceKey = sourceEntries[0];
+          assert.ok(sourceKey);
+          assert.match(sourceKey, /^[a-f0-9]{64}$/u);
           await fs.access(
             path.join(
               directory,
               "sources/entries",
-              fixture.baseline,
+              sourceKey,
               "data/mokly.config.json",
             ),
           );
