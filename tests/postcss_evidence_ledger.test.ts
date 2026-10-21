@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  beginReadEvidenceGeneration,
   observeBytes,
   readEvidence,
 } from "../packages/mokly/src/sidecar/postcss-evidence.js";
@@ -64,5 +65,35 @@ test("PostCSS hashing scales with observed reads and storage retains only distin
   } finally {
     context.mock.restoreAll();
     syncBuiltinESMExports();
+  }
+});
+
+test("PostCSS read evidence stays bounded to one simulated generation", (context) => {
+  const generationFiles = (generation: number) =>
+    Array.from({ length: 4 }, (_, read) =>
+      path.resolve(`/inputs/generation-${generation}/read-${read}.txt`),
+    );
+  const measure = (generations: number): number => {
+    for (let generation = 0; generation < generations; generation++) {
+      beginReadEvidenceGeneration(`generation-${generation}`);
+      for (const [read, file] of generationFiles(generation).entries())
+        observeBytes(file, Buffer.from(`${generation}:${read}`));
+    }
+    return readEvidence([]).reads.length;
+  };
+
+  for (const resolve of [path.resolve, path.win32.resolve]) {
+    context.mock.method(path, "resolve", resolve);
+    const small = measure(4);
+    const large = measure(16);
+    assert.equal(small, 4);
+    assert.equal(large, 4);
+    assert.ok(small > 0);
+    assert.ok(large <= small * 4.5);
+    assert.deepEqual(
+      readEvidence([]).reads.map((read) => read.path),
+      generationFiles(15),
+    );
+    context.mock.restoreAll();
   }
 });

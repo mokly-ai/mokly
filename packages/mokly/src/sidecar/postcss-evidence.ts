@@ -14,17 +14,32 @@ import { resolutionMetadata } from "./postcss-resolution-evidence.js";
 const reads = new Map<string, PostcssRead>();
 const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
+let activeGeneration: string | undefined;
 const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
 let physicalReader = originalPromiseRead;
 const require = nodeModule.createRequire(import.meta.url);
-const initialModules = new Set(Object.keys(require.cache));
+let moduleBaseline = new Set(Object.keys(require.cache));
 type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
 const observerKey = Symbol.for("mokly.postcss.readEvidence");
+const generationKey = Symbol.for("mokly.postcss.readEvidenceGeneration");
+const generationInitKey = Symbol.for(
+  "mokly.postcss.readEvidenceGenerationInit",
+);
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
+type GenerationReset = (generation: string) => void;
+type GenerationInit = (generation: string) => void;
+
+function isGenerationReset(value: unknown): value is GenerationReset {
+  return typeof value === "function";
+}
+
+function isGenerationInit(value: unknown): value is GenerationInit {
+  return typeof value === "function";
+}
 
 function isObserver(value: unknown): value is Observer {
   return typeof value === "function";
@@ -38,6 +53,41 @@ export function preloadedObserver(): Observer | undefined {
 
 export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, observerKey, { value: readEvidence });
+  Object.defineProperty(globalThis, generationKey, {
+    value: resetReadEvidence,
+  });
+  Object.defineProperty(globalThis, generationInitKey, {
+    value: initializeReadEvidenceGeneration,
+  });
+}
+
+/** Keep only witnesses observed after the current generation starts. */
+export function beginReadEvidenceGeneration(generation: string): void {
+  const value: unknown = Reflect.get(globalThis, generationKey);
+  if (isGenerationReset(value)) {
+    value(generation);
+    return;
+  }
+  resetReadEvidence(generation);
+}
+
+function resetReadEvidence(generation: string): void {
+  if (generation === activeGeneration) return;
+  activeGeneration = generation;
+  reads.clear();
+  ranges.clear();
+  modules.clear();
+  moduleBaseline = new Set(Object.keys(require.cache));
+}
+
+/** Mark the worker's first generation without dropping preload observations. */
+export function initializeReadEvidenceGeneration(generation: string): void {
+  const value: unknown = Reflect.get(globalThis, generationInitKey);
+  if (isGenerationInit(value) && value !== initializeReadEvidenceGeneration) {
+    value(generation);
+    return;
+  }
+  activeGeneration = generation;
 }
 
 /** Async loaders cannot certify raw source or synchronously load an ESM preload. */
@@ -213,7 +263,7 @@ export function readEvidence(loaded: Iterable<string>): PostcssEvidence {
   if (observer) return observer([...loaded, ...modules]);
   for (const file of loaded) modules.add(file);
   for (const file of Object.keys(require.cache))
-    if (!initialModules.has(file)) modules.add(file);
+    if (!moduleBaseline.has(file)) modules.add(file);
   return {
     coverage: "incomplete",
     modules: [...modules],
