@@ -1456,10 +1456,19 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and removals, with kind isolation and distinct parent/variant destinations.
       Keep canonical impact grouping unchanged.
       Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
-- [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
+- [x] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. Code: `material.rs`, `moves.rs`, `affected.rs`, and
+      `review_projection.rs` in `crates/mokly-compare/src`. Tests in
+      `crates/mokly-compare/tests`: `engine_tests.rs` for ignored changes,
+      moves, documents, and pages, with `move_engine_tests.rs` and
+      `impact_engine_tests.rs`. The instance and slot markers are in
+      `crates/mokly-html/src/_tests_/fragment_tests.rs`, and the strict
+      review v8 reader is in
+      `crates/mokly-model/src/_tests_/review_reader_tests.rs`.
   - [x] Implement the HTML comparison engine, strict review v8 and snapshot v4
         readers, metadata, move pairing, and historical records.
   - [x] Resolve variant-only affected identity and actual-instance resource
@@ -1557,8 +1566,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/final-root-groups.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/comparison-equality.json`.
 - [x] Settle base-render hardening under F8 decision 41 C. Retain the current
       environment filtering and reserved-path documentation without new rejection.
-- [ ] Implement background classification in Serve, the change snapshot v4,
+- [x] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: every child is done.
+      Code: `crates/mokly-cli/src/serve_changes.rs` and
+      `crates/mokly-model/src/snapshot.rs`. Tests: `serve_changes_tests.rs`
+      and `serve_capture_generation_tests.rs` in
+      `crates/mokly-cli/src/_tests_`,
+      `crates/mokly-model/src/_tests_/snapshot_reader_tests.rs`, and the
+      Serve specs `serve_changes_*.spec.ts` and `serve_comparison_*.spec.ts`
+      under `tests/browser`.
   - [x] Keep a selected variant nested under its component parent in review v8.
         Retain only that variant and capture only its documents. This preserves
         parent-owned dependency evidence instead of returning an invalid result.
@@ -1637,9 +1654,15 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         timing, cancellation and size failure, capacity before projection,
         trace outcomes, backward tip moves, and advertised URL fences.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
-- [ ] Behaviour tests from the captured scenarios, rewritten in the new
+- [x] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: every child is done.
+      Tests: `tests/rebuild_behaviour_table.test.ts` and
+      `tests/rebuild_behaviour_evidence.test.ts`, over
+      `scripts/rebuild/rust-adapter.mjs` and `legacy-adapter.mjs`. Sweeps:
+      `.context/rust-rebuild/sweeps/m9-compare.md` and `m9-references.md`
+      there.
   - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
   - [x] Run the bounded previous-contract and test-title sweep.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
@@ -1681,7 +1704,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         14 found no open row. The last three branch-point rows came with F15
         (`06de37d7`), which integration batch 17 merged in `bb78a8f3`. Hub
         record: `.context/rust-rebuild/delegation/m8-browser/report-14.md`.
-- [ ] Add the stylesheet attribution tests over the design catalogue that
+- [x] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
       stylesheet links, the exact per-entry rendered-resource and rule
@@ -1689,6 +1712,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       unresolved shared rules, and the attribution acceptance matrix.
       The matrix runs in the separate optional nightly and manual workflow.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1:
+      `design_catalogue_attribution_acceptance_matrix` in
+      `crates/mokly-cli/tests/design_attribution_tests.rs` runs the scenarios
+      in `crates/mokly-cli/tests/design_support/`. `scopes.rs` pins the
+      route scopes of the nine shared sheets and the 69 saved library
+      variants, and checks them in every scenario. `shared.rs` checks the
+      exact rule records, the exact changed-entry union, and no affected
+      consumers for unresolved shared rules. `matrix.rs` holds the
+      acceptance matrix. `.github/workflows/design-attribution.yml` runs it
+      nightly and on manual dispatch. GitHub runs that workflow only from
+      the default branch, so it has no hosted run yet.
   - [x] Decide the CI home of the on-demand design matrix: item 50 option B,
         applied by default (user rule), 2026-10-20. Use a separate optional
         nightly and manual workflow on eight CPUs. Give the job 120 minutes
