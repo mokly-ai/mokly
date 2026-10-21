@@ -111,8 +111,20 @@ export async function managerPath(
     bin,
     process.platform === "win32" ? "node.exe" : "node",
   );
-  if (process.platform === "win32") await fs.copyFile(process.execPath, node);
-  else await fs.symlink(process.execPath, node);
+  if (process.platform === "win32") {
+    await fs.copyFile(process.execPath, node);
+  } else {
+    // Inject the probe through a node wrapper. Mokly's install environment
+    // allow list drops NODE_OPTIONS from the manager child, so the probe can
+    // no longer ride that variable into the install.
+    const preload = path.join(root, ".context/manager-probe.cjs");
+    const real = JSON.stringify(process.execPath);
+    await fs.writeFile(
+      node,
+      `#!/bin/sh\nif [ -f ${JSON.stringify(preload)} ]; then exec ${real} --require ${JSON.stringify(preload)} "$@"; fi\nexec ${real} "$@"\n`,
+      { mode: 0o755 },
+    );
+  }
   if (!missing) {
     const name = managerName(manager);
     if (process.platform === "win32") {

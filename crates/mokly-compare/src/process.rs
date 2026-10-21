@@ -32,16 +32,13 @@ impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
         let mut command = command(request)?;
         let variables = manager_command::variables(request);
-        let names = variables
-            .iter()
-            .map(|(name, _)| *name)
-            .chain(manager_command::removed(request).iter().copied())
-            .collect::<Vec<_>>();
+        // Start each install from an allowed list of variables, not the
+        // inherited environment, so no base configuration can read an
+        // inherited secret such as MOKLY_TOKEN or GITHUB_TOKEN. Mokly's own
+        // fixed names follow, and the sanitized PATH that `programs` set
+        // overrides the inherited one.
         for (inherited, _) in env::vars_os() {
-            if names
-                .iter()
-                .any(|name| manager_command::same(&inherited, name))
-            {
+            if !manager_command::allowed(&inherited) {
                 command.env_remove(inherited);
             }
         }

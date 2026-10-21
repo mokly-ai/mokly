@@ -78,8 +78,12 @@ It checks catalog and package-extension ranges like manifest specifications,
 and it requires the `npm:` default protocol.
 Classic reads its project and user configuration. Command-line flags and
 environment settings fix its folders, mirror, and lock file inside the private
-entry, and a confined committed mirror stays in use. Each fixed environment
-setting replaces every inherited spelling of its name.
+entry, and a confined committed mirror stays in use. Each install starts from
+an allowed list of environment variables — paths, proxies, certificates,
+process-start names, and the names that Mokly fixes — and Mokly removes every
+other inherited variable, so no base configuration can read an inherited
+secret such as `MOKLY_TOKEN` or `GITHUB_TOKEN`. Yarn Berry also reads no
+project environment file.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
