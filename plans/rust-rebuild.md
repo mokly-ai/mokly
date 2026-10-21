@@ -2776,13 +2776,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
-Defaults-engine round 5 merge resolutions: merged `e620ff06` with a merge
+Defaults-engine round 5 merge resolutions: merged `e620ff06`, then the latest
+rebuild tip `24982bb7`, with merge commits.
 commit. `crates/mokly-compare/README.md` kept the tip's prepared-base text and
 this branch's CSS ownership text. `docs/protocol/mokly-build-warnings.md`
 kept both the tip warning rows and the HTML dependency producer row.
-`plans/rust-rebuild.md` kept both histories and open decisions. The tip's
-Node 22.15 floor, RUSTSEC patch, capture collector, and CI changes stay live.
-Evidence: `.context/defaults-engine-round5/merge-resolutions.md`.
+`plans/rust-rebuild.md` kept both histories and open decisions. The latest tip's
+Node 22.15 floor, RUSTSEC certificate patch, capture collector, and CI changes
+stay live. Evidence: `.context/defaults-engine-round5/merge-resolutions.md`
+and `.context/defaults-engine-round5/merge-latest.log`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
