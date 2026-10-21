@@ -3318,16 +3318,6 @@ Audit-filter completion merge decisions: `.context/release-audit-completion/audi
       write-permission job. Keep source, archive, audit, and publication checks.
       Evidence: `.context/release-audit-completion/`.
 
-- [x] User decisions 93 (2026-10-21): D, and 92: ignore. Keep the CLI root
-      component from decision 20 C, and use its Release Please extra-files to
-      update the viewer package and every lockfile dependency edge. One root
-      release publishes the CLI, five native packages, and viewer with one
-      shared version. The separate viewer component and viewer-reuse path are
-      removed. Every release builds and publishes a new viewer archive. The
-      stale-base release PR check has no purpose under this lockstep rule and
-      remains removed. The first synchronized source version is 0.15.0, and
-      the next root release updates both packages to 0.16.0.
-
 - [x] Configure plain actionlint runs (2026-10-21). Declare the five exact
       Blacksmith runner labels in the repository configuration without ignore
       rules. Document the manual command. No tracked invocation uses a label
@@ -3762,9 +3752,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         which needs a reproducible viewer build and registry access, Medium;
         D, release a new viewer with every CLI release, which changes the
         versioning, Large. Recommended: C.
-    - User decision 93 (2026-10-21): D, "keep them on the same version".
-      The CLI and the viewer release together with one version. Work:
-      `rebuild/release-lockstep`, in the CI gates workspace.
+    - [x] User decisions 93 (2026-10-21): D, and 92: ignore. Keep the CLI root
+          component from decision 20 C, and use its Release Please extra-files
+          to update the viewer package and every lockfile dependency edge. One
+          root release publishes the CLI, five native packages, and viewer with
+          one shared version. The separate viewer component and viewer-reuse
+          path are removed. Every release builds and publishes a new viewer
+          archive. The stale-base release PR check has no purpose under this
+          lockstep rule and remains removed. The first synchronized source
+          version is 0.15.0, and the next root release updates both packages to
+          0.16.0.
   - [x] Resolve user item 94 (CI release checks hub review finding 3): the
         Rust audit guard misses other report filters. It checks only ignored
         advisory IDs, but a severity threshold or a target list in the audit
@@ -3773,9 +3770,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         threshold or a target list, Small; B, state that the guard covers
         only ignored IDs, Small (estimate). Recommended: A. A is a stricter
         validation, so it needs the user.
-    - User decision 94 (2026-10-21): A. The audit guard also fails on a
-      severity threshold or a target list. Work: the CI gates workspace on
-      `rebuild/audit-guard-filters`.
+    - [x] User decision 94 (2026-10-21): apply option A for CI gates hub review
+          finding 3. The Rust audit guard rejects any effective severity
+          threshold or target architecture or operating system list, in addition
+          to rejecting every ignored advisory other than RUSTSEC-2026-0235. The
+          alternative was to document that the guard covered ignored IDs only.
+          The stricter guard keeps every other vulnerability visible.
   - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
     a healthy Node 22 file-delivery run before report download. Separate branch.
     The hub must decide the Testbox guard before any timeout change.
@@ -3859,12 +3859,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and the specific release workflow assertions. The alternative was a
         new general policy check for every fixed-name upload. The user chose
         the direct fixes without that additional gate.
-  - [x] User decision 94 (2026-10-21): apply option A for CI gates hub review
-        finding 3. The Rust audit guard rejects any effective severity
-        threshold or target architecture or operating system list, in addition
-        to rejecting every ignored advisory other than RUSTSEC-2026-0235.
-        The alternative was to document that the guard covered ignored IDs
-        only. The stricter guard keeps every other vulnerability visible.
   - [x] Keep decision 81's existing shell and toolchain checks on the moved
         preparation workflow. The complete gate exposed the shell test's old
         workflow lookup. Preserve its tagged-commit assertion and include the
