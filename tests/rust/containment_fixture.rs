@@ -153,7 +153,6 @@ pub fn sources(case: Case, changed: bool) -> Vec<(String, String)> {
 }
 
 /// Use native CSS nesting for the Stack rule while preserving the case axes.
-#[expect(dead_code, reason = "The CLI tests use the nested stylesheet cases.")]
 pub fn nested_sources(case: Case, changed: bool) -> Vec<(String, String)> {
     let mut files = sources(case, changed);
     let spacing = if changed && matches!(case.edit, Edit::Stack | Edit::Both) {
