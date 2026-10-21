@@ -45,7 +45,7 @@ jobs:
            registerHooks({resolve(s,c,n){writeSync(2,'RESOLVE '+s+' FROM '+c.parentURL+'\\n');return n(s,c)},load(u,c,n){writeSync(2,'LOAD '+u+'\\n');return n(u,c)}});
            new (require('node:worker_threads').Worker)(\`
            const {Session}=require('node:inspector');const s=new Session();s.connectToMainThread();s.post('Debugger.enable');
-           s.on('Debugger.paused',({params})=>{require('node:fs').writeSync(2,'PAUSED '+JSON.stringify(params.callFrames.map(f=>({function:f.functionName,url:f.url,line:f.location})))+'\\n');s.post('Debugger.resume')});
+           s.on('Debugger.paused',({params})=>{require('node:fs').writeSync(2,'PAUSED '+JSON.stringify(params.callFrames.map(f=>({function:f.functionName,url:f.url,line:f.location})))+String.fromCharCode(10));s.post('Debugger.resume')});
            setTimeout(()=>s.post('Debugger.pause'),15000);
            \`,{eval:true});
           }
@@ -54,7 +54,7 @@ jobs:
           const child=fork(path.join(workspace,'packages/mokly/dist/sidecar/postcss-worker.js'),[],{cwd:temp,env:{...process.env,MOKLY_POSTCSS_PHASES:'1',NODE_OPTIONS:`--require=${JSON.stringify(path.join(workspace,'packages/mokly/dist/sidecar/postcss-preload.cjs'))} --require=${JSON.stringify(debug)}`},stdio:['pipe','pipe','pipe','ipc']});
           child.stdout.on('data',d=>process.stdout.write(d));child.stderr.on('data',d=>process.stderr.write(d));
           const timer=setTimeout(()=>{console.error('PROBE TIMEOUT');child.kill('SIGKILL')},60000);
-          child.on('message',m=>{if('id' in m){console.log('REPLY',JSON.stringify(m));child.kill('SIGKILL')}else if(m.line && !m.line.includes('"phase":"module"'))console.log(m.line)});
+          child.on('message',m=>{if('id' in m){console.log('REPLY',JSON.stringify(m.error ?? m.result?.text));child.kill('SIGKILL')}else if(m.line && !m.line.includes('"phase":"module"'))console.log(m.line)});
           child.once('exit',()=>clearTimeout(timer));
           child.send({sourceRoot:temp,repositoryRoots:[temp],moduleResolution:resolution,postcss:path.join(temp,'examples/basic/postcss.config.mjs')});
           child.send({id:1,params:{sourceRoot:temp,repositoryRoots:[temp],moduleResolution:resolution,postcss:'examples/basic/postcss.config.mjs',sourcePath:path.join(temp,'input.css'),text:'p{color:red}'}});
