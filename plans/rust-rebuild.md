@@ -3678,6 +3678,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         every source, Small; B, do A only when the source reloads the page,
         Small; C, a separate "replaced" delivery status, Large. Recommended:
         B. Previous examples: F11 and `89f8f6cd` for a route with one detail.
+    - User decision 90 (2026-10-21): C, a separate "replaced" delivery
+      status. Work: W2 on `rebuild/viewer-90c`.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
