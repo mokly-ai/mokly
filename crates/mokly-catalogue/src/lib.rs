@@ -44,6 +44,7 @@ mod references;
 mod registry;
 mod relationships;
 pub mod render_sources;
+mod template_role;
 pub mod template_types;
 mod templates;
 mod validate_templates;

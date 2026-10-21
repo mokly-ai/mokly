@@ -7,6 +7,7 @@ use mokly_model::prop_schema::PropSchema;
 
 use crate::diagnostic::Issue;
 use crate::preparation::PreparedCatalogue;
+use crate::template_role::TemplateRole;
 use crate::template_types::Template;
 use crate::{links, registry, templates};
 
@@ -40,14 +41,15 @@ pub(crate) fn validate(
             };
             let result = templates::validate(
                 template,
-                &entry.metadata.path,
                 schema,
-                slots,
+                TemplateRole::EntryBody {
+                    path: &entry.metadata.path,
+                    slots,
+                },
                 &prepared.elements,
                 failed,
-                true,
             );
-            let mut components = result.components;
+            let components = result.components;
             issues.extend(result.issues);
             prepared.warnings.extend(result.warnings);
             issues.extend(links::html(
@@ -66,7 +68,7 @@ pub(crate) fn validate(
                     let EntryContent::Component { visual, slots, .. } = &variant.content else {
                         continue;
                     };
-                    for (name, body) in prepared
+                    for (name, saved) in prepared
                         .slot_fragments
                         .get(&variant.metadata.path)
                         .into_iter()
@@ -74,21 +76,22 @@ pub(crate) fn validate(
                     {
                         let template = Template {
                             source_path: variant.metadata.source.path.clone(),
-                            source: body.clone(),
-                            body: body.clone(),
+                            source: saved.body.clone(),
+                            body: saved.body.clone(),
                             body_offset: 0,
                             page: false,
                         };
                         let result = templates::validate(
                             &template,
-                            &variant.metadata.path,
                             &visual.prop_schema,
-                            Some(slots.as_slice()),
+                            TemplateRole::SavedSlot {
+                                parent,
+                                slots: slots.as_slice(),
+                                source: &saved.source,
+                            },
                             &prepared.elements,
                             failed,
-                            false,
                         );
-                        components.extend(result.components);
                         issues.extend(result.issues);
                         prepared.warnings.extend(result.warnings);
                         issues.extend(links::html(

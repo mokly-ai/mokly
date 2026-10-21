@@ -154,3 +154,27 @@ fn reserved_navigation_warning_names_rejection_instead_of_ignoring() {
         "reserved navigation metadata data-mokly-link on <mokly-ignore-scope> is rejected"
     );
 }
+
+#[test]
+fn saved_variant_slots_do_not_create_component_cycles() {
+    let root = tempfile::tempdir().unwrap();
+    support::write(root.path(), "mokly.config.json", "{}");
+    support::write(
+        root.path(),
+        "specs/tree.component.html",
+        "---
+title: Tree
+element: tree-item
+propSchema: {type: object, additionalProperties: false, properties: {}}
+slots: [children]
+variants:
+  - slug: self
+    title: Self
+    props: {}
+    slots:
+      children: '<tree-item></tree-item>'
+---
+<slot></slot>",
+    );
+    support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+}

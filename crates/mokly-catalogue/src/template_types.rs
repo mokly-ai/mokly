@@ -2,6 +2,8 @@
 
 use std::collections::BTreeMap;
 
+use mokly_model::catalogue::SourceLocation;
+
 use mokly_model::prop_schema::PropSchema;
 
 /// A private authored body, retained outside catalogue JSON for composition.
@@ -17,6 +19,15 @@ pub struct Template {
     pub body_offset: usize,
     /// True for one complete authored page document.
     pub page: bool,
+}
+
+/// One saved variant slot body and its authored front matter position.
+#[derive(Clone, Debug)]
+pub struct SavedSlot {
+    /// The HTML fragment supplied to the declared slot.
+    pub body: String,
+    /// The source position of the `variants/{index}/slots/{name}` field.
+    pub source: SourceLocation,
 }
 
 /// Registry metadata needed before the first render.

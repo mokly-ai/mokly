@@ -6,10 +6,10 @@ use html5gum::{StartTag, Token};
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
-use crate::diagnostic::{Code, Issue, Warning, WarningSubject};
+use crate::diagnostic::{Code, Issue, Warning};
 use crate::html_tokens;
-use crate::locations::at;
 use crate::references::{boolean, reference, substitutions, use_reference};
+use crate::template_role::TemplateRole;
 use crate::template_types::{ElementRegistry, Template};
 
 pub(crate) struct Validation {
@@ -20,18 +20,15 @@ pub(crate) struct Validation {
 
 pub(crate) fn validate(
     template: &Template,
-    path: &str,
     schema: &PropSchema,
-    slots: Option<&[String]>,
+    role: TemplateRole<'_>,
     registry: &ElementRegistry,
     failed: &BTreeSet<String>,
-    warn_unused_props: bool,
 ) -> Validation {
     let mut checker = Checker {
         template,
-        path,
+        role,
         schema,
-        slots,
         registry,
         failed,
         used: BTreeSet::new(),
@@ -53,11 +50,7 @@ pub(crate) fn validate(
                     }
                     checker.result.warnings.push(Warning {
                         code: "html-ignore-attribute",
-                        subject: if slots.is_some() {
-                            WarningSubject::Component(path.into())
-                        } else {
-                            WarningSubject::Entry(path.into())
-                        },
+                        subject: role.warning_subject(),
                         message: html_tokens::ignore_warning_message(&attribute, &tag.name),
                     });
                 }
@@ -106,16 +99,12 @@ pub(crate) fn validate(
         .properties
         .iter()
         .flat_map(|props| props.keys())
-        .filter(|_| warn_unused_props)
+        .filter(|_| role.entry_body())
     {
         if !checker.used.contains(name) {
             checker.result.warnings.push(Warning {
                 code: "html-unused-props",
-                subject: if slots.is_some() {
-                    WarningSubject::Component(path.into())
-                } else {
-                    WarningSubject::Entry(path.into())
-                },
+                subject: role.warning_subject(),
                 message: format!("prop {name:?} is not read by the body"),
             });
         }
@@ -125,9 +114,8 @@ pub(crate) fn validate(
 
 struct Checker<'a> {
     template: &'a Template,
-    path: &'a str,
+    role: TemplateRole<'a>,
     schema: &'a PropSchema,
-    slots: Option<&'a [String]>,
     registry: &'a ElementRegistry,
     failed: &'a BTreeSet<String>,
     used: BTreeSet<String>,
@@ -137,11 +125,7 @@ struct Checker<'a> {
 
 impl Checker<'_> {
     fn location(&self, offset: usize) -> SourceLocation {
-        at(
-            &self.template.source_path,
-            &self.template.source,
-            self.template.body_offset + offset,
-        )
+        self.role.location(self.template, offset)
     }
     fn fail(&mut self, code: Code, message: impl Into<String>, offset: usize) {
         self.result
@@ -170,17 +154,22 @@ impl Checker<'_> {
     fn start(&mut self, tag: StartTag<usize>) {
         let name = String::from_utf8_lossy(&tag.name).into_owned();
         let component = self.registry.get(&name);
-        if (!self.template.page
-            && matches!(name.as_str(), "script" | "html" | "head" | "body" | "base"))
-            || (name.starts_with("mokly-")
-                && !matches!(name.as_str(), "mokly-ignore" | "mokly-ignore-scope"))
+        if self.role.check_elements()
+            && ((!self.template.page
+                && matches!(name.as_str(), "script" | "html" | "head" | "body" | "base"))
+                || (name.starts_with("mokly-")
+                    && !matches!(name.as_str(), "mokly-ignore" | "mokly-ignore-scope")))
         {
             self.fail(
                 Code::HtmlElement,
                 format!("forbidden element {name}"),
                 tag.span.start,
             );
-        } else if name.contains('-') && !name.starts_with("mokly-") && component.is_none() {
+        } else if self.role.check_elements()
+            && name.contains('-')
+            && !name.starts_with("mokly-")
+            && component.is_none()
+        {
             self.fail(
                 Code::HtmlElement,
                 format!("unknown element {name}"),
@@ -201,7 +190,7 @@ impl Checker<'_> {
                 .find(|(name, _)| name.as_ref() == b"name")
                 .map(|(_, value)| String::from_utf8_lossy(&value.value).into_owned())
                 .unwrap_or_else(|| "children".into());
-            if !self.slots.is_some_and(|slots| slots.contains(&slot)) {
+            if !self.role.slots().is_some_and(|slots| slots.contains(&slot)) {
                 self.fail(
                     Code::HtmlSlot,
                     format!("undeclared slot placeholder {slot}"),
@@ -219,11 +208,7 @@ impl Checker<'_> {
             }) {
                 self.result.warnings.push(Warning {
                     code: "html-foster-parented",
-                    subject: if self.slots.is_some() {
-                        WarningSubject::Component(self.path.into())
-                    } else {
-                        WarningSubject::Entry(self.path.into())
-                    },
+                    subject: self.role.warning_subject(),
                     message: format!(
                         "component element {name} is moved out of <{}> by HTML parsing",
                         self.stack.last().map_or("table", String::as_str)
