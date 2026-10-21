@@ -9,10 +9,8 @@ import { releasePackages } from "./targets.mjs";
 export async function requireUnpublishedRelease(
   root,
   execute = runCommandResult,
-  { reuseViewer = false } = {},
 ) {
   for (const { directory, name } of releasePackages()) {
-    if (reuseViewer && name === "@mokly/viewer") continue;
     const { version } = JSON.parse(
       await fs.readFile(path.join(root, directory, "package.json"), "utf8"),
     );

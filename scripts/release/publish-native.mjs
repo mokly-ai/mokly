@@ -8,9 +8,7 @@ const directory = path.resolve(
   root,
   process.argv[2] ?? ".context/release-artifact",
 );
-const packages = await inspectReleaseSet(root, directory, {
-  reuseViewer: process.env.VIEWER_REF === "",
-});
+const packages = await inspectReleaseSet(root, directory);
 await publishPackages(
   root,
   packages.filter(({ report }) => report.name.startsWith("@mokly/native-")),

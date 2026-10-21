@@ -93,10 +93,7 @@ async function verifyAttempt(options, dependencies, retryPropagation) {
     if (reports.length !== 1) {
       throw new Error(`npm pack returned ${reports.length} reports`);
     }
-    const commitArgs = [
-      "rev-parse",
-      options.sourceRef ? `${options.sourceRef}^{commit}` : "HEAD",
-    ];
+    const commitArgs = ["rev-parse", "HEAD"];
     const commitResult = await dependencies.execute("git", commitArgs, {
       cwd: repositoryRoot,
     });

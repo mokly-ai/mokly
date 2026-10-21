@@ -2694,6 +2694,14 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         Preserve the CLI baseline and removal checks after core-only releases.
         Evidence: `.context/ci-gates-round2/review-ratchet-green.log`.
         Release selection evidence: `.context/ci-gates-round2/release-all.log`.
+- [x] Apply User decisions 93 (2026-10-21): D, and 92: ignore. Keep the root
+      CLI component from item 20 C, and make it the only Release Please
+      component. Its extra-files update the viewer package and every lockfile
+      edge to the same version. The next release is 0.16.0 for both packages.
+      Remove the viewer component, viewer-reuse archive download and source
+      check, and publish every package from the one release commit. The root
+      changelog is the release history for both packages. The implementation
+      is on `rebuild/release-lockstep`. The release and workflow tests pass.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
@@ -3286,6 +3294,40 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+Release lockstep completion merge decisions: `.context/release-audit-completion/lockstep-merge.md`.
+Audit-filter completion merge decisions: `.context/release-audit-completion/audit-merge.md`.
+
+- [x] Complete user decision 94 A (2026-10-21). Cover all five severity
+      thresholds, single and multiple target filters, empty lists, malformed
+      lists, and unfiltered reports with or without the approved ignore ID.
+      Run the regression against the pre-guard implementation before the
+      guarded implementation. Preserve the exception date and locked-version
+      checks. Evidence: `.context/release-audit-completion/audit-red.log`,
+      `audit-green.log`, and the final check records in that directory.
+
+- [x] Complete user decisions 93 D and 92 ignore (2026-10-21). The root
+      component's extra-files update all seven package versions and viewer
+      dependency edges. This uses one existing Node updater without a
+      workspace plugin or independent viewer version calculation. Source
+      metadata retains CLI 0.15.0 and viewer 0.6.0 until the next root release.
+      The breaking-change release fixture gives both packages 0.16.0 without
+      a manual version edit. This corrects the earlier synchronized-source
+      wording without changing published versions. Restore the viewer export
+      audit and release-selection regressions. Complete the matching immutable
+      viewer tag before native builds, without a checkout or build in that
+      write-permission job. Keep source, archive, audit, and publication checks.
+      Evidence: `.context/release-audit-completion/`.
+
+- [x] User decisions 93 (2026-10-21): D, and 92: ignore. Keep the CLI root
+      component from decision 20 C, and use its Release Please extra-files to
+      update the viewer package and every lockfile dependency edge. One root
+      release publishes the CLI, five native packages, and viewer with one
+      shared version. The separate viewer component and viewer-reuse path are
+      removed. Every release builds and publishes a new viewer archive. The
+      stale-base release PR check has no purpose under this lockstep rule and
+      remains removed. The first synchronized source version is 0.15.0, and
+      the next root release updates both packages to 0.16.0.
+
 - [x] Configure plain actionlint runs (2026-10-21). Declare the five exact
       Blacksmith runner labels in the repository configuration without ignore
       rules. Document the manual command. No tracked invocation uses a label
@@ -3501,6 +3543,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] Release lockstep completion review finding 1: fixed test versions
+        block the next release. Severity High, effort Medium. Recommended:
+        B, use fixed input fixtures for exact-version tests and derive live
+        expectations from generated versions and selected tags. Previous
+        example: `6658493c`. Await the user. Evidence:
+        `.context/release-audit-completion/review.md`.
   - [ ] Resolve user item 132 (actionlint review finding): the label
         coverage test misses workflow labels. `tests/actionlint_config.test.ts`
         scans only `.yml` workflows. It also ignores a job's own `runs-on`
@@ -3700,7 +3748,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `statuses: write` and adds a gate, Medium. Recommended: A.
     - User decision 92 (2026-10-21): ignore. The finding is closed with no
       change, because user decision 93 D removes the check.
-  - [ ] Resolve user item 93 (CI release checks hub review finding 2): the
+  - [x] Resolve user item 93 (CI release checks hub review finding 2): the
         viewer check compares the wrong file set. It misses viewer build
         inputs outside `packages/viewer`, such as React and React DOM from
         the root lockfile, which bundle into `dist/browser/shell.js`, and
@@ -3717,7 +3765,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 93 (2026-10-21): D, "keep them on the same version".
       The CLI and the viewer release together with one version. Work:
       `rebuild/release-lockstep`, in the CI gates workspace.
-  - [ ] Resolve user item 94 (CI release checks hub review finding 3): the
+  - [x] Resolve user item 94 (CI release checks hub review finding 3): the
         Rust audit guard misses other report filters. It checks only ignored
         advisory IDs, but a severity threshold or a target list in the audit
         configuration also hides advisories. Severity Low, effort Small.
@@ -3811,6 +3859,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and the specific release workflow assertions. The alternative was a
         new general policy check for every fixed-name upload. The user chose
         the direct fixes without that additional gate.
+  - [x] User decision 94 (2026-10-21): apply option A for CI gates hub review
+        finding 3. The Rust audit guard rejects any effective severity
+        threshold or target architecture or operating system list, in addition
+        to rejecting every ignored advisory other than RUSTSEC-2026-0235.
+        The alternative was to document that the guard covered ignored IDs
+        only. The stricter guard keeps every other vulnerability visible.
   - [x] Keep decision 81's existing shell and toolchain checks on the moved
         preparation workflow. The complete gate exposed the shell test's old
         workflow lookup. Preserve its tagged-commit assertion and include the

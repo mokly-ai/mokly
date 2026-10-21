@@ -6,21 +6,20 @@ Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management
 
-Conventional Commits feed two release-please Node components through
+Conventional Commits feed one root release-please Node component through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
-`main` creates or updates a release PR; an ordinary push with no release does
+`main` creates or updates one release PR for the CLI and viewer. An ordinary push with no release does
 not publish. The CLI is the root `.` component. Rust-only changes under `crates/` select
-a CLI release. Its package name remains `@mokly/mokly`, so the export audit
+a release for both packages. Its package name remains `@mokly/mokly`, so the export audit
 checks the public CLI directory. The single
 release PR owns the CLI version, which the private root and five platform
-packages share, the viewer version, both changelogs, the root
+packages share, the shared viewer version, the root changelog, the root
 lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
-`viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
-A newly released viewer tag identifies the CLI release commit. A CLI-only
-release reuses its exact viewer pin from the earlier immutable viewer tag. The CLI's
+`viewer-vX.Y.Z` with the same version as the CLI. A newly released viewer tag identifies the CLI release commit. The CLI's
 `changelog-path` is `/CHANGELOG.md`; its build copies that root file into the
-published package. The root file retains the full CLI release history.
+published package. The root file retains the full release history. The viewer
+changelog keeps a Release Please version marker and historical viewer notes.
 
 The [Pull Request Title Contract](./ci-verification.md#pull-request-title-contract)
 checks every proposed squash title before merge because release-please reads
@@ -37,35 +36,26 @@ Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
 those literals with the `@mokly/mokly` package version; root tests reject drift.
 
-The release manifest records each package's latest released version. The viewer
-uses `initial-version: 0.1.0` only before its first release; the setting has no
-effect once a release exists. Runtime and packaging gates derive versions from
-package metadata and never hardcode that initial value. `bump-minor-pre-major`
+The root release manifest entry owns the shared release version. The historical
+viewer entry retains its independent release baseline. Runtime and packaging
+gates derive versions from package metadata. `bump-minor-pre-major`
 keeps breaking pre-1.0 changes on the minor stream. Published tags are immutable;
 versions advance only through the release PR.
 
-The components have independent versions. There is no `node-workspace` plugin.
-Core-only commits release the CLI and its five native packages without bumping
-the viewer. Viewer commits also reach the root component, so the CLI releases
-with the new exact viewer dependency. The root Node updater owns the root
+The CLI and viewer share one version. The root component owns both package
+versions and releases them together. Core-only commits release the CLI, five native
+packages, and viewer. Viewer commits also reach the root component. The root Node updater owns the root
 version. JSON `extra-files` update the public CLI version, all native versions,
 the exact viewer dependency, and their lockfile edges. They preserve the private
 root native `file:` links. Release PR checks must pass `npm ci` and the version
 agreement gate. The CLI keeps the root changelog and its full release history.
 
-Before merge and tag creation, a release PR compares its proposed CLI and viewer
-versions with the PR base. A viewer version change requires a CLI version change.
-If the viewer version stays unchanged, its tracked package files must match the
-existing viewer tag, except for the viewer's tests. This includes source changes
-already present on the PR base. A failed check requires a release PR correction.
-The check runs before tags exist so an invalid release cannot create an
-unpublishable viewer tag or an untested CLI and viewer pair.
+Before merge and tag creation, the release PR updates one shared version for
+the CLI, native packages, and viewer. The release workflow then:
 
-The release workflow then:
-
-1. Selects the root CLI action outputs and an optional new viewer tag.
-   Manual retries supply `publish_ref` and leave `viewer_ref` empty for a
-   CLI-only release. Ordinary pushes without a release do nothing.
+1. Selects the root CLI action output and creates the matching viewer tag at
+   the same commit. An existing tag must already identify that commit.
+   Manual retries supply the CLI tag. Ordinary pushes without a release do nothing.
 2. Starts read-only preparation after native builds succeed, or after validated
    retry archives replace those builds. Preparation checks out the immutable
    CLI tag with full history and no persisted checkout credentials.
@@ -73,9 +63,7 @@ The release workflow then:
    without a package cache. Publication uses that same exact Node version.
    Preparation installs the pinned Rust toolchain and Chromium. A tag that
    predates the Rust toolchain pin uses the runner's default toolchain.
-4. Verifies the CLI tag identifies clean `HEAD` locally and on origin. A new
-   viewer tag must identify the same commit. A reused viewer tag must match its
-   package version, origin, and an ancestor of `HEAD`.
+4. Verifies that both tags identify clean `HEAD` locally and on origin.
 5. Runs dependency installation, the live npm and Rust audits, and verification
    in the read-only preparation job. It reuses applicable complete CI evidence
    for the exact tagged tree or runs the complete strict gate. The
@@ -83,10 +71,9 @@ The release workflow then:
    selection and failure semantics. No preparation step receives publication
    credentials or access to the protected npm environment.
 6. On the first run, preparation downloads the five native archives and packs
-   the viewer and CLI. A CLI-only release downloads the pinned published viewer
-   without lifecycle scripts. Its report retains the viewer tag's commit and
-   tree. Other reports identify the CLI commit. A retry reuses the original
-   checked seven-package set without rebuilding it. Preparation checks packed
+   the viewer and CLI from the same release commit. Every report identifies the
+   shared release commit. A retry reuses the original checked seven-package set
+   without rebuilding it. Preparation checks packed
    manifests, inventories, runtime licenses, and clean-consumer smokes. It then
    rechecks source and tags and preserves the archives and evidence.
    Publication waits for preparation, downloads that exact saved set, installs
@@ -97,8 +84,7 @@ The release workflow then:
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
    workflow fails.
-8. Publishes the platform packages, then a newly released viewer, then the CLI.
-   It verifies a reused viewer without publishing it or requiring `latest`.
+8. Publishes the platform packages, then the shared-version viewer, then the CLI.
    Each registry verification completes before the next publication starts.
 9. Downloads the registry artifact and rechecks integrity, shasum, file
    inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
@@ -110,7 +96,7 @@ The release workflow then:
 
 Publishing occurs in the workflow invocation that creates the CLI release.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
-(`vX.Y.Z`) with an optional new `viewer_ref` (`viewer-vX.Y.Z`). Its required
+(`vX.Y.Z`); the matching viewer tag is `viewer-vX.Y.Z`. Its required
 `artifact_run_id` identifies the original `main` push run with the checked
 archive set. The workflow verifies that run's repository, numeric workflow
 identity, branch, and event. Its head can differ from the tag commit when a
@@ -135,7 +121,9 @@ contents access, and runs in the protected GitHub environment named `npm`.
 Preparation receives only read-only Actions and contents access. It receives
 no inherited secrets. Both checkouts disable credential persistence.
 Release-please receives only contents, pull-request, and issue write
-permissions. Prefer a repository-owned fine-grained token or GitHub App
+permissions. Tag completion receives only contents write permission and runs
+no checkout or build. Manual retries verify existing tags and create no tags.
+Prefer a repository-owned fine-grained token or GitHub App
 credential in the `RELEASE_PLEASE_TOKEN` secret so release PR events trigger
 normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
 follow-on workflow events created with that token, so maintainers must verify
@@ -174,7 +162,7 @@ so publication cannot delete the retained copy. No package lifecycle rebuilds re
 Use **Re-run failed jobs**. A full workflow rerun repeats Release Please. The
 releases already exist, so Release Please reports no newly created CLI release and
 publication is skipped. If the failed-job rerun is unavailable, use a manual
-dispatch with the CLI tag, any new viewer tag, and the original `artifact_run_id`.
+dispatch with the shared CLI tag and the original `artifact_run_id`.
 
 A manual dispatch requires the original automatic run's `artifact_run_id`.
 It downloads that run's complete set, rechecks the archive hashes, inventories,
@@ -186,7 +174,7 @@ checked set or prepare a new reviewed release version.
 If the first run failed before it saved the complete set, rerun its failed
 jobs. Before a new build, a registry lookup must prove all newly released
 versions absent. An existing new-release version requires the saved set.
-A CLI-only release excludes the previously published viewer from this check. Native registrations use
+Every release checks all seven newly published packages. Native registrations use
 the reserved `0.0.0` version, which no coordinated release publishes, under the
 [bootstrap contract](./npm-bootstrap.md#native-package-registration).
 

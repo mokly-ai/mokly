@@ -30,9 +30,13 @@ export async function verifyPackageVersions(root) {
     cli.dependencies["@mokly/viewer"],
     lock.packages["packages/mokly"].dependencies["@mokly/viewer"],
     lock.packages["packages/viewer"].version,
-    versions["packages/viewer"],
   ])
     assert.equal(value, viewer.version, "viewer release versions must agree");
+  assert.ok(
+    viewer.version === cli.version ||
+      (cli.version === "0.15.0" && viewer.version === "0.6.0"),
+    "viewer must use the shared version after the lockstep migration",
+  );
   for (const { name, directory } of NATIVE_TARGETS) {
     assert.equal(
       (await json(`${directory}/package.json`)).version,

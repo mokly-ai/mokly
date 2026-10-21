@@ -25,14 +25,16 @@ The wrapper checks the UTC review deadline before starting a process. It reads
 the locked dependency graph through Cargo metadata and checks `lightningcss`.
 It gets pinned cargo-audit from the [tool installer](#rust-audit-tool) and runs
 that executable for a live JSON audit. The report gives the effective ignore
-list, including configuration changes outside the repository file. Only the
-approved advisory can be ignored. Native tools parse their own TOML inputs.
+list and severity and target filters, including configuration changes outside
+the repository file. Only the approved advisory can be ignored. The severity
+must be null, and effective target lists must be empty. Native tools parse
+their own TOML inputs.
 Every command failure propagates.
 
 The [dependency security contract](../../docs/protocol/dependency-security.md#rust-advisory-audit)
 defines the approved exception and review conditions. `tests/rust_audit.test.ts`
 injects time, the installer, and command results to cover expiry, version
-changes, extra IDs, invalid output, and failure propagation without a network or
+changes, extra IDs, filters, invalid output, and failure propagation without a network or
 elapsed-time assertion.
 
 ## Rust audit tool

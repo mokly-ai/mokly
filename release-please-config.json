@@ -32,6 +32,36 @@
         },
         {
           "type": "json",
+          "path": "/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/viewer/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/viewer']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
           "path": "/packages/mokly/package.json",
           "jsonpath": "$['optionalDependencies'][*]"
         },
@@ -97,45 +127,13 @@
         {
           "type": "generic",
           "path": "/docs/guides/ci/github-action.md"
+        },
+        {
+          "type": "generic",
+          "path": "/packages/viewer/CHANGELOG.md"
         }
       ],
       "package-name": "@mokly/mokly"
-    },
-    "packages/viewer": {
-      "release-type": "node",
-      "component": "viewer",
-      "initial-version": "0.1.0",
-      "changelog-path": "CHANGELOG.md",
-      "include-component-in-tag": true,
-      "include-v-in-tag": true,
-      "bump-minor-pre-major": true,
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "/package-lock.json",
-          "jsonpath": "$['packages']['']['devDependencies']['@mokly/viewer']"
-        },
-        {
-          "type": "json",
-          "path": "/package.json",
-          "jsonpath": "$['devDependencies']['@mokly/viewer']"
-        },
-        {
-          "type": "json",
-          "path": "/package-lock.json",
-          "jsonpath": "$['packages']['packages/viewer']['version']"
-        },
-        {
-          "type": "json",
-          "path": "/packages/mokly/package.json",
-          "jsonpath": "$['dependencies']['@mokly/viewer']"
-        },
-        {
-          "type": "json",
-          "path": "/package-lock.json",
-          "jsonpath": "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']"
-        }
-      ]
     }
   }
 }
