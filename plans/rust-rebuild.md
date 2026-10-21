@@ -2438,6 +2438,13 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         follow-up line on `rebuild/base-pnpm-yarn-fix1` names the same wider
         fix. Options: A, keep the scalar scans with the targeted fixes, Small
         (estimate); B, the typed model, Large. Recommended: B.
+  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+        send unscoped tokens elsewhere. Severity High, security, effort
+        Small. Options: A, document it only, Small (estimate); B, clear
+        unscoped Yarn credentials for base installs, Small (estimate); C, B,
+        and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
+        D, fall back whenever the base configuration selects a registry or a
+        scope, Medium. Recommended: C.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
