@@ -70,7 +70,8 @@ fn vanished_nodes_do_not_kill_an_install_or_trigger_a_scan_on_every_poll() {
                 directory: "/private".into(),
                 timeout: Duration::from_secs(120),
                 byte_limit: Some(100),
-                size_root: None
+                size_root: None,
+                cache: None,
             })
             .is_ok()
     );

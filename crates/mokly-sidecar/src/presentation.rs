@@ -30,11 +30,20 @@ impl Error {
                 RuntimeCode::Bundle,
                 format!("generation {generation} changed while reloading"),
             ),
-            Self::RequestTimeout { call, deadline_ms } => (
+            Self::RequestTimeout {
+                call,
+                deadline_ms,
+                phase,
+            } => (
                 RuntimeCode::Timeout,
-                format!("{call} exceeded {deadline_ms}ms"),
+                format!(
+                    "{call} exceeded {deadline_ms}ms{}",
+                    phase
+                        .as_deref()
+                        .map_or_else(String::new, |phase| format!("; {phase}"))
+                ),
             ),
-            Self::Timeout { deadline_ms } => (
+            Self::Timeout { deadline_ms, .. } => (
                 RuntimeCode::Timeout,
                 format!("request exceeded {deadline_ms}ms"),
             ),

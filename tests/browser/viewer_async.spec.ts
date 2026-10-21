@@ -125,6 +125,62 @@ test("a failed URL index source can retry", async ({
   ]);
 });
 
+test("another deployment keeps the stage loading until the host replaces the index", async ({
+  page,
+}) => {
+  const other = "1".repeat(64);
+  await page.evaluate((deploymentId) => {
+    const seen = { unavailable: false };
+    (window as unknown as { stageSeen: typeof seen }).stageSeen = seen;
+    new MutationObserver(() => {
+      if (document.body.textContent?.includes("could not be shown"))
+        seen.unavailable = true;
+    }).observe(document.body, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    const host = window.viewerHarness.start("one");
+    host.details["home"] = { ...host.details["home"]!, deploymentId };
+  }, other);
+  const errors = () =>
+    page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "error")
+        .map((event) => event.value),
+    );
+  const changed = {
+    code: "catalogue",
+    message: "The catalogue changed. Reload it to see the new version.",
+  };
+  await expect.poll(errors).toEqual([changed]);
+  const viewer = page.locator("#one");
+  await expect(
+    viewer.getByRole("status").filter({ hasText: "Loading preview…" }),
+  ).toBeVisible();
+  await page.evaluate((deploymentId) => {
+    const host = window.viewerHarness.get("one");
+    host.props = {
+      ...host.props,
+      index: { ...(host.props.index as object), deploymentId },
+    } as MoklyViewerProps;
+    host.render();
+  }, other);
+  await expect(viewer.locator("iframe").first()).toBeVisible();
+  await expect(viewer.getByText("Loading preview…")).toHaveCount(0);
+  // The unavailable stage with Try again never appeared, and one deployment
+  // change reported one error.
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { stageSeen: { unavailable: boolean } }).stageSeen
+          .unavailable,
+    ),
+  ).toBe(false);
+  expect(await errors()).toEqual([changed]);
+});
+
 test("frame failures end picking once and reject one handle with one safe error", async ({
   page,
 }) => {

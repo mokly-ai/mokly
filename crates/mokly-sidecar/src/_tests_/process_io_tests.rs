@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::postcss_phase::PhaseState;
 use crate::workers::DiagnosticsMock;
 
 use super::{DiagnosticInputMock, forward_diagnostics};
@@ -48,8 +49,35 @@ fn only_enabled_complete_sidecar_records_bypass_diagnostic_formatting() {
                 rest,
             ))
         };
-        forward_diagnostics(&mut reader, &diagnostics, enabled);
+        forward_diagnostics(&mut reader, &diagnostics, enabled, &PhaseState::default());
     }
+}
+
+#[test]
+fn postcss_phase_lines_are_captured_without_becoming_diagnostics() {
+    const LINE: &str =
+        r#"[mokly:postcss-phase] {"phase":"stylesheet-run","event":"start","elapsedMs":12}"#;
+    let bytes = format!("{LINE}\n").into_bytes();
+    let mut reader = Unimock::new((
+        DiagnosticInputMock::read
+            .next_call(matching!(_))
+            .answers_arc(Arc::new(move |_, output| {
+                output[..bytes.len()].copy_from_slice(&bytes);
+                Ok(bytes.len())
+            })),
+        DiagnosticInputMock::read
+            .next_call(matching!(_))
+            .returns(Ok(0)),
+    ));
+    let diagnostics = Unimock::new(());
+    let phases = PhaseState::default();
+    forward_diagnostics(&mut reader, &diagnostics, false, &phases);
+    assert!(
+        phases
+            .summary()
+            .unwrap()
+            .contains("stylesheet-run=running at 12ms")
+    );
 }
 
 #[test]
@@ -78,7 +106,7 @@ fn a_newline_after_the_chunk_limit_cannot_emit_an_oversized_piece() {
             .returns(()),
         DiagnosticsMock::emit.next_call(matching!("x")).returns(()),
     ));
-    forward_diagnostics(&mut reader, &diagnostics, false);
+    forward_diagnostics(&mut reader, &diagnostics, false, &PhaseState::default());
 }
 
 #[test]
@@ -113,7 +141,7 @@ fn diagnostic_lines_preserve_split_utf8_and_flush_the_eof_tail() {
             .next_call(matching!("last"))
             .returns(()),
     ));
-    forward_diagnostics(&mut reader, &diagnostics, false);
+    forward_diagnostics(&mut reader, &diagnostics, false, &PhaseState::default());
 }
 
 #[test]
@@ -138,7 +166,7 @@ fn long_lines_keep_a_bounded_carry_without_losing_bytes() {
             .next_call(matching!((text) if text.len() == 4096 && text.bytes().all(|b| b == b'x')))
             .returns(()),
     ));
-    forward_diagnostics(&mut reader, &diagnostics, false);
+    forward_diagnostics(&mut reader, &diagnostics, false, &PhaseState::default());
 }
 
 #[test]
@@ -163,7 +191,7 @@ fn invalid_utf8_cannot_underflow_the_bounded_buffer_split() {
             .next_call(matching!((text) if text.chars().count() == 4096))
             .returns(()),
     ));
-    forward_diagnostics(&mut reader, &diagnostics, false);
+    forward_diagnostics(&mut reader, &diagnostics, false, &PhaseState::default());
 }
 
 #[test]
@@ -199,7 +227,7 @@ fn every_utf8_width_and_crossing_position_stays_whole_at_the_chunk_bound() {
                         captured.lock().unwrap().push(text.to_owned())
                     })),
             );
-            forward_diagnostics(&mut input, &diagnostics, false);
+            forward_diagnostics(&mut input, &diagnostics, false, &PhaseState::default());
             let pieces = pieces.lock().unwrap();
             assert_eq!(*pieces, [prefix, format!("{character}tail")]);
             assert!(pieces.iter().all(|piece| piece.len() <= 65_536));

@@ -12,11 +12,16 @@ import { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ShellDataSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
-/** How one route's detail is delivered to the workspace and the stage. */
+/**
+ * How one route's detail is delivered to the workspace and the stage.
+ * `replaced`: another deployment replaced the catalogue before the details
+ * arrived; a full page load or the host's new index brings the new data.
+ */
 export type DetailDelivery =
   | { status: "loading" }
   | { status: "ready" }
-  | { status: "failed"; retry(): void };
+  | { status: "failed"; retry(): void }
+  | { status: "replaced" };
 
 /**
  * The details a route renders from: the routed entry's own, and for a use
@@ -162,9 +167,51 @@ export function routeKey(route: ShellRoute): string {
 }
 
 /** Whether every request of a route has an accepted detail. */
-export function routeReady(
+function routeReady(
   held: ReadonlyMap<string, EntryDetailV2>,
   requests: readonly DetailRequest[],
 ): boolean {
   return requests.every((request) => held.has(detailKey(request)));
+}
+
+/** What the delivery of one route's details is decided from. */
+export interface RouteDeliveryInput {
+  /** The details that the installed snapshot holds. */
+  details: ReadonlyMap<string, EntryDetailV2>;
+  /** The keys of the requested details whose last load failed. */
+  failed: ReadonlySet<string>;
+  /** Whether the route's last publication refresh failed. */
+  refreshFailed: boolean;
+  /** Whether another deployment replaced the catalogue. */
+  replaced: boolean;
+  requests: readonly DetailRequest[];
+  retry(keys: readonly string[]): void;
+  retryRefresh(): void;
+}
+
+/**
+ * The delivery of one route's details. A catalogue that another deployment
+ * replaced outranks a failed load or refresh: a route that still waits for a
+ * detail shows it replaced, and a route whose details all arrived keeps them.
+ * A failed detail fails the route only after every other detail has arrived
+ * or failed, because a detail that still loads can show another deployment.
+ */
+export function routeDetailDelivery(
+  input: RouteDeliveryInput,
+): DetailDelivery | undefined {
+  const { requests } = input;
+  if (!requests.length) return undefined;
+  const ready = routeReady(input.details, requests);
+  if (input.replaced)
+    return ready ? { status: "ready" } : { status: "replaced" };
+  if (input.refreshFailed)
+    return { status: "failed", retry: input.retryRefresh };
+  if (ready) return { status: "ready" };
+  const keys = requests.map(detailKey);
+  const settled = keys.every(
+    (key) => input.details.has(key) || input.failed.has(key),
+  );
+  return settled
+    ? { status: "failed", retry: () => input.retry(keys) }
+    : { status: "loading" };
 }

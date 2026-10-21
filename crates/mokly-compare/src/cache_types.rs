@@ -97,6 +97,8 @@ pub trait Storage: Send + Sync {
     fn publish(&self, stage: &Path, target: &Path) -> Result<()>;
     /// Copy regular source files to a fresh install directory under a byte limit.
     fn copy(&self, source: &Path, destination: &Path, limit: u64) -> Result<()>;
+    /// Create a private configuration file without replacing or following links.
+    fn write(&self, path: &Path, bytes: &[u8]) -> Result<()>;
 }
 
 /// Terminal boundary. A process shares one reporter across both cache kinds.

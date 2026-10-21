@@ -50,8 +50,9 @@ in that list. Uncertain changes have a separate explanation beside it.
 A component-only style change can leave a screen under Affected screens with
 no Changes row of its own. That screen keeps the changed styles it uses, links
 each changed component, and ends its details with “Shared component changes
-affect this preview. This page has no independent entry in Changes.” On the
-component's own page the details say “Changed styles that apply to this
+affect this preview. This page has no independent entry in Changes.” A saved
+variant links the changed components that its own views use, and its parent
+links only those that the parent's own views use. On the component's own page the details say “Changed styles that apply to this
 component:”. A component page with only a wrapper change has its own
 Changes row, says “Changed styles that apply to this variant:”, and that rule
 gives it no Affected screens. The details name the stylesheet actually

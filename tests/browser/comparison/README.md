@@ -146,10 +146,14 @@ The copy is read-only. Import the named case paths, `branchPointPaths`, from
 
 `createComparisonCatalogue(root, additions?)` calls the optional source hook
 before each of its two commits. The default catalogue has no extra entries.
-`addBranchPointSources` adds five namespaced cases under `branch/`: moved
+`addBranchPointSources` adds six namespaced cases under `branch/`: moved
 screen and component consumers, a moved parent with a removed sibling, a
-transferred variant, case-only renames, and a document that reuses a removed
-component's path. The moved consumers also retain distinct base and head SVG
+transferred variant, case-only renames, a document that reuses a removed
+component's path, and the affected destinations of user decision 103 C under
+`branch/impact/`. There the changed Tally is used by Meter and its variant,
+which stay out of Changes, by Slip, a pure move, and by Ledger, which Changes
+lists because a desktop-only paragraph changes. Each consumer's views that use
+Tally stay unchanged. The moved consumers also retain distinct base and head SVG
 bytes. The case-only entries use no changed styles. The moved parent's folder
 has its own page, an unchanged component index. Both hosts below use the
 same authored sources. The cases come from `tests/fixtures/branch_point_cases.json`,
@@ -213,6 +217,11 @@ A pure move is included even when its kind is `unmodified`.
 | `case/Action/secondary`            | —                                | removed      | yes      | Former parent title Case action                  |
 | `reused/action`                    | —                                | added        | yes      | Document replaces the component path             |
 | `reused/action/default`            | —                                | removed      | yes      | Former parent title Former action                |
+| `impact/tally`                     | —                                | changed      | yes      | Changed component render text                    |
+| `impact/meter`                     | —                                | unmodified   | no       | Affected-only component consumer                 |
+| `impact/meter/default`             | —                                | unmodified   | no       | Affected-only variant consumer                   |
+| `impact/archive/slip`              | `impact/slip`                    | unmodified   | yes      | Pure-moved screen consumer                       |
+| `impact/ledger`                    | —                                | changed      | yes      | Consumer whose desktop view alone changed        |
 | `moves/current/receipt`            | `moves/previous/receipt`         | unmodified   | yes      | Pure-moved screen                                |
 | `moves/current/action`             | `moves/previous/action`          | unmodified   | yes      | Moved component parent                           |
 | `moves/current/action/primary`     | `moves/previous/action/primary`  | unmodified   | yes      | Unmodified moved variant                         |

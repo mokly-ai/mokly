@@ -94,5 +94,29 @@
       "branch/reused/action/default": "Former action"
     },
     "affected": []
+  },
+  {
+    "name": "affected-destinations",
+    "base": {
+      "specs/branch/impact/tally.component.html": "---\ntitle: Tally\nelement: bp-tally\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Tally}\n---\n<span class=\"branch-tally\">Before {{label}}</span>",
+      "specs/branch/impact/meter.component.html": "---\ntitle: Meter\nelement: bp-meter\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Meter}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Level\"}}]\n---\n<section><bp-tally label=\"{{label}}\"></bp-tally></section>",
+      "specs/branch/impact/slip.screen.html": "---\ntitle: Slip\n---\n<h1>Slip</h1><bp-tally label=\"Paid\"></bp-tally>",
+      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total before</p>"
+    },
+    "head": {
+      "specs/branch/impact/slip.screen.html": null,
+      "specs/branch/impact/tally.component.html": "---\ntitle: Tally\nelement: bp-tally\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Tally}\n---\n<span class=\"branch-tally\">After {{label}}</span>",
+      "specs/branch/impact/archive/slip.screen.html": "---\ntitle: Slip\nmovedFrom: branch/impact/slip\n---\n<h1>Slip</h1><bp-tally label=\"Paid\"></bp-tally>",
+      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total after</p>"
+    },
+    "moves": {
+      "branch/impact/archive/slip": "branch/impact/slip"
+    },
+    "removed": {},
+    "affected": [
+      "branch/impact/meter",
+      "branch/impact/archive/slip",
+      "branch/impact/ledger"
+    ]
   }
 ]

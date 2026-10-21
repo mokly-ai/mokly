@@ -20,7 +20,8 @@ export function comparisonEligibilityKnown(
   return (
     changesStatus !== "pending" &&
     changesStatus !== "preparing" &&
-    delivery.status !== "loading"
+    delivery.status !== "loading" &&
+    delivery.status !== "replaced"
   );
 }
 

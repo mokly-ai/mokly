@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
+use mokly_model::catalogue::EntryContent;
 use mokly_model::material::{instance_key, props_key, slot_key};
 use mokly_model::usage::{
     CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord,
@@ -131,6 +132,42 @@ fn unknown_crossing_and_unconsumed_fragment_markers_fail() {
 }
 
 #[test]
+fn javascript_pages_turn_authored_ignore_elements_into_regions() {
+    let mut catalogue = support::prepared("<p>Home</p>");
+    catalogue.model.entries[0].metadata.path = "page".into();
+    catalogue.model.entries[0].content = EntryContent::Page;
+    let renderer = Arc::new(Unimock::new(
+        FragmentRendererMock::render
+            .next_call(matching!(_))
+            .returns(Ok(Fragment {
+                html: "<!doctype html><html><head></head><body><mokly-ignore-scope enabled='true'><mokly-ignore id='x'><p>Ignored</p></mokly-ignore></mokly-ignore-scope></body></html>".into(),
+                ..Default::default()
+            })),
+    ));
+    let entry = &catalogue.model.entries[0];
+    let document = HtmlComposer {
+        fragments: renderer,
+    }
+    .compose(&ComposeRequest {
+        catalogue: &catalogue,
+        entry,
+        viewport: Viewport::Desktop,
+        color_scheme: ColorScheme::Light,
+        stylesheets: Vec::new(),
+    })
+    .unwrap();
+    assert!(crate::tree::walk(&document.tree).any(|node| matches!(
+        node,
+        crate::tree::Node::Region { region, .. }
+            if matches!(region.kind, crate::tree::RegionKind::Ignore { .. })
+    )));
+    assert!(crate::tree::walk(&document.tree).all(|node| {
+        !matches!(node, crate::tree::Node::Element(element) if element.name == "mokly-ignore"
+            || element.name == "mokly-ignore-scope")
+    }));
+}
+
+#[test]
 fn nested_instance_and_slot_markers_rebase_under_the_core_invocation() {
     let catalogue = support::prepared(
         "<p>{{label}}</p><ui-js label=\"Receiver\" mokly-instance=\"outer\"></ui-js>",
@@ -224,4 +261,37 @@ fn nested_instance_and_slot_markers_rebase_under_the_core_invocation() {
     assert_eq!(ranges.len(), 3);
     assert_eq!(ranges[2].parent_id.as_deref(), Some("r-1"));
     insta::assert_snapshot!(serialize::html(&document.tree));
+}
+
+#[test]
+fn javascript_pages_apply_the_no_props_template_rule() {
+    let mut catalogue = support::prepared("<p>Home</p>");
+    catalogue.model.entries[0].metadata.path = "page".into();
+    catalogue.model.entries[0].content = mokly_model::catalogue::EntryContent::Page;
+    let renderer = Arc::new(Unimock::new(
+        FragmentRendererMock::render
+            .next_call(matching!(_))
+            .returns(Ok(Fragment {
+                html: "<!doctype html><html><head></head><body><p>{{label}}</p></body></html>"
+                    .into(),
+                ..Default::default()
+            })),
+    ));
+    let entry = &catalogue.model.entries[0];
+    let error = HtmlComposer {
+        fragments: renderer,
+    }
+    .compose(&ComposeRequest {
+        catalogue: &catalogue,
+        entry,
+        viewport: Viewport::Desktop,
+        color_scheme: ColorScheme::Light,
+        stylesheets: Vec::new(),
+    })
+    .unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("undeclared prop reference label")
+    );
 }

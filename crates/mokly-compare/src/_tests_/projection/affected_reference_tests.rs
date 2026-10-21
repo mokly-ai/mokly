@@ -1,5 +1,7 @@
 //! Affected links retain real variant contexts through moves and removals.
 
+use std::collections::BTreeSet;
+
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::public_detail::UsageLink;
 use mokly_model::review::{ReviewEntryAddress, ReviewState};
@@ -53,15 +55,17 @@ fn links(
         evidence,
     }];
     let projected = projection_affected::index(result, &Context::new(result)).unwrap();
+    let links = projected.links.get("badge").cloned().unwrap_or_default();
+    // Each link names a consumer whose own detail names the changed
+    // component, and no other entry is a consumer.
     assert_eq!(
-        projected
-            .consumers
+        projected.consumers,
+        links
             .iter()
-            .map(String::as_str)
-            .collect::<Vec<_>>(),
-        [consumer]
+            .map(|link| link.entry_path.clone())
+            .collect::<BTreeSet<_>>()
     );
-    projected.links.get("badge").cloned().unwrap_or_default()
+    links
 }
 
 fn moved() -> ComparisonResult {

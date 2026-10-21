@@ -9,12 +9,12 @@ import { awaitSelectedComparison } from "./serve_comparison_ui.js";
 /**
  * How one host runs the branch-point checks. The hosts of the moved cases
  * fit: each says how it opens an entry, which page path it shows for that
- * entry, and whether a narrow window shows the compact search control. Only
- * Serve captures comparisons on demand.
+ * entry, whether a narrow window shows the compact search control, and how
+ * it opens an Affected link. Only Serve captures comparisons on demand.
  */
 export type BranchPointHost = Pick<
   MovedHost,
-  "comparisons" | "compactSearch" | "open" | "path"
+  "affectedLinks" | "comparisons" | "compactSearch" | "open" | "path"
 >;
 
 /**

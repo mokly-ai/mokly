@@ -16,12 +16,8 @@ import {
 } from "./data_commit.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
 import { staleAwareLiveSource } from "./data_live_transport.js";
-import {
-  loadFencedDetail,
-  loadRefresh,
-  routeKey,
-  type DetailOutcome,
-} from "./data_requests.js";
+import { PublicationRefresh } from "./data_refresh.js";
+import { loadFencedDetail, type DetailOutcome } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
@@ -46,13 +42,13 @@ export class ShellDataController {
   #wanted: readonly DetailRequest[] = [];
   #failed: ReadonlySet<string> = new Set();
   readonly #loading = new Map<string, AbortController>();
+  #replaced = false;
   #connected = false;
   #closeStream: (() => void) | undefined;
   #streamWarned = false;
   readonly #descriptor: LiveDescriptor;
   readonly #live: ShellLiveSource | undefined;
-  #refreshing: AbortController | undefined;
-  #refreshFailed: string | undefined;
+  readonly #refresh: PublicationRefresh;
 
   constructor(
     initial: ShellDataSnapshot,
@@ -73,6 +69,15 @@ export class ShellDataController {
       versionError: (error) => host.versionError(error),
       warn: (message, cause) => host.warn(message, cause),
     });
+    this.#refresh = new PublicationRefresh(source, {
+      index: () => this.#snapshot.index,
+      route: () => host.route(),
+      adopt: (index, details) =>
+        this.#commit(withIndex(this.#snapshot, index, details)),
+      deploymentChanged: () => this.#replace(),
+      versionError: (error) => host.versionError(error),
+      changed: () => this.#changed(),
+    });
   }
 
   get snapshot(): ShellDataSnapshot {
@@ -82,6 +87,11 @@ export class ShellDataController {
   /** The keys of the requested details whose last load failed. */
   get failed(): ReadonlySet<string> {
     return this.#failed;
+  }
+
+  /** Another deployment replaced the catalogue; no detail loads after it. */
+  get replaced(): boolean {
+    return this.#replaced;
   }
 
   /** The descriptor of the installed render generation, while connected. */
@@ -98,7 +108,7 @@ export class ShellDataController {
 
   /** The route whose last publication refresh failed. */
   get refreshFailed(): string | undefined {
-    return this.#refreshFailed;
+    return this.#refresh.failed;
   }
 
   /** The live transport, present while a descriptor is installed. */
@@ -118,7 +128,7 @@ export class ShellDataController {
   request(requests: readonly DetailRequest[]): void {
     this.#wanted = requests;
     const source = this.#source;
-    if (!source) return;
+    if (!source || this.#replaced) return;
     const wanted = new Set(requests.map(detailKey));
     for (const [key, controller] of this.#loading)
       if (!wanted.has(key)) {
@@ -160,18 +170,24 @@ export class ShellDataController {
   /** Follow the event stream and load the descriptor while the index is live. */
   connect(): () => void {
     const live = this.#source?.live;
-    if (this.#connected || !live || !this.#snapshot.index.live) return () => {};
+    if (
+      this.#connected ||
+      this.#replaced ||
+      !live ||
+      !this.#snapshot.index.live
+    )
+      return () => {};
     this.#connected = true;
     this.#descriptor.load();
     this.#closeStream = live.subscribe({
       message: (revision, deploymentId) => {
         const installed = this.#snapshot.index;
         if (deploymentId !== installed.deploymentId) {
-          this.#source?.deploymentChanged();
+          this.#replace();
           return;
         }
         if (this.#descriptor.failed) this.#descriptor.load();
-        if (revision > installed.revision) this.#refresh(revision);
+        if (revision > installed.revision) this.#refresh.load(revision);
       },
       unavailable: () => {
         if (this.#streamWarned) return;
@@ -189,7 +205,8 @@ export class ShellDataController {
 
   /** Refresh the installed revision again after a failed refresh. */
   readonly retryRefresh = (): void => {
-    this.#refresh(this.#snapshot.index.revision);
+    if (this.#replaced) return;
+    this.#refresh.load(this.#snapshot.index.revision);
   };
 
   /** Abort every load; a later request starts them again. */
@@ -213,11 +230,26 @@ export class ShellDataController {
       return;
     }
     if (outcome.kind === "deployment") {
-      this.#source?.deploymentChanged();
-      // A full page load replaces this document, so the stage keeps loading.
-      if (this.#source?.reloadsOnDeployment) return;
-    } else this.#source?.detailFailed?.(request);
+      this.#replace();
+      return;
+    }
+    this.#source?.detailFailed?.(request);
     this.#failed = new Set(this.#failed).add(detailKey(request));
+    this.#changed();
+  }
+
+  /**
+   * Another deployment answered. Stop every load, end the live connection as
+   * a disconnect does, and tell the source once; a full page load or the
+   * host's new index brings the new data, and a route that still waits for a
+   * detail shows the catalogue replaced until then.
+   */
+  #replace(): void {
+    if (this.#replaced) return;
+    this.#replaced = true;
+    this.abortLoads();
+    this.#disconnect();
+    this.#source?.deploymentChanged();
     this.#changed();
   }
 
@@ -234,34 +266,6 @@ export class ShellDataController {
     this.#changed();
   }
 
-  #refresh(revision: number): void {
-    const source = this.#source;
-    if (!source) return;
-    this.#refreshing?.abort();
-    const controller = new AbortController();
-    this.#refreshing = controller;
-    void loadRefresh(
-      source,
-      this.#snapshot.index,
-      () => this.#host.route(),
-      revision,
-      controller.signal,
-    ).then((outcome) => {
-      if (controller.signal.aborted) return;
-      this.#refreshing = undefined;
-      if (outcome.kind === "accepted") {
-        this.#refreshFailed = undefined;
-        this.#commit(withIndex(this.#snapshot, outcome.index, outcome.details));
-      } else if (outcome.kind === "deployment") source.deploymentChanged();
-      else if (outcome.kind === "version")
-        this.#host.versionError(outcome.error);
-      else {
-        this.#refreshFailed = routeKey(this.#host.route());
-        this.#changed();
-      }
-    });
-  }
-
   /**
    * Serve answered a render of the installed revision with 409, so a newer
    * publication exists. Refresh once, unless a refresh is loading, so the
@@ -269,16 +273,16 @@ export class ShellDataController {
    */
   #refreshStale(revision: number): void {
     const installed = this.#snapshot.index.revision;
-    if (!this.#connected || this.#refreshing || revision !== installed) return;
-    this.#refresh(installed + 1);
+    if (!this.#connected || this.#refresh.loading || revision !== installed)
+      return;
+    this.#refresh.load(installed + 1);
   }
 
   #disconnect(): void {
     this.#connected = false;
     this.#closeStream?.();
     this.#closeStream = undefined;
-    this.#refreshing?.abort();
-    this.#refreshing = undefined;
+    this.#refresh.stop();
     this.#descriptor.stop();
   }
 

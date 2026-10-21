@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 
 use crate::error::Result;
 use crate::local_packages;
+use crate::manager_plan;
 use crate::manifest::Manifest;
 use crate::sources::Sources;
 
@@ -34,7 +35,7 @@ impl Inputs {
             .or_else(|| self.selected_lockfile(configured))
     }
 
-    /// Npm lockfile precedence. Other managers follow the fallback tier.
+    /// Lockfile precedence for warning locations.
     pub fn lockfile(&self) -> Option<RepoPath> {
         [
             "npm-shrinkwrap.json",
@@ -54,46 +55,44 @@ impl Inputs {
     }
 
     fn selected_lockfile(&self, configured: &[String]) -> Option<RepoPath> {
-        [
-            &["npm-shrinkwrap.json", "package-lock.json"][..],
-            &["pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"][..],
-        ]
-        .into_iter()
-        .find_map(|names| {
-            std::iter::once("")
-                .chain(configured.iter().map(String::as_str))
-                .find_map(|root| {
-                    names.iter().find_map(|name| {
-                        let path = if root.is_empty() {
-                            (*name).to_owned()
-                        } else {
-                            format!("{root}/{name}")
-                        };
-                        self.files
-                            .keys()
-                            .find(|candidate| candidate.as_str() == path)
-                            .cloned()
-                    })
+        manager_plan::directories(configured)
+            .into_iter()
+            .find_map(|root| {
+                let prefix = if root.is_empty() {
+                    String::new()
+                } else {
+                    format!("{root}/")
+                };
+                let manifest = self
+                    .files
+                    .iter()
+                    .find(|(path, _)| path.as_str() == format!("{prefix}package.json"))
+                    .and_then(|(_, bytes)| serde_json::from_slice::<Manifest>(bytes).ok());
+                let manager = manifest
+                    .as_ref()
+                    .and_then(|manifest| manifest.package_manager.as_deref())
+                    .and_then(|manager| manager.split('@').next());
+                let names: &[&str] = match manager {
+                    Some("npm") => &["npm-shrinkwrap.json", "package-lock.json"],
+                    Some("pnpm") => &["pnpm-lock.yaml"],
+                    Some("yarn") => &["yarn.lock"],
+                    Some("bun") => &["bun.lock", "bun.lockb"],
+                    _ => &[
+                        "npm-shrinkwrap.json",
+                        "package-lock.json",
+                        "pnpm-lock.yaml",
+                        "yarn.lock",
+                        "bun.lock",
+                        "bun.lockb",
+                    ],
+                };
+                names.iter().find_map(|name| {
+                    self.files
+                        .keys()
+                        .find(|path| path.as_str() == format!("{prefix}{name}"))
+                        .cloned()
                 })
-        })
-    }
-
-    /// Whether this snapshot can be installed with npm's lockfile contract.
-    pub fn supports_npm(&self) -> bool {
-        let Some(lockfile) = self.lockfile() else {
-            return false;
-        };
-        if !matches!(
-            lockfile.as_str().rsplit('/').next(),
-            Some("npm-shrinkwrap.json" | "package-lock.json")
-        ) {
-            return false;
-        }
-        self.manifests().all(|manifest| {
-            manifest
-                .package_manager
-                .is_none_or(|manager| manager.starts_with("npm@"))
-        })
+            })
     }
 
     /// Cache key includes exact manifests, lockfiles, manager version and local-source identity.
@@ -146,8 +145,21 @@ pub(crate) fn is_lock(path: &str) -> bool {
     )
 }
 
-pub(crate) fn selected(path: &str) -> bool {
-    is_lock(path) || path.rsplit('/').next() == Some("package.json")
+pub(crate) fn manager_lock(path: &str) -> bool {
+    matches!(
+        path.rsplit('/').next(),
+        Some("pnpm-lock.yaml" | "yarn.lock")
+    ) && !path.split('/').any(|part| part == "node_modules")
+}
+
+pub(crate) fn selected(path: &str, manager_config: bool) -> bool {
+    is_lock(path)
+        || path.rsplit('/').next() == Some("package.json")
+        || manager_config
+            && matches!(
+                path.rsplit('/').next(),
+                Some("pnpm-workspace.yaml" | ".yarnrc.yml" | ".yarnrc" | ".npmrc")
+            )
 }
 
 /// Dependency inventory read boundary over an immutable source side.
@@ -162,11 +174,14 @@ pub struct SourceInputs;
 
 impl InputReader for SourceInputs {
     fn read(&self, sources: &dyn Sources, limits: Limits) -> Result<Inputs> {
-        let entries: Vec<_> = sources
-            .list(&[None], limits)?
+        let entries = sources.list(&[None], limits)?;
+        let manager_config = entries
+            .iter()
+            .any(|entry| manager_lock(entry.path.as_str()));
+        let entries: Vec<_> = entries
             .into_iter()
             .filter(|entry| {
-                selected(entry.path.as_str())
+                selected(entry.path.as_str(), manager_config)
                     && !entry
                         .path
                         .as_str()
