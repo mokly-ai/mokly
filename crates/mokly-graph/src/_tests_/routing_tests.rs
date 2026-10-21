@@ -2,9 +2,10 @@
 
 use std::collections::BTreeMap;
 
-use mokly_catalogue::template_types::Template;
+use mokly_catalogue::template_types::{SavedSlot, Template};
 use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::EntryContent;
+use mokly_model::catalogue::SourceLocation;
 
 #[path = "routing_support.rs"]
 mod support;
@@ -34,9 +35,22 @@ fn routing_keys_preserve_case_aliases_missing_targets_and_flow_steps() {
             page: true,
         },
     );
-    catalogue
-        .slot_fragments
-        .insert("opaque".into(), [("children".into(), body.into())].into());
+    catalogue.slot_fragments.insert(
+        "opaque".into(),
+        [(
+            "children".into(),
+            SavedSlot {
+                body: body.into(),
+                source: SourceLocation {
+                    path: "catalogue.mockup.ts".into(),
+                    line: 1,
+                    column: 1,
+                    export: None,
+                },
+            },
+        )]
+        .into(),
+    );
     let keys: BTreeMap<_, _> = support::plans(&catalogue)
         .into_iter()
         .map(|(route, plan)| (route, (plan.key.0, plan.resource_key)))

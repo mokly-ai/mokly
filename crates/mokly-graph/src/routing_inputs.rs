@@ -46,8 +46,8 @@ pub(crate) fn key(
         scan(&body, path, catalogue, &mut targets, &mut opaque);
     }
     if let Some(slots) = catalogue.slot_fragments.get(&entry.metadata.path) {
-        for body in slots.values() {
-            scan(body, parent, catalogue, &mut targets, &mut opaque);
+        for slot in slots.values() {
+            scan(&slot.body, parent, catalogue, &mut targets, &mut opaque);
         }
     }
     if let Some(body) = catalogue.documents.get(&entry.metadata.path) {
