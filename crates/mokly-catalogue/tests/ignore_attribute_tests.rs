@@ -178,3 +178,22 @@ variants:
     );
     support::prepare(root.path(), Some("mokly.config.json")).unwrap();
 }
+
+#[test]
+fn saved_variant_slots_keep_element_failures_deferred() {
+    for body in [
+        "<unknown-widget></unknown-widget>",
+        "<script>ignored</script>",
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        support::write(root.path(), "mokly.config.json", "{}");
+        support::write(
+            root.path(),
+            "specs/tree.component.html",
+            &format!(
+                "---\ntitle: Tree\nelement: tree-item\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {{}}\n    slots:\n      children: {body:?}\n---\n<slot></slot>"
+            ),
+        );
+        support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+    }
+}

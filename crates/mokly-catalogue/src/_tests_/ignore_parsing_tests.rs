@@ -129,3 +129,23 @@ fn markup_contexts_keep_wrappers_visible_to_catalogue_checks() {
         assert_eq!(wrappers, vec![vec!["typo".to_owned()]], "{source}");
     }
 }
+
+#[test]
+fn markup_context_tracker_keeps_tree_raw_text_and_integration_points() {
+    for source in [
+        "<svg><title>&lt;x-card&gt;</title></svg>",
+        "<noscript><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></noscript>",
+        "<svg/><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style>",
+        "<svg><foreignObject><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></foreignObject></svg>",
+    ] {
+        let wrappers: Vec<_> = html_tokens::parse(source)
+            .filter_map(|parsed| match parsed.token {
+                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                    Some(parsed.ignored_attributes)
+                }
+                _ => None,
+            })
+            .collect();
+        assert!(wrappers.is_empty(), "{source}");
+    }
+}

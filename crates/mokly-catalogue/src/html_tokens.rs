@@ -1,5 +1,6 @@
 //! Authored HTML token boundary with separate diagnostic metadata.
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use html5gum::{DefaultEmitter, Span, StartTag, Token, Tokenizer};
@@ -21,7 +22,7 @@ pub struct ParsedToken {
 
 /// Parse authored HTML while retaining token errors and original byte spans.
 pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
-    let tokens = expand_markup_contexts(tokenize(source, true));
+    let tokens = expand_markup_contexts(source, tokenize(source, true));
     tokens.into_iter().map(normalize)
 }
 
@@ -33,26 +34,41 @@ fn tokenize(source: &str, switch_states: bool) -> Vec<Token<usize>> {
         .collect()
 }
 
-fn expand_markup_contexts(tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
+fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
     let mut output = Vec::new();
-    let mut foreign_depth: usize = 0;
+    let mut foreign_stack: Vec<bool> = Vec::new();
     let mut raw_context = None;
     for token in tokens {
         match &token {
             Token::StartTag(tag) => {
                 let name = tag.name.as_ref();
-                if matches!(name, b"svg" | b"math") {
-                    foreign_depth += 1;
+                let in_foreign = foreign_stack
+                    .last()
+                    .is_some_and(|integration| !*integration);
+                let integration = in_foreign && is_integration_point(name);
+                if matches!(name, b"svg" | b"math") && !tag.self_closing {
+                    foreign_stack.push(false);
+                } else if in_foreign && !integration && !tag.self_closing {
+                    foreign_stack.push(false);
+                } else if integration && !tag.self_closing {
+                    foreign_stack.push(true);
                 }
-                if name == b"noscript" || foreign_depth > 0 && matches!(name, b"style" | b"title") {
+                if (name == b"noscript" && !in_foreign)
+                    || (in_foreign && !integration && matches!(name, b"style" | b"title"))
+                {
                     raw_context = Some(name.to_owned());
                 }
                 output.push(token);
             }
             Token::String(text) if raw_context.is_some() => {
-                let value = String::from_utf8_lossy(&text.value);
+                let value = source
+                    .get(text.span.start..text.span.end)
+                    .map(Cow::Borrowed)
+                    .unwrap_or_else(|| {
+                        Cow::Owned(String::from_utf8_lossy(&text.value).into_owned())
+                    });
                 output.extend(
-                    tokenize(&value, false)
+                    expand_markup_contexts(value.as_ref(), tokenize(value.as_ref(), true))
                         .into_iter()
                         .map(|token| shift_token(token, text.span.start)),
                 );
@@ -61,8 +77,8 @@ fn expand_markup_contexts(tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
                 if raw_context.as_deref() == Some(tag.name.as_ref()) {
                     raw_context = None;
                 }
-                if matches!(tag.name.as_ref(), b"svg" | b"math") {
-                    foreign_depth = foreign_depth.saturating_sub(1);
+                if !foreign_stack.is_empty() {
+                    foreign_stack.pop();
                 }
                 output.push(token);
             }
@@ -70,6 +86,13 @@ fn expand_markup_contexts(tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
         }
     }
     output
+}
+
+fn is_integration_point(name: &[u8]) -> bool {
+    matches!(
+        name,
+        b"foreignobject" | b"mi" | b"mo" | b"mn" | b"ms" | b"mtext"
+    )
 }
 
 fn shift_token(mut token: Token<usize>, offset: usize) -> Token<usize> {
