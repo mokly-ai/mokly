@@ -7,7 +7,7 @@ use mokly_git::identity::RepoPath;
 use crate::error::Error;
 use crate::inputs::Inputs;
 use crate::install;
-use crate::manager::{Manager, Root};
+use crate::manager::{Manager, RepositoryPath, Root};
 use crate::manager_plan::roots;
 use crate::manager_yaml;
 
@@ -171,7 +171,10 @@ fn berry_keeps_the_confined_nearest_cache_folder() {
         ("app/.yarnrc.yml", "cacheFolder: .yarn/app-cache"),
     ]);
     let root = roots(&base, &["app".into()]).unwrap().remove(0);
-    assert_eq!(root.berry_cache.as_deref(), Some("app/.yarn/app-cache"));
+    assert_eq!(
+        root.berry_cache,
+        Some(RepositoryPath::confine("app", ".yarn/app-cache").unwrap())
+    );
 }
 
 #[test]

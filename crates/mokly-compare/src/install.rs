@@ -70,7 +70,7 @@ impl Builder for Install<'_> {
                 berry_cache: root
                     .berry_cache
                     .as_ref()
-                    .map(|path| destination.join(&root.directory).join(path)),
+                    .map(|path| path.under(destination)),
             })?;
         }
         let mut caches = BTreeSet::new();
@@ -88,7 +88,7 @@ impl Builder for Install<'_> {
             if root.manager == Manager::YarnBerry
                 && let Some(cache) = &root.berry_cache
             {
-                caches.insert(directory.join(cache));
+                caches.insert(cache.under(destination));
             }
         }
         for cache in caches {

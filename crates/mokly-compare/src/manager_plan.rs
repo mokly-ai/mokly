@@ -4,11 +4,10 @@ use crate::ancestor_roots;
 use crate::error::{Error, Result};
 use crate::inputs::Inputs;
 use crate::local_packages;
-use crate::manager::{Manager, Root, version_major};
+use crate::manager::{Manager, RepositoryPath, Root, version_major};
 use crate::manager_classic::{self, Configuration};
 use crate::manager_yaml;
 use crate::manager_yarnrc;
-use crate::manifest;
 
 pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>> {
     let manifests = local_packages::manifests(&inputs.files)?;
@@ -137,7 +136,7 @@ fn berry_linker(inputs: &Inputs, root: &str) -> Result<Option<String>> {
     Ok(berry_config(inputs, root)?.0)
 }
 
-fn berry_config(inputs: &Inputs, root: &str) -> Result<(Option<String>, Option<String>)> {
+fn berry_config(inputs: &Inputs, root: &str) -> Result<(Option<String>, Option<RepositoryPath>)> {
     let mut linker = None;
     let mut cache = None;
     for directory in ancestor_roots::directories(root) {
@@ -167,7 +166,7 @@ fn berry_config(inputs: &Inputs, root: &str) -> Result<(Option<String>, Option<S
         if cache.is_none()
             && let Some(value) = config.get("cacheFolder")
         {
-            cache = Some(manifest::target(
+            cache = Some(RepositoryPath::confine(
                 &directory,
                 value.as_deref().ok_or(Error::InvalidInput { path })?,
             )?);

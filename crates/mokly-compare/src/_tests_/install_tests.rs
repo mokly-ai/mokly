@@ -155,3 +155,71 @@ fn an_expired_shared_deadline_starts_no_next_package_manager() {
         Err(Error::InstallTimeout)
     ));
 }
+
+#[test]
+fn a_nested_berry_cache_joins_the_private_repository_root_once() {
+    let base = Inputs {
+        files: [
+            ("app/package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+            ("app/yarn.lock", "__metadata:\n  version: 8"),
+            (
+                "app/.yarnrc.yml",
+                "nodeLinker: node-modules\ncacheFolder: .yarn/app-cache",
+            ),
+        ]
+        .into_iter()
+        .map(|(path, bytes)| (RepoPath::parse(path).unwrap(), bytes.as_bytes().to_vec()))
+        .collect(),
+        objects: BTreeMap::new(),
+    };
+    let mut root = manager_plan::roots(&base, &["app".into()])
+        .unwrap()
+        .remove(0);
+    root.version = "4.18.1".into();
+    let request = Request {
+        base,
+        head: Inputs::default(),
+        source_root: "/base".into(),
+        unmapped_directories: vec![],
+        used_directories: Vec::new(),
+        source_identity: "commit".into(),
+        head_root: "/repo".into(),
+        configuration: RepoPath::parse("mokly.config.json").unwrap(),
+        resolution: ModuleResolution::default(),
+    };
+    let owner = DependencyTiers {
+        cache: Arc::new(Unimock::new(())),
+        storage: Arc::new(Unimock::new((
+            StorageMock::copy
+                .next_call(matching!(_, _, 1000))
+                .returns(Ok(())),
+            StorageMock::remove
+                .each_call(matching!((path) if [
+                    Path::new("/install/app/.yarn/app-cache"),
+                    Path::new("/install/app/.yarn/cache"),
+                    Path::new("/install/app/.yarn/global"),
+                ]
+                .contains(path)))
+                .answers(&|_, _| Ok(())),
+        ))),
+        commands: Arc::new(Unimock::new(
+            CommandsMock::run
+                .next_call(matching!((command) if command.directory == Path::new("/install/app") && command.berry_cache.as_deref() == Some(Path::new("/install/app/.yarn/app-cache"))))
+                .returns(Ok(vec![])),
+        )),
+        clock: Arc::new(Unimock::new(
+            ClockMock::now
+                .next_call(matching!())
+                .returns(Duration::ZERO),
+        )),
+        timeout: Duration::from_secs(100),
+        install_bytes: 1000,
+    };
+    let builder: &dyn Builder = &Install {
+        request: &request,
+        owner: &owner,
+        roots: vec![root],
+        deadline: Duration::from_secs(100),
+    };
+    builder.build(Path::new("/install")).unwrap();
+}

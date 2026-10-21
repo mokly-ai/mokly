@@ -1,7 +1,10 @@
 //! Supported package-manager dialects and exact version checks.
 
+use std::path::{Path, PathBuf};
+
 use crate::error::{Error, Result};
 use crate::manager_classic::Configuration;
+use crate::manifest;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum Manager {
@@ -50,7 +53,24 @@ pub(crate) struct Root {
     pub(crate) requested: Option<String>,
     pub(crate) version: String,
     pub(crate) classic: Option<Configuration>,
-    pub(crate) berry_cache: Option<String>,
+    pub(crate) berry_cache: Option<RepositoryPath>,
+}
+
+/// A confined repository-relative path. It joins only a private repository
+/// root, so a nested install root cannot join it twice.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RepositoryPath(String);
+
+impl RepositoryPath {
+    /// Confine `value` from the repository folder `parent`.
+    pub(crate) fn confine(parent: &str, value: &str) -> Result<Self> {
+        Ok(Self(manifest::target(parent, value)?))
+    }
+
+    /// The path inside the private copy whose repository root is `root`.
+    pub(crate) fn under(&self, root: &Path) -> PathBuf {
+        root.join(&self.0)
+    }
 }
 
 impl Root {
