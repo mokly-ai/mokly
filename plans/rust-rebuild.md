@@ -1550,6 +1550,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         paths of the kept own-page matches through reduction and
         classification, while Details keep the nested record, Large because
         it changes two crates. Recommended: B. Hub review 3 found B correct.
+    - Option B is in the code on the unmerged `rebuild/defaults-engine`, in
+      `e6b2b99c`, from an earlier default, and it stays until the user
+      decides.
   - [ ] Resolve user item 110 (review 3 finding 1): React component parents
         get false rows from page-wide registry copies. Severity High, effort
         Large for C. Options: A, keep the behaviour, state it, and add a
