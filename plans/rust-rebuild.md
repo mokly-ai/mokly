@@ -2888,8 +2888,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         startup and the extra full-blob buffer, and preserve all existing
         bounds, Large; B, retain the measured adapter, Small (estimate).
         Recommended: A. No option is applied.
-- [ ] Complete the gap sweep: every triage decision is in a spec or recorded
-      as an accepted difference for the release note.
+- [x] Complete the gap sweep: every triage decision is in a spec or recorded
+      as an accepted difference for the release note. Done on 2026-10-21.
+      Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
@@ -4164,6 +4165,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.
+  - Open from the M14 gap sweep close-out review, report under
+    `.context/m14-gap-sweep/review.md`:
+  - 34: the gap sweep tick leaves audit finding 7 untracked in this plan.
+    Severity Low, effort Small. Recommended: A, add one open line that names
+    finding 7 and the branch that it waits for. The hub owns the audit.
+  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+    that setup always adds the unrelated rule to the first shared
+    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+    close-out review. Separate branch.
+  - `plans/rust-rebuild.md:2305`: the open PostCSS TODO still names "supply
+    immutable generation inputs" as a design path, but decision 56 A and the
+    PostCSS page reject enforced immutable inputs. Found by the gap sweep
+    close-out review. Separate branch.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
