@@ -62,7 +62,7 @@ export function ComponentWorkspace({
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
     eligibilityKnown: comparisonEligibilityKnown(
       catalogue.publicModel.changesStatus,
-      workspace.usageDelivery,
+      workspace.detailDelivery,
     ),
     historical: data.removed || variant?.removed === true,
     entryId: variantPath ?? entry.path,
@@ -184,6 +184,7 @@ export function ComponentWorkspace({
     <WorkspacePropsTab
       controls={controls.panel}
       data={data}
+      delivery={workspace.detailDelivery}
       instance={selectedInstance}
       target={editTarget}
       usage={activeView?.usage}
@@ -279,7 +280,7 @@ export function ComponentWorkspace({
             ),
             props: propsPanel,
             usage: (
-              <WorkspaceUsage data={data} delivery={workspace.usageDelivery} />
+              <WorkspaceUsage data={data} delivery={workspace.detailDelivery} />
             ),
           }}
         />

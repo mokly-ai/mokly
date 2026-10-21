@@ -125,6 +125,8 @@ design/library/chrome/top-bar -> design/components/pages/variants
 design/library/chrome/top-bar -> design/components/states/additions/added
 design/library/chrome/top-bar -> design/components/states/empty
 design/library/chrome/top-bar -> design/components/states/loading/inspection-loading
+design/library/chrome/top-bar -> design/components/states/loading/props-failed
+design/library/chrome/top-bar -> design/components/states/loading/props-loading
 design/library/chrome/top-bar -> design/components/states/loading/usage-failed
 design/library/chrome/top-bar -> design/components/states/loading/usage-loading
 design/library/chrome/top-bar -> design/components/states/removed

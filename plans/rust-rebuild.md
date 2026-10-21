@@ -578,6 +578,15 @@ evidence presentation contract names two things there. The visible copy stays
 the same. The rejected option A kept each kind's sentences written out
 separately.
 
+**User decision 88 (2026-10-21): A.** The Props tab shows its fields only after
+the routed entry's detail arrives, because only the detail carries their
+declared order. Until then it shows "Loading props…" and no fields, so the
+fields never move from the index's name order to the declared order. A failed
+detail shows "Props couldn’t be loaded." with Try again, as Usage does. The
+rejected option B kept the sorted fallback and stated it in the controls
+contract. The rejected option C carried `controlOrder` in the catalogue index,
+which makes index v8.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -687,7 +696,7 @@ through Decision 27.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
 design defaults of decision log items 17, 24, 32, 38, and 42 and user decisions
-82 and 84;
+82, 84, and 88;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -2269,6 +2278,31 @@ milestone.
       The visible copy stays the same. The noun test fails first. Evidence:
       `.context/viewer-119b/` (red and green logs, the copy before and after,
       and the mutation check).
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
+
+## Milestone 10.8: Props pending state in the designs
+
+Tags: mockup
+
+The numbers follow Milestones 10.5 to 10.7 of decisions 84 B and 119 B, which
+other branches add.
+
+- [x] User decision 88 A: draw the Props tab while the entry's detail loads,
+      "Loading props…" with no fields, and after its load failed, "Props
+      couldn’t be loaded." with Try again, in the Loading and recovery gallery.
+      Add both strings to the settled controls copy.
+- [x] Run the mockup check and smoke-test the new pages through Serve.
+      Evidence: `.context/viewer-88a/` (mockup check, design specs, smoke log,
+      and shots).
+
+## Milestone 10.9: Props pending state in the viewer
+
+Tags: ui
+
+- [x] User decision 88 A: show the Props fields only after the routed entry's
+      detail arrives, with the drawn pending and failed states. The browser
+      test fails first. Evidence: `.context/viewer-88a/` (red and green
+      logs).
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
@@ -3891,7 +3925,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Diagnostics table, Small (estimate); B, also make invocation warnings
         name the component path and the instance id and use one prop-name
         form, then define the messages, Medium. Recommended: B.
-  - [ ] Resolve user item 88 (CLI defaults hub finding 6): Props fields
+  - [x] Resolve user item 88 (CLI defaults hub finding 6): Props fields
         reorder after the detail loads. Entry detail v2 carries the declared
         control order, but until the detail arrives the Props tab shows the
         index's alphabetical order, and then the fields jump. Severity Low,
