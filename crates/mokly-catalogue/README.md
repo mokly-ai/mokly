@@ -31,6 +31,9 @@ JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
 The working tree uses the shared `dunce` path spelling, including Windows
 repository identities, so output confinement and input rechecks use matching paths.
+Configuration aliases retain both private source names when a repository's
+parent path is a symbolic link. Discovery compares output and root identities
+so an aliased output directory stays outside the entry inventory.
 PostCSS path, suffix, and regular-file checks use the catalogued
 `config-invalid` diagnostics before a sidecar starts.
 Git root validation belongs to the Git boundary. Config-relative parent

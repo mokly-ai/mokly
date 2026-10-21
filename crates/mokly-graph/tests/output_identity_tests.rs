@@ -34,3 +34,34 @@ fn the_projected_output_stays_private_under_the_loaded_repository_identity() {
         Err(PublicDenial::Private)
     ));
 }
+
+#[cfg(unix)]
+#[test]
+fn output_through_a_repository_alias_stays_private() {
+    let temporary = TempDir::new().unwrap();
+    let root = temporary.path().join("real");
+    fs::create_dir_all(root.join("specs")).unwrap();
+    fs::create_dir(root.join("site")).unwrap();
+    fs::write(root.join("mokly.config.json"), "{}").unwrap();
+    fs::write(root.join("site/logo.svg"), "<svg/>").unwrap();
+    let alias = temporary.path().join("alias");
+    std::os::unix::fs::symlink(&root, &alias).unwrap();
+    let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+    let config = Loader { tree: tree.clone() }.load(&alias, None).unwrap();
+    let policy = FilePolicy::new(
+        tree,
+        &config,
+        &[],
+        BTreeMap::new(),
+        Some(&alias.join("site")),
+    )
+    .unwrap();
+    assert_eq!(
+        policy.check("site/logo.svg").unwrap_err(),
+        PublicDenial::Private
+    );
+    assert_eq!(
+        policy.recheck("site/logo.svg").unwrap_err(),
+        PublicDenial::Private
+    );
+}

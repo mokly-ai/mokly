@@ -102,7 +102,7 @@ pub(crate) fn inputs(
                 WatchAction::Reload => &mut reload,
             };
             let hash = tree.digest(&path).ok().unwrap_or_default();
-            target.insert(relative.to_string_lossy().into_owned(), hash);
+            target.insert(name, hash);
         }
     }
     Ok((
@@ -110,3 +110,7 @@ pub(crate) fn inputs(
         digest(format!("{reload:?}").as_bytes()),
     ))
 }
+
+#[cfg(test)]
+#[path = "_tests_/watch_rules_tests.rs"]
+mod watch_rules_tests;

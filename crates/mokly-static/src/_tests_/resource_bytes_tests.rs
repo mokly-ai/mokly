@@ -1,5 +1,7 @@
 //! Opaque capture preserves typed input-change errors and checks existing output bounds first.
 
+use std::path::Path;
+
 use mokly_graph::asset_delivery::{AssetRead, AssetReadMock};
 use mokly_graph::closure::GeneratedResourcesMock;
 use mokly_graph::error::GraphError;
@@ -31,7 +33,7 @@ fn a_changed_asset_uses_the_existing_input_change_error() {
             }),
     );
     assert!(
-        matches!(generated(&generation, "assets/a.svg", "static/mokly-generated/assets/a.svg"), Err(Error::InputsChanged { path }) if path.to_string_lossy() == "/repo/a.svg")
+        matches!(generated(&generation, "assets/a.svg", "static/mokly-generated/assets/a.svg"), Err(Error::InputsChanged { path }) if path == Path::new("/repo/a.svg"))
     );
 }
 

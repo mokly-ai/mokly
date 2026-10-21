@@ -68,17 +68,25 @@ fn location_resolves_namespace_links_once_and_accepts_an_external_cache_disk() {
     let repository = temporary.path().join("repository");
     let disk = temporary.path().join("disk");
     let cache_home = temporary.path().join("cache-home");
+    let home = temporary.path().join("home");
     std::fs::create_dir(&repository).unwrap();
     std::fs::create_dir(&disk).unwrap();
     std::fs::create_dir(&cache_home).unwrap();
+    std::fs::create_dir_all(home.join("Library/Caches")).unwrap();
+    #[cfg(target_os = "macos")]
+    std::os::unix::fs::symlink(&disk, home.join("Library/Caches/mokly")).unwrap();
+    #[cfg(not(target_os = "macos"))]
     std::os::unix::fs::symlink(&disk, cache_home.join("mokly")).unwrap();
-    let output = std::process::Command::new(std::env::current_exe().unwrap())
+    let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+    command
         .args(["--exact", "location_probe", "--nocapture"])
         .env("MOKLY_CACHE_LOCATION_PROBE", &repository)
-        .env("XDG_CACHE_HOME", &cache_home)
-        .env("MOKLY_CACHE_EXPECTED_DISK", &disk)
-        .output()
-        .unwrap();
+        .env("MOKLY_CACHE_EXPECTED_DISK", &disk);
+    #[cfg(target_os = "macos")]
+    command.env("HOME", &home);
+    #[cfg(not(target_os = "macos"))]
+    command.env("XDG_CACHE_HOME", &cache_home);
+    let output = command.output().unwrap();
     assert!(
         output.status.success(),
         "{}",

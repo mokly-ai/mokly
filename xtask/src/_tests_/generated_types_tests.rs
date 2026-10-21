@@ -96,13 +96,17 @@ fn catalogue_directory_is_allowed_but_its_stale_sources_fail() {
         EntriesMock
             .each_call(matching!(_))
             .answers(&|_, directory| {
-                Ok(match directory.to_str().unwrap() {
-                    "/workspace/packages/viewer/src/generated" => vec![directory.join("catalogue")],
-                    "/workspace/packages/viewer/src/generated/catalogue" => {
+                Ok(
+                    if directory == Path::new("/workspace/packages/viewer/src/generated") {
+                        vec![directory.join("catalogue")]
+                    } else if directory
+                        == Path::new("/workspace/packages/viewer/src/generated/catalogue")
+                    {
                         vec![directory.join("stale.ts")]
-                    }
-                    _ => Vec::new(),
-                })
+                    } else {
+                        Vec::new()
+                    },
+                )
             }),
     )));
     assert!(matches!(

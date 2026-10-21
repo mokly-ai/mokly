@@ -202,7 +202,7 @@ fn bundle_and_render_failures_have_no_internal_wrapper_text() {
 fn sidecars_start_in_the_resolved_repository_from_a_nested_invocation() {
     let root = fixture();
     fs::create_dir(root.path().join("nested")).unwrap();
-    let expected = serde_json::to_string(root.path().to_str().unwrap()).unwrap();
+    let expected = serde_json::to_string(&dunce::canonicalize(root.path()).unwrap()).unwrap();
     write(
         root.path(),
         "specs/item.mockup.ts",

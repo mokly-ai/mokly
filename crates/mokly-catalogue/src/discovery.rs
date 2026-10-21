@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_model::canonical::compare_utf16;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::config::{normalize, relative};
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::discovery_walk::Walk;
@@ -101,6 +102,21 @@ pub struct Discoverer {
 impl Discovery for Discoverer {
     #[tracing::instrument(name = "catalogue.discover", skip_all, err)]
     fn discover(&self, config: &ResolvedConfig, output: Option<&Path>) -> Result<Inventory> {
+        let output = match output {
+            Some(path) => match self.tree.project(path) {
+                Ok(Some(node)) => Some(node.identity),
+                Ok(None) => Some(normalize(path)),
+                Err(error) if error.is_vanished() => Some(normalize(path)),
+                Err(error) => {
+                    return Err(invalid(format!(
+                        "{}: {}",
+                        relative(path, &config.repo_root),
+                        error.code()
+                    )));
+                }
+            },
+            None => None,
+        };
         let mut inventory = Inventory {
             files: Vec::new(),
             sources: Vec::new(),
@@ -124,7 +140,7 @@ impl Discovery for Discoverer {
                 root,
                 index,
                 globs,
-                output,
+                output: output.as_deref(),
                 not_searched: Vec::new(),
                 owners: &mut owners,
                 candidates: &mut candidates,
