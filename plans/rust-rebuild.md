@@ -3283,6 +3283,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] Resolve user item 132 (actionlint review finding): the label
+        coverage test misses workflow labels. `tests/actionlint_config.test.ts`
+        scans only `.yml` workflows. It also ignores a job's own `runs-on`
+        label when the job also has a matrix, as three `ci.yml` jobs do.
+        Severity Low, effort Small. Options: A, include `.yaml` workflows and
+        each such job's own `runs-on` label in the label coverage test,
+        Small. Recommended: A. Missing tests need the user. The rebuild
+        branch records the first part as a "Finding" line here. Keep one
+        line when both reach the plan.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
