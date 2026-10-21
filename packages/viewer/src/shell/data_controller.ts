@@ -213,10 +213,12 @@ export class ShellDataController {
       return;
     }
     if (outcome.kind === "deployment") {
+      // A full page load or the host's new index replaces this data, so the
+      // stage keeps loading.
       this.#source?.deploymentChanged();
-      // A full page load replaces this document, so the stage keeps loading.
-      if (this.#source?.reloadsOnDeployment) return;
-    } else this.#source?.detailFailed?.(request);
+      return;
+    }
+    this.#source?.detailFailed?.(request);
     this.#failed = new Set(this.#failed).add(detailKey(request));
     this.#changed();
   }
