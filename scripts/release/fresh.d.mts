@@ -10,5 +10,4 @@ export function requireUnpublishedRelease(
     stdout: string;
     stderr: string;
   }>,
-  options?: { reuseViewer?: boolean },
 ): Promise<void>;

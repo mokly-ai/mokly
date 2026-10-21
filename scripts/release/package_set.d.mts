@@ -15,15 +15,12 @@ export function inspectReleasePackage(
   root: string,
   directory: string,
   descriptor: { artifact: string; name: string; directory: string },
-  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease>;
 export function inspectReleaseSet(
   root: string,
   directory: string,
-  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease[]>;
 export function packReleaseSet(
   root: string,
   directory: string,
-  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease[]>;

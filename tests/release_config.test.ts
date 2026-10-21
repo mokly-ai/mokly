@@ -13,7 +13,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const json = async (file: string) =>
   JSON.parse(await fs.readFile(path.join(repositoryRoot, file), "utf8"));
 
-test("the private workspace releases the root CLI independently of the viewer", async () => {
+test("the private workspace releases the CLI and viewer with one root version", async () => {
   await verifyPackageVersions(repositoryRoot);
   const [manifest, config, versions] = await Promise.all([
     json("package.json"),
@@ -22,26 +22,20 @@ test("the private workspace releases the root CLI independently of the viewer", 
   ]);
   for (const key of ["bin", "exports", "files", "publishConfig", "types"])
     assert.equal(manifest[key], undefined, key);
-  assert.deepEqual(Object.keys(config.packages).sort(), [
-    ".",
-    "packages/viewer",
-  ]);
-  assert.deepEqual(
-    Object.keys(versions).sort(),
-    Object.keys(config.packages).sort(),
-  );
+  assert.deepEqual(Object.keys(config.packages), ["."]);
+  assert.deepEqual(Object.keys(versions).sort(), [".", "packages/viewer"]);
   assert.equal(config.plugins, undefined);
-  for (const [key, component, prefix] of [
-    [".", "mokly", false],
-    ["packages/viewer", "viewer", true],
-  ]) {
-    const entry = config.packages[String(key)];
-    assert.equal(entry.component, component);
-    assert.equal(entry["release-type"], "node");
-    assert.equal(entry["include-component-in-tag"], prefix);
-    assert.equal(entry["include-v-in-tag"], true);
-    assert.equal(entry["bump-minor-pre-major"], true);
-  }
+  const entry = config.packages["."];
+  assert.equal(entry.component, "mokly");
+  assert.equal(entry["release-type"], "node");
+  assert.equal(entry["include-component-in-tag"], false);
+  assert.equal(entry["include-v-in-tag"], true);
+  assert.equal(entry["bump-minor-pre-major"], true);
+  assert.ok(
+    entry["extra-files"].some(
+      (file) => file.path === "/packages/viewer/package.json",
+    ),
+  );
 });
 
 test("pinned Release Please updates all manifest and lockfile edges and retains changelog history", async (t) => {
@@ -61,8 +55,11 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     t.after(() => fs.rm(root, { recursive: true, force: true }));
     const updates = await releaseUpdates(repositoryRoot, changed);
     assert.ok(updates.has("packages/mokly/package.json"));
-    const viewerChanged = changed.includes("packages/viewer/src/index.ts");
-    assert.equal(updates.has("packages/viewer/package.json"), viewerChanged);
+    assert.ok(updates.has("packages/viewer/package.json"));
+    assert.match(
+      updates.get("packages/viewer/CHANGELOG.md") ?? "",
+      /Shared release version: 0\.16\.0/,
+    );
     for (const file of [
       "package.json",
       "package-lock.json",
@@ -89,10 +86,7 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       cli.version,
       (await json("packages/mokly/package.json")).version,
     );
-    assert.equal(
-      viewer.version !== (await json("packages/viewer/package.json")).version,
-      viewerChanged,
-    );
+    assert.equal(viewer.version, cli.version);
     assert.match(cli.version, /^0\./);
     assert.match(viewer.version, /^0\./);
   }

@@ -2217,6 +2217,14 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         Preserve the CLI baseline and removal checks after core-only releases.
         Evidence: `.context/ci-gates-round2/review-ratchet-green.log`.
         Release selection evidence: `.context/ci-gates-round2/release-all.log`.
+- [x] Apply User decisions 93 (2026-10-21): D, and 92: ignore. Keep the root
+      CLI component from item 20 C, and make it the only Release Please
+      component. Its extra-files update the viewer package and every lockfile
+      edge to the same version. The next release is 0.16.0 for both packages.
+      Remove the viewer component, viewer-reuse archive download and source
+      check, and publish every package from the one release commit. The root
+      changelog is the release history for both packages. The implementation
+      is on `rebuild/release-lockstep`. The release and workflow tests pass.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
@@ -2678,6 +2686,16 @@ Integration batch 18 decisions: `.context/integration-18-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
+
+- [x] User decisions 93 (2026-10-21): D, and 92: ignore. Keep the CLI root
+      component from decision 20 C, and use its Release Please extra-files to
+      update the viewer package and every lockfile dependency edge. One root
+      release publishes the CLI, five native packages, and viewer with one
+      shared version. The separate viewer component and viewer-reuse path are
+      removed. Every release builds and publishes a new viewer archive. The
+      stale-base release PR check has no purpose under this lockstep rule and
+      remains removed. The first synchronized source version is 0.15.0, and
+      the next root release updates both packages to 0.16.0.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 

@@ -3,19 +3,22 @@ import path from "node:path";
 import { verifyReleaseRefs } from "./refs.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
-const [cliRef, viewerRef, flag, artifacts] = process.argv.slice(2);
+const [cliRef, second, third, fourth] = process.argv.slice(2);
+const viewerRef =
+  !second || second.startsWith("--") ? `viewer-${cliRef}` : second;
+const flag = !second || second.startsWith("--") ? second : third;
+const artifacts = !second || second.startsWith("--") ? third : fourth;
 if (
   !cliRef ||
-  viewerRef === undefined ||
-  ![4, 6].includes(process.argv.length) ||
+  ![3, 4, 5].includes(process.argv.length) ||
   (flag && (flag !== "--artifacts" || !artifacts))
 )
-  throw new Error(
-    "usage: verify-ref.mjs {vX.Y.Z} {viewer-vX.Y.Z-or-empty} [--artifacts {directory}]",
-  );
+  throw new Error("usage: verify-ref.mjs {vX.Y.Z} [--artifacts {directory}]");
 const head = await verifyReleaseRefs(root, cliRef, viewerRef);
 if (artifacts) {
   const { inspectReleaseSet } = await import("./package_set.mjs");
-  await inspectReleaseSet(root, artifacts, { reuseViewer: !viewerRef });
+  await inspectReleaseSet(root, artifacts);
 }
-process.stdout.write(`Verified ${cliRef} and ${viewerRef} at ${head}.\n`);
+process.stdout.write(
+  `Verified shared tags ${cliRef} and ${viewerRef} at ${head}.\n`,
+);

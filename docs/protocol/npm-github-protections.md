@@ -4,8 +4,8 @@ The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
 the `main` branch in environment `npm`; dispatch retries from `main` with
-an existing CLI tag as `publish_ref` and any new viewer tag as `viewer_ref`.
-A CLI-only retry leaves `viewer_ref` empty. Merging the combined
+the shared CLI tag as `publish_ref`; its matching viewer tag is derived as `viewer-vX.Y.Z`.
+Every retry includes both immutable tags. Merging the combined
 Release Please PR authorizes its automatic npm publication. Starting a manual
 dispatch authorizes a retry of those already-created immutable tags.
 
@@ -96,7 +96,7 @@ and must have custom branch policies enabled. The deployment policy list must
 contain only `main` with `type: branch`, not a tag pattern. Read the tag ruleset
 in full with
 `gh api repos/mokly-ai/mokly/rulesets/<ruleset-id>` and verify its active status,
-tag target, both `v*` and `viewer-v*` conditions, both rules, and empty bypass
+tag target, both shared-version `v*` and `viewer-v*` conditions, both rules, and empty bypass
 list. Check `main` protection's required status checks include `Required CI`.
 
 Retain the API read-back alongside release evidence. Do not test immutability

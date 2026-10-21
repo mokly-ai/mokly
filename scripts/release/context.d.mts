@@ -3,9 +3,6 @@ export function resolvePublishRefs(input: {
   manualRef?: string;
   releaseCreated?: string;
   releaseTag?: string;
-  manualViewerRef?: string;
-  viewerReleaseCreated?: string;
-  viewerReleaseTag?: string;
 }): { cli: string; viewer: string } | undefined;
 export function validateTagVersion(
   ref: string,

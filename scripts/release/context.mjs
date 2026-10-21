@@ -8,20 +8,14 @@ export function resolvePublishRefs(input) {
   let viewer;
   if (input.eventName === "workflow_dispatch") {
     cli = input.manualRef;
-    viewer = input.manualViewerRef ?? "";
+    viewer = input.manualRef ? `viewer-${input.manualRef}` : undefined;
   } else if (input.eventName === "push") {
     const cliCreated = input.releaseCreated === "true";
-    const viewerCreated = input.viewerReleaseCreated === "true";
-    if (!cliCreated && !viewerCreated) return undefined;
-    if (!cliCreated)
-      throw new Error("a viewer release requires the root CLI release");
+    if (!cliCreated) return undefined;
     cli = input.releaseTag;
-    viewer = viewerCreated ? input.viewerReleaseTag : "";
+    viewer = cli?.replace(/^v/u, "viewer-v");
   } else throw new Error(`unsupported release event: ${input.eventName}`);
-  if (!cli || viewer === undefined)
-    throw new Error(
-      "publish_ref and any newly released viewer tag are required",
-    );
+  if (!cli || !viewer) throw new Error("publish_ref is required");
   validateTag(cli);
   if (viewer) validateTag(viewer, "viewer-");
   return { cli, viewer };

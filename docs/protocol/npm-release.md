@@ -7,7 +7,7 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 ## Package Set
 
 A CLI release publishes its package and five native packages from one reviewed
-commit. It publishes a changed viewer or reuses the exact existing viewer pin:
+commit. It publishes the viewer with the CLI, using one shared version:
 
 | Package                  | Content                                                                                                            |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -102,10 +102,9 @@ viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
 API. The smokes install the archives, not the source tree or a workspace link,
 and read protocol documents from the installed package.
 
-A CLI-only release downloads its published viewer archive without rebuilding it.
-Its source identity is the earlier viewer tag. A new viewer uses the CLI commit.
-The first run saves the checked seven-package set for 90 days before any
-publication. A retry reuses those exact archives under the
+The viewer publishes with the CLI at the same version. Both tags identify the
+same release commit. The first run saves the checked seven-package set for 90
+days before publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never
 rebuilds a partially published version.
 

@@ -5,9 +5,6 @@ on:
       publish_ref:
         required: true
         type: string
-      viewer_ref:
-        required: true
-        type: string
       verification:
         required: true
         type: string
@@ -33,7 +30,6 @@ jobs:
       node_version: ${{ steps.node-version.outputs.value }}
     env:
       PUBLISH_REF: ${{ inputs.publish_ref }}
-      VIEWER_REF: ${{ inputs.viewer_ref }}
       RELEASE_VERIFICATION: ${{ inputs.verification }}
       CARGO_BUILD_JOBS: 4
       CARGO_PROFILE_DEV_DEBUG: 0
@@ -56,7 +52,7 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Verify immutable tags
-        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF"
+        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF"
       - name: Resolve checked archives for publication
         id: publish_artifacts
         env:
@@ -115,7 +111,7 @@ jobs:
       - name: Smoke-test exact publish artifacts
         run: node scripts/release/smoke.mjs .context/release-artifact
       - name: Recheck immutable tags and source
-        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF" --artifacts .context/release-artifact
+        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" --artifacts .context/release-artifact
       - name: Preserve checked artifacts
         if: steps.publish_artifacts.outputs.artifact_run_id == ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
