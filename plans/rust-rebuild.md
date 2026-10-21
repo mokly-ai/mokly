@@ -2925,6 +2925,7 @@ Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 Integration batch 11 decisions: `.context/integration-11-merge-decisions.md`.
 Integration batch 18 decisions: `.context/integration-18-merge-decisions.md`.
+Integration batch 19 decisions: `.context/integration-19-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
