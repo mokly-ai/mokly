@@ -112,6 +112,7 @@ fn every_install_uses_the_remaining_shared_allowance_and_whole_tree_size_bound()
         owner: &owner,
         roots: vec![npm(""), npm("frontend")],
         deadline: Duration::from_secs(100),
+        node: None,
     };
     builder.build(Path::new("/install")).unwrap();
 }
@@ -151,6 +152,7 @@ fn an_expired_shared_deadline_starts_no_next_package_manager() {
         owner: &owner,
         roots: vec![npm("frontend")],
         deadline: Duration::from_secs(100),
+        node: None,
     };
     assert!(matches!(
         builder.build(Path::new("/install")),
@@ -223,6 +225,7 @@ fn a_nested_berry_cache_joins_the_private_repository_root_once() {
         owner: &owner,
         roots: vec![root],
         deadline: Duration::from_secs(100),
+        node: None,
     };
     builder.build(Path::new("/install")).unwrap();
 }

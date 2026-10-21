@@ -37,6 +37,7 @@ fn relative_path_probe() {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     });
     assert!(matches!(
         result,
@@ -82,6 +83,7 @@ fn interpreter_probe() {
             byte_limit: None,
             size_root: None,
             cache: None,
+            node: None,
         })
         .unwrap();
     assert_eq!(child.finish().unwrap().stdout, b"trusted-node");
@@ -133,6 +135,7 @@ fn install_environment_removes_mokly_token() {
             byte_limit: None,
             size_root: None,
             cache: None,
+            node: None,
         })
         .unwrap();
     assert_eq!(child.finish().unwrap().stdout, b"unset");
@@ -212,6 +215,7 @@ fn cancellation_kills_a_script_child_tree() {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     };
     let worker = std::thread::spawn(move || commands.run(&command));
     let reported = std::fs::read_to_string(&marker).expect("script did not report its child");

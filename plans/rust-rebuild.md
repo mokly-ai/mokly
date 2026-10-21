@@ -3109,6 +3109,11 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] User item 135 B review finding 48 A: wait for the cancellation
         fixture's child PID through a named pipe. Keep its cancellation and
         child-exit assertions. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 46 B: share parent-side Node selection
+        with rendering, probe outside the base extraction, and key scripts-on
+        installs on Node's version, operating system, and architecture. Put
+        the probed executable's folder first on the install PATH while keeping
+        the selected manager. Evidence: `.context/base-install-scripts-review/`.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The

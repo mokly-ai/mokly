@@ -19,6 +19,7 @@ fn command() -> Command {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     }
 }
 

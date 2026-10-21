@@ -18,6 +18,7 @@ fn request(manager: Manager, args: Vec<OsString>) -> Command {
         byte_limit: Some(1000),
         size_root: Some("/private".into()),
         cache: None,
+        node: None,
     }
 }
 

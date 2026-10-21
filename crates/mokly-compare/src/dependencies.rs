@@ -12,6 +12,7 @@ use crate::commands::{Command, Commands};
 use crate::dependency_types::{Fallback, Request, Resolved, Tier, Warning};
 use crate::error::{Error, Result};
 use crate::install::{self, Install};
+use crate::install_node;
 use crate::manager_plan;
 
 /// Base dependency selection boundary.
@@ -74,30 +75,29 @@ impl Dependencies for DependencyTiers {
                     byte_limit: None,
                     size_root: None,
                     cache: None,
+                    node: None,
                 })?;
                 root.validate_version(&version)?;
             }
-            let node_version = if request.install_scripts {
-                String::from_utf8_lossy(&self.commands.run(&Command {
+            let node = if request.install_scripts {
+                Some(install_node::decode(&self.commands.run(&Command {
                     program: "node".into(),
-                    args: vec!["--version".into()],
-                    directory: request.source_root.clone(),
+                    args: vec!["--print".into(), install_node::PROBE.into()],
+                    directory: request.head_root.clone(),
                     timeout: deadline.saturating_sub(self.clock.now()),
                     byte_limit: None,
                     size_root: None,
                     cache: None,
-                })?)
-                .trim()
-                .to_owned()
+                    node: None,
+                })?)?)
             } else {
-                String::new()
+                None
             };
             let key = install::key(
                 &request.base,
                 &request.source_identity,
                 &roots,
-                request.install_scripts,
-                &node_version,
+                node.as_ref(),
             );
             self.cache.get(
                 Kind::Dependencies,
@@ -107,6 +107,7 @@ impl Dependencies for DependencyTiers {
                     owner: self,
                     roots,
                     deadline,
+                    node,
                 },
             )
         })();
@@ -228,3 +229,7 @@ mod dependencies_tests;
 #[cfg(test)]
 #[path = "_tests_/ancestor_tests.rs"]
 mod ancestor_tests;
+
+#[cfg(test)]
+#[path = "_tests_/scripts_install_tests.rs"]
+mod scripts_install_tests;

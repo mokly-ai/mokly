@@ -72,6 +72,12 @@ include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.
 
+`NodeExecutable` resolves the shim-supplied Node or searches absolute PATH
+entries. The CLI uses the same resolver for rendering. Scripts-on probes run
+from the working repository and read Node's version, operating system,
+architecture, and actual executable. Installs put that executable's folder
+first on their filtered PATH without changing the selected package manager.
+
 Yarn planning collects repository ancestor settings. Berry uses the nearest
 linker setting and rejects the existing restricted keys anywhere in that chain.
 It checks catalog and package-extension ranges like manifest specifications,
@@ -242,6 +248,8 @@ so process startup speed cannot exhaust its readiness wait.
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and
   [command supervision](./src/commands.rs).
+- [Node executable selection](./src/node_executable.rs) shares the host choice
+  between rendering and the scripts-on runtime probe.
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
   [local path confinement](./src/manager_local.rs), and

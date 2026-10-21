@@ -12,6 +12,7 @@ use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
 use crate::error::{Error, Result};
 use crate::inputs::Inputs;
+use crate::install_node::InstallNode;
 use crate::manager::{Manager, Root};
 use crate::manager_command;
 
@@ -20,23 +21,23 @@ pub(crate) struct Install<'a> {
     pub(crate) owner: &'a DependencyTiers,
     pub(crate) roots: Vec<Root>,
     pub(crate) deadline: Duration,
+    pub(crate) node: Option<InstallNode>,
 }
 
 pub(crate) fn key(
     inputs: &Inputs,
     identity: &str,
     roots: &[Root],
-    install_scripts: bool,
-    node_version: &str,
+    node: Option<&InstallNode>,
 ) -> String {
     let mut hash = Sha256::new();
-    hash.update(inputs.key("manager-install-v3", identity).as_bytes());
-    hash.update([u8::from(install_scripts)]);
-    if install_scripts {
-        hash.update((node_version.len() as u64).to_le_bytes());
-        hash.update(node_version.as_bytes());
-        hash.update(std::env::consts::OS.as_bytes());
-        hash.update(std::env::consts::ARCH.as_bytes());
+    hash.update(inputs.key("manager-install-v4", identity).as_bytes());
+    hash.update([u8::from(node.is_some())]);
+    if let Some(node) = node {
+        for value in [&node.version, &node.platform, &node.architecture] {
+            hash.update((value.len() as u64).to_le_bytes());
+            hash.update(value.as_bytes());
+        }
     }
     for root in roots {
         for value in [&root.directory, root.manager.identity(), &root.version] {
@@ -80,6 +81,7 @@ impl Builder for Install<'_> {
                 byte_limit: Some(self.owner.install_bytes),
                 size_root: Some(destination.to_owned()),
                 cache,
+                node: self.node.as_ref().map(|node| node.executable.clone()),
             })?;
         }
         let mut caches = BTreeSet::new();

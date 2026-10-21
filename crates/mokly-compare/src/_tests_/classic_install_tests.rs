@@ -75,6 +75,7 @@ fn build(yarnrc: &str, mirror: &'static str, removed: &'static [&'static str]) {
         owner: &owner,
         roots: vec![root],
         deadline: Duration::from_secs(100),
+        node: None,
     };
     builder.build(Path::new("/install")).unwrap();
 }
