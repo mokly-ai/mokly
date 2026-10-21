@@ -4265,6 +4265,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `relatedComponents` by the entry whose views each evidence item
         names, in place of the parent, and update the Status Lines rule,
         Small. Recommended: B. User item 103 option C includes B.
+    - User decision 83 (2026-10-21): B, covered by user decision 103 C in
+      the viewer workspace. Tick this TODO with 103 C.
     - Covered by user decision 103 (2026-10-21): C, which includes 83 B.
       Work: `rebuild/viewer-103c`.
   - [ ] Resolve user item 84 (review finding 6): the shared-component
