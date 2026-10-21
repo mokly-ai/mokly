@@ -25,6 +25,7 @@ pub(crate) fn validate(
     slots: Option<&[String]>,
     registry: &ElementRegistry,
     failed: &BTreeSet<String>,
+    warn_unused_props: bool,
 ) -> Validation {
     let mut checker = Checker {
         template,
@@ -104,7 +105,12 @@ pub(crate) fn validate(
             0,
         );
     }
-    for name in schema.properties.iter().flat_map(|props| props.keys()) {
+    for name in schema
+        .properties
+        .iter()
+        .flat_map(|props| props.keys())
+        .filter(|_| warn_unused_props)
+    {
         if !checker.used.contains(name) {
             checker.result.warnings.push(Warning {
                 code: "html-unused-props",
