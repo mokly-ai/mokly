@@ -777,13 +777,15 @@ merges; the freeze applies to it from 2026-10-12.
           #136, #153, #158, #186, #187, #188, #189, #190, #192, #194, and
           #196 unmerged, each with a comment that names its replacement.
           #174 waits for user item 66, and #197 waits for user item 65.
-    - [ ] Resolve user item 65 (triage decision 4): when to take the in-range
+    - [x] Resolve user item 65 (triage decision 4): when to take the in-range
           updates and Rust 1.99.0 of #197. Severity Low, effort Small.
           Options: A, close #197 and redo the updates after the rebuild
           merges, Small (estimate); B, redo the in-range updates and Rust
           1.99.0 on the rebuild branch before the final pull request, then
           close #197, Small; C, merge #197 into `main` now, Small (estimate).
           Recommended: B.
+      - User decision 65 (2026-10-21): A. The hub closed #197 on 2026-10-21,
+        and a post-merge follow-up redoes its updates.
     - [ ] Resolve user item 66 (triage decision 5): the test gates of #153
           and #174. #153 adds an empty-test assertion guard, and #174 widens
           the clock lint. Severity Low, effort Small. Options: A, adopt
@@ -4594,6 +4596,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       providers and options, and unavailable native identity. User decision
       114 A (2026-10-21) moved this work after the merge. Design:
       `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
+
+- [ ] Redo the in-range dependency updates and the Rust 1.99.0 move of the
+      closed #197 after the rebuild merges. User decision 65 A, 2026-10-21.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.
