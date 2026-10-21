@@ -1989,7 +1989,13 @@ Tags: ui
       settled copy and states were already in the viewer.
 - [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
       move the copy checks that reached Details through it to live inputs.
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: this milestone's
+      branch `rebuild/defaults-viewer` (`1bdccfba`) and its fix round
+      `rebuild/defaults-viewer-fix1` (`2ccc31d7`) are in the 82 B branch,
+      which integration batch 17 merged. The complete gate passed on tree
+      `02e84b0e`, the tip `d044deaf` of the 82 B fix round, which batch 18
+      merged.
 
 ## Milestone 10.3: Affected-only comparisons in the designs
 
