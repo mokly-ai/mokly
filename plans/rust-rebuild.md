@@ -5402,10 +5402,15 @@ check passes on this commit.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Resolve user item 111 with option C: take each statement's start and
+- [x] Resolve user item 111 with option C: take each statement's start and
       kind from cssparser's parsers so the CSS Modules scanners align with
       `lightningcss`. Keep the iterative, heap-only depth guarantee and add
       differential coverage for repository stylesheets and a generated corpus.
+  - User decision 111 (2026-10-21): C, ported in `f4558272`. The section
+    reader takes each statement's start and kind from cssparser's rule
+    parsers, so the stylesheet skips `<!--` and `-->` before a statement
+    for all three scanners. Differential tests cover the 51 repository
+    stylesheets and 25 generated cases. Evidence: `.context/port-111c/`.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution

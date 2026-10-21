@@ -61,11 +61,9 @@ guard runs before scoping. `lightningcss` bundles the scoped text and is
 never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
-The CSS Modules scanners have a known parity gap for an HTML comment token
-(`<!--` or `-->`) before a stylesheet statement. cssparser skips that token,
-but the scanners keep it, so the statement can receive a different kind from
-the scanners and from `lightningcss`. The current rebuild records this gap;
-post-merge work will align the scanners.
+At every nesting level, the scoper reads each statement with the same start
+and kind as the bundler. Before a stylesheet statement, both skip the HTML
+comment tokens `<!--` and `-->`.
 
 ### Composition And Exports
 
