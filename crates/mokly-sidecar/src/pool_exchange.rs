@@ -101,10 +101,11 @@ impl SidecarPool for Pool {
                 call: Box::new(call.clone()),
             });
         }
-        if let Err(Error::Timeout { deadline_ms }) = outcome {
+        if let Err(Error::Timeout { deadline_ms, phase }) = outcome {
             outcome = Err(Error::RequestTimeout {
                 call: Box::new(call),
                 deadline_ms,
+                phase,
             });
         }
         if cancelled {

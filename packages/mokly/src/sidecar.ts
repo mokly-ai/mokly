@@ -47,6 +47,13 @@ const session = new Session(
     );
   },
   timings,
+  (line) =>
+    write(
+      encodeFrame({
+        event: "diagnostic",
+        params: { message: line },
+      }),
+    ),
 );
 const input = parentInput();
 try {

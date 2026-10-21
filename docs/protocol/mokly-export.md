@@ -135,6 +135,21 @@ Changes; Serve's watcher ignores the same paths.
    do not participate. Explicit inventoried inputs and reached closure files
    participate even beneath excluded directory names. Resolve each selected
    path inside the real repository before hashing its target bytes.
+   The fingerprint excludes JavaScript modules that the sidecar bundles from
+   `node_modules`, files under `node_modules` that a PostCSS plugin reports,
+   `.gitignore` and the Git index, ancestor `tsconfig.json` files, ancestor
+   `package.json` files that PostCSS module resolution does not name, missing
+   resolution candidates, the file list of a directory that a PostCSS plugin
+   reports, files that a PostCSS plugin reads without reporting them, and
+   files that a render callback reads without an import. An edit to one of
+   these during a build is not detected. These include an installed
+   stylesheet that a PostCSS plugin inlines. Installed stylesheets that Mokly
+   resolves itself, their `url()` assets, the `package.json` files that this
+   resolution reads, PostCSS plugin modules, and the package manifests that
+   PostCSS module resolution names participate. Decision: the fingerprint
+   covers only the build's inputs. A walk of every repository file was
+   rejected because it hashes unrelated files on every build and stops a
+   build when an unrelated file changes.
    For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
    of the exact bytes it bundled as the baseline. A missing module digest is
    an internal failure; a later source read cannot replace it. Compare captured digests with
@@ -155,9 +170,8 @@ Changes; Serve's watcher ignores the same paths.
    late baseline and the live recheck. That baseline does not detect an edit
    between an opaque read and capture. One observed read never makes a path or
    context complete. The [PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence)
-   defines this stage's coverage. Staged observation preserves compatible plugins;
-   enforced immutable inputs are not required. The full consumed-byte guarantee
-   remains open.
+   defines the coverage of PostCSS evidence. Mokly does not require enforced
+   immutable inputs, so compatible plugins keep working.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.

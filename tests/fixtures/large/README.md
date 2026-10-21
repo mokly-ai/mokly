@@ -19,11 +19,15 @@ npm run fixture:large -- --variant react --areas 2 --screens 12 --rows 8 --root 
 npm run benchmark:large -- --root .context/large-react --scenario build --sidecars 2
 ```
 
-Generation requires an empty directory. Options are `--areas`, `--screens`
-(at least two), `--rows`, `--stylesheets`, and `--stylesheet-share` (0 to 1).
-Shared stylesheets apply to the leading `ceil(screens * share)` screens in
-each area. Setup commits the source, then adds one non-matching CSS rule.
-Generated output stays ignored.
+Generation requires an empty directory. Options and their defaults are
+`--areas` (30), `--screens` (40, at least two), `--rows` (12), `--stylesheets`
+(4, zero or more), and `--stylesheet-share` (0.5, from 0 to 1). Shared
+stylesheets apply to the leading `ceil(screens * share)` screens in each area,
+so a zero count or a zero share links none. Setup commits the source, then
+adds one non-matching CSS rule to the first shared stylesheet. With
+`--stylesheets 0`, setup adds no rule. Entries name the fixture's root
+`notes.md` as a related document. It stays outside the `specs` root, so it is
+not an entry. Generated output stays ignored.
 
 `--toolchain workspace` is the default. It links the workspace dependencies
 and records their lockfile. It measures no install time. `--toolchain install`
@@ -48,8 +52,8 @@ availability. Its result omits those measurements. `all` keeps the four complete
 scenarios; `serve` includes delivered Changes and available review.
 Cold and warm runs each use a new Serve process and browser context.
 Both keep the native comparison caches. Cold means application-cold, not an
-empty disk cache. Serve prepares the pinned fixture base through M9: HTML
-reads Git sources; React acquires source and dependency leases. The harness
+empty disk cache. Serve prepares the pinned fixture base from its sources. HTML
+reads Git sources. React acquires source and dependency leases. The harness
 records the announced cache directory and never resets a baseline output.
 Serve reports delivered Changes readiness and review availability separately.
 Changes verifies the browser's own event stream, delivered index, Changes

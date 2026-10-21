@@ -30,8 +30,9 @@ export class Session {
     private readonly compile: typeof build = build,
     private readonly operation: (operation: Operation) => void = () => {},
     private readonly measurements: Measurements = unmeasured,
+    phase: (line: string) => void = () => {},
   ) {
-    this.workers = new PostcssWorkers(diagnostic, operation);
+    this.workers = new PostcssWorkers(diagnostic, operation, undefined, phase);
   }
 
   async call(request: Request): Promise<unknown> {

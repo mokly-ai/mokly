@@ -2966,8 +2966,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         startup and the extra full-blob buffer, and preserve all existing
         bounds, Large; B, retain the measured adapter, Small (estimate).
         Recommended: A. No option is applied.
-- [ ] Complete the gap sweep: every triage decision is in a spec or recorded
-      as an accepted difference for the release note.
+- [x] Complete the gap sweep: every triage decision is in a spec or recorded
+      as an accepted difference for the release note. Done on 2026-10-21.
+      Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
@@ -3002,6 +3003,7 @@ Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 Integration batch 11 decisions: `.context/integration-11-merge-decisions.md`.
 Integration batch 18 decisions: `.context/integration-18-merge-decisions.md`.
+Integration batch 19 decisions: `.context/integration-19-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -3204,6 +3206,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the failed child. Evidence: `.context/native-ci-fixes-3/`.
         The hub must dispatch hosted macOS and Windows CI on
         `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
+  - [x] Native CI round 4: keep valid unusual names on macOS and keep the
+        non-UTF-8 filename case on filesystems that support it. Copy the
+        repository ignore rules into the design fixture and add PostCSS child
+        phase timings to timeout diagnostics. Evidence:
+        `.context/native-ci-fixes-4/`. The hub must dispatch hosted macOS and
+        Windows CI on `rebuild/native-ci-fixes-4`.
   - [x] F17: align remote executable discovery with the shared Node shim
         resolver and Windows native `.exe` names. Keep explicit extensions
         and Unix names. Evidence: `.context/f17/windows-red.log` and
@@ -4310,6 +4318,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.
+  - Open from the M14 gap sweep close-out review, report under
+    `.context/m14-gap-sweep/review.md`:
+  - 34: the gap sweep tick leaves audit finding 7 untracked in this plan.
+    Severity Low, effort Small. Recommended: A, add one open line that names
+    finding 7 and the branch that it waits for. The hub owns the audit.
+  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+    that setup always adds the unrelated rule to the first shared
+    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+    close-out review. Separate branch.
+  - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
+    consumed-byte digests for the PostCSS module graph": it still names
+    "supply immutable generation inputs" as a design path, but decision 56 A
+    and the PostCSS page reject enforced immutable inputs. Found by the gap
+    sweep close-out review. Separate branch.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
