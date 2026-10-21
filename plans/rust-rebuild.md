@@ -3045,6 +3045,21 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [ ] Merge set. User decision 147 (2026-10-21): B. Milestone 15 starts when
+      every entry below is done. Everything else is post-merge work; items
+      98 B, 111 C, 115 C, 116 C, and 117 C stay post-merge, as the user
+      chose earlier.
+  - [ ] `rebuild/defaults-engine` with user decision 110 C, and its two
+        companion branches: `rebuild/defaults-engine-deps`, with user
+        decision 74 C, and `rebuild/followups-f14`, with user decision 76 B.
+        They hold work that `main` already has.
+  - [ ] Passing hosted macOS and Windows CI, in native CI round 5.
+  - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
+        93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
+        refresh fix of 140 B.
+  - [ ] The security items 122, 141, and 142, each of which needs the
+        user's answer, and 145 B, which merged in batch 23.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
