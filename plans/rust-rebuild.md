@@ -2661,6 +2661,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         consumer preloads, as the base did, and state the remaining
         asynchronous-loader gap, Medium; C, record module paths through an
         asynchronous resolve hook and a message port, Large. Recommended: B.
+    - User decision 117 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: the new
+      PostCSS follow-ups workspace.
   - [ ] Resolve user item 118 (W6 review finding 3): each file open probes
         identity twice. Every tracked open runs one wasted `fstat`,
         `realpath`, and `stat` probe. Severity Low, effort Small. Performance
@@ -3510,6 +3513,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         keys, Medium; C, split the public parser into an authored parse and a
         delivered-document parse that every caller chooses, Large.
         Recommended: C.
+    - User decision 115 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: W6, with the
+      HTML pipeline.
   - [ ] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
         new code can bypass the token boundary. Nothing stops new code in
         `mokly-catalogue` or `mokly-html` from calling html5gum's tokenizer
@@ -3521,6 +3527,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the two boundary files, Medium; C, make the boundary the only
         html5gum user, with Mokly-owned token types, Large. Recommended: B.
         B is a new lint, so it needs the user.
+    - User decision 116 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: W6, with the
+      HTML pipeline.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
@@ -4449,6 +4458,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         because it aligns the scanners with lightningcss and with the
         `@value` rule. B makes such a stylesheet fail, and it builds today,
         so keep the behaviour until the user decides.
+    - User decision 111 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: the new CSS
+      Modules workspace.
   - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
         differential): removing a bare `:global` or `:local` at
         `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
