@@ -78,6 +78,34 @@ test("a detail from another deployment is reported once and keeps loading", asyn
   assert.deepEqual(fixture.source.detailFailures, []);
 });
 
+test("a step that fails after another deployment answered leaves the use case replaced", async () => {
+  const fixture = controllerFixture(indexFixture());
+  fixture.navigate("/view/tour/");
+  const steps = fixture.source.details.filter(
+    (item) => item.input.path !== "tour",
+  );
+  assert.equal(steps.length, 2);
+  fixture.source
+    .detail("tour")
+    .resolve({ ...detailFixture({ path: "tour" }), deploymentId: OTHER });
+  await flush();
+  assert.equal(fixture.controller.replaced, true);
+  assert.equal(fixture.source.deploymentChanges, 1);
+  // A full page load or the host's new index brings the new data, so the
+  // step loads stop, and a step that fails afterwards is not a failed route.
+  assert.ok(steps.every((step) => step.signal.aborted));
+  for (const step of steps) step.reject(new Error("Not found"));
+  await flush();
+  assert.equal(fixture.controller.failed.size, 0);
+  assert.deepEqual(fixture.source.detailFailures, []);
+  // A later route waits for the new data too, and requests nothing.
+  fixture.navigate("/view/guide/");
+  fixture.controller.retry([detailKey({ path: "guide" })]);
+  assert.equal(fixture.source.details.length, 3);
+  assert.equal(fixture.source.deploymentChanges, 1);
+  assert.equal(fixture.commits.length, 0);
+});
+
 test("a newer detail installs with the refetched index of its revision", async () => {
   const fixture = controllerFixture(indexFixture());
   fixture.navigate(`/view/${HOME}/`);

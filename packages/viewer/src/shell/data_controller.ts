@@ -42,6 +42,7 @@ export class ShellDataController {
   #wanted: readonly DetailRequest[] = [];
   #failed: ReadonlySet<string> = new Set();
   readonly #loading = new Map<string, AbortController>();
+  #replaced = false;
   #connected = false;
   #closeStream: (() => void) | undefined;
   #streamWarned = false;
@@ -73,7 +74,7 @@ export class ShellDataController {
       route: () => host.route(),
       adopt: (index, details) =>
         this.#commit(withIndex(this.#snapshot, index, details)),
-      deploymentChanged: () => this.#source?.deploymentChanged(),
+      deploymentChanged: () => this.#replace(),
       versionError: (error) => host.versionError(error),
       changed: () => this.#changed(),
     });
@@ -86,6 +87,11 @@ export class ShellDataController {
   /** The keys of the requested details whose last load failed. */
   get failed(): ReadonlySet<string> {
     return this.#failed;
+  }
+
+  /** Another deployment replaced the catalogue; no detail loads after it. */
+  get replaced(): boolean {
+    return this.#replaced;
   }
 
   /** The descriptor of the installed render generation, while connected. */
@@ -122,7 +128,7 @@ export class ShellDataController {
   request(requests: readonly DetailRequest[]): void {
     this.#wanted = requests;
     const source = this.#source;
-    if (!source) return;
+    if (!source || this.#replaced) return;
     const wanted = new Set(requests.map(detailKey));
     for (const [key, controller] of this.#loading)
       if (!wanted.has(key)) {
@@ -171,7 +177,7 @@ export class ShellDataController {
       message: (revision, deploymentId) => {
         const installed = this.#snapshot.index;
         if (deploymentId !== installed.deploymentId) {
-          this.#source?.deploymentChanged();
+          this.#replace();
           return;
         }
         if (this.#descriptor.failed) this.#descriptor.load();
@@ -217,13 +223,25 @@ export class ShellDataController {
       return;
     }
     if (outcome.kind === "deployment") {
-      // A full page load or the host's new index replaces this data, so the
-      // stage keeps loading.
-      this.#source?.deploymentChanged();
+      this.#replace();
       return;
     }
     this.#source?.detailFailed?.(request);
     this.#failed = new Set(this.#failed).add(detailKey(request));
+    this.#changed();
+  }
+
+  /**
+   * Another deployment answered. Stop every load and tell the source once; a
+   * full page load or the host's new index brings the new data, and a route
+   * that still waits for a detail shows the catalogue replaced until then.
+   */
+  #replace(): void {
+    if (this.#replaced) return;
+    this.#replaced = true;
+    this.abortLoads();
+    this.#refresh.stop();
+    this.#source?.deploymentChanged();
     this.#changed();
   }
 

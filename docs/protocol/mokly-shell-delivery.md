@@ -139,9 +139,12 @@ installed index. On a revision mismatch it refetches the index once; if the
 pair still disagrees, the entry shows its unavailable state with retry. A
 different `deploymentId` means another deployment replaced the files: the
 standalone shell performs a full page load of the requested URL, and an
-embedded React host receives one `onError` and keeps its state. In both hosts
-the entry's stage keeps its loading state until the new data arrives: the full
-page load, or the `index` that the host supplies. It accepts a removed entry's
+embedded React host receives one `onError` and keeps its state. From then on
+the shell loads no detail and reports no later failure. A route that still
+waits for a detail has the replaced delivery status: in both hosts its stage
+keeps the loading state, never the unavailable state, until the new data
+arrives with the full page load or the `index` that the host supplies. A route
+whose details all arrived keeps them. It accepts a removed entry's
 detail only when `identity` equals the index, `generation`
 equals the generation that the index's `comparisonUrl` names, and
 `snapshotId` equals the index's removed record for that path.
@@ -202,5 +205,6 @@ The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
 | a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
+| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                      | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
 | a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
 | a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                                                |
