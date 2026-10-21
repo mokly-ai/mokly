@@ -4408,6 +4408,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         without "no independent entry", design first, Large; C, leave out the
         terminal line when a shown view uses a changed component, design
         first, Large (estimate). Recommended: B.
+  - [ ] Resolve user item 137 (viewer-103c decision 2): links to added
+        consumers ask for a comparison. `projection_affected.rs:105` sets
+        `comparisonEligible` from the entry kind only, so an Affected link to
+        an Added view asks for a comparison that the view cannot have.
+        Severity Low, effort Small. Options: A, keep the flag and add a rule
+        that a link to an Added view opens Current, Small (estimate); B, set
+        the flag to false when the linked view is Added, and document it,
+        Small; C, leave added consumers out of the Affected list, Small
+        (estimate). Recommended: B.
   - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
         of an affected-only entry comes from view usage. Severity Low.
         Option B is applied by default (user rule): see the record "Serve
