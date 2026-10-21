@@ -848,6 +848,19 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       repair without a compatible published update. The narrow exception lets
       the audit protect all other dependencies.
       Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+- [x] Resolve RUSTSEC-2026-0382, published 2026-10-20: `rustls-webpki`
+      0.103.15 may accept distrusted intermediate certificates. It reaches
+      `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
+      patched 0.103.16 and changes nothing else. The remote repository suite
+      failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17
+      and CI round 5 made the same lockfile change on 2026-10-20, and this
+      line now records all three.
+      Evidence: `.context/m14-nesting/r7/audit-before.txt` and
+      `.context/m14-nesting/r7/audit-after.txt`; batch 17:
+      `.context/integration-17/security-audit.log` and
+      `.context/integration-17/security-publish-tests.log`; CI round 5:
+      `.context/ci-shard-balance/webpki-advisory.md`,
+      `webpki-dependents.log`, and `webpki-green.log`.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The
@@ -2208,11 +2221,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
-- [x] Patch the newly reported RUSTSEC-2026-0382 certificate distrust defect
-      with locked `rustls-webpki` 0.103.16. Keep all other dependency edges.
-      Evidence: `.context/integration-17/security-audit.log` and
-      `.context/integration-17/security-publish-tests.log`.
-
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
       cancellation, fallback, and every charge and bound. Trims preserve the
@@ -2674,14 +2682,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       the median cost. Hosted confirmation belongs to the hub.
       Evidence, exact trees, source reports, and final remote observations:
       `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
-
-- [x] CI round 5 audit follow-up (2026-10-20): update `rustls-webpki` from
-      0.103.15 to 0.103.16 for newly published RUSTSEC-2026-0382. The live
-      remote audit reproduced the certificate-verification advisory. Keep
-      every exception and unrelated lockfile edge unchanged. The live audit
-      and publication/TLS tests pass with the patch.
-      Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
-      `webpki-dependents.log`, and `webpki-green.log`.
 
 - [x] CI round 5 measurement follow-up (2026-10-20): calibrate scheduling
       costs with both the hosted per-test observations and remote run
@@ -3780,17 +3780,85 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
-  - Follow-up: classify CSS statements without a block once in the section
-    reader, for the module check, the renamer, and the token check. Effort
-    Medium. Covers M14 nesting report finding 22: a wrapper left open at the
-    end of input in a declaration block gets the generic syntax message,
-    which the wrapper table test pins (option A, kept by the orchestrator on
-    2026-10-20). Previous examples: `.c{}.y`, where the token check fired
-    instead of the syntax check.
-  - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
-    check always reports line 1, column 1, though its catalogue row shows
-    `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
-    branch.
+  - [x] Follow-up: classify CSS statements without a block once in the
+        section reader, for the module check, the renamer, and the token
+        check. Effort Medium. Covers M14 nesting report finding 22: a wrapper
+        left open at the end of input in a declaration block got the generic
+        syntax message. Previous examples: `.c{}.y`, where the token check
+        fired instead of the syntax check. Done on 2026-10-20 in nesting
+        round 7, as the orchestrator asked: in a style rule's block, those
+        cases now get the catalogued empty-wrapper message, which the wrapper
+        table test pins. In a block where lightningcss reads no rules, such a
+        statement stays as authored.
+  - [x] `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
+        check always reports line 1, column 1, though its catalogue row
+        shows `{line}:{column}`. Found by the M14 nesting round 6 review.
+        Separate branch. Done on 2026-10-20 in nesting round 7, as the
+        orchestrator asked: the failure points at the first authored token
+        that scoping would change, or at the end of the stylesheet when
+        scoping only adds tokens there.
+  - [ ] Resolve user item 111 (M14 nesting report item 24, round 7 review
+        finding 1): cssparser skips an HTML comment token (`<!--` or `-->`)
+        before a stylesheet statement, but the section reader keeps it. So
+        the scanners read `<!-- @value x: 1;` and `-->@keyframes k{…}` as
+        style rules, while lightningcss reads them as at-rules. The `@value`
+        ships, and the keyframes keep `k` while its references are renamed.
+        Severity Low. Options: A, record the gap and narrow the README parity
+        claim, Small; B, skip those tokens before a stylesheet statement
+        through a root grammar, Medium; C, read each statement's start and
+        kind from cssparser's own parsers, Large and blocked. Recommended: B,
+        because it aligns the scanners with lightningcss and with the
+        `@value` rule. B makes such a stylesheet fail, and it builds today,
+        so keep the behaviour until the user decides.
+  - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
+        differential): removing a bare `:global` or `:local` at
+        `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
+        Before an at-keyword, it turns a rule into an at-rule, for example
+        `:global@media all{}` into `@media all{}`. Alone in a statement
+        without a block, it empties the statement, so `.p{:local}` builds as
+        `.p{}`. The token check misses both where its two readings agree.
+        Severity Low. Options: A, keep the behaviour, Small; B, add the kind
+        of each statement to the token check's fingerprint, so that any edit
+        that changes a statement fails with the catalogued message, Small;
+        C, keep a bare wrapper that no selector follows, so that lightningcss
+        reports the syntax error, Small, but not for the `:global()` form.
+        Recommended: B, because one guard catches every edit that changes a
+        statement. B and C reject stylesheets that build today, so keep the
+        behaviour until the user decides.
+    - `crates/mokly-css/src/rename_selectors.rs:181`: removing a `:global()`
+      wrapper before an at-keyword, as in `:global(@media all){.a{}}`, also
+      turns a rule into an at-rule. Found by the M14 nesting round 7 review.
+      User item 112 covers it.
+  - [ ] Resolve user item 113 (M14 nesting report item 28, round 7
+        differential): in a rule list, the module check at
+        `crates/mokly-css/src/module_checks.rs:30` skips the block of a
+        statement that starts like a custom property, such as `--x:{…}`. The
+        renamer and the token check read the same statement as a rule with a
+        block, so an `@value` in that block passes the module check. In
+        keyframes and `@document` blocks, such a stylesheet builds today.
+        Severity Low. Options: A, keep the skip, Small; B, delete it, so that
+        an `@value` there fails with its catalogued message, Small.
+        Recommended: B, because it removes the last statement that one
+        scanner reads on its own, and `@value` fails at every rule level. B
+        rejects stylesheets that build today, so keep the skip until the
+        user decides.
+  - Open from the M14 nesting round 7 review, report under
+    `.context/m14-nesting/r7/review-r7.md`:
+  - 24: moved to user item 111 on 2026-10-21.
+  - 26: settled on 2026-10-21 with option B, the wider fix, as the
+    orchestrator asked: the token check compares the optional fingerprint
+    entries up to the longer length, so one rule covers changed, added, and
+    dropped tokens, and the case `a{}b` scoped to `a{}` points at 1:4.
+  - Open from the M14 nesting round 7 re-review, report under
+    `.context/m14-nesting/r7/review-r7b.md`:
+  - `crates/mokly-css/src/_tests_/token_sections_tests.rs:26`: settled on
+    2026-10-21 in nesting round 8, as the orchestrator asked: the
+    classification test doc now names the text case in a style block, an
+    at-rule without a block under an unknown keyframes name.
+  - `crates/mokly-css/src/_tests_/wrapper_table_tests.rs:61`: settled on
+    2026-10-21 in nesting round 8, as the orchestrator asked: the
+    `STYLE_RULE` doc now names an at-rule without a block under an unknown
+    keyframes name as text.
 
 ## Post-merge follow-up (non-blocking)
 

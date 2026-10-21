@@ -54,7 +54,9 @@ media, supports, or layer conditions, or modern syntax; everything reaches
 the bundler as authored. A scoping result that would change anything other
 than a local name, for example a selector reprinted as a different selector
 or a keyframe reference rewritten into an invalid declaration, fails with
-the catalogued diagnostic instead of shipping. The `image-set()` string
+the catalogued diagnostic instead of shipping. That diagnostic points at the
+first authored token that the result would change, or at the end of the
+stylesheet when the result only adds tokens there. The `image-set()` string
 guard runs before scoping. `lightningcss` bundles the scoped text and is
 never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
