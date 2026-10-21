@@ -20,6 +20,7 @@ fn every_native_command_stays_covered_by_the_local_gate() {
         .collect();
     if local.contains(&CommandSpec::new("npm").args(["run", "build"])) {
         local.push(CommandSpec::new("cargo").args(["xtask", "build-native"]));
+        local.push(CommandSpec::new("cargo").args(["test", "--workspace", "--no-fail-fast"]));
     }
     for command in commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline) {
         assert!(
