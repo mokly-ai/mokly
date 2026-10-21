@@ -2988,11 +2988,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
-  - [ ] Run the watch scenario on the default large fixture and record its
-        edit-to-reload time for each edit kind: one screen, one component,
-        and one stylesheet. The budget table in `mokly-timings.md` requires
-        this record. Found in plan bookkeeping pass 1 on 2026-10-21: the plan
-        records only the watch smoke run in `.context/m14-harness/watch-smoke/`.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
