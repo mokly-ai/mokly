@@ -5,6 +5,9 @@ use crate::modules::{scope, scoped_name};
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::Tokens;
 
+#[path = "token_differential_tests.rs"]
+mod token_differential_tests;
+
 /// The statements at the first block level of `source`, read with `grammar`.
 fn statements(source: &str, grammar: Grammar) -> Vec<Statement> {
     let tokens = Tokens::new(source);
@@ -69,7 +72,7 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
         at_rule("media"),
         at_rule("value"),
     ];
-    assert_eq!(statements(source, Grammar::Rules), rules);
+    assert_eq!(statements(source, Grammar::Stylesheet), rules);
     assert_eq!(statements(source, Grammar::Lenient), rules);
 }
 
@@ -85,19 +88,19 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
 #[test]
 fn blocks_open_the_grammar_that_lightningcss_parses() {
     let cases = [
-        (Grammar::Rules, ".a{}", Grammar::Style),
-        (Grammar::Rules, "@MEDIA all{}", Grammar::Rules),
+        (Grammar::Stylesheet, ".a{}", Grammar::Style),
+        (Grammar::Stylesheet, "@MEDIA all{}", Grammar::Rules),
         (
-            Grammar::Rules,
+            Grammar::Stylesheet,
             "@-moz-document url-prefix(){}",
             Grammar::Style,
         ),
-        (Grammar::Rules, "@keyframes k{}", Grammar::Lenient),
-        (Grammar::Rules, "@document x{}", Grammar::Lenient),
-        (Grammar::Rules, "@font-face{}", Grammar::Declarations),
-        (Grammar::Rules, "@foo{}", Grammar::Declarations),
-        (Grammar::Rules, "-->.a{}", Grammar::Declarations),
-        (Grammar::Rules, "<!--@foo{}", Grammar::Declarations),
+        (Grammar::Stylesheet, "@keyframes k{}", Grammar::Lenient),
+        (Grammar::Stylesheet, "@document x{}", Grammar::Lenient),
+        (Grammar::Stylesheet, "@font-face{}", Grammar::Declarations),
+        (Grammar::Stylesheet, "@foo{}", Grammar::Declarations),
+        (Grammar::Stylesheet, "-->.a{}", Grammar::Style),
+        (Grammar::Stylesheet, "<!--@foo{}", Grammar::Declarations),
         (Grammar::Style, "&:hover{}", Grammar::Style),
         (Grammar::Style, "@supports (x:y){}", Grammar::Style),
         (
@@ -185,7 +188,6 @@ fn statements_without_a_block_stay_as_authored_where_lightningcss_reads_no_rules
         "{error}"
     );
 }
-
 /// In a style rule, an at-rule under a keyframes name that lightningcss does
 /// not know is text only without a block. With a block, the renamer still
 /// reads its keyframes name.

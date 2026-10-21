@@ -4,6 +4,8 @@ use std::ops::Range;
 
 use cssparser::Token;
 
+use crate::token_grammar::{classify, custom_property, nested, normalize};
+use crate::token_statement;
 use crate::token_tree::Tokens;
 
 /// How the statements of one block end and read. The grammar of a block
@@ -15,9 +17,12 @@ use crate::token_tree::Tokens;
 /// drops, or rejects text instead.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Grammar {
-    /// A rule list: the stylesheet, and the block of a conditional, layer,
-    /// scope, or starting-style rule in a rule list. A statement ends at its
-    /// `{}` block or at `;`, and it is a rule or an at-rule.
+    /// The top-level stylesheet, which skips HTML comment tokens before each
+    /// statement as cssparser does.
+    Stylesheet,
+    /// A rule list block of a conditional, layer, scope, or starting-style
+    /// rule. A statement ends at its `{}` block or at `;`, and it is a rule or
+    /// an at-rule.
     Rules,
     /// A style block: the block of a style rule or an `@-moz-document` rule
     /// in a rule list or a style block, and the block of a conditional,
@@ -79,7 +84,7 @@ pub(crate) enum Statement {
 pub(crate) struct Section {
     /// Tokens before the `{` or `;`, including leading whitespace.
     pub(crate) prelude: Range<usize>,
-    /// Byte offset of the first prelude token, which can be whitespace.
+    /// Byte offset of the statement start selected by cssparser.
     pub(crate) start: usize,
     /// Byte offset of the `{` or `;`, or the end of the enclosing block.
     pub(crate) end: usize,
@@ -92,15 +97,9 @@ pub(crate) struct Section {
 }
 
 impl Section {
-    /// The index of the first prelude token that is not whitespace or a comment.
-    pub(crate) fn first(&self, tokens: &Tokens<'_>) -> Option<usize> {
-        tokens.next_significant(&mut self.prelude.clone())
-    }
-
     /// The byte offset of the first significant token, where diagnostics point.
-    pub(crate) fn lead(&self, tokens: &Tokens<'_>) -> usize {
-        self.first(tokens)
-            .map_or(self.start, |index| tokens.nodes[index].start)
+    pub(crate) fn lead(&self) -> usize {
+        self.start
     }
 
     /// True when the statement starts with a dashed ident and a colon.
@@ -123,7 +122,7 @@ pub(crate) fn next(
 ) -> Option<Section> {
     tokens.next_significant(&mut range.clone())?;
     let begin = range.start;
-    let start = tokens.offset(begin);
+    let initial = tokens.offset(begin);
     let custom = matches!(grammar, Grammar::Style | Grammar::Declarations)
         && custom_property(tokens, range.clone());
     while let Some(index) = tokens.next(range) {
@@ -131,11 +130,26 @@ pub(crate) fn next(
         let body = !custom && matches!(node.token, Token::CurlyBracketBlock);
         let semicolon = matches!(node.token, Token::Semicolon);
         if body || semicolon {
-            let prelude = begin..index;
-            let statement = classify(tokens, prelude.clone(), grammar, body);
+            let parsed = token_statement::parse(
+                &tokens.source[initial..node.start],
+                grammar,
+                begin == 0,
+                body,
+            );
+            let start = parsed
+                .as_ref()
+                .map_or(initial, |parsed| initial + parsed.start);
+            let prelude_begin = (begin..index)
+                .find(|&token| tokens.nodes[token].start >= start)
+                .unwrap_or(index);
+            let prelude = prelude_begin..index;
+            let statement = parsed.map_or_else(
+                || classify(tokens, prelude.clone(), grammar, body),
+                |parsed| normalize(parsed.statement, grammar, body),
+            );
             let block = body.then(|| Block {
                 range: tokens.children(index),
-                grammar: nested(grammar, &statement, html_comment(tokens, prelude.clone())),
+                grammar: nested(grammar, &statement),
             });
             return Some(Section {
                 prelude,
@@ -147,117 +161,31 @@ pub(crate) fn next(
             });
         }
     }
-    let prelude = begin..range.end;
+    let parsed = token_statement::parse(
+        &tokens.source[initial..tokens.offset(range.end)],
+        grammar,
+        begin == 0,
+        false,
+    );
+    let start = parsed
+        .as_ref()
+        .map_or(initial, |parsed| initial + parsed.start);
+    let prelude_begin = (begin..range.end)
+        .find(|&token| tokens.nodes[token].start >= start)
+        .unwrap_or(range.end);
+    let prelude = prelude_begin..range.end;
+    let statement = parsed.map_or_else(
+        || classify(tokens, prelude.clone(), grammar, false),
+        |parsed| normalize(parsed.statement, grammar, false),
+    );
     Some(Section {
-        statement: classify(tokens, prelude.clone(), grammar, false),
+        statement,
         prelude,
         start,
         end: tokens.offset(range.end),
         block: None,
         semicolon: false,
     })
-}
-
-/// Classify a statement by its first tokens and its block, as lightningcss
-/// reads the block that holds it.
-fn classify(
-    tokens: &Tokens<'_>,
-    mut prelude: Range<usize>,
-    grammar: Grammar,
-    block: bool,
-) -> Statement {
-    let mut significant = || {
-        tokens
-            .next_significant(&mut prelude)
-            .map(|index| &tokens.nodes[index].token)
-    };
-    let (first, second) = (significant(), significant());
-    let at_rule = match first {
-        Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-        _ => None,
-    };
-    let declarations = matches!(grammar, Grammar::Style | Grammar::Declarations);
-    let text = match grammar {
-        Grammar::Declarations => true,
-        Grammar::Style => at_rule.as_deref().is_some_and(unknown_keyframes),
-        Grammar::Rules | Grammar::Lenient => false,
-    };
-    match (first, second) {
-        (Some(Token::Ident(name)), Some(Token::Colon)) if declarations && !block => {
-            Statement::Declaration(name.to_ascii_lowercase())
-        }
-        _ if text && !block => Statement::Text(at_rule),
-        _ => at_rule.map_or(Statement::Rule, Statement::AtRule),
-    }
-}
-
-/// True for an at-rule name that ends with `keyframes` but that lightningcss
-/// does not parse. In a style rule, lightningcss keeps such an at-rule
-/// without a block as text.
-fn unknown_keyframes(name: &str) -> bool {
-    name.ends_with("keyframes")
-        && !matches!(
-            name,
-            "keyframes" | "-webkit-keyframes" | "-moz-keyframes" | "-o-keyframes" | "-ms-keyframes"
-        )
-}
-
-/// The grammar of the block that a statement opens. An `@-moz-document`
-/// block reads as a style rule's block, so a keyframes block in it holds
-/// declarations. cssparser skips `<!--` and `-->` before a statement in the
-/// stylesheet, so a rule that starts with one can be an at-rule there, and
-/// its block holds declarations.
-fn nested(grammar: Grammar, statement: &Statement, html_comment: bool) -> Grammar {
-    match (grammar, statement) {
-        (Grammar::Rules, Statement::AtRule(name)) if rule_list(name) => Grammar::Rules,
-        (Grammar::Rules | Grammar::Style, Statement::AtRule(name))
-            if rule_list(name) || name == "-moz-document" =>
-        {
-            Grammar::Style
-        }
-        (Grammar::Rules | Grammar::Style, Statement::Rule) if !html_comment => Grammar::Style,
-        (Grammar::Rules | Grammar::Lenient, Statement::AtRule(name)) if grouping(name) => {
-            Grammar::Lenient
-        }
-        _ => Grammar::Declarations,
-    }
-}
-
-/// At-rules whose blocks lightningcss parses as rules: conditional, layer,
-/// scope, and starting-style rules.
-fn rule_list(name: &str) -> bool {
-    matches!(
-        name,
-        "media" | "supports" | "container" | "layer" | "scope" | "starting-style"
-    )
-}
-
-/// At-rules whose blocks the scanners read as rules: keyframes, conditional,
-/// layer, document, scope, and starting-style rules.
-fn grouping(name: &str) -> bool {
-    name.ends_with("keyframes")
-        || matches!(
-            name,
-            "media" | "supports" | "container" | "layer" | "document" | "scope" | "starting-style"
-        )
-}
-
-/// True when the statement starts with `<!--` or `-->`.
-fn html_comment(tokens: &Tokens<'_>, mut range: Range<usize>) -> bool {
-    tokens
-        .next_significant(&mut range)
-        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::CDO | Token::CDC))
-}
-
-/// True when the statement starts with a dashed ident and a colon.
-fn custom_property(tokens: &Tokens<'_>, mut range: Range<usize>) -> bool {
-    let mut significant = || {
-        tokens
-            .next_significant(&mut range)
-            .map(|index| &tokens.nodes[index].token)
-    };
-    matches!(significant(), Some(Token::Ident(name)) if name.starts_with("--"))
-        && matches!(significant(), Some(Token::Colon))
 }
 
 #[cfg(test)]
