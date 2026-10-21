@@ -2550,7 +2550,7 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       user token to the registry that the base configuration selects, as the
       project's own install of the base commit does. `mokly-base-dependencies.md`
       states how each manager sends tokens (`b1604f5b`).
-  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+  - [x] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
         scope): a base `.npmrc` can choose npm's git program. npm gets the
         base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
         Git dependency can run a committed program. Severity High
@@ -2560,6 +2560,12 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         under 120 C, so npm repositories with Git dependencies get tier
         three, Small; C, fall back when the base npm configuration sets
         `git`, Small (estimate). Recommended: B.
+    - User decision 142 (2026-10-21): D, an option that this TODO did not
+      list: the base commit's `.npmrc` applies as in the project's own
+      install, including its `git` setting, because a base install trusts
+      the base commit as that install did. `mokly-base-dependencies.md`
+      states it, and it no longer says that npm installs clone no Git
+      repository (`b1604f5b`).
   - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
     `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
     only `percent-encoding` and `yaml-rust2`.
