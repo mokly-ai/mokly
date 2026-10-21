@@ -3777,6 +3777,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 90 (2026-10-21): C, a separate "replaced" delivery
       status. Work: W1 on `rebuild/viewer-90c`. The hub moved this work from
       W2 to W1 on 2026-10-21.
+  - [ ] Resolve user item 139 (90 C decision 1): what the replaced stage
+        shows. The replaced delivery status of 90 C shows the loading stage
+        in both hosts, which is the stage that 89 B gives an embedded host.
+        The spec has no words for a replaced catalogue. Severity Low, effort
+        Small. Options: A, keep the loading stage for the replaced status in
+        both hosts, and add one sentence about it to the `preview-loading`
+        design description, Small; B, show one new line in the same quiet
+        stage, "Loading the new catalogue…", in both hosts, after a fifth
+        design screen "Catalogue replaced", Large; C, as B with the words of
+        the host message, "The catalogue changed. Loading the new
+        version…", Large. Recommended: A.
+    - User decision 139 (2026-10-21): A. Work: W1 on
+      `rebuild/viewer-139a-140b`.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
