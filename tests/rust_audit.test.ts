@@ -6,12 +6,19 @@ import test from "node:test";
 import {
   runRustAudit,
   type RustAuditCommand,
+  type RustAuditInstaller,
 } from "../scripts/verification/rust-audit.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const approved = "RUSTSEC-2026-0235";
 const lightningcss = { name: "lightningcss", version: "1.0.0-alpha.72" };
+const tool = "/fixture/.context/rust-audit-tool/identity/bin/cargo-audit";
+
+/** The step that one recorded call ran. */
+function step(call: { file: string; args: string[] }): string | undefined {
+  return call.file === "install" ? "install" : call.args[0];
+}
 
 function harness(
   options: {
@@ -38,10 +45,13 @@ function harness(
       args[0] === "metadata"
         ? (options.metadataText ??
           JSON.stringify({ packages: options.packages ?? [lightningcss] }))
-        : args[0] === "audit"
-          ? (options.auditText ?? JSON.stringify(report))
-          : "installed cargo-audit\n";
+        : (options.auditText ?? JSON.stringify(report));
     return { stdout, stderr: "cargo diagnostic\n" };
+  };
+  const install: RustAuditInstaller = async (root) => {
+    calls.push({ file: "install", args: [], cwd: root });
+    if (options.failure === "install") throw failure;
+    return tool;
   };
   return {
     calls,
@@ -52,6 +62,7 @@ function harness(
         root: "/fixture",
         now: () => new Date(options.date ?? "2026-10-20T00:00:00.000Z"),
         execute,
+        install,
         write: (message) => {
           output.push(message);
         },
@@ -59,7 +70,7 @@ function harness(
   };
 }
 
-test("Rust audit uses locked metadata and pinned live auditing, retaining informational warnings", async () => {
+test("Rust audit uses locked metadata and the pinned tool's live audit, retaining informational warnings", async () => {
   const fixture = harness();
   await fixture.run();
   assert.deepEqual(fixture.calls, [
@@ -68,13 +79,9 @@ test("Rust audit uses locked metadata and pinned live auditing, retaining inform
       args: ["metadata", "--locked", "--format-version", "1"],
       cwd: "/fixture",
     },
+    { file: "install", args: [], cwd: "/fixture" },
     {
-      file: "cargo",
-      args: ["install", "cargo-audit", "--version", "0.22.2", "--locked"],
-      cwd: "/fixture",
-    },
-    {
-      file: "cargo",
+      file: tool,
       args: ["audit", "--json", "--file", "Cargo.lock"],
       cwd: "/fixture",
     },
@@ -118,7 +125,7 @@ test("effective cargo-audit settings cannot ignore another advisory", async () =
       fixture.run(),
       /Only RUSTSEC-2026-0235 may be ignored/,
     );
-    assert.equal(fixture.calls.at(-1)?.args[0], "audit");
+    assert.equal(fixture.calls.at(-1)?.file, tool);
   }
   await harness({ ignore: [] }).run();
 });
@@ -141,9 +148,10 @@ test("cargo failures propagate without retries or ignored results", async () => 
   for (const failure of ["metadata", "install", "audit"] as const) {
     const fixture = harness({ failure });
     await assert.rejects(fixture.run(), (error) => error === fixture.failure);
-    assert.equal(fixture.calls.at(-1)?.args[0], failure);
+    const last = fixture.calls.at(-1);
+    assert.equal(last && step(last), failure);
     assert.equal(
-      fixture.calls.filter((call) => call.args[0] === failure).length,
+      fixture.calls.filter((call) => step(call) === failure).length,
       1,
     );
   }

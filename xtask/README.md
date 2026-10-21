@@ -151,7 +151,7 @@ inclusive UTC end dates, and a maximum 31-day window under the
 [dependency security contract](../docs/protocol/dependency-security.md#reviewed-workspace-exceptions).
 
 `npm run dependencies:check:rust` follows the npm audit in both modes. It
-installs locked `cargo-audit` 0.22.2 and audits `Cargo.lock` against the live
+builds pinned `cargo-audit` 0.22.2 with the reviewed tool lockfile and audits `Cargo.lock` against the live
 RustSec database with `.cargo/audit.toml`. Unexcepted vulnerabilities and audit
 errors stop the suite. The configuration records the single dated exception
 and its review conditions. The daily

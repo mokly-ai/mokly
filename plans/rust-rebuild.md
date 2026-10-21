@@ -2602,6 +2602,26 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 6, item 1 (2026-10-20): report the actual number of
+      successfully probed Testboxes. The mocked regression checks all seven
+      probes, the message before suite execution, and no success message after
+      a failed probe or fingerprint. Evidence:
+      `.context/ci-probe-diagnostic/probe-red.log` and `probe-green.log`.
+
+- [x] CI round 6, item 2 (2026-10-20): inspect all tracked Cargo locks and
+      pinned Cargo tools for RUSTSEC-2026-0382. The workspace already uses
+      patched `rustls-webpki` 0.103.16. Pinned `cargo-zigbuild` 0.23.4 has no
+      such dependency. Latest released `cargo-audit` 0.22.2 still locks
+      vulnerable 0.103.13, and its published dependency graph has 13 advisory
+      findings. Keep its released source and checksum pinned, refresh its
+      committed tool dependency lock, and build with locked resolution in an
+      isolated cache. Keep `kstring` 2.0.2 for Rust 1.95.0 compatibility.
+      Do not weaken the existing advisory policy or skip the live workspace
+      query on a tool cache hit. Evidence:
+      `.context/ci-probe-diagnostic/tool-audit-red.log`,
+      `pinned-tool-audit.log`, `candidate-tool-build-compatible.log`,
+      and `installer-smoke.log`.
+
 - [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
       all discovered browser specs to four whole-file shards in hosted CI and
       the remote executor. Keep the 1.25 test-count share limit. Use the

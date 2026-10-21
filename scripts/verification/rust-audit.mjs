@@ -1,5 +1,7 @@
 import { runCommand } from "../release/command.mjs";
 
+import { ensureRustAuditTool } from "./rust-audit-tool.mjs";
+
 const ADVISORY = "RUSTSEC-2026-0235";
 const LIGHTNINGCSS = "1.0.0-alpha.72";
 const EXPIRES = Date.parse("2027-02-01T00:00:00.000Z");
@@ -7,6 +9,8 @@ const EXPIRES = Date.parse("2027-02-01T00:00:00.000Z");
 /**
  * Enforce the reviewed exception before accepting a live Rust advisory audit.
  * Cargo parses the lockfile; cargo-audit reports its effective configuration.
+ * The installer returns the pinned tool, built from verified source with the
+ * reviewed tool lock. A cached tool still runs the live audit.
  * @param {import("./rust-audit.mjs").RustAuditOptions} options
  * @returns {Promise<void>}
  */
@@ -14,6 +18,7 @@ export async function runRustAudit({
   root,
   now = () => new Date(),
   execute = runCommand,
+  install = ensureRustAuditTool,
   write = (message) => process.stdout.write(message),
 }) {
   const date = now().valueOf();
@@ -38,15 +43,9 @@ export async function runRustAudit({
       `Review ${ADVISORY}: locked lightningcss must remain ${LIGHTNINGCSS}. Review the new dependency before auditing.`,
     );
 
-  const installed = await execute(
-    "cargo",
-    ["install", "cargo-audit", "--version", "0.22.2", "--locked"],
-    { cwd: root },
-  );
-  write(installed.stdout);
-  write(installed.stderr);
+  const tool = await install(root);
   const audited = await execute(
-    "cargo",
+    tool,
     ["audit", "--json", "--file", "Cargo.lock"],
     { cwd: root },
   );
