@@ -10,19 +10,17 @@ use crate::source_position::line_column;
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::{Tokens, opening};
 
-/// Compare the authored and scoped tokens. A failure points at the first
-/// authored token that scoping would change, or at the end of the stylesheet
-/// when scoping only adds tokens there.
+/// Compare the authored and scoped tokens up to the longer list, where a
+/// missing token differs from every token. A failure points at the first
+/// authored token that scoping would change or drop, or at the end of the
+/// stylesheet when scoping only adds tokens there.
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
     let prefix = format!("mokly_{}_", &digest(path.as_bytes())[..12]);
     let authored = fingerprint(source, &prefix);
     let scoped = fingerprint(output, &prefix);
-    let changed = authored
-        .iter()
-        .zip(&scoped)
-        .position(|(authored, scoped)| authored.text != scoped.text)
-        .or_else(|| (authored.len() != scoped.len()).then(|| authored.len().min(scoped.len())));
-    let Some(index) = changed else {
+    let Some(index) = (0..authored.len().max(scoped.len()))
+        .find(|&index| text(&authored, index) != text(&scoped, index))
+    else {
         return Ok(());
     };
     let offset = authored
@@ -35,6 +33,11 @@ pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
             "CSS Modules scoping would change more than local names in {path}:{line}:{column}; move this CSS to a plain stylesheet"
         ),
     })
+}
+
+/// The text of the fingerprint entry at `index`, or `None` past the end.
+fn text(entries: &[Entry], index: usize) -> Option<&str> {
+    entries.get(index).map(|entry| entry.text.as_str())
 }
 
 /// One fingerprint token, and the byte offset of the source token it stands for.

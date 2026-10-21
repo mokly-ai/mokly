@@ -3280,9 +3280,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     Medium. Recommended: B, skip those tokens before a stylesheet statement,
     as cssparser does. It rejects such an `@value`, so it needs a user
     decision.
-  - 26: No test pins the token check position for tokens dropped at the
-    end. Severity Low, effort Small. Recommended: A, add the case `a{}b`
-    scoped to `a{}`.
+  - 26: settled on 2026-10-21 with option B, the wider fix, as the
+    orchestrator asked: the token check compares the optional fingerprint
+    entries up to the longer length, so one rule covers changed, added, and
+    dropped tokens, and the case `a{}b` scoped to `a{}` points at 1:4.
   - Open from the M14 nesting round 7 re-review, report under
     `.context/m14-nesting/r7/review-r7b.md`:
   - `crates/mokly-css/src/_tests_/token_sections_tests.rs:26`: the

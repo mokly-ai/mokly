@@ -100,8 +100,8 @@ fn syntax_failures_point_at_the_authored_character() {
 }
 
 /// The token check points at the first authored token that scoping would
-/// change, with CSS line breaks and character columns, or at the end of the
-/// stylesheet when scoping only adds tokens there.
+/// change or drop, with CSS line breaks and character columns, or at the end
+/// of the stylesheet when scoping only adds tokens there.
 #[test]
 fn token_check_failures_point_at_the_first_changed_token() {
     let message = |line: usize, column: usize| {
@@ -116,7 +116,10 @@ fn token_check_failures_point_at_the_first_changed_token() {
         assert_eq!(failure.to_string(), message(2, 6), "{name}");
     }
     for (source, output, column) in [
+        ("a{}", "b{}", 1),
         ("a{}", "a{}b", 4),
+        ("a b", "a b b", 4),
+        ("a{}b", "a{}", 4),
         ("a{}", "a b{}", 2),
         ("a:b{}", "a b{}", 2),
         ("a{}", "a{b}", 3),
