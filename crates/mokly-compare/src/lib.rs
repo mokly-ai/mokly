@@ -68,6 +68,8 @@ mod rendered_moves;
 mod view_material;
 
 mod affected;
+mod comparison_address;
+mod comparison_attribution;
 mod comparison_views;
 mod entry_classification;
 mod review_projection;

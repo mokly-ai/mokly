@@ -1,6 +1,7 @@
 //! Minimal parsed-document arena for pure CSS matching and retained containment proof.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use mokly_model::evidence::EvidenceOwner;
 
@@ -13,6 +14,8 @@ pub struct Containment {
     pub path: String,
     /// True only for a component's own root region.
     pub root: bool,
+    /// Exact physical instance identity, shared with its supplier path; roots have none.
+    pub instance: Option<Arc<str>>,
 }
 
 /// One element after HTML5 tree building and ignored-region removal.
@@ -32,6 +35,8 @@ pub struct MatchElement {
     pub text: bool,
     /// Shared inclusive physical component ancestry, visited innermost first.
     pub regions: ContainmentPath,
+    /// Supplier input ancestry, separate from physical containment.
+    pub input_regions: ContainmentPath,
     /// Nearest input owner, including slot suppliers.
     pub owner: EvidenceOwner,
 }
@@ -44,6 +49,29 @@ pub struct MatchTree {
 }
 
 impl MatchTree {
+    /// Check element depth iteratively after validating arena references.
+    pub(crate) fn exceeds_depth(&self, limit: usize) -> bool {
+        let mut pending: Vec<_> = self
+            .elements
+            .iter()
+            .enumerate()
+            .filter(|(_, element)| element.parent.is_none())
+            .map(|(index, _)| (index, 1usize))
+            .collect();
+        while let Some((index, depth)) = pending.pop() {
+            if depth > limit {
+                return true;
+            }
+            pending.extend(
+                self.elements[index]
+                    .children
+                    .iter()
+                    .map(|child| (*child, depth + 1)),
+            );
+        }
+        false
+    }
+
     /// Check arena references before matching. Invalid inputs produce unresolved evidence.
     pub fn valid(&self) -> bool {
         let mut incoming = vec![0usize; self.elements.len()];

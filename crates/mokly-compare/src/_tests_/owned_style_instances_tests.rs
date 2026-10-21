@@ -50,8 +50,13 @@ fn shared_chains_keep_selector_indices_and_exclude_inert_or_empty_instances() {
     assert_eq!(indices[0].elements.len(), 4);
     assert_eq!(indices[0].instances.len(), 3);
     assert_eq!(
-        matched(&DocumentMatching::Unresolved(vec![]), "new", &indices),
-        BTreeSet::from(["outer".into(), "inner".into()])
+        matched(
+            &DocumentMatching::Unresolved(vec![]),
+            "new",
+            &indices,
+            &BTreeMap::new()
+        ),
+        BTreeSet::new()
     );
     let mut matching = DocumentMatching::Resolved(vec![MatchedRule {
         change: RuleChange {
@@ -68,27 +73,28 @@ fn shared_chains_keep_selector_indices_and_exclude_inert_or_empty_instances() {
         }],
     }]);
     assert_eq!(
-        matched(&matching, "new", &indices),
+        matched(&matching, "new", &indices, &BTreeMap::new()),
         BTreeSet::from(["outer".into(), "inner".into()])
     );
-    assert!(matched(&matching, "old", &indices).is_empty());
+    assert!(matched(&matching, "old", &indices, &BTreeMap::new()).is_empty());
     if let DocumentMatching::Resolved(rules) = &mut matching {
         rules[0].selectors[0].elements[0].element = 0;
     }
     assert_eq!(
-        matched(&matching, "new", &indices),
+        matched(&matching, "new", &indices, &BTreeMap::new()),
         BTreeSet::from(["outer".into()])
     );
     if let DocumentMatching::Resolved(rules) = &mut matching {
         rules[0].selectors[0].elements[0].element = 3;
     }
-    assert!(matched(&matching, "new", &indices).is_empty());
+    assert!(matched(&matching, "new", &indices, &BTreeMap::new()).is_empty());
     if let DocumentMatching::Resolved(rules) = &mut matching {
         rules[0].selectors[0].unresolved = true;
+        rules[0].selectors[0].elements[0].element = 1;
     }
     assert_eq!(
-        matched(&matching, "new", &indices),
-        BTreeSet::from(["outer".into(), "inner".into()])
+        matched(&matching, "new", &indices, &BTreeMap::new()),
+        BTreeSet::new()
     );
 }
 
@@ -104,9 +110,23 @@ fn deep_nested_instances_retain_one_link_per_region_and_one_index_per_element() 
         assert_eq!(index.elements.len(), 1);
         assert_eq!(
             matched(
-                &DocumentMatching::Unresolved(vec![]),
+                &DocumentMatching::Resolved(vec![MatchedRule {
+                    change: RuleChange {
+                        before: None,
+                        after: None
+                    },
+                    selectors: vec![SelectorMatch {
+                        selector: "b".into(),
+                        unresolved: false,
+                        elements: vec![ElementMatch {
+                            side: ReviewSide::Before,
+                            element: 0
+                        }],
+                    }],
+                }]),
                 "old",
-                &[index, Default::default()]
+                &[index, Default::default()],
+                &BTreeMap::new()
             )
             .len(),
             20_000

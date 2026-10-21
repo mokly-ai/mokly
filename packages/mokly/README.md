@@ -183,6 +183,18 @@ output and copied docs first. The package includes the complete guide and
 protocol trees, their public receiver fixtures, and the root changelog history.
 Release Please writes the root `CHANGELOG.md`; the build copies it into the
 package. Copied docs, the package changelog, and build output stay ignored.
+The [registry collectors](./src/sidecar/styles.ts) retain one delivery sheet.
+[Styled-components views](./src/sidecar/styled-ownership.ts) observe rule names
+on cache hits and insertions. [Emotion views](./src/sidecar/emotion-ownership.ts)
+observe serialized identities. Both keep all users of a deduplicated rule.
+Ownership views retain consumer cache keys, sheets, and rendering policies.
+Each actual cache or sheet has its own observation state. Inline registry
+styles retain their delivery grouping and receive the same ownership metadata.
+Dependent keyframes keep every owner of the rules that use them.
+Component and slot contexts select the owner; React private owner fields and
+injection order do not select it. Typed comparison records stay separate from
+served CSS and its existing style-block grouping.
+
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).

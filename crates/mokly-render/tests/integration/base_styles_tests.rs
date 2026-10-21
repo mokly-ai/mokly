@@ -14,6 +14,7 @@ use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
+use mokly_model::evidence::{EvidenceOwner, RuleStatus};
 use mokly_model::review::{EntryChangeReason, ReviewState};
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
@@ -25,7 +26,7 @@ use super::support::Consumer;
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],element:'ui-card',propSchema:{type:'object',additionalProperties:false,required:['label'],properties:{label:{type:'string'}}},props:{label:'Own'},variants:[{slug:'other',title:'Other',props:{label:'Other'}}],render:(props)=><><style>{`.card-${props.label}{color:${COLOR}}`}</style><p className={'card-'+props.label}>Card</p></>});";
 const HOME: &str = "---\ntitle: Home\n---\n<ui-card label=\"Instance\"></ui-card>";
 
-fn consumer(color: &str) -> Consumer {
+pub(super) fn consumer(color: &str) -> Consumer {
     let consumer = Consumer::single();
     fs::create_dir(consumer.root().join("owned")).unwrap();
     fs::write(
@@ -90,7 +91,7 @@ fn historical(head: &Consumer, base: &Consumer) -> Arc<dyn RenderGeneration> {
         .unwrap()
 }
 
-fn compare(base: &Consumer, head: &Consumer) -> ComparisonResult {
+pub(super) fn compare(base: &Consumer, head: &Consumer) -> ComparisonResult {
     let current = head.generation(head.prepare().unwrap());
     let previous = historical(head, base);
     let engine: &dyn Comparison = &Engine {
@@ -125,7 +126,16 @@ fn base_owned_styles_change_the_component_and_saved_variant_without_a_consumer_r
             .iter()
             .filter(|entry| entry.path == "card" || entry.path == "card/other")
             .flat_map(|entry| &entry.documents)
-            .all(|view| view.evidence.rules.is_empty())
+            .all(|view| view.evidence.rules.len() == 1
+                && view.evidence.rules[0].status == RuleStatus::Matched
+                && view.evidence.rules[0].selector.starts_with(".card-")
+                && view.evidence.rules[0]
+                    .stylesheet
+                    .starts_with("static/mokly-generated/")
+                && view.evidence.rules[0].owner
+                    == EvidenceOwner::Component {
+                        path: "card".into()
+                    })
     );
     assert!(
         result

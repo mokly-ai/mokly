@@ -46,6 +46,7 @@ impl TreeSink for Arena {
         };
         let node = Node::Element(Element {
             style_owners: None,
+            style_attribution: None,
             origin: source
                 .as_ref()
                 .map(|source| format!("{}:{}:{}", source.path, source.line, source.column)),

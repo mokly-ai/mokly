@@ -4,11 +4,12 @@ use std::mem;
 use std::vec::IntoIter;
 
 use crate::normalization::{ATTRIBUTE, Metadata, PREFIX, Placement, Repair};
+use crate::text_mode::{TextMode, Token};
 use crate::tree::Node;
 
 enum Finish {
     Root,
-    Element(Box<Node>),
+    Element(Box<Node>, Token),
     Region(String),
 }
 
@@ -22,6 +23,15 @@ struct Frame {
 }
 
 pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
+    annotate_with_plaintext(nodes, repair, true)
+}
+
+/// Annotate a fresh tree while optionally disabling plaintext prediction.
+pub(crate) fn annotate_with_plaintext(
+    nodes: Vec<Node>,
+    repair: &mut Repair,
+    allow_plaintext: bool,
+) -> Vec<Node> {
     let mut frames = vec![Frame {
         parent: "document".into(),
         parent_name: "document".into(),
@@ -30,7 +40,11 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
         output: Vec::new(),
         finish: Finish::Root,
     }];
-    let mut plaintext = false;
+    let mut mode = if allow_plaintext {
+        TextMode::default()
+    } else {
+        TextMode::without_plaintext()
+    };
     while let Some(frame) = frames.last_mut() {
         if let Some(mut node) = frame.remaining.next() {
             match &mut node {
@@ -59,7 +73,7 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
                     frames.push(nested);
                 }
                 Node::Element(element) => {
-                    let id = if plaintext {
+                    let id = if mode.plaintext() {
                         frame.parent.clone()
                     } else {
                         let id = repair.elements.len().to_string();
@@ -68,6 +82,7 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
                             id.clone(),
                             Metadata {
                                 style_owners: element.style_owners.take(),
+                                style_attribution: element.style_attribution.take(),
                                 origin: element.origin.take(),
                                 navigation: element.navigation.take(),
                                 source: element.source.take(),
@@ -79,14 +94,14 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
                         element.set(ATTRIBUTE, &id);
                         id
                     };
-                    plaintext |= element.is_html() && element.name == "plaintext";
+                    let token = mode.enter(element);
                     let nested = Frame {
                         parent: id,
                         parent_name: element.name.clone(),
                         owner: frame.owner.clone(),
                         remaining: mem::take(&mut element.children).into_iter(),
                         output: Vec::new(),
-                        finish: Finish::Element(Box::new(node)),
+                        finish: Finish::Element(Box::new(node), token),
                     };
                     frames.push(nested);
                 }
@@ -97,7 +112,10 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
         if let Some(frame) = frames.pop() {
             let result = match frame.finish {
                 Finish::Root => return frame.output,
-                Finish::Element(mut node) => {
+                Finish::Element(mut node, token) => {
+                    if let Node::Element(element) = node.as_ref() {
+                        mode.leave(token, &element.name);
+                    }
                     if let Some(children) = node.children_mut() {
                         *children = frame.output;
                     }

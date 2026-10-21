@@ -153,6 +153,7 @@ export async function render(
         generation,
         server.renderToStaticMarkup,
         node,
+        kind === "component" ? generation.bindings?.[name]?.path : undefined,
       );
       if (
         kind === "component" &&
@@ -163,7 +164,12 @@ export async function render(
           server.renderToStaticMarkup(
             componentOutput(generation.runtime, session, null),
           ) + collected.html;
-      const result = finishMarkup(collected.html, session);
+      const result = finishMarkup(
+        collected.html,
+        session,
+        true,
+        collected.inlineAttribution,
+      );
       const owners =
         kind === "component" && "entry" in params
           ? [generation.bindings![name]!.path]
@@ -171,7 +177,10 @@ export async function render(
       return {
         html: result.html,
         styles: [
-          ...collected.styles.map((css) => ({ css, owners })),
+          ...collected.styles.map((style) => ({
+            ...style,
+            owners: style.owners.length ? style.owners : owners,
+          })),
           ...result.styles.map((style) => ({
             ...style,
             owners: style.owners.length ? style.owners : owners,

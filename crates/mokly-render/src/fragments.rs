@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_html::error::{HtmlError, InternalError};
+use mokly_html::fragment::StyleAttribution;
 use mokly_html::fragment::{
     Fragment, FragmentMarker, FragmentMarkerKind, FragmentRenderer, FragmentRequest, OwnedStyle,
     RenderKind,
@@ -221,6 +222,15 @@ pub(crate) fn fragment(result: Render, route: &str) -> Result<Fragment> {
             .map(|style| OwnedStyle {
                 css: style.css,
                 owners: style.owners,
+                attribution: style.attribution.map(|records| {
+                    records
+                        .into_iter()
+                        .map(|record| StyleAttribution {
+                            css: record.css,
+                            owners: record.owners,
+                        })
+                        .collect()
+                }),
             })
             .collect(),
         resources: result.resources,

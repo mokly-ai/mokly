@@ -34,6 +34,7 @@ fn shallow(node: &Node) -> Node {
         Node::Doctype(name) => Node::Doctype(name.clone()),
         Node::Element(element) => Node::Element(Element {
             style_owners: element.style_owners.clone(),
+            style_attribution: element.style_attribution.clone(),
             origin: element.origin.clone(),
             navigation: element.navigation.clone(),
             source: element.source.clone(),

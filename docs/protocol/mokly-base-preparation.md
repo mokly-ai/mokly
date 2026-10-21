@@ -49,7 +49,7 @@ one sidecar pool, one render cache, and one cancellation state. A base that
 needs JavaScript, a renderer, or PostCSS acquires a `BaseSide`: its source
 lease, dependency `Resolved` value, repository mappings, and commit identity.
 The graph holds these leases while it can request a render. HTML without a
-renderer or PostCSS uses Git sources without extraction or a Node process.
+renderer or PostCSS follows the [HTML dependency policy](./mokly-comparison.md#html-package-styles).
 
 The CLI sets separate disk cache bounds and one shared allowance for
 dependency preparation. Extraction and installation use the

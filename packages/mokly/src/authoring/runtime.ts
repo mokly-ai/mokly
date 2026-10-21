@@ -48,6 +48,12 @@ export interface RenderSession {
   logicalLink: (value: string) => string;
 }
 
+/** Per-render adapter views preserve supplier ownership without changing delivery. */
+export interface StyleCapture {
+  entryOwner: string | undefined;
+  wrap(owner: string | undefined, node: React.ReactNode): React.ReactNode;
+}
+
 /** A generation owns its React instance and contexts. No attribution is global. */
 export class AuthoringRuntime {
   readonly links = new Map<
@@ -60,6 +66,7 @@ export class AuthoringRuntime {
     session: React.Context<RenderSession | null>;
     owner: React.Context<Owner>;
     ignore: React.Context<boolean>;
+    styles: React.Context<StyleCapture | null>;
   };
 
   constructor(react?: typeof React) {
@@ -78,6 +85,7 @@ export class AuthoringRuntime {
         seen: new Set(),
       }),
       ignore: this.react.createContext(true),
+      styles: this.react.createContext<StyleCapture | null>(null),
     });
   }
 

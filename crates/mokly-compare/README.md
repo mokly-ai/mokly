@@ -38,6 +38,9 @@ Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
+HTML-only comparison uses working dependencies for package stylesheets on both
+sides. The CLI compares dependency identities through Git and emits
+`base-dependencies` when they differ, including a package-only upgrade.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency
@@ -115,14 +118,12 @@ Eligibility follows the displayed scheme, including Light fallback when the
 destination has no Dark view.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Its timing spans count final view states and measure changed-path collection,
-deduplication, and sorting without recording source data.
-`Comparison::capture_base` validates and captures the base through one ordered
-collector. Each base
+Its timing spans count final view states without recording source data.
+It validates and captures the base through one ordered collector. Each base
 view supplies its validated document and closure without a second render.
 Base preparation passes that result to `Comparison::compare_prepared`.
-An uncaptured fallback also uses that entry point,
-so a summary that exceeds the capture bound does not start another pass.
+An uncaptured fallback also uses that entry point, so a summary that exceeds
+the capture bound does not start another pass.
 Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and
@@ -159,6 +160,24 @@ matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
+Owned rules enter the same catalogue-wide evidence reducer as linked and
+ownerless head CSS. Equal rule identities join across document routes and
+owner sets. Physical containment claims matches for every CSS source. Owned
+rules use supplier ancestry only for nested filtering, preserving a supplier's
+own rule without preventing a receiver from styling supplied content.
+Self-nested copies keep their matches. Each source uses matched, unresolved,
+or excluded records.
+Physical and supplier ancestry use separate shared paths. Each instance key
+retains one supplier path. Linked and ownerless proof retain only physical
+ancestry; owned proof also retains a shared supplier path.
+The engine transfers observations into catalogue attribution without cloning them.
+Exact owned-instance proof uses the same unfiltered own-page sets after the
+catalogue pass, and retains only paired instances with unchanged caller inputs.
+Own render, resource, and rule impact share one unchanged-input check. Saved
+prop edits retain their view records without marking unchanged consumers affected.
+Own CSS states and dependency reasons use kept own-page source proof.
+Details can retain a nested component record without promoting its source to
+an own-page dependency reason.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership
@@ -240,10 +259,14 @@ change. `tests/static_base_manager_ci.test.ts` runs the four base-manager
 files and `tests/static_cold_base_tiers.test.ts` with `CI=true` and
 `GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
 
+Registry rule ownership stays separate from delivery style groups. Both the
+private capture codec and the head comparison retain these rule records.
+
 ### Key Code
 
 - [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).
 - [Removed projection](./src/projection_removed.rs).
+- [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
 - [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).

@@ -17,7 +17,13 @@ use crate::tree::{self, Node, RegionKind};
 
 pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Result<()> {
     for style in &fragment.styles {
-        for owner in &style.owners {
+        for owner in style.owners.iter().chain(
+            style
+                .attribution
+                .iter()
+                .flatten()
+                .flat_map(|record| &record.owners),
+        ) {
             if !catalogue.model.entries.iter().any(|entry| {
                 &entry.metadata.path == owner
                     && entry.metadata.variant_of.is_none()

@@ -1,5 +1,7 @@
 //! Owned, thread-safe HTML5 trees with explicit composition regions.
 
+use crate::fragment::StyleAttribution;
+
 use std::mem;
 
 use mokly_model::catalogue::SourceLocation;
@@ -21,6 +23,8 @@ pub struct Attribute {
 pub struct Element {
     /// Trusted sidecar style owners; authored attributes cannot create this annotation.
     pub style_owners: Option<Vec<String>>,
+    /// Per-rule comparison ownership without changes to serialized bytes.
+    pub style_attribution: Option<Vec<StyleAttribution>>,
     /// Private invocation-site token for repeated placements; excluded from identity keys.
     pub origin: Option<String>,
     /// Package-written logical destination, absent on consumer-authored metadata.
@@ -167,6 +171,7 @@ impl Node {
         };
         Some(Element {
             style_owners: element.style_owners.take(),
+            style_attribution: element.style_attribution.take(),
             origin: element.origin.take(),
             navigation: element.navigation.take(),
             source: element.source.take(),
@@ -204,6 +209,7 @@ impl<'a> Iterator for Walk<'a> {
 pub fn element(name: &str, attributes: &[(&str, &str)], children: Vec<Node>) -> Node {
     Node::Element(Element {
         style_owners: None,
+        style_attribution: None,
         origin: None,
         navigation: None,
         source: None,

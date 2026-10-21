@@ -7,8 +7,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 Comparison decides, for every entry and view, whether the base and the head
 differ in a way a reviewer should see, and who owns each difference. Its
 inputs are the head side rendered from the working tree, the base side
-rendered from the base commit under [Sides](#sides), the Git changed paths,
-and the configured review settings. It works on parsed trees. It never reads recorded text offsets, and
+rendered from the base commit under [Sides](#sides), and the configured review
+settings. It works on parsed trees. It never reads recorded text offsets, and
 it never splices document text.
 
 ## Markers
@@ -75,34 +75,39 @@ sides; the canonical form exists only to decide equality.
 
 ## Style Ownership
 
-Styles a [sidecar](./mokly-sidecar.md) render returned are written into the
-head as `<style data-mokly-owners="<component paths>">` elements, one rule
-list per owner set, deduplicated by rule identity. Every rule inside such an
-element belongs to those components. Composition retains trusted owner
-annotations through HTML normalization and graph caching on both sides. An
-authored `data-mokly-owners` attribute does not create that annotation.
-Compare normalized rule sets per owner; formatting and duplicate copies do
-not change material. Collected rules use the per-rule records of the
-[membership contract](./mokly-css-attribution-membership.md). Rule evidence
-supplies their material and affected-consumer effects under the
-[component change rules](./mokly-component-changes.md). Linked stylesheets
-use the same [CSS attribution](./mokly-css-attribution.md) rules.
+Registry ownership follows the [sidecar rule records](./mokly-sidecar-render-records.md#results).
+Trusted annotations survive normalization and caching on both sides.
+Authored owner attributes grant no ownership. Compare normalized rules per
+owner; formatting and duplicate copies do not change material.
+Owned, ownerless head, and linked CSS use one
+[catalogue-wide proof and evidence reduction](./mokly-css-attribution.md).
+Equal rule identities join across documents, even with different owner sets.
+Physical instance containment decides who claims a match for all three sources.
+For component X, drop a match inside a different nested component Y only when
+the same rule matches on Y's own pages before nested filtering. A self-nested
+copy of X never takes X's match. For a declared owner's rule, use supplier
+input ancestry only for that nested test. A receiving component cannot take
+the supplier's own rule for content the supplier passed into it.
 
-Head `<style>` elements without owners use the same rule identities and
-catalogue-wide own-page proof as linked CSS. Diff their rules between the
-sides and match changed selectors against both trees. A component owns a
-match only when its own pages keep a match for that rule after nested
-filtering. Inline matches follow input ownership: caller-supplied slot
-content cannot prove the receiving component. Other matches belong to the
-entry. Unresolved rules belong to the entry.
+Owned rules retain their declared owner as exact-instance evidence when no
+own-page proof applies, including matches on supplied content inside that
+owner's physical region. That proof requires a paired instance with unchanged
+caller inputs and a kept match under the nested test. It can change the
+component's implementation without changing its own views.
+Unresolved rules use the conservative entry record and supply no instance proof.
 
-Collect only ownerless head styles. Body styles and styles with
-nonempty trusted owner records do not enter this analysis. A rule with no match on either
-side produces no record. A document whose changed inline rules all match
-nothing has one `excluded` record with an empty selector and the entry owner.
-An excluded record never makes a view material. The `stylesheet` address is
-the containing public document route. Equal rule identities join own-page
-proof across document routes; consumer routes add no reasons to a component.
+Head styles without trusted owners and linked styles use physical containment
+and catalogue-wide own-page proof to assign component records. A receiving
+component claims supplied content only when its own pages prove that rule.
+Without that proof, a match outside every changed component belongs to the entry.
+Authored body styles do not enter this analysis. Linked styles keep their reachability.
+The [membership contract](./mokly-css-attribution-membership.md) defines the records and their effects.
+
+When a source has no kept changed rule on a view, emit one `excluded` record
+with an empty selector and the entry owner. Owned and ownerless head styles use the containing
+public document route. Omit its excluded record when that route has any kept
+rule. Excluded evidence changes no view. Consumer document routes add no
+own-page reason to a component.
 
 ## Resources
 
@@ -141,6 +146,18 @@ and consumer PostCSS at the base need the base's JavaScript on disk. The base
 commit's sources are extracted on demand into the bounded cache outside the
 repository that the [architecture page](../architecture/rust-core.md#render-graph)
 names, keyed by the commit, and the sidecar bundles from that directory.
+
+### HTML Package Styles
+
+An HTML-only catalogue without a renderer or PostCSS uses working-tree
+dependencies for package stylesheets on both sides. It needs no extraction,
+Node process, or package installation. Compare dependency identities with Git.
+When they differ, emit a configuration-subject `base-dependencies` warning.
+Under `--strict`, that warning fails the build. Equal Git clean identities
+produce no warning. The warning makes a package-only upgrade visible even
+when both sides render the same installed CSS.
+
+### JavaScript Package Selection
 
 Repository-owned packages, including workspaces and local directory packages,
 always come from the side's own sources. During module resolution, a real

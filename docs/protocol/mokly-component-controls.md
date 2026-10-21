@@ -203,7 +203,7 @@ so a hanging consumer render cannot hang Browse or shutdown.
 Preview document bundles, with usage, props, and resource bytes, live in a
 process-local memory store behind opaque render ids; nothing is spilled to disk,
 not to the cache directory, the OS temporary directory, or any root. Temporary
-documents never enter the saved document cache, Git changed-path calculation,
+documents never enter the saved document cache, saved comparison inputs,
 the watch set, or a publication. Content-addressed fragments may use the bounded
 fragment cache. Reading public assets is allowed; generated asset bytes stay in
 the same memory bundle as their document and are served through its render id.

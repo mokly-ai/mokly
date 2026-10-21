@@ -369,6 +369,165 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**Comparison defaults (2026-10-20, applied by default (user rule)):**
+
+- Orchestrator item 39 B: retain page-wide CSS-in-JS owners. A rule changes
+  the page component only with a match outside every nested registered
+  instance. This prevents duplicate parent Changes rows without discarding
+  trusted owners. Alternatives: A, ownerless sheets; C, per-instance sidecar
+  attribution.
+- Orchestrator item 40 A, after 39 B: emit per-rule evidence for owned rules.
+  A changed owned rule with no match on either side emits no record and
+  changes no view. This keeps Details aligned with the rule contract.
+  Alternative B retains the direct material path and changes the contract.
+  Verification follow-up: unresolved owned rules supply no instance proof;
+  the entry record does not invent an affected component without a match.
+  Merge owned and ownerless evidence before excluding a document route.
+- Orchestrator item 48 B (2026-10-20, applied by default (user rule)): matching
+  trees deeper than 512 elements keep changed `:has()` selectors as unresolved
+  evidence. A measured 288-byte recursive frame on a 2 MiB worker stack,
+  with an eightfold margin, permits 910 levels; round down to 512.
+  This prevents deep-page aborts while preserving honest evidence.
+  Alternatives: A, retain the gap; C, replace the recursive matcher.
+
+- Orchestrator item 45 B (2026-10-20, applied by default (user rule)): remove
+  `review.changed-paths` and the claimed Git changed-path comparison input.
+  Keep output exclusions against source capture and resource comparison.
+  Keep the independent publish checkout check. The comparison consumes
+  rendered sources, so no consumer needs Git path discovery. Alternatives:
+  A, retain and rename the span; C, add unused Git discovery.
+
+- Orchestrator item 27 B (2026-10-20, applied by default (user rule)): HTML-only
+  catalogues without a renderer or PostCSS use working-tree dependencies for
+  package CSS on both sides. Compare dependency identities with Git and emit
+  `base-dependencies` when they differ. Strict builds fail on that warning.
+  This preserves the no-Node HTML boundary and exposes dependency-only edits.
+  Alternatives: A, install base packages; C, prepare a base side when package
+  CSS is reached.
+
+- Orchestrator item 37 B (2026-10-20, applied by default (user rule)): write all
+  text raw while plaintext mode is active. Formatting clones keep authored
+  characters and literal entity spellings. Repeated parsing and serialization
+  remain stable. Alternative A preserves escaping but shows different text.
+
+- Defaults-engine hub review finding 2 B (2026-10-20, approved): share
+  plaintext activation between serialization and metadata repair. Follow
+  foreign-content and HTML integration-point parsing so escaped text stays
+  inert after an HTML component renders inside SVG or MathML. Option A
+  duplicates the rule. Option C also changes `noscript` characters and waits
+  for the user.
+
+**Comparison filter follow-up (2026-10-20):**
+
+- User decision 96 (2026-10-20): C. Use physical containment to claim matches
+  for owned CSS-in-JS, ownerless head styles, and linked CSS. Supplier input
+  ancestry only prevents a nested receiver from taking a supplier's own rule.
+  Declared owners claim supplied content inside their physical instance even
+  without own-page matches. Ownerless and linked rules require catalogue-wide
+  own-page proof; otherwise a match falls back to the entry. Keep decision 73's
+  supplier protection, decision 75's shared reducer, and the child-only goal
+  of decision 39. Alternatives A and B keep receiver-row errors or separate
+  models. C removes that delivery-path difference. Items 97 and 98 remain pending.
+
+- Round 4 scoped universal follow-up (2026-10-20): applied by default (user
+  rule). The exact decision 96 Stack selector contains universal terms, which
+  the former closed keep list always marked unresolved. Recommended option A
+  permits ordinary matching when a selector branch has a positive type, class,
+  ID, or attribute outside pseudo-class arguments. Bare universals and global
+  selectors stay unresolved. Apply this equally to all CSS sources. Option B
+  keeps the old rule and uses explicit item classes in the Stack fixture.
+  A implements the requested example. No answer followed the question.
+
+- User decision 107 (2026-10-20): C. Extend the scoped-universal default to
+  native nested CSS. A substituted nesting parent counts as an outer anchor
+  when every branch has a positive type, class, ID, or attribute anchor.
+  Authored `:is()` arguments remain conservative. Linked and head-style
+  Stack regressions use the same evidence as the flat selector.
+
+- Defaults-engine round 4 focused re-review finding 3 B (2026-10-20): applied
+  by default (user rule). Carry kept own-page stylesheet paths through the
+  shared reducer and comparison. Use them for preview states, component
+  impact, and dependency reasons. Keep nested ownership records and exact
+  instance proof. Option A uses a page-level flag but leaves mixed-source
+  dependency errors. B is the complete fix within decisions 96 and 73.
+  The two-crate scope grades Large. No answer followed the choice. Items 97
+  and 98 remain pending.
+
+- Defaults-engine round 3 finding 3 A (2026-10-20, approved): move observations
+  out of pending views and pass the vector into attribution by value. Merge
+  rule observations in place without cloning their retained paths. Keep
+  per-view owned proof indexes and address candidates until option B is decided.
+  Alternative B compacts that state; alternative C measures its retained size.
+
+- Defaults-engine round 3 finding 4 A (2026-10-20, approved): decide every
+  raw-text tag from the parser-context namespace returned at element entry.
+  Preserve raw text at HTML integration points and escape foreign grafts.
+  This shares the namespace rule across all raw-text elements without settling
+  the broader parser-driven text-mode decision.
+
+- Defaults-engine round 3 finding 2 B (2026-10-20, approved): confirm the
+  predicted plaintext element against the reparsed HTML namespace and repair
+  identity. Retry with all text escaped when it does not agree. This covers
+  the MathML void-element and ignored nested-form divergences without a new
+  rejection. Alternative A repairs one context; structural option C lets the
+  parser choose the raw-text point and remains pending with the class decision.
+
+- Defaults-engine round 3 finding 5 B (2026-10-20, approved): preserve the
+  rebuild tip's shared physical containment and use a second shared path for
+  supplier ancestry, indexed by exact instance key. Linked proof retains only
+  physical ancestry. Head proof exposes only its supplier path through the
+  private proof reader. Alternative A omits linked copies but retains deep
+  per-element input lists. Merge resolutions: `.context/defaults-engine-round3/merge-resolutions.md`.
+
+- User decision 73 (2026-10-20): apply hub finding 1 C. Owned rules use
+  linked-CSS catalogue-wide own-page proof. A different nested component takes
+  a match only when its unfiltered own-page set for the same rule is nonempty.
+  Self-nested copies keep their matches. Slots retain supplier input ownership.
+  Equal identities join across document owners. This preserves parent edits
+  without duplicate child-only consumer rows. Alternatives A, B, and D retain
+  lost cases, fix only slots and self-nesting, or remove registry owners.
+- User decision 75 (2026-10-20): apply hub finding 5 C. Owned, ownerless head,
+  and linked CSS share one evidence reducer for matched, unresolved, and
+  excluded records. Build decision 73 on this reducer. This removes delivery
+  path drift. Alternatives A and B add the missing record locally or document
+  an owned-style exception.
+- User decision 74 (2026-10-20): apply hub finding 3 C in
+  `rebuild/defaults-engine-deps`. Compare only dependency identities that govern
+  the directories in use. That workspace owns the change; this round retains
+  dependency identity code. Alternatives A and B keep the broad scan or skip
+  it only when head CSS uses no dependency directory.
+- User decision 76 (2026-10-20): option B for the `noscript` follow-up waits
+  until the plaintext helper lands. Do not implement that follow-up in this
+  round. The helper's foreign-content correction keeps the current `noscript`
+  behavior.
+
+- Orchestrator item 11 A is the selected default under the user rule.
+  Implementation waits for the further decision below. The default requires
+  checkout conversion without network access and equality on Git clean form.
+  Arbitrary configured Git filters are external programs. Git's transport
+  restrictions do not restrict their network access. LFS skip-smudge returns
+  a pointer even when a local object exists. The current process boundary
+  does not provide portable network isolation.
+- Further decision 11.1: offline custom-filter policy. Severity Medium,
+  effort Large. Base resources currently compare raw blobs with working
+  bytes, so checkout conversion can cause false Changes. Option A supports
+  Git's built-in conversions and local LFS objects without running external
+  filters; an unsupported custom-filter resource becomes unavailable.
+  Option B adds network isolation for arbitrary clean and checkout filters
+  on every supported operating system. Both options have Large effort.
+  Recommend A: it handles the named line-ending and LFS cases with a clear
+  offline guarantee. The new unavailable-resource case needs approval before
+  implementation. Keep raw-blob behaviour until this decision is settled.
+  Hub review finding 6 A (2026-10-20, approved): dependency identity already
+  runs configured Git clean filters for changed manifests and lockfiles via
+  `git hash-object --stdin-paths`. The JavaScript base path uses
+  `SystemWorkingInputs`; the HTML-only path now calls it from
+  `NativeBase::prepare` through `html_dependencies`. Git configuration defines
+  executable filter programs; repository attributes can select those configured
+  filters. Clean filters can reach the network too. Both options must cover
+  dependency identity as well as base-resource checkout conversion. This
+  clarification changes no filter execution and does not settle decision 11.1.
+
 **User decision 131 (2026-10-21): keep.** The user keeps every option that
 the old default rule applied so far, and reviewed the list. This covers each
 line in this plan that says "applied by default" or "the hub's default",
@@ -1517,15 +1676,32 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
 ## Milestone 9: Changes
 
-- [ ] Settle the Git changed-path input (user decision 45): the
-      `review.changed-paths` row in `mokly-timings.md` describes Git discovery,
-      but the span measures snapshot changed-entry collection. The comparison
-      contract names Git changed paths as an input that production code does
-      not read. Keep the span and the M12 tick pending the decision.
-  - Item 45 B is in the code on the unmerged `rebuild/defaults-engine` from
-    an earlier default: it removes `review.changed-paths` and the claimed
-    Git changed-path comparison input. User decision 131 (2026-10-21) keeps
-    it. Tick this TODO when that branch merges.
+- [ ] Settle further decision 11.1 for default 11 A. Severity Medium, effort
+      Large. Recommended A: built-in checkout conversion and local LFS only,
+      with unavailable resources for unsupported external filters.
+
+- [x] Settle the Git changed-path input with decision default 45 B. Remove
+      the misleading timing stage and Git-input wording. Keep output exclusions
+      for source capture and resource comparison. Keep publish checkout checks.
+
+- [x] Apply defaults-engine review finding 1, High, option B. Keep owned-rule
+      page evidence and exact instance proof in independent result fields.
+      Self-nested style changes retain implementation evidence without changing
+      the component's own view states.
+      Evidence: `.context/defaults-engine/implementation-review-1.md`.
+- [x] Apply defaults-engine review finding 2, High, option B. Put own render,
+      resource, and owned-rule impact under one unchanged-input condition.
+      Saved component and variant prop edits keep Details evidence and direct
+      view states without marking unchanged consumers affected.
+      Evidence: `.context/defaults-engine/implementation-review-3.md`.
+- Outside scope: `tests/sidecar_postcss_loader_evidence.test.ts` and
+  `tests/static_postcss_base_evidence.test.ts` require loader hooks absent on
+  Node 22.14.0. Both files pass all seven tests on Node 24.21.0. Separate branch.
+- Outside scope: `tests/browser/static_deployment.spec.ts:79` matched two
+  transient headings during a deployment reload. The second remote gate passed
+  the same test. Suspected source: reload ordering. Separate branch.
+  - User decision 131 (2026-10-21) confirms 45 B. The code remains on
+    `rebuild/defaults-engine` until the hub merges this branch.
 
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
@@ -1628,8 +1804,41 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         false rows stay until C lands, Small now (estimate). Recommended: C,
         because it is the only option that keeps both the goal of 39 B and
         the supplier rule of 73 C.
-    - User decision 110 (2026-10-21): C. Engine round 6 implements it on
-      `rebuild/defaults-engine`. Tick this TODO when that branch merges.
+    - [x] User decision 110 (2026-10-21): C. The sidecar attributes each
+          registry rule to the registered component render that injected it. It
+          uses render-local styled-components sheet proxies and Emotion cache
+          proxies over one root extraction, so rule order and consumer CSS bytes
+          stay stable. Slot content uses the supplier's proxy. Component and
+          whole-screen renders use the same rule. The comparison, sidecar, and
+          membership protocols state this ownership contract. Evidence:
+          `tests/sidecar_styles.test.ts` and
+          `crates/mokly-cli/tests/changes_registry_ownership_tests.rs`.
+  - [x] Decision 110 round 6 audit: keep original style text and delivery
+        grouping; store rule ownership as separate trusted metadata through
+        repair and capture. Join owners by adapter identity, including cache
+        hits. Do not pair equal selectors by insertion order. This preserves
+        served bytes for styled-components, Emotion, and the example catalogue.
+        Merge resolutions: `.context/defaults-engine-round6/merge-resolutions.md`.
+        Round 5 byte reference and red test:
+        `.context/defaults-engine-round6/byte-parity-red.log`.
+  - [x] Decision 110 fresh review fixes: retain consumer Emotion caches and
+        styled-components context; join dependent keyframe owners on cache
+        hits; charge fragment attribution through the shared style accounting.
+        Failing regressions and review:
+        `.context/defaults-engine-round6/fresh-review.md`,
+        `.context/defaults-engine-round6/context-red2.log`, and
+        `.context/defaults-engine-round6/metadata-weight-red.log`.
+  - [x] Decision 110 re-review finding 4: observe consumer caches and sheets
+        as well as root collectors. Inline registry extraction receives all
+        users of each adapter identity without changing delivered bytes.
+        The shared rule and keyframe cases fail in both orders before the fix.
+        Evidence: `.context/defaults-engine-round6/fresh-rereview.md` and
+        `.context/defaults-engine-round6/foreign-context-red.log`.
+    - Outside the scope: `tests/browser/large_watch.spec.ts`, React journey,
+      failed with `Test timeout of 300000ms exceeded` and
+      `page.waitForFunction: Test ended` in round 6 gate 4; gate 5 passed
+      that command. Suspected source: contention in the combined React watch
+      journey; the timing contract accepts rare timeouts. Separate branch.
   - [ ] Resolve user item 101 (engine review auto-fix): an HTML component's
         own plaintext page lost its root range after parser repair and
         failed static detail validation. Severity Medium, product bug.
@@ -3201,6 +3410,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 Release lockstep completion merge decisions: `.context/release-audit-completion/lockstep-merge.md`.
 Audit-filter completion merge decisions: `.context/release-audit-completion/audit-merge.md`.
 
+Defaults-engine round 5 merge resolutions: merged `e620ff06`, then the latest
+rebuild tip `24982bb7`, with merge commits.
+commit. `crates/mokly-compare/README.md` kept the tip's prepared-base text and
+this branch's CSS ownership text. `docs/protocol/mokly-build-warnings.md`
+kept both the tip warning rows and the HTML dependency producer row.
+`plans/rust-rebuild.md` kept both histories and open decisions. The latest tip's
+Node 22.15 floor, RUSTSEC certificate patch, capture collector, and CI changes
+stay live. Evidence: `.context/defaults-engine-round5/merge-resolutions.md`
+and `.context/defaults-engine-round5/merge-latest.log`.
+
 - [x] Complete user decision 94 A (2026-10-21). Cover all five severity
       thresholds, single and multiple target filters, empty lists, malformed
       lists, and unfiltered reports with or without the approved ignore ID.
@@ -3452,6 +3671,92 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Defaults-engine round 4: apply user decision 96 C for shared physical
+        CSS ownership, supplier protection, and exact receiver proof. Retain
+        the eight requested acceptance groups. Evidence:
+        `.context/defaults-engine-round4/`.
+  - [x] Defaults-engine round 4 post-push review finding 1: distinguish
+        whole-root own-page filtering from declared-instance filtering. An
+        outer supplier cannot block a receiver's declared physical claim.
+        This applies option B within decision 96. Evidence:
+        `.context/defaults-engine-round4/ancestor-cli-red.log`.
+  - [x] Defaults-engine round 4 post-push review finding 2: carry functional
+        argument context through selector broadening. Argument-local anchors
+        cannot enable universal matching. This applies option A within the
+        scoped-universal default. Evidence:
+        `.context/defaults-engine-round4/arguments-cli-red.log`.
+  - [x] Defaults-engine round 4 repeated-receiver regression: retain exact
+        instance identity in shared containment links. A receiving copy of a
+        supplier component cannot remove an intermediate declared owner's
+        rule. This completes decision 96's exact supplier protection.
+        Evidence: `.context/defaults-engine-round4/repeated-cli-red.log`.
+  - [x] Defaults-engine round 4 focused re-review finding 3 B: separate kept
+        own-page CSS source proof from nested ownership records. Preview states
+        and dependency reasons use source proof; Details and exact instance
+        proof retain the nested record. Evidence:
+        `.context/defaults-engine-round4/provenance-cli-red.log` and
+        `.context/defaults-engine-round4/provenance-unit-red.log`.
+  - [x] Defaults-engine round 5 finding 2 A: validate every raw-text repair
+        identity and retry with escaped text on foreign or mismatched tags.
+        Evidence: `.context/defaults-engine-round5/raw-text-red.log`.
+  - [x] Defaults-engine round 5 finding 3 A: annotate a fresh source tree and
+        disable plaintext prediction during the escaped retry. Evidence:
+        `.context/defaults-engine-round5/retry-red2.log`.
+  - [x] Defaults-engine round 5 finding 5 A: align the three sidecar and
+        membership passages with shared ownership and excluded evidence.
+  - [x] Defaults-engine round 5 finding 6 B: remove the unread proof owner
+        copy and keep proof storage private. Evidence:
+        `.context/defaults-engine-round5/proof-owner-green.log`.
+  - [x] Defaults-engine round 5 decision 107 C: count an anchored substituted
+        nesting parent for scoped universal matching. Linked stylesheet, head
+        style, and unit tests pass. Evidence:
+        `.context/defaults-engine-round5/nested-unit-red.log` and
+        `.context/defaults-engine-round5/linked-styles-red.log`.
+  - [x] Defaults-engine round 5 outside-scope move admission defect: use the
+        physical owner claim and retain the failing regression. Evidence:
+        `.context/defaults-engine-round5/move-admission-red.log`.
+  - [x] Defaults-engine round 5 outside-scope selector duplicate scan: use a
+        set and retain the 1:4 operation-count regression. Evidence:
+        `.context/defaults-engine-round5/selector-cost-red.log`.
+  - [x] Defaults-engine round 3 findings 2 B, 3 A, 4 A, 5 B, and 6 A:
+        verify predicted plaintext against the parsed element, consume rule
+        observations, share raw-text context and containment paths, and align
+        the two supplier-ancestry passages. Evidence:
+        `.context/defaults-engine-round3/`.
+  - [x] Defaults-engine round 3 post-push review finding 1: require the
+        predicted plaintext identity in the parsed prefix through its start
+        tag, as well as the complete result. Later literal text cannot replace
+        an ignored start. This strengthens approved finding 2 B and leaves
+        parser-selected text modes pending. Evidence:
+        `.context/defaults-engine-round3/plaintext-identity-red.log` and
+        `.context/defaults-engine-round3/plaintext-identity-green.log`.
+  - [x] Defaults-engine hub review 1, finding 1: apply user decision 73 C
+        through catalogue-wide rule proof and supplier input ancestry.
+  - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`
+    can expose markup in scripting-enabled browsers. Severity Medium, effort
+    Small. User decision 76 selects a later follow-up after the helper lands.
+  - Defaults-engine hub review 1, finding 3: HTML dependency warnings scan
+    every manifest. Severity Medium, effort Small. Recommended: B, compare
+    identities only when head CSS uses a dependency directory. Superseded by
+    user decision 74 C in `rebuild/defaults-engine-deps`.
+  - [x] Defaults-engine hub review 1, finding 5: apply user decision 75 C
+        through one reducer for owned, ownerless head, and linked CSS.
+  - [x] Defaults-engine round 2 review, finding 1: retain exact supplier
+        instance keys with input ancestry. A repeated component path cannot
+        select the receiving copy instead of the supplying instance. This
+        implements decision 73 without changing its contract. Evidence:
+        `.context/defaults-engine-round2/supplier-red.log` and
+        `.context/defaults-engine-round2/supplier-integration-green.log`.
+  - [x] Item 101 (2026-10-20, approved): keep the own-page root through
+        confirmed plaintext repair. Static detail validates and Usage remains
+        ready. Preserve raw authored text and the separate noscript policy.
+        Do not mark Usage unavailable. The original round 1 smoke is fixed.
+        Evidence: `.context/defaults-engine-round4/item101-cli-red.log`.
+  - [x] Defaults-engine round 1 post-push review, finding 1: apply foreign
+        end-tag rules after a breakout removed the original element. Shared
+        parser context closes the surviving matching ancestor and keeps later
+        escaped text inert. Evidence: `.context/defaults-engine-round1/foreign-end-red.log`
+        and `.context/defaults-engine-round1/foreign-end-green.log`.
   - Follow-up: share a parsed dependency-input model for identity and source validation.
     Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
     Review and regression evidence: `.context/base-pnpm-yarn/`.

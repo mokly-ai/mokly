@@ -128,6 +128,7 @@ fn node(name: &str, class: &str, parent: Option<usize>, children: Vec<usize>) ->
         children,
         text: false,
         regions: Default::default(),
+        input_regions: Default::default(),
         owner: EvidenceOwner::Entry,
     }
 }

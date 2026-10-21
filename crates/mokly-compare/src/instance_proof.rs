@@ -8,9 +8,9 @@ use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_model::review::{EntryChangeReason, ReviewEntryAddress};
 use mokly_model::review_affected::ReviewSide;
 
+use crate::comparison_address::address;
 use crate::comparison_resources::Resources;
 use crate::comparison_types::ViewKey;
-use crate::comparison_views::address;
 use crate::material::mapped;
 use crate::view_material::MaterialComparison;
 

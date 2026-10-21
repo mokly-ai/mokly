@@ -1,13 +1,20 @@
-//! Trusted sidecar styles are component material, independent of linked-CSS membership.
+//! Trusted sidecar rules enter the shared catalogue-wide evidence reducer.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
+use mokly_css::attribution::{self, OwnPageMatches, RuleObservation};
 use mokly_css::match_tree::MatchTree;
-use mokly_css::rule_matching::match_document;
+use mokly_css::rule_matching::{DocumentMatching, match_document};
 use mokly_css::rules::{ParsedCss, RuleDiff};
 use mokly_html::tree::{Node, RegionKind};
+use mokly_model::catalogue::ModelEntry;
+use mokly_model::review::EntryChangeReason;
 
+use crate::comparison_address::address;
+use crate::comparison_types::ViewKey;
 use crate::error::Result;
+use crate::instance_proof::InstanceProof;
 use crate::material::mapped;
 use crate::owned_style_instances;
 use crate::resource_memo::ResourceMemo;
@@ -15,21 +22,23 @@ use crate::view_material::MaterialComparison;
 
 #[derive(Default)]
 pub(crate) struct Changes {
-    owners: BTreeSet<String>,
-    instances: BTreeSet<String>,
+    pub(crate) rules: Vec<RuleObservation>,
+    matching: Vec<(String, DocumentMatching)>,
+    indices: Option<[owned_style_instances::Index; 2]>,
+    potential: Vec<InstanceProof>,
 }
 
 pub(crate) fn compare(
     nodes: [&[Node]; 2],
     trees: [Option<&MatchTree>; 2],
     paths: &BTreeMap<String, String>,
+    route: &str,
     memo: &dyn ResourceMemo,
 ) -> Result<Changes> {
     let before = collect(nodes[0], paths);
     let after = collect(nodes[1], &BTreeMap::new());
     let owners: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     let mut changes = Changes::default();
-    let mut indices = None;
     for owner in owners {
         let left = before.get(owner).cloned().unwrap_or_default();
         let right = after.get(owner).cloned().unwrap_or_default();
@@ -42,30 +51,81 @@ pub(crate) fn compare(
         {
             continue;
         }
-        changes.owners.insert(owner.clone());
-        let indices = indices.get_or_insert_with(|| {
-            [
-                owned_style_instances::index(nodes[0], paths),
-                owned_style_instances::index(nodes[1], &BTreeMap::new()),
-            ]
-        });
-        changes.instances.extend(owned_style_instances::matched(
-            &match_document(&diff, trees[0], trees[1]),
-            owner,
-            indices,
-        ));
+        let matching = match_document(&diff, trees[0], trees[1]);
+        let rules = attribution::observe_owned(route, &matching, trees[0], trees[1], Some(owner));
+        changes.rules.extend(rules);
+        changes.matching.push((owner.clone(), matching));
+    }
+    if !changes.matching.is_empty() {
+        changes.indices = Some([
+            owned_style_instances::index(nodes[0], paths),
+            owned_style_instances::index(nodes[1], &BTreeMap::new()),
+        ]);
     }
     Ok(changes)
 }
 
-pub(crate) fn apply(comparison: &mut MaterialComparison, owner: Option<&str>, changes: &Changes) {
-    if owner.is_some_and(|owner| changes.owners.contains(owner)) {
-        comparison.changed = true;
-        comparison.root_changed = true;
-        comparison.ignored_only = false;
+impl Changes {
+    /// Move admission follows physical claims for declared owned rules.
+    pub(crate) fn changes_owner(&self, owner: Option<&str>) -> bool {
+        let Some(owner) = owner else {
+            return false;
+        };
+        self.rules
+            .iter()
+            .flat_map(|rule| &rule.selectors)
+            .any(|selector| {
+                selector.unresolved
+                    || selector.matches.iter().any(|matched| {
+                        if matched.trusted_owner.as_deref() != Some(owner) {
+                            return false;
+                        }
+                        matched.regions().any(|region| region.path == owner)
+                    })
+            })
     }
-    for instance in &mut comparison.instances {
-        instance.render_changed |= changes.instances.contains(&instance.key);
+
+    /// Retain only paired instances whose caller inputs stayed equal.
+    pub(crate) fn prepare(
+        &mut self,
+        comparison: &MaterialComparison,
+        before: &ModelEntry,
+        after: &ModelEntry,
+        view: ViewKey,
+    ) {
+        if self.matching.is_empty() {
+            return;
+        }
+        self.potential = comparison
+            .instances
+            .iter()
+            .map(|instance| InstanceProof {
+                component: instance.component.clone(),
+                instance: instance.key.clone(),
+                before: address(before),
+                after: address(after),
+                view,
+                reason: EntryChangeReason::Implementation,
+                reference: None,
+            })
+            .collect();
+    }
+
+    /// Resolve exact instance proof with the same unfiltered own-page sets as records.
+    pub(crate) fn proofs(&mut self, own_pages: &OwnPageMatches) -> Vec<InstanceProof> {
+        let Some(indices) = &self.indices else {
+            return Vec::new();
+        };
+        let mut instances = BTreeSet::new();
+        for (owner, matching) in &self.matching {
+            instances.extend(owned_style_instances::matched(
+                matching, owner, indices, own_pages,
+            ));
+        }
+        mem::take(&mut self.potential)
+            .into_iter()
+            .filter(|proof| instances.contains(&proof.instance))
+            .collect()
     }
 }
 
@@ -114,7 +174,16 @@ fn visit(
     while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) if element.name == "style" => {
-                if let Some(owners) = &element.style_owners {
+                if let Some(records) = &element.style_attribution {
+                    for record in records {
+                        for owner in &record.owners {
+                            output
+                                .entry(mapped(owner, paths))
+                                .or_default()
+                                .insert(record.css.clone());
+                        }
+                    }
+                } else if let Some(owners) = &element.style_owners {
                     let css: String = element
                         .children
                         .iter()

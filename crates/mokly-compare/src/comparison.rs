@@ -1,15 +1,16 @@
 //! One catalogue-wide comparison engine for build, Serve, and static projection.
 
+use std::mem;
 use std::sync::Arc;
 
 use mokly_css::attribution::{self, PageObservation};
 use mokly_css::parsed_cache::ParsedCssCache;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::EntryContent;
-use mokly_model::evidence::{EvidenceOwner, RuleStatus};
 use mokly_model::review::{ReviewDiagnostic, ReviewResultV8, ReviewState};
 use mokly_model::review_order;
 
+use crate::comparison_attribution::{self, ViewInput};
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonCounts, ComparisonRequest, ComparisonResult};
 use crate::comparison_views;
@@ -86,7 +87,7 @@ impl Engine {
             .collect();
         let mut observations: Vec<PageObservation> = Vec::new();
         for pair in &pairing.entries {
-            let views = comparison_views::collect(
+            let mut views = comparison_views::collect(
                 pair,
                 before.clone(),
                 after.clone(),
@@ -95,11 +96,16 @@ impl Engine {
                 &before_plans,
                 &after_plans,
             )?;
-            observations.extend(views.views.iter().map(|view| view.observation.clone()));
+            observations.extend(
+                views
+                    .views
+                    .iter_mut()
+                    .map(|view| mem::take(&mut view.observation)),
+            );
             pairs.push(views);
         }
-        let attributed = attribution::attribute(&observations);
-        let mut impact = attributed.changed_components;
+        let mut attributed = attribution::attribute(observations);
+        let mut impact = mem::take(&mut attributed.changed_components);
         let mut instance_proofs = Vec::new();
         let mut own_impact = OwnImpact::default();
         let mut index = 0;
@@ -127,49 +133,18 @@ impl Engine {
                 &paths,
             )?;
             for view in &mut views.views {
-                view.document
-                    .evidence
-                    .rules
-                    .extend(attributed.pages[index].clone());
-                instance_proofs.append(&mut view.proofs);
-                if let Some(component) = &component
-                    && view.root_changed
-                    && same_inputs
-                {
-                    impact.insert(component.clone());
-                    own_impact.render.insert(component.clone());
-                }
-                for resource in &view.document.evidence.resources {
-                    if let EvidenceOwner::Component { path } = &resource.owner
-                        && Some(path) == component.as_ref()
-                        && same_inputs
-                    {
-                        impact.insert(path.clone());
-                        own_impact
-                            .dependencies
-                            .insert((path.clone(), resource.path.clone()));
-                    }
-                }
-                for rule in &view.document.evidence.rules {
-                    if let EvidenceOwner::Component { path } = &rule.owner
-                        && Some(path) == component.as_ref()
-                    {
-                        own_impact
-                            .dependencies
-                            .insert((path.clone(), rule.stylesheet.clone()));
-                    }
-                }
-                let direct = attributed.component_pages.contains(&index)
-                    || view.document.evidence.rules.iter().any(|rule| rule.owner == EvidenceOwner::Entry && rule.status != RuleStatus::Excluded)
-                    || view.document.evidence.resources.iter().any(|resource| resource.owner == EvidenceOwner::Entry || matches!(&resource.owner, EvidenceOwner::Component { path } if Some(path) == component.as_ref()));
-                if direct
-                    && matches!(
-                        view.document.state,
-                        ReviewState::Unchanged | ReviewState::IgnoredOnly
-                    )
-                {
-                    view.document.state = ReviewState::Changed;
-                }
+                comparison_attribution::apply(
+                    view,
+                    ViewInput {
+                        attributed: &attributed,
+                        index,
+                        component: component.as_deref(),
+                        same_inputs,
+                    },
+                    &mut impact,
+                    &mut own_impact,
+                    &mut instance_proofs,
+                );
                 index += 1;
             }
             usages.append(&mut views.usage);

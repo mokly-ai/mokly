@@ -1,36 +1,38 @@
 //! Catalogue-wide own-page membership, nested filtering, and wire evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
-use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
+use mokly_model::evidence::RuleEvidence;
 use mokly_model::review_affected::ReviewSide;
-use mokly_model::review_order::rule_key;
 
+use crate::attribution_membership::Boundary;
 use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
+use crate::{attribution_membership, attribution_records, observation};
 
 /// Path-independent before and after tuples of one changed rule.
 pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, String)>);
+
+/// Catalogue-wide proof before any nested-component filtering.
+pub type OwnPageMatches = BTreeMap<RuleIdentity, BTreeSet<String>>;
 
 /// Proof retained after the parsed document is released.
 #[derive(Clone, Debug)]
 pub struct MatchProof {
     /// Shared physical containment, visited innermost first.
     pub(crate) regions: ContainmentPath,
-    /// Restrict inline proof to the component that supplied the matched input.
-    pub(crate) input_owner_only: bool,
-    /// Resolved input owner for the inline-style seam.
-    pub owner: EvidenceOwner,
+    /// Supplier ancestry used only to protect a trusted owner's supplied content.
+    pub(crate) inputs: Option<ContainmentPath>,
+    /// Explicit sidecar owner, independent of copies on other documents.
+    pub trusted_owner: Option<String>,
 }
 
 impl MatchProof {
-    /// Visit retained regions innermost first, restricted to the inline input owner.
+    /// Visit physical ancestry innermost first for every CSS delivery source.
     pub fn regions(&self) -> impl Iterator<Item = &Containment> {
-        self.regions.iter().filter(|region| {
-            !self.input_owner_only
-                || matches!(&self.owner, EvidenceOwner::Component { path } if path == &region.path)
-        })
+        self.regions.iter()
     }
 }
 
@@ -68,12 +70,16 @@ pub struct PageObservation {
 /// Complete own-page and per-entry attribution, with no parsed document retention.
 #[derive(Clone, Debug)]
 pub struct Attribution {
+    /// Unfiltered own-page membership used by exact owned-instance proof.
+    pub own_pages: OwnPageMatches,
     /// Wire evidence corresponding to each input page.
     pub pages: Vec<Vec<RuleEvidence>>,
-    /// Component implementation impact from kept own-root matches.
+    /// Component impact from unowned own-root matches; trusted owners need equal inputs.
     pub changed_components: BTreeSet<String>,
     /// Page indices with a kept own-root match, used for variant reasons.
     pub component_pages: BTreeSet<usize>,
+    /// Sources with kept own-root matches, separate from nested-instance records.
+    pub own_page_sources: BTreeMap<usize, BTreeSet<String>>,
 }
 
 /// Retain only containment proof before releasing each view's parsed trees.
@@ -82,6 +88,17 @@ pub fn observe(
     matching: &DocumentMatching,
     before: Option<&MatchTree>,
     after: Option<&MatchTree>,
+) -> Vec<RuleObservation> {
+    observe_owned(stylesheet, matching, before, after, None)
+}
+
+/// Retain physical proof and the supplier chain needed by declared style owners.
+pub fn observe_owned(
+    stylesheet: &str,
+    matching: &DocumentMatching,
+    before: Option<&MatchTree>,
+    after: Option<&MatchTree>,
+    owner: Option<&str>,
 ) -> Vec<RuleObservation> {
     match matching {
         DocumentMatching::Unresolved(_) => vec![RuleObservation {
@@ -124,8 +141,8 @@ pub fn observe(
                                     let element = tree.elements.get(matched.element)?;
                                     Some(MatchProof {
                                         regions: element.regions.clone(),
-                                        input_owner_only: false,
-                                        owner: element.owner.clone(),
+                                        inputs: owner.map(|_| element.input_regions.clone()),
+                                        trusted_owner: owner.map(str::to_owned),
                                     })
                                 })
                                 .collect(),
@@ -138,9 +155,12 @@ pub fn observe(
 }
 
 /// Resolve all own-page matches before attributing any entry's records.
-pub fn attribute(pages: &[PageObservation]) -> Attribution {
-    let mut unfiltered: BTreeMap<RuleIdentity, BTreeSet<String>> = BTreeMap::new();
-    for page in pages {
+pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
+    for page in &mut pages {
+        page.rules = observation::merge(mem::take(&mut page.rules));
+    }
+    let mut unfiltered = OwnPageMatches::new();
+    for page in &pages {
         let Some(component) = &page.component else {
             continue;
         };
@@ -150,11 +170,7 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .iter()
                 .filter(|selector| !selector.unresolved)
                 .flat_map(|selector| &selector.matches)
-                .any(|matched| {
-                    matched
-                        .regions()
-                        .any(|region| region.root && &region.path == component)
-                })
+                .any(|matched| attribution_membership::own_root(matched, component))
             {
                 unfiltered
                     .entry(rule.identity.clone())
@@ -164,7 +180,8 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
         }
     }
     let mut changed: BTreeMap<RuleIdentity, BTreeSet<String>> = BTreeMap::new();
-    let mut component_pages = BTreeSet::new();
+    let mut changed_components = BTreeSet::new();
+    let mut own_page_sources = BTreeMap::<usize, BTreeSet<String>>::new();
     for (index, page) in pages.iter().enumerate() {
         let Some(component) = &page.component else {
             continue;
@@ -177,86 +194,50 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .filter(|selector| !selector.unresolved)
                 .flat_map(|selector| &selector.matches)
                 .any(|matched| {
-                    matched
-                        .regions()
-                        .any(|region| region.root && &region.path == component)
-                        && !matched.regions().any(|region| {
-                            !region.root
-                                && &region.path != component
-                                && unfiltered.is_some_and(|paths| paths.contains(&region.path))
-                        })
+                    attribution_membership::own_root(matched, component)
+                        && attribution_membership::kept(
+                            matched,
+                            component,
+                            unfiltered,
+                            Boundary::OwnPage,
+                        )
                 });
             if kept {
+                if rule
+                    .selectors
+                    .iter()
+                    .filter(|selector| !selector.unresolved)
+                    .flat_map(|selector| &selector.matches)
+                    .any(|matched| {
+                        matched.trusted_owner.is_none()
+                            && attribution_membership::own_root(matched, component)
+                            && attribution_membership::kept(
+                                matched,
+                                component,
+                                unfiltered,
+                                Boundary::OwnPage,
+                            )
+                    })
+                {
+                    changed_components.insert(component.clone());
+                }
                 changed
                     .entry(rule.identity.clone())
                     .or_default()
                     .insert(component.clone());
-                component_pages.insert(index);
+                own_page_sources
+                    .entry(index)
+                    .or_default()
+                    .insert(rule.stylesheet.clone());
             }
         }
     }
-    let output = pages
-        .iter()
-        .map(|page| {
-            let mut records = Vec::new();
-            let mut examined = BTreeSet::new();
-            for rule in &page.rules {
-                examined.insert(rule.stylesheet.clone());
-                for selector in &rule.selectors {
-                    if !selector.unresolved && selector.matches.is_empty() {
-                        continue;
-                    }
-                    let changed = changed.get(&rule.identity);
-                    let owners: BTreeSet<_> = if selector.unresolved {
-                        BTreeSet::from([None])
-                    } else {
-                        selector
-                            .matches
-                            .iter()
-                            .map(|matched| {
-                                matched
-                                    .regions()
-                                    .find(|region| {
-                                        changed.is_some_and(|paths| paths.contains(&region.path))
-                                    })
-                                    .map(|region| region.path.clone())
-                            })
-                            .collect()
-                    };
-                    for owner in owners {
-                        records.push(RuleEvidence {
-                            stylesheet: rule.stylesheet.clone(),
-                            selector: selector.selector.clone(),
-                            status: if selector.unresolved {
-                                RuleStatus::Unresolved
-                            } else {
-                                RuleStatus::Matched
-                            },
-                            owner: owner.map_or(EvidenceOwner::Entry, |path| {
-                                EvidenceOwner::Component { path }
-                            }),
-                        });
-                    }
-                }
-            }
-            for stylesheet in examined {
-                if !records.iter().any(|record| record.stylesheet == stylesheet) {
-                    records.push(RuleEvidence {
-                        stylesheet,
-                        selector: String::new(),
-                        status: RuleStatus::Excluded,
-                        owner: EvidenceOwner::Entry,
-                    });
-                }
-            }
-            records.sort_by(|left, right| rule_key(left).cmp(&rule_key(right)));
-            records.dedup();
-            records
-        })
-        .collect();
+    let output = attribution_records::reduce(&pages, &changed, &unfiltered);
     Attribution {
+        own_pages: unfiltered,
         pages: output,
-        changed_components: changed.into_values().flatten().collect(),
-        component_pages,
+        changed_components,
+        component_pages: own_page_sources.keys().copied().collect(),
+        own_page_sources,
     }
 }

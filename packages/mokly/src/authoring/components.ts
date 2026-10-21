@@ -123,6 +123,9 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       instanceKey: key,
       seen: new Set(),
     };
+    const capture = React.useContext(runtime.contexts.styles);
+    const output = React.createElement(Adapter);
+    const owned = capture?.wrap(registered.path, output) ?? output;
     return React.createElement(
       React.Fragment,
       null,
@@ -132,7 +135,7 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       React.createElement(
         runtime.contexts.owner.Provider,
         { value: owner },
-        React.createElement(Adapter),
+        owned,
       ),
       session.boundary(`mokly-instance:end id="${region}"`),
     );
@@ -172,6 +175,14 @@ function wrapSlot(
   function Slot() {
     const slotRegion = session.nextRegion();
     draft.regionIds.push(slotRegion);
+    const capture = React.useContext(runtime.contexts.styles);
+    const ownerPath =
+      original.kind === "instance"
+        ? session.instances.find(
+            (instance) => instance.key === original.instanceKey,
+          )?.componentPath
+        : capture?.entryOwner;
+    const supplied = capture?.wrap(ownerPath, node) ?? node;
     return React.createElement(
       React.Fragment,
       null,
@@ -181,7 +192,7 @@ function wrapSlot(
       React.createElement(
         runtime.contexts.owner.Provider,
         { value: { ...original, seen: new Set<string>() } },
-        node,
+        supplied,
       ),
       session.boundary(`mokly-slot:end id="${slotRegion}"`),
     );

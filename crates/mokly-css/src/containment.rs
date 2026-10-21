@@ -6,13 +6,21 @@ use std::sync::Arc;
 use crate::match_tree::Containment;
 
 /// Shared component ancestry. Cloning retains one link, without copying its ancestors.
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct ContainmentPath(Option<Arc<Link>>);
 
 struct Link {
     region: Containment,
     parent: ContainmentPath,
     depth: usize,
+}
+
+impl Clone for ContainmentPath {
+    fn clone(&self) -> Self {
+        #[cfg(test)]
+        copy_tests::record();
+        Self(self.0.clone())
+    }
 }
 
 impl ContainmentPath {
@@ -73,3 +81,7 @@ impl Drop for ContainmentPath {
 #[cfg(test)]
 #[path = "_tests_/containment_tests.rs"]
 mod containment_tests;
+
+#[cfg(test)]
+#[path = "_tests_/observation_ownership_tests.rs"]
+mod copy_tests;

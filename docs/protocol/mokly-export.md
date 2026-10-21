@@ -92,7 +92,7 @@ ref and `HEAD`, pins their merge base once, renders the base side from that
 commit's Git tree under the [comparison contract](./mokly-comparison.md#sides),
 and writes one complete comparison generation. Entry-level Changes attribution
 and every screen comparison use that one commit, the same current documents,
-and the same changed-path exclusions. The index carries `base`,
+and the same source-capture and resource-comparison exclusions. The index carries `base`,
 `changesStatus: "ready"`, and the `comparisonUrl` of the generation's
 `review.json`; removed screens, pages, documents, components, and variants
 keep their base context under [removed previews](./mokly-removed-previews.md),
@@ -111,7 +111,7 @@ removed entries.
 Ignored-only edits, source moves, and unreferenced files alone add no entry
 and no evidence. The navigation filter is never derived by counting changed
 comparison screens. The output directory, its reservation and backup paths,
-and their resolved aliases are excluded from changed-path evidence and from
+and their resolved aliases are excluded from source capture and
 resource comparison, so building twice never makes a build affect its own
 Changes; Serve's watcher ignores the same paths.
 

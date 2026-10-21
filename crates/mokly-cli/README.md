@@ -93,8 +93,7 @@ reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads. Shared Changes timings
-include the numeric dependency tier, final comparison view counts, and
-changed-path collection. A failed phase keeps error status.
+include the numeric dependency tier and final comparison view counts. A failed phase keeps error status.
 Capture spans separate validation, composition, encoding, and closure work.
 
 Common options are `--config`, `--base`, `--base-install-scripts`,
@@ -107,6 +106,7 @@ An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
+HTML-only base comparison follows the [HTML package styles policy](../../docs/protocol/mokly-comparison.md#html-package-styles).
 Static builds keep the input-change outcome when historical PostCSS evidence
 disagrees with its pinned Git source. They preserve the earlier output.
 They also check selected base package inputs before base document callbacks.
