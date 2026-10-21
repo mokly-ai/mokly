@@ -3044,6 +3044,12 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         and the specific release workflow assertions. The alternative was a
         new general policy check for every fixed-name upload. The user chose
         the direct fixes without that additional gate.
+  - [x] User decision 94 (2026-10-21): apply option A for CI gates hub review
+        finding 3. The Rust audit guard rejects any effective severity
+        threshold or target architecture or operating system list, in addition
+        to rejecting every ignored advisory other than RUSTSEC-2026-0235.
+        The alternative was to document that the guard covered ignored IDs
+        only. The stricter guard keeps every other vulnerability visible.
   - [x] Keep decision 81's existing shell and toolchain checks on the moved
         preparation workflow. The complete gate exposed the shell test's old
         workflow lookup. Preserve its tagged-commit assertion and include the

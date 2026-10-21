@@ -25,6 +25,7 @@ function harness(
     date?: string;
     packages?: unknown;
     ignore?: unknown;
+    settings?: Record<string, unknown>;
     metadataText?: string;
     auditText?: string;
     failure?: "metadata" | "install" | "audit";
@@ -33,7 +34,10 @@ function harness(
   const calls: { file: string; args: string[]; cwd: string }[] = [];
   const output: string[] = [];
   const report = {
-    settings: { ignore: options.ignore ?? [approved] },
+    settings: {
+      ignore: options.ignore ?? [approved],
+      ...options.settings,
+    },
     vulnerabilities: { found: false, count: 0, list: [] },
     warnings: { unmaintained: [{ advisory: { id: "RUSTSEC-2024-0436" } }] },
   };
@@ -128,6 +132,21 @@ test("effective cargo-audit settings cannot ignore another advisory", async () =
     assert.equal(fixture.calls.at(-1)?.file, tool);
   }
   await harness({ ignore: [] }).run();
+});
+
+test("effective cargo-audit settings cannot filter by severity or target", async () => {
+  for (const settings of [
+    { severity: "high" },
+    { target_arch: ["x86_64"] },
+    { target_os: ["linux"] },
+  ]) {
+    const fixture = harness({ settings });
+    await assert.rejects(
+      fixture.run(),
+      /Rust audit settings cannot filter advisories/,
+    );
+    assert.equal(fixture.calls.at(-1)?.file, tool);
+  }
 });
 
 test("missing or malformed native tool reports cannot bypass review", async () => {

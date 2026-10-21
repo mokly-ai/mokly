@@ -63,10 +63,10 @@ only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires
 writes source maps. Review this exception by 2027-01-31 or at the next
 `lightningcss` update, whichever comes first. Every other vulnerability fails.
 The shared audit command rejects the exception after 2027-01-31 UTC, when the
-locked `lightningcss` version changes, or when the effective audit configuration
-ignores any other advisory ID. These conditions require review before the audit
-can pass. After the date or a locked `lightningcss` change, the command fails
-until its reviewed script changes, even when the approved ID is absent.
+locked `lightningcss` version changes, or when settings set a severity threshold,
+target architecture, or target operating system list. It also rejects any other
+ignored advisory ID.
+After the date or a locked `lightningcss` change, it fails until its reviewed script changes, even when the approved ID is absent.
 The repository suite, daily dependency audit, and release verification run it.
 A release with reusable CI evidence still runs a fresh Rust audit. The daily
 and release Rust audits run with read-only permissions and no publication
