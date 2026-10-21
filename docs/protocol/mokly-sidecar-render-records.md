@@ -41,9 +41,10 @@ must satisfy the [root-range rules](./mokly-component-usage-records.md#root-outp
 
 `renderPage` runs a synchronous `definePage` callback. It returns
 `{ html, resources, warnings }`, with a complete document and no styles.
-The sidecar rejects consumer-authored `<mokly-…>` elements, including raw
-ignore wrappers. Review-ignore markers must use the authenticated comments
-emitted by the authoring API.
+The sidecar permits authored ignore wrappers in `renderPage` HTML for the
+core page rules. The core converts them into ignore regions. Other reserved
+`<mokly-…>` elements remain rejected, and component or screen output must use
+the authenticated comments emitted by the authoring API.
 The core applies the [page rules](./mokly-pages.md) to the document.
 
 ## Resolved Bindings

@@ -78,21 +78,15 @@ test("dynamic wrapper props fail the profile before the adapter runs", async (co
   await sidecar.call("shutdown");
 });
 
-test("renderPage rejects authored ignore elements", async (context) => {
+test("renderPage preserves authored ignore elements for core composition", async (context) => {
   const root = await callbackConsumer(context, source);
   const sidecar = startSidecar(context, root);
   await sidecar.call("hello");
   const { generation } = await describeCallbacks(sidecar, root);
-  await assert.rejects(
-    sidecar.call("renderPage", {
-      generation,
-      handle: `${callbackEntry}#rawIgnore`,
-    }),
-    (error: Error) => {
-      assert.equal(Reflect.get(error, "code"), "render-failed");
-      assert.match(error.message, /reserved mokly- element/u);
-      return true;
-    },
-  );
+  const result = await sidecar.call<PageResult>("renderPage", {
+    generation,
+    handle: `${callbackEntry}#rawIgnore`,
+  });
+  assert.match(result.html, /<mokly-ignore id="x">Ignored<\/mokly-ignore>/u);
   await sidecar.call("shutdown");
 });
