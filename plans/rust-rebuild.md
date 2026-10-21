@@ -2975,13 +2975,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     real watcher readiness or runner contention, not proven. Separate branch.
     Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
     and `.context/ci-release-fixes/watch-react-rerun.log`.
-<<<<<<< HEAD
-
-=======
     - [x] Settled by user decision 105 (2026-10-20): the combined React
           journey keeps its 300-second guard, its rare timeouts are accepted,
           and `docs/protocol/ci-test-timing.md` records the limit.
->>>>>>> origin/calummoore/mokly-backend-rust-rebuild
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
