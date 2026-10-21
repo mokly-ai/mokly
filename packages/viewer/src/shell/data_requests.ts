@@ -193,8 +193,9 @@ export interface RouteDeliveryInput {
  * The delivery of one route's details. A catalogue that another deployment
  * replaced outranks a failed load or refresh: a route that still waits for a
  * detail shows it replaced, and a route whose details all arrived keeps them.
- * A failed detail fails the route only after every other detail has arrived
- * or failed, because a detail that still loads can show another deployment.
+ * A failed detail or a failed publication refresh fails the route only after
+ * every detail has arrived or failed, because a detail that still loads can
+ * show another deployment.
  */
 export function routeDetailDelivery(
   input: RouteDeliveryInput,
@@ -204,14 +205,13 @@ export function routeDetailDelivery(
   const ready = routeReady(input.details, requests);
   if (input.replaced)
     return ready ? { status: "ready" } : { status: "replaced" };
-  if (input.refreshFailed)
-    return { status: "failed", retry: input.retryRefresh };
-  if (ready) return { status: "ready" };
   const keys = requests.map(detailKey);
   const settled = keys.every(
     (key) => input.details.has(key) || input.failed.has(key),
   );
-  return settled
-    ? { status: "failed", retry: () => input.retry(keys) }
-    : { status: "loading" };
+  if (!settled) return { status: "loading" };
+  if (input.refreshFailed)
+    return { status: "failed", retry: input.retryRefresh };
+  if (ready) return { status: "ready" };
+  return { status: "failed", retry: () => input.retry(keys) };
 }

@@ -220,10 +220,11 @@ rebinds the route and the disclosures to it;
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry. A use case
-shows the unavailable state only after each of its details has arrived,
-failed, or been replaced, because a detail that still loads can show another
-deployment. Until then the stage keeps loading, while an embedded host still
-hears of each failure at once. A detail of
+shows the unavailable state, also after a failed publication refresh, only
+after each of its details has arrived, failed, or been replaced, because a
+detail that still loads can show another deployment. Until then the stage
+keeps loading, while an embedded host still hears of each failure at once. A
+detail of
 another deployment is not a failed load: the controller stops every load,
 ends the live connection as a disconnect does, and ignores later failures,
 the source reports the change once, and a route that
