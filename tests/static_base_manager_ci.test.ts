@@ -17,6 +17,7 @@ test(
         "tests/static_base_managers.test.ts",
         "tests/static_base_registry.test.ts",
         "tests/static_base_manager_mirror.test.ts",
+        "tests/static_base_classic_paths.test.ts",
         "tests/static_cold_base_tiers.test.ts",
       ],
       {
@@ -40,6 +41,6 @@ test(
       throw error;
     });
     assert.match(stdout, /unit tests skipped or todo: 0/u);
-    assert.match(stdout, /selected files: 4; tests run: [1-9]\d*;/u);
+    assert.match(stdout, /selected files: 5; tests run: [1-9]\d*;/u);
   },
 );
