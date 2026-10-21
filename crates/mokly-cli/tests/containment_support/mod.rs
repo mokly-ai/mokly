@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review::ReviewResultV8;
 
@@ -49,7 +49,7 @@ pub fn build_configured(
         serde_json::from_slice(&fs::read(site.join(index.comparison_url.unwrap())).unwrap())
             .unwrap();
     for entry in &review.entries {
-        let detail: EntryDetailV1 = serde_json::from_slice(
+        let detail: EntryDetailV2 = serde_json::from_slice(
             &fs::read(site.join(format!("mokly-viewer/entries/{}.json", entry.path))).unwrap(),
         )
         .unwrap();
