@@ -1570,6 +1570,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         false rows stay until C lands, Small now (estimate). Recommended: C,
         because it is the only option that keeps both the goal of 39 B and
         the supplier rule of 73 C.
+    - User decision 110 (2026-10-21): C. Engine round 6 implements it on
+      `rebuild/defaults-engine`. Tick this TODO when that branch merges.
   - [ ] Resolve user item 97 (review 2 finding 3): owned proof state waits
         for the whole catalogue. Decision 73 C made owned instance proof wait
         for catalogue-wide own-page proof. So every view keeps two
