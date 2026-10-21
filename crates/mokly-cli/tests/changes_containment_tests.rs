@@ -52,10 +52,8 @@ fn button_and_stack_rules_keep_independent_owners() {
 #[test]
 fn component_nested_stack_rule_matches_the_flat_rule() {
     let case = containment_fixture::CASES[3];
-    let review = containment_support::build(
-        containment_fixture::nested_sources(case, false),
-        containment_fixture::nested_sources(case, true),
-    );
+    let review =
+        containment_support::build(nested_sources(case, false), nested_sources(case, true));
     containment_assertions::check(&review, case);
 }
 
@@ -98,10 +96,8 @@ fn linked_stylesheet_nested_stack_rule_has_flat_evidence() {
 #[test]
 fn head_nested_stack_rule_matches_the_flat_rule() {
     let case = containment_fixture::CASES[5];
-    let review = containment_support::build(
-        containment_fixture::nested_sources(case, false),
-        containment_fixture::nested_sources(case, true),
-    );
+    let review =
+        containment_support::build(nested_sources(case, false), nested_sources(case, true));
     let changed = review
         .entries
         .iter()
@@ -138,4 +134,25 @@ fn head_nested_stack_rule_matches_the_flat_rule() {
             mokly_model::evidence::RuleStatus::Matched
         );
     }
+}
+
+fn nested_sources(case: containment_fixture::Case, changed: bool) -> Vec<(String, String)> {
+    let mut files = containment_fixture::sources(case, changed);
+    let spacing = if changed
+        && matches!(
+            case.edit,
+            containment_fixture::Edit::Stack | containment_fixture::Edit::Both
+        ) {
+        16
+    } else {
+        8
+    };
+    let flat = format!("'.stack > * + *{{margin-top:{spacing}px}}'");
+    let nested = format!("'.stack {{ & > * + * {{ margin-top:{spacing}px }} }}'");
+    let rules = files
+        .iter_mut()
+        .find(|(path, _)| path == "rules.ts")
+        .unwrap();
+    rules.1 = rules.1.replace(&flat, &nested);
+    files
 }

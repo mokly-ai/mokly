@@ -151,21 +151,3 @@ pub fn sources(case: Case, changed: bool) -> Vec<(String, String)> {
     }
     files
 }
-
-/// Use native CSS nesting for the Stack rule while preserving the case axes.
-pub fn nested_sources(case: Case, changed: bool) -> Vec<(String, String)> {
-    let mut files = sources(case, changed);
-    let spacing = if changed && matches!(case.edit, Edit::Stack | Edit::Both) {
-        16
-    } else {
-        8
-    };
-    let flat = format!("'.stack > * + *{{margin-top:{spacing}px}}'");
-    let nested = format!("'.stack {{ & > * + * {{ margin-top:{spacing}px }} }}'");
-    let rules = files
-        .iter_mut()
-        .find(|(path, _)| path == "rules.ts")
-        .unwrap();
-    rules.1 = rules.1.replace(&flat, &nested);
-    files
-}
