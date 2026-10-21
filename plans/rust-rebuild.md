@@ -3622,6 +3622,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 116 (2026-10-21): A now, and C after the merge, in
       parallel if possible, without blocking the merge. Work: W6, with the
       HTML pipeline.
+  - [ ] Resolve user item 128 (F21 decision): saved variant slot element
+        checks. The F21 record gives no severity or effort. Options: A, keep
+        the checks and state the rule in `mokly-html-components.md`; B, keep
+        only the required `html-ignore-attribute` and `html-foster-parented`
+        warnings. Recommended: A. The rebuild branch records this item as the
+        line "Item 128" after the F21 record. Keep one line when both reach
+        the plan.
+    - Saved slots skip the forbidden and unknown element checks, because a
+      new build error needs the user's yes (item 128 is open).
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
