@@ -225,6 +225,8 @@ cold build per manager from a local registry that requires the user token.
 Pinned test CLIs come from development dependencies, and no test uses the
 internet. Tests cover script suppression, timing tiers, registry access,
 comparison output, cache reuse, executable selection, and fallback reasons.
+Command tests pin every manager's complete scripts-off argument list. Enabling
+scripts removes only its script-suppression argument from that list.
 
 ### Key Code
 

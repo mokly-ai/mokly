@@ -173,6 +173,10 @@ mod berry_sources_tests;
 mod manager_command_tests;
 
 #[cfg(test)]
+#[path = "_tests_/manager_arguments_tests.rs"]
+mod manager_arguments_tests;
+
+#[cfg(test)]
 #[path = "_tests_/manager_confinement_tests.rs"]
 mod manager_confinement_tests;
 
