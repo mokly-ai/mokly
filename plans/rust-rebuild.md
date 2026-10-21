@@ -3076,6 +3076,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+- [ ] Integration batch 18 decision 2 (2026-10-21): configure the actionlint
+      runner labels, so that a plain `actionlint` run needs no label ignore
+      rule. `rebuild/ci-actionlint-config` holds the work, at `2bc59dd2`.
+      Tick this TODO when that branch merges.
+
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
