@@ -56,7 +56,9 @@ in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
 `browser-4-of-4`, plus `static-delivery`. The delivery command builds the source
 and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
 fingerprint check, so index readers see the same tree as a committed
-checkout. When a command ends, its worker downloads its report and cleans up
+checkout. Every command refreshes copied changed-file modification times
+before its first build, so Cargo rebuilds changed crates after warmup. When a
+command ends, its worker downloads its report and cleans up
 its box at once. Only the viewer command and the four browser shards produce
 suite reports; repository and delivery outcomes use their exit codes. After all commands end,
 xtask cleans up the remaining boxes, runs the local aggregate over the five
