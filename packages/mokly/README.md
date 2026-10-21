@@ -151,6 +151,8 @@ including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
 child process in the side's source root, with consumer plugins unbundled.
 A child watchdog stops even a blocked plugin after its sidecar dies.
+The watchdog owns the input pipe. Main-thread `process.stdin` and
+`node:process` imports share its forwarded stream, including on Windows.
 Operation events count each fork and its terminal event once.
 PostCSS child failures settle pending requests when startup, IPC, or exit fails.
 The child lifetime retains errors raised before the request is attached.

@@ -1,9 +1,14 @@
+import { syncBuiltinESMExports } from "node:module";
 import { Readable } from "node:stream";
 import { Worker } from "node:worker_threads";
 
 /** A separate thread owns stdin, so EOF and parent death can stop a blocked render. */
 export function parentInput() {
-  const stream = new Readable({ read() {} });
+  const stream = Object.assign(new Readable({ read() {} }), { fd: 0 });
+  // Windows cannot bind the watchdog's pipe to a second event loop when a
+  // consumer imports node:process and Node evaluates its lazy stdin export.
+  Object.defineProperty(process, "stdin", { value: stream });
+  syncBuiltinESMExports();
   const worker = new Worker(new URL("./parent-watchdog.js", import.meta.url), {
     workerData: process.ppid,
     execArgv: process.execArgv.filter((arg) => !arg.startsWith("--input-type")),

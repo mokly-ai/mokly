@@ -45,3 +45,30 @@ test(
     assert.ok(signal === "SIGKILL" || code !== 0, stderr);
   },
 );
+
+test("process imports share the input owned by the parent watchdog", async (context) => {
+  const child = spawn(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      `import assert from 'node:assert/strict';
+       import { parentInput } from ${JSON.stringify(pathToFileURL(path.resolve("packages/mokly/dist/sidecar/parent-input.js")).href)};
+       const parent = parentInput();
+       try {
+         const { stdin } = await import('node:process');
+         assert.equal(stdin, parent.stream);
+       } finally {
+         await parent.close();
+       }`,
+    ],
+    { stdio: "pipe", signal: context.signal },
+  );
+  context.after(() => child.kill("SIGKILL"));
+  let errors = "";
+  child.stderr.on("data", (bytes) => {
+    errors += String(bytes);
+  });
+  const [code] = await once(child, "exit");
+  assert.equal(code, 0, errors);
+});
