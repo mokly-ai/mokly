@@ -23,7 +23,7 @@ impl Evidence {
             Err(error) => return Err(error),
         };
         Ok(Self {
-            path: manifest::target(parent, value.trim_start_matches('!'))
+            path: manifest::targets(parent, value.trim_start_matches('!'))
                 .err()
                 .map(|_| Arc::from(value.trim_start_matches('!'))),
             specification,
@@ -42,7 +42,7 @@ impl Evidence {
             _ => return Ok(()),
         };
         if let Some(path) = rejected {
-            manifest::target(parent, path)?;
+            manifest::targets(parent, path)?;
         }
         Ok(())
     }
