@@ -94,7 +94,7 @@ pub(crate) fn strings(text: &str, path: &str) -> Result<Vec<String>> {
             values.push(value);
         } else {
             let end = remaining
-                .find(|character: char| character.is_whitespace() || character == ',')
+                .find(|character: char| character.is_whitespace() || matches!(character, ',' | ':'))
                 .unwrap_or(remaining.len());
             values.push(remaining[..end].trim_end_matches(':').to_owned());
             remaining = &remaining[end..];
