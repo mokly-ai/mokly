@@ -1,7 +1,7 @@
 /**
  * A use case whose step screen the next deployment removed: the outgoing
- * document keeps its loading stage until the full page load, also when the
- * removed step's detail fails after the deployment changed.
+ * document keeps its loading stage until the full page load, whether the
+ * removed step's detail fails after the deployment changed or before.
  */
 
 import fs from "node:fs/promises";
@@ -15,6 +15,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 
 const STEPS = (paths: readonly string[]) =>
@@ -79,8 +80,10 @@ async function recordStepAnswer(page: Page): Promise<void> {
 }
 
 let root: string;
-let site: string;
+let first: string;
 let next: string;
+/** The copy that the static host publishes now. */
+let site: string;
 let host: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
   root = await fs.mkdtemp(
@@ -95,7 +98,7 @@ test.beforeAll(async () => {
     await fs.rm(root, { recursive: true, force: true });
   });
   const source = path.join(root, "source");
-  site = path.join(root, "site");
+  first = path.join(root, "site");
   next = path.join(root, "next");
   await fs.mkdir(path.join(source, "specs"), { recursive: true });
   await fs.writeFile(
@@ -115,7 +118,7 @@ test.beforeAll(async () => {
     STEPS(["home", "extra"]),
   );
   await buildStaticCatalogue(source, path.join(source, "built"));
-  await fs.cp(path.join(source, "built"), site, { recursive: true });
+  await fs.cp(path.join(source, "built"), first, { recursive: true });
   await fs.rm(path.join(source, "specs/extra.screen.html"));
   await fs.writeFile(
     path.join(source, "specs/tour.use-case.yaml"),
@@ -124,7 +127,11 @@ test.beforeAll(async () => {
   await buildStaticCatalogue(source, path.join(source, "next"));
   await fs.cp(path.join(source, "next"), next, { recursive: true });
   await fs.rm(source, { recursive: true });
+  site = first;
   host = await serveStaticFiles(() => site);
+});
+test.beforeEach(() => {
+  site = first;
 });
 
 test("a removed step that fails after another deployment keeps the use case loading", async ({
@@ -180,4 +187,58 @@ test("a removed step that fails after another deployment keeps the use case load
     ),
   ).toEqual([null, "true"]);
   requests.assert();
+});
+
+test("a removed step that fails before the other details keeps the use case loading", async ({
+  page,
+  allowBrowserError,
+}) => {
+  allowBrowserError(missingResourceNotice(`${host.url}${STEP_URL}`));
+  const failures: string[] = [];
+  page.on("response", (response) => {
+    if (response.status() >= 400)
+      failures.push(`${response.status()} ${response.url()}`);
+  });
+  await page.goto(`${host.url}/view/home/`);
+  await expect(page.locator("#mb-main h2")).toHaveText("Home");
+  await recordStepAnswer(page);
+  let useCase: Route | undefined;
+  let useCaseHeld!: () => void;
+  let answered!: () => void;
+  const held = new Promise<void>((resolve) => (useCaseHeld = resolve));
+  const settled = new Promise<void>((resolve) => (answered = resolve));
+  await page.route("**/mokly-viewer/entries/tour.json", async (route) => {
+    if (useCase) await route.continue();
+    else {
+      useCase = route;
+      useCaseHeld();
+    }
+  });
+  await page.route(`**${SETTLED_URL}`, async (route) => {
+    await route.fulfill({ status: 204 });
+    answered();
+  });
+  site = next;
+  await page.locator('a[data-route="tour/index.html"]').click();
+  // Hold the tour's own detail, which shows the next deployment, until the
+  // shell has handled the removed step's 404. The step failed first, but the
+  // tour still loads, so the stage keeps loading.
+  await held;
+  await settled;
+  await expect(page.locator("#mb-main [data-mokly-stage]")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  const reloaded = page.waitForEvent("load");
+  await useCase!.continue();
+  await reloaded;
+  await expect(page.locator("#mb-main h2")).toHaveText("Tour");
+  expect(
+    await page.evaluate(
+      (keys) => keys.map((key) => sessionStorage.getItem(key)),
+      [UNAVAILABLE_SEEN, STAGE_BUSY],
+    ),
+  ).toEqual([null, "true"]);
+  expect(failures).toEqual([`404 ${host.url}${STEP_URL}`]);
 });

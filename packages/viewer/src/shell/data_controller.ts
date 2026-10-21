@@ -170,7 +170,13 @@ export class ShellDataController {
   /** Follow the event stream and load the descriptor while the index is live. */
   connect(): () => void {
     const live = this.#source?.live;
-    if (this.#connected || !live || !this.#snapshot.index.live) return () => {};
+    if (
+      this.#connected ||
+      this.#replaced ||
+      !live ||
+      !this.#snapshot.index.live
+    )
+      return () => {};
     this.#connected = true;
     this.#descriptor.load();
     this.#closeStream = live.subscribe({
@@ -199,6 +205,7 @@ export class ShellDataController {
 
   /** Refresh the installed revision again after a failed refresh. */
   readonly retryRefresh = (): void => {
+    if (this.#replaced) return;
     this.#refresh.load(this.#snapshot.index.revision);
   };
 
@@ -232,15 +239,16 @@ export class ShellDataController {
   }
 
   /**
-   * Another deployment answered. Stop every load and tell the source once; a
-   * full page load or the host's new index brings the new data, and a route
-   * that still waits for a detail shows the catalogue replaced until then.
+   * Another deployment answered. Stop every load, end the live connection as
+   * a disconnect does, and tell the source once; a full page load or the
+   * host's new index brings the new data, and a route that still waits for a
+   * detail shows the catalogue replaced until then.
    */
   #replace(): void {
     if (this.#replaced) return;
     this.#replaced = true;
     this.abortLoads();
-    this.#refresh.stop();
+    this.#disconnect();
     this.#source?.deploymentChanged();
     this.#changed();
   }

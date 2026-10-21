@@ -81,7 +81,17 @@ impl Manifest {
             .packages()
             .map(|(_, value)| value.as_str())
             .collect::<Vec<_>>();
-        values.extend(self.resolutions.values().map(String::as_str));
+        values.extend(self.replacements());
+        values
+    }
+
+    /// Resolution and override values, which replace other dependency ranges.
+    pub(crate) fn replacements(&self) -> Vec<&str> {
+        let mut values = self
+            .resolutions
+            .values()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
         let mut pending = self
             .overrides
             .values()

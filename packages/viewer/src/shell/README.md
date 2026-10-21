@@ -219,9 +219,14 @@ rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. A detail of
-another deployment is not a failed load: the controller stops every load and
-ignores later failures, the source reports the change once, and a route that
+shows the loading state, or the unavailable state with retry. A use case
+shows the unavailable state only after each of its details has arrived,
+failed, or been replaced, because a detail that still loads can show another
+deployment. Until then the stage keeps loading, while an embedded host still
+hears of each failure at once. A detail of
+another deployment is not a failed load: the controller stops every load,
+ends the live connection as a disconnect does, and ignores later failures,
+the source reports the change once, and a route that
 still waits has the `replaced` delivery. Its stage keeps the loading state
 until the new data arrives, from the standalone shell's full page load or from
 the `index` that an embedded host supplies. The element generation of `frame_source_hook.ts` advances

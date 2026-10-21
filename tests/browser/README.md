@@ -85,7 +85,10 @@ removed step only after that, so the step's answer always arrives after the
 deployment change. The outgoing document runs no test script while its page
 load waits. It therefore records its stage in session storage and requests
 one test URL when the shell has handled the step's answer. The test requires
-a busy stage and no stage that could not be shown.
+a busy stage and no stage that could not be shown. A second test answers the
+removed step first and holds the tour's own detail until the shell has
+handled that answer. It requires the busy stage at that moment, while the
+tour still loads, and again no stage that could not be shown.
 
 `tests/static_server_deployment.test.ts` holds an old request while a request
 for the replacement copy completes. Both must return their selected file.

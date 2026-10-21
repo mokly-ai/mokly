@@ -69,9 +69,10 @@ workspace paths, bare relative and absolute paths, home paths and local
 `.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from the
 declaring manifest. A workspace pattern falls back when any of its brace
 expansions leaves the repository, with `**` counted as zero folders. Yarn
-Classic resolves bare local paths from its lockfile folder, so every
-specification in a Classic project normalizes from that folder. A nested
-`file:../x` that leaves that folder therefore falls back.
+Classic rewrites `file:` and `link:` dependency values from their manifest
+folder, so those normalize from the declaring manifest. Classic resolves every
+other local value from its lockfile folder, so those normalize from that
+folder.
 
 Normalize each lockfile value from the folder that its manager reads it from:
 pnpm importer specifiers and `link:` versions from their importer, other pnpm
