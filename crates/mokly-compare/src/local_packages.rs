@@ -15,6 +15,7 @@ use crate::manager_local;
 use crate::manager_lockfiles;
 use crate::manifest::{self, Manifest};
 use crate::npm_lockfiles;
+use crate::workspace_patterns;
 
 pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<String, Manifest>> {
     files
@@ -53,7 +54,7 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
             local_specifications::validate(value, base, &project)?;
         }
         for workspace in manifest.workspaces() {
-            manifest::targets(&directory, workspace)?;
+            workspace_patterns::confine(&directory, workspace)?;
         }
         for patch in manifest.patches() {
             manifest::target(&directory, patch)?;

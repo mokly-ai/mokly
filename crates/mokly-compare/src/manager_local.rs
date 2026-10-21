@@ -7,7 +7,7 @@ use yaml_rust2::parser::{Event, Parser};
 
 use crate::error::{Error, Result};
 use crate::local_specifications;
-use crate::manifest;
+use crate::workspace_patterns;
 
 #[derive(Clone, Default)]
 struct Evidence {
@@ -23,7 +23,7 @@ impl Evidence {
             Err(error) => return Err(error),
         };
         Ok(Self {
-            path: manifest::targets(parent, value.trim_start_matches('!'))
+            path: workspace_patterns::confine(parent, value.trim_start_matches('!'))
                 .err()
                 .map(|_| Arc::from(value.trim_start_matches('!'))),
             specification,
@@ -42,7 +42,7 @@ impl Evidence {
             _ => return Ok(()),
         };
         if let Some(path) = rejected {
-            manifest::targets(parent, path)?;
+            workspace_patterns::confine(parent, path)?;
         }
         Ok(())
     }

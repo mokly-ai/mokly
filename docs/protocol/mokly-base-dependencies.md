@@ -59,29 +59,35 @@ environment files are disabled.
 
 The install key length-frames all manifest and lockfile paths and bytes, the
 manager families and actual versions, manager configuration inputs, and the
-selected install roots. Local package paths, archives,
-overrides and workspaces also add the immutable source identity. pnpm and Yarn
-installs always include it because their lockfiles and configurations can
-select local archives, patches, and workspace sources. Recognize
-`file:`, `link:`, Yarn `portal:` and patch paths, pnpm overrides and workspace
-paths, bare relative and absolute paths, home paths and local
-`.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from
-the declaring manifest. Yarn Classic resolves bare local paths from its
-lockfile folder, so every specification in a Classic project normalizes from
-that folder. A nested `file:../x` that leaves that folder therefore falls back.
+selected install roots. Local package paths, archives, overrides and
+workspaces also add the immutable source identity. pnpm and Yarn installs
+always include it because their lockfiles and configurations can select local
+archives, patches, and workspace sources.
+
+Recognize `file:`, `link:`, Yarn `portal:` and patch paths, pnpm overrides and
+workspace paths, bare relative and absolute paths, home paths and local
+`.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from the
+declaring manifest. A workspace pattern falls back when any of its brace
+expansions leaves the repository, with `**` counted as zero folders. Yarn
+Classic resolves bare local paths from its lockfile folder, so every
+specification in a Classic project normalizes from that folder. A nested
+`file:../x` that leaves that folder therefore falls back.
+
 Normalize each lockfile value from the folder that its manager reads it from:
 pnpm importer specifiers and `link:` versions from their importer, other pnpm
 values and all Yarn Classic values from the lockfile folder, and Yarn Berry
-values from the workspace that their locator names. npm `packages` keys, link
-targets, `resolved` values, and v1 `version` values use the lockfile folder.
-A lockfile that does not parse uses the `invalid dependency input` fallback. A pnpm value whose
+values from the workspace that their locator names. A pnpm value whose
 position an alias, a merge key, or a complex key can change normalizes from
-the repository root. Equal text in another position gets no exemption,
-because the manager reads that position from another folder. Yarn patch
-references validate each patch and its source. Their `~/` prefix is relative to the Yarn project, not the home
-directory. Built-in patches need no local path. A local path outside the repository, including a home
-or absolute path, uses a typed fallback reason when an install is needed.
-No install reads it.
+the repository root. Equal text in another position gets no exemption, because
+the manager reads that position from another folder. npm `packages` keys, link
+targets, `resolved` values, and v1 `version` values use the lockfile folder. A
+lockfile that does not parse uses the `invalid dependency input` fallback.
+
+Yarn patch references validate each patch and its source. Their `~/` prefix is
+relative to the Yarn project, not the home directory. Built-in patches need no
+local path. A local path outside the repository, including a home or absolute
+path, uses a typed fallback reason when an install is needed. No install reads
+it.
 
 ## Installation And Bundle Settings
 

@@ -36,6 +36,7 @@ mod manifest;
 mod npm_lockfiles;
 mod pnpm_lockfile;
 mod programs;
+mod workspace_patterns;
 
 #[cfg(windows)]
 mod windows_durability;
@@ -157,6 +158,10 @@ mod manager_classic_tests;
 #[cfg(test)]
 #[path = "_tests_/pnpm_lockfile_tests.rs"]
 mod pnpm_lockfile_tests;
+
+#[cfg(test)]
+#[path = "_tests_/workspace_patterns_tests.rs"]
+mod workspace_patterns_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]

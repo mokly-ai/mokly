@@ -168,68 +168,6 @@ pub(crate) fn target(parent: &str, value: &str) -> Result<String> {
     Ok(parts.join("/"))
 }
 
-pub(crate) fn targets(parent: &str, value: &str) -> Result<Vec<String>> {
-    expand(value)
-        .into_iter()
-        .map(|value| target(parent, &value))
-        .collect()
-}
-
-fn expand(value: &str) -> Vec<String> {
-    let Some(start) = value.find('{') else {
-        return vec![value.to_owned()];
-    };
-    let mut depth = 0usize;
-    let Some(end) = value[start..]
-        .char_indices()
-        .find_map(|(offset, character)| {
-            match character {
-                '{' => depth += 1,
-                '}' => {
-                    depth = depth.saturating_sub(1);
-                    if depth == 0 {
-                        return Some(start + offset);
-                    }
-                }
-                _ => {}
-            }
-            None
-        })
-    else {
-        return vec![value.to_owned()];
-    };
-    let inner = &value[start + 1..end];
-    let mut alternatives = Vec::new();
-    let mut begin = 0usize;
-    let mut nested = 0usize;
-    for (index, character) in inner.char_indices() {
-        match character {
-            '{' => nested += 1,
-            '}' => nested = nested.saturating_sub(1),
-            ',' if nested == 0 => {
-                alternatives.push(&inner[begin..index]);
-                begin = index + 1;
-            }
-            _ => {}
-        }
-    }
-    alternatives.push(&inner[begin..]);
-    if alternatives.len() == 1 {
-        return vec![value.to_owned()];
-    }
-    alternatives
-        .into_iter()
-        .flat_map(|alternative| {
-            expand(&format!(
-                "{}{}{}",
-                &value[..start],
-                alternative,
-                &value[end + 1..]
-            ))
-        })
-        .collect()
-}
-
 #[cfg(test)]
 #[path = "_tests_/manifest_tests.rs"]
 mod manifest_tests;

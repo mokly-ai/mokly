@@ -237,6 +237,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [wrapped package specifications](./src/local_specifications.rs).
   [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and
   package-extension settings.
+  [Workspace patterns](./src/workspace_patterns.rs) confine every brace and
+  `**` expansion in one linear pass.
 - [Lockfile source confinement](./src/manager_lockfiles.rs) checks each
   lockfile value from the folder its manager reads it from.
   [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its
