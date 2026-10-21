@@ -32,8 +32,8 @@ test("the private workspace releases the CLI and viewer with one root version", 
   assert.equal(entry["include-v-in-tag"], true);
   assert.equal(entry["bump-minor-pre-major"], true);
   assert.ok(
-    entry["extra-files"].some(
-      (file) => file.path === "/packages/viewer/package.json",
+    (entry["extra-files"] as Array<{ path: string }>).some(
+      (file: { path: string }) => file.path === "/packages/viewer/package.json",
     ),
   );
 });
