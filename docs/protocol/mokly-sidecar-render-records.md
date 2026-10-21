@@ -13,14 +13,23 @@ Styles keep first-appearance order. Resources are the non-CSS public seeds the
 consumer renderer declares. Instance and slot drafts describe actual usage.
 Warnings belong only to that render.
 
-Each style is `{ css, owners }`. Owners are registered component parent paths.
-An empty owner list uses selector attribution. Inline styles retain the
-component or slot supplier whose output produced them. Registry rules are
-collected under the component whose render injected them, in component and
-whole-screen renders. A rule that a supplier creates for supplied slot content
-keeps the supplier owner. Comparison applies the shared [style
-ownership](./mokly-comparison.md#style-ownership) rules and shared evidence
-reduction to these records.
+A collected style keeps its original `css` bytes and delivery owner grouping.
+Its optional `attribution` list holds rendered CSS with registered component
+owners for comparison. When this list is present, comparison uses it instead
+of the delivery grouping. Without it, the style's owners apply to its whole
+text. Empty comparison owners use selector attribution. Consumer HTML cannot
+create these trusted records.
+
+Styled-components and Emotion registry rules name the component whose render
+used each rule, in component and whole-screen renders. A supplier's slot rules
+keep the supplier owner. A rule used by several owners keeps all those owners,
+even when the styling library emits it only once. Ownership does not depend on
+render order or Suspense scheduling. Collection keeps HTML, class names, CSS
+text, rule order, and style-block grouping identical. Inline styles retain
+the component or slot supplier whose output produced them. Persistent native
+registries keep their existing selector attribution and delivery grouping.
+Comparison uses the shared [style ownership](./mokly-comparison.md#style-ownership)
+and evidence reduction rules.
 
 `markers` is the ordered list of authenticated API placements. Each record has
 `id`, optional `parentId`, and `payload`. The payload is one of

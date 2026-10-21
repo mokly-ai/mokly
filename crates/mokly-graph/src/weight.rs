@@ -4,6 +4,7 @@ use std::mem;
 
 use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
+use mokly_html::fragment::StyleAttribution;
 use mokly_html::links::Reference;
 use mokly_html::tree;
 use mokly_html::tree::{Node, RegionKind};
@@ -97,6 +98,16 @@ fn nodes(values: &Vec<Node>) -> usize {
                     element.style_owners.as_ref().map_or(0, |owners| {
                         owners.capacity() * mem::size_of::<String>()
                             + owners.iter().map(String::capacity).sum::<usize>()
+                    }) + element.style_attribution.as_ref().map_or(0, |records| {
+                        records.capacity() * mem::size_of::<StyleAttribution>()
+                            + records
+                                .iter()
+                                .map(|record| {
+                                    record.css.capacity()
+                                        + record.owners.capacity() * mem::size_of::<String>()
+                                        + record.owners.iter().map(String::capacity).sum::<usize>()
+                                })
+                                .sum::<usize>()
                     }) + element.name.capacity()
                         + element.namespace.capacity()
                         + element.origin.as_ref().map_or(0, String::capacity)

@@ -18,6 +18,7 @@ mod ownership_tests;
 mod postcss_contract_tests;
 mod process_counts;
 mod rebuild_tests;
+mod registry_matrix_tests;
 mod render_tests;
 mod review_validation_tests;
 mod slot_order_tests;

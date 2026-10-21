@@ -8,6 +8,7 @@ use flate2::write::ZlibEncoder;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_graph::cache::Artifact;
 use mokly_html::composition::Composed;
+use mokly_html::fragment::StyleAttribution;
 use mokly_html::links::Reference;
 use mokly_html::parse;
 use mokly_html::tree::{Node, Region, RegionKind};
@@ -59,6 +60,10 @@ fn encoded_views_preserve_bytes_and_all_trusted_annotations() {
         panic!("style")
     };
     element.style_owners = Some(vec!["card".into()]);
+    element.style_attribution = Some(vec![StyleAttribution {
+        css: ".owned{color:red}".into(),
+        owners: vec!["nested".into()],
+    }]);
     element.origin = Some("private invocation".into());
     element.source = Some(SourceLocation {
         path: "card.html".into(),

@@ -171,11 +171,20 @@ test("registry rules are attributed to the component that rendered them", async 
     colorScheme: "light",
   });
   const style = (needle: string) =>
-    result.styles.find((item) => item.css.includes(needle));
+    result.styles
+      .flatMap((sheet) => sheet.attribution ?? [sheet])
+      .find((item) => item.css.includes(needle));
   assert.deepEqual(style(".stack>*+*")?.owners, ["stack"]);
   assert.deepEqual(style(".stack-emotion>*+*")?.owners, ["stack"]);
   assert.deepEqual(style(".layout{")?.owners, ["layout"]);
-  const css = result.styles.map((item) => item.css).join("");
-  assert.ok(css.indexOf(".stack>*+*") < css.indexOf(".layout{"));
-  assert.ok(css.indexOf(".layout{") < css.indexOf(".stack-emotion>*+*"));
+  assert.deepEqual(
+    result.styles.map((item) => item.css),
+    [
+      ".stack-emotion>*+*{margin-top:9px;}",
+      ".stack>*+*{margin-top:8px;}/*!sc*/\n" +
+        'data-styled.g1[id="sc-global-AwISP"]{content:"sc-global-AwISP1,"}/*!sc*/\n' +
+        ".layout{border:1px solid red;}/*!sc*/\n" +
+        'data-styled.g2[id="sc-global-axthp"]{content:"sc-global-axthp1,"}/*!sc*/\n',
+    ],
+  );
 });

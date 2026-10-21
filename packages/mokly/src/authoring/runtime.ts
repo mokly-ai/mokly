@@ -48,30 +48,10 @@ export interface RenderSession {
   logicalLink: (value: string) => string;
 }
 
-export interface StyleOwnerRecord {
-  owner: string;
-  css: string;
-}
-
-/** Render-local style adapters attribute rules to their rendering component. */
+/** Per-render adapter views preserve supplier ownership without changing delivery. */
 export interface StyleCapture {
-  records: StyleOwnerRecord[];
-  styled?: {
-    StyleSheetManager: React.ElementType;
-    sheetFor: (owner: string) => unknown;
-  };
-  emotion?: {
-    CacheProvider: React.ElementType;
-    cacheFor: (owner: string) => unknown;
-  };
-}
-
-export interface OwnedStyleSheet {
-  instance: unknown;
-  getStyleElement: () => readonly {
-    props?: { dangerouslySetInnerHTML?: { __html?: string } };
-  }[];
-  seal: () => void;
+  entryOwner: string | undefined;
+  wrap(owner: string | undefined, node: React.ReactNode): React.ReactNode;
 }
 
 /** A generation owns its React instance and contexts. No attribution is global. */

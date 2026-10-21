@@ -82,6 +82,7 @@ pub(crate) fn annotate_with_plaintext(
                             id.clone(),
                             Metadata {
                                 style_owners: element.style_owners.take(),
+                                style_attribution: element.style_attribution.take(),
                                 origin: element.origin.take(),
                                 navigation: element.navigation.take(),
                                 source: element.source.take(),

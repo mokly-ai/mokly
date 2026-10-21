@@ -123,22 +123,9 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       instanceKey: key,
       seen: new Set(),
     };
-    let owned: ReactNode = React.createElement(Adapter);
     const capture = React.useContext(runtime.contexts.styles);
-    const styleOwner = registered.path;
-    if (capture?.styled) {
-      owned = React.createElement(
-        capture.styled.StyleSheetManager,
-        { sheet: capture.styled.sheetFor(styleOwner) },
-        owned,
-      );
-    }
-    if (capture?.emotion) {
-      owned = React.createElement(capture.emotion.CacheProvider, {
-        value: capture.emotion.cacheFor(styleOwner),
-        children: owned,
-      });
-    }
+    const output = React.createElement(Adapter);
+    const owned = capture?.wrap(registered.path, output) ?? output;
     return React.createElement(
       React.Fragment,
       null,
@@ -194,20 +181,8 @@ function wrapSlot(
         ? session.instances.find(
             (instance) => instance.key === original.instanceKey,
           )?.componentPath
-        : undefined;
-    let supplied = node;
-    if (ownerPath && capture?.styled)
-      supplied = React.createElement(
-        capture.styled.StyleSheetManager,
-        { sheet: capture.styled.sheetFor(ownerPath) },
-        supplied,
-      );
-    if (ownerPath && capture?.emotion)
-      supplied = React.createElement(
-        capture.emotion.CacheProvider,
-        { value: capture.emotion.cacheFor(ownerPath) },
-        supplied,
-      );
+        : capture?.entryOwner;
+    const supplied = capture?.wrap(ownerPath, node) ?? node;
     return React.createElement(
       React.Fragment,
       null,

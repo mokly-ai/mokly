@@ -153,7 +153,7 @@ export async function render(
         generation,
         server.renderToStaticMarkup,
         node,
-        session,
+        kind === "component" ? generation.bindings?.[name]?.path : undefined,
       );
       if (
         kind === "component" &&

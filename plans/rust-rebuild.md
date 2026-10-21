@@ -1713,6 +1713,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         membership protocols state this ownership contract. Evidence:
         `tests/sidecar_styles.test.ts` and
         `crates/mokly-cli/tests/changes_registry_ownership_tests.rs`.
+  - [x] Decision 110 round 6 audit: keep original style text and delivery
+        grouping; store rule ownership as separate trusted metadata through
+        repair and capture. Join owners by adapter identity, including cache
+        hits. Do not pair equal selectors by insertion order. This preserves
+        served bytes for styled-components, Emotion, and the example catalogue.
+        Merge resolutions: `.context/defaults-engine-round6/merge-resolutions.md`.
+        Round 5 byte reference and red test:
+        `.context/defaults-engine-round6/byte-parity-red.log`.
   - [ ] Resolve user item 97 (review 2 finding 3): owned proof state waits
         for the whole catalogue. Decision 73 C made owned instance proof wait
         for catalogue-wide own-page proof. So every view keeps two

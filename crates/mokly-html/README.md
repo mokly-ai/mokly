@@ -68,7 +68,9 @@ Every raw-text tag uses the namespace returned by the parser-context helper.
 An HTML tag grafted into foreign content therefore keeps its text escaped.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
-Sidecar style elements carry typed owner annotations through HTML reparsing.
+Sidecar style elements carry typed per-rule owner annotations through HTML
+reparsing. Assembly retains the original style text and delivery grouping;
+comparison reads the separate metadata.
 Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.

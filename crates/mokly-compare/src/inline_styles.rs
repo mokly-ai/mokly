@@ -46,8 +46,16 @@ fn collect(nodes: &[Node], head: bool, output: &mut String) {
             Node::Element(element)
                 if head
                     && element.name == "style"
-                    && element.style_owners.as_ref().is_none_or(Vec::is_empty) =>
+                    && (element.style_attribution.is_some()
+                        || element.style_owners.as_ref().is_none_or(Vec::is_empty)) =>
             {
+                if let Some(records) = &element.style_attribution {
+                    for record in records.iter().filter(|record| record.owners.is_empty()) {
+                        output.push_str(&record.css);
+                        output.push('\n');
+                    }
+                    continue;
+                }
                 for node in &element.children {
                     if let Node::Text(text) = node {
                         output.push_str(text);

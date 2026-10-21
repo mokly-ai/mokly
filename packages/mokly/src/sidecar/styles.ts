@@ -1,56 +1,21 @@
 import type { ReactNode } from "react";
 
-import type {
-  OwnedStyleSheet,
-  RenderSession,
-  StyleCapture,
-  StyleOwnerRecord,
-} from "../authoring/runtime.js";
+import type { StyleCapture } from "../authoring/runtime.js";
 import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 
 import type { Generation } from "./bundle.js";
+import { emotionOwners } from "./emotion-ownership.js";
+import type { EmotionCache } from "./emotion-ownership.js";
 import { registryStyles } from "./registry-styles.js";
-import { ownedStyles } from "./style-ownership.js";
+import { styledOwners } from "./styled-ownership.js";
+import type { StyledAdapter } from "./styled-ownership.js";
 
-interface StyledInstance {
-  hasNameForId: (id: string, name: string) => boolean;
-  insertRules: (id: string, name: string, rules: string[]) => unknown;
-}
-
-interface StyledSheet extends OwnedStyleSheet {
-  instance: StyledInstance;
-  collectStyles: (node: ReactNode) => ReactNode;
-}
-
-interface StyledAdapter {
-  ServerStyleSheet: new () => StyledSheet;
-  StyleSheetManager: React.ElementType;
-}
-
-interface EmotionSerialized {
-  name: string;
-  styles: string;
-}
-
-interface EmotionCache {
-  insert: (
-    selector: string,
-    serialized: EmotionSerialized,
-    sheet: unknown,
-    shouldCache: boolean,
-  ) => unknown;
-}
-
-interface EmotionAdapter {
-  CacheProvider: React.ElementType;
-}
-
-/** Collect adapter CSS once and attach each rule to its rendering component. */
+/** Delivery uses the original sheet bytes. Comparison uses separate rule owners. */
 export function collectStyles(
   generation: Generation,
   render: (node: ReactNode) => string,
   node: ReactNode,
-  session: RenderSession,
+  entryOwner?: string,
 ): { html: string; styles: CollectedStyle[] } {
   const styles: CollectedStyle[] = [];
   const React = generation.runtime.react;
@@ -71,21 +36,9 @@ export function collectStyles(
   const styled = generation.exports?.styleAdapters?.styled as
     StyledAdapter | undefined;
   const sheet = styled ? new styled.ServerStyleSheet() : undefined;
-  const records: StyleOwnerRecord[] = [];
-  const capture: StyleCapture = { records };
-  const styledSheets = new Map<string, StyledInstance>();
-  if (styled)
-    capture.styled = {
-      StyleSheetManager: styled.StyleSheetManager,
-      sheetFor: (owner) => {
-        let value = styledSheets.get(owner);
-        if (!value) {
-          value = styleSheet(sheet!.instance, owner, records);
-          styledSheets.set(owner, value);
-        }
-        return value;
-      },
-    };
+  const styledCapture = sheet
+    ? styledOwners(sheet.instance, entryOwner)
+    : undefined;
   const native = generation.exports?.styleAdapters
     ?.native as ReturnType<NodeJS.Require>;
   if (native)
@@ -97,100 +50,77 @@ export function collectStyles(
     native?.AppRegistry.getApplication(
       "__mokly_sidecar_styles__",
     ).getStyleElement().props.dangerouslySetInnerHTML.__html ?? "";
-  let rootEmotion: EmotionCache | undefined;
-  let createServer:
-    | ((cache: unknown) => {
-        extractCritical: (value: string) => { css: string };
-      })
-    | undefined;
   try {
+    if (sheet) node = sheet.collectStyles(node);
     const emotion = generation.exports?.styleAdapters?.emotion as
-      EmotionAdapter | undefined;
+      { CacheProvider: React.ElementType } | undefined;
     const createCache = optional("@emotion/cache");
-    const serverModule = optional("@emotion/server/create-instance");
-    const emotionCaches = new Map<string, EmotionCache>();
-    if (emotion && createCache && serverModule) {
-      const create = (createCache.default ?? createCache) as (options: {
-        key: string;
-      }) => EmotionCache;
-      rootEmotion = create({ key: "mokly" });
-      createServer = (serverModule.default ??
-        serverModule) as typeof createServer;
-      capture.emotion = {
-        CacheProvider: emotion.CacheProvider,
-        cacheFor: (owner) => {
-          let value = emotionCaches.get(owner);
-          if (!value) {
-            value = emotionCache(rootEmotion!, owner, records);
-            emotionCaches.set(owner, value);
-          }
-          return value;
-        },
-      };
+    const createServer = optional("@emotion/server/create-instance");
+    let emotionCapture: ReturnType<typeof emotionOwners> | undefined;
+    let emotionServer:
+      | { extractCritical(html: string): { css: string; ids: string[] } }
+      | undefined;
+    if (emotion && createCache && createServer) {
+      const cache: EmotionCache = (createCache.default ?? createCache)({
+        key: "mokly",
+      });
+      // Server extraction enables compat mode before rendering, as in ordinary SSR.
+      emotionServer = (createServer.default ?? createServer)(cache);
+      emotionCapture = emotionOwners(cache);
       node = React.createElement(
         emotion.CacheProvider,
-        { value: rootEmotion },
+        { value: emotionCapture.forOwner(entryOwner) },
         node,
       );
     }
-    if (sheet) node = sheet.collectStyles(node);
+    const capture: StyleCapture = {
+      entryOwner,
+      wrap(owner, child) {
+        if (styled && styledCapture)
+          child = React.createElement(
+            styled.StyleSheetManager,
+            { sheet: styledCapture.forOwner(owner) },
+            child,
+          );
+        if (emotion && emotionCapture)
+          child = React.createElement(
+            emotion.CacheProvider,
+            { value: emotionCapture.forOwner(owner) },
+            child,
+          );
+        return child;
+      },
+    };
     node = React.createElement(
       generation.runtime.contexts.styles.Provider,
       { value: capture },
       node,
     );
     const html = render(node);
-    if (rootEmotion && createServer) {
-      const extracted = createServer(rootEmotion).extractCritical(html);
+    if (emotionServer && emotionCapture) {
+      const extracted = emotionServer.extractCritical(html);
       if (extracted.css)
-        styles.push(...ownedStyles(extracted.css, html, session, records));
+        styles.push({
+          css: extracted.css,
+          owners: [],
+          attribution: emotionCapture.records(extracted.ids),
+        });
     }
-    if (sheet) addSheet(styles, sheet, html, session, records);
+    if (sheet) {
+      for (const element of sheet.getStyleElement()) {
+        const css = element.props.dangerouslySetInnerHTML?.__html;
+        if (css)
+          styles.push({
+            css,
+            owners: [],
+            attribution: styledCapture!.records(),
+          });
+      }
+    }
     const registry = registryStyles(nativeSheet(), html);
     if (registry) styles.push({ css: registry, owners: [] });
     return { html, styles };
   } finally {
     sheet?.seal();
   }
-}
-
-function addSheet(
-  styles: CollectedStyle[],
-  sheet: StyledSheet,
-  html: string,
-  session: RenderSession,
-  records: readonly StyleOwnerRecord[],
-) {
-  for (const element of sheet.getStyleElement()) {
-    const text = element.props?.dangerouslySetInnerHTML?.__html;
-    if (text) styles.push(...ownedStyles(text, html, session, records, false));
-  }
-}
-
-function styleSheet(
-  root: StyledInstance,
-  owner: string,
-  records: StyleOwnerRecord[],
-): StyledInstance {
-  const proxy = Object.create(root) as StyledInstance;
-  proxy.hasNameForId = () => false;
-  proxy.insertRules = (id, name, rules) => {
-    records.push({ owner, css: rules.join("\n") });
-    if (!root.hasNameForId(id, name)) return root.insertRules(id, name, rules);
-    return undefined;
-  };
-  return proxy;
-}
-
-function emotionCache(
-  root: EmotionCache,
-  owner: string,
-  records: StyleOwnerRecord[],
-): EmotionCache {
-  const proxy = Object.create(root) as EmotionCache;
-  proxy.insert = (selector, serialized, sheet, shouldCache) => {
-    records.push({ owner, css: serialized.styles });
-    return root.insert(selector, serialized, sheet, shouldCache);
-  };
-  return proxy;
 }

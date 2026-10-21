@@ -142,6 +142,9 @@ check call order and outputs without elapsed-time assertions. The JavaScript
 rebuild test retains both generations on one pool. It renders an uncached old
 view after the edit and counts real process starts and hello calls.
 
+The fragment adapter transfers typed registry rule ownership to HTML assembly
+without splitting the delivered CSS text or changing its style-block grouping.
+
 ### Key Code
 
 - [Runtime factories](./src/runtime.rs) and [base inputs](./src/side.rs).

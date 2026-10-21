@@ -174,7 +174,16 @@ fn visit(
     while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) if element.name == "style" => {
-                if let Some(owners) = &element.style_owners {
+                if let Some(records) = &element.style_attribution {
+                    for record in records {
+                        for owner in &record.owners {
+                            output
+                                .entry(mapped(owner, paths))
+                                .or_default()
+                                .insert(record.css.clone());
+                        }
+                    }
+                } else if let Some(owners) = &element.style_owners {
                     let css: String = element
                         .children
                         .iter()

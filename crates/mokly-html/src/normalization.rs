@@ -1,5 +1,7 @@
 //! Reparse composed bytes and restore only sibling regions the browser can inspect.
 
+use crate::fragment::StyleAttribution;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
@@ -20,6 +22,7 @@ pub(crate) const PREFIX: &str = "mokly-normalize:";
 
 pub(crate) struct Metadata {
     pub(crate) style_owners: Option<Vec<String>>,
+    pub(crate) style_attribution: Option<Vec<StyleAttribution>>,
     pub(crate) origin: Option<String>,
     pub(crate) navigation: Option<Reference>,
     pub(crate) source: Option<SourceLocation>,
@@ -178,6 +181,7 @@ pub(crate) fn metadata(element: &mut Element, repair: &Repair) {
         && let Some(metadata) = repair.elements.get(&id)
     {
         element.style_owners = metadata.style_owners.clone();
+        element.style_attribution = metadata.style_attribution.clone();
         element.origin = metadata.origin.clone();
         element.navigation = metadata.navigation.clone();
         element.source = metadata.source.clone();

@@ -1,5 +1,8 @@
 //! Iterative tree operations preserve the trusted style annotations used by comparison.
 
+use mokly_model::axes::ColorScheme;
+
+use crate::fragment::{OwnedStyle, StyleAttribution};
 use crate::normalization::{Repair, metadata};
 use crate::normalization_annotate;
 use crate::tree::{Node, element, walk};
@@ -11,6 +14,10 @@ fn style() -> Node {
         panic!()
     };
     style.style_owners = Some(vec!["card".into()]);
+    style.style_attribution = Some(vec![StyleAttribution {
+        css: ".owned{color:red}".into(),
+        owners: vec!["nested".into()],
+    }]);
     node
 }
 
@@ -53,4 +60,36 @@ fn iterative_annotation_preserves_owners_through_browser_repair() {
         })
         .collect::<Vec<_>>();
     assert_eq!(owners, [vec!["card".to_owned()]]);
+    let attribution = walk(&repaired)
+        .find_map(|node| match node {
+            Node::Element(element) => element.style_attribution.clone(),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(attribution[0].owners, ["nested"]);
+    assert_eq!(attribution[0].css, ".owned{color:red}");
+}
+
+#[test]
+fn registry_rule_owners_do_not_change_delivered_style_groups() {
+    let sheets = vec![OwnedStyle {
+        css: ".child{color:red}/*!sc*/\n.layout{border:0}".into(),
+        owners: vec!["layout".into()],
+        attribution: None,
+    }];
+    let expected = crate::assembly::document("Layout", ColorScheme::Light, &sheets, &[], vec![]);
+    let mut attributed = sheets;
+    attributed[0].attribution = Some(vec![StyleAttribution {
+        css: ".child{color:red}".into(),
+        owners: vec!["child".into()],
+    }]);
+    let actual = crate::assembly::document("Layout", ColorScheme::Light, &attributed, &[], vec![]);
+    assert_eq!(serialize::html(&actual), serialize::html(&expected));
+    let metadata = walk(&actual)
+        .find_map(|node| match node {
+            Node::Element(element) => element.style_attribution.as_ref(),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(metadata[0].owners, ["child"]);
 }

@@ -226,6 +226,9 @@ isolated Git repositories, OS locks, and a local `file:` npm package. The
 fixture enables npm's offline mode and checks that lifecycle scripts did not
 run. It needs no registry.
 
+Registry rule ownership stays separate from delivery style groups. Both the
+private capture codec and the head comparison retain these rule records.
+
 ### Key Code
 
 - [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).

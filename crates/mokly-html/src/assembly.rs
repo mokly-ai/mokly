@@ -1,9 +1,11 @@
 //! Package-owned screen and component document wrappers.
 
+use std::collections::BTreeSet;
+
 use mokly_model::axes::ColorScheme;
 use mokly_model::canonical::compare_utf16;
 
-use crate::fragment::OwnedStyle;
+use crate::fragment::{OwnedStyle, StyleAttribution};
 use crate::tree::{Node, element};
 
 /// Assemble a deterministic screen or component document.
@@ -60,25 +62,33 @@ pub(crate) fn append_styles(nodes: &mut [Node], styles: &[OwnedStyle]) {
 }
 
 fn collected(styles: &[OwnedStyle]) -> Vec<Node> {
-    let mut groups: Vec<(Vec<String>, Vec<String>)> = Vec::new();
+    let mut groups: Vec<(Vec<String>, Vec<String>, BTreeSet<StyleAttribution>)> = Vec::new();
     for style in styles {
         let mut owners = style.owners.clone();
         owners.sort_by(|a, b| compare_utf16(a, b));
         owners.dedup();
-        let index = match groups.iter().position(|(known, _)| known == &owners) {
+        let index = match groups.iter().position(|(known, _, _)| known == &owners) {
             Some(index) => index,
             None => {
-                groups.push((owners, Vec::new()));
+                groups.push((owners, Vec::new(), BTreeSet::new()));
                 groups.len() - 1
             }
         };
+        if let Some(records) = &style.attribution {
+            groups[index].2.extend(records.iter().cloned());
+        } else {
+            groups[index].2.insert(StyleAttribution {
+                css: style.css.clone(),
+                owners: style.owners.clone(),
+            });
+        }
         if !groups[index].1.contains(&style.css) {
             groups[index].1.push(style.css.clone());
         }
     }
     groups
         .into_iter()
-        .map(|(owners, rules)| {
+        .map(|(owners, rules, attribution)| {
             let owner_names = owners.join(" ");
             let attributes = if owners.is_empty() {
                 Vec::new()
@@ -88,6 +98,7 @@ fn collected(styles: &[OwnedStyle]) -> Vec<Node> {
             let mut style = element("style", &attributes, vec![Node::Text(rules.join("\n"))]);
             if let Node::Element(element) = &mut style {
                 element.style_owners = Some(owners);
+                element.style_attribution = Some(attribution.into_iter().collect());
             }
             style
         })
