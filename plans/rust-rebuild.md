@@ -3358,6 +3358,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         threshold or a target list, Small; B, state that the guard covers
         only ignored IDs, Small (estimate). Recommended: A. A is a stricter
         validation, so it needs the user.
+    - User decision 94 (2026-10-21): A. The audit guard also fails on a
+      severity threshold or a target list. Work: the CI gates workspace on
+      `rebuild/audit-guard-filters`.
   - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
     a healthy Node 22 file-delivery run before report download. Separate branch.
     The hub must decide the Testbox guard before any timeout change.
