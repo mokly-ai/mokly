@@ -2828,6 +2828,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
+  - Open watch review finding 1: `docs/protocol/mokly-timings.md` still states
+    a 60-second browser allowance without the full-size watch exception.
+    Severity Low, effort Small. Options A, add the exception beside the
+    default, or B, add a scenario timeout table. Recommend A. User decision
+    required. Separate documentation follow-up.
   - [x] F16: repair hosted native verification startup. Use portable terminal
         pointers, resolve Windows Node shims at both xtask process boundaries,
         and bypass the checkout cache on non-Linux native runners. Replace
