@@ -4458,6 +4458,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     only screens under "Affected screens", while the viewer lists screens and
     components under "Affected screens and components". Separate branch.
     User item 104 covers it.
+  - [ ] Resolve user item 144 (103 C review finding 2): Affected link tests
+        do not check their axes. `tests/browser/branch_point_affected.ts`
+        lines 126 to 193 take the expected viewport from the link itself, and
+        `packages/viewer/tests/affected_comparison.test.ts` lines 134 to 168
+        do not read the Affected link URLs. Severity Low, test, effort
+        Medium. Options: A, add the expected viewport and scheme to the
+        fixture, and assert the query and the Details text, Small
+        (estimate); B, a shared helper with independent destination, axis,
+        comparison, and Details expectations, Medium. Recommended: B.
   - [x] Hub review of `rebuild/defaults-viewer-82b`, fixed on 2026-10-21 in
         `rebuild/defaults-viewer-82b-fix1`: finding 2, a Serve update
         reopened Side by side (`5c761b5d`, B); finding 3, the affected
