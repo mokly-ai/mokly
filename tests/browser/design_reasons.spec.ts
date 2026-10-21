@@ -110,6 +110,7 @@ test("every Browse design of a changed, added, or removed entry lists its reason
   expect(response.ok()).toBe(true);
   const index = (await response.json()) as { screens: { path: string }[] };
   const marked: string[] = [];
+  const seen = new Set<string>();
   for (const { path: route } of index.screens) {
     if (!BROWSE_DESIGN.test(route)) continue;
     const design = await page.evaluate(
@@ -128,11 +129,26 @@ test("every Browse design of a changed, added, or removed entry lists its reason
       },
       await designSource(request, route),
     );
-    if (EXCEPTED_KINDS.has(design.kind)) continue;
+    if (design.changed) seen.add("changed row");
+    if (design.removed) seen.add("removed row");
+    if (design.badge === "added") seen.add("added badge");
+    if (EXCEPTED_KINDS.has(design.kind)) {
+      seen.add(design.kind);
+      continue;
+    }
     if (design.changed || design.removed || CHANGE_BADGES.has(design.badge))
       marked.push(route);
   }
-  expect(marked.length).toBeGreaterThan(0);
+  // Each mark and each excepted kind occurs, so a renamed class or a lost
+  // marker cannot narrow the check unseen.
+  expect([...seen].sort()).toEqual([
+    "added badge",
+    "changed row",
+    "document",
+    "page",
+    "removed row",
+    "use-case",
+  ]);
   expect(marked.filter((route) => !Object.hasOwn(REASONS, route))).toEqual([]);
 });
 
