@@ -4435,16 +4435,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Recommended: C. If the user declines C, apply A.
     - User decision 103 (2026-10-21): C, which includes 83 B. Work:
       `rebuild/viewer-103c`.
-  - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's
-        Details deny its comparison. For an entry that Changes lists only as
-        a move, the Details end with a terminal line that says Changes has no
-        independent entry for it, so they deny the comparison that the entry
-        offers. Severity Low, effort Large. Options: A, keep the
-        terminal line, Small (estimate); B, for an entry that Changes lists
-        only as a move, show the shared-component sentence in a wording
-        without "no independent entry", design first, Large; C, leave out the
-        terminal line when a shown view uses a changed component, design
-        first, Large (estimate). Recommended: B.
   - [ ] Resolve user item 137 (viewer-103c decision 2): links to added
         consumers ask for a comparison. `projection_affected.rs:105` sets
         `comparisonEligible` from the entry kind only, so an Affected link to
@@ -4691,6 +4681,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
+
+- [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
+      deny its comparison. For an entry that Changes lists only as a move,
+      the Details end with a terminal line that says Changes has no
+      independent entry for it, so they deny the comparison that the entry
+      offers. Severity Low, effort Large. Options: A, keep the terminal
+      line, Small (estimate); B, for an entry that Changes lists only as a
+      move, show the shared-component sentence in a wording without "no
+      independent entry in Changes", which the 84 B rewording can supply,
+      and draw the design first, Large; C, leave out the terminal line when
+      a shown view uses a changed component, design first, Large
+      (estimate). Recommended: B.
+  - User decision 136 (2026-10-21): B, as work after the merge.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.
