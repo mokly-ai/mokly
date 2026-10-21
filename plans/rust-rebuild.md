@@ -2672,6 +2672,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tickets, Small; B, A and also keep the descriptor's object until the
         descriptor closes, Small (estimate); C, an operation-count test for
         the probes of each read at two sizes, Medium. Recommended: A.
+    - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
+      workspace.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
