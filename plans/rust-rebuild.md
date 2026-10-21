@@ -548,6 +548,13 @@ usage holds an instance of a changed component that the entry detail's
 so a component's markup change left its affected consumer's views reading "No
 changes to this screen" beside a band that offers their comparison.
 
+**User decision 88 (2026-10-21): A.** The Props tab shows its fields only after
+the routed entry's detail arrives, because only the detail carries their
+declared order. Until then it shows "Loading props…" and no fields, so the
+fields never move from the index's name order to the declared order. A failed
+detail shows "Props couldn’t be loaded." with Try again, as Usage does. The
+hub decision log holds the rejected options.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -656,8 +663,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
-82;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decisions
+82 and 88;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -2107,6 +2114,28 @@ Tags: ui
       `.context/defaults-viewer-82b/shards/`.
 - [x] Pass the complete gate on the final commit, push the branch, and report.
       Evidence: `.context/defaults-viewer-82b/gate.log`.
+
+## Milestone 10.8: Props pending state in the designs
+
+Tags: mockup
+
+The numbers follow Milestones 10.5 to 10.7 of decisions 84 B and 119 B, which
+other branches add.
+
+- [ ] User decision 88 A: draw the Props tab while the entry's detail loads,
+      "Loading props…" with no fields, and after its load failed, "Props
+      couldn’t be loaded." with Try again, in the Loading and recovery gallery.
+      Add both strings to the settled controls copy.
+- [ ] Run the mockup check and smoke-test the new pages through Serve.
+
+## Milestone 10.9: Props pending state in the viewer
+
+Tags: ui
+
+- [ ] User decision 88 A: show the Props fields only after the routed entry's
+      detail arrives, with the drawn pending and failed states. The browser
+      test fails first.
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
 
