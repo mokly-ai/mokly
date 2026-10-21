@@ -3500,12 +3500,15 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     delete the alias and list `Manifest`, `ManifestV10`, and
     `HistoricalManifest` with the names that `@mokly/viewer/data` stops
     exporting. Option A keeps the alias and corrects only the release note.
-  - Outside the scope of the hub review of `rebuild/defaults-viewer`, found
-    by its fix round: eleven shell and viewer modules, such as
-    `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a catalogue
-    without published records, which no delivery builds. Making
-    `publicModel` required in the shell catalogue type would show which are
-    dead. Separate branch.
+  - [x] Outside the scope of the hub review of `rebuild/defaults-viewer`,
+        found by its fix round: eleven shell and viewer modules, such as
+        `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a
+        catalogue without published records, which no delivery builds. Making
+        `publicModel` required in the shell catalogue type would show which
+        are dead. Separate branch. Done on 2026-10-21:
+        `rebuild/viewer-followups-v1` deleted the fallbacks (`3525d264`), and
+        `rebuild/viewer-followups-v2` made `publicModel` required
+        (`8f3db91b`).
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.
