@@ -2623,6 +2623,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     elements instead of matching tag signatures. Effort Large. Covers F19
     review finding 2, option B. Previous example: the existing source-location
     queues. The scoped wrapper repair applies option A.
+  - [x] F21: restore empty wrapper source slots during plaintext repair,
+        follow HTML parser markup contexts for noscript and foreign style or title
+        content, validate saved variant slot fragments, name reserved navigation
+        warnings as rejections, and reject raw mokly elements in renderPage output.
+        Evidence: `.context/f21-item2-slot-red.log`,
+        `.context/f21-item3-warning-red.log`, and
+        `.context/f21-item4-sidecar-green-final.log`.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
