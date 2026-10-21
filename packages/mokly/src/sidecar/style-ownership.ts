@@ -1,9 +1,9 @@
-import postcss, { type ChildNode, type Root } from "postcss";
 import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
+import postcss, { type ChildNode, type Root } from "postcss";
 
-import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 import type { RenderSession, StyleOwnerRecord } from "../authoring/runtime.js";
+import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 
 type HtmlNode = DefaultTreeAdapterMap["node"];
 

@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
-import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 import type {
   OwnedStyleSheet,
   RenderSession,
   StyleCapture,
   StyleOwnerRecord,
 } from "../authoring/runtime.js";
+import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
 
 import type { Generation } from "./bundle.js";
 import { registryStyles } from "./registry-styles.js";
