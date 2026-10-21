@@ -2162,9 +2162,11 @@ Tags: ui
 The design copy keeps its sentences, so decision 119 B needs no mockup
 milestone.
 
-- [ ] User decision 119 B: declare each Details kind's nouns once in the
+- [x] User decision 119 B: declare each Details kind's nouns once in the
       shared entry wording, and build every sentence of the kind from them.
-      The visible copy stays the same. The noun test fails first.
+      The visible copy stays the same. The noun test fails first. Evidence:
+      `.context/viewer-119b/` (red and green logs, the copy before and after,
+      and the mutation check).
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
@@ -3581,13 +3583,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         "replaced" stage that shows the `onError` copy without Try again,
         which needs new copy, a mockup, and spec rows, Large. Recommended: B,
         because it shows no action that cannot work.
-  - [ ] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
+  - [x] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
         each entry kind's sentences from one word.
         `packages/viewer/src/shell/entry_wording.ts` writes the sentences of
         each kind separately, so one kind used two words for one thing.
         Severity Medium, effort Medium. Code-structure findings wait for the
         user. Options: A, keep the current separate sentences. The hub
-        decision log holds the other options and the recommendation.
+        decision log holds the other options and the recommendation. The
+        user chose B on 2026-10-21, and Milestone 10.7 applies it.
   - [ ] Resolve user item 90 (F12 review finding 2): a failed step detail
         still flashes the error during a deployment reload. On a use-case
         route, the use case detail starts the page load, but a 404 for a
