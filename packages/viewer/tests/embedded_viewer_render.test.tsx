@@ -8,7 +8,11 @@ import { ComparisonFailure, reviewReload } from "../src/shell/diffs.js";
 import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
-import { rawIndexFixture } from "./catalogue_v7_fixture.js";
+import {
+  detailPairs,
+  rawDetailFixtures,
+  rawIndexFixture,
+} from "./catalogue_v7_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -153,6 +157,7 @@ test("independent embedded viewers keep IDs and references root-local", () => {
 
 test("distinct identifier prefixes keep roots apart; published props have no fields", () => {
   const index = rawIndexFixture();
+  const details = rawDetailFixtures();
   const component = index.components[0]!;
   if (component.variantOf !== undefined)
     throw new Error("Missing component parent");
@@ -169,6 +174,9 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
       },
     };
     entry.props = { ...entry.props, "mb-main": entry.props.label! };
+    // Its detail declares the added control too, so the shell holds it.
+    const detail = details.current[entry.path]!;
+    detail.controlOrder = [...detail.controlOrder!, "mb-main"];
   }
   const markup = (identifierPrefix: string) =>
     embeddedMarkup({
@@ -179,10 +187,24 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
   const first = markup("x");
   const firstIds = htmlIds(first);
   const secondIds = htmlIds(markup("x-mb-prop-action"));
+  // Until the routed detail arrives, the viewer's Props show no fields.
+  assert.match(
+    first.slice(
+      first.indexOf('data-inspector-panel="props"'),
+      first.indexOf('data-inspector-panel="usage"'),
+    ),
+    /<p role="status">Loading props…<\/p>/,
+  );
 
-  const props = first.slice(
-    first.indexOf('data-inspector-panel="props"'),
-    first.indexOf('data-inspector-panel="usage"'),
+  // Props wait for the routed detail, so a render that holds it shows them.
+  const held = heldEmbeddedMarkup({
+    index,
+    details: detailPairs(undefined, details),
+    selection: { screenPath: component.path },
+  });
+  const props = held.slice(
+    held.indexOf('data-inspector-panel="props"'),
+    held.indexOf('data-inspector-panel="usage"'),
   );
   assert.match(
     props,
