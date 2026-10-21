@@ -763,16 +763,20 @@ merges; the freeze applies to it from 2026-10-12.
   - [x] viewer;
   - [x] design mockups;
   - [x] CI, verification, and release.
-- [ ] Confirm the landable pull requests merged: #135, #182, and the test and
+- [x] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
+      Ticked on 2026-10-21 in plan bookkeeping pass 3: all four children are
+      done.
   - [x] #135: closed unmerged by the user's decision on 2026-10-20, because
         #168 replaced its behaviour.
   - [x] #182: merged on 2026-10-20 as `b19d4433`. It released
         `@mokly/mokly` 0.15.0 and `@mokly/viewer` 0.6.0.
   - [x] #198: merged on 2026-10-20 as `d9f421d1` by the user's decision. CI
         also runs on a manual dispatch for any branch.
-  - [ ] The test and CI housekeeping pull requests: the user decides each
+  - [x] The test and CI housekeeping pull requests: the user decides each
         open pull request.
+        Ticked on 2026-10-21 in plan bookkeeping pass 3: the hub closed #174
+        and #197 on 2026-10-21, so no housekeeping pull request is open.
     - [x] User decision 63 (2026-10-20): A. On 2026-10-20 the hub closed
           #136, #153, #158, #186, #187, #188, #189, #190, #192, #194, and
           #196 unmerged, each with a comment that names its replacement.
@@ -786,7 +790,7 @@ merges; the freeze applies to it from 2026-10-12.
           Recommended: B.
       - User decision 65 (2026-10-21): A. The hub closed #197 on 2026-10-21,
         and a post-merge follow-up redoes its updates.
-    - [ ] Resolve user item 66 (triage decision 5): the test gates of #153
+    - [x] Resolve user item 66 (triage decision 5): the test gates of #153
           and #174. #153 adds an empty-test assertion guard, and #174 widens
           the clock lint. Severity Low, effort Small. Options: A, adopt
           neither, and record both as post-merge follow-ups, Small
@@ -794,6 +798,9 @@ merges; the freeze applies to it from 2026-10-12.
           and three more clock forms, and defer the assertion guard, Small;
           C, port both, Large (estimate). Recommended: B. A stricter lint
           needs the user's approval.
+      - User decision 66 (2026-10-21): A. The hub closed #174 on 2026-10-21,
+        and two post-merge follow-ups hold the clock lint of #174 and the
+        empty-test assertion guard of #153.
 - [x] Tag the last TypeScript backend commit on `main` as `ts-backend-final`:
       `b19d4433`, the 0.15.0 release, tagged on 2026-10-20.
 - [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
@@ -4599,6 +4606,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 - [ ] Redo the in-range dependency updates and the Rust 1.99.0 move of the
       closed #197 after the rebuild merges. User decision 65 A, 2026-10-21.
+
+- [ ] Port the wider clock lint of the closed #174: the timing guard for
+      `packages/viewer/tests` and three more clock forms. User decision 66 A,
+      2026-10-21.
+
+- [ ] Port the empty-test assertion guard of the closed #153, which fails
+      a unit test that makes no assertion. User decision 66 A, 2026-10-21.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.
