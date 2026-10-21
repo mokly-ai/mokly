@@ -110,3 +110,22 @@ fn raw_text_that_looks_like_a_wrapper_is_not_filtered() {
         .collect();
     assert_eq!(text, literal);
 }
+
+#[test]
+fn markup_contexts_keep_wrappers_visible_to_catalogue_checks() {
+    for source in [
+        "<noscript><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></noscript>",
+        "<svg><style><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></style></svg>",
+        "<math><title><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></title></math>",
+    ] {
+        let wrappers: Vec<_> = html_tokens::parse(source)
+            .filter_map(|parsed| match parsed.token {
+                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                    Some(parsed.ignored_attributes)
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(wrappers, vec![vec!["typo".to_owned()]], "{source}");
+    }
+}
