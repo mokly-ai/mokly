@@ -64,6 +64,17 @@ function RowIcon({ node }: { node: NavigationRow }) {
   return <ScreenIcon />;
 }
 
+/**
+ * The entry kind that the product's row names in `data-entry-kind`: a flow is
+ * a use case, and a variant takes its parent's kind. A folder has none.
+ */
+function entryKind(node: NavigationRow): string | undefined {
+  if (node.kind === "folder") return undefined;
+  if (node.kind === "flow") return "use-case";
+  if (node.kind === "variant") return node.variantParentKind ?? "screen";
+  return node.kind;
+}
+
 /** The icon wrapper's modifier, which styles and tests target by row kind. */
 function iconClassName(kind: NavigationRow["kind"]): string {
   if (kind === "flow") return "mbk-nav-ico flow";
@@ -155,6 +166,7 @@ export function NavRow({
   );
   const rowProps = {
     className,
+    "data-entry-kind": entryKind(node),
     style: navRowStyle(node.depth),
     // A parent row also names the current page when its own entry is shown.
     "aria-current": isActive

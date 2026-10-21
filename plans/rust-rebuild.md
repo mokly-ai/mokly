@@ -587,6 +587,15 @@ rejected option B kept the sorted fallback and stated it in the controls
 contract. The rejected option C carried `controlOrder` in the catalogue index,
 which makes index v8.
 
+**User decision 71 (2026-10-21): B.** The design reasons spec also finds every
+built Browse design whose selected row shows Changed or "· Removed", or whose
+title row shows an Added, Changed, or Removed badge, and requires each one in
+its reasons list. An added entry's row carries no mark in the designs, so the
+title row's badge finds it. Pages, documents, and use cases need no entry,
+which the design row's `data-entry-kind` tells. The rejected option A kept the
+hand-written list alone, so a new design of a changed screen could leave out
+its reasons.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -2150,7 +2159,7 @@ and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
 The F12 follow-ups, the merges of F10 and F11, and the deployment switch
 fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
 
-- [ ] Resolve user item 71 (M10 D1 round 3 decision 1): check every changed
+- [x] Resolve user item 71 (M10 D1 round 3 decision 1): check every changed
       design automatically. `tests/browser/design_reasons.spec.ts` checks a
       hand-written list of 29 Browse designs, so a new design of a changed
       screen can leave out its reasons and no test fails. Severity Low,
@@ -2303,6 +2312,20 @@ Tags: ui
       detail arrives, with the drawn pending and failed states. The browser
       test fails first. Evidence: `.context/viewer-88a/` (red and green
       logs).
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
+
+## Milestone 10.10: Changed designs list their reasons
+
+Tags: mockup
+
+The number follows Milestones 10.5 to 10.9 of decisions 84 B, 119 B, and 88 A,
+which other branches add.
+
+- [x] User decision 71 B: mark each design row's entry kind, as the product's
+      row does, and make `tests/browser/design_reasons.spec.ts` require a
+      reasons entry for every built Browse design of a changed, added, or
+      removed entry. A temporary unlisted design fails the check first.
+      Evidence: `.context/design-reasons-auto/` (red and green logs).
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
