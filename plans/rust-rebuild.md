@@ -3091,7 +3091,7 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         is not selected because the scoped warning producer completes 6 C.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
-  - [x] Resolve user item 135. User decision 135 B (2026-10-21) keeps base
+  - [x] User decision 135 (2026-10-21): B. Resolve user item 135. Keep base
         lifecycle scripts disabled by default and adds `review.baseInstallScripts`
         plus `--base-install-scripts` and `--no-base-install-scripts` overrides.
         The setting comes from the working tree only. Scripts-on cache keys add
