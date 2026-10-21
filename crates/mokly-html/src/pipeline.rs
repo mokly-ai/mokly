@@ -132,10 +132,10 @@ impl<'a> Callback<Infallible, usize> for CallbackSink<'a> {
             CallbackEvent::String { value } => {
                 let text = String::from_utf8_lossy(value);
                 let mut parts = text.split('\0');
-                if let Some(first) = parts.next() {
-                    if !first.is_empty() {
-                        let _ = self.send(Token::CharacterTokens(first.into()));
-                    }
+                if let Some(first) = parts.next()
+                    && !first.is_empty()
+                {
+                    let _ = self.send(Token::CharacterTokens(first.into()));
                 }
                 for part in parts {
                     let _ = self.send(Token::NullCharacterToken);
@@ -230,11 +230,9 @@ pub(crate) fn document(source: &str, path: &str) -> Vec<Node> {
     );
     let emitter = PipelineEmitter::new(&mut builder, source, path);
     let tokenizer = Tokenizer::new_with_emitter(source, emitter);
-    for result in tokenizer {
-        match result {
-            Ok(value) => match value {},
-            Err(error) => match error {},
-        }
+    match tokenizer.finish() {
+        Ok(()) => {}
+        Err(error) => match error {},
     }
     builder.sink.output()
 }
