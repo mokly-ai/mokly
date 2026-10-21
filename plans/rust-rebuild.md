@@ -3380,6 +3380,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         workflow after hosted import and process checks. Updated evidence,
         the correction to the initial ineffective WASI flag probe, and merge
         audits: `.context/native-ci-fixes-5/resume/`.
+  - [ ] Native CI round 6: merge the batch-25 rebuild tip once, then prove
+        hosted macOS and Windows CI on the task branch. Classify and fix the
+        remaining Windows dependency, process, render, watch, and snapshot
+        failures without weakening their contracts. Evidence:
+        `.context/native-ci-fixes-6/`.
   - Outside round 5: `mokly-compare/tests/dependencies_tests.rs` and
     `package_roots_tests.rs` returned Fallback instead of Installed on Windows
     before the package-manager merge. Confirm on the merged tree. Separate branch.
