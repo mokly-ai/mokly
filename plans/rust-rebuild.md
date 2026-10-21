@@ -3816,6 +3816,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       the embedded host still gets each failure's `onError` at once. A unit
       test, a controller test, and a browser test that answers the removed
       step first cover it. Evidence: `.context/viewer-139a-140b/`.
+  - [ ] Resolve user item 143 (89 B and 90 C review finding 2): a
+        deployment spec never delivers its step failure. On
+        `rebuild/viewer-90c`, `tests/browser/static_deployment_flow.spec.ts`
+        lines 130 to 182 pass on the abort alone: the replacement aborts the
+        step's load before its 404 can arrive. Severity Low, test, effort
+        Small. Options: A, rename the test, reword its comment and
+        `tests/browser/README.md` lines 82 to 88, and record and assert the
+        abort, Small. Recommended: A.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
