@@ -150,3 +150,18 @@ export const excludedOnlyScreen = defineScreen({
     "A changed stylesheet with no changed styles that apply never adds a Changes row, a comparison or a stage heading. Details still name it, so a reader can see that the change was examined, and the last line confirms that the screen did not change.",
   title: "Excluded styles only",
 });
+
+/** Temporary: a changed design that the reasons list leaves out. */
+export const unlistedScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The changed Welcome of Excluded styles, which the reasons list leaves out.",
+  ...artboards({
+    desktop: <ExcludedStyles viewport="desktop" />,
+    mobile: <ExcludedStyles viewport="mobile" />,
+  }),
+  slug: "unlisted",
+  rationale: "A temporary design that shows the reasons check fail.",
+  title: "Unlisted changed screen",
+});
