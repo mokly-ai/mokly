@@ -3485,6 +3485,19 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.
+  - Open from the M14 gap sweep close-out review, report under
+    `.context/m14-gap-sweep/review.md`:
+  - 34: the gap sweep tick leaves audit finding 7 untracked in this plan.
+    Severity Low, effort Small. Recommended: A, add one open line that names
+    finding 7 and the branch that it waits for. The hub owns the audit.
+  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+    that setup always adds the unrelated rule to the first shared
+    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+    close-out review. Separate branch.
+  - `plans/rust-rebuild.md:2267`: the open PostCSS TODO still names "supply
+    immutable generation inputs" as a design path, but decision 56 A and the
+    PostCSS page reject enforced immutable inputs. Found by the gap sweep
+    close-out review. Separate branch.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
