@@ -3,6 +3,11 @@
 use std::collections::BTreeMap;
 use std::thread;
 
+use mokly_css::attribution;
+use mokly_css::match_tree::{Containment, MatchElement, MatchTree};
+use mokly_css::rule_collection::collect as collect_css;
+use mokly_css::rule_matching::match_document;
+use mokly_css::rules::diff;
 use mokly_html::tree::{self, Node, Region, RegionKind};
 
 use super::collect;
@@ -42,4 +47,58 @@ fn deep_styles_map_owners_deduplicate_rules_and_skip_inert_subtrees() {
     })
     .join()
     .unwrap();
+}
+
+#[test]
+fn move_admission_keeps_a_declared_owner_match_inside_a_nested_region() {
+    let regions = vec![
+        Containment {
+            path: "child".into(),
+            root: false,
+            instance: None,
+        },
+        Containment {
+            path: "parent".into(),
+            root: true,
+            instance: None,
+        },
+    ]
+    .into_iter()
+    .collect();
+    let tree = MatchTree {
+        elements: vec![MatchElement {
+            name: "p".into(),
+            namespace: "http://www.w3.org/1999/xhtml".into(),
+            attributes: BTreeMap::from([("class".into(), "hit".into())]),
+            parent: None,
+            children: vec![],
+            text: true,
+            regions,
+            input_regions: Default::default(),
+            owner: mokly_model::evidence::EvidenceOwner::Component {
+                path: "parent".into(),
+            },
+        }],
+    };
+    let matching = match_document(
+        &diff(
+            &collect_css(b".hit{margin-left:1px}"),
+            &collect_css(b".hit{margin-left:2px}"),
+        ),
+        Some(&tree),
+        Some(&tree),
+    );
+    let changes = super::Changes {
+        rules: attribution::observe_owned(
+            "document",
+            &matching,
+            Some(&tree),
+            Some(&tree),
+            Some("parent"),
+        ),
+        matching: vec![],
+        indices: None,
+        potential: vec![],
+    };
+    assert!(changes.changes_owner(Some("parent")));
 }

@@ -66,7 +66,7 @@ pub(crate) fn compare(
 }
 
 impl Changes {
-    /// Move admission precedes catalogue attribution and retains its local owner check.
+    /// Move admission follows physical claims for declared owned rules.
     pub(crate) fn changes_owner(&self, owner: Option<&str>) -> bool {
         let Some(owner) = owner else {
             return false;
@@ -80,15 +80,7 @@ impl Changes {
                         if matched.trusted_owner.as_deref() != Some(owner) {
                             return false;
                         }
-                        let own_page = matched
-                            .regions()
-                            .any(|region| region.root && region.path == owner);
-                        let nested = matched.regions().find(|region| !region.root);
-                        if own_page {
-                            nested.is_none()
-                        } else {
-                            nested.is_none_or(|region| region.path == owner)
-                        }
+                        matched.regions().any(|region| region.path == owner)
                     })
             })
     }
