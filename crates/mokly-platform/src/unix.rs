@@ -132,7 +132,7 @@ fn macos_group_has_live_member(pgid: i32) -> Option<bool> {
                 std::mem::size_of::<libc::proc_bsdinfo>() as i32,
             )
         };
-        if size < 0 {
+        if size != std::mem::size_of::<libc::proc_bsdinfo>() as i32 {
             return None;
         }
         let info = unsafe { info.assume_init() };
