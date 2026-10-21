@@ -41,7 +41,7 @@ impl GitRepository {
             .split(|byte| *byte == 0)
             .collect::<Vec<_>>()
             .chunks_exact(3)
-            .any(|record| record[1] == b"filter" && !matches!(record[2], b"unset" | b"unspecified"))
+            .any(|record| record[1] == b"filter")
         {
             let salt = tempfile::Builder::new()
                 .prefix("mokly-filter-generation-")

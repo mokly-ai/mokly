@@ -46,3 +46,23 @@ fn external_filters_do_not_reuse_a_stale_source_key() {
         repository.source_key(&commit).unwrap()
     );
 }
+
+#[test]
+fn literal_filter_state_names_do_not_reuse_a_stale_source_key() {
+    for driver in ["unset", "unspecified"] {
+        let fixture = Fixture::new();
+        fixture.write(
+            ".gitattributes",
+            format!("*.txt filter={driver}\n").as_bytes(),
+        );
+        fixture.write("notes.txt", b"base\n");
+        let commit = fixture.commit();
+        fixture.git(&["config", &format!("filter.{driver}.smudge"), "cat"]);
+        let repository = fixture.repository();
+        assert_ne!(
+            repository.source_key(&commit).unwrap(),
+            repository.source_key(&commit).unwrap(),
+            "{driver}"
+        );
+    }
+}
