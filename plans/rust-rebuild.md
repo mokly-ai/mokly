@@ -3098,6 +3098,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     conversion failure. Auto-fix.
   - Finding 4: dependency identity text still described raw base bytes.
     Severity Medium, effort Small. Fixed in the working tree. Auto-fix.
+  - [x] Finding 5: Serve did not forward checkout environment and timeout.
+    Fixed by forwarding both calls through `Tracked`. Severity High.
   - Outside scope: remote browser host setup failures. Separate branch.
   - Outside scope: remote sidecar lifecycle readiness failure. Separate branch.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`

@@ -175,6 +175,11 @@ impl Checkout {
             }
             result => result,
         }?;
+        if size_bound.as_ref().is_some_and(SizeBound::exceeded) {
+            return Err(Error::ByteLimit {
+                limit: size_bound.as_ref().map_or(0, |bound| bound.limit),
+            });
+        }
         if filter_failed(&output.stderr) {
             return Err(Error::CheckoutFailed {
                 stderr: output.stderr,
