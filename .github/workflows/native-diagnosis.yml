@@ -60,6 +60,14 @@ jobs:
           child.send({id:1,params:{sourceRoot:temp,repositoryRoots:[temp],moduleResolution:resolution,postcss:'examples/basic/postcss.config.mjs',sourcePath:path.join(temp,'input.css'),text:'p{color:red}'}});
           JS
           node .context/native-probe.mjs
+      - name: Verify the original Windows design failure
+        env:
+          CARGO_BUILD_JOBS: '4'
+          CARGO_PROFILE_DEV_DEBUG: '0'
+          CARGO_INCREMENTAL: '0'
+        run: |
+          rustup toolchain install
+          cargo test -p mokly-cli --test design_behaviour_tests
   macos:
     runs-on: blacksmith-6vcpu-macos-26
     timeout-minutes: 20
