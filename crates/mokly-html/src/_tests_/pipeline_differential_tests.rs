@@ -18,7 +18,7 @@ const GENERATED: &[&str] = &[
 struct Report {
     inputs: usize,
     equivalent: usize,
-    old_defects_fixed: usize,
+    source_identities: usize,
     new_defects: Vec<String>,
 }
 
@@ -63,7 +63,7 @@ fn compare(report: &mut Report, name: &str, source: &str) {
     } else {
         report.equivalent += 1;
     }
-    report.old_defects_fixed += source_count(&new);
+    report.source_identities += source_count(&new);
 }
 
 #[test]
@@ -85,10 +85,10 @@ fn repository_html_differential_report_has_no_new_tree_or_byte_defects() {
         report.new_defects
     );
     println!(
-        "pipeline differential: inputs={} equivalent={} old_defects_fixed={} new_defects={}",
+        "pipeline differential: inputs={} equivalent={} source_identities={} new_defects={}",
         report.inputs,
         report.equivalent,
-        report.old_defects_fixed,
+        report.source_identities,
         report.new_defects.len()
     );
 }
