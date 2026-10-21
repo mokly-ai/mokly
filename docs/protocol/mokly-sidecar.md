@@ -128,8 +128,10 @@ bindings fails closed under the [render records](./mokly-sidecar-render-records.
 ## Style Collection
 
 A render returns styles owned by the rendered component or screen. Emotion
-and styled-components use render-local server extraction. The sidecar also
-collects `<style>` elements in the fragment. For a persistent registry such
+and styled-components use render-local server extraction. Each registry rule
+from a registered component names that component, including when a screen
+renders it. Slot content keeps the supplier that created the rule. The sidecar
+also collects `<style>` elements in the fragment. For a persistent registry such
 as the React Native Web sheet from `AppRegistry.getApplication`, it returns
 only rules whose class selectors match the fragment's class tokens, their
 required at-rules and keyframes, and the registry's element-level resets.

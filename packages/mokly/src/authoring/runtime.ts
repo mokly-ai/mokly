@@ -48,6 +48,32 @@ export interface RenderSession {
   logicalLink: (value: string) => string;
 }
 
+export interface StyleOwnerRecord {
+  owner: string;
+  css: string;
+}
+
+/** Render-local style adapters attribute rules to their rendering component. */
+export interface StyleCapture {
+  records: StyleOwnerRecord[];
+  styled?: {
+    StyleSheetManager: React.ElementType;
+    sheetFor: (owner: string) => unknown;
+  };
+  emotion?: {
+    CacheProvider: React.ElementType;
+    cacheFor: (owner: string) => unknown;
+  };
+}
+
+export interface OwnedStyleSheet {
+  instance: unknown;
+  getStyleElement: () => readonly {
+    props?: { dangerouslySetInnerHTML?: { __html?: string } };
+  }[];
+  seal: () => void;
+}
+
 /** A generation owns its React instance and contexts. No attribution is global. */
 export class AuthoringRuntime {
   readonly links = new Map<
@@ -60,6 +86,7 @@ export class AuthoringRuntime {
     session: React.Context<RenderSession | null>;
     owner: React.Context<Owner>;
     ignore: React.Context<boolean>;
+    styles: React.Context<StyleCapture | null>;
   };
 
   constructor(react?: typeof React) {
@@ -78,6 +105,7 @@ export class AuthoringRuntime {
         seen: new Set(),
       }),
       ignore: this.react.createContext(true),
+      styles: this.react.createContext<StyleCapture | null>(null),
     });
   }
 

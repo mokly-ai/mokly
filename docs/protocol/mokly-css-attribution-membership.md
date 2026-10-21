@@ -122,7 +122,9 @@ changed-component set from the selected entry alone.
   view.
 - A component owner names a registered component with a kept own-page match
   for that rule identity, or a kept trusted exact-instance match. Physical
-  containment supplies the claim; supplier ancestry protects a supplier's own rule.
+  containment supplies the claim for owned, ownerless, and linked rules.
+  Supplier ancestry only prevents a nested component from taking a supplier's
+  own rule for content that the supplier passed into it.
   The producer checks
   each owner against that proof, never against the result's own rows.
 - An `unresolved` record is owned by the entry.

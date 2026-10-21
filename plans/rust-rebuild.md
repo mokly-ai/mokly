@@ -1704,13 +1704,15 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         that leaves mixed-source dependency errors, effort not recorded; B,
         carry the kept own-page stylesheet paths through the shared reducer
         and the comparison, Large. Recommended: B. The user must confirm B.
-  - [ ] Resolve user item 110 (review 3 finding 1): React component parents
-        get false rows from page-wide registry copies. Severity High, effort
-        Large for C. Options: A, keep the behaviour, state it, and add a
-        React-parent test that asserts it, so the false rows stay; B, remove
-        the supplier-ancestry condition; C, Large. The task message cut this
-        record, so the hub decision log holds the rest of B, option C, and
-        the recommendation.
+  - [x] User decision 110 (2026-10-21): C. The sidecar attributes each
+        registry rule to the registered component render that injected it.
+        It uses render-local styled-components sheet proxies and Emotion cache
+        proxies over one root extraction, so rule order and consumer CSS bytes
+        stay stable. Slot content uses the supplier's proxy. Component and
+        whole-screen renders use the same rule. The comparison, sidecar, and
+        membership protocols state this ownership contract. Evidence:
+        `tests/sidecar_styles.test.ts` and
+        `crates/mokly-cli/tests/changes_registry_ownership_tests.rs`.
   - [ ] Resolve user item 97 (review 2 finding 3): owned proof state waits
         for the whole catalogue. Decision 73 C made owned instance proof wait
         for catalogue-wide own-page proof. So every view keeps two

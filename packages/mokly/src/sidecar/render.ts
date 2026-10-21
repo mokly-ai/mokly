@@ -153,6 +153,7 @@ export async function render(
         generation,
         server.renderToStaticMarkup,
         node,
+        session,
       );
       if (
         kind === "component" &&
@@ -171,7 +172,10 @@ export async function render(
       return {
         html: result.html,
         styles: [
-          ...collected.styles.map((css) => ({ css, owners })),
+          ...collected.styles.map((style) => ({
+            ...style,
+            owners: style.owners.length ? style.owners : owners,
+          })),
           ...result.styles.map((style) => ({
             ...style,
             owners: style.owners.length ? style.owners : owners,

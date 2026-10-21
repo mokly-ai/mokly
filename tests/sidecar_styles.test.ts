@@ -153,7 +153,15 @@ test("registry rules are attributed to the component that rendered them", async 
     }),
   );
   await sidecar.call("cssModules", { generation, classMaps: {} });
-  await installBindings(sidecar, generation);
+  await installBindings(sidecar, generation, {
+    "registry-ownership.mockup.tsx#card": { path: "card", title: "Card" },
+    "registry-ownership.mockup.tsx#stack": { path: "stack", title: "Stack" },
+    "registry-ownership.mockup.tsx#layout": {
+      path: "layout",
+      title: "Layout",
+    },
+    "registry-ownership.mockup.tsx#default": { path: "home", title: "Home" },
+  });
   const result = await sidecar.call<RenderResult>("renderScreen", {
     generation,
     handle: "registry-ownership.mockup.tsx#default",
@@ -164,7 +172,10 @@ test("registry rules are attributed to the component that rendered them", async 
   });
   const style = (needle: string) =>
     result.styles.find((item) => item.css.includes(needle));
-  assert.deepEqual(style(".stack > * + *")?.owners, ["stack"]);
-  assert.deepEqual(style(".stack-emotion > * + *")?.owners, ["stack"]);
-  assert.deepEqual(style(".layout {")?.owners, ["layout"]);
+  assert.deepEqual(style(".stack>*+*")?.owners, ["stack"]);
+  assert.deepEqual(style(".stack-emotion>*+*")?.owners, ["stack"]);
+  assert.deepEqual(style(".layout{")?.owners, ["layout"]);
+  const css = result.styles.map((item) => item.css).join("");
+  assert.ok(css.indexOf(".stack>*+*") < css.indexOf(".layout{"));
+  assert.ok(css.indexOf(".layout{") < css.indexOf(".stack-emotion>*+*"));
 });

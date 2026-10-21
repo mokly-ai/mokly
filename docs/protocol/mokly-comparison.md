@@ -77,7 +77,9 @@ sides; the canonical form exists only to decide equality.
 
 Styles a [sidecar](./mokly-sidecar.md) render returned are written into the
 head as `<style data-mokly-owners="<component paths>">` elements, one rule
-list per owner set. Trusted annotations survive normalization and caching on
+list per owner set. Each registry rule names the registered component whose
+render created it; nested rules stay with that component and slot content stays
+with its supplier. Trusted annotations survive normalization and caching on
 both sides. An authored owner attribute grants no ownership. Compare normalized
 rules per owner; formatting and duplicate copies do not change material.
 Owned, ownerless head, and linked CSS use one
@@ -96,14 +98,12 @@ owner's physical region. That proof requires a paired instance with unchanged
 caller inputs and a kept match under the nested test. It can change the
 component's implementation without changing its own views.
 Unresolved rules use the conservative entry record and supply no instance proof.
-
 Head styles without trusted owners and linked styles use physical containment
 and catalogue-wide own-page proof to assign component records. A receiving
 component claims supplied content only when its own pages prove that rule.
 Without that proof, a match outside every changed component belongs to the entry.
 Authored body styles do not enter this analysis. Linked styles keep their reachability.
 The [membership contract](./mokly-css-attribution-membership.md) defines the records and their effects.
-
 A changed rule without a match produces no matched record. When a source has
 no kept changed rule on a view, emit one `excluded` record with an empty
 selector and the entry owner. Owned and ownerless head styles use the containing
