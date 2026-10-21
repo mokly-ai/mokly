@@ -3261,8 +3261,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
         refresh fix of 140 B.
-  - [ ] The security items 122, 141, and 142, each of which needs the
-        user's answer, and 145 B, which merged in batch 23.
+  - [x] The security items 122, 141, and 142, which the user answered on
+        2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
+        batch 23.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
