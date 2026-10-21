@@ -3120,6 +3120,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the failed child. Evidence: `.context/native-ci-fixes-3/`.
         The hub must dispatch hosted macOS and Windows CI on
         `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
+  - [x] Native CI round 4: keep valid unusual names on macOS and keep the
+        non-UTF-8 filename case on filesystems that support it. Copy the
+        repository ignore rules into the design fixture and add PostCSS child
+        phase timings to timeout diagnostics. Evidence:
+        `.context/native-ci-fixes-4/`. The hub must dispatch hosted macOS and
+        Windows CI on `rebuild/native-ci-fixes-4`.
   - [x] F17: align remote executable discovery with the shared Node shim
         resolver and Windows native `.exe` names. Keep explicit extensions
         and Unix names. Evidence: `.context/f17/windows-red.log` and
