@@ -68,7 +68,7 @@ function parseGuide(filename: string, section: GuideSection): GuidePage {
   };
 }
 
-export function loadGuides(): readonly GuidePage[] {
+function loadGuides(): readonly GuidePage[] {
   return GUIDE_SECTIONS.flatMap((section) => {
     const directory = path.join(guidesRoot, section);
     return readdirSync(directory, { withFileTypes: true })
@@ -87,7 +87,6 @@ export function loadGuides(): readonly GuidePage[] {
 }
 
 export const GUIDES = loadGuides();
-export const GUIDE_PATHS = GUIDES.map((guide) => `docs/guides/${guide.id}.md`);
 
 export function withoutFencedCode(source: string): string {
   const kept: string[] = [];

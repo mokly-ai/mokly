@@ -23,7 +23,7 @@ export interface Deferred<T> {
   reject(error: unknown): void;
 }
 
-export function deferred<T>(): Deferred<T> {
+function deferred<T>(): Deferred<T> {
   let resolve!: (value: T) => void;
   let reject!: (error: unknown) => void;
   const promise = new Promise<T>((done, fail) => {
@@ -114,7 +114,7 @@ export class FakeDataSource implements ShellDataSource {
 const answered = new WeakSet<object>();
 
 /** A live transport with a captured stream listener. */
-export class FakeLiveSource implements ShellLiveSource {
+class FakeLiveSource implements ShellLiveSource {
   readonly descriptors: Pending<LiveDescriptorV3, undefined>[] = [];
   readonly renders: Pending<
     ComponentRenderSuccess,

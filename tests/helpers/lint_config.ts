@@ -6,7 +6,7 @@ import { repositoryRoot } from "./fixture.js";
 
 /** Load the repository's real flat config, including its ignore integration. */
 export const repositoryEslint = new ESLint({ cwd: repositoryRoot });
-export const fixingRepositoryEslint = new ESLint({
+const fixingRepositoryEslint = new ESLint({
   cwd: repositoryRoot,
   fix: true,
 });

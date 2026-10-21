@@ -6,7 +6,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /** The branch-point sentence starts so, and the copies name `fixture-base`. */
-export const BRANCH_POINT = "Compared with the branch point";
+const BRANCH_POINT = "Compared with the branch point";
 export const BASE = `${BRANCH_POINT} on fixture-base.`;
 export const FILES_LEAD = "Changes to these files may affect this screen:";
 export const MATCHED_LEAD = "Changed styles that apply to this screen:";

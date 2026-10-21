@@ -2767,9 +2767,83 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the failed child. Evidence: `.context/native-ci-fixes-3/`.
         The hub must dispatch hosted macOS and Windows CI on
         `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
-  - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
-    Windows executable suffixes. Selected Native bypasses this path.
-    Separate branch before claiming Windows remote-executor support.
+  - [x] F17: align remote executable discovery with the shared Node shim
+        resolver and Windows native `.exe` names. Keep explicit extensions
+        and Unix names. Evidence: `.context/f17/windows-red.log` and
+        `.context/f17/xtask.log`. The F16 dependency merge preserves both
+        branches without conflicts: `.context/f17/merge-decisions.md`.
+  - [x] F17 decision 1: B, applied by default (user rule), 2026-10-20.
+        Split React watch into one browser test per edit kind. Keep every
+        evidence and restoration check and the existing timeout. HTML keeps
+        the complete three-edit journey. Severity Low, effort Small.
+        The accumulated React and base compilations can exhaust the test's
+        total guard on two CPUs without a missed watcher event. A keeps the
+        rare timeout. C adds the deferred compiled-recipe cache from decision 59. B keeps coverage without a larger timeout or a new cache policy.
+        Investigation and phase costs: `.context/f17/investigation.md`.
+  - [x] User decision 105 (2026-10-20): A, keep the combined React large
+        watch test and record the limit. It replaces F17 decision 1 B. F20
+        item 1 reverts the split from `a1c8259c`, keeps the 300-second guard,
+        and records the accepted exception in `docs/protocol/ci-test-timing.md`.
+  - [x] User decision 67 (2026-10-20): A, delete the unused test helpers
+        `tests/helpers/watched_events.ts`, `watched_catalogue.ts`,
+        `operation_counts.ts`, and `operation_count_cases.ts` with their own
+        five tests, and remove the operation counting helper section of
+        `docs/protocol/ci-test-timing.md`. Done in F20 item 2. Search record:
+        `.context/m10/f20/item2-searches.txt`.
+  - [x] F20 item 4, under the user rule of 2026-10-20 that deleting unused
+        code needs no permission: the F18 measurement found 47 unused exports
+        in `tests/helpers`, `tests/browser`, and `packages/viewer/tests`.
+        Item 2 removed five with the watched helpers. Of the other 42, 21
+        items are deleted, and 21 keep their declaration without `export`.
+        `tests/fixtures` and the export check stay as they are. The wider
+        check is item 109 for the user. Search record:
+        `.context/m10/f20/item4-searches.txt`.
+  - [x] F20 merge of the rebuild tip `24982bb7`, on 2026-10-20: the plan
+        keeps both sides' new records. F17's replacement of the remote
+        discovery line stays, and user decision 105 settles the tip's React
+        watch timeout line. Merge decisions:
+        `.context/m10/f20/merge-decisions.md`.
+  - [x] F20 review, on 2026-10-21: finding 40 is fixed by option A. The
+        timing contract keeps the exception of user decision 105 and its
+        reason, without measurements. The measured limit behind the
+        decision: on two CPUs the combined React journey takes 185 to 218
+        seconds, about 155 of them in twelve JavaScript compilations, and one
+        busy process per CPU pushed it past 300 seconds. Evidence:
+        `.context/f17/investigation.md`. The full report is
+        `.context/m10/f20/review_1.md`.
+  - [x] F20 review, on 2026-10-21: finding 41 is fixed by option A. The path
+        identity release note says that the viewer data release note lists
+        the names that this release removes from `@mokly/viewer/data`.
+  - F20 review finding 42 for the user: the merged plan keeps a settled line
+    open. Severity Low, effort Small. Recommended: A, rewrite the React
+    large watch timeout line as one checked record of user decision 105 and
+    delete its child line.
+  - F20 review finding 43 for the user: the premise of item 109 is stale
+    after item 4. Severity Low, effort Small. Recommended: A, add to the item
+    4 record that the three trees now have no unused runtime export, so
+    option B of item 109 needs no baseline entries.
+  - Outside the F20 review scope:
+    - `docs/protocol/ci-test-timing.md`: the duration helper section and the
+      fixture budget sentence name test helper files and functions, which
+      belong in a README. Separate branch.
+    - `docs/protocol/npm-release-notes.md`: the viewer data note says that
+      its listed names have no public replacement, but the root
+      `@mokly/viewer` entry still exports `ComponentControl` and
+      `ComponentControlLabel`. Separate branch.
+  - [x] F20 re-review, on 2026-10-21: finding 44 is fixed by option A. The
+        path identity release note says that the viewer data release note
+        lists the 0.15.0 successors of the released types, such as
+        `ManifestV10` and `ReviewResultV7`. The full report is
+        `.context/m10/f20/review_2.md`.
+  - F20 re-review finding 45 for the user: the options recorded for
+    findings 42 and 43 would edit history lines. Severity Low, effort Small.
+    Recommended: A, record options for 42 and 43 that edit only live lines
+    or add new lines beside the checked records.
+  - Outside the F20 re-review scope:
+    - `docs/protocol/npm-release-notes.md`: no note tells
+      `@mokly/viewer/data` users to import `ComponentInstanceRecord` and six
+      other dropped types from the root `@mokly/viewer` entry, which still
+      exports them. Separate branch.
   - [x] Fix CI release checks hub review finding 4 with option A: name read-only
         release preparation as the npm and Rust audit owner in the three
         affected verification documents. Publication uses the checked archives.
@@ -2812,6 +2886,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     real watcher readiness or runner contention, not proven. Separate branch.
     Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
     and `.context/ci-release-fixes/watch-react-rerun.log`.
+    - [x] Settled by user decision 105 (2026-10-20): the combined React
+          journey keeps its 300-second guard, its rare timeouts are accepted,
+          and `docs/protocol/ci-test-timing.md` records the limit.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
@@ -3615,13 +3692,16 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     `relatedComponents` and detail eligibility keyed by the entry that each
     evidence item names. If the user declines C, apply A: add the intent
     only when the destination will show the band.
-  - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
-    user: `HistoricalManifest` has no user and no published export since
-    `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
-    names it as a released type. Severity Low, effort Small. Recommended: B,
-    delete the alias and list `Manifest`, `ManifestV10`, and
-    `HistoricalManifest` with the names that `@mokly/viewer/data` stops
-    exporting. Option A keeps the alias and corrects only the release note.
+  - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
+        `HistoricalManifest` had no user and no published export since
+        `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
+        still named it as a released type. User decision 91 (2026-10-20): B,
+        delete the alias and list `Manifest`, `ManifestV10`, and
+        `HistoricalManifest` with the names that `@mokly/viewer/data` stops
+        exporting. Done in F20 item 3, which also deletes the unused aliases
+        `HistoricalManifestPage` and `HistoricalManifestUseCase` and the
+        release note's advice to replace the removed manifest and review
+        types.
   - [x] Outside the scope of the hub review of `rebuild/defaults-viewer`,
         found by its fix round: eleven shell and viewer modules, such as
         `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a

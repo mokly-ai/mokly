@@ -6,10 +6,9 @@ for current-only delivery and watched Serve fixtures.
 
 ## Native comparison copy
 
-`comparison_test.ts` supplies `test`, `copiedComparisonUrl()`,
-`copiedComparisonDirectory()`, and `comparisonPaths`. Import its `test` to
-use the comparison copy as `baseURL`. Import the URL function when one test
-needs both copies. Resolve these functions in a test or hook, after setup.
+`comparison_test.ts` supplies `test`, `copiedComparisonDirectory()`, and
+`comparisonPaths`. Import its `test` to use the comparison copy as `baseURL`.
+Resolve the directory function in a test or hook, after setup.
 Tests can read the shared directories but must not change their bytes.
 
 `tests/helpers/comparison_catalogue.ts` writes an isolated repository with
