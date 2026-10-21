@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::catalogue::SourceLocation;
+use serde::Serialize;
 
 use mokly_model::prop_schema::PropSchema;
 
@@ -22,7 +23,7 @@ pub struct Template {
 }
 
 /// One saved variant slot body and its authored front matter position.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct SavedSlot {
     /// The HTML fragment supplied to the declared slot.
     pub body: String,
