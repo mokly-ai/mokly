@@ -1,12 +1,12 @@
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 
+import { observeAsyncModuleLoads } from "./postcss-async-registration.js";
 import {
   observeModuleLoads,
   shareReadEvidence,
   trustEarlyReaders,
 } from "./postcss-evidence.js";
-import { observeAsyncModuleLoads } from "./postcss-async-registration.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { observeDescriptorSharing } from "./postcss-read-sharing.js";
