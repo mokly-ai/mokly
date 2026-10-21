@@ -2153,6 +2153,12 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
 - [ ] Verify native TLS on macOS and Windows CI. Build all five target
       binaries with a target C toolchain and check `ldd`, `otool -L`, or
       `dumpbin /dependents` for an unintended crypto shared-library dependency.
+      User decision 106 (2026-10-20): A. Use a separate contents-read release
+      check workflow. Before merge, its push trigger is limited to
+      `rebuild/ci-release-check`, so the hub can run it before the workflow is
+      present on the default branch. After merge, it also accepts a manual
+      dispatch. It has no publication job, OIDC permission, npm environment,
+      or secrets.
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
@@ -2160,6 +2166,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         a scratch checkout and record the blocked steps.
   - [ ] Complete the seven-package pack, reuse, and smoke with all native
         archives from the hosted target builds.
+        User decision 106 (2026-10-20): A. The branch workflow builds and
+        inspects all five native archives, then runs the existing pack, reuse,
+        and smoke scripts for the seven-package set from the same commit.
 - [x] Settle Release Please selection for core-only commits: item 20 option C,
       applied by default (user rule), 2026-10-20. Make the CLI the root `.`
       component and remove the `node-workspace` plugin. Core-only changes

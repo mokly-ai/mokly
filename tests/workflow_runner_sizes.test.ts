@@ -78,7 +78,8 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
       for (const value of values) {
         assert.ok(typeof value === "string", `${context} runner matrix value`);
         if (
-          workflowName === "release.yml" &&
+          (workflowName === "release.yml" ||
+            workflowName === "release-check.yml") &&
           jobName === "build-native" &&
           value === "macos-26-intel"
         ) {

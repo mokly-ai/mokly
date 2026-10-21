@@ -141,6 +141,13 @@ normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
 follow-on workflow events created with that token, so maintainers must verify
 the release PR's required checks when using the fallback.
 
+Before this workflow reaches the default branch, the read-only release-check
+workflow runs on a push to `rebuild/ci-release-check`. A later manual dispatch
+can run the same check after the workflow reaches the default branch. It pins
+all five native builds and the seven-package pack, archive recheck, and clean
+consumer smoke to the pushed commit. It has no publication job, npm environment,
+OIDC permission, inherited secret, or registry write.
+
 ## Release Recovery
 
 Release Please reads the merged release PR body as HTML. Changelog text can

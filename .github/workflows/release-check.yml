@@ -1,0 +1,127 @@
+name: Release checks
+on:
+  # This branch trigger runs before the workflow exists on the default branch.
+  push:
+    branches:
+      - rebuild/ci-release-check
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-native:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64-gnu
+            triple: x86_64-unknown-linux-gnu
+            runner: blacksmith-2vcpu-ubuntu-2404
+          - target: linux-arm64-gnu
+            triple: aarch64-unknown-linux-gnu
+            runner: blacksmith-2vcpu-ubuntu-2404-arm
+          - target: darwin-arm64
+            triple: aarch64-apple-darwin
+            runner: blacksmith-6vcpu-macos-26
+          - target: win32-x64-msvc
+            triple: x86_64-pc-windows-msvc
+            runner: blacksmith-2vcpu-windows-2025
+          - target: darwin-x64
+            triple: x86_64-apple-darwin
+            runner: macos-26-intel
+    env:
+      RELEASE_TARGET: ${{ matrix.target }}
+      RUST_TARGET: ${{ matrix.triple }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out pinned release-check commit
+        if: matrix.target != 'darwin-x64'
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 1
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check out pinned Intel macOS release-check commit
+        if: matrix.target == 'darwin-x64'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 1
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install target
+        run: rustup target add "$RUST_TARGET"
+      - name: Set up Linux release tools
+        if: startsWith(matrix.target, 'linux-')
+        run: node scripts/release/setup-linux.mjs
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Build and pack native archive
+        run: node scripts/release/build-native.mjs "$RELEASE_TARGET"
+      - name: Inspect native TLS
+        run: node scripts/release/inspect-native.mjs "$RELEASE_TARGET"
+      - name: Preserve native release-check archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-native-${{ matrix.target }}
+          path: .context/release-artifact/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+  package-and-smoke:
+    if: needs.build-native.result == 'success'
+    needs: [build-native]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out pinned release-check commit
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 1
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Download five native archives
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-native-*
+          path: .context/release-artifact
+          merge-multiple: true
+      - name: Pack seven release packages
+        run: node scripts/release/pack.mjs .context/release-artifact
+      - name: Recheck seven release packages
+        run: node scripts/release/pack.mjs .context/release-artifact --reuse
+      - name: Smoke-test seven release packages
+        run: node scripts/release/smoke.mjs .context/release-artifact
+      - name: Preserve release-check evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-check-evidence
+          path: .context/release-artifact/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
