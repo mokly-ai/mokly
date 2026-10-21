@@ -12,6 +12,7 @@ use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
+use sha2::{Digest, Sha256};
 
 use support::Fixture;
 
@@ -138,6 +139,30 @@ fn base_reads_smudge_local_lfs_objects() {
             .read(&base, &RepoPath::parse("asset.lfs").unwrap(), 64)
             .unwrap(),
         b"local LFS content\n"
+    );
+}
+
+#[test]
+fn converted_digest_streams_files_larger_than_the_capture_limit() {
+    let fixture = Fixture::new();
+    let bytes = vec![7; 65 * 1024 * 1024];
+    fixture.write("large.bin", &bytes);
+    let base = fixture.commit();
+    let entry = fixture
+        .repository()
+        .list(&base, None, Limits::default())
+        .unwrap()
+        .into_iter()
+        .find(|entry| entry.path.as_str() == "large.bin")
+        .unwrap();
+    let expected = Sha256::digest(&bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+
+    assert_eq!(
+        fixture.repository().digest(&base, &entry).unwrap(),
+        expected
     );
 }
 
