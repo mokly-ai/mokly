@@ -4454,6 +4454,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the flag to false when the linked view is Added, and document it,
         Small; C, leave added consumers out of the Affected list, Small
         (estimate). Recommended: B.
+    - User decision 137 (2026-10-21): B. Work: another workspace, on
+      `rebuild/viewer-137b`.
   - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
         of an affected-only entry comes from view usage. Severity Low.
         Option B is applied by default (user rule): see the record "Serve
