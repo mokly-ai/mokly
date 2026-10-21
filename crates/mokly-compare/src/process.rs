@@ -11,6 +11,7 @@ use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 use crate::commands::{Child, Command, Output, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::manager_command;
+use crate::manager_environment;
 use crate::programs::command;
 
 const OUTPUT_LIMIT: usize = 1024 * 1024;
@@ -38,7 +39,7 @@ impl Spawner for SystemSpawner {
         // fixed names follow, and the sanitized PATH that `programs` set
         // overrides the inherited one.
         for (inherited, _) in env::vars_os() {
-            if !manager_command::allowed(&inherited) {
+            if !manager_environment::allowed(&inherited) {
                 command.env_remove(inherited);
             }
         }

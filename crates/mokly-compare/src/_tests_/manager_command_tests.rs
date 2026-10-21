@@ -7,7 +7,8 @@ use std::time::Duration;
 
 use crate::commands::Command;
 use crate::manager::{Manager, Root};
-use crate::manager_command::{allowed, arguments, variables};
+use crate::manager_command::{arguments, variables};
+use crate::manager_environment::allowed;
 
 fn request(manager: Manager, args: Vec<OsString>) -> Command {
     Command {

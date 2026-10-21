@@ -8,7 +8,7 @@
 //! allowed list of variables, so no base configuration or lifecycle script
 //! can read an inherited secret.
 
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::path::Path;
 
 use crate::commands::Command;
@@ -232,67 +232,6 @@ fn no_environment_files(request: &Command) -> OsString {
     let mut value = anchor.join(".mokly-no-environment-file").into_os_string();
     value.push("?");
     value
-}
-
-/// Whether an inherited variable is on the allowed list that every install
-/// starts from. Mokly removes every other inherited variable, so a base
-/// cannot read a secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or `NPM_TOKEN`
-/// through its configuration. Mokly adds its own fixed names separately, with
-/// the values that `variables` sets. This is the single rule for the install
-/// environment. Windows reads a variable name without case, so the names
-/// match without case there.
-pub(crate) fn allowed(inherited: &OsStr) -> bool {
-    const NAMES: &[&str] = &[
-        "PATH",
-        "HOME",
-        "HTTP_PROXY",
-        "HTTPS_PROXY",
-        "NO_PROXY",
-        "ALL_PROXY",
-        "http_proxy",
-        "https_proxy",
-        "no_proxy",
-        "all_proxy",
-        "NODE_EXTRA_CA_CERTS",
-        "SSL_CERT_FILE",
-        "SSL_CERT_DIR",
-        "TMPDIR",
-        "LANG",
-        "LC_ALL",
-        "TZ",
-        "USER",
-        "LOGNAME",
-        "SystemRoot",
-        "windir",
-        "ComSpec",
-        "PATHEXT",
-        "TEMP",
-        "TMP",
-        "USERPROFILE",
-        "APPDATA",
-        "LOCALAPPDATA",
-        "HOMEDRIVE",
-        "HOMEPATH",
-        "NUMBER_OF_PROCESSORS",
-        "PROCESSOR_ARCHITECTURE",
-    ];
-    let name = inherited.to_string_lossy();
-    let matches = |listed: &str| {
-        if cfg!(windows) {
-            listed.eq_ignore_ascii_case(&name)
-        } else {
-            listed == name
-        }
-    };
-    if NAMES.iter().any(|listed| matches(listed)) {
-        return true;
-    }
-    // Every locale category, for example LC_CTYPE and LC_TIME.
-    match name.get(..3) {
-        Some(prefix) if cfg!(windows) => prefix.eq_ignore_ascii_case("LC_"),
-        Some(prefix) => prefix == "LC_",
-        None => false,
-    }
 }
 
 fn fixed(values: &[(&'static str, &str)]) -> Vec<(&'static str, OsString)> {

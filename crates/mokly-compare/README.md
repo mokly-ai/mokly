@@ -246,6 +246,7 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [command supervision](./src/commands.rs).
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
+  [the install environment allowlist](./src/manager_environment.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
   [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and
