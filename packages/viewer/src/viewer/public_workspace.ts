@@ -182,7 +182,6 @@ export function publicWorkspace(
         : (selectedVariant?.comparisonEligible ?? false)),
     affectedComparison:
       original.changes.status === "ready" &&
-      !original.changes.included &&
       detail?.comparisonEligible === true &&
       detail.relatedComponents.length > 0,
     removed,

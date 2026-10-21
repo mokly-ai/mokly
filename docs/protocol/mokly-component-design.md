@@ -24,7 +24,7 @@ Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count stay visible.
 
-The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row. The strip lists
+The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row unless a shown view uses a changed component that the entry detail names, under the [screen controls](./mokly-changes-controls.md#screen-controls). The strip lists
 the parent's own entry first, then each saved variant in authored order: Action,
 Default, Disabled, and Secondary. The shown entry uses a pale sage surface,
 border, and explicit current-link state. Default and Disabled are Action's
