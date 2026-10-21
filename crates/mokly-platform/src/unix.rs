@@ -46,7 +46,17 @@ fn path_string(path: &Path) -> Result<CString> {
 }
 
 pub(crate) fn configure(command: &mut Command) {
-    command.process_group(0);
+    // SAFETY: The child runs this async-signal-safe call before exec. A new
+    // session gives shells and their descendants one process group.
+    unsafe {
+        command.pre_exec(|| {
+            if libc::setsid() == -1 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(())
+            }
+        });
+    }
 }
 
 pub(crate) fn attach(child: &Child) -> Result<Box<dyn ProcessGroup>> {
@@ -65,17 +75,21 @@ struct UnixGroup {
 impl UnixGroup {
     fn signal(&self, signal: i32) -> Result<()> {
         // SAFETY: The positive child PID identifies the process group created
-        // by CommandExt::process_group(0). No memory is accessed by kill.
+        // by setsid in the child pre-exec hook. No memory is accessed by kill.
         let result = unsafe { libc::kill(-self.pid, signal) };
         if result == 0 {
             return Ok(());
         }
         let source = io::Error::last_os_error();
-        if source.raw_os_error() == Some(libc::ESRCH) {
+        if group_is_gone(&source) {
             return Ok(());
         }
         Err(source).platform()
     }
+}
+
+fn group_is_gone(source: &io::Error) -> bool {
+    matches!(source.raw_os_error(), Some(libc::ESRCH | libc::EPERM))
 }
 
 impl ProcessGroup for UnixGroup {
@@ -84,5 +98,19 @@ impl ProcessGroup for UnixGroup {
     }
     fn kill(&self) -> Result<()> {
         self.signal(libc::SIGKILL)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io;
+
+    use super::group_is_gone;
+
+    #[test]
+    fn missing_process_groups_include_permission_denied() {
+        assert!(group_is_gone(&io::Error::from_raw_os_error(libc::ESRCH)));
+        assert!(group_is_gone(&io::Error::from_raw_os_error(libc::EPERM)));
+        assert!(!group_is_gone(&io::Error::from_raw_os_error(libc::EINVAL)));
     }
 }
