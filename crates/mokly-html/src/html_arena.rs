@@ -4,6 +4,7 @@ use std::cell::RefCell;
 
 use html5ever::{QualName, local_name, ns};
 
+use crate::source_locations::Locations;
 use crate::tree::Node;
 
 #[derive(Clone)]
@@ -22,12 +23,14 @@ pub(crate) struct Entry {
 
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
+    pub(crate) locations: RefCell<Locations>,
 }
 
 impl Default for Arena {
     fn default() -> Self {
         Self {
             entries: RefCell::new(vec![Entry::new(None)]),
+            locations: RefCell::default(),
         }
     }
 }
@@ -54,6 +57,13 @@ impl Handle {
 }
 
 impl Arena {
+    pub(crate) fn with_locations(locations: Locations) -> Self {
+        Self {
+            locations: RefCell::new(locations),
+            ..Self::default()
+        }
+    }
+
     pub(crate) fn create(&self, node: Option<Node>, name: Option<QualName>) -> Handle {
         let mut entries = self.entries.borrow_mut();
         let handle = Handle {

@@ -1,22 +1,16 @@
 //! Token checks retain duplicate attributes that an HTML tree must discard.
 
-use html5gum::{DefaultEmitter, Error, Token, Tokenizer};
+use html5gum::{Error, Token};
+use mokly_catalogue::html_tokens;
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 
 /// Reject reserved authored metadata before HTML5 parsing removes duplicates.
 pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
-    for token in Tokenizer::new_with_emitter(source, emitter).flatten() {
-        match token {
-            Token::StartTag(tag)
-                if tag.attributes.keys().any(|name| {
-                    name.as_ref() == b"data-mokly-link"
-                        || name.starts_with(b"data-mokly-link-control")
-                }) =>
-            {
+    for parsed in html_tokens::parse(source) {
+        match parsed.token {
+            Token::StartTag(_) if parsed.reserved_navigation => {
                 return Err(invalid(
                     Code::BuildInvalid,
                     "reserved navigation metadata in consumer output",
@@ -47,11 +41,9 @@ pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
 
 /// Validate callback page structure before the parser can imply missing wrappers.
 pub fn page(source: &str) -> Result<()> {
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
     let mut counts = [0, 0, 0];
-    for token in Tokenizer::new_with_emitter(source, emitter).flatten() {
-        if let Token::StartTag(tag) = token {
+    for parsed in html_tokens::parse(source) {
+        if let Token::StartTag(tag) = parsed.token {
             for (index, name) in ["html", "head", "body"].iter().enumerate() {
                 if tag.name.as_ref() == name.as_bytes() {
                     counts[index] += 1;

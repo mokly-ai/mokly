@@ -2,23 +2,26 @@
 
 use std::collections::{BTreeMap, VecDeque};
 
-use html5gum::{DefaultEmitter, Token, Tokenizer};
+use html5gum::Token;
+use mokly_catalogue::html_tokens;
 use mokly_catalogue::template_types::Template;
 use mokly_model::catalogue::SourceLocation;
 
 use crate::error::Result;
-use crate::tree::{Element, Node};
+use crate::tree::{self, Attribute, Element, Node};
 use crate::{parse, source_checks};
+
+/// Authored positions grouped by diagnostic identity, in source order.
+pub(crate) type Locations = BTreeMap<String, VecDeque<SourceLocation>>;
 
 pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
     source_checks::validate(&template.body, false)?;
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
-    let mut locations: BTreeMap<String, VecDeque<SourceLocation>> = BTreeMap::new();
+    let mut locations = Locations::new();
+    let mut wrappers = Locations::new();
     let mut cursor = template.source.char_indices().peekable();
     let (mut line, mut column) = (1, 1);
-    for token in Tokenizer::new_with_emitter(template.body.as_str(), emitter).flatten() {
-        if let Token::StartTag(tag) = token {
+    for parsed in html_tokens::parse(&template.body) {
+        if let Token::StartTag(tag) = parsed.token {
             let name = String::from_utf8_lossy(&tag.name);
             let attributes: BTreeMap<_, _> = tag
                 .attributes
@@ -42,6 +45,10 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
                     }
                 }
             }
+            let (locations, key) = match parsed.source_signature {
+                Some(signature) => (&mut wrappers, signature),
+                None => (&mut locations, key),
+            };
             locations.entry(key).or_default().push_back(SourceLocation {
                 path: template.source_path.clone(),
                 line,
@@ -50,28 +57,49 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
             });
         }
     }
-    let mut nodes = if template.page {
-        parse::document(&template.body)
-    } else {
-        parse::fragment(&template.body)
-    };
+    let mut nodes = parse::located(&template.body, template.page, wrappers);
     attach(&mut nodes, &mut locations);
     Ok(nodes)
 }
 
-fn attach(nodes: &mut [Node], locations: &mut BTreeMap<String, VecDeque<SourceLocation>>) {
+fn attach(nodes: &mut [Node], locations: &mut Locations) {
     let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
     while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
-            let key = signature(element);
-            element.source = locations.get_mut(&key).and_then(VecDeque::pop_front);
-            element.origin = element
-                .source
-                .as_ref()
-                .map(|source| format!("{}:{}:{}", source.path, source.line, source.column));
+            if element.source.is_none() {
+                let key = signature(element);
+                element.source = locations.get_mut(&key).and_then(VecDeque::pop_front);
+                element.origin = element
+                    .source
+                    .as_ref()
+                    .map(|source| format!("{}:{}:{}", source.path, source.line, source.column));
+            }
             pending.extend(element.children.iter_mut().rev());
         }
     }
+}
+
+pub(crate) fn ignore_signature(name: &str, attributes: &[Attribute]) -> Option<String> {
+    html_tokens::ignore_source_signature(
+        name,
+        attributes
+            .iter()
+            .map(|attribute| (attribute.name.clone(), attribute.value.clone())),
+    )
+}
+
+/// Re-key surviving wrappers in serialized order for the plaintext repair pass.
+pub(crate) fn wrapper_locations(nodes: &[Node]) -> Locations {
+    let mut locations = Locations::new();
+    for node in tree::walk(nodes) {
+        if let Node::Element(element) = node
+            && let Some(source) = &element.source
+            && let Some(key) = ignore_signature(&element.name, &element.attributes)
+        {
+            locations.entry(key).or_default().push_back(source.clone());
+        }
+    }
+    locations
 }
 
 fn signature(element: &Element) -> String {
