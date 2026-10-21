@@ -27,6 +27,7 @@ pub(super) fn copy() -> TempDir {
             "ls-files",
             "-z",
             "--",
+            ".gitignore",
             "examples",
             "docs/protocol",
             "plans/rust-rebuild.md",

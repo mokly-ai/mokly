@@ -27,6 +27,7 @@ fn relative_path_probe() {
         timeout: std::time::Duration::from_secs(120),
         byte_limit: None,
         size_root: None,
+        cache: None,
     });
     assert!(matches!(
         result,
@@ -71,6 +72,7 @@ fn interpreter_probe() {
             timeout: std::time::Duration::from_secs(120),
             byte_limit: None,
             size_root: None,
+            cache: None,
         })
         .unwrap();
     assert_eq!(child.finish().unwrap().stdout, b"trusted-node");

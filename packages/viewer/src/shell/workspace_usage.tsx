@@ -38,9 +38,7 @@ export function WorkspaceUsage({
   if (delivery.status !== "ready")
     return (
       <section aria-label="Usage status" data-usage-section="status">
-        {delivery.status === "loading" ? (
-          <p role="status">Loading usage…</p>
-        ) : (
+        {delivery.status === "failed" ? (
           <>
             <p role="alert">Usage couldn’t be loaded.</p>
             <button
@@ -51,6 +49,8 @@ export function WorkspaceUsage({
               Try again
             </button>
           </>
+        ) : (
+          <p role="status">Loading usage…</p>
         )}
       </section>
     );

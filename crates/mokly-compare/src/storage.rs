@@ -1,6 +1,7 @@
 //! Host cache storage with durable receipts and metadata-only namespace scans.
 
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -23,6 +24,18 @@ pub struct SystemStorage {
 }
 
 impl Storage for SystemStorage {
+    fn write(&self, path: &Path, bytes: &[u8]) -> Result<()> {
+        check(self.cancellation.as_ref())?;
+        validate_directory(&self.root, path.parent().unwrap_or(path))?;
+        fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(path)
+            .base()?
+            .write_all(bytes)
+            .base()
+    }
+
     fn directory(&self, path: &Path) -> Result<bool> {
         check(self.cancellation.as_ref())?;
         match fs::metadata(path) {

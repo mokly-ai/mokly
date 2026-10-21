@@ -63,9 +63,9 @@ export interface WorkspaceData {
   comparisons: boolean;
   comparisonEligible: boolean;
   /**
-   * Changes does not list the routed entry, yet its entry detail marks it
-   * comparison-eligible and names the changed components that affect it.
-   * Its comparison stays available while it shows Unmodified.
+   * The routed entry's detail marks it comparison-eligible and names the
+   * changed components that affect it, in or out of Changes. Each Unmodified
+   * view whose usage holds one of them keeps its comparison.
    */
   affectedComparison: boolean;
   removed: boolean;

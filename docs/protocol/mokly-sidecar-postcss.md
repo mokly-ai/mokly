@@ -22,6 +22,10 @@ Child startup errors, exit, IPC disconnection, and failed request writes settle
 affected requests without waiting for the request deadline. Errors raised before
 request attachment remain failures of that request. A failed child cannot accept
 later work; a later request starts a new child for the context.
+When a PostCSS request reaches its deadline, the timeout diagnostic includes
+deterministic timings for child spawn, configuration load, plugin construction,
+and the latest stylesheet run. Each phase reports its elapsed milliseconds or
+its running state. The diagnostic does not include authored paths or CSS text.
 
 ## Read Evidence
 
@@ -103,9 +107,10 @@ Pre-existing or privately duplicated descriptors and caller-supplied asynchronou
 `readFile` buffers can bypass the observed boundaries. They retain native behavior.
 The late baseline detects only edits after capture for an unobserved input.
 
-Decision 56 selects staged observation to preserve plugin compatibility.
-Enforced immutable inputs need a separate isolation and input-domain contract.
-This stage does not meet the full M14 consumed-byte requirement.
+Decision: Mokly keeps native plugins compatible. It records a read witness
+only for the reads that it observes, and it reports its coverage as
+`incomplete`. Enforced immutable inputs were rejected because they need a
+separate isolation and input-domain contract.
 
 ## Related Docs
 

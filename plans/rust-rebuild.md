@@ -368,6 +368,14 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**User decision 131 (2026-10-21): keep.** The user keeps every option that
+the old default rule applied so far, and reviewed the list. This covers each
+line in this plan that says "applied by default" or "the hub's default",
+including item 20 C, and the defaults on the unmerged
+`rebuild/defaults-engine`, such as items 37 B, 40 A, 45 B, and 48 B. Items 102
+and 108 stay open for the user. From 2026-10-21, no default settles an
+unanswered decision; only the user's own decisions apply.
+
 **Follow-up decision defaults (F8):** These numbers identify the orchestrator's
 follow-up list, not the architecture decisions above.
 
@@ -755,16 +763,44 @@ merges; the freeze applies to it from 2026-10-12.
   - [x] viewer;
   - [x] design mockups;
   - [x] CI, verification, and release.
-- [ ] Confirm the landable pull requests merged: #135, #182, and the test and
+- [x] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
+      Ticked on 2026-10-21 in plan bookkeeping pass 3: all four children are
+      done.
   - [x] #135: closed unmerged by the user's decision on 2026-10-20, because
         #168 replaced its behaviour.
   - [x] #182: merged on 2026-10-20 as `b19d4433`. It released
         `@mokly/mokly` 0.15.0 and `@mokly/viewer` 0.6.0.
   - [x] #198: merged on 2026-10-20 as `d9f421d1` by the user's decision. CI
         also runs on a manual dispatch for any branch.
-  - [ ] The test and CI housekeeping pull requests: the user decides each
+  - [x] The test and CI housekeeping pull requests: the user decides each
         open pull request.
+        Ticked on 2026-10-21 in plan bookkeeping pass 3: the hub closed #174
+        and #197 on 2026-10-21, so no housekeeping pull request is open.
+    - [x] User decision 63 (2026-10-20): A. On 2026-10-20 the hub closed
+          #136, #153, #158, #186, #187, #188, #189, #190, #192, #194, and
+          #196 unmerged, each with a comment that names its replacement.
+          #174 waits for user item 66, and #197 waits for user item 65.
+    - [x] Resolve user item 65 (triage decision 4): when to take the in-range
+          updates and Rust 1.99.0 of #197. Severity Low, effort Small.
+          Options: A, close #197 and redo the updates after the rebuild
+          merges, Small (estimate); B, redo the in-range updates and Rust
+          1.99.0 on the rebuild branch before the final pull request, then
+          close #197, Small; C, merge #197 into `main` now, Small (estimate).
+          Recommended: B.
+      - User decision 65 (2026-10-21): A. The hub closed #197 on 2026-10-21,
+        and a post-merge follow-up redoes its updates.
+    - [x] Resolve user item 66 (triage decision 5): the test gates of #153
+          and #174. #153 adds an empty-test assertion guard, and #174 widens
+          the clock lint. Severity Low, effort Small. Options: A, adopt
+          neither, and record both as post-merge follow-ups, Small
+          (estimate); B, widen the clock lint now to `packages/viewer/tests`
+          and three more clock forms, and defer the assertion guard, Small;
+          C, port both, Large (estimate). Recommended: B. A stricter lint
+          needs the user's approval.
+      - User decision 66 (2026-10-21): A. The hub closed #174 on 2026-10-21,
+        and two post-merge follow-ups hold the clock lint of #174 and the
+        empty-test assertion guard of #153.
 - [x] Tag the last TypeScript backend commit on `main` as `ts-backend-final`:
       `b19d4433`, the 0.15.0 release, tagged on 2026-10-20.
 - [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
@@ -853,8 +889,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
       failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17,
-      CI round 5, native CI round 2, F18, and F19 made the same lockfile
-      change on 2026-10-20, and this line records all six.
+      CI round 5, native CI round 2, F18, F19, and the pnpm and Yarn base
+      install made the same lockfile change on 2026-10-20, and this line
+      records all seven.
       Evidence: `.context/m14-nesting/r7/audit-before.txt` and
       `.context/m14-nesting/r7/audit-after.txt`; batch 17:
       `.context/integration-17/security-audit.log` and
@@ -862,8 +899,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `.context/ci-shard-balance/webpki-advisory.md`,
       `webpki-dependents.log`, and `webpki-green.log`; F19:
       `.context/f19/repository.log`, `.context/f19/rust-audit-fixed.log`,
-      and `.context/f19/publish-tests.log`. The native CI round 2 and F18
-      records named no evidence file.
+      and `.context/f19/publish-tests.log`; pnpm and Yarn base install:
+      `.context/base-pnpm-yarn/early-repository.log`. The native CI round 2
+      and F18 records named no evidence file.
 - [x] Keep the braces audit exception through 2026-11-03 UTC. User decision
       72 (2026-10-20): A. Do not renew or extend the exception, and leave
       `rebuild/audit-braces` unmerged. From 2026-11-04 UTC, the strict audit
@@ -1120,9 +1158,17 @@ renders again.
   - [x] Add the shared `RenderGeneration::render_props` path with Rust prop
         validation, fragment caching, document composition, and closure checks.
   - [x] Wire the Serve live render route to the shared JavaScript runtime.
-- [ ] Restore the example catalogue, the design catalogue, and a packed
+- [x] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all six children are
+      done. The example is `examples/basic/mokly.config.json`, the design
+      catalogue is `examples/basic/specs/design`, and
+      `tests/design_catalogue.test.ts` checks the served design catalogue.
+      The packed consumer smokes are `scripts/release/smoke_example.mjs`
+      (`npm run package:smoke`) and `scripts/release/smoke.mjs`, which
+      hosted release check run `39529350934` passed. Gap sweeps:
+      `.context/rust-rebuild/sweeps/m8-core.md` and `m9-references.md` there.
   - [x] Read and classify the previous rendering and component rules and tests
         for the core integration gap sweep.
   - [x] Compare captured example and large scenarios after the example port
@@ -1150,7 +1196,9 @@ renders again.
         example.
   - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
-- [ ] Complete browser coverage for copied static output.
+- [x] Complete browser coverage for copied static output.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all eleven children
+      are done.
   - [x] Build and copy the example in global setup and run exact-file static
         checks in the normal four shards: navigation, inspection, no live
         endpoints, read-only props, resources, canonical links, deployment
@@ -1187,9 +1235,18 @@ renders again.
         fixture shapes, semantic edit readiness, and exact blank-frame notices.
         Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
         Merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions-2.md`.
-  - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
+  - [x] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
         user approves the new job. Include the private slot and variant file
         fixture and the design journeys checked by a manual run.
+        Ticked on 2026-10-21 in plan bookkeeping pass 1: user decision 2 A
+        (2026-10-19) approved the job. The `static-delivery` job of
+        `.github/workflows/ci.yml` runs
+        `scripts/verification/static-delivery.mjs`, which runs
+        `playwright.delivery.config.ts` over static HTTP and then with
+        `MOKLY_PLAYWRIGHT_FILE_DIR`. That spec list holds the design journeys
+        and `component_fragments.spec.ts`, which builds the private slot and
+        variant fixture. The job passed in hosted run `39455750846` at
+        `b1f3c86f`, integration batch 14, and runs in every CI run since.
 - [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -1200,8 +1257,15 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
-- [ ] Complete the M8 viewer cases assigned by the browser sweep, including
+- [x] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all five children are
+      done. Browser sweep round 14 has 743 rows: 704 ported, 0 open TODO
+      rows, and 39 recorded drops, and every ported row has title proof.
+      Specs under `tests/browser`: `shell_client_routes.spec.ts`,
+      `shell_client_history.spec.ts`, `browse_navigation.spec.ts`,
+      `shell_live_edits.spec.ts`, and `serve_usage_focus.spec.ts`. Hub
+      record: `.context/rust-rebuild/delegation/m8-browser/report-14.md`.
   - [x] Port the route, history, detail fence, mount, publication, and live
         edit cases.
   - [x] Port the cases that stay under the viewer client-shell TODO in the
@@ -1241,10 +1305,12 @@ renders again.
       `examples/basic/specs/example/team`, including native HTML screen links.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-14.md`.
 
-- [ ] Add the design catalogue checks that the verification and adoption
+- [x] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+      Ticked on 2026-10-21 in plan bookkeeping pass 2: all eleven children
+      are done.
   - [x] Restore current design artboards, library samples, the frozen screen
         inventory, shared component consumers and ownership, portable links,
         controls, and both viewport layouts through Serve.
@@ -1261,9 +1327,24 @@ renders again.
         through standalone portable links in each viewport and scheme. Disk
         mode uses no HTTP request and the source is removed before navigation.
         Evidence: `.context/ci-gates-round2/private-focused-2.log`.
-  - [ ] Complete the remaining design checks with their feature owners:
+  - [x] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
+        Ticked on 2026-10-21 in plan bookkeeping pass 2. Live props:
+        `design_library_props.spec.ts` edits a design library component on
+        Serve, unsets and sets an optional prop, resets the saved variant,
+        and writes no source file. `component_controls.spec.ts` and
+        `static_component_controls.spec.ts` check the editable and the
+        published read-only controls. Stylesheet attribution and comparison
+        output: the design attribution matrix in
+        `crates/mokly-cli/tests/design_attribution_tests.rs`,
+        `design_behaviour_tests.rs` there, and the design comparison specs
+        `comparison_design.spec.ts`, `design_comparison_*.spec.ts`,
+        `design_stylesheet_evidence.spec.ts`, and
+        `static_comparison_design.spec.ts`. Static build acceptance: the
+        `static_design_*.spec.ts` specs, `review_snapshot_links.spec.ts` for
+        the Review snapshot link fallback, and the static delivery job over
+        HTTP and `file://`. The specs are under `tests/browser`.
   - [x] Check one served example in `tests/design_catalogue.test.ts`: the
         frozen inventory, the shared components and their consumers, family
         adoption, owner chains, stylesheet links and scopes, scripts, link
@@ -1283,10 +1364,18 @@ renders again.
         desktop divider alignment, comparison bars, the stacked frames, mobile
         sheets, responsive overflow, bounded scrolling, and portable link round
         trips.
-  - [ ] Add the Changes checks after Milestone 9: the attribution matrix, one
+  - [x] Add the Changes checks after Milestone 9: the attribution matrix, one
         classification of the nine shared sheets per scenario, the rule
         records and the changed-entry union, and bounded base-side Git
         batching.
+        Ticked on 2026-10-21 in plan bookkeeping pass 1. The design
+        attribution matrix of the M9 TODO "Add the stylesheet attribution
+        tests over the design catalogue" holds the first three parts.
+        `end_to_end_planning_batches_are_constant_at_ten_and_forty_screens`
+        in `crates/mokly-compare/tests/planning_io_tests.rs` bounds base-side
+        Git reads by command count: at most four `cat-file` processes, the
+        same at 10 and 40 screens. That test uses a generated catalogue, not
+        the design catalogue.
   - [x] Add the Rust behaviour tests over the design catalogue after
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
@@ -1389,6 +1478,10 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
       but the span measures snapshot changed-entry collection. The comparison
       contract names Git changed paths as an input that production code does
       not read. Keep the span and the M12 tick pending the decision.
+  - Item 45 B is in the code on the unmerged `rebuild/defaults-engine` from
+    an earlier default: it removes `review.changed-paths` and the claimed
+    Git changed-path comparison input. User decision 131 (2026-10-21) keeps
+    it. Tick this TODO when that branch merges.
 
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
@@ -1430,10 +1523,19 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and removals, with kind isolation and distinct parent/variant destinations.
       Keep canonical impact grouping unchanged.
       Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
-- [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
+- [x] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. Code: `material.rs`, `moves.rs`, `affected.rs`, and
+      `review_projection.rs` in `crates/mokly-compare/src`. Tests in
+      `crates/mokly-compare/tests`: `engine_tests.rs` for ignored changes,
+      moves, documents, and pages, with `move_engine_tests.rs` and
+      `impact_engine_tests.rs`. The instance and slot markers are in
+      `crates/mokly-html/src/_tests_/fragment_tests.rs`, and the strict
+      review v8 reader is in
+      `crates/mokly-model/src/_tests_/review_reader_tests.rs`.
   - [x] Implement the HTML comparison engine, strict review v8 and snapshot v4
         readers, metadata, move pairing, and historical records.
   - [x] Resolve variant-only affected identity and actual-instance resource
@@ -1448,15 +1550,69 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         addresses. Connect page head styles.
   - [x] Connect sidecar style ownership through the base render provider.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/b-regression-final.log`.
-  - [ ] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
+  - [x] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
         sheets are owned by the rendered parent in the code, so a child-only
         rule edit can create a direct parent change. Keep this behaviour until
         the user chooses the ownership rule.
-  - [ ] Resolve user item 40 (review 6b finding 3): owned styles set material
+    - Replaced by user decisions 73 C and 96 C of 2026-10-20 and 110 C of
+      2026-10-21, which `rebuild/defaults-engine` implements. The decision is
+      settled, so the hub had this TODO ticked on 2026-10-21. The code
+      reaches the rebuild branch when that branch merges.
+  - [x] Resolve user item 40 (review 6b finding 3): owned styles set material
         flags without per-rule records in the code. Consumer-instance matches
         of owned styles also supply implementation proof without those records.
         Keep the approved rule-evidence specification. Decide both evidence
         paths before adding records or changing the documented view-state rule.
+    - User decision 131 (2026-10-21) keeps option 40 A, which
+      `rebuild/defaults-engine` implements. The decision is settled, so the
+      hub had this TODO ticked on 2026-10-21. The code reaches the rebuild
+      branch when that branch merges.
+  - [ ] Resolve user item 108 (engine round 4 own review finding 3): nested
+        matches changed own previews. After decision 96 C, a component can
+        hold a record for a match inside a nested copy of itself: X renders
+        Y, and Y renders another X. That record made the component's own
+        previews show Changed and added dependency reasons on its consumers.
+        Severity High, effort Large. Options: A, one page-level flag for
+        nested-only matches, but a page that mixes nested and own sources
+        keeps the wrong result, Medium (estimate); B, carry the stylesheet
+        paths of the kept own-page matches through reduction and
+        classification, while Details keep the nested record, Large because
+        it changes two crates. Recommended: B. Hub review 3 found B correct.
+    - Option B is in the code on the unmerged `rebuild/defaults-engine`, in
+      `e6b2b99c`, from an earlier default, and it stays until the user
+      decides.
+  - [ ] Resolve user item 110 (review 3 finding 1): React component parents
+        get false rows from page-wide registry copies. Severity High, effort
+        Large for C. Options: A, keep the behaviour, state it, and add a
+        React-parent test that asserts it, so the false rows stay, Small
+        (estimate); B, remove the supplier-ancestry condition from the owned
+        nested test, so that a receiver whose own pages prove the rule takes
+        supplied content, Medium. B changes the supplier rule of decisions 73
+        and 96: a parent's own rule for the receiver's children then goes to
+        the receiver when the receiver's preview also matches. C, collect
+        registry styles per registered instance in the sidecar, with slot
+        content under its supplier, so that each rule names the component
+        that rendered it, Large. C changes the sidecar, the core, and the
+        protocol, and it is the original option C of decision 39. D, merge
+        A's documentation now and build C next on its own branch, so the
+        false rows stay until C lands, Small now (estimate). Recommended: C,
+        because it is the only option that keeps both the goal of 39 B and
+        the supplier rule of 73 C.
+    - User decision 110 (2026-10-21): C. Engine round 6 implements it on
+      `rebuild/defaults-engine`. Tick this TODO when that branch merges.
+  - [ ] Resolve user item 97 (review 2 finding 3): owned proof state waits
+        for the whole catalogue. Decision 73 C made owned instance proof wait
+        for catalogue-wide own-page proof. So every view keeps two
+        whole-document instance indexes and candidate proofs until all views
+        are collected, an estimated 190 MB across 5,850 views at 1,000
+        elements per side, not measured. Severity Medium, effort Medium.
+        Options: A, pass the state by value only, which engine fix round 3
+        applied on `rebuild/defaults-engine`; B, keep compact candidates:
+        deduplicated instance chains per owner and rule identity, candidates
+        only for owners with changed rules, and one address pair per view,
+        Medium; C, a counted test at two catalogue sizes, Medium (estimate).
+        Recommended: B, because it removes a memory regression that
+        `rebuild/defaults-engine` adds.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -1531,8 +1687,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/final-root-groups.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/comparison-equality.json`.
 - [x] Settle base-render hardening under F8 decision 41 C. Retain the current
       environment filtering and reserved-path documentation without new rejection.
-- [ ] Implement background classification in Serve, the change snapshot v4,
+- [x] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: every child is done.
+      Code: `crates/mokly-cli/src/serve_changes.rs` and
+      `crates/mokly-model/src/snapshot.rs`. Tests: `serve_changes_tests.rs`
+      and `serve_capture_generation_tests.rs` in
+      `crates/mokly-cli/src/_tests_`,
+      `crates/mokly-model/src/_tests_/snapshot_reader_tests.rs`, and the
+      Serve specs `serve_changes_*.spec.ts` and `serve_comparison_*.spec.ts`
+      under `tests/browser`.
   - [x] Keep a selected variant nested under its component parent in review v8.
         Retain only that variant and capture only its documents. This preserves
         parent-owned dependency evidence instead of returning an invalid result.
@@ -1611,9 +1775,15 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         timing, cancellation and size failure, capacity before projection,
         trace outcomes, backward tip moves, and advertised URL fences.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
-- [ ] Behaviour tests from the captured scenarios, rewritten in the new
+- [x] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: every child is done.
+      Tests: `tests/rebuild_behaviour_table.test.ts` and
+      `tests/rebuild_behaviour_evidence.test.ts`, over
+      `scripts/rebuild/rust-adapter.mjs` and `legacy-adapter.mjs`. Sweeps:
+      `.context/rust-rebuild/sweeps/m9-compare.md` and `m9-references.md`
+      there.
   - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
   - [x] Run the bounded previous-contract and test-title sweep.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
@@ -1634,22 +1804,28 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/m9-round16a/` and
         `.context/rust-rebuild/delegation/m9-compare/report-16a.md`.
         Merge decisions: `.context/rust-rebuild/delegation/m9-compare/merge-decisions-15.md`.
-- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+- [x] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
       assertions. Keep the duplicate component-explorer cases in one suite.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all three children
+      are done.
   - [x] Add one native HTML fixture with five cases in four Serve Changes specs.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log`.
   - [x] Supply a shared private Serve comparison fixture with a pinned base,
         moved and removed entries, CSS evidence, watched edits, and base-ref
         moves. Cover readiness, membership, retained bytes, and renewal.
         Evidence: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
-  - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
+  - [x] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
         `next-assignments.md` item 7b.
         Cold base-source preparation uses real offline builds in
         `tests/static_cold_base_tiers.test.ts` for all three dependency tiers.
         Evidence: `.context/cold-base-tiers/inventory.md` and `.context/cold-base-tiers/`.
-- [ ] Add the stylesheet attribution tests over the design catalogue that
+        Ticked on 2026-10-21 in plan bookkeeping pass 1: browser sweep round
+        14 found no open row. The last three branch-point rows came with F15
+        (`06de37d7`), which integration batch 17 merged in `bb78a8f3`. Hub
+        record: `.context/rust-rebuild/delegation/m8-browser/report-14.md`.
+- [x] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
       stylesheet links, the exact per-entry rendered-resource and rule
@@ -1657,6 +1833,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       unresolved shared rules, and the attribution acceptance matrix.
       The matrix runs in the separate optional nightly and manual workflow.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1:
+      `design_catalogue_attribution_acceptance_matrix` in
+      `crates/mokly-cli/tests/design_attribution_tests.rs` runs the scenarios
+      in `crates/mokly-cli/tests/design_support/`. `scopes.rs` pins the
+      route scopes of the nine shared sheets and the 69 saved library
+      variants, and checks them in every scenario. `shared.rs` checks the
+      exact rule records, the exact changed-entry union, and no affected
+      consumers for unresolved shared rules. `matrix.rs` holds the
+      acceptance matrix. `.github/workflows/design-attribution.yml` runs it
+      nightly and on manual dispatch. GitHub runs that workflow only from
+      the default branch, so it has no hosted run yet.
   - [x] Decide the CI home of the on-demand design matrix: item 50 option B,
         applied by default (user rule), 2026-10-20. Use a separate optional
         nightly and manual workflow on eight CPUs. Give the job 120 minutes
@@ -1705,6 +1892,33 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
         Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
+- [ ] Resolve user item 69 (engine defaults decision 11.1): offline custom
+      Git filters for base resources. Default item 11 A needs checkout
+      conversion of raw base blobs without network access. Git's transport
+      restrictions do not isolate external filter programs. Severity Medium,
+      effort Large. Options: A, support Git's built-in conversions and local
+      LFS objects without external filters, and make a resource with an
+      unsupported custom filter unavailable, Large; B, add network isolation
+      for arbitrary clean and checkout filters on every supported operating
+      system, Large. Recommended: A, because it covers line endings and LFS
+      with a clear offline rule. Raw-blob comparison stays until the user
+      decides. `rebuild/defaults-engine` records this decision and is not
+      merged yet.
+  - User decision 69 (2026-10-21): C. This line lists only options A and B
+    of the engine record, so the hub record holds the text of option C.
+    Work: the new Git base reads workspace, `rebuild/git-base-reads`.
+- [ ] Resolve user item 127 (integration batch 18 decision 1): blobless
+      clones fail comparison base reads. Mokly reads base files with several
+      `git cat-file` processes at once. In a blobless partial clone, Git's
+      parallel lazy fetches fail, so `mokly build --base` and Serve's
+      Changes can fail. Plain Git also failed 3 of 8 parallel readers.
+      Severity Medium, effort Medium. Options: A, find the missing base blobs
+      first, fetch them in one batch, then read, Medium; B, keep the reads
+      and show the recovery fetch command on this failure, Small (estimate);
+      C, document that comparisons need a full clone, Small (estimate).
+      Recommended: A.
+  - User decision 127 (2026-10-21): A. Work: the new Git base reads
+    workspace, `rebuild/git-base-reads`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -1725,7 +1939,14 @@ Tags: ui
 - [x] Add user-facing wording for the review v8 `implementation` reason under
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
-- [ ] Run the viewer suite against Milestone 9 output.
+- [x] Run the viewer suite against Milestone 9 output.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. The browser suite runs the comparison specs on copied
+      `mokly build --base` output, for example
+      `static_comparison_output.spec.ts`, and on Serve Changes in
+      `serve_comparison_*.spec.ts`. The complete gate passed on tree
+      `02e84b0e`, the tip `d044deaf` of `rebuild/defaults-viewer-82b-fix1`,
+      which integration batch 18 merged.
   - [x] Run the comparison UI in Chrome against `mokly build --base` output
         and a removed-entry fixture, and fix the viewer defects that it finds.
   - [x] Settle how Details shows the review reasons, including
@@ -1873,6 +2094,17 @@ and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
 The F12 follow-ups, the merges of F10 and F11, and the deployment switch
 fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
 
+- [ ] Resolve user item 71 (M10 D1 round 3 decision 1): check every changed
+      design automatically. `tests/browser/design_reasons.spec.ts` checks a
+      hand-written list of 29 Browse designs, so a new design of a changed
+      screen can leave out its reasons and no test fails. Severity Low,
+      effort Small. Options: A, keep the hand-written list, Small; B, also
+      find every built Browse design whose selected row has a Changed,
+      Added, or Removed mark, and require each one in the list, except
+      pages, documents, and use cases, Small. Recommended: B, because it
+      catches the class of gap that round 3 review 1 found. B is a new
+      catalogue-wide check, so it needs the user.
+  - User decision 71 (2026-10-21): B. Work: W2.
 - [ ] Commit.
 
 ## Milestone 10.1: Decision defaults in the designs
@@ -1908,7 +2140,13 @@ Tags: ui
       settled copy and states were already in the viewer.
 - [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
       move the copy checks that reached Details through it to live inputs.
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: this milestone's
+      branch `rebuild/defaults-viewer` (`1bdccfba`) and its fix round
+      `rebuild/defaults-viewer-fix1` (`2ccc31d7`) are in the 82 B branch,
+      which integration batch 17 merged. The complete gate passed on tree
+      `02e84b0e`, the tip `d044deaf` of the 82 B fix round, which batch 18
+      merged.
 
 ## Milestone 10.3: Affected-only comparisons in the designs
 
@@ -2154,9 +2392,69 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
 
 ## Milestone 13: Release packaging
 
-- [ ] Add pnpm and Yarn base dependency installation before the first release,
-      under F8 decision 10 option B. Keep the current npm-only limit documented
-      until that support is implemented and verified.
+- [x] Add pnpm and Yarn base dependency installation before the first release,
+      under F8 decision 10 option B. Support offline pnpm 10 through 12, Yarn Classic 1,
+      and Yarn Berry 4 with node modules. Keep Plug'n'Play on its typed fallback.
+      Match exact manager pins and preserve bounded caches and script suppression.
+      Design and verification: `.context/base-pnpm-yarn/`.
+      Implementation of default decision 10 B on 2026-10-20 replaces the
+      npm-only install limit for these supported manager families.
+  - [x] Resolve user item 120 (pnpm and Yarn review finding 6): offline-only
+        pnpm and Yarn installs rarely reach tier two. pnpm gets an empty
+        private store, Berry reads only a committed `.yarn/cache`, and
+        Classic needs a committed mirror. So most repositories fail the
+        offline install on every cold run, with no failure cache, and get
+        "installation failed". Severity Medium, effort Medium. It is a
+        performance finding and a requirement. Options: A, keep offline
+        installs, and fall back at once, before the copy, with a specific
+        reason, when the lockfile has registry packages and the base has no
+        offline data, Medium; B, copy in from the user's existing pnpm store
+        or Yarn cache, which conflicts with "no shared package store",
+        Large; C, allow registry access as npm does, with scripts off, no git
+        protocol, and Berry git and GitHub dependencies kept on the fallback
+        tier, a network-access decision, Medium (estimate). Recommended: A.
+        C best meets F8 decision 10 B.
+    - [x] User decision 120 (2026-10-21): C, for pnpm/Yarn finding 6, offline
+          installs rarely reach tier two. pnpm and Yarn base installs use the
+          registry that the base and user configuration select, with its
+          credentials, as npm base installs do. Scripts, pnpmfile hooks, Git
+          transports, and Corepack downloads stay off. Yarn Berry Git and
+          GitHub sources fall back. Yarn Classic now reads its project and user
+          configuration, with fixed private folders, mirror, and lock file.
+          Fix round 2 implements it; the local registry tests are in
+          `tests/static_base_registry.test.ts`.
+  - [ ] Resolve user item 121 (pnpm and Yarn review finding 7): marker
+        fixtures for every script and hook guard. No test asserts
+        `--ignore-pnpmfile`, `YARN_IGNORE_PATH=1`, `--no-default-rc`, or the
+        `YARN_PLUGINS` removal. Severity Medium, effort Medium. Missing tests
+        wait for the user. Options: A, assert each flag in
+        `manager_command_tests`, Small (estimate); B, A and also cold-build
+        fixtures, `.pnpmfile.cjs` and `.mjs`, a Berry `yarnPath` script, and
+        an ancestor Classic `yarn-path`, that write a marker file that the
+        test requires to be absent, Medium. Recommended: B.
+    - Fix round 2 finding 5 joins it: the marker fixtures in
+      `tests/static_base_managers.test.ts` and
+      `tests/helpers/base_manager_fixture.ts` look in the wrong place.
+  - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
+        and 2): allowlist Berry dependency protocols. Accept only `npm:`,
+        `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
+        resolutions, fall back for every other protocol, and force off a
+        fixed list of Berry settings that load project code. Cached git
+        dependencies then stop installing. Effort Medium. It is a wider fix,
+        so the hub grades no severity, and it is stricter validation, so it
+        needs the user. Options: A, keep only the targeted fixes of findings
+        1 and 2, Small (estimate); B, the allowlist and the forced-off
+        settings, Medium. Recommended: B.
+    - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
+      2 finding 2.
+  - [ ] Resolve user item 123 (wider fix of pnpm and Yarn review findings 3
+        and 4): one typed lockfile model. Parse pnpm and Yarn lockfiles into
+        a typed model with importer and locator context, check only path
+        fields, and test it with a differential corpus against Yarn's parser.
+        Effort Large. It is a wider fix, so the hub grades no severity. The
+        follow-up line on `rebuild/base-pnpm-yarn-fix1` names the same wider
+        fix. Options: A, keep the scalar scans with the targeted fixes, Small
+        (estimate); B, the typed model, Large. Recommended: B.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
@@ -2191,7 +2489,14 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       `.context/ci-release-check-round9/hosted/`.
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
-- [ ] Dry-run the release scripts locally; the real publication is post-merge.
+- [x] Dry-run the release scripts locally; the real publication is post-merge.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. Hosted run `39529350934` of the read-only `release-check.yml`
+      (user decision 106 A) passed on `bbe9d12d`, which integration batch 18
+      merged. It built the five native targets with TLS inspection, packed
+      the seven packages with the `MOKLY_TEST_` scan, rechecked them with
+      `--reuse`, and passed the Chromium smoke of authoring, browser, Build,
+      and Serve.
   - [x] Run the local steps that need no credentials or registry write against
         a scratch checkout and record the blocked steps.
   - [x] Complete the seven-package pack, reuse, and smoke with all native
@@ -2261,6 +2566,20 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Integration: `.context/m14-collector/merge-resolution.md`.
       Follow-up integration: `.context/m14-collector-fix1/merge-resolution.md`.
 
+- [ ] Resolve user item 99 (collector review finding 2): partial capture can
+      drop an earlier view. The growing summary charge means that a later
+      view can stay while an earlier view that fits falls back to its
+      source. Output bytes do not change. Only the number of views that
+      render again when memory is tight changes. The docs do not define
+      which views a partial capture keeps. Severity Low, effort Small.
+      Options: A, record the rule and the default, which the collector
+      decision under the large fixture TODO now does, Small; B, make route
+      order strict, so that no later view stays after the first skip or
+      trim, which is simple to state and test but can keep fewer views,
+      Small (estimate); C, restore the old rule: apply it again when the
+      final capacity is known and render each dropped view that now fits,
+      Medium. Recommended: A.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2302,12 +2621,26 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       and reached closure files. Measure this boundary under the large fixtures.
   - [x] Verify captured bundle inputs against sidecar module digests before
         document callbacks; retain those baselines through the live recheck.
-- [ ] Report exact consumed-byte digests for the PostCSS module graph and
-      plugin file dependencies, and use them as static fingerprint baselines.
-      Design how to capture the bytes that module evaluation and plugins read,
-      or supply immutable generation inputs. Paths and rereads after a plugin
-      runs cannot establish the consumed bytes. Plugin file dependencies outside
-      roots and bundle modules without witnesses retain an accepted late baseline.
+- [x] Report observed-read evidence for the PostCSS module graph and plugin
+      file dependencies, and use it as static fingerprint baselines: record
+      the bytes that module evaluation and plugins read through observed
+      APIs, and keep explicit incomplete coverage and late opaque baselines
+      for other reads. Paths and rereads after a plugin runs cannot establish
+      the consumed bytes. Plugin file dependencies outside roots and bundle
+      modules without witnesses retain an accepted late baseline.
+      User decision 114 (2026-10-21): A. It changes this TODO from exact
+      consumed-byte digests to this observed-read guarantee, and it removes
+      the immutable generation inputs path, which decision 56 A rejects.
+      Ticked on 2026-10-21 in plan bookkeeping pass 3: the observed-read
+      children are done. The Read Evidence and Incomplete Coverage sections
+      of `docs/protocol/mokly-sidecar-postcss.md` state the guarantee.
+      `sidecar_postcss_evidence.test.ts`,
+      `sidecar_postcss_module_evidence.test.ts`,
+      `sidecar_postcss_loader_evidence.test.ts`,
+      `sidecar_postcss_ranges.test.ts`, `sidecar_postcss_streams.test.ts`,
+      and `postcss_evidence_ledger.test.ts` under `tests` check it. Stage
+      evidence: `.context/rust-rebuild/m14-postcss-read-evidence/` and its
+      `-2` and `-3` siblings.
   - [x] Compare read observers with immutable PostCSS inputs, including native
         plugins, child processes, descriptors, cost, and supported platforms.
   - [x] Decision 56 A, approved 2026-10-19: add observed-read evidence in
@@ -2330,12 +2663,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         ranges. Track FileHandle, Node streams, and FileHandle web streams.
         Keep unknown or overlapping sequential positions opaque. Verify ranges
         in one streamed pass per path and preserve them through both caches.
-  - [ ] Complete the remaining coverage: native/helper/worker reads,
-        private resolution metadata, unknown descriptor positions, opaque
-        providers and options, and unavailable native identity. The full M14 item
-        remains open. No path or context is labelled complete.
-        Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
-        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
+  - Moved on 2026-10-21 to the post-merge follow-up for confined inputs, by
+    user decision 114 A: native, helper, and worker reads, private
+    resolution metadata, unknown descriptor positions, opaque providers and
+    options, and unavailable native identity.
   - [x] Retain descriptor-bound file identity and verified resolved names.
         Detect equal-byte replacements and symlink retargets before callbacks
         and installation. Keep helper, worker, and native cursor changes opaque.
@@ -2350,13 +2681,21 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         if possible, but do not block the merge. Option C records asynchronous
         loader module paths through a message port and restores short-circuited
         resolve paths. The raw source remains opaque.
-  - [ ] Closure decision M14-PC2, proposed 2026-10-20, remains pending.
-        A: change the parent acceptance to the observed-read guarantee and tick
-        that scope with the recorded incomplete coverage. Effort Small.
-        B: keep the full parent open until an approved confined-domain design
-        can cover opaque reads. Effort Large. Recommend B because native reads
-        can still produce CSS from bytes that differ from their late baseline.
-        Neither option is applied. The user reserved the parent checkbox.
+  - [x] Resolve user item 114 (W6 decision 1, closure decision M14-PC2,
+        proposed 2026-10-20): close this PostCSS evidence item? Observed-read
+        evidence now covers every read that JavaScript hooks can see. Reads
+        by native addons, helper processes, workers, private Node package
+        manifest reads, and synthetic providers stay incomplete. Severity
+        High, effort Large for B. Options: A, change the parent acceptance to
+        the observed-read guarantee and tick that scope with the recorded
+        incomplete coverage, Small; B, keep the full parent open until an
+        approved confined-domain design can cover opaque reads, Large.
+        Recommended: B, because native reads can still produce CSS from
+        bytes that differ from their late baseline. Neither option is
+        applied. The user reserved the parent checkbox.
+    - User decision 114 (2026-10-21): A. This pass changes and ticks the
+      parent TODO, and a post-merge follow-up holds the confined input
+      design.
   - [x] Measure cumulative range-ledger growth during repeated Serve-style
         updates. A 1 MiB file read in 4 KiB chunks with unique bytes on every
         update reached 31,426,890 JSON bytes at 400 updates on Node 24.21.0.
@@ -2366,15 +2705,46 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         .context/rust-rebuild/m14-postcss-read-evidence-3/ledger-boundary-node24-unique.log,
         ledger-100x1m-4k-fd-node22.log, and
         ledger-100x1m-4k-fd-node24.log.
-  - [ ] Decision 119, proposed 2026-10-21, remains pending for cumulative
-        range evidence that can exceed the existing 64 MiB frame limit.
-        A: add a per-context evidence cap below the frame limit and retain an
-        explicit incomplete or late class after the cap. Effort Medium.
-        B: send evidence deltas or an out-of-band ledger while keeping each
-        frame below 64 MiB. Effort Large. Recommend B because it preserves
-        exact evidence for long Serve sessions without changing the frame
-        limit. C: keep the current cumulative response and document the
-        projected session bound. Effort Small. No option is applied.
+- [ ] Resolve user item 125 (W6 decision, first recorded here as decision
+      119, proposed 2026-10-21): the cumulative range ledger can pass the
+      existing 64 MiB frame limit. It does not block the merge, because
+      only plugins that read files through descriptors or streams in small
+      chunks add range witnesses. Severity High, effort Large for B.
+      Options: A, add a per-context evidence cap below the frame limit and
+      retain an explicit incomplete or late class after the cap, Medium;
+      B, send evidence deltas or an out-of-band ledger while keeping each
+      frame below 64 MiB, Large; C, keep the current cumulative response and
+      document the projected session bound, Small. Recommended: B, because
+      it preserves exact evidence for long Serve sessions without changing
+      the frame limit. No option is applied.
+  - User decision 125 (2026-10-21): D, a new option: the PostCSS child
+    keeps read evidence for one generation only. Work: the PostCSS
+    follow-ups workspace.
+- [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
+      loader-supplied modules. The preload now registers Mokly's hooks
+      first, so a consumer load hook that returns source without
+      `nextLoad` hides that module. Contexts with an asynchronous loader
+      record no ESM module. Such plugin files get no witness, no path, and
+      no late baseline, so the protocol's rule that unobserved reads keep a
+      late opaque baseline is not true for them. Severity Low, effort
+      Medium. Options: A, state the gap in the protocol and the README,
+      Small (estimate); B, register a second, path-only hook set after the
+      consumer preloads, as the base did, and state the remaining
+      asynchronous-loader gap, Medium; C, record module paths through an
+      asynchronous resolve hook and a message port, Large. Recommended: B.
+  - User decision 117 (2026-10-21): A now, and C after the merge, in
+    parallel if possible, without blocking the merge. Work: the new
+    PostCSS follow-ups workspace.
+- [ ] Resolve user item 118 (W6 review finding 3): each file open probes
+      identity twice. Every tracked open runs one wasted `fstat`,
+      `realpath`, and `stat` probe. Severity Low, effort Small. Performance
+      findings wait for the user. Options: A, probe in `opened()` only when
+      a whole-file read needs it, and in `begin()` only for unsuppressed
+      tickets, Small; B, A and also keep the descriptor's object until the
+      descriptor closes, Small (estimate); C, an operation-count test for
+      the probes of each read at two sizes, Medium. Recommended: A.
+  - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
+    workspace.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -2498,6 +2868,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         matching path. Its subtree search uses one native frame per rendered
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
+    - Item 48 B is in the code on the unmerged `rebuild/defaults-engine`
+      from an earlier default: matching trees deeper than 512 elements keep
+      changed `:has()` selectors as unresolved evidence. User decision 131
+      (2026-10-21) keeps it. Tick this TODO when that branch merges.
   - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
@@ -2544,6 +2918,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
+  - [ ] Run the watch scenario on the default large fixture and record its
+        edit-to-reload time for each edit kind: one screen, one component,
+        and one stylesheet. The budget table in `mokly-timings.md` requires
+        this record. Found in plan bookkeeping pass 1 on 2026-10-21: the plan
+        records only the watch smoke run in `.context/m14-harness/watch-smoke/`.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -2552,6 +2931,30 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Decide whether reconstructed `plaintext` text writes raw characters;
       keep its escaping rules until approved (M14 review 1a finding 1B).
+  - Item 37 B is in the code on the unmerged `rebuild/defaults-engine` from
+    an earlier default: it writes all text raw while plaintext mode is
+    active. User decision 131 (2026-10-21) keeps it. User decision 76 B
+    covers the `noscript` case: the unmerged `rebuild/followups-f14` escapes
+    raw `noscript` closing text in `4beca842`. Tick this TODO when both
+    branches merge.
+- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
+      decision): let the parser choose the plaintext point. Four cases of
+      serializer-versus-parser divergence so far: hub review 1 finding 2,
+      `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
+      for B. Options: A, keep the fail-safe check that retries with all text
+      escaped when the parser disagrees, which engine fix round 3 applied on
+      `rebuild/defaults-engine` as its option B, Small (estimate); B,
+      serialize first with all text escaped, find the first HTML `plaintext`
+      element by its repair id, and write raw text only after it, Large.
+      Recommended: A now, and B as a post-merge follow-up.
+  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
+    now also covers the source-identity redesign: the M15 follow-up "carry
+    source identities through HTML5 token processing for all elements", F19
+    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
+    in which html5ever's tree builder reads the tokens of the token pass,
+    chooses every text mode, and gives each element its source position.
+    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
+    request.
 - [x] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
@@ -2639,12 +3042,24 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
       Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
-  - [ ] R20-1: Decide on streamed Git blob copies and batched digests.
-        Severity Low, effort Large. Recommended: A, remove per-asset process
-        startup and the extra full-blob buffer. Preserve all existing bounds.
-        Option B retains the measured adapter. No option is applied.
-- [ ] Complete the gap sweep: every triage decision is in a spec or recorded
-      as an accepted difference for the release note.
+  - [ ] Resolve user item 64 (engine R20-1, from M14 review 6 finding 8):
+        decide on streamed Git blob copies and batched digests. Each opaque
+        asset digest starts its own Git process, and delivery buffers a
+        copy. 64 assets cause 128 opaque Git commands, and a 16.78 MB file
+        needs two payload copies during delivery. Every bound holds.
+        Severity Low, effort Large. Options: A, remove per-asset process
+        startup and the extra full-blob buffer, and preserve all existing
+        bounds, Large; B, retain the measured adapter, Small (estimate).
+        Recommended: A. No option is applied.
+- [x] Complete the gap sweep: every triage decision is in a spec or recorded
+      as an accepted difference for the release note. Done on 2026-10-21.
+      Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
+- [ ] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
+      recursion of `:has()` and for the raw characters of reconstructed
+      `plaintext` text wait for `rebuild/defaults-engine` to merge. The
+      `noscript` case also waits for `rebuild/followups-f14`. User decision
+      131 (2026-10-21) keeps their options, so both TODOs wait only for those
+      merges. Tick this line when both TODOs are ticked.
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
@@ -2679,9 +3094,20 @@ Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 Integration batch 11 decisions: `.context/integration-11-merge-decisions.md`.
 Integration batch 18 decisions: `.context/integration-18-merge-decisions.md`.
+Integration batch 19 decisions: `.context/integration-19-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
+
+- [x] Configure plain actionlint runs (2026-10-21). Declare the five exact
+      Blacksmith runner labels in the repository configuration without ignore
+      rules. Document the manual command. No tracked invocation uses a label
+      ignore pattern, and no gate changes. Evidence:
+      `.context/ci-actionlint-config/`.
+  - Integration batch 18 decision 2 (2026-10-21): configure the actionlint
+    runner labels, so that a plain `actionlint` run needs no label ignore
+    rule. `rebuild/ci-actionlint-config` (`2bc59dd2`) holds the work.
+    Integration batch 20 merged it, and the record above ticks it.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
@@ -2704,6 +3130,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `.context/ci-probe-diagnostic/tool-audit-red.log`,
       `pinned-tool-audit.log`, `candidate-tool-build-compatible.log`,
       and `installer-smoke.log`.
+  - Integration batch 18 decision 3 (2026-10-21): this record stays beside
+    the RUSTSEC-2026-0382 TODO of Milestone 3. It names the advisory, but it
+    records a different change: the lock of the `cargo-audit` tool itself,
+    not the workspace `Cargo.lock` patch.
 
 - [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
       all discovered browser specs to four whole-file shards in hosted CI and
@@ -2804,6 +3234,51 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
 
+- [ ] Resolve user item 100: CI jobs exceed the three-times rule of the CI
+      timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
+      its 30 minutes and Viewer took 11.3 of its 30 minutes. Severity Medium,
+      effort Small. Options: A, raise the limits to at least three times the
+      measured durations, Repository 75 and Viewer 40 minutes, Small; B,
+      larger Blacksmith runners for Repository and Viewer, which cost more
+      and also shorten the critical path of every pull request, Small
+      (estimate); C, split the Repository job into parallel jobs, for
+      example Rust tests apart from lint, types, and audits, and keep the
+      30-minute limits, Medium. Recommended: B, with A as the safety margin,
+      to be confirmed by a second measured run.
+  - User decision 100 (2026-10-21): A. Work: the CI gates workspace.
+- [ ] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
+      browser shards. The same files vary above 15 percent in 208 of 267
+      comparisons between two hosted runs, so these data do not separate
+      runner noise from cache, fixture, and order effects. Severity Medium,
+      effort Small. Options: A, three controlled hosted repeats of one
+      commit and assignment, with the median shard times as the target,
+      Small; B, a dynamic whole-file queue across the four runners, Large
+      (estimate). Recommended: A, because it is the smallest way to separate
+      stable costs from run variation. The unmerged
+      `rebuild/ci-shard-hosted-2` records the measurements.
+  - User decision 124 (2026-10-21): A. Work: the CI gates workspace.
+- [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
+      that fails when a ticked TODO has an open child. Three cases so far:
+      m7 review 3 finding 4, the deferred probe under a ticked parent at
+      `7cfc4895`, and the plan line that was then at line 2125. Severity Low,
+      effort Medium. Options: A, no check, and reviews catch it, Small
+      (estimate); B, a Node test next to `tests/markdown_links.test.ts` that
+      fails on a ticked item with an open child, Medium. Recommended: B. B
+      adds a gate, so it needs the user's approval.
+  - User decision 68 (2026-10-21): A. No plan check is added.
+- [x] Resolve user item 126 (audit item 5, wider fix C): a check for
+      milestone and history words in protocol pages. Three protocol passages
+      used plan words against the end-state rule: "Compilation redesign is
+      deferred" in `mokly-timings.md`, "Decision 56" and "M14" in
+      `mokly-sidecar-postcss.md`, and "remains open" in `mokly-export.md`.
+      Severity Low, effort Medium. Options: A, no check, and reviews catch
+      them under the documentation skill, Small (estimate); B, a
+      repository-suite check that fails on milestone and plan-decision
+      references in `docs/protocol`, such as M and a number, "Milestone",
+      and plan decision numbers, with an allowlist for real terms, Medium.
+      Recommended: B. B is a new lint, so it needs the user.
+  - User decision 126 (2026-10-21): A. No check for plan words is added.
+
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
@@ -2813,6 +3288,21 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Finding: `tests/actionlint_config.test.ts` scans only `.yml` workflows.
+    Include `.yaml` in the label coverage test. Severity Low, effort Small.
+    Recommended: A. User decision required because this is a missing-test
+    finding.
+  - Follow-up: share a parsed dependency-input model for identity and source validation.
+    Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
+    Review and regression evidence: `.context/base-pnpm-yarn/`.
+  - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
+        Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
+        `7e6ae9ad`, and `9855feb1`.
+  - [ ] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
+        fix them only in part. Fix round 2 on `rebuild/base-pnpm-yarn-fix2`
+        completes them when it lands: Berry `exec:` sources (finding 1),
+        lockfile paths by position (finding 3), bounded workspace pattern
+        walks (finding 5), and the nested Berry cache path (finding 9).
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
@@ -2839,6 +3329,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the failed child. Evidence: `.context/native-ci-fixes-3/`.
         The hub must dispatch hosted macOS and Windows CI on
         `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
+  - [x] Native CI round 4: keep valid unusual names on macOS and keep the
+        non-UTF-8 filename case on filesystems that support it. Copy the
+        repository ignore rules into the design fixture and add PostCSS child
+        phase timings to timeout diagnostics. Evidence:
+        `.context/native-ci-fixes-4/`. The hub must dispatch hosted macOS and
+        Windows CI on `rebuild/native-ci-fixes-4`.
   - [x] F17: align remote executable discovery with the shared Node shim
         resolver and Windows native `.exe` names. Keep explicit extensions
         and Unix names. Evidence: `.context/f17/windows-red.log` and
@@ -2870,6 +3366,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `tests/fixtures` and the export check stay as they are. The wider
         check is item 109 for the user. Search record:
         `.context/m10/f20/item4-searches.txt`.
+  - [x] F20 review finding 43, on 2026-10-21: settled by option C as the
+        hub's default. User item 109 option B now needs no baseline entries,
+        because F20 removed all 47 unused exports.
   - [x] F20 merge of the rebuild tip `24982bb7`, on 2026-10-20: the plan
         keeps both sides' new records. F17's replacement of the remote
         discovery line stays, and user decision 105 settles the tip's React
@@ -2886,14 +3385,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] F20 review, on 2026-10-21: finding 41 is fixed by option A. The path
         identity release note says that the viewer data release note lists
         the names that this release removes from `@mokly/viewer/data`.
-  - F20 review finding 42 for the user: the merged plan keeps a settled line
-    open. Severity Low, effort Small. Recommended: A, rewrite the React
-    large watch timeout line as one checked record of user decision 105 and
-    delete its child line.
-  - F20 review finding 43 for the user: the premise of item 109 is stale
-    after item 4. Severity Low, effort Small. Recommended: A, add to the item
-    4 record that the three trees now have no unused runtime export, so
-    option B of item 109 needs no baseline entries.
+  - [x] F20 review finding 42, on 2026-10-21: settled by option B as the
+        hub's default. The open React large watch timeout line no longer
+        says "Separate branch." or names an unproven suspected cause, and its
+        checked child stays.
+  - F20 review finding 43: settled on 2026-10-21 by option C as the hub's
+    default. The record follows the F20 item 4 record.
   - Outside the F20 review scope:
     - `docs/protocol/ci-test-timing.md`: the duration helper section and the
       fixture budget sentence name test helper files and functions, which
@@ -2907,10 +3404,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         lists the 0.15.0 successors of the released types, such as
         `ManifestV10` and `ReviewResultV7`. The full report is
         `.context/m10/f20/review_2.md`.
-  - F20 re-review finding 45 for the user: the options recorded for
-    findings 42 and 43 would edit history lines. Severity Low, effort Small.
-    Recommended: A, record options for 42 and 43 that edit only live lines
-    or add new lines beside the checked records.
+  - [x] F20 re-review finding 45, on 2026-10-21: settled by option A as the
+        hub's default. Options 42 B and 43 C edit only live lines or add a
+        new line beside a checked record.
   - Outside the F20 re-review scope:
     - `docs/protocol/npm-release-notes.md`: no note tells
       `@mokly/viewer/data` users to import `ComponentInstanceRecord` and six
@@ -2937,25 +3433,58 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         in the existing native release workflow test. Preserve build behavior.
         Evidence: `.context/ci-release-fixes/native-checkout-red.log` and
         `.context/ci-release-fixes/native-checkout-green.log`.
-  - CI release checks hub review finding 1: a stale PR base can keep an old
-    release check green. Severity Medium, effort Small. Recommended: A, require
-    branches to be up to date before merge. The hub owns the user decision.
-  - CI release checks hub review finding 2: viewer source comparison misses
-    external build inputs and includes unpublished Markdown. Severity Medium,
-    effort Medium. Recommended: C, compare packed viewer bytes with the
-    published archive. The hub owns the user decision.
-  - CI release checks hub review finding 3: effective severity and target filters
-    can hide Rust advisories. Severity Low, effort Small. Recommended: A,
-    reject those filters. The hub owns the user decision.
+  - [x] Resolve user item 92 (CI release checks hub review finding 1): the
+        release PR check can pass on a stale base. Release Please does not
+        update an open release PR for a non-releasable commit, and a re-run
+        keeps the old merge commit. So a CLI-only release PR can merge with
+        viewer source that differs from the viewer tag. Severity Medium,
+        effort Small. Options: A, require branches to be up to date before a
+        merge to `main`: a branch protection setting that needs a maintainer
+        credential, and every pull request then needs an update after `main`
+        moves, Small; B, repeat the comparison in `release.yml` before
+        preparation: it adds a gate, and the new CLI tag then needs a new
+        version, Small (estimate); C, on each push to `main`, run the check
+        for the open release PR and post a required status: it needs
+        `statuses: write` and adds a gate, Medium. Recommended: A.
+    - User decision 92 (2026-10-21): ignore. The finding is closed with no
+      change, because user decision 93 D removes the check.
+  - [ ] Resolve user item 93 (CI release checks hub review finding 2): the
+        viewer check compares the wrong file set. It misses viewer build
+        inputs outside `packages/viewer`, such as React and React DOM from
+        the root lockfile, which bundle into `dist/browser/shell.js`, and
+        the root `tsconfig.json`. It also fails on README files that the
+        package does not ship. Severity Medium, effort Medium. Options: A,
+        also compare the root `tsconfig.json` and skip the Markdown under
+        `src`, which still misses the lockfile, Small; B, also fail when the
+        resolved packages in the root lockfile changed since the viewer tag,
+        Medium; C, build and pack the viewer at the PR head and compare it
+        byte for byte with the published viewer archive of the same version,
+        which needs a reproducible viewer build and registry access, Medium;
+        D, release a new viewer with every CLI release, which changes the
+        versioning, Large. Recommended: C.
+    - User decision 93 (2026-10-21): D, "keep them on the same version".
+      The CLI and the viewer release together with one version. Work:
+      `rebuild/release-lockstep`, in the CI gates workspace.
+  - [ ] Resolve user item 94 (CI release checks hub review finding 3): the
+        Rust audit guard misses other report filters. It checks only ignored
+        advisory IDs, but a severity threshold or a target list in the audit
+        configuration also hides advisories. Severity Low, effort Small.
+        Options: A, also fail when the effective settings hold a severity
+        threshold or a target list, Small; B, state that the guard covers
+        only ignored IDs, Small (estimate). Recommended: A. A is a stricter
+        validation, so it needs the user.
+    - User decision 94 (2026-10-21): A. The audit guard also fails on a
+      severity threshold or a target list. Work: the CI gates workspace on
+      `rebuild/audit-guard-filters`.
   - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
     a healthy Node 22 file-delivery run before report download. Separate branch.
     The hub must decide the Testbox guard before any timeout change.
     Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
     `.context/ci-release-fixes/remote-floor-final.log`.
-  - `tests/browser/large_watch.spec.ts`: `large watch delivers browser evidence
-for react` hit `Test timeout of 300000ms exceeded` during the Node 22
-    remote gate. The unchanged isolated Node 22 rerun passed. Suspected source:
-    real watcher readiness or runner contention, not proven. Separate branch.
+  - `tests/browser/large_watch.spec.ts`:
+    `large watch delivers browser evidence for react` hit
+    `Test timeout of 300000ms exceeded` during the Node 22 remote gate. The
+    unchanged isolated Node 22 rerun passed.
     Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
     and `.context/ci-release-fixes/watch-react-rerun.log`.
     - [x] Settled by user decision 105 (2026-10-20): the combined React
@@ -3074,11 +3603,81 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     elements instead of matching tag signatures. Effort Large. Covers F19
     review finding 2, option B. Previous example: the existing source-location
     queues. The scoped wrapper repair applies option A.
+    - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item
+      98 now covers this follow-up and F21 review finding 5: one HTML
+      pipeline in which html5ever's tree builder reads the tokens of the
+      token pass, chooses every text mode, and gives each element its source
+      position. Work: W6 on `rebuild/html-pipeline`. It must not delay the
+      final pull request.
+  - [ ] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
+        delivered documents lose wrapper-named attributes. The tree sink
+        filters every HTML5 parse. So a raw delivered `.html` file, a
+        `srcdoc` value, or `definePage` HTML with an element named
+        `mokly-ignore` or `mokly-ignore-scope` loses attributes such as
+        `style`, `src`, `href`, and `class` in Mokly's tree. The browser
+        still applies them, but `definePage` pages lose them in the served
+        page. So the public closure can miss a referenced file, and Changes
+        can miss a style change in an embedded document. Severity Low,
+        effort Large for C. Options: A, accept the global filter and state
+        it in the HTML screens protocol, Small (estimate); B, filter only
+        authored parses through an authored flag on the parser arena, so
+        that two graph scans read the attributes again and widen their cache
+        keys, Medium; C, split the public parser into an authored parse and a
+        delivered-document parse that every caller chooses, Large.
+        Recommended: C.
+  - [ ] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
+        new code can bypass the token boundary. Nothing stops new code in
+        `mokly-catalogue` or `mokly-html` from calling html5gum's tokenizer
+        directly and reading ordinary unknown wrapper attributes again. That
+        is the class of CLI defaults review finding 1. Severity Low, effort
+        Medium. Options: A, a README rule, which nothing enforces, Small
+        (estimate); B, a workspace `clippy.toml` `disallowed-methods` entry
+        for the html5gum tokenizer constructors, allowed with `#[expect]` in
+        the two boundary files, Medium; C, make the boundary the only
+        html5gum user, with Mokly-owned token types, Large. Recommended: B.
+        B is a new lint, so it needs the user.
+    - User decisions 115 and 116 (2026-10-21): A now, C after the merge, in
+      parallel. Decision 115 A records the current global wrapper-attribute
+      filtering rule. Decision 116 A records the current `html_tokens::parse`
+      consumer rule. Phase 2 of the HTML pipeline plans options C for both
+      boundaries after the merge.
+  - [x] F21: restore empty wrapper source slots during plaintext repair,
+        follow HTML parser markup contexts for noscript and foreign style or title
+        content, validate saved variant slot fragments, name reserved navigation
+        warnings as rejections, and preserve authored page ignore wrappers for
+        Rust region composition.
+        Evidence: `.context/f21-item2-slot-red.log`,
+        `.context/f21-item3-warning-red.log`, and
+        `.context/f21-item4-sidecar-green-final.log`.
+  - Item 128: saved variant slot element checks. Option A keeps the
+    checks and states the rule in `mokly-html-components.md`; option B keeps
+    only the required `html-ignore-attribute` and `html-foster-parented`
+    warnings. Recommended: A. Apply B until the user answers.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
-  - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
-  - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
+  - [ ] Resolve user item 87 (CLI defaults hub finding 5): define the new
+        warning messages. `html-ignore-attribute`, `props-control-bounds`,
+        and `props-unsafe-integer` have no defined message. Invocation
+        warnings name the rendered entry and only the prop path, for example
+        entry "home": prop "/count" when `home` has no `count` prop, and they
+        merge with the entry's own warning. Prop names appear as "/count" and
+        as "count". Severity Low, effort Medium for B. Options: A, define the
+        current messages in the three contracts and add the code to the HTML
+        Diagnostics table, Small (estimate); B, also make invocation warnings
+        name the component path and the instance id and use one prop-name
+        form, then define the messages, Medium. Recommended: B.
+  - [ ] Resolve user item 88 (CLI defaults hub finding 6): Props fields
+        reorder after the detail loads. Entry detail v2 carries the declared
+        control order, but until the detail arrives the Props tab shows the
+        index's alphabetical order, and then the fields jump. Severity Low,
+        effort Small. Options: A, show the Props fields only after the routed
+        detail arrives, with a pending state, Small; B, keep the sorted
+        fallback and state it in the controls contract, Small (estimate); C,
+        carry `controlOrder` in the catalogue index, which makes index v8,
+        Large. Recommended: A.
+    - User decision 88 (2026-10-21): A. The Props fields wait for the routed
+      detail. Work: W2 on `rebuild/viewer-88a`.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
     Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
   - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
@@ -3172,18 +3771,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
           destination's loading stage until the full page load. The F11
           deployment case now fails if the outgoing document shows the
           unavailable stage. An embedded host behaves as before.
-    - F12 decision 1 for the user: an embedded host shows the unavailable
-      stage with retry after another deployment, which the viewer contract
-      does not name. Severity Medium, effort Small. Recommended: A, state
-      that behaviour in `mokly-viewer.md` and test it.
-    - Follow-up, user item 90: a use-case route whose step detail fails
-      while the use case detail reports another deployment still shows the
-      unavailable stage before the page load. Severity Low, effort Small.
-      Option A: after a deployment outcome, clear the route's failed marks
-      and ignore later failures for every source. Option B: do A only when
-      the source reloads the page. Option C: a separate "replaced" delivery
-      status, effort Large. Recommended: B. Covers F12 review finding 2.
-      Previous examples: F11 and `89f8f6cd` for a route with one detail.
+    - On 2026-10-21, F12 decision 6, which this record first called
+      decision 1, moved to user item 89. F12 review finding 2 moved to user
+      item 90. Both follow this F12 record.
     - [x] Outside the scope of F12 review 1, line 93, and review 2, line 86:
           component copy used both "variant" and "saved view". The stage
           read "No changes to this variant", and Details read "No changes
@@ -3191,6 +3781,71 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
           `rebuild/viewer-followups-v2` (`09d38589`): every component
           sentence says "variant", the term of the variants contract, and
           the protocol, guides, design copy and tests follow.
+  - [ ] Resolve user item 89 (F12 decision 6): what an embedded host shows
+        after another deployment. `mokly-viewer.md` says that a different
+        `deploymentId` emits one `onError` and leaves the installed state in
+        place, but not what the stage shows. Today the embedded host shows
+        the unavailable stage with Try again, and the retry cannot succeed
+        until the host replaces `index`. Severity Medium, effort Small.
+        Options: A, state the current behaviour in `mokly-viewer.md` and add
+        an embedded test, Small; B, keep the loading stage until the host
+        replaces `index`: set `reloadsOnDeployment` on the embedded source,
+        state the rule in `mokly-viewer.md`, and test it, Small; C, a
+        "replaced" stage that shows the `onError` copy without Try again,
+        which needs new copy, a mockup, and spec rows, Large. Recommended: B,
+        because it shows no action that cannot work.
+    - User decision 89 (2026-10-21): B. Work: W1 on `rebuild/viewer-89b`.
+  - [ ] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
+        each entry kind's sentences from one word.
+        `packages/viewer/src/shell/entry_wording.ts` writes the sentences of
+        each kind separately, so one kind used two words for one thing.
+        Severity Medium, effort Medium. Code-structure findings wait for the
+        user. Options: A, keep the current sentences and the new copy test,
+        Small (estimate); B, derive the sentences of each kind in
+        `entry_wording.ts` from one noun per kind, so that a kind cannot mix
+        words, Medium. Recommended: B.
+    - User decision 119 (2026-10-21): B, build each kind's sentences in
+      `entry_wording.ts` from one noun per kind. Work: W2 on
+      `rebuild/viewer-119b`, after 84 B.
+  - [ ] Resolve user item 90 (F12 review finding 2): a failed step detail
+        still flashes the error during a deployment reload. On a use-case
+        route, the use case detail starts the page load, but a 404 for a
+        removed step screen marks the route failed. So the old document
+        shows "This user flow could not be shown" until the page load.
+        Severity Low, effort Small. Options: A, after a deployment outcome,
+        clear the route's failed marks and ignore its later failures for
+        every source, Small; B, do A only when the source reloads the page,
+        Small; C, a separate "replaced" delivery status, Large. Recommended:
+        B. Previous examples: F11 and `89f8f6cd` for a route with one detail.
+    - User decision 90 (2026-10-21): C, a separate "replaced" delivery
+      status. Work: W1 on `rebuild/viewer-90c`. The hub moved this work from
+      W2 to W1 on 2026-10-21.
+  - [ ] Resolve user item 139 (90 C decision 1): what the replaced stage
+        shows. The replaced delivery status of 90 C shows the loading stage
+        in both hosts, which is the stage that 89 B gives an embedded host.
+        The spec has no words for a replaced catalogue. Severity Low, effort
+        Small. Options: A, keep the loading stage for the replaced status in
+        both hosts, and add one sentence about it to the `preview-loading`
+        design description, Small; B, show one new line in the same quiet
+        stage, "Loading the new catalogue…", in both hosts, after a fifth
+        design screen "Catalogue replaced", Large; C, as B with the words of
+        the host message, "The catalogue changed. Loading the new
+        version…", Large. Recommended: A.
+    - User decision 139 (2026-10-21): A. Work: W1 on
+      `rebuild/viewer-139a-140b`.
+  - [ ] Resolve user item 140 (90 C decision 2): when a use case shows a
+        step failure. A use-case route loads the use case detail and each
+        step detail at once. A step failure that arrives before any detail
+        shows the new deployment makes the route show the unavailable stage
+        until the next detail arrives. An embedded host also gets the step's
+        `onError` before the catalogue message. Severity Low, effort Small.
+        Options: A, keep showing a failure as soon as it arrives, Small; B,
+        show a failed route only after all its details have settled, and
+        keep sending the host's failure message at once, Small; C, as B, and
+        also hold the host's failure message until the route settles, Medium
+        (estimate). Recommended: B.
+    - User decision 140 (2026-10-21): B. Work: W1 on
+      `rebuild/viewer-139a-140b`.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
@@ -3248,11 +3903,14 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         The M14 isolated rerun passed; its missing epoch let idle cleanup take
         the asserted slot. Evidence: M14 `report-3.md` and
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
-  - M8 browser review 3 finding 1, High severity, Medium effort: approve two
-    hosted PR measurements with fresh and restored caches before Required CI.
-    Keep four shards, the job timeout, and the 60-second test timeout until
-    the user decides from measured setup, shard, and slow-case durations.
-    Recommended A: measure.
+  - [ ] M8 browser review 3 finding 1, High severity, Medium effort: approve
+        two hosted PR measurements with fresh and restored caches before
+        Required CI. Keep four shards, the job timeout, and the 60-second test
+        timeout until the user decides from measured setup, shard, and
+        slow-case durations. Recommended A: measure.
+    - Covered by user decision 124 (2026-10-21): A, three controlled hosted
+      repeats of one commit and assignment, which the CI gates workspace
+      runs. Tick this line when 124 A lands.
   - [x] M10 shard follow-up: both cases of `design_modern_controls.spec.ts`
         "every selected screen uses one icon footer and one view toolbar"
         timed out once under load in shard 2. Fixed by `f81b7744`, which
@@ -3402,12 +4060,14 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         `branchPointPaths` in `tests/browser/branch_point_test.ts` that item
         1 left without a reader, is fixed by option A. The full report is
         `.context/m10/f18/review_1.md`.
-  - F18 review decision for the user: extend the unused internal export
-    check to the test helper trees. Severity Low, effort Medium. Covers
-    finding 36. Previous examples: `ec52f856` and `fe3624df`. Recommended: B,
-    check `tests/browser`, `tests/helpers`, and `packages/viewer/tests` with
-    a shrinking baseline of their 47 current entries, and leave the
-    catalogue fixtures out.
+  - [ ] Resolve user item 109 (F18 decision 39): extend the unused internal
+        export check to the test helper trees. It is a stricter check, so it
+        needs the user. Covers finding 36. Previous examples: `ec52f856` and
+        `fe3624df`. Severity Low, effort Medium. Options: A, keep the current
+        scope, Small (estimate); B, check `tests/browser`, `tests/helpers`,
+        and `packages/viewer/tests`, and leave the catalogue fixtures out,
+        Medium. F20 removed all 47 unused exports, so B starts with no
+        baseline entries. Recommended: B.
   - Outside the F18 review scope:
     - `packages/viewer/src/shell/layout_breakpoint.ts`: its header and
       `packages/viewer/src/shell/README.md` say that every shell and viewer
@@ -3419,9 +4079,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] F18 re-review, on 2026-10-20: finding 37, a guide sentence that
         said specs import `branchPointPaths`, is fixed by option A. The full
         report is `.context/m10/f18/review_2.md`.
-  - F18 re-review finding 38 for the user: the F18 review decision line has
-    no number. Severity Low, effort Small. Recommended: A, add the number
-    that the F18 final report gives the decision, 39.
+  - [x] F18 re-review finding 38, on 2026-10-21: settled by option A with
+        the hub's number. The F18 review decision line is now user item 109,
+        and it names F18 decision 39, the number of the F18 final report.
   - Outside the F18 re-review scope:
     - `xtask/src/check/commands.rs`: the gate runs cargo without `--locked`,
       so a stale `Cargo.lock` passes the gate and fails only the release
@@ -3536,12 +4196,20 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
             draft fails it.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
       split rule, with no recorded exception. Separate branch.
-      - Follow-up F9b item 7, decision 23 for the user: a split by subject
-        needs doc-only folders in the source tree or Markdown pages for
-        module mechanics, which belong in code comments. Severity Low,
-        effort Small. Recommended: A, keep one page, add a heading per
-        subject, and record the exception, as decision 2 A did for the
-        browser test guide.
+      - [ ] Resolve user item 95 (F9b item 7, decision 23): the shell README
+            stays past 300 lines. It had 494 lines under one heading on
+            2026-10-21, for 193 flat files, and the link check reads only
+            `README.md` files, `docs/`, `plans/`, and `AGENTS.md`. Severity
+            Low, effort Small. Options: A, keep one page, add a heading per
+            subject, and record the exception, as decision 2 A did for the
+            browser test guide, Small; B, move the standalone paragraphs into
+            `src/standalone/README.md` and record the exception for the
+            rest, Small (estimate); C, split it into
+            `src/shell/docs/{subject}/README.md` pages, Small (estimate); D,
+            move the mechanics into module doc comments and keep an index,
+            Large. Recommended: A, because a split by subject needs doc-only
+            folders in the source tree, and module mechanics belong in code
+            comments.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
       with no recorded exception. Separate branch.
       - [x] Follow-up F9b item 7: the README keeps the overview, the quick
@@ -3573,10 +4241,21 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] M10 D1 round 4 decision 11: item 60 C from `rebuild/ci-gates`
         raises the Node floor to 22.15.0. Both PostCSS evidence tests must
         pass on that runtime and 24.21.0. The earlier exception has ended.
-  - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
-    list of the old test's assertions, and check each port's title. Severity
-    Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
-    of review 2. Recommended: A, add the step to the gap sweep procedure.
+  - [x] Resolve user item 70 (M10 D1 round 4 decision 13): list every old
+        assertion in the sweep procedure. Reviews found sweep reasons that
+        missed or misstated old checks inside helpers and host branches, and
+        a title that no longer states what its port proves. Covers findings
+        3 to 6 of review 1 and finding 10 of review 2. Severity Low, effort
+        Small. Options: A, add a step to the gap sweep procedure: list every
+        assertion of the old test, with its helpers and host branches, mark
+        each one proved or not proved, and check that the port's title
+        states what it proves, Small; B, keep the current rule, Small.
+        Recommended: A, because it covers the whole class that the two
+        reviews found.
+    - User decision 70 (2026-10-21): A. Done in plan bookkeeping pass 3: step
+      2 of the gap sweep procedure in `docs/protocol/rust-rebuild-procedures.md`
+      lists every old assertion and protocol section, marks each one proved
+      or not proved, and checks the title of each port.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
@@ -3608,9 +4287,12 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
     workflow path in `evidence_contract.mjs`; review numeric workflow identity
     matching so a GitHub `path` ending in `@main` can select valid evidence.
-  - Milestone 13 review 1, finding 5: the user must settle the Release Please
-    component for core-only commits; keep the `packages/mokly` layout until
-    that decision. Native builds and paired-tag publication remain unchanged.
+  - [x] Milestone 13 review 1, finding 5: the user must settle the Release
+        Please component for core-only commits; keep the `packages/mokly`
+        layout until that decision. Native builds and paired-tag publication
+        remain unchanged. Settled by user decision 20 C: the CLI is the root
+        `.` component. The Milestone 13 TODO "Settle Release Please selection
+        for core-only commits" records the decision.
   - Milestone 6 review 2, finding 6: settled by F8 decision 21 B. Keep all
     Used by lists unavailable after one unavailable view until the next generation.
   - M8 sidecar review D2: settled by F8 decision 12 C. The wrapper uses the
@@ -3618,6 +4300,11 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
     HTML-only catalogues that import package CSS; retain working dependencies
     until the user decides.
+    - Settled on 2026-10-20 by user decision 74 C on the unmerged
+      `rebuild/defaults-engine-deps`, which narrows default item 27 B:
+      HTML-only catalogues use the working-tree dependencies for package CSS,
+      and they warn when the dependency identities that govern the used
+      directories differ. Mark this line settled when that branch merges.
   - [x] M8 core review 3, finding 2, and review 6, finding 7: settled on
         2026-10-20 by item 22 A and extended A, applied by default (user rule).
         Keep complete merged bounds checks, warn on saved values outside bounds,
@@ -3626,6 +4313,7 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     with pnpm and Yarn support under option B required before the first release.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
+    User item 69 holds the remaining decision.
   - `crates/mokly-compare/src/projection_context.rs:24-38` builds its own
     component counterpart map next to `Lookup::counterpart`. Separate branch.
   - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants
@@ -3690,18 +4378,39 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        2026-10-20 by user decision 82 B, which Milestones 10.3 and 10.4
        apply: the shell offers the comparison for such an entry, opens it
        from Affected screens, and the design depicts its pane heading.
-    2. Related components follow the parent, not the changed views.
-       Severity Medium, effort Medium. The affected records name the parent
-       as the consumer for every view of a component, so `projection_affected.rs`
-       gives `relatedComponents` to the parent's detail only. A variant page
-       without a loaded review then reads "No changes to this variant."
-       while its preview changed. A parent page whose variant alone uses the
-       changed component claims a shared change in its own preview (hub
-       review finding 1, merged here by the orchestrator on 2026-10-20).
-       Recommended: B, key `relatedComponents` by the entry whose views each
-       evidence item names, in place of the parent, and update the Status
-       Lines rule. Option A documents that only the parent page explains the
-       shared change.
+    2. Moved to user item 83 on 2026-10-21.
+  - [x] Resolve user item 83 (viewer defaults decision 2, the second
+        decision log item 32 follow-up): variant pages miss the shared
+        change. The affected records name the parent as the consumer for
+        every view of a component, so `projection_affected.rs` gives
+        `relatedComponents` to the parent's detail only. A variant page
+        without a loaded review then reads "No changes to this variant."
+        while its preview changed. A parent page whose variant alone uses
+        the changed component claims a shared change in its own preview (hub
+        review finding 1, merged here by the orchestrator on 2026-10-20).
+        Severity Medium, effort Small. Options: A, document that only the
+        parent page explains the shared change, Small (estimate); B, key
+        `relatedComponents` by the entry whose views each evidence item
+        names, in place of the parent, and update the Status Lines rule,
+        Small. Recommended: B. User item 103 option C includes B. Settled on
+        2026-10-21 by user decision 103 C, which includes item 83 B:
+        `rebuild/viewer-103c` keys `relatedComponents` and detail
+        eligibility by the entry whose views each evidence item names
+        (`3a30e389`).
+  - [ ] Resolve user item 84 (review finding 6): the shared-component
+        sentence calls a screen "this page". "Shared component changes
+        affect this preview. This page has no independent entry in
+        Changes." now shows on live screens and saved views, but "page"
+        means a whole-document page. The sentence is in
+        `packages/viewer/src/shell/workspace_evidence.tsx`, the design copy,
+        and `mokly-css-evidence-presentation.md`. Severity Low, effort Large
+        for B. Options: A, keep the sentence, Small (estimate); B, word it
+        for each entry kind through `entry_wording.ts`, for example "Changed
+        components that this screen uses affect its preview.", with the
+        design copy, the contract, the Details guide, and the tests, Large.
+        Recommended: B.
+    - User decision 84 (2026-10-21): B. Work: `rebuild/viewer-84b`, in the W2
+      workspace.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
         2026-10-20: no artboard shows the pane heading “Components this
         screen uses changed”. Severity Low. Milestone 10.3 closes it: the
@@ -3724,16 +4433,28 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        screen." Recommended: B, apply the affected rule to every entry whose
        own views are all unchanged and whose detail names changed components,
        with the shared-component sentence. Option A keeps the rule to entries
-       that Changes does not list.
-    2. No artboard depicts an affected-only component's comparison, which
-       reads "Components this variant uses changed". Severity Low, effort
-       Large, because it is a new artboard. Recommended: B, draw it when the
-       design's Affected screens list also shows components, as the viewer's
-       list does. Option A keeps the component case in the design copy only.
+       that Changes does not list. User item 103 covers this case. Settled on
+       2026-10-21 by user decision 103 C, which applies this item's option C:
+       each Unmodified view whose usage holds a changed component that the
+       detail names offers the band, in or out of Changes (`80f48c61`). Its
+       Details ending stays open below.
+    2. Moved to user item 104 on 2026-10-21.
+  - [ ] Resolve user item 104 (82 B delegate decision 6, with the second
+        user decision 82 follow-up): the component artboard shows only
+        screens in Affected, and no artboard depicts an affected-only
+        component's comparison, which reads "Components this variant uses
+        changed". Severity Low, effort Large for B, because B is a new
+        artboard. Options: A, keep the component case in the design copy
+        only, Small (estimate); B, draw it in the separate branch that fixes
+        the design's Affected list, as the viewer's list shows components
+        too, Large. Recommended: B. With either option, correct the sentence
+        of `mokly-component-design.md` that gives known unchanged shown views
+        no comparison row.
   - Outside the scope of user decision 82:
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
     components under "Affected screens and components". Separate branch.
+    User item 104 covers it.
   - [x] Hub review of `rebuild/defaults-viewer-82b`, fixed on 2026-10-21 in
         `rebuild/defaults-viewer-82b-fix1`: finding 2, a Serve update
         reopened Side by side (`5c761b5d`, B); finding 3, the affected
@@ -3745,16 +4466,47 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         assigned two problems outside its scope: the design and the viewer
         now say that a comparison is selected when highlighting is off, and
         the shell README no longer cites "implemented in M31" (`8bf3cc4c`).
-  - Hub review of `rebuild/defaults-viewer-82b`, finding 1 for the user:
-    Affected links ask for refused comparisons. A consumer that Changes
-    lists as a pure move, a component variant consumer, and a consumer in
-    Changes whose linked view is Unmodified each open Current with no band,
-    against the intent rule of `docs/protocol/mokly-changes-controls.md`.
-    Severity Medium, effort Large. Recommended: C, every Affected
-    destination offers the band for the view that its link names, with
-    `relatedComponents` and detail eligibility keyed by the entry that each
-    evidence item names. If the user declines C, apply A: add the intent
-    only when the destination will show the band.
+  - [x] Resolve user item 103 (hub review of `rebuild/defaults-viewer-82b`,
+        finding 1): Affected links ask for comparisons that the destination
+        refuses. A consumer that Changes lists as a pure move, a component
+        variant consumer, and a consumer in Changes whose linked view is
+        Unmodified each open Current with no band, against the intent rule of
+        `docs/protocol/mokly-changes-controls.md`. Severity Medium, effort
+        Large for C. Options: A, add the intent only when the destination
+        will show the band, Medium (estimate); B, the Rust projection marks
+        each link with the real eligibility of its destination, Large
+        (estimate); C, every unchanged view that uses a changed component
+        offers the band, in or out of Changes, variants included, with
+        `relatedComponents` and detail eligibility keyed by the entry that
+        each evidence item names, Large. C includes user item 83 B.
+        Recommended: C. If the user declines C, apply A. User decision 103
+        (2026-10-21): C, which includes item 83 B. Done in
+        `rebuild/viewer-103c`: the projection keys (`3a30e389`), the
+        per-view band rule (`80f48c61`), and the `affected-destinations` case
+        of the shared branch-point set, whose journeys run in Serve, the
+        static build, and a React host (`6dbdb181`).
+  - [ ] Resolve user item 137 (viewer-103c decision 2): links to added
+        consumers ask for a comparison. `projection_affected.rs:105` sets
+        `comparisonEligible` from the entry kind only, so an Affected link to
+        an Added view asks for a comparison that the view cannot have.
+        Severity Low, effort Small. Options: A, keep the flag and add a rule
+        that a link to an Added view opens Current, Small (estimate); B, set
+        the flag to false when the linked view is Added, and document it,
+        Small; C, leave added consumers out of the Affected list, Small
+        (estimate). Recommended: B.
+    - User decision 137 (2026-10-21): B. Work: another workspace, on
+      `rebuild/viewer-137b`.
+  - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
+        of an affected-only entry comes from view usage. Severity Low.
+        Option B is applied by default (user rule): see the record "Serve
+        pane heading, requirement applied by default" of 2026-10-20 above
+        the milestones. The reviewer agrees. Options: A, head a view from
+        its records and `affected` evidence only; B, also head a view whose
+        usage holds an instance of a changed component that the entry
+        detail's `relatedComponents` names. Recommended: B. Close the item as
+        B unless the user objects.
+    - Option B is in the code on the rebuild branch from an earlier default,
+      and it stays until the user decides.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
         `HistoricalManifest` had no user and no published export since
         `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
@@ -3777,6 +4529,20 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
         item 4 A, applied by default (user rule). Publish build warnings are
         fatal only with `--strict`.
+  - Open from the M14 gap sweep close-out review, report under
+    `.context/m14-gap-sweep/review.md`:
+  - 34: settled on 2026-10-21 with option A, as the orchestrator asked: a
+    new open Milestone 14 line names audit finding 7 and the branches that
+    it waits for.
+  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+    that setup always adds the unrelated rule to the first shared
+    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+    close-out review. Separate branch.
+  - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
+    consumed-byte digests for the PostCSS module graph": it still names
+    "supply immutable generation inputs" as a design path, but decision 56 A
+    and the PostCSS page reject enforced immutable inputs. Found by the gap
+    sweep close-out review. Separate branch.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
@@ -3873,6 +4639,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         because it aligns the scanners with lightningcss and with the
         `@value` rule. B makes such a stylesheet fail, and it builds today,
         so keep the behaviour until the user decides.
+    - User decision 111 (2026-10-21): A now, and C after the merge, in
+      parallel if possible, without blocking the merge. Work: the new CSS
+      Modules workspace.
   - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
         differential): removing a bare `:global` or `:local` at
         `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
@@ -3944,6 +4713,50 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
 
 - [ ] Replace the Intel macOS release runner before GitHub retires its Intel
       images, preserving native build and execution coverage.
+
+- [ ] Design confined inputs for the PostCSS reads that observation leaves
+      opaque: native addons, helper processes, workers, metadata reads,
+      `fs.openAsBlob`, and WASI. Cover native, helper, and worker reads,
+      private resolution metadata, unknown descriptor positions, opaque
+      providers and options, and unavailable native identity. User decision
+      114 A (2026-10-21) moved this work after the merge. Design:
+      `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
+
+- [ ] Redo the in-range dependency updates and the Rust 1.99.0 move of the
+      closed #197 after the rebuild merges. User decision 65 A, 2026-10-21.
+
+- [ ] Port the wider clock lint of the closed #174: the timing guard for
+      `packages/viewer/tests` and three more clock forms. User decision 66 A,
+      2026-10-21.
+
+- [ ] Port the empty-test assertion guard of the closed #153, which fails
+      a unit test that makes no assertion. User decision 66 A, 2026-10-21.
+
+- [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
+      deny its comparison. For an entry that Changes lists only as a move,
+      the Details end with a terminal line that says Changes has no
+      independent entry for it, so they deny the comparison that the entry
+      offers. Severity Low, effort Large. Options: A, keep the terminal
+      line, Small (estimate); B, for an entry that Changes lists only as a
+      move, show the shared-component sentence in a wording without "no
+      independent entry in Changes", which the 84 B rewording can supply,
+      and draw the design first, Large; C, leave out the terminal line when
+      a shown view uses a changed component, design first, Large
+      (estimate). Recommended: B.
+  - User decision 136 (2026-10-21): B, as work after the merge.
+
+- [ ] Resolve user item 138 (F22 decision): JavaScript page wrappers get no
+      attribute warning. Unknown attributes on ignore wrappers that a
+      `renderPage` callback returns are removed without the
+      `html-ignore-attribute` warning, because the sidecar contract has no
+      warning transport for callback HTML. Severity Medium, effort Large.
+      Options: A, add warning transport to the sidecar render record and one
+      `html-ignore-attribute` warning per page callback body and attribute,
+      Large; B, keep callback HTML warning-free and limit the warning to
+      authored bodies, Small (estimate). Recommended: A. The F22 branch
+      records this item as "Item 131", and integration batch 20 renumbers
+      that line to 138. Keep one line when both reach the plan.
+  - User decision 138 (2026-10-21): A, as work after the merge.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.

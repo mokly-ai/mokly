@@ -7,7 +7,7 @@ use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
 
 use crate::html_arena::Arena;
-use crate::source_locations::Locations;
+use crate::source_locations::WrapperLocations;
 use crate::tree::{self, Node};
 use crate::{serialize, source_locations};
 
@@ -23,16 +23,16 @@ fn options() -> ParseOpts {
 
 /// Parse a complete document, including implied wrappers.
 pub fn document(source: &str) -> Vec<Node> {
-    located(source, true, Locations::new())
+    located(source, true, WrapperLocations::new())
 }
 
 /// Parse a body-context fragment with the standard HTML5 algorithm.
 pub fn fragment(source: &str) -> Vec<Node> {
-    located(source, false, Locations::new())
+    located(source, false, WrapperLocations::new())
 }
 
 /// Bind wrapper source locations before tree repair can change their traversal order.
-pub(crate) fn located(source: &str, page: bool, locations: Locations) -> Vec<Node> {
+pub(crate) fn located(source: &str, page: bool, locations: WrapperLocations) -> Vec<Node> {
     let parser = if page { raw_document } else { raw_fragment };
     let nodes = parser(source, locations);
     if terminal_text(&nodes) {
@@ -45,7 +45,7 @@ pub(crate) fn located(source: &str, page: bool, locations: Locations) -> Vec<Nod
     }
 }
 
-fn raw_document(source: &str, locations: Locations) -> Vec<Node> {
+fn raw_document(source: &str, locations: WrapperLocations) -> Vec<Node> {
     parse_document(Arena::with_locations(locations), options()).one(source)
 }
 
@@ -58,7 +58,7 @@ fn terminal_text(nodes: &[Node]) -> bool {
     })
 }
 
-fn raw_fragment(source: &str, locations: Locations) -> Vec<Node> {
+fn raw_fragment(source: &str, locations: WrapperLocations) -> Vec<Node> {
     parse_fragment(
         Arena::with_locations(locations),
         options(),

@@ -46,7 +46,7 @@ pub(crate) fn append(
         file,
         &config.roots[file.root_index],
         kind,
-        source,
+        source.clone(),
         schemes,
     ) {
         Ok(result) => {
@@ -73,12 +73,23 @@ pub(crate) fn append(
                     },
                 );
             }
-            for variant in &parsed.input.variants {
+            for (index, variant) in parsed.input.variants.iter().enumerate() {
                 if let Some(slug) = variant.get("slug").and_then(serde_json::Value::as_str) {
-                    prepared.slot_fragments.insert(
-                        format!("{path}/{slug}"),
-                        prepare_entry::slot_fragments(variant),
-                    );
+                    let fragments = prepare_entry::slot_fragments(variant)
+                        .into_iter()
+                        .map(|(name, body)| {
+                            let source = parsed
+                                .document
+                                .positions
+                                .get(&format!("/variants/{index}/slots/{name}"))
+                                .cloned()
+                                .unwrap_or_else(|| source.clone());
+                            (name, crate::template_types::SavedSlot { body, source })
+                        })
+                        .collect();
+                    prepared
+                        .slot_fragments
+                        .insert(format!("{path}/{slug}"), fragments);
                 }
             }
             prepared.model.entries.extend(result.entries);

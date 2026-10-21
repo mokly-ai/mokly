@@ -4,8 +4,13 @@
 
 use std::collections::BTreeMap;
 
+use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::lookup::{Destination, Lookup, Parent};
-use mokly_model::axes::EntryKind;
+use mokly_compare::{projection_index, projection_workspace};
+use mokly_model::axes::{EntryKind, Viewport};
+use mokly_model::projection;
+use mokly_model::public_detail::Workspace;
+use mokly_model::review::ReviewState;
 use mokly_model::review_affected::ReviewSide;
 use serde::Deserialize;
 
@@ -36,7 +41,7 @@ fn names(cases: &[Case]) -> Vec<&str> {
     cases.iter().map(|case| case.name.as_str()).collect()
 }
 
-/// The five shared cases. Their names match the browser checks, and `check`
+/// The six shared cases. Their names match the browser checks, and `check`
 /// selects the extra assertions of some cases by name.
 #[test]
 fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
@@ -50,7 +55,8 @@ fn shared_real_git_cases_preserve_side_paths_destinations_and_parent_titles() {
             "moved-parent",
             "moved-variant",
             "case-renames",
-            "reused-parent"
+            "reused-parent",
+            "affected-destinations"
         ]
     );
     cases.iter().for_each(check);
@@ -114,6 +120,9 @@ fn check(case: &Case) {
         .map(|record| record.consumer.path.clone())
         .collect();
     assert_eq!(affected, case.affected, "{} affected", case.name);
+    if case.name == "affected-destinations" {
+        affected_destinations(&result);
+    }
     let lookup = Lookup::new(
         "generation",
         &result.after.catalogue().model,
@@ -212,4 +221,67 @@ fn check(case: &Case) {
             )
             .is_err()
     );
+}
+
+/// User decision 103 C: each Affected destination of Tally has its own detail
+/// that names Tally and can compare. Meter and its variant stay out of
+/// Changes, Slip is a pure move, and Ledger is in Changes while only its
+/// desktop view changed.
+fn affected_destinations(result: &ComparisonResult) {
+    let model = &result.after.catalogue().model;
+    let state = projection_index::publication("mokly.config.json".into(), "fixture-base");
+    let index = projection::index(model, &[], &state).unwrap();
+    let mut details = projection::pending_details(model, &index, &[]);
+    for detail in details.values_mut() {
+        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            detail.workspace = Some(Workspace {
+                comparison_eligible: false,
+                used_by: vec![],
+                affected: vec![],
+                related_components: vec![],
+                input_changes: vec![],
+            });
+        }
+    }
+    projection_workspace::apply(&mut details, result).unwrap();
+    for path in [
+        "branch/impact/meter",
+        "branch/impact/meter/default",
+        "branch/impact/archive/slip",
+        "branch/impact/ledger",
+    ] {
+        let workspace = details[path].workspace.as_ref().unwrap();
+        assert!(workspace.comparison_eligible, "{path} eligible");
+        assert_eq!(
+            workspace
+                .related_components
+                .iter()
+                .map(|component| component.path.as_str())
+                .collect::<Vec<_>>(),
+            ["branch/impact/tally"],
+            "{path} related"
+        );
+    }
+    let entry = |path: &str| {
+        result
+            .entries
+            .iter()
+            .find(|entry| entry.path == path)
+            .unwrap()
+    };
+    for path in ["branch/impact/meter", "branch/impact/meter/default"] {
+        assert!(!entry(path).included, "{path} included");
+    }
+    let slip = entry("branch/impact/archive/slip");
+    assert!(slip.included && slip.reasons.is_empty());
+    assert_eq!(slip.state, ReviewState::Unchanged);
+    let ledger = entry("branch/impact/ledger");
+    assert!(ledger.included);
+    let states: BTreeMap<_, _> = ledger
+        .documents
+        .iter()
+        .map(|document| (document.key.viewport, document.state))
+        .collect();
+    assert_eq!(states[&Some(Viewport::Mobile)], ReviewState::Unchanged);
+    assert_eq!(states[&Some(Viewport::Desktop)], ReviewState::Changed);
 }
