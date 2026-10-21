@@ -186,6 +186,7 @@ async function install(root: string, manager: Manager, env: NodeJS.ProcessEnv) {
     managerName(manager) === "pnpm"
       ? [
           "install",
+          "--no-frozen-lockfile",
           "--ignore-scripts",
           "--ignore-pnpmfile",
           "--config.pm-on-fail=ignore",

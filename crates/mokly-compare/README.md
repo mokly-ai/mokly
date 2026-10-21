@@ -231,6 +231,10 @@ cold build per manager from a local registry that requires the user token.
 Pinned test CLIs come from development dependencies, and no test uses the
 internet. Tests cover script suppression, timing tiers, registry access,
 comparison output, cache reuse, executable selection, and fallback reasons.
+Fixture setup updates pnpm lockfiles explicitly, including after a manifest
+change. `tests/static_base_manager_ci.test.ts` runs the four base-manager
+files and `tests/static_cold_base_tiers.test.ts` with `CI=true` and
+`GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
 
 ### Key Code
 

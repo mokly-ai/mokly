@@ -3392,6 +3392,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Follow-up: share a parsed dependency-input model for identity and source validation.
     Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
     Review and regression evidence: `.context/base-pnpm-yarn/`.
+  - [x] Repair hosted pnpm fixture setup after batch 21. Both fixture installers
+        explicitly update their lockfiles after manifest edits. The default suite
+        also runs the base-manager and cold-tier files with CI and GitHub Actions
+        detection enabled. Evidence: `.context/ci-pnpm-fixture-env/`.
+  - CI pnpm decision 1: tracked `node_modules/.modules.yaml` changes the base
+    dependency tier with CI detection. Severity Medium, effort Small.
+    A pins noninteractive recreation inside the private install; B keeps and
+    documents the inherited behavior. Recommended: A. No option is applied.
+    Evidence: `.context/ci-pnpm-fixture-env/pnpm-product-ci.json`.
   - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
         Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
         `7e6ae9ad`, and `9855feb1`.
