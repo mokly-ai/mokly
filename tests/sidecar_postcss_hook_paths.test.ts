@@ -45,9 +45,10 @@ function load(url,context,nextLoad){
       await fs.writeFile(loader, hooks + "\nexport {resolve,load};");
       const preload = path.join(base, "preload.cjs");
       const asynchronous = `const {register}=require('node:module'); register(${JSON.stringify(pathToFileURL(loader).href)}); register(${JSON.stringify(pathToFileURL(loader).href)});`;
+      const hookNames = mode === "mixed" ? "resolve" : "resolve,load";
       const synchronous =
         hooks +
-        "\nconst {registerHooks}=require('node:module'); registerHooks({resolve,load}); registerHooks({resolve,load});";
+        `\nconst {registerHooks}=require('node:module'); registerHooks({${hookNames}}); registerHooks({${hookNames}});`;
       await fs.writeFile(
         preload,
         mode === "sync"
@@ -65,7 +66,10 @@ function load(url,context,nextLoad){
         path.join(base, "postcss.mjs"),
         "export default {plugins:{plugin:{}}};",
       );
-      const flag = mode === "sync" || mode === "mixed" ? "--require" : mode;
+      // Node 22.15 needs ESM preload initialization for mixed hooks, and its
+      // asynchronous CommonJS loads can return null source to synchronous loads.
+      const flag =
+        mode === "sync" ? "--require" : mode === "mixed" ? "--import" : mode;
       const entry = mode.includes("loader") ? loader : preload;
       const sidecar = startSidecar(context, undefined, {
         ...process.env,
