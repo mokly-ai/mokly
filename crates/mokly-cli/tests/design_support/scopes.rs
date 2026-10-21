@@ -62,7 +62,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|path| path.starts_with("design/components/"))
             .count(),
-        51
+        53
     );
     assert_eq!(
         screens

@@ -62,7 +62,7 @@ The Loading and recovery folder sits below Empty and change states and contains
 exactly these five states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All forty-nine component
+membership is the entry's folder. All fifty-one component
 screens and their two variants opt into light documents, as the shell mockups do. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top

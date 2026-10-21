@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all fifty-one component design entries (forty-nine screens and two variants), their
+all fifty-three component design entries (fifty-one screens and two variants), their
 owning folders, and stylesheet scopes.
 
 ## Component Pages
@@ -158,7 +158,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
 shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the fifty-one
+Route-scoped rules link the required mixed/global sheets from the fifty-three
 component design routes. Registered components declare exclusive CSS through
 `stylesheets`; the `$componentStylesheets` marker keeps those links between base
 and layout sheets. Shared metadata supplies related docs, while folder records
