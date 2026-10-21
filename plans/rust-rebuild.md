@@ -3286,10 +3286,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     dropped tokens, and the case `a{}b` scoped to `a{}` points at 1:4.
   - Open from the M14 nesting round 7 re-review, report under
     `.context/m14-nesting/r7/review-r7b.md`:
-  - `crates/mokly-css/src/_tests_/token_sections_tests.rs:26`: the
-    classification test doc says that only a declarations block makes a
-    statement without a block into text, but the test also expects text in
-    a style block. Separate branch.
+  - `crates/mokly-css/src/_tests_/token_sections_tests.rs:26`: settled on
+    2026-10-21 in nesting round 8, as the orchestrator asked: the
+    classification test doc now names the text case in a style block, an
+    at-rule without a block under an unknown keyframes name.
   - `crates/mokly-css/src/_tests_/wrapper_table_tests.rs:61`: the
     `STYLE_RULE` doc does not say that an at-rule without a block under an
     unknown keyframes name is text in a style rule's block. Separate branch.

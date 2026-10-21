@@ -24,9 +24,11 @@ fn block_grammar(source: &str, grammar: Grammar) -> Grammar {
 }
 
 /// In a style or declarations block, only a statement without a block that
-/// starts with an identifier and a colon is a declaration. In a rule list, no
-/// statement is one. Another statement without a block is a rule or an
-/// at-rule, except in a declarations block, where it is text.
+/// starts with an identifier and a colon is a declaration. In a rule list or
+/// a lenient rule list, no statement is one. In a declarations block, every
+/// other statement without a block is text. In a style block, such a
+/// statement is text only when it is an at-rule under a keyframes name that
+/// lightningcss does not know. Every other statement is a rule or an at-rule.
 #[test]
 fn statements_are_classified_as_lightningcss_reads_a_block() {
     let declaration = |name: &str| Statement::Declaration(name.into());
