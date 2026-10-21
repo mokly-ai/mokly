@@ -500,15 +500,6 @@ readiness rather than blocking this acceptance round on further startup work.
   excluded records. Build decision 73 on this reducer. This removes delivery
   path drift. Alternatives A and B add the missing record locally or document
   an owned-style exception.
-- User decision 74 (2026-10-20): apply hub finding 3 C in
-  `rebuild/defaults-engine-deps`. Compare only dependency identities that govern
-  the directories in use. That workspace owns the change; this round retains
-  dependency identity code. Alternatives A and B keep the broad scan or skip
-  it only when head CSS uses no dependency directory.
-- User decision 76 (2026-10-20): option B for the `noscript` follow-up waits
-  until the plaintext helper lands. Do not implement that follow-up in this
-  round. The helper's foreign-content correction keeps the current `noscript`
-  behavior.
 - User decision 76 (2026-10-20): B, implemented in F14 after the shared helper
   landed. Escape raw `</noscript` text inside HTML `noscript`, preserving case.
   Accept the authored-character change to prevent markup activation with
