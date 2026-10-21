@@ -2255,6 +2255,24 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         can cover opaque reads. Effort Large. Recommend B because native reads
         can still produce CSS from bytes that differ from their late baseline.
         Neither option is applied. The user reserved the parent checkbox.
+  - [x] Measure cumulative range-ledger growth during repeated Serve-style
+        updates. A 1 MiB file read in 4 KiB chunks with unique bytes on every
+        update reached 31,426,890 JSON bytes at 400 updates on Node 24.21.0.
+        Growth was linear at 78,316 bytes per update and projects a 64 MiB
+        response at about 856 updates. Node 22.15.0 reached 7,533,952 bytes
+        at 100 updates. Evidence:
+        .context/rust-rebuild/m14-postcss-read-evidence-3/ledger-boundary-node24-unique.log,
+        ledger-100x1m-4k-fd-node22.log, and
+        ledger-100x1m-4k-fd-node24.log.
+  - [ ] Decision 119, proposed 2026-10-21, remains pending for cumulative
+        range evidence that can exceed the existing 64 MiB frame limit.
+        A: add a per-context evidence cap below the frame limit and retain an
+        explicit incomplete or late class after the cap. Effort Medium.
+        B: send evidence deltas or an out-of-band ledger while keeping each
+        frame below 64 MiB. Effort Large. Recommend B because it preserves
+        exact evidence for long Serve sessions without changing the frame
+        limit. C: keep the current cumulative response and document the
+        projected session bound. Effort Small. No option is applied.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
