@@ -2141,9 +2141,13 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       with a clear offline rule. Raw-blob comparison stays until the user
       decides. `rebuild/defaults-engine` records this decision and is not
       merged yet.
-  - User decision 69 (2026-10-21): C. This line lists only options A and B
-    of the engine record, so the hub record holds the text of option C.
-    Work: the new Git base reads workspace, `rebuild/git-base-reads`.
+  - [x] User decision 69 (2026-10-21): C. Use Git checkout conversion for every
+        base source read and extraction. The private temporary index applies the
+        base commit's attributes and the user's filters, including line endings,
+        local Git LFS objects, and custom smudge commands. A conversion failure,
+        timeout, or bound failure leaves that resource unavailable with a
+        warning while other resources continue. Custom filters are not
+        network-isolated; their configured Git behaviour is the contract.
 - [ ] Resolve user item 127 (integration batch 18 decision 1): blobless
       clones fail comparison base reads. Mokly reads base files with several
       `git cat-file` processes at once. In a blobless partial clone, Git's
@@ -2154,8 +2158,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and show the recovery fetch command on this failure, Small (estimate);
       C, document that comparisons need a full clone, Small (estimate).
       Recommended: A.
-  - User decision 127 (2026-10-21): A. Work: the new Git base reads
-    workspace, `rebuild/git-base-reads`.
+  - [x] User decision 127 (2026-10-21): A. Before base conversion, check all
+        requested object ids with lazy fetch disabled. Fetch missing ids through
+        the configured promisor remote in one bounded `git fetch --stdin`
+        request. A failed fetch reports the remote and the recovery command.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -3810,6 +3816,29 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         from the environment uses tier three with the install-failed reason.
         Finding 2 sets `YARN_INJECT_ENVIRONMENT_FILES` so Berry reads no base
         environment file. Tests: `tests/static_base_secrets.test.ts`.
+  - [x] Git base-read findings 1 and 7: implement the already approved
+        decision 69 C with typed unavailable resources and a path-scoped index.
+        Independent comparisons continue. No additional product decision is needed.
+  - [x] Git base-read findings 2, 3, 5, and 6: bound converted temporary output,
+        recognize optional filter failure, forward every Serve runner option,
+        and stream digests without an unbounded temporary spool.
+  - [x] Git base-read finding 4: align dependency identity text with converted
+        source bytes and retained clean object identities.
+  - [x] Preserve extraction limits and cancellation after disk-copy writes.
+        Keep partial extraction leases transient and invalidate sources when
+        effective checkout settings change. External filters rerun per preparation.
+  - Git base-read check evidence: `.context/git-base-reads/verification.md`.
+    Earlier remote attempts used the wrong workflow ref and Node 22.14.0.
+    These attempts are failed checks, not evidence of unrelated product defects.
+  - [x] Pin checkout attribute selection despite an inherited `GIT_ATTR_SOURCE`.
+        Keep the base commit's attribute rule for byte reads and extraction.
+  - [x] Git base-read fresh review finding 1: share the real repository
+        conversion context across bytes, digests, and extraction. Use bounded
+        raw NUL-framed batches only when checkout conversion is proved to be
+        identity. Other files use bounded `cat-file --filters` streams into
+        owned temporary files. Relative filters keep their repository context.
+  - [x] Git base-read fresh review finding 2: update the opaque-resource README
+        to describe checkout conversion and the retained byte bounds.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
@@ -4828,9 +4857,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and reject incompatible declared steps.
   - Milestone 9 part 1 review 1, finding 11: settled by F8 decision 10 A now,
     with pnpm and Yarn support under option B required before the first release.
-  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
-    conversion for base render/resource bytes; retain raw Git blob bytes.
-    User item 69 holds the remaining decision.
+  - [x] Milestone 9 part 1 review 1, finding 12: User decision 69 (2026-10-21): C.
+        Apply Git checkout conversion, including network-enabled LFS smudge.
+        This replaces the unbuilt offline default 11 A.
   - `crates/mokly-compare/src/projection_context.rs:24-38` builds its own
     component counterpart map next to `Lookup::counterpart`. Separate branch.
   - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants

@@ -21,6 +21,10 @@ pub struct TreeIndex {
 /// Confined source enumeration and byte reads.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = SourcesMock))]
 pub trait Sources: Send + Sync {
+    /// Conversion warnings retained by extraction in the same repository session.
+    fn warnings(&self) -> Vec<(String, String)> {
+        Vec::new()
+    }
     /// List regular files below exact roots; `None` explicitly selects all files.
     fn list(&self, roots: &[Option<RepoPath>], limits: Limits) -> Result<Vec<Entry>>;
     /// Read one regular source without querying tree metadata again.
@@ -62,6 +66,9 @@ impl GitSources {
 }
 
 impl Sources for GitSources {
+    fn warnings(&self) -> Vec<(String, String)> {
+        self.repository.conversion_warnings()
+    }
     fn list(&self, roots: &[Option<RepoPath>], limits: Limits) -> Result<Vec<Entry>> {
         if roots.is_empty() {
             return Ok(vec![]);
@@ -134,15 +141,16 @@ impl Sources for GitSources {
             })
             .collect::<Result<Vec<_>>>()?;
         for entry in &entries {
-            if entry.size > limits.blob {
-                return Err(Error::Limit {
-                    path: entry.path.to_string(),
-                    source: error::Error::ByteLimit { limit: limits.blob },
+            if !entry.mode.regular() {
+                return Err(Error::Git {
+                    source: error::Error::NotRegular {
+                        path: entry.path.to_string(),
+                    },
                 });
             }
         }
         self.repository
-            .read_many(&entries, limits)
+            .read_many(&self.commit, &entries, limits)
             .at_path(paths.first().map_or(".", RepoPath::as_str))
     }
 
@@ -207,7 +215,9 @@ impl Sources for GitSources {
                 path: path.to_string(),
             },
         })?;
-        self.repository.digest(entry).at_path(path.as_str())
+        self.repository
+            .digest(&self.commit, entry)
+            .at_path(path.as_str())
     }
 }
 

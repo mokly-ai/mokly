@@ -1,4 +1,4 @@
-//! A cancelled streamed blob removes the extraction's partial destination.
+//! A cancelled checkout removes the extraction's partial destination.
 
 use std::fs;
 use std::io::Write;
@@ -10,23 +10,19 @@ use mokly_git::disk::SystemDisk;
 use mokly_git::error::{Error, Result};
 use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::tree::Limits;
-use unimock::{MockFn, Unimock, matching};
-
 #[expect(
     dead_code,
-    reason = "stream cancellation uses its own repository adapter"
+    reason = "the shared fixture also supports repository integration tests"
 )]
 mod support;
 
-#[unimock::unimock(api = CopyMock)]
-trait Copy: Send + Sync {
-    fn copy(&self, request: &Request, writer: &mut (dyn Write + Send), bytes: usize) -> Result<()>;
-}
 struct CancelledCopy {
     runner: Arc<dyn Runner>,
-    copy: Box<dyn Copy>,
 }
 impl Runner for CancelledCopy {
+    fn checkpoint(&self) -> Result<()> {
+        self.runner.checkpoint()
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         self.runner.run(request)
     }
@@ -41,12 +37,56 @@ impl Runner for CancelledCopy {
         self.runner.run_cancellable(request, cancellation)
     }
     fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
-        self.copy.copy(request, output, bytes)
+        self.runner.copy(request, output, bytes)
+    }
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<String> {
+        self.runner.digest_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
+    }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        let _ = (request, cancellation, environment, timeout, output, limit);
+        Err(Error::Cancelled)
+    }
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+    ) -> Result<Output> {
+        self.runner
+            .run_cancellable_with_environment(request, cancellation, environment)
+    }
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        _request: &Request,
+        _cancellation: &dyn Cancellation,
+        _environment: &[(&str, std::ffi::OsString)],
+        _timeout: std::time::Duration,
+    ) -> Result<Output> {
+        Err(Error::Cancelled)
     }
 }
 
 #[test]
-fn cancellation_after_a_written_prefix_removes_the_partial_destination() {
+fn cancellation_during_checkout_removes_the_partial_destination() {
     let fixture = support::Fixture::new();
     fs::File::create(fixture.root().join("large.bin"))
         .unwrap()
@@ -54,24 +94,9 @@ fn cancellation_after_a_written_prefix_removes_the_partial_destination() {
         .unwrap();
     let base = fixture.commit();
     let target = fixture.root().join("partial");
-    let observed = target.clone();
-    let copy = Unimock::new(
-        CopyMock::copy
-            .next_call(matching!(_, _, 51_380_224))
-            .answers_arc(Arc::new(move |_, _, writer, _| {
-                writer.write_all(b"partial bytes").unwrap();
-                writer.flush().unwrap();
-                assert_eq!(
-                    fs::read(observed.join("large.bin")).unwrap(),
-                    b"partial bytes"
-                );
-                Err(Error::Cancelled)
-            })),
-    );
     let repositories: &dyn Repositories = &GitRepositories {
         runner: Arc::new(CancelledCopy {
             runner: support::runner(Arc::new(Token::default())),
-            copy: Box::new(copy),
         }),
         disk: Arc::new(SystemDisk),
     };

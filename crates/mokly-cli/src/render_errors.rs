@@ -90,7 +90,9 @@ fn collect(
 fn presentation(error: &GraphError) -> String {
     match error {
         GraphError::Attempt { .. } | GraphError::Document { .. } => String::new(),
-        GraphError::Invalid { message, .. } => message.clone(),
+        GraphError::Invalid { message, .. } | GraphError::ResourceUnavailable { message, .. } => {
+            message.clone()
+        }
         GraphError::Runtime { source } => source.message.clone(),
         GraphError::Html { source } => html(source),
         GraphError::Css { source } => css(source),

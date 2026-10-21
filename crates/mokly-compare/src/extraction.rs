@@ -34,6 +34,9 @@ struct Extract<'a> {
 }
 
 impl Builder for Extract<'_> {
+    fn reusable(&self) -> bool {
+        self.repository.conversion_warnings().is_empty()
+    }
     fn build(&self, destination: &Path) -> Result<()> {
         self.repository
             .extract(self.commit, destination, self.limits)
@@ -51,7 +54,7 @@ impl Extraction for CachedExtraction {
         };
         self.cache.get(
             Kind::Sources,
-            commit.as_str(),
+            &self.repository.source_key(commit).base()?,
             &Extract {
                 repository: self.repository.as_ref(),
                 commit,

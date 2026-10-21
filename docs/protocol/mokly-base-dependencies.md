@@ -24,9 +24,10 @@ bytes reuse the base identity without a Git process. Hash the remaining
 confined paths in one `hash-object --stdin-paths` call, without writing objects,
 and compare their Git clean identities with the corresponding base blob ids.
 This applies line ending and
-clean-filter conversion. Equal identities use the base blob bytes in the
-input set. A changed file or path set differs. This normalization is for
-dependency identity only; it does not change base render or resource bytes.
+clean-filter conversion. Equal identities use the converted base bytes in the
+input set. A changed file or path set differs. Clean normalization is for
+dependency identity. Checkout conversion supplies the base render and
+resource bytes before dependency selection.
 
 Repository-owned workspace and local directory packages always resolve from
 the side's own sources, in every tier. During bundling, a resolved real path
@@ -104,7 +105,7 @@ select tier three with a `base-dependencies` warning naming that directory.
 JavaScript, stylesheet, and PostCSS package reads establish this usage.
 An unused ancestor directory does not cause a warning.
 
-Tracked base files supply their bytes before installed copies. Other bare
+Tracked base files supply their converted bytes before installed copies. Other bare
 imports start at the matching importer directory in the selected installation,
 before configuration and explicit package-root fallback. Source aliases and
 tsconfig paths use base files. Working tsconfig paths cannot remap base package imports.

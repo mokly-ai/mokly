@@ -16,7 +16,7 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
 - Produce strict review v8, private snapshot v4, and affected-consumer chains.
 - Share public index state, eligibility, workspace lists, and input-change projection.
-- Read regular base files from Git blobs with preserved POSIX paths.
+- Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
 - Store source and dependency caches outside the repository.
 - Bound cache bytes, retain active leases, and evict the least used entries.
@@ -37,7 +37,12 @@ Git IO holds no cache lock. Unrelated adjacent blobs are not prefetched.
 Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
-these files. HTML reads require no extraction or package manager.
+these files. HTML reads require no extraction or package manager. Conversion failures become
+`SourceError::Unavailable` and `base-conversion` warnings. The resource memo
+keeps unavailable bytes distinct from missing paths. Independent resources can
+still prove changes. Partial source extraction leases have no durable receipt.
+Their staging data is removed when the lease ends. Source keys include effective
+checkout settings. External filters get a new source key for each preparation.
 HTML-only comparison uses working dependencies for package stylesheets on both
 sides. The CLI compares dependency identities through Git and emits
 `base-dependencies` when governing inputs differ, including a package-only upgrade.
@@ -62,7 +67,7 @@ complete while an install is pending. Deleting the cache permits a rebuild.
 The CLI shares one `OnceReporter` across both namespaces and uses
 `plain_line` for the exact cache announcement.
 
-`SourceInputs` reads dependency inputs from base blobs.
+`SourceInputs` reads dependency inputs from converted base blobs.
 `SystemWorkingInputs` gets tracked and nonignored candidates through Git and
 compares clean object identities. It reuses base bytes for equal inputs. `DependencyTiers`
 uses working third-party dependencies when both sets are equal. In every tier,
@@ -203,10 +208,10 @@ group links to a different-kind replacement at the parent's path.
 Metadata comparison keeps schema, controls, and declared slots on the parent.
 Variants compare their own metadata, props, and supplied slots independently.
 
-Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
-copies it to the destination. Digest cache misses each start one
-`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
-command. Hash-only preparation does not fill the source-byte LRU.
+Opaque Git asset delivery buffers one converted blob under the 64 MiB Git
+limit and copies it to the destination. Digest cache misses stream checkout-
+converted bytes into SHA-256. Delivery uses the same commit-pinned conversion
+context and byte bounds. Hash-only preparation does not fill the source-byte LRU.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.

@@ -19,6 +19,9 @@ struct Counted {
     blobs: AtomicUsize,
 }
 impl Runner for Counted {
+    fn checkpoint(&self) -> Result<()> {
+        self.inner.checkpoint()
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         if request.args.iter().any(|arg| arg == "cat-file") {
             self.blobs.fetch_add(1, Ordering::SeqCst);
@@ -40,6 +43,68 @@ impl Runner for Counted {
         cancellation: &dyn Cancellation,
     ) -> Result<Output> {
         self.inner.run_cancellable(request, cancellation)
+    }
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<String> {
+        if request.args.iter().any(|arg| arg == "cat-file") {
+            self.blobs.fetch_add(1, Ordering::SeqCst);
+        }
+        self.inner.digest_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
+    }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        self.blobs.fetch_add(1, Ordering::SeqCst);
+        self.inner.stream_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+            output,
+            limit,
+        )
+    }
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+    ) -> Result<Output> {
+        self.inner
+            .run_cancellable_with_environment(request, cancellation, environment)
+    }
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<Output> {
+        if request.args.iter().any(|arg| arg == "cat-file") {
+            self.blobs.fetch_add(1, Ordering::SeqCst);
+        }
+        self.inner.run_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
     }
 }
 

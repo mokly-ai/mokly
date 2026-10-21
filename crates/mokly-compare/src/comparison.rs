@@ -82,7 +82,7 @@ impl Engine {
             .catalogue()
             .warnings
             .iter()
-            .filter(|warning| warning.code == "base-dependencies")
+            .filter(|warning| matches!(warning.code, "base-dependencies" | "base-conversion"))
             .cloned()
             .collect();
         let mut observations: Vec<PageObservation> = Vec::new();
@@ -96,6 +96,7 @@ impl Engine {
                 &before_plans,
                 &after_plans,
             )?;
+            warnings.extend(views.warnings.iter().cloned());
             observations.extend(
                 views
                     .views

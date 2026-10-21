@@ -99,7 +99,9 @@ impl BaseProvider for AttemptBase {
             .extend(
                 records
                     .iter()
-                    .filter(|warning| warning.code == "base-dependencies")
+                    .filter(|warning| {
+                        matches!(warning.code, "base-dependencies" | "base-conversion")
+                    })
                     .cloned(),
             );
         let base = prepared?;

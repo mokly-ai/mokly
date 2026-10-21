@@ -178,6 +178,7 @@ fn a_missing_historical_blob_is_git_failed_instead_of_unavailable_validation() {
     let commit = String::from_utf8(commit.stdout).unwrap();
     let message = failure(root.path(), "fixture-base", "git-failed");
     assert!(message.contains(commit.trim()), "{message}");
-    assert!(message.contains("malformed Git output"), "{message}");
+    assert!(message.contains("base object"), "{message}");
+    assert!(message.contains("git fetch origin"), "{message}");
     assert!(message.contains("fixture-base"), "{message}");
 }

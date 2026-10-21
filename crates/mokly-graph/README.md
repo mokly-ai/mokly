@@ -80,7 +80,10 @@ reporting its summary charge and forwarding inputs in route order.
 Each batch contains at most one transient input per render worker.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
-validation. Both sides require complete, valid closures. A missing referenced
+validation. Both sides validate reached resources. Historical checkout failures keep a
+`base-conversion` warning in the closure and omit that file from delivery.
+`ResourceUnavailable` preserves this state through resource byte and digest
+access. Other closure work continues. A missing referenced
 head resource is `build-invalid`. `resource_bytes` reads confined public routes
 without granting access to private sources or retaining assets in the private
 source snapshot. `resource_digest` hashes opaque resources through a bounded

@@ -13,6 +13,14 @@ pub type Result<T> = std::result::Result<T, SourceError>;
 /// Source failures retain the operation, path, and original IO error.
 #[derive(Debug, Error)]
 pub enum SourceError {
+    /// A historical checkout filter could not supply this resource.
+    #[error("[mokly-source-interface/unavailable] {}: {message}", path.display())]
+    Unavailable {
+        /// Original resource path.
+        path: PathBuf,
+        /// Safe user diagnostic from the conversion boundary.
+        message: String,
+    },
     /// The caller explicitly cancelled source work.
     #[error("[mokly-source-interface/cancelled] source work cancelled: {}", path.display())]
     Cancelled {

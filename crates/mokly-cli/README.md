@@ -57,7 +57,7 @@ against one pinned merge base. Base extraction and dependency installation
 publish `preparing`; rendering and comparison publish `pending`. Only the
 accepted generation reports `Changes ready` and its Changes, moved, and
 ignored-only counts. A failed comparison publishes `unavailable` with its
-diagnostic while All remains available. Base dependency warnings use the
+diagnostic while All remains available. Base dependency and checkout-conversion warnings use the
 captured attempt and precede the result. Base composition warnings stay private.
 
 Serve keeps the configured sidecar pool bound for both source roots. A shared

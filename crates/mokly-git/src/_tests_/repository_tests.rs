@@ -25,6 +25,8 @@ fn output(bytes: &[u8]) -> Result<Output> {
 }
 fn repository(mock: Unimock) -> GitRepository {
     GitRepository {
+        fetch_lock: std::sync::Mutex::new(()),
+        unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         directory: "/repo".into(),
         runner: Arc::new(mock),
         disk: Arc::new(Unimock::new(())),
@@ -82,46 +84,6 @@ fn root_projection_rejects_nested_repositories_and_preserves_aliases() {
 }
 
 #[test]
-fn blobs_use_object_ids_on_stdin_and_keep_binary_bytes() {
-    let listing = format!("100644 blob {} 3\tspecs/a\nfile\0", id());
-    let blob = [
-        format!("{} blob 3\n", id()).as_bytes(),
-        &[0, 255, 10],
-        b"\n",
-    ]
-    .concat();
-    let repo = repository(Unimock::new((
-        RunnerMock::run.next_call(matching!((request) if request.args.last().unwrap() == "specs/a\nfile")).returns(output(listing.as_bytes())),
-        RunnerMock::run.next_call(matching!((request) if request.stdin == format!("{}\n", id()).as_bytes() && request.args[2..] == ["cat-file", "--batch"].map(OsString::from))).returns(output(&blob)),
-    )));
-    assert_eq!(
-        repo.read(&id(), &RepoPath::parse("specs/a\nfile").unwrap(), 3)
-            .unwrap(),
-        [0, 255, 10]
-    );
-}
-
-#[test]
-fn oversize_and_symlink_reads_never_start_cat_file() {
-    for (mode, expected) in [("100644", false), ("120000", true)] {
-        let listing = format!("{mode} blob {} 4\tfile\0", id());
-        let repo = repository(Unimock::new(
-            RunnerMock::run
-                .next_call(matching!(_))
-                .returns(output(listing.as_bytes())),
-        ));
-        let error = repo
-            .read(&id(), &RepoPath::parse("file").unwrap(), 3)
-            .unwrap_err();
-        if expected {
-            assert!(matches!(error, Error::NotRegular { .. }));
-        } else {
-            assert!(matches!(error, Error::ByteLimit { limit: 3 }));
-        }
-    }
-}
-
-#[test]
 fn changes_preserve_renames_and_add_untracked_paths() {
     let repo = repository(Unimock::new((
         RunnerMock::run
@@ -164,19 +126,6 @@ fn malformed_status_and_tree_records_are_rejected() {
     ] {
         assert!(tree::parse(bytes, Limits::default()).is_err());
     }
-    let entry = Entry {
-        path: RepoPath::parse("file").unwrap(),
-        object: id(),
-        mode: Mode::File,
-        size: 1,
-    };
-    for bytes in [
-        b"no header".as_slice(),
-        b"wrong header\na\n",
-        format!("{} blob 1\na", id()).as_bytes(),
-    ] {
-        assert!(tree::blobs(bytes, std::slice::from_ref(&entry)).is_err());
-    }
 }
 
 #[test]
@@ -217,26 +166,10 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
         ),
         Err(Error::FileCount { limit: 1 })
     ));
-    let repo = repository(Unimock::new(
-        RunnerMock::run
-            .next_call(matching!(_))
-            .returns(output(listing.as_bytes())),
-    ));
-    assert!(matches!(
-        repo.extract(
-            &id(),
-            Path::new("/dest"),
-            Limits {
-                bytes: 5,
-                ..Limits::default()
-            }
-        ),
-        Err(Error::ByteLimit { limit: 5 })
-    ));
 }
 
 #[test]
-fn source_byte_reads_keep_their_per_file_limit() {
+fn raw_source_bounds_and_modes_are_checked_before_checkout_io() {
     let repo = repository(Unimock::new(()));
     let entry = Entry {
         path: RepoPath::parse("asset.bin").unwrap(),
@@ -246,13 +179,36 @@ fn source_byte_reads_keep_their_per_file_limit() {
     };
     assert!(matches!(
         repo.read_many(
-            &[entry],
+            &id(),
+            std::slice::from_ref(&entry),
             Limits {
                 blob: 2,
                 ..Limits::default()
             }
         ),
         Err(Error::ByteLimit { limit: 2 })
+    ));
+    assert!(matches!(
+        repo.read_many(
+            &id(),
+            std::slice::from_ref(&entry),
+            Limits {
+                bytes: 2,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::ByteLimit { limit: 2 })
+    ));
+    assert!(matches!(
+        repo.read_many(
+            &id(),
+            &[Entry {
+                mode: Mode::Symlink,
+                ..entry
+            }],
+            Limits::default()
+        ),
+        Err(Error::NotRegular { .. })
     ));
 }
 

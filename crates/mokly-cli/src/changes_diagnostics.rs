@@ -64,7 +64,7 @@ pub(crate) fn warnings(error: &Error) -> Vec<Warning> {
     };
     records
         .into_iter()
-        .filter(|warning| warning.code == "base-dependencies")
+        .filter(|warning| matches!(warning.code, "base-dependencies" | "base-conversion"))
         .collect()
 }
 

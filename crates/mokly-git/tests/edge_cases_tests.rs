@@ -10,7 +10,7 @@ use std::sync::Arc;
 use mokly_git::changes::Kind;
 #[cfg(unix)]
 use mokly_git::control::Token;
-use mokly_git::disk::{ArchiveFile, Disk, SystemDisk};
+use mokly_git::disk::{Disk, SystemDisk};
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
 #[cfg(unix)]
@@ -99,15 +99,13 @@ fn direct_archive_api_rejects_a_git_segment_and_removes_partial_data() {
     let temporary = tempfile::tempdir().unwrap();
     let destination = temporary.path().join("base");
     let disk: &dyn Disk = &SystemDisk;
-    let files = [ArchiveFile {
-        path: RepoPath::parse("safe/.git/config").unwrap(),
-        bytes: b"unsafe".to_vec(),
-        executable: false,
-    }];
-    assert!(matches!(
-        disk.extract(&destination, &files),
-        Err(Error::InvalidPath { .. })
-    ));
+    {
+        let mut archive = disk.archive(&destination).unwrap();
+        assert!(matches!(
+            archive.file(&RepoPath::parse("safe/.git/config").unwrap(), false),
+            Err(Error::InvalidPath { .. })
+        ));
+    }
     assert!(!destination.exists());
 }
 

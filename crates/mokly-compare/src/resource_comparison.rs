@@ -63,6 +63,9 @@ impl Memo {
     ) -> Result<bool> {
         let left = self.fact(ReviewSide::Before, before)?;
         let right = self.fact(ReviewSide::After, after)?;
+        if left.unavailable || right.unavailable {
+            return Ok(true);
+        }
         if !after.ends_with(".css") {
             return Ok(left.digest == right.digest);
         }

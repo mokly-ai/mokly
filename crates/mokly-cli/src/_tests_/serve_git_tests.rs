@@ -1,6 +1,7 @@
 //! Tracked Git admission closes before cancellation waits for active operations.
 
 use std::sync::{Arc, Mutex, mpsc};
+use std::time::Duration;
 
 use mokly_git::command::{Output, Request, Runner, RunnerMock};
 use mokly_git::error::Error;
@@ -30,6 +31,7 @@ fn closed_admission_rejects_every_runner_operation() {
     let git = ServeGit::new(Arc::new(runners.clone()));
     let runner = git.runner(Arc::new(ChangeToken::default()));
     git.cancel();
+    assert!(matches!(runner.checkpoint(), Err(Error::Cancelled)));
     assert!(matches!(runner.run(&request()), Err(Error::Cancelled)));
     assert!(matches!(runner.digest(&request()), Err(Error::Cancelled)));
     assert!(matches!(
@@ -40,6 +42,100 @@ fn closed_admission_rejects_every_runner_operation() {
         runner.run_cancellable(&request(), &Unimock::new(())),
         Err(Error::Cancelled)
     ));
+    assert!(matches!(
+        runner.run_cancellable_with_environment(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+        ),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        runner.run_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+            Duration::from_secs(1),
+        ),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        runner.digest_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+        ),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        runner.stream_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+            &mut Vec::new(),
+            32,
+        ),
+        Err(Error::Cancelled)
+    ));
+}
+
+#[test]
+fn checkout_environment_and_timeout_reach_the_inner_runner() {
+    let inner = Unimock::new((
+        RunnerMock::run_cancellable_with_environment_timeout
+            .next_call(matching!((req, _, environment, timeout) if **req == request() && *environment == [("GIT_INDEX_FILE", "index".into())] && *timeout == Duration::from_secs(1)))
+            .returns(Ok(Output {
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            })),
+        RunnerMock::digest_cancellable_with_environment_timeout
+            .next_call(matching!((req, _, environment, timeout) if **req == request() && *environment == [("LC_ALL", "C".into())] && *timeout == Duration::from_secs(120)))
+            .returns(Ok("converted-digest".into())),
+        RunnerMock::stream_cancellable_with_environment_timeout
+            .next_call(matching!((req, _, environment, timeout, _, limit) if **req == request() && *environment == [("LC_ALL", "C".into())] && *timeout == Duration::from_secs(120) && *limit == 32))
+            .answers(&|_, _, _, _, _, output, _| { output.write_all(b"converted").unwrap(); Ok(()) }),
+    ));
+    let inner: Arc<dyn Runner> = Arc::new(inner);
+    let runners = Unimock::new(
+        GitRunnersMock::create
+            .next_call(matching!(_))
+            .returns(inner),
+    );
+    let git = ServeGit::new(Arc::new(runners));
+    let runner = git.runner(Arc::new(ChangeToken::default()));
+    runner
+        .run_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+            Duration::from_secs(1),
+        )
+        .unwrap();
+    assert_eq!(
+        runner
+            .digest_cancellable_with_environment_timeout(
+                &request(),
+                &Unimock::new(()),
+                &[("LC_ALL", "C".into())],
+                Duration::from_secs(120),
+            )
+            .unwrap(),
+        "converted-digest"
+    );
+    let mut bytes = Vec::new();
+    runner
+        .stream_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+            &mut bytes,
+            32,
+        )
+        .unwrap();
+    assert_eq!(bytes, b"converted");
 }
 
 #[test]
