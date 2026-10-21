@@ -275,9 +275,10 @@ one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
-`entry_wording.ts` declares each kind's nouns once and builds every Details
-sentence of that kind from them. A component's sentences name the shown
-variant, while its file list and its own rules name the component.
+`entry_wording.ts` declares each kind's nouns once and builds the kind's
+evidence sentences, status lines and pane labels from them. A component's
+sentences name the shown variant, while its file list and its own rules name
+the component.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup. `workspace_evidence.tsx` follows the designs' order: the reason

@@ -62,9 +62,10 @@ export const ENTRY_NOUNS = {
   page: { entry: "page", within: "on", item: "page" },
 } as const satisfies Record<EntryKind, EntryNouns>;
 
-/** The paired matched and unresolved sentences, with or without a list. */
+/** The matched sentence: a colon before its list, or a full stop alone. */
 const applies = (noun: string, end: ":" | ".") =>
   `Changed styles that apply to this ${noun}${end}`;
+/** The unresolved sentence: a colon before its list, or a full stop alone. */
 const anywhere = (noun: string, end: ":" | ".") =>
   `This change can apply anywhere on the ${noun}, so the ${noun} stays in Changes${end}`;
 
