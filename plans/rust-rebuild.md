@@ -2982,6 +2982,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [x] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note. Done on 2026-10-21.
       Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
+- [ ] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
+      recursion of `:has()` and for the raw characters of reconstructed
+      `plaintext` text wait for `rebuild/defaults-engine` to merge. The
+      `noscript` case also waits for `rebuild/followups-f14`. Their options
+      are in the code on those branches from earlier defaults, so both TODOs
+      also wait for the user's decisions. Tick this line when both TODOs
+      are ticked.
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
@@ -4353,9 +4360,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         fatal only with `--strict`.
   - Open from the M14 gap sweep close-out review, report under
     `.context/m14-gap-sweep/review.md`:
-  - 34: the gap sweep tick leaves audit finding 7 untracked in this plan.
-    Severity Low, effort Small. Recommended: A, add one open line that names
-    finding 7 and the branch that it waits for. The hub owns the audit.
+  - 34: settled on 2026-10-21 with option A, as the orchestrator asked: a
+    new open Milestone 14 line names audit finding 7 and the branches that
+    it waits for.
   - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
     that setup always adds the unrelated rule to the first shared
     stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
