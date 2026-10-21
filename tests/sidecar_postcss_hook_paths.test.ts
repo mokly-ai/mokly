@@ -14,6 +14,8 @@ for (const mode of [
   "--experimental-loader",
   "--import",
   "--require",
+  "sync",
+  "mixed",
 ])
   test(
     `${mode} retains short-circuited transitive paths after repeated registration`,
@@ -42,9 +44,17 @@ function load(url,context,nextLoad){
       const loader = path.join(base, "loader.mjs");
       await fs.writeFile(loader, hooks + "\nexport {resolve,load};");
       const preload = path.join(base, "preload.cjs");
+      const asynchronous = `const {register}=require('node:module'); register(${JSON.stringify(pathToFileURL(loader).href)}); register(${JSON.stringify(pathToFileURL(loader).href)});`;
+      const synchronous =
+        hooks +
+        "\nconst {registerHooks}=require('node:module'); registerHooks({resolve,load}); registerHooks({resolve,load});";
       await fs.writeFile(
         preload,
-        `const {register}=require('node:module'); register(${JSON.stringify(pathToFileURL(loader).href)}); register(${JSON.stringify(pathToFileURL(loader).href)});`,
+        mode === "sync"
+          ? synchronous
+          : mode === "mixed"
+            ? asynchronous + "\n" + synchronous
+            : asynchronous,
       );
       await dependency(
         base,
@@ -55,7 +65,7 @@ function load(url,context,nextLoad){
         path.join(base, "postcss.mjs"),
         "export default {plugins:{plugin:{}}};",
       );
-      const flag = mode;
+      const flag = mode === "sync" || mode === "mixed" ? "--require" : mode;
       const entry = mode.includes("loader") ? loader : preload;
       const sidecar = startSidecar(context, undefined, {
         ...process.env,

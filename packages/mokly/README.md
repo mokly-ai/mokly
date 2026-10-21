@@ -190,6 +190,8 @@ before consumer preloads in each owned child.
 Its CommonJS build supports asynchronous loaders on Node 22 and shares one
 observation ledger with the worker. The async resolve hook reports supplied
 module paths through a message port. Loader-transformed source stays opaque.
+The [module path observer](./src/sidecar/postcss-path-hooks.ts) retains paths
+from consumer hooks without certifying their source bytes.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
 file positions and reuse. FileHandle and Node stream reads share range evidence.
 The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds

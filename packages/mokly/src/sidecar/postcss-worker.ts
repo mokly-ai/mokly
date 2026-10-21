@@ -14,6 +14,7 @@ import {
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
+import { observeModulePaths } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
@@ -39,6 +40,7 @@ process.once("message", (workerData: WorkerData) => {
   if (!preloadedObserver()) {
     observeFileReads();
     observeModuleLoads();
+    observeModulePaths();
   }
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({

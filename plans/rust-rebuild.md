@@ -2720,7 +2720,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - User decision 125 (2026-10-21): D, a new option: the PostCSS child
     keeps read evidence for one generation only. Work: the PostCSS
     follow-ups workspace.
-- [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
+- [x] Resolve user item 117 (W6 review finding 2): module hooks miss
       loader-supplied modules. The preload now registers Mokly's hooks
       first, so a consumer load hook that returns source without
       `nextLoad` hides that module. Contexts with an asynchronous loader
@@ -3288,6 +3288,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - PostCSS loader-path review finding 2: repeated asynchronous registrations
+    retain hooks and ports. Severity Low, effort Large. Recommended: B, use
+    one registration broker. No user option is applied.
   - Finding: `tests/actionlint_config.test.ts` scans only `.yml` workflows.
     Include `.yaml` in the label coverage test. Severity Low, effort Small.
     Recommended: A. User decision required because this is a missing-test
