@@ -16,12 +16,8 @@ import {
 } from "./data_commit.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
 import { staleAwareLiveSource } from "./data_live_transport.js";
-import {
-  loadFencedDetail,
-  loadRefresh,
-  routeKey,
-  type DetailOutcome,
-} from "./data_requests.js";
+import { PublicationRefresh } from "./data_refresh.js";
+import { loadFencedDetail, type DetailOutcome } from "./data_requests.js";
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
@@ -51,8 +47,7 @@ export class ShellDataController {
   #streamWarned = false;
   readonly #descriptor: LiveDescriptor;
   readonly #live: ShellLiveSource | undefined;
-  #refreshing: AbortController | undefined;
-  #refreshFailed: string | undefined;
+  readonly #refresh: PublicationRefresh;
 
   constructor(
     initial: ShellDataSnapshot,
@@ -72,6 +67,15 @@ export class ShellDataController {
       changed: () => this.#changed(),
       versionError: (error) => host.versionError(error),
       warn: (message, cause) => host.warn(message, cause),
+    });
+    this.#refresh = new PublicationRefresh(source, {
+      index: () => this.#snapshot.index,
+      route: () => host.route(),
+      adopt: (index, details) =>
+        this.#commit(withIndex(this.#snapshot, index, details)),
+      deploymentChanged: () => this.#source?.deploymentChanged(),
+      versionError: (error) => host.versionError(error),
+      changed: () => this.#changed(),
     });
   }
 
@@ -98,7 +102,7 @@ export class ShellDataController {
 
   /** The route whose last publication refresh failed. */
   get refreshFailed(): string | undefined {
-    return this.#refreshFailed;
+    return this.#refresh.failed;
   }
 
   /** The live transport, present while a descriptor is installed. */
@@ -171,7 +175,7 @@ export class ShellDataController {
           return;
         }
         if (this.#descriptor.failed) this.#descriptor.load();
-        if (revision > installed.revision) this.#refresh(revision);
+        if (revision > installed.revision) this.#refresh.load(revision);
       },
       unavailable: () => {
         if (this.#streamWarned) return;
@@ -189,7 +193,7 @@ export class ShellDataController {
 
   /** Refresh the installed revision again after a failed refresh. */
   readonly retryRefresh = (): void => {
-    this.#refresh(this.#snapshot.index.revision);
+    this.#refresh.load(this.#snapshot.index.revision);
   };
 
   /** Abort every load; a later request starts them again. */
@@ -236,34 +240,6 @@ export class ShellDataController {
     this.#changed();
   }
 
-  #refresh(revision: number): void {
-    const source = this.#source;
-    if (!source) return;
-    this.#refreshing?.abort();
-    const controller = new AbortController();
-    this.#refreshing = controller;
-    void loadRefresh(
-      source,
-      this.#snapshot.index,
-      () => this.#host.route(),
-      revision,
-      controller.signal,
-    ).then((outcome) => {
-      if (controller.signal.aborted) return;
-      this.#refreshing = undefined;
-      if (outcome.kind === "accepted") {
-        this.#refreshFailed = undefined;
-        this.#commit(withIndex(this.#snapshot, outcome.index, outcome.details));
-      } else if (outcome.kind === "deployment") source.deploymentChanged();
-      else if (outcome.kind === "version")
-        this.#host.versionError(outcome.error);
-      else {
-        this.#refreshFailed = routeKey(this.#host.route());
-        this.#changed();
-      }
-    });
-  }
-
   /**
    * Serve answered a render of the installed revision with 409, so a newer
    * publication exists. Refresh once, unless a refresh is loading, so the
@@ -271,16 +247,16 @@ export class ShellDataController {
    */
   #refreshStale(revision: number): void {
     const installed = this.#snapshot.index.revision;
-    if (!this.#connected || this.#refreshing || revision !== installed) return;
-    this.#refresh(installed + 1);
+    if (!this.#connected || this.#refresh.loading || revision !== installed)
+      return;
+    this.#refresh.load(installed + 1);
   }
 
   #disconnect(): void {
     this.#connected = false;
     this.#closeStream?.();
     this.#closeStream = undefined;
-    this.#refreshing?.abort();
-    this.#refreshing = undefined;
+    this.#refresh.stop();
     this.#descriptor.stop();
   }
 

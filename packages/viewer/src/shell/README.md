@@ -210,8 +210,10 @@ event stream, and the live descriptor. `data_requests.ts` lists the details a
 route renders from (the routed entry's, plus each step screen's for a use
 case), loads one detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
-and loads a publication refresh. `data_commit.ts` adopts a new index and its
-details as one snapshot and rebinds the route and the disclosures to it;
+and loads a publication refresh; `data_refresh.ts` runs one such refresh at a
+time for the controller and keeps the route whose refresh failed.
+`data_commit.ts` adopts a new index and its details as one snapshot and
+rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
