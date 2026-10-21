@@ -4435,16 +4435,24 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        that Changes does not list. User item 103 covers this case.
     2. Moved to user item 104 on 2026-10-21.
   - [ ] Resolve user item 104 (82 B delegate decision 6, with the second
-        user decision 82 follow-up): the component artboard shows only
-        screens in Affected, and no artboard depicts an affected-only
-        component's comparison, which reads "Components this variant uses
-        changed". Severity Low, effort Large for B, because B is a new
-        artboard. Options: A, keep the component case in the design copy
-        only, Small (estimate); B, draw it in the separate branch that fixes
-        the design's Affected list, as the viewer's list shows components
-        too, Large. Recommended: B. With either option, correct the sentence
-        of `mokly-component-design.md` that gives known unchanged shown views
-        no comparison row.
+        user decision 82 follow-up and 103 C review finding 1): the
+        component artboard shows only screens in Affected, and no artboard
+        depicts an affected-only component's comparison, which reads
+        "Components this variant uses changed". Severity Low, effort Large
+        for B, because B is a new artboard. Options: A, keep the component
+        case in the design copy only, Small (estimate); B, draw three states
+        in the separate branch that fixes the design's Affected list: the
+        affected component variant, an Unmodified view that stays in Changes
+        and shows the band, and the component's Affected list, which shows
+        components too, Large. Recommended: B. With either option, correct
+        the sentence of `mokly-component-design.md` that gives known
+        unchanged shown views no comparison row.
+    - 103 C review finding 1 widened option B on 2026-10-21. The
+      affected-screen artboard, `affectedScreenScreen` in
+      `examples/basic/specs/design/components/states/shared-impact/screens.tsx`,
+      already covers the screen state. The Moved artboard,
+      `review/outcomes/moved.tsx`, shows changed content, so it does not
+      cover an Unmodified affected view.
   - Outside the scope of user decision 82:
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
