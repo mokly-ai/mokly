@@ -3600,6 +3600,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         pointer form, and duplicate rule. Strict mode treats them like the
         other unsafe-integer warnings. Broader preparation tracking, option B,
         is not selected because the scoped warning producer completes 6 C.
+  - User item 85: withdrawn on 2026-10-20, because decision 6 C already
+    rounds every authored number, including props and schema keywords. It
+    needs no TODO.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
