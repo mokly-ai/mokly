@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-use html5gum::{DefaultEmitter, Span, StartTag, Token, Tokenizer};
+use html5gum::{DefaultEmitter, Span, Spanned, StartTag, Token, Tokenizer};
 use mokly_model::material;
 
 use crate::template_types::ignore_attribute_allowed;
@@ -22,7 +22,10 @@ pub struct ParsedToken {
 
 /// Parse authored HTML while retaining token errors and original byte spans.
 pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
-    let tokens = expand_markup_contexts(source, tokenize(source, true));
+    let tokens = expand_markup_contexts(
+        source,
+        collapse_raw_elements(source, tokenize(source, true)),
+    );
     tokens.into_iter().map(normalize)
 }
 
@@ -34,10 +37,57 @@ fn tokenize(source: &str, switch_states: bool) -> Vec<Token<usize>> {
         .collect()
 }
 
+fn collapse_raw_elements(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
+    let mut output = Vec::new();
+    let mut index = 0;
+    while index < tokens.len() {
+        let Token::StartTag(start) = &tokens[index] else {
+            output.push(tokens[index].clone());
+            index += 1;
+            continue;
+        };
+        if start.name.as_ref() != b"noframes" {
+            output.push(tokens[index].clone());
+            index += 1;
+            continue;
+        }
+        output.push(tokens[index].clone());
+        let mut end_index = index + 1;
+        while end_index < tokens.len() {
+            if let Token::EndTag(end) = &tokens[end_index]
+                && end.name.as_ref() == b"noframes"
+            {
+                break;
+            }
+            end_index += 1;
+        }
+        if end_index < tokens.len() {
+            let end = match &tokens[end_index] {
+                Token::EndTag(end) => end.span,
+                _ => unreachable!(),
+            };
+            if let Some(text) = source.get(start.span.end..end.start) {
+                output.push(Token::String(Spanned {
+                    value: text.as_bytes().to_vec().into(),
+                    span: Span {
+                        start: start.span.end,
+                        end: end.start,
+                    },
+                }));
+            }
+            output.push(tokens[end_index].clone());
+            index = end_index + 1;
+        } else {
+            index += 1;
+        }
+    }
+    output
+}
+
 fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
     let mut output = Vec::new();
     let mut foreign_stack: Vec<bool> = Vec::new();
-    let mut raw_context = None;
+    let mut raw_context: Option<(Vec<u8>, bool)> = None;
     for token in tokens {
         match &token {
             Token::StartTag(tag) => {
@@ -53,28 +103,52 @@ fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<
                 } else if integration && !tag.self_closing {
                     foreign_stack.push(true);
                 }
-                if (name == b"noscript" && !in_foreign)
-                    || (in_foreign && !integration && matches!(name, b"style" | b"title"))
-                {
-                    raw_context = Some(name.to_owned());
+                let markup_context = (name == b"noscript" && !in_foreign)
+                    || (in_foreign && !integration && matches!(name, b"style" | b"title"));
+                let raw_context_tag = in_foreign
+                    && !integration
+                    && matches!(
+                        name,
+                        b"textarea"
+                            | b"xmp"
+                            | b"iframe"
+                            | b"noembed"
+                            | b"noframes"
+                            | b"plaintext"
+                            | b"script"
+                    );
+                if name == b"noframes" && !in_foreign {
+                    raw_context = Some((name.to_owned(), false));
+                } else if markup_context {
+                    raw_context = Some((name.to_owned(), true));
+                } else if raw_context_tag {
+                    raw_context = Some((name.to_owned(), false));
                 }
                 output.push(token);
             }
             Token::String(text) if raw_context.is_some() => {
-                let value = source
-                    .get(text.span.start..text.span.end)
-                    .map(Cow::Borrowed)
-                    .unwrap_or_else(|| {
-                        Cow::Owned(String::from_utf8_lossy(&text.value).into_owned())
-                    });
-                output.extend(
-                    expand_markup_contexts(value.as_ref(), tokenize(value.as_ref(), true))
-                        .into_iter()
-                        .map(|token| shift_token(token, text.span.start)),
-                );
+                let (_, markup) = raw_context.as_ref().unwrap();
+                if *markup {
+                    let value = source
+                        .get(text.span.start..text.span.end)
+                        .map(Cow::Borrowed)
+                        .unwrap_or_else(|| {
+                            Cow::Owned(String::from_utf8_lossy(&text.value).into_owned())
+                        });
+                    output.extend(
+                        expand_markup_contexts(value.as_ref(), tokenize(value.as_ref(), true))
+                            .into_iter()
+                            .map(|token| shift_token(token, text.span.start)),
+                    );
+                } else {
+                    output.push(token);
+                }
             }
             Token::EndTag(tag) => {
-                if raw_context.as_deref() == Some(tag.name.as_ref()) {
+                if raw_context
+                    .as_ref()
+                    .is_some_and(|(name, _)| name.as_slice() == tag.name.as_ref())
+                {
                     raw_context = None;
                 }
                 if !foreign_stack.is_empty() {

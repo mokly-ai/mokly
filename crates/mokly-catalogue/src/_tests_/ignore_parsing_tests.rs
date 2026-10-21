@@ -149,3 +149,23 @@ fn markup_context_tracker_keeps_tree_raw_text_and_integration_points() {
         assert!(wrappers.is_empty(), "{source}");
     }
 }
+
+#[test]
+fn foreign_and_noframes_raw_text_matches_the_tree_parser() {
+    for source in [
+        "<noframes><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></noframes>",
+        "<svg><script><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></script></svg>",
+        "<svg><textarea><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></textarea></svg>",
+        "<svg><foreignObject><title><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></title></foreignObject></svg>",
+    ] {
+        let wrappers: Vec<_> = html_tokens::parse(source)
+            .filter_map(|parsed| match parsed.token {
+                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                    Some(parsed.ignored_attributes)
+                }
+                _ => None,
+            })
+            .collect();
+        assert!(wrappers.is_empty(), "{source}");
+    }
+}
