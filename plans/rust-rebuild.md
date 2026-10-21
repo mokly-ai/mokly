@@ -2745,6 +2745,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the failed child. Evidence: `.context/native-ci-fixes-3/`.
         The hub must dispatch hosted macOS and Windows CI on
         `rebuild/native-ci-fixes-3`; the Windows design timeout needs that rerun.
+  - [x] Native CI round 4: keep valid unusual names on macOS and keep the
+        non-UTF-8 filename case on filesystems that support it. Copy the
+        repository ignore rules into the design fixture and add PostCSS child
+        phase timings to timeout diagnostics. Evidence:
+        `.context/native-ci-fixes-4/`. The hub must dispatch hosted macOS and
+        Windows CI on `rebuild/native-ci-fixes-4`.
   - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
     Windows executable suffixes. Selected Native bypasses this path.
     Separate branch before claiming Windows remote-executor support.
