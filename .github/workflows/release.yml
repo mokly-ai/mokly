@@ -101,11 +101,10 @@ jobs:
             const { data: source } = await github.rest.repos.getCommit({
               ...context.repo, ref: `tags/${cli}`,
             });
-            let existing;
             try {
-              existing = (await github.rest.repos.getCommit({
+              await github.rest.git.getRef({
                 ...context.repo, ref: `tags/${viewer}`,
-              })).data;
+              });
             } catch (error) {
               if (error.status !== 404 || context.eventName !== 'push') throw error;
               await github.rest.git.createRef({
@@ -113,6 +112,9 @@ jobs:
               });
               return;
             }
+            const { data: existing } = await github.rest.repos.getCommit({
+              ...context.repo, ref: `tags/${viewer}`,
+            });
             if (existing.sha !== source.sha) {
               throw new Error('CLI and viewer tags must identify the same commit');
             }

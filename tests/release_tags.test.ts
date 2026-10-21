@@ -78,13 +78,20 @@ async function runTagScript(
             getCommit: async ({ ref }: { ref: string }) => {
               calls.push({ operation: "read", ref });
               if (ref === "tags/v0.16.0") return { data: { sha: commit } };
-              if (options.failure) throw options.failure;
               if (options.viewerCommit)
                 return { data: { sha: options.viewerCommit } };
-              throw missing;
+              throw Object.assign(new Error("No commit found for SHA"), {
+                status: 422,
+              });
             },
           },
           git: {
+            getRef: async ({ ref }: { ref: string }) => {
+              calls.push({ operation: "lookup", ref });
+              if (options.failure) throw options.failure;
+              if (options.viewerCommit) return { data: { ref } };
+              throw missing;
+            },
             createRef: async ({ ref, sha }: { ref: string; sha: string }) => {
               calls.push({ operation: "create", ref, sha });
             },
@@ -101,7 +108,7 @@ test("automatic releases create the matching viewer tag before builds", async ()
   await fixture.run();
   assert.deepEqual(fixture.calls, [
     { operation: "read", ref: "tags/v0.16.0" },
-    { operation: "read", ref: "tags/viewer-v0.16.0" },
+    { operation: "lookup", ref: "tags/viewer-v0.16.0" },
     {
       operation: "create",
       ref: "refs/tags/viewer-v0.16.0",
@@ -114,13 +121,13 @@ test("tag reruns accept matching commits and never overwrite other tags", async 
   for (const event of ["push", "workflow_dispatch"]) {
     const fixture = await runTagScript({ event, viewerCommit: "a".repeat(40) });
     await fixture.run();
-    assert.equal(fixture.calls.length, 2);
+    assert.equal(fixture.calls.length, 3);
     const mismatch = await runTagScript({
       event,
       viewerCommit: "b".repeat(40),
     });
     await assert.rejects(mismatch.run(), /same commit/);
-    assert.equal(mismatch.calls.length, 2);
+    assert.equal(mismatch.calls.length, 3);
   }
 });
 
