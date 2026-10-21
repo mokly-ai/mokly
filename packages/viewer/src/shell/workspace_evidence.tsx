@@ -13,10 +13,6 @@ import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 
-/** Details of an entry that only changed components affect end with it. */
-const SHARED_IMPACT =
-  "Shared component changes affect this preview. This page has no independent entry in Changes.";
-
 /**
  * Comparison facts for the current entry and optional loaded comparison, in
  * the designs' order: the branch point and, for a moved entry, the path its
@@ -102,7 +98,7 @@ export function WorkspaceEvidence({
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
-          {evidence.sharedImpact ? <p>{SHARED_IMPACT}</p> : null}
+          {evidence.sharedImpact ? <p>{wording.sharedImpact}</p> : null}
           {variant?.before &&
           variant.after &&
           JSON.stringify(variant.before.props) !==

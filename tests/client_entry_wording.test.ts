@@ -16,6 +16,10 @@ test("entry wording keeps screen copy and recasts it for a variant", () => {
   );
   assert.equal(screen.label("Screen changed"), "Screen changed");
   assert.equal(screen.noChanges, "No changes to this screen.");
+  assert.equal(
+    screen.sharedImpact,
+    "Changed components that this screen uses affect its preview.",
+  );
 
   const component = entryWording("component");
   assert.equal(
@@ -24,6 +28,10 @@ test("entry wording keeps screen copy and recasts it for a variant", () => {
   );
   assert.equal(component.label("Screen changed"), "Variant changed");
   assert.equal(component.noChanges, "No changes to this variant.");
+  assert.equal(
+    component.sharedImpact,
+    "Changed components that this variant uses affect its preview.",
+  );
 });
 
 test("a component recasts each stage label for its variant", () => {
@@ -51,6 +59,7 @@ test("each entry kind's copy matches the shared design copy", () => {
       screen.noChanges,
       screen.stylesChanged,
       screen.componentsChanged,
+      screen.sharedImpact,
     ],
     [
       SCREEN_STYLE_COPY.files,
@@ -62,6 +71,7 @@ test("each entry kind's copy matches the shared design copy", () => {
       SCREEN_STYLE_COPY.noChanges,
       SCREEN_STYLE_COPY.stylesChanged,
       SCREEN_STYLE_COPY.componentsChanged,
+      SCREEN_STYLE_COPY.sharedImpact,
     ],
   );
   const component = entryWording("component");
@@ -73,6 +83,7 @@ test("each entry kind's copy matches the shared design copy", () => {
       component.noChanges,
       component.stylesChanged,
       component.componentsChanged,
+      component.sharedImpact,
     ],
     [
       COMPONENT_STYLE_COPY.files,
@@ -81,6 +92,7 @@ test("each entry kind's copy matches the shared design copy", () => {
       COMPONENT_STYLE_COPY.noChanges,
       COMPONENT_STYLE_COPY.stylesChanged,
       COMPONENT_STYLE_COPY.componentsChanged,
+      COMPONENT_STYLE_COPY.sharedImpact,
     ],
   );
   const page = entryWording("page");
@@ -98,4 +110,6 @@ test("each entry kind's copy matches the shared design copy", () => {
       PAGE_STYLE_COPY.unresolved,
     ],
   );
+  // A page has no usage records, so neither copy gives it that sentence.
+  assert.ok(!("sharedImpact" in page) && !("sharedImpact" in PAGE_STYLE_COPY));
 });

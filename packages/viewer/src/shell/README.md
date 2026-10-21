@@ -286,6 +286,10 @@ one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
+`entry_wording.ts` declares each kind's nouns once and builds the kind's
+evidence sentences, status lines and pane labels from them. A component's
+sentences name the shown variant, while its file list and its own rules name
+the component.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup. `workspace_evidence.tsx` follows the designs' order: the reason
@@ -293,7 +297,8 @@ sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
 design places, and the no-changes line follow, in that order.
-`workspace_evidence_data.ts` shows the shared-component sentence in place of
+`workspace_evidence_data.ts` shows the shared-component sentence, which
+`entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
 detail's related components, a component-owned record on a shown view, or the

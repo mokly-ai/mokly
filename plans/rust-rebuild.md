@@ -557,6 +557,27 @@ usage holds an instance of a changed component that the entry detail's
 so a component's markup change left its affected consumer's views reading "No
 changes to this screen" beside a band that offers their comparison.
 
+**User decision 84 (2026-10-21): B.** The Details sentence of an entry that only
+changed components affect follows the entry's kind, through the shared entry
+wording: "Changed components that this screen uses affect its preview." for a
+screen, and "Changed components that this variant uses affect its preview."
+for a component and its variants. The replaced sentence, "Shared component
+changes affect this preview. This page has no independent entry in Changes.",
+named a page, but in Mokly a page is a whole-document page entry. A page has
+no usage records, so it never shows the sentence. Item 119, building each
+kind's sentences from one noun, stays open, so only this sentence changes.
+
+**User decision 119 (2026-10-21): B.** Each kind of Details entry declares its
+nouns in one place in the shared entry wording, and every sentence of the kind
+takes its noun from there. So one kind cannot name one thing with two words
+again, as component copy did with "saved view" and "variant". A screen's
+sentences name the screen, and a whole-document page's sentences name the
+page. A component's sentences name the shown entry a variant. Its file list
+and the sentences of its own rules name the component, because the CSS
+evidence presentation contract names two things there. The visible copy stays
+the same. The rejected option A kept each kind's sentences written out
+separately.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -665,8 +686,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
-82;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decisions
+82 and 84;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -2209,6 +2230,46 @@ Tags: ui
       `.context/defaults-viewer-82b/shards/`.
 - [x] Pass the complete gate on the final commit, push the branch, and report.
       Evidence: `.context/defaults-viewer-82b/gate.log`.
+
+## Milestone 10.5: Shared-impact sentence per kind in the designs
+
+Tags: mockup
+
+- [x] User decision 84 B: word the design copy's shared-component sentence
+      for each kind. A screen reads "Changed components that this screen uses
+      affect its preview.", and a component and its variants read "Changed
+      components that this variant uses affect its preview." A page has no
+      such sentence. `design/components/states/shared-impact/affected-screen`
+      shows the screen sentence.
+- [x] Run the mockup check and smoke-test the changed page through Serve.
+      Evidence: `.context/viewer-84b/` (mockup check log, smoke log, and
+      shots).
+
+## Milestone 10.6: Shared-impact sentence per kind in the viewer
+
+Tags: ui
+
+- [x] User decision 84 B: end the Details of a screen or a component that
+      only changed components affect with the sentence of its kind, from the
+      shared entry wording. Update the CSS evidence contracts, the Details
+      guide, and the tests. The copy test failed first. Evidence:
+      `.context/viewer-84b/` (red and green logs).
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Evidence: `.context/viewer-84b/gate.log`.
+
+## Milestone 10.7: One noun source per kind in the viewer
+
+Tags: ui
+
+The design copy keeps its sentences, so decision 119 B needs no mockup
+milestone.
+
+- [x] User decision 119 B: declare each Details kind's nouns once in the
+      shared entry wording, and build every sentence of the kind from them.
+      The visible copy stays the same. The noun test fails first. Evidence:
+      `.context/viewer-119b/` (red and green logs, the copy before and after,
+      and the mutation check).
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
 
@@ -3964,7 +4025,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       removing the `reloadsOnDeployment` flag, not by setting it on the
       embedded source as option B said. `mokly-viewer.md` and the shell
       delivery contract state the rule. Evidence: `.context/viewer-89b/`.
-  - [ ] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
+  - [x] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
         each entry kind's sentences from one word.
         `packages/viewer/src/shell/entry_wording.ts` writes the sentences of
         each kind separately, so one kind used two words for one thing.
@@ -3972,7 +4033,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         user. Options: A, keep the current sentences and the new copy test,
         Small (estimate); B, derive the sentences of each kind in
         `entry_wording.ts` from one noun per kind, so that a kind cannot mix
-        words, Medium. Recommended: B.
+        words, Medium. Recommended: B. The user chose B on 2026-10-21, and
+        Milestone 10.7 applies it.
     - User decision 119 (2026-10-21): B, build each kind's sentences in
       `entry_wording.ts` from one noun per kind. Work: W2 on
       `rebuild/viewer-119b`, after 84 B.
@@ -4590,7 +4652,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `rebuild/viewer-103c` keys `relatedComponents` and detail
         eligibility by the entry whose views each evidence item names
         (`3a30e389`).
-  - [ ] Resolve user item 84 (review finding 6): the shared-component
+  - [x] Resolve user item 84 (review finding 6): the shared-component
         sentence calls a screen "this page". "Shared component changes
         affect this preview. This page has no independent entry in
         Changes." now shows on live screens and saved views, but "page"
@@ -4601,7 +4663,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         for each entry kind through `entry_wording.ts`, for example "Changed
         components that this screen uses affect its preview.", with the
         design copy, the contract, the Details guide, and the tests, Large.
-        Recommended: B.
+        Recommended: B. The user chose B on 2026-10-21, and Milestones 10.5
+        and 10.6 apply it.
     - User decision 84 (2026-10-21): B. Work: `rebuild/viewer-84b`, in the W2
       workspace.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on

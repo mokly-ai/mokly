@@ -27,8 +27,7 @@ import {
 } from "./catalogue_v7_fixture.js";
 
 const SCREEN = "product/browse/home/empty";
-const SHARED =
-  "Shared component changes affect this preview. This page has no independent entry in Changes.";
+const SHARED = "Changed components that this screen uses affect its preview.";
 const NO_CHANGES = "No changes to this screen.";
 const ACTION = { path: "components/action", title: "Action" } as const;
 

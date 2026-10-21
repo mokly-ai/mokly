@@ -123,7 +123,7 @@ export function ComparisonDetails({
           <MockLink to={component.to}>{component.title}</MockLink>
         </p>
       ))}
-      {affected ? <p>{SCREEN_STYLE_COPY.sharedImpact}</p> : null}
+      {affected ? <p>{styleCopy.sharedImpact}</p> : null}
       {excludedStylesheets ? <p>{COMPONENT_STYLE_COPY.noChanges}</p> : null}
     </section>
   );

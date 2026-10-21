@@ -138,7 +138,7 @@ test("a consuming component shows its live view evidence before any comparison l
     /<li>static\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
   );
   assert.ok(
-    markup.endsWith(`<p>${SCREEN_STYLE_COPY.sharedImpact}</p></section>`),
+    markup.endsWith(`<p>${COMPONENT_STYLE_COPY.sharedImpact}</p></section>`),
     markup,
   );
   assert.doesNotMatch(markup, /No changes to this variant\./);

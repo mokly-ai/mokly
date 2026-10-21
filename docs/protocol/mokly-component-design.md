@@ -110,8 +110,9 @@ the comparison, and the shown view reads "Components this screen uses
 changed" over its two versions; a component in Welcome's position reads
 "Components this variant uses changed". Its Details list the
 stylesheet with the styles that apply to Welcome, link Action, and end with
-"Shared component changes affect this preview. This page has no independent
-entry in Changes." In Styles outside a
+"Changed components that this screen uses affect its preview."; a component
+in Welcome's position ends with "Changed components that this variant uses
+affect its preview." In Styles outside a
 changed component, the rule also styles Welcome's own Not now link, so Welcome
 has its own row beside Action, five in all, and Details links Action to the
 first story. Variants own no artboard there, so their rows and options stay
