@@ -3070,6 +3070,11 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     elements instead of matching tag signatures. Effort Large. Covers F19
     review finding 2, option B. Previous example: the existing source-location
     queues. The scoped wrapper repair applies option A.
+  - User decisions 115 and 116 (2026-10-21): A now, C after the merge, in
+    parallel. Decision 115 A records the current global wrapper-attribute
+    filtering rule. Decision 116 A records the current `html_tokens::parse`
+    consumer rule. Phase 2 of the HTML pipeline plans options C for both
+    boundaries after the merge.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
