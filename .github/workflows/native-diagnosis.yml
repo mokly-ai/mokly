@@ -1,0 +1,77 @@
+name: Native diagnosis
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: blacksmith-2vcpu-windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: 'true'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22.15.0
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run build --workspace @mokly/viewer && npm run build --workspace @mokly/mokly
+      - name: Observe the configuration import
+        run: |
+          mkdir -p .context
+          cat > .context/native-probe.mjs <<'JS'
+          import fs from 'node:fs/promises';
+          import os from 'node:os';
+          import path from 'node:path';
+          import {fork} from 'node:child_process';
+          import {fileURLToPath,pathToFileURL} from 'node:url';
+          const workspace = process.cwd();
+          const temp = await fs.mkdtemp(path.join(os.tmpdir(),'mokly-import-probe-'));
+          await fs.mkdir(path.join(temp,'examples/basic'),{recursive:true});
+          await fs.copyFile('examples/basic/postcss.config.mjs',path.join(temp,'examples/basic/postcss.config.mjs'));
+          await fs.writeFile(path.join(temp,'package.json'),'{"type":"module"}');
+          await fs.symlink(path.join(workspace,'node_modules'),path.join(temp,'node_modules'),'junction');
+          const debug=path.join(temp,'debug.cjs');
+          await fs.writeFile(debug, `
+          if(process.send && require('node:worker_threads').isMainThread){
+           const {registerHooks}=require('node:module'); const {writeSync}=require('node:fs');
+           registerHooks({resolve(s,c,n){writeSync(2,'RESOLVE '+s+' FROM '+c.parentURL+'\\n');return n(s,c)},load(u,c,n){writeSync(2,'LOAD '+u+'\\n');return n(u,c)}});
+           new (require('node:worker_threads').Worker)(\`
+           const {Session}=require('node:inspector');const s=new Session();s.connectToMainThread();s.post('Debugger.enable');
+           s.on('Debugger.paused',({params})=>{require('node:fs').writeSync(2,'PAUSED '+JSON.stringify(params.callFrames.map(f=>({function:f.functionName,url:f.url,line:f.location})))+'\\n');s.post('Debugger.resume')});
+           setTimeout(()=>s.post('Debugger.pause'),15000);
+           \`,{eval:true});
+          }
+          `);
+          const resolution={aliases:{'react-native':'react-native-web'},conditions:['react-native','import','module','default'],loaders:{'.js':'jsx'},mainFields:['react-native','module','main'],packageRoots:[path.join(temp,'examples/basic'),path.join(temp,'examples'),temp],resolveExtensions:['.web.tsx','.web.ts','.web.js','.tsx','.ts','.js','.jsx','.json'],dependencyRoot:temp};
+          const child=fork(path.join(workspace,'packages/mokly/dist/sidecar/postcss-worker.js'),[],{cwd:temp,env:{...process.env,MOKLY_POSTCSS_PHASES:'1',NODE_OPTIONS:`--require=${JSON.stringify(path.join(workspace,'packages/mokly/dist/sidecar/postcss-preload.cjs'))} --require=${JSON.stringify(debug)}`},stdio:['pipe','pipe','pipe','ipc']});
+          child.stdout.on('data',d=>process.stdout.write(d));child.stderr.on('data',d=>process.stderr.write(d));
+          const timer=setTimeout(()=>{console.error('PROBE TIMEOUT');child.kill('SIGKILL')},60000);
+          child.on('message',m=>{if('id' in m){console.log('REPLY',JSON.stringify(m));child.kill('SIGKILL')}else if(m.line && !m.line.includes('"phase":"module"'))console.log(m.line)});
+          child.once('exit',()=>clearTimeout(timer));
+          child.send({sourceRoot:temp,repositoryRoots:[temp],moduleResolution:resolution,postcss:path.join(temp,'examples/basic/postcss.config.mjs')});
+          child.send({id:1,params:{sourceRoot:temp,repositoryRoots:[temp],moduleResolution:resolution,postcss:'examples/basic/postcss.config.mjs',sourcePath:path.join(temp,'input.css'),text:'p{color:red}'}});
+          JS
+          node .context/native-probe.mjs
+  macos:
+    runs-on: blacksmith-6vcpu-macos-26
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '4'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: 'true'
+      - run: rustup toolchain install
+      - name: Repeat process ownership after readiness
+        run: |
+          cargo test -p mokly-platform
+          for i in $(seq 1 20); do
+            cargo test -p mokly-platform --test process_tests || exit $?
+          done
