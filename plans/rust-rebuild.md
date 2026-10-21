@@ -3102,6 +3102,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `.context/ci-probe-diagnostic/tool-audit-red.log`,
       `pinned-tool-audit.log`, `candidate-tool-build-compatible.log`,
       and `installer-smoke.log`.
+  - Integration batch 18 decision 3 (2026-10-21): this record stays beside
+    the RUSTSEC-2026-0382 TODO of Milestone 3. It names the advisory, but it
+    records a different change: the lock of the `cargo-audit` tool itself,
+    not the workspace `Cargo.lock` patch.
 
 - [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
       all discovered browser specs to four whole-file shards in hosted CI and
