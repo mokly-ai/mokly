@@ -2693,7 +2693,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
-Defaults-engine round 5 merge resolutions: `.context/defaults-engine-round5/merge-resolutions.md`.
+Defaults-engine round 5 merge resolutions: merged `e620ff06` with a merge
+commit. `crates/mokly-compare/README.md` kept the tip's prepared-base text and
+this branch's CSS ownership text. `docs/protocol/mokly-build-warnings.md`
+kept both the tip warning rows and the HTML dependency producer row.
+`plans/rust-rebuild.md` kept both histories and open decisions. The tip's
+Node 22.15 floor, RUSTSEC patch, capture collector, and CI changes stay live.
+Evidence: `.context/defaults-engine-round5/merge-resolutions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
@@ -2748,8 +2754,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         copy and keep proof storage private. Evidence:
         `.context/defaults-engine-round5/proof-owner-green.log`.
   - [x] Defaults-engine round 5 decision 107 C: count an anchored substituted
-        nesting parent for scoped universal matching. Linked and head-style
-        tests pass. Evidence: `.context/defaults-engine-round5/nested-unit-red.log`.
+        nesting parent for scoped universal matching. Linked stylesheet, head
+        style, and unit tests pass. Evidence:
+        `.context/defaults-engine-round5/nested-unit-red.log` and
+        `.context/defaults-engine-round5/linked-styles-red.log`.
+  - [x] Defaults-engine round 5 outside-scope move admission defect: use the
+        physical owner claim and retain the failing regression. Evidence:
+        `.context/defaults-engine-round5/move-admission-red.log`.
+  - [x] Defaults-engine round 5 outside-scope selector duplicate scan: use a
+        set and retain the 1:4 operation-count regression. Evidence:
+        `.context/defaults-engine-round5/selector-cost-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.
