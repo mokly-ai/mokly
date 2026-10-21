@@ -41,12 +41,16 @@ interface AutomationDocument {
   readonly runs?: { readonly steps?: readonly AutomationStep[] };
 }
 
-test("every workflow and composite action pins uses: to a full commit", async () => {
+test("external actions pin commits and local workflows use the caller revision", async () => {
   const references: string[] = [];
   for (const file of await automationFiles()) {
     const { document } = await readDocument(file);
-    for (const uses of actionReferences(document))
-      references.push(`${file}: ${uses}`);
+    for (const uses of actionReferences(document)) {
+      if (uses.startsWith("./")) {
+        assert.match(uses, /^\.\/\.github\/workflows\/[\w-]+\.ya?ml$/);
+        assert.ok(existsSync(path.join(repositoryRoot, uses)));
+      } else references.push(`${file}: ${uses}`);
+    }
   }
   assert.ok(references.length > 0, "workflows and actions must use actions");
   assert.deepEqual(

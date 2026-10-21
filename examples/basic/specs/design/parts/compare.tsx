@@ -34,6 +34,7 @@ export function CompareToolbar({
 const STATE_LABELS: Record<ReviewState, string> = {
   added: "New screen",
   changed: "Screen changed",
+  "components-changed": SCREEN_STYLE_COPY.componentsChanged,
   removed: "Screen removed",
   "styles-changed": SCREEN_STYLE_COPY.stylesChanged,
 };

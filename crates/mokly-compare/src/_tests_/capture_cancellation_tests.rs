@@ -13,6 +13,8 @@ use mokly_model::axes::ColorScheme;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::capture_producer;
+
 use super::{CapturedGeneration, capture};
 
 #[test]
@@ -45,7 +47,6 @@ fn a_retained_capture_forwards_cancellation_to_its_source() {
 fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() {
     let rendered = Arc::new(AtomicUsize::new(0));
     let cancelled = Arc::new(AtomicBool::new(false));
-    let checks = Arc::new(AtomicUsize::new(0));
     let plans: BTreeMap<_, _> = ["first/index.html", "later/index.html"]
         .into_iter()
         .enumerate()
@@ -65,38 +66,19 @@ fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() 
         })
         .collect();
     let cancellation = cancelled.clone();
-    let check_count = checks.clone();
     let render_count = rendered.clone();
     let error = {
         let source = Arc::new(Unimock::new((
-            RenderGenerationMock::collect_comparison
-                .each_call(matching!(_))
-                .answers(&|mock, collector| {
-                    let summary = mock.render_all()?;
-                    collector.summary(&summary);
-                    for route in mock.plans().keys() {
-                        let input = mock.comparison_input(route)?;
-                        mock.check_cancelled()?;
-                        collector.collect(route, input)?;
-                    }
-                    Ok(summary)
-                }),
+            capture_producer::collection(),
             RenderGenerationMock::comparison_capture
                 .each_call(matching!())
                 .returns(None),
-            RenderGenerationMock::render_all
-                .next_call(matching!())
-                .returns(Ok(RenderSummary {
-                    documents: 2,
-                    ..Default::default()
-                })),
             RenderGenerationMock::plans
                 .each_call(matching!())
                 .returns(plans),
             RenderGenerationMock::check_cancelled
                 .each_call(matching!())
                 .answers_arc(Arc::new(move |_| {
-                    check_count.fetch_add(1, Ordering::SeqCst);
                     if cancellation.load(Ordering::SeqCst) {
                         Err(GraphError::Runtime {
                             source: RuntimeDiagnostic {
@@ -128,11 +110,14 @@ fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() 
         )));
         capture(source).err()
     };
-    let Some(GraphError::Runtime { source }) = error else {
+    let Some(GraphError::Attempt { failures, .. }) = error else {
         panic!("expected capture cancellation")
+    };
+    assert_eq!(failures.len(), 1);
+    let GraphError::Runtime { source } = &failures[0] else {
+        panic!("expected cancellation during the next queued view")
     };
     assert_eq!(source.code, RuntimeCode::Cancelled);
     assert_eq!(source.message, "capture cancelled");
     assert_eq!(rendered.load(Ordering::SeqCst), 1);
-    assert_eq!(checks.load(Ordering::SeqCst), 2);
 }

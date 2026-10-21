@@ -38,19 +38,23 @@ impl Session {
                 break;
             }
             let inputs = self.schedule_comparison(&batch, &Inputs { session: self });
+            let mut ready = Vec::with_capacity(batch.len());
             for (route, input) in batch.iter().zip(inputs) {
                 match input {
                     Ok(input) => {
                         summary.record(view(route, &input));
-                        collector.summary(&summary.value);
-                        if failure.is_none() {
-                            failure = self
-                                .check_cancelled()
-                                .and_then(|()| collector.collect(route, input))
-                                .err();
-                        }
+                        ready.push((route, input));
                     }
                     Err(error) => summary.record(Err(error)),
+                }
+            }
+            collector.summary(&summary.value);
+            for (route, input) in ready {
+                if failure.is_none() {
+                    failure = self
+                        .check_cancelled()
+                        .and_then(|()| collector.collect(route, input))
+                        .err();
                 }
             }
         }

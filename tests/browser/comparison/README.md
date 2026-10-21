@@ -169,22 +169,22 @@ viewer over this copy through both frame adapters. Each host passes a
 `MovedHost` from `moved_rows.ts`, which extends the `EntryHost` of
 `entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
 page path it shows for that entry. An embedded host keeps `/viewer.html`, so
-a link that leaves the viewer for the standalone shell fails the case.
-`branch_point_cases.ts` registers the branch-point checks on the same three
-hosts: `branch_point_comparison_ui.spec.ts` on this copy,
-`serve_branch_point.spec.ts` on Serve, and `viewer_branch_point.spec.ts` in
-the embedded viewer. `branch_viewer_test.ts` serves that viewer to both
-embedded specs.
+a link that leaves the viewer for the standalone shell fails the case. Its
+host page gives the viewer the window width. The `compactSearch` marker says
+that a narrow window shows the compact search control in place of the field.
+The branch-point checks expect the control or the field from that marker,
+so a wide embedded viewer fails their mobile runs.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 
-`BRANCH_POINT_CHECKS` in `branch_point_checks.ts` runs on three hosts at
-desktop and mobile widths: `branch_point_comparison_ui.spec.ts` on this copy,
+`BRANCH_POINT_CHECKS` in `branch_point_checks.ts` holds the checks of each
+shared case. `branch_point_cases.ts` registers them at desktop and mobile
+widths on three hosts: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `BranchPointHost`, which keeps the `EntryHost` path check and names
-when comparisons are captured.
+a `MovedHost`. `branch_viewer_test.ts` serves the embedded viewer to both
+embedded specs.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.

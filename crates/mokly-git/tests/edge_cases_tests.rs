@@ -124,11 +124,12 @@ fn a_real_shallow_clone_cannot_invent_a_merge_base() {
     let output = Command::new("git")
         .args([
             "clone",
+            "--no-local",
             "--depth",
             "1",
             "--branch",
             "head",
-            &format!("file://{}", fixture.root().display()),
+            fixture.root().to_str().unwrap(),
         ])
         .arg(&clone)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")

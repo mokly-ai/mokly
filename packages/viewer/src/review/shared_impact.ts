@@ -1,7 +1,7 @@
 /**
  * Where changed components affect an entry whose own content is unchanged:
- * the component-owned records its views keep, and the review's affected
- * records that name its views.
+ * the component-owned records its views keep, the review's affected records
+ * that name its views, and the views whose usage holds a changed component.
  */
 
 import type { ResourceEvidence, RuleEvidence } from "../catalogue/types.js";
@@ -54,6 +54,37 @@ export function affectedEntry(
         (axes === undefined ||
           (context.viewport === axes.viewport &&
             context.colorScheme === axes.colorScheme)),
+    ),
+  );
+}
+
+/** One view's axes and the component instances its usage records. */
+interface ViewUsage extends ViewAxes {
+  readonly usage?: {
+    readonly instances: readonly { readonly componentId: string }[];
+  };
+}
+
+/** The key of one view's axes in a set of views. */
+export function viewAxesKey({ viewport, colorScheme }: ViewAxes): string {
+  return `${viewport}/${colorScheme}`;
+}
+
+/**
+ * The keys of the views whose usage holds an instance of one of the changed
+ * `components`, which the entry detail names. A selected comparison in Serve
+ * omits the affected records, so these views still name the shared change.
+ */
+export function viewsUsingComponents(
+  views: readonly ViewUsage[],
+  components: readonly { readonly path: string }[],
+): ReadonlySet<string> {
+  const paths = new Set(components.map(({ path }) => path));
+  return new Set(
+    views.flatMap((view) =>
+      view.usage?.instances.some(({ componentId }) => paths.has(componentId))
+        ? [viewAxesKey(view)]
+        : [],
     ),
   );
 }

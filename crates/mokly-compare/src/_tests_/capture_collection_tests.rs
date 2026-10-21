@@ -8,7 +8,7 @@ use mokly_graph::closure::Closure;
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::types::{ComparisonDocument, RenderSummary};
 
-use super::{Collector, charge};
+use super::Collector;
 
 fn input() -> ComparisonDocument {
     ComparisonDocument {
@@ -28,7 +28,7 @@ fn candidate_charges_are_exact_and_summary_growth_keeps_earlier_routes() {
     let mut full = Collector::new(usize::MAX);
     full.summary(&summary);
     full.collect("a/index.html", input()).unwrap();
-    let cost = charge("a/index.html", &full.views["a/index.html"]);
+    let cost = full.views["a/index.html"].charge("a/index.html");
     let mut collector = Collector::new(full.fixed + 3 * cost);
     collector.summary(&summary);
     for route in ["a/index.html", "b/index.html", "c/index.html"] {
@@ -67,7 +67,7 @@ fn resources_reclaim_later_candidates_and_oversized_summaries_keep_no_capture() 
     for route in ["a/index.html", "b/index.html", "c/index.html"] {
         collector.collect(route, input()).unwrap();
     }
-    let cost = charge("a/index.html", &collector.views["a/index.html"]);
+    let cost = collector.views["a/index.html"].charge("a/index.html");
     collector.trim(cost);
     assert_eq!(collector.retained, cost);
     assert_eq!(
