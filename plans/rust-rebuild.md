@@ -4057,9 +4057,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
     workflow path in `evidence_contract.mjs`; review numeric workflow identity
     matching so a GitHub `path` ending in `@main` can select valid evidence.
-  - Milestone 13 review 1, finding 5: the user must settle the Release Please
-    component for core-only commits; keep the `packages/mokly` layout until
-    that decision. Native builds and paired-tag publication remain unchanged.
+  - [x] Milestone 13 review 1, finding 5: the user must settle the Release
+        Please component for core-only commits; keep the `packages/mokly`
+        layout until that decision. Native builds and paired-tag publication
+        remain unchanged. Settled by user decision 20 C: the CLI is the root
+        `.` component. The Milestone 13 TODO "Settle Release Please selection
+        for core-only commits" records the decision.
   - Milestone 6 review 2, finding 6: settled by F8 decision 21 B. Keep all
     Used by lists unavailable after one unavailable view until the next generation.
   - M8 sidecar review D2: settled by F8 decision 12 C. The wrapper uses the
