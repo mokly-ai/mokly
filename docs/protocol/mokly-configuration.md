@@ -36,6 +36,8 @@ following contract:
   [sidecar](./mokly-sidecar.md) bundles with;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base;
+- `review.baseInstallScripts`: whether base dependency installs run lifecycle
+  scripts, defaulting to false;
 - `watch`: additional authored inputs and static assets for watched Serve.
 
 The resolved config has one repository root, one sorted resolved source-file
@@ -105,6 +107,7 @@ interface MoklyConfig {
   }[];
   review?: {
     base?: string; // origin/main; merge base with HEAD
+    baseInstallScripts?: boolean; // false; use lifecycle scripts for base installs
   };
   watch?: {
     debounceMs?: number; // 75

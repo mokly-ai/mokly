@@ -20,7 +20,7 @@ JSON file named by `--config`.
   ],
   "renderer": "specs/renderer.tsx",
   "stylesheets": [{ "match": "**/index.html", "stylesheets": ["app.css"] }],
-  "review": { "base": "origin/main" }
+  "review": { "base": "origin/main", "baseInstallScripts": false }
 }
 ```
 
@@ -82,6 +82,8 @@ A JavaScript `file` loader is invalid because it emits an undelivered file.
 ## Review and watch
 
 `review.base` selects the Git base, with `origin/main` as its default.
+`review.baseInstallScripts` enables lifecycle scripts for base dependency
+installs. It defaults to `false` and only uses the working tree configuration.
 Changes renders from the merge base and the working tree. It uses no committed
 generated tree.
 
@@ -108,6 +110,7 @@ The configuration declares no output directory and no build recipe.
 | `postcss`          | A local module that supplies consumer PostCSS plugins                        |
 | `moduleResolution` | Consumer aliases, package roots, conditions, fields, extensions, and loaders |
 | `review.base`      | The Git ref used to find the comparison base                                 |
+| `review.baseInstallScripts` | Run lifecycle scripts for base dependency installs, default false       |
 | `watch`            | Additional watch rules and the debounce interval                             |
 
 Paths resolve from the configuration file. Inputs stay inside `repoRoot`.
