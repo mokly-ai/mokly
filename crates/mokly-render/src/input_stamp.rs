@@ -14,6 +14,7 @@ pub(crate) struct InputStamp {
     pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
     pub(crate) assets: BTreeMap<PathBuf, Option<(Node, String)>>,
+    pub(crate) identities: BTreeMap<PathBuf, Option<(Node, String)>>,
     pub(crate) directories: BTreeMap<(PathBuf, String), Option<Vec<PathBuf>>>,
 }
 
@@ -59,6 +60,7 @@ impl InputStamp {
         let assets: usize = self
             .assets
             .iter()
+            .chain(self.identities.iter())
             .map(|(path, stamp)| {
                 path.capacity()
                     + size_of_val(stamp)
@@ -82,6 +84,16 @@ impl InputStamp {
                 .map(|hash| (node, hash))
         });
         self.assets.insert(path, stamp);
+    }
+
+    pub(crate) fn identity(&mut self, tree: &dyn SourceTree, path: PathBuf) {
+        let value = tree.project(&path).ok().flatten().and_then(|node| {
+            tree.file_object(&path)
+                .ok()
+                .flatten()
+                .map(|object| (node, object))
+        });
+        self.identities.insert(path, value);
     }
 
     pub(crate) fn directories(
@@ -121,6 +133,9 @@ impl InputStamp {
         }
         for path in self.assets.keys() {
             result.asset(tree, path.clone());
+        }
+        for path in self.identities.keys() {
+            result.identity(tree, path.clone());
         }
         let mut scan = Scan::default();
         for (path, pattern) in self.directories.keys() {

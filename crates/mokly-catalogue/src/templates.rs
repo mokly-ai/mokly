@@ -2,14 +2,15 @@
 
 use std::collections::BTreeSet;
 
-use html5gum::{DefaultEmitter, StartTag, Token, Tokenizer};
+use html5gum::{StartTag, Token};
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
 use crate::diagnostic::{Code, Issue, Warning, WarningSubject};
+use crate::html_tokens;
 use crate::locations::at;
 use crate::references::{boolean, reference, substitutions, use_reference};
-use crate::template_types::{ElementRegistry, Template, ignore_attribute_allowed};
+use crate::template_types::{ElementRegistry, Template};
 
 pub(crate) struct Validation {
     pub(crate) issues: Vec<Issue>,
@@ -40,12 +41,28 @@ pub(crate) fn validate(
             components: BTreeSet::new(),
         },
     };
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
     let mut document_tags = [0, 0, 0];
-    for token in Tokenizer::new_with_emitter(template.body.as_str(), emitter).flatten() {
-        match token {
+    let mut warned_attributes = BTreeSet::new();
+    for parsed in html_tokens::parse(&template.body) {
+        match parsed.token {
             Token::StartTag(tag) => {
+                for attribute in parsed.ignored_attributes {
+                    if !warned_attributes.insert(attribute.clone()) {
+                        continue;
+                    }
+                    checker.result.warnings.push(Warning {
+                        code: "html-ignore-attribute",
+                        subject: if slots.is_some() {
+                            WarningSubject::Component(path.into())
+                        } else {
+                            WarningSubject::Entry(path.into())
+                        },
+                        message: format!(
+                            "unknown attribute {attribute} on <{}> is ignored",
+                            String::from_utf8_lossy(&tag.name)
+                        ),
+                    });
+                }
                 for (i, name) in ["html", "head", "body"].iter().enumerate() {
                     if tag.name.as_ref() == name.as_bytes() {
                         document_tags[i] += 1;
@@ -171,7 +188,6 @@ impl Checker<'_> {
             .attributes
             .iter()
             .find(|(name, _)| name.as_ref() == b"slot")
-            .filter(|_| ignore_attribute_allowed(&name, "slot"))
             .map(|(_, value)| String::from_utf8_lossy(&value.value).into_owned())
             .unwrap_or_else(|| "children".into());
         self.slot_content(&slot_name, tag.span.start);
@@ -214,18 +230,6 @@ impl Checker<'_> {
         }
         for (attribute, value) in &tag.attributes {
             let attribute = String::from_utf8_lossy(attribute);
-            if !ignore_attribute_allowed(&name, &attribute) {
-                self.result.warnings.push(Warning {
-                    code: "html-ignore-attribute",
-                    subject: if self.slots.is_some() {
-                        WarningSubject::Component(self.path.into())
-                    } else {
-                        WarningSubject::Entry(self.path.into())
-                    },
-                    message: format!("unknown attribute {attribute} on <{name}> is ignored"),
-                });
-                continue;
-            }
             let text = String::from_utf8_lossy(&value.value);
             self.substitutions(&text, value.span.start);
             if attribute == "mokly-if" {

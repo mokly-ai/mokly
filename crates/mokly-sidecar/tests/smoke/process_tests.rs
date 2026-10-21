@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use mokly_sidecar::error::{Error, FailureKind, ProtocolError};
 use mokly_sidecar::methods::{Call, ModuleResolution, ProcessCss};
 use mokly_sidecar::pool::SidecarPool;
+use mokly_sidecar::wire::MethodResult;
 
 use super::super::{pool, pool_with_entry};
 
@@ -90,4 +91,29 @@ fn unavailable_source_directories_name_the_source_root() {
         assert!(matches!(error, Error::Unavailable { part } if part == root.to_string_lossy()));
         pool.shutdown().unwrap();
     }
+}
+
+#[test]
+fn a_postcss_child_exit_is_a_remote_failure_and_the_context_can_restart() {
+    let directory = tempfile::tempdir().unwrap();
+    let file = directory.path().join("postcss.mjs");
+    fs::write(&file, "process.exit(23); export default {plugins:[]};").unwrap();
+    let pool = pool(&super::super::package_version::read());
+    let call = Call::ProcessCss(ProcessCss {
+        repository_roots: Vec::new(),
+        context: "child-exit".into(),
+        source_root: directory.path().to_string_lossy().into_owned(),
+        module_resolution: ModuleResolution::default(),
+        postcss: "postcss.mjs".into(),
+        source_path: "input.css".into(),
+        text: "p { color: red }".into(),
+    });
+    let error = pool.request(call.clone()).unwrap_err();
+    assert!(matches!(error, Error::Remote { .. }), "{error}");
+    fs::write(&file, "export default {plugins:[]};").unwrap();
+    let MethodResult::Css(result) = pool.request(call).unwrap() else {
+        panic!("expected CSS result after replacing the failed child")
+    };
+    assert!(result.text.contains("color: red"));
+    pool.shutdown().unwrap();
 }

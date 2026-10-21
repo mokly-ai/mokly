@@ -5,7 +5,11 @@ import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
-import { observeModuleLoads, readEvidence } from "./postcss-evidence.js";
+import {
+  observeModuleLoads,
+  preloadedObserver,
+  readEvidence,
+} from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
@@ -20,8 +24,10 @@ const parent = parentInput();
 parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());
 process.once("message", (workerData: WorkerData) => {
-  observeFileReads();
-  observeModuleLoads();
+  if (!preloadedObserver()) {
+    observeFileReads();
+    observeModuleLoads();
+  }
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths).then((loaded) => ({
       ...loaded,

@@ -62,11 +62,14 @@ impl CapturedTree {
     }
 }
 impl SourceTree for CapturedTree {
+    fn file_object(&self, path: &Path) -> error::Result<Option<String>> {
+        self.live.file_object(path)
+    }
     fn observe_pinned_input(
         &self,
         path: &Path,
         baseline: &ReadBaseline,
-        digest: &str,
+        digest: Option<&str>,
     ) -> error::Result<()> {
         self.evidence.record_pinned(path, baseline, digest)
     }

@@ -3,10 +3,6 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 type HtmlNode = DefaultTreeAdapterMap["node"];
 export type HtmlElement = DefaultTreeAdapterMap["element"];
 
-export function documentText(content: string): string {
-  return textContent(parse(content));
-}
-
 /** Find document elements without matching serialized JSON script contents. */
 export function documentElements(
   content: string,
@@ -16,7 +12,7 @@ export function documentElements(
 }
 
 /** Find matching elements in one parsed document subtree. */
-export function elements(
+function elements(
   node: HtmlNode,
   predicate: (element: HtmlElement) => boolean,
 ): HtmlElement[] {

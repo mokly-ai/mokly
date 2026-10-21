@@ -1,7 +1,7 @@
 //! Discovery scale is measured by source operations, not elapsed time.
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree, SourceTreeMock};
@@ -10,8 +10,8 @@ use unimock::{MockFn, Unimock, matching};
 use crate::config::{ConfigLoader, Loader};
 use crate::discovery::{Discoverer, Discovery};
 
-fn run(size: usize) -> BTreeMap<String, usize> {
-    let counts = Arc::new(Mutex::new(BTreeMap::<String, usize>::new()));
+fn run(size: usize) -> BTreeMap<PathBuf, usize> {
+    let counts = Arc::new(Mutex::new(BTreeMap::<PathBuf, usize>::new()));
     let captured = counts.clone();
     let tree: Arc<dyn SourceTree> = Arc::new(Unimock::new((
         SourceTreeMock::read
@@ -20,11 +20,7 @@ fn run(size: usize) -> BTreeMap<String, usize> {
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                *captured
-                    .lock()
-                    .unwrap()
-                    .entry(path.to_string_lossy().into_owned())
-                    .or_default() += 1;
+                *captured.lock().unwrap().entry(path.to_owned()).or_default() += 1;
                 Ok(Some(Node {
                     identity: path.into(),
                     lexical_kind: if path == Path::new("/repo") || path == Path::new("/repo/specs")
@@ -63,6 +59,7 @@ fn repository_roots_and_candidates_project_once_with_linear_operation_growth() {
     let smaller = run(32);
     let larger = run(128);
     for path in ["/repo", "/repo/specs", "/repo/mokly.config.json"] {
+        let path = Path::new(path);
         assert!(smaller[path] > 0);
         assert_eq!(smaller[path], 1);
         assert_eq!(smaller[path], larger[path]);

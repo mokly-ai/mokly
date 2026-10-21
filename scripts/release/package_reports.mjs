@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { nativeTarget } from "./targets.mjs";
 
 const METADATA = ["package.json", "LICENSE", "README.md"];
+const POSTCSS_PRELOAD = "dist/sidecar/postcss-preload.cjs";
 export function validateNativeReport(report, name) {
   const { executable } = nativeTarget(name);
   const required = [...METADATA, `bin/${executable}`].sort();
@@ -27,6 +28,7 @@ export function validateCliReport(report) {
     "dist/index.d.ts",
     "dist/sidecar.js",
     "dist/sidecar/postcss-worker.js",
+    POSTCSS_PRELOAD,
     "dist/runtime.mjs",
     "dist/shim.mjs",
     "dist/execution.mjs",
@@ -45,6 +47,7 @@ export function validateCliReport(report) {
         file === "CHANGELOG.md" ||
         file === "config.schema.json" ||
         file === "bin/mokly.mjs" ||
+        file === POSTCSS_PRELOAD ||
         /^dist\/.+\.(?:js|mjs|ts)$/.test(file) ||
         /^docs\/(?:guides|protocol)\/.+/.test(file),
       `CLI contains non-allowlisted path ${file}`,

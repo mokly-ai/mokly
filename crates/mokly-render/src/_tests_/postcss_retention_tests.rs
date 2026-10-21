@@ -169,6 +169,7 @@ fn observed_read_metadata_is_charged_to_the_existing_cache_bound() {
             result: Css {
                 read_evidence: Evidence {
                     reads: vec![Read::WholeFile {
+                        identity: None,
                         path: "x".repeat(4096),
                         digest: "a".repeat(64),
                     }],

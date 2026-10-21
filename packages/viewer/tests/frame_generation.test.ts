@@ -61,7 +61,7 @@ test("a publication reloads exactly the frames whose document key changed", () =
     new Map(),
   );
   const frames = (snapshot: typeof before) =>
-    snapshot.catalogue.publicModel!.screens.flatMap((screen) =>
+    snapshot.catalogue.publicModel.screens.flatMap((screen) =>
       (screen as ShellCatalogueScreen).views.map((view) => ({
         source: frameSource(screen, view)!,
         documentKey: view.documentKey,
@@ -101,7 +101,7 @@ test("a page frame follows its key and a document frame its scheme's key", () =>
 });
 
 test("saved component views supplied by controls reload when their index key changes", () => {
-  const index = dataSnapshot(indexFixture(), new Map()).catalogue.publicModel!;
+  const index = dataSnapshot(indexFixture(), new Map()).catalogue.publicModel;
   const component = index.components[0]!;
   const saved = component.views[0]!;
   const preview = {

@@ -6,15 +6,50 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
+import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
+import type { PostcssRead } from "../generated/sidecar/PostcssRead.js";
 
-const reads = new Map<string, Set<string>>();
+import { resolutionMetadata } from "./postcss-resolution-evidence.js";
+
+const reads = new Map<string, PostcssRead>();
+const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
 const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
+let physicalReader = originalPromiseRead;
 const require = nodeModule.createRequire(import.meta.url);
 const initialModules = new Set(Object.keys(require.cache));
 type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
+let earlyReaders = false;
+let moduleHooksInstalled = false;
+const observerKey = Symbol.for("mokly.postcss.readEvidence");
+type Observer = (loaded: Iterable<string>) => PostcssEvidence;
+
+function isObserver(value: unknown): value is Observer {
+  return typeof value === "function";
+}
+
+/** A CommonJS preload and the ESM worker share one installed observer. */
+export function preloadedObserver(): Observer | undefined {
+  const value: unknown = Reflect.get(globalThis, observerKey);
+  return isObserver(value) && value !== readEvidence ? value : undefined;
+}
+
+export function shareReadEvidence(): void {
+  Object.defineProperty(globalThis, observerKey, { value: readEvidence });
+}
+
+/** Async loaders cannot certify raw source or synchronously load an ESM preload. */
+export const asynchronousLoader = [
+  ...process.execArgv,
+  process.env.NODE_OPTIONS ?? "",
+].some((value) => /--(?:experimental-)?loader(?:=|\s|$)/.test(value));
+
+/** The first child preload obtains native readers before consumer replacement. */
+export function trustEarlyReaders(): void {
+  earlyReaders = true;
+}
 
 /** Preloads can replace file APIs before this child can observe their raw inputs. */
 export const preloadedCode = [
@@ -25,12 +60,42 @@ export const preloadedCode = [
 );
 
 /** Only equal witnessed versions coalesce; a conflicting version remains evidence. */
-export function observeBytes(file: string, bytes: Uint8Array): void {
+export function observeBytes(
+  file: string,
+  bytes: Uint8Array,
+  identity?: PostcssFileIdentity,
+): void {
   const name = path.resolve(file);
   const digest = createHash("sha256").update(bytes).digest("hex");
-  let versions = reads.get(name);
-  if (!versions) reads.set(name, (versions = new Set()));
-  versions.add(digest);
+  const record: PostcssRead = {
+    kind: "whole-file",
+    path: name,
+    digest,
+    ...(identity ? { identity } : {}),
+  };
+  reads.set(JSON.stringify(record), record);
+}
+
+/** Ranges retain their offsets and never become whole-file digests. */
+export function observeRange(
+  file: string,
+  offset: number,
+  bytes: Uint8Array,
+  eof = false,
+  identity?: PostcssFileIdentity,
+): void {
+  if (!Number.isSafeInteger(offset) || offset < 0 || (!bytes.length && !eof))
+    return;
+  const record: PostcssRead = {
+    kind: "byte-range",
+    path: path.resolve(file),
+    digest: createHash("sha256").update(bytes).digest("hex"),
+    offset,
+    length: bytes.length,
+    eof,
+    ...(identity ? { identity } : {}),
+  };
+  ranges.set(JSON.stringify(record), record);
 }
 
 /** Supply compiler bytes; only native file providers establish raw provenance. */
@@ -48,7 +113,7 @@ export async function moduleBytesAsync(
   file: string,
   physicalFile = false,
 ): Promise<Buffer | string> {
-  const reader = physicalFile ? originalPromiseRead : promises.readFile;
+  const reader = physicalFile ? physicalReader : promises.readFile;
   const invoke = reader.bind(promises);
   return compilerBytes(
     file,
@@ -62,10 +127,14 @@ export async function moduleBytesAsync(
 /** Only Mokly's own wrappers can certify the raw read below a text conversion. */
 export function markFileReader(reader: FileReader): void {
   observedReaders.add(reader);
+  if (reader === promises.readFile) physicalReader = reader;
 }
 
 function rawReader(reader: FileReader, original: FileReader): boolean {
-  return !preloadedCode && (reader === original || observedReaders.has(reader));
+  return (
+    (earlyReaders || !preloadedCode) &&
+    (reader === original || observedReaders.has(reader))
+  );
 }
 
 function compilerBytes(
@@ -74,16 +143,36 @@ function compilerBytes(
   nativeProvider: boolean,
 ): Buffer | string {
   modules.add(file);
-  if (!preloadedCode && nativeProvider && Buffer.isBuffer(bytes))
+  if (
+    (earlyReaders || !preloadedCode) &&
+    nativeProvider &&
+    Buffer.isBuffer(bytes)
+  )
     observeBytes(file, bytes);
   return bytes;
 }
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
 export function observeModuleLoads(): void {
-  if (typeof nodeModule.registerHooks !== "function") return;
-  let customized = preloadedCode;
-  nodeModule.registerHooks({
+  if (
+    moduleHooksInstalled ||
+    asynchronousLoader ||
+    typeof nodeModule.registerHooks !== "function"
+  )
+    return;
+  moduleHooksInstalled = true;
+  let customized = !earlyReaders && preloadedCode;
+  const hooks = nodeModule.registerHooks({
+    resolve(specifier, context, nextResolve) {
+      const result = nextResolve(specifier, context);
+      for (const file of resolutionMetadata(
+        specifier,
+        context.parentURL,
+        result.url,
+      ))
+        modules.add(file);
+      return result;
+    },
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
       if (!url.startsWith("file:")) return result;
@@ -105,11 +194,12 @@ export function observeModuleLoads(): void {
       return result;
     },
   });
-  for (const name of ["register", "registerHooks"] as const) {
+  for (const name of ["register"] as const) {
     const original = nodeModule[name];
     Object.defineProperty(nodeModule, name, {
       value: function (...args: unknown[]): unknown {
         customized = true;
+        hooks.deregister();
         return Reflect.apply(original, nodeModule, args);
       },
     });
@@ -119,14 +209,14 @@ export function observeModuleLoads(): void {
 
 /** A context remains incomplete even when every listed path has an observed read. */
 export function readEvidence(loaded: Iterable<string>): PostcssEvidence {
+  const observer = preloadedObserver();
+  if (observer) return observer([...loaded, ...modules]);
   for (const file of loaded) modules.add(file);
   for (const file of Object.keys(require.cache))
     if (!initialModules.has(file)) modules.add(file);
   return {
     coverage: "incomplete",
     modules: [...modules],
-    reads: [...reads].flatMap(([path, versions]) =>
-      [...versions].map((digest) => ({ kind: "whole-file", path, digest })),
-    ),
+    reads: [...reads.values(), ...ranges.values()],
   };
 }

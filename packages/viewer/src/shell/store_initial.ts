@@ -54,6 +54,7 @@ export function createInitialShellState(
   return {
     announcement: "",
     changesStatus: context.changesStatus,
+    comparisonIntent: route.comparison === "side",
     detailsOpen,
     disclosures,
     drawerOpen: false,
@@ -67,6 +68,7 @@ export function createInitialShellState(
     regionScrolls: {},
     revealedFolder: undefined,
     route,
+    routeInstallation: 0,
     selection,
     tagPickerIndex: 0,
     tagPickerOpen: false,
@@ -81,7 +83,7 @@ export function viewRoute(
 ): ShellRoute {
   const snapshot =
     snapshotId ??
-    (catalogue.publicModel && view.kind === "target"
+    (view.kind === "target"
       ? resolveCatalogueEntry(catalogue.publicModel, {
           path: view.target.entry.path,
           kind: view.target.entry.kind,

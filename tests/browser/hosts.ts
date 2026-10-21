@@ -68,7 +68,7 @@ export async function serveHost(
 }
 
 /** Fail before launching tests when an output path is missing or incomplete. */
-export async function requireStaticCatalogue(directory: string): Promise<void> {
+async function requireStaticCatalogue(directory: string): Promise<void> {
   const root = path.resolve(directory);
   for (const name of [
     "index.html",

@@ -5,8 +5,6 @@ import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.j
 import { test as base } from "./browser_test.js";
 import { startComparisonStaticHost } from "./comparison_static_setup.js";
 
-export { branchPointPaths } from "../helpers/branch_point_sources.js";
-
 /** A separate immutable copy leaves the viewer's default membership intact. */
 export const test = base.extend<
   object,

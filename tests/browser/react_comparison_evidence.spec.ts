@@ -20,7 +20,7 @@ import {
   COMPONENT_FILES_LEAD,
   INSPECTOR_VIEWPORTS,
   MATCHED_LEAD,
-  SAVED_VIEW_LEAD,
+  VARIANT_LEAD,
   SHARED,
   VARIANT_TERMINAL,
   evidenceFiles,
@@ -78,7 +78,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         ).toBeVisible();
         await expect
           .poll(() => evidenceFiles(evidence))
-          .toEqual([[sheets.wrapper, [[SAVED_VIEW_LEAD, [".frame"]]]]]);
+          .toEqual([[sheets.wrapper, [[VARIANT_LEAD, [".frame"]]]]]);
         await expect(evidence).not.toContainText(SHARED);
         await expect(evidence).not.toContainText(VARIANT_TERMINAL);
         await expectUsersNotAffected(page, ["Badged"]);

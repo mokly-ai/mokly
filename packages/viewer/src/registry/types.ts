@@ -80,14 +80,9 @@ export interface ManifestV10 {
   sourceFiles: readonly string[];
 }
 
-/** A baseline accepted by the historical boundary is exactly manifest v10. */
-export type HistoricalManifest = ManifestV10;
-
 /** Historical names express caller intent without introducing a second shape. */
 export type HistoricalManifestEntry = ManifestEntry;
 export type HistoricalManifestScreen = ManifestScreen;
-export type HistoricalManifestPage = ManifestPage;
-export type HistoricalManifestUseCase = ManifestUseCase;
 
 /** Current and historical comparison inputs share the exact v10 contract. */
 export type Manifest = ManifestV10;

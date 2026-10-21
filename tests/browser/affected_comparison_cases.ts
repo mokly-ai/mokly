@@ -12,7 +12,12 @@ import { expect, type Page } from "@playwright/test";
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import type { test as baseTest } from "./browser_test.js";
-import { chooseFilter, modeButton, navRow } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  chooseFilter,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
 
 /** Where the catalogue comes from: Serve, or a static build. */
@@ -32,7 +37,12 @@ async function comparing(
 }
 
 /** The shown status, and whether the comparison band offers its modes. */
-async function expectBand(page: Page, offered: boolean): Promise<void> {
+async function expectBand(
+  page: Page,
+  path: string,
+  offered: boolean,
+): Promise<void> {
+  await awaitRoutedDetail(page, path);
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
@@ -69,7 +79,7 @@ export function registerAffectedComparisons(
       [comparisonPaths.consumingComponent, VARIANT_HEADING],
     ] as const) {
       await page.goto(`/view/${path}/`);
-      await expectBand(page, true);
+      await expectBand(page, path, true);
       await comparing(page, host, () =>
         modeButton(page, "Side by side").click(),
       );
@@ -90,7 +100,7 @@ export function registerAffectedComparisons(
       comparisonPaths.plainComponent,
     ]) {
       await page.goto(`/view/${path}/`);
-      await expectBand(page, false);
+      await expectBand(page, path, false);
     }
   });
 
@@ -108,7 +118,7 @@ export function registerAffectedComparisons(
     await expect(page).toHaveURL(
       new RegExp(`/view/${comparisonPaths.consumer}/\\?`, "u"),
     );
-    await expectBand(page, true);
+    await expectBand(page, comparisonPaths.consumer, true);
     // The link names the consumer's first affected view: mobile, light.
     await expectSideBySide(page, [`Mobile · ${SCREEN_HEADING}`]);
     await chooseFilter(page, "changed");

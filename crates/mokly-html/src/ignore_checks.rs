@@ -1,16 +1,7 @@
-//! Validate authored ignore wrappers before consuming their attributes.
-
-use mokly_catalogue::template_types::ignore_attribute_allowed;
+//! Validate authored ignore identities after parsing has filtered wrapper attributes.
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
-use crate::tree::Element;
-
-pub(crate) fn attributes(element: &mut Element) {
-    element
-        .attributes
-        .retain(|attribute| ignore_attribute_allowed(&element.name, &attribute.name));
-}
 
 pub(crate) fn id(value: &str) -> Result<()> {
     if value.is_empty()

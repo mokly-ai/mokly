@@ -105,3 +105,7 @@ mod deep_context_tests;
 #[cfg(test)]
 #[path = "_tests_/style_metadata_tests.rs"]
 mod style_metadata_tests;
+
+#[cfg(test)]
+#[path = "_tests_/ignore_parsing_tests.rs"]
+mod ignore_parsing_tests;

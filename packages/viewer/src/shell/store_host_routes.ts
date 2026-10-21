@@ -91,6 +91,7 @@ export function withHostRoute(
       route.view.kind === "target"
         ? `Loaded ${viewTitle(catalogue, route.view)}`
         : "Loaded Mokly",
+    comparisonIntent: route.comparison === "side",
     disclosures: openDisclosures(state.disclosures, path),
     drawerOpen: false,
     expandedFrame: undefined,
@@ -98,6 +99,7 @@ export function withHostRoute(
       ? openDisclosures(state.filterBaseline, path)
       : undefined,
     route,
+    routeInstallation: state.routeInstallation + 1,
     tagPickerOpen: false,
   };
 }
@@ -109,11 +111,10 @@ export function announceNavigation(
   fragment: string | undefined,
   pending: PendingNavigation | undefined,
 ): void {
-  const model = catalogue.publicModel;
   const entry =
-    typeof selection.screenPath === "string" && model
+    typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
-          model,
+          catalogue.publicModel,
           selection.screenPath,
           selection.snapshotId,
         )?.entry

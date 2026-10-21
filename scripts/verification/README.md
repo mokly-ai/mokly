@@ -8,20 +8,53 @@ Public test commands and strict evidence rules live in the
 
 ## Rust advisory audit
 
-Run `npm run dependencies:check:rust`. It needs Node and Cargo but no installed
-npm dependency. `audit-rust.mjs` starts `rust-audit.mjs` at the repository root.
+Run `npm run dependencies:check:rust`. It needs Node, Cargo, and the installed
+npm dependencies, because the tool installer reads the release archive with
+`tar`. `audit-rust.mjs` starts `rust-audit.mjs` at the repository root.
 
 The wrapper checks the UTC review deadline before starting a process. It reads
 the locked dependency graph through Cargo metadata and checks `lightningcss`.
-It installs pinned cargo-audit with its locked dependencies and runs a live JSON
-audit. The report gives the effective ignore list, including configuration
-changes outside the repository file. Only the approved advisory can be ignored.
-Native tools parse their own TOML inputs. Every command failure propagates.
+It gets pinned cargo-audit from the [tool installer](#rust-audit-tool) and runs
+that executable for a live JSON audit. The report gives the effective ignore
+list, including configuration changes outside the repository file. Only the
+approved advisory can be ignored. Native tools parse their own TOML inputs.
+Every command failure propagates.
 
 The [dependency security contract](../../docs/protocol/dependency-security.md#rust-advisory-audit)
 defines the approved exception and review conditions. `tests/rust_audit.test.ts`
-injects time and command results to cover expiry, version changes, extra IDs,
-invalid output, and failure propagation without a network or elapsed-time assertion.
+injects time, the installer, and command results to cover expiry, version
+changes, extra IDs, invalid output, and failure propagation without a network or
+elapsed-time assertion.
+
+## Rust audit tool
+
+The audit wrapper calls `ensureRustAuditTool(root)` in
+[`rust-audit-tool.mjs`](./rust-audit-tool.mjs). It downloads cargo-audit 0.22.2
+from crates.io and verifies the release archive's pinned SHA-256 before
+extraction. It uses the reviewed dependency graph in
+[the tool lockfile](../../.cargo/audit-tool/Cargo.lock), isolates the source
+from the parent Cargo workspace, and builds with `cargo install --locked`.
+
+The tool lives under `.context/rust-audit-tool/{identity}/bin/`. Its identity
+includes the host platform and architecture, source version, source checksum,
+and complete lockfile bytes.
+The installer writes its completion marker only after a successful build.
+Failed or interrupted installs cannot become cache hits. It removes the
+temporary source tree after installation. Compiled dependencies use
+`target/rust-audit-tool/`. Both locations stay ignored.
+
+The installer returns the exact installed executable. The wrapper runs the
+live workspace advisory query with it on every invocation, including cache
+hits. The installer does not change the wrapper's advisory policy. The daily
+read-only audit job installs the existing npm dependencies with lifecycle
+scripts disabled before it uses the installer.
+
+To update tool dependencies, extract the pinned source into an isolated
+workspace, apply Cargo updates with the repository's Rust toolchain, and
+review the resulting lockfile. Audit it explicitly with
+`cargo audit --file .cargo/audit-tool/Cargo.lock`, then build and exercise the
+tool through `npm run dependencies:check:rust`. The tool source stays pinned
+unless its version and archive checksum are updated together.
 
 ## Browser partitioning
 

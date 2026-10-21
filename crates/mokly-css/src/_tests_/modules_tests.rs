@@ -24,7 +24,7 @@ fn token_guard_rejects_non_name_changes_with_the_exact_diagnostic() {
     .unwrap_err();
     assert_eq!(
         error.to_string(),
-        "[mokly-css/build-invalid] CSS Modules scoping would change more than local names in fonts.module.css:1:1; move this CSS to a plain stylesheet"
+        "[mokly-css/build-invalid] CSS Modules scoping would change more than local names in fonts.module.css:1:17; move this CSS to a plain stylesheet"
     );
 }
 

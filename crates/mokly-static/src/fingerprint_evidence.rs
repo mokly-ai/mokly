@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use mokly_source_interface::error::{self, SourceError};
+use mokly_source_interface::identity_evidence;
+use mokly_source_interface::range_evidence;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::tree::SourceTree;
 
@@ -21,9 +23,12 @@ impl Evidence {
         &self,
         path: &Path,
         baseline: &ReadBaseline,
-        digest: &str,
+        digest: Option<&str>,
     ) -> error::Result<()> {
-        if baseline.digest() == digest {
+        if Some(baseline.digest()) == digest {
+            if baseline.identity().is_some() {
+                self.record(path, baseline);
+            }
             return Ok(());
         }
         self.pinned_failure
@@ -61,12 +66,26 @@ impl Evidence {
             let Some(node) = node.filter(|node| Some(node) == current.as_ref()) else {
                 return Err(Error::InputsChanged { path: path.clone() });
             };
+            if versions
+                .iter()
+                .filter_map(ReadBaseline::identity)
+                .any(|identity| !identity_evidence::matches(live, path, identity))
+            {
+                return Err(Error::InputsChanged { path: path.clone() });
+            }
             let captured = captured.digest(&node.identity).ok();
             let current = live.digest(&node.identity).ok();
             if versions.iter().any(|version| {
-                captured.as_deref() != Some(version.digest())
-                    || current.as_deref() != Some(version.digest())
+                version.whole_digest().is_some_and(|expected| {
+                    captured.as_deref() != Some(expected) || current.as_deref() != Some(expected)
+                })
             }) {
+                return Err(Error::InputsChanged { path: path.clone() });
+            }
+            let Some(digest) = current else {
+                return Err(Error::InputsChanged { path: path.clone() });
+            };
+            if !range_evidence::verify(live, &node.identity, versions, &digest) {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }

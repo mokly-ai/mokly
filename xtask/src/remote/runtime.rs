@@ -5,7 +5,7 @@ use std::fs;
 use std::io::{self, Write};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::thread;
@@ -13,6 +13,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use chrono::Utc;
 
+use crate::command::program_for_platform;
 use crate::executor::Decision;
 
 use crate::remote::contracts::{Clock, Environment, Interrupt, Programs, Reporter};
@@ -69,11 +70,21 @@ impl ProgramFiles for SystemProgramFiles {
 
 impl Programs for SystemPrograms {
     fn find(&self, name: &str) -> Result<bool> {
+        self.find_for_platform(name, env::consts::OS)
+    }
+}
+
+impl SystemPrograms {
+    fn find_for_platform(&self, name: &str, os: &str) -> Result<bool> {
         let Some(path) = self.environment.get("PATH") else {
             return Ok(false);
         };
+        let mut program = PathBuf::from(program_for_platform(name, os));
+        if os == "windows" && program.extension().is_none() {
+            program.set_extension("exe");
+        }
         for directory in env::split_paths(&path) {
-            let candidate = directory.join(name);
+            let candidate = directory.join(&program);
             match self.files.executable(&candidate) {
                 Ok(true) => return Ok(true),
                 Ok(false) | Err(_) => continue,

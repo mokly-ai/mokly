@@ -26,7 +26,7 @@ function persistedStore(catalogue: Catalogue, initial: ShellState) {
   const stateRef = { current: state };
   const store = shellStore({
     catalogue,
-    context: viewerContext(catalogue.publicModel!, state.selection),
+    context: viewerContext(catalogue.publicModel, state.selection),
     embedded: false,
     interactive: false,
     navigation: {

@@ -46,6 +46,7 @@ return result;
       .filter(Boolean)
       .join(" "),
   });
+
   await sidecar.call("hello");
   const params = cssParams({
     sourceRoot: base,
@@ -69,7 +70,7 @@ return result;
 });
 
 for (const mode of ["module", "async module", "encoded module", "file"])
-  test(`a preloaded ${mode} read provider retains its output without a false raw witness`, async (context) => {
+  test(`a preloaded ${mode} provider retains output and underlying raw evidence`, async (context) => {
     const { base } = await sidecarSources(context);
     const config = path.join(base, "postcss.mjs");
     const tokens = path.join(base, "tokens.txt");
@@ -86,6 +87,7 @@ result.messages.push({type:'dependency',file:${JSON.stringify(tokens)}});
 }}]};`,
     );
     const preload = path.join(base, "preload.mjs");
+    const original = await fs.readFile(target);
     await fs.writeFile(
       preload,
       `
@@ -123,12 +125,56 @@ syncBuiltinESMExports();`,
     );
     assert.match(result.text, /blue/);
     assert.equal(result.readEvidence.coverage, "incomplete");
-    assert.equal(
-      result.readEvidence.reads.some((read) => read.path === target),
-      false,
+    assert.deepEqual(
+      result.readEvidence.reads
+        .filter((read) => read.path === target)
+        .map((read) => read.digest),
+      [createHash("sha256").update(original).digest("hex")],
     );
     assert.ok(result.readEvidence.modules.includes(config));
     assert.ok(
       result.dependencies.some((dependency) => dependency.path === tokens),
     );
+  });
+
+for (const preloadKind of ["require", "import"])
+  test(`${preloadKind} preloads retain reads made before configuration evaluation`, async (context) => {
+    const { base } = await sidecarSources(context);
+    const target = path.join(base, "tokens.txt");
+    await fs.writeFile(target, "red");
+    const preload = path.join(base, "early provider.cjs");
+    await fs.writeFile(
+      preload,
+      `globalThis.preloadedTokens=require('node:fs').readFileSync(${JSON.stringify(target)},'utf8');`,
+    );
+    await fs.writeFile(
+      path.join(base, "postcss.mjs"),
+      `
+import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'cached-preload',Once(root,{result}){
+root.append({prop:'value',value:globalThis.preloadedTokens});
+fs.writeFileSync(${JSON.stringify(target)},'blue');
+result.messages.push({type:'dependency',file:${JSON.stringify(target)}});
+}}]};`,
+    );
+    const option =
+      preloadKind === "import" ? pathToFileURL(preload).href : preload;
+    const sidecar = startSidecar(context, undefined, {
+      ...process.env,
+      NODE_OPTIONS: `--${preloadKind}=${JSON.stringify(option)}`,
+    });
+    await sidecar.call("hello");
+    const result = await sidecar.call<CssResult>(
+      "processCss",
+      cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+    );
+    assert.match(result.text, /value: red/u);
+    assert.deepEqual(
+      result.readEvidence.reads
+        .filter((read) => read.path === target)
+        .map((read) => read.digest),
+      [createHash("sha256").update("red").digest("hex")],
+    );
+    assert.equal(await fs.readFile(target, "utf8"), "blue");
+    assert.equal(result.readEvidence.coverage, "incomplete");
   });

@@ -68,7 +68,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
                 ],
                 ..Default::default()
             },
-            repository_roots: vec![consumer.root().into()],
+            repository_roots: vec![consumer.config().repo_root],
             warning: None,
             lease: None,
         },

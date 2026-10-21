@@ -17,10 +17,7 @@ export function observeBuild(
 }
 
 /** Compare the receiver's wire bytes with the installed artifact on every platform. */
-export async function verifyReceived(
-  received: Map<string, Buffer>,
-  output: string,
-) {
+async function verifyReceived(received: Map<string, Buffer>, output: string) {
   const local = new Map(
     [...(await files(output))].map(([name, bytes]) => [
       name.replaceAll("\\", "/"),

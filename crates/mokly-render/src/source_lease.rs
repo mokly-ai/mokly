@@ -1,5 +1,6 @@
 //! Source reads keep the historical extraction and dependency installation leased.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -19,11 +20,18 @@ pub(crate) struct LeasedTree {
 }
 
 impl SourceTree for LeasedTree {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        self.tree.file_object(path)
+    }
+
+    fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
+        self.tree.observe_inputs(path, baselines)
+    }
     fn observe_pinned_input(
         &self,
         path: &Path,
         baseline: &ReadBaseline,
-        digest: &str,
+        digest: Option<&str>,
     ) -> Result<()> {
         self.tree.observe_pinned_input(path, baseline, digest)
     }

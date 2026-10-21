@@ -112,7 +112,7 @@ export function previewUsage(): ComponentViewRecord {
 }
 
 /** Create a promise with its settle functions. */
-export function deferred<T>(): Deferred<T> {
+function deferred<T>(): Deferred<T> {
   let reject = (_error: unknown): void => undefined;
   let resolve = (_value: T): void => undefined;
   const promise = new Promise<T>((complete, fail) => {
