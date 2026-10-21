@@ -4,8 +4,6 @@ import promises from "node:fs/promises";
 import nodeModule from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { MessageChannel } from "node:worker_threads";
-import type { MessagePort } from "node:worker_threads";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
@@ -33,13 +31,6 @@ type ModulePathRecorder = (url: string) => void;
 function isModulePathRecorder(value: unknown): value is ModulePathRecorder {
   return typeof value === "function";
 }
-let asyncHookInstalled = false;
-let asyncHookRegistering = false;
-let asyncHookActive = false;
-let asyncPathsPort: MessagePort | undefined;
-let asyncFlushId = 0;
-const pendingAsyncFlushes = new Map<number, () => void>();
-
 function isObserver(value: unknown): value is Observer {
   return typeof value === "function";
 }
@@ -53,81 +44,6 @@ export function preloadedObserver(): Observer | undefined {
 export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, observerKey, { value: readEvidence });
   Object.defineProperty(globalThis, modulePathKey, { value: recordModulePath });
-}
-
-/** Record file URLs resolved by an asynchronous consumer loader. */
-export function observeAsyncModuleLoads(): void {
-  if (
-    (!asynchronousLoader && !consumerImport) ||
-    asyncHookInstalled ||
-    typeof nodeModule.register !== "function"
-  )
-    return;
-  asyncHookInstalled = true;
-  const original = nodeModule.register;
-  Object.defineProperty(nodeModule, "register", {
-    value: function (...args: unknown[]): unknown {
-      const result = Reflect.apply(original, nodeModule, args as never);
-      if (!asyncHookRegistering) registerAsyncHook();
-      return result;
-    },
-  });
-  if (asynchronousLoader) registerAsyncHook();
-}
-
-/** Let loader-thread messages arrive before the result frame is sent. */
-export async function flushAsyncModulePaths(): Promise<void> {
-  if (!asyncHookActive || !asyncPathsPort) return;
-  const id = ++asyncFlushId;
-  await new Promise<void>((resolve) => {
-    pendingAsyncFlushes.set(id, resolve);
-    asyncPathsPort?.postMessage({ kind: "flush", id });
-  });
-}
-
-function registerAsyncHook(): void {
-  if (asyncHookRegistering) return;
-  asyncHookRegistering = true;
-  asyncHookActive = true;
-  const { port1, port2 } = new MessageChannel();
-  asyncPathsPort = port1;
-  port1.on("message", (message: unknown) => {
-    if (
-      message &&
-      typeof message === "object" &&
-      "kind" in message &&
-      message.kind === "flushed" &&
-      "id" in message &&
-      typeof message.id === "number"
-    ) {
-      pendingAsyncFlushes.get(message.id)?.();
-      pendingAsyncFlushes.delete(message.id);
-      return;
-    }
-    if (
-      message &&
-      typeof message === "object" &&
-      "kind" in message &&
-      message.kind === "path" &&
-      "url" in message &&
-      typeof message.url === "string"
-    )
-      recordModulePath(message.url);
-  });
-  port1.on("close", () => {
-    for (const resolve of pendingAsyncFlushes.values()) resolve();
-    pendingAsyncFlushes.clear();
-  });
-  port1.unref();
-  try {
-    nodeModule.register("./postcss-async-loader.mjs", {
-      parentURL: import.meta.url,
-      data: { paths: port2 },
-      transferList: [port2],
-    });
-  } finally {
-    asyncHookRegistering = false;
-  }
 }
 
 /** Add a resolved file URL to the current module inventory. */
@@ -150,11 +66,6 @@ export const asynchronousLoader = [
   ...process.execArgv,
   process.env.NODE_OPTIONS ?? "",
 ].some((value) => /--(?:experimental-)?loader(?:=|\s|$)/.test(value));
-
-const consumerImport = [
-  ...process.execArgv,
-  process.env.NODE_OPTIONS ?? "",
-].some((value) => /--import(?:=|\s|$)/.test(value));
 
 /** The first child preload obtains native readers before consumer replacement. */
 export function trustEarlyReaders(): void {

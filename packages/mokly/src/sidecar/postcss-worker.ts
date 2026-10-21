@@ -6,11 +6,11 @@ import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
-  flushAsyncModulePaths,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
 } from "./postcss-evidence.js";
+import { flushAsyncModulePaths } from "./postcss-async-registration.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
