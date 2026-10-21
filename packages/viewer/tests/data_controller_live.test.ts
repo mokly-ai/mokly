@@ -82,9 +82,12 @@ test("a descriptor of another version shows the version error state", async () =
   assert.equal(fixture.controller.live, undefined);
 });
 
-test("a message from another deployment is a full page load", () => {
+test("a message from another deployment replaces the catalogue once", () => {
   const fixture = connected();
   fixture.live.listener!.message(9, OTHER);
+  assert.equal(fixture.controller.replaced, true);
+  assert.equal(fixture.source.deploymentChanges, 1);
+  fixture.live.listener!.message(10, OTHER);
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.source.indexes.length, 0);
 });
@@ -141,7 +144,7 @@ test("a refresh that cannot settle shows the route unavailable until a retry", a
   assert.equal(fixture.controller.refreshFailed, undefined);
 });
 
-test("a refresh from another deployment is a full page load", async () => {
+test("a refresh from another deployment replaces the catalogue", async () => {
   const fixture = connected();
   fixture.live.listener!.message(2, fixture.deployment);
   fixture.source.index().resolve(
@@ -152,6 +155,7 @@ test("a refresh from another deployment is a full page load", async () => {
     }),
   );
   await flush();
+  assert.equal(fixture.controller.replaced, true);
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.commits.length, 0);
 });

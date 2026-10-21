@@ -25,7 +25,7 @@ fn request() -> Request {
         files: BTreeMap::from([
             (
                 RepoPath::parse("package-lock.json").unwrap(),
-                b"base".to_vec(),
+                br#"{"lockfileVersion":3,"packages":{}}"#.to_vec(),
             ),
             (RepoPath::parse("package.json").unwrap(), b"{}".to_vec()),
         ]),

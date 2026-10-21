@@ -141,9 +141,9 @@ and protocol-relative `//` URLs.
 Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
-are ignored with one `html-ignore-attribute` warning per shared body and attribute.
-Their values are not evaluated. `--strict` makes these warnings fatal.
-Warnings catch spelling errors while letting ordinary builds continue.
+warn once per shared body and attribute. Their values are not evaluated.
+Strict builds fail. HTML5 parses remove unknown attributes from these wrappers
+in HTML, `srcdoc`, and `definePage`; closure and Changes omit them.
 
 ## Variants
 

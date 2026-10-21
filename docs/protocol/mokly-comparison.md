@@ -75,12 +75,10 @@ sides; the canonical form exists only to decide equality.
 
 ## Style Ownership
 
-The [sidecar's rule records](./mokly-sidecar-render-records.md#results) name
-which registered component rendered each registry rule. Slot content keeps
-its supplier. Delivery keeps the original HTML, class names, CSS text, and
-rule order. Trusted rule annotations survive normalization and caching on
-both sides. An authored owner attribute grants no ownership. Compare normalized
-rules per owner; formatting and duplicate copies do not change material.
+Registry ownership follows the [sidecar rule records](./mokly-sidecar-render-records.md#results).
+Trusted annotations survive normalization and caching on both sides.
+Authored owner attributes grant no ownership. Compare normalized rules per
+owner; formatting and duplicate copies do not change material.
 Owned, ownerless head, and linked CSS use one
 [catalogue-wide proof and evidence reduction](./mokly-css-attribution.md).
 Equal rule identities join across documents, even with different owner sets.
@@ -177,7 +175,7 @@ Third-party dependencies follow three tiers:
    through the module resolution settings.
 2. They differ: the base's dependencies are installed, with lifecycle scripts
    disabled and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
-   the package manager version, selected install roots, and the immutable source
+   the package manager and its version, manager configuration, selected install roots, and the immutable source
    identity when local packages or workspaces participate, and the bundle resolves
    third-party dependencies from there.
 3. The install cannot run, because the machine is offline, the package
@@ -187,9 +185,11 @@ Third-party dependencies follow three tiers:
    `base-dependencies` warning names the selected lockfile when one exists and
    gives the fallback reason.
 
-Base dependency installation supports npm only. When installation is needed,
-pnpm, Yarn, and Bun repositories use tier three with the `base-dependencies`
-warning. Equal dependency identities still use tier one without an install or
+Base dependency installation supports npm, pnpm 10 through 12, Yarn Classic 1, and Yarn
+Berry 4 with `nodeLinker: node-modules`. pnpm and Yarn install offline with
+lifecycle scripts disabled. Missing managers, unsupported versions, Bun,
+and Yarn Plug'n'Play use tier three with the `base-dependencies` warning.
+Plug'n'Play has its own fallback reason because the sidecar lacks its resolver. Equal dependency identities still use tier one without an install or
 an unsupported-manager warning. Repository-owned workspace sources retain
 their side-local mapping for every package manager.
 

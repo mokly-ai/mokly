@@ -100,6 +100,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                     timeout: Duration::from_secs(120),
                     byte_limit: None,
                     size_root: None,
+                    cache: None,
                 })
                 .unwrap();
         }

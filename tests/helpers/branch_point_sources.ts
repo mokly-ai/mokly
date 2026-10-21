@@ -22,8 +22,8 @@ export interface BranchPointCase {
 }
 
 /**
- * The branch-point lookup contract's five cases, one shared set of real Git
- * base commits. The Rust comparison tests run each case in its own
+ * The branch-point lookup contract's five cases and the affected destinations
+ * of user decision 103 C, one shared set of real Git base commits. The Rust comparison tests run each case in its own
  * repository; the browser fixtures write every case into both commits of
  * their catalogue, so Serve, the branch copy, and the embedded viewer show
  * the same sources.
@@ -88,4 +88,14 @@ export const branchPointPaths = {
   caseRemoved: "branch/case/Action/secondary",
   reusedParent: "branch/reused/action",
   reusedRemoved: "branch/reused/action/default",
+  /** Tally changes, and its consumers' views that use it stay unchanged. */
+  impactComponent: "branch/impact/tally",
+  /** Out of Changes: Meter and its variant. */
+  impactParent: "branch/impact/meter",
+  impactVariant: "branch/impact/meter/default",
+  /** In Changes as a pure move. */
+  impactMoved: "branch/impact/archive/slip",
+  impactPrevious: "branch/impact/slip",
+  /** In Changes for its desktop view; its mobile view stays unchanged. */
+  impactLedger: "branch/impact/ledger",
 } as const;

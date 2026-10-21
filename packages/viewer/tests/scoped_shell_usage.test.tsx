@@ -53,6 +53,10 @@ test("a workspace without its held detail derives no cross-route Usage or false 
   assert.match(loading, /Loading usage…/);
   assert.doesNotMatch(loading, /No recorded consumers/);
   assert.doesNotMatch(loading, /Used by/);
+  const replaced = renderToStaticMarkup(
+    <WorkspaceUsage data={data} delivery={{ status: "replaced" }} />,
+  );
+  assert.equal(replaced, loading);
 
   let retries = 0;
   const failed = renderToStaticMarkup(

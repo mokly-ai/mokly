@@ -41,6 +41,7 @@ impl TreeSink for Arena {
                     .borrow_mut()
                     .get_mut(&key)
                     .and_then(|queue| queue.pop_front())
+                    .flatten()
             })
         };
         let node = Node::Element(Element {

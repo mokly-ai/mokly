@@ -12,6 +12,7 @@ use crate::commands::{Command, Commands};
 use crate::dependency_types::{Fallback, Request, Resolved, Tier, Warning};
 use crate::error::{Error, Result};
 use crate::install::{self, Install};
+use crate::manager_plan;
 
 /// Base dependency selection boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DependenciesMock))]
@@ -59,20 +60,24 @@ impl Dependencies for DependencyTiers {
             let deadline = self.clock.now().saturating_add(self.timeout);
             request.base.validate_install()?;
             let configured = package_roots(request);
-            let roots = install::roots(&request.base, &configured)?;
-            let version = self.commands.run(&Command {
-                program: "npm".into(),
-                args: vec!["--version".into()],
-                directory: request.source_root.clone(),
-                timeout: self.timeout,
-                byte_limit: None,
-                size_root: None,
-            })?;
-            let version = match str::from_utf8(&version) {
-                Ok(version) if !version.trim().is_empty() => version.trim(),
-                _ => return Err(Error::UnsupportedManager),
-            };
-            let key = install::key(&request.base, version, &request.source_identity, &roots);
+            let mut roots = manager_plan::roots(&request.base, &configured)?;
+            for root in &mut roots {
+                let timeout = deadline.saturating_sub(self.clock.now());
+                if timeout.is_zero() {
+                    return Err(Error::InstallTimeout);
+                }
+                let version = self.commands.run(&Command {
+                    program: root.manager.program().into(),
+                    args: vec!["--version".into()],
+                    directory: request.source_root.join(&root.directory),
+                    timeout,
+                    byte_limit: None,
+                    size_root: None,
+                    cache: None,
+                })?;
+                root.validate_version(&version)?;
+            }
+            let key = install::key(&request.base, &request.source_identity, &roots);
             self.cache.get(
                 Kind::Dependencies,
                 &key,
@@ -113,6 +118,8 @@ impl Dependencies for DependencyTiers {
                     Error::InstallTimeout => Fallback::Timeout,
                     Error::CacheLimit { .. } => Fallback::Size,
                     Error::UnsupportedManager | Error::CommandUnavailable => Fallback::Unavailable,
+                    Error::UnsupportedVersion => Fallback::Version,
+                    Error::YarnPnp => Fallback::YarnPnp,
                     Error::InstallFailed { .. } | Error::CommandOutputLimit => Fallback::Failed,
                     Error::LocalOutside { .. } => Fallback::LocalOutside,
                     Error::InvalidInput { .. } => Fallback::InvalidInput,

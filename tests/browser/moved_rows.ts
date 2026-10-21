@@ -10,6 +10,11 @@ import { embeddedHost, routedHost, type EntryHost } from "./entry_hosts.js";
 export interface MovedHost extends EntryHost {
   /** Serve captures comparisons on demand; a copy publishes them. */
   comparisons: "on demand" | "published";
+  /**
+   * Serve and a static build open an Affected link in Side by side; a React
+   * host opens it in Current, where the band offers the same comparison.
+   */
+  affectedLinks: "current" | "side by side";
   /** The window widths of the Moved-row case. */
   widths: readonly number[];
 }
@@ -18,6 +23,7 @@ export interface MovedHost extends EntryHost {
 export const serveMovedHost: MovedHost = {
   ...routedHost,
   comparisons: "on demand",
+  affectedLinks: "side by side",
   widths: [390, 1280],
 };
 
@@ -25,6 +31,7 @@ export const serveMovedHost: MovedHost = {
 export const copyMovedHost: MovedHost = {
   ...routedHost,
   comparisons: "published",
+  affectedLinks: "side by side",
   widths: [390, 1280],
 };
 
@@ -38,6 +45,7 @@ export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
   return {
     ...embeddedHost(adapter),
     comparisons: "published",
+    affectedLinks: "current",
     widths: [1280],
   };
 }

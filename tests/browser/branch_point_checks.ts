@@ -12,13 +12,16 @@ import {
 } from "../helpers/branch_point_sources.js";
 
 import {
+  affectedDestinations,
+  movedConsumers,
+} from "./branch_point_affected.js";
+import {
   activateRow,
   type BranchPointHost,
   compareSideBySide,
   expectHead,
   expectRouted,
   expectSavedProps,
-  inspectorTab,
   openChanges,
   openEntry,
   search,
@@ -128,50 +131,6 @@ async function activation(
   await expectRouted(page, host, parent);
 }
 
-async function movedConsumers(
-  page: Page,
-  host: BranchPointHost,
-): Promise<void> {
-  await openEntry(page, host, "branch/consumers/badge");
-  await expectHead(page, "Badge", ["Branch [button]", "Consumers [button]"]);
-  await inspectorTab(page, "Usage");
-  await expect(page.locator("[data-usage-section='used-by']")).toBeVisible();
-  const affected = page.locator("[data-usage-section='affected'] a");
-  // A variant consumer is its own destination, titled by the variant. Each
-  // link asks for its consumer's comparison; a moved consumer is in Changes
-  // as a move with unchanged views, so it opens Current.
-  await expect(affected).toHaveCount(3);
-  expect(
-    await affected.evaluateAll((links) =>
-      links.map((link) => {
-        const url = new URL(link.getAttribute("href")!, location.href);
-        return [
-          link.textContent,
-          url.pathname,
-          url.searchParams.has("comparison"),
-        ];
-      }),
-    ),
-  ).toEqual([
-    ["Status", "/view/branch/consumers/archive/status/", true],
-    ["default", `/view/${paths.movedConsumer}/`, true],
-    ["Receipt", `/view/${paths.movedScreen}/`, true],
-  ]);
-  await affected.nth(1).click();
-  await expectRouted(page, host, paths.movedConsumer);
-  await expectHead(page, "Status", [
-    "Branch [button]",
-    "Consumers [button]",
-    "Archive [button]",
-  ]);
-  await expect
-    .poll(() => variantBar(page))
-    .toEqual([
-      "Status -> branch/consumers/archive/status",
-      `default -> ${paths.movedConsumer} (current)`,
-    ]);
-}
-
 async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
   await openEntry(page, host, paths.movedChild);
   // The folder above the moved parent has its own page, so its crumb links.
@@ -270,6 +229,7 @@ const CHECKS: Readonly<
   "moved-variant": movedVariant,
   "case-renames": caseRenames,
   "reused-parent": reusedParent,
+  "affected-destinations": affectedDestinations,
 };
 
 /**
