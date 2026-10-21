@@ -3761,7 +3761,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 119 (2026-10-21): B, build each kind's sentences in
       `entry_wording.ts` from one noun per kind. Work: W2 on
       `rebuild/viewer-119b`, after 84 B.
-  - [ ] Resolve user item 90 (F12 review finding 2): a failed step detail
+  - [x] Resolve user item 90 (F12 review finding 2): a failed step detail
         still flashes the error during a deployment reload. On a use-case
         route, the use case detail starts the page load, but a 404 for a
         removed step screen marks the route failed. So the old document
@@ -3774,6 +3774,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 90 (2026-10-21): C, a separate "replaced" delivery
       status. Work: W1 on `rebuild/viewer-90c`. The hub moved this work from
       W2 to W1 on 2026-10-21.
+    - Done in `9ef52160` and `2a5f0768` on `rebuild/viewer-90c`: the first
+      deployment change stops every detail load, and a route that still
+      waits gets the replaced status. `0a420f28` on
+      `rebuild/viewer-139a-140b` applies option B of finding 1 of the fresh
+      review of 89 B and 90 C: the replacement also ends the live
+      connection, so no index loads after it. Evidence:
+      `.context/viewer-90c/` and `.context/viewer-139a-140b/`.
   - [ ] Resolve user item 139 (90 C decision 1): what the replaced stage
         shows. The replaced delivery status of 90 C shows the loading stage
         in both hosts, which is the stage that 89 B gives an embedded host.
