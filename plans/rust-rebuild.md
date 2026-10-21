@@ -2278,7 +2278,14 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       `.context/ci-release-check-round9/hosted/`.
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
-- [ ] Dry-run the release scripts locally; the real publication is post-merge.
+- [x] Dry-run the release scripts locally; the real publication is post-merge.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: both children are
+      done. Hosted run `39529350934` of the read-only `release-check.yml`
+      (user decision 106 A) passed on `bbe9d12d`, which integration batch 18
+      merged. It built the five native targets with TLS inspection, packed
+      the seven packages with the `MOKLY_TEST_` scan, rechecked them with
+      `--reuse`, and passed the Chromium smoke of authoring, browser, Build,
+      and Serve.
   - [x] Run the local steps that need no credentials or registry write against
         a scratch checkout and record the blocked steps.
   - [x] Complete the seven-package pack, reuse, and smoke with all native
