@@ -60,6 +60,21 @@ test("a route loads until every detail arrives, and a failed one offers a retry"
   assert.deepEqual(refresh.retried, [["refresh"]]);
 });
 
+test("a use case shows a failed step only after every detail settles", () => {
+  // The step failed while the use case detail still loads.
+  assert.deepEqual(delivery({ failed: [STEP] }).result, { status: "loading" });
+  // Once every detail arrived or failed, the route shows the failure.
+  assert.equal(
+    delivery({ held: [TOUR], failed: [STEP] }).result?.status,
+    "failed",
+  );
+  assert.equal(delivery({ failed: [TOUR, STEP] }).result?.status, "failed");
+  // Another deployment's catalogue settles the waiting detail as replaced.
+  assert.deepEqual(delivery({ failed: [STEP], replaced: true }).result, {
+    status: "replaced",
+  });
+});
+
 test("another deployment's catalogue replaces a route that still waits for a detail", () => {
   assert.deepEqual(delivery({ replaced: true }).result, {
     status: "replaced",

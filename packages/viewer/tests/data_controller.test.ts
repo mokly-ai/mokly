@@ -3,6 +3,10 @@ import { test } from "node:test";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import {
+  routeDetailDelivery,
+  routeDetailRequests,
+} from "../src/shell/data_requests.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v7_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
@@ -104,6 +108,33 @@ test("a step that fails after another deployment answered leaves the use case re
   assert.equal(fixture.source.details.length, 3);
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.commits.length, 0);
+});
+
+test("a step that fails first is reported at once while the use case waits for its other details", async () => {
+  const fixture = controllerFixture(indexFixture());
+  const route = fixture.navigate("/view/tour/");
+  const delivery = () =>
+    routeDetailDelivery({
+      details: fixture.controller.snapshot.details,
+      failed: fixture.controller.failed,
+      refreshFailed: false,
+      replaced: fixture.controller.replaced,
+      requests: routeDetailRequests(fixture.controller.snapshot.index, route),
+      retry: () => undefined,
+      retryRefresh: () => undefined,
+    });
+  fixture.source.detail(HOME).reject(new Error("Not found"));
+  await flush();
+  // The host hears of the failure at once, but the stage keeps loading
+  // while the use case detail and the other step still load.
+  assert.deepEqual(fixture.source.detailFailures, [{ path: HOME }]);
+  assert.deepEqual(delivery(), { status: "loading" });
+  fixture.source
+    .detail("tour")
+    .resolve({ ...detailFixture({ path: "tour" }), deploymentId: OTHER });
+  await flush();
+  assert.deepEqual(delivery(), { status: "replaced" });
+  assert.equal(fixture.source.deploymentChanges, 1);
 });
 
 test("a newer detail installs with the refetched index of its revision", async () => {

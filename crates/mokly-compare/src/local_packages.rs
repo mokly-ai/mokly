@@ -1,7 +1,9 @@
 //! Local dependency confinement for base installs.
 //!
-//! Yarn Classic resolves bare local paths from its lockfile folder, so Classic
-//! project specifications use that root. Other managers use the manifest folder.
+//! Yarn Classic rewrites `file:` and `link:` dependency values from their
+//! manifest folder, so those use that folder. It resolves every other local
+//! value from its lockfile folder, so those use the Classic root. Other
+//! managers use the manifest folder.
 
 use std::collections::BTreeMap;
 
@@ -33,6 +35,11 @@ pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<
         .collect()
 }
 
+/// Whether Yarn Classic rewrites a dependency value from its manifest folder.
+fn rewritten(value: &str) -> bool {
+    value.starts_with("file:") || value.starts_with("link:")
+}
+
 pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
     for (directory, manifest) in manifests(files)? {
         let lockfile = ancestor_roots::directories(&directory)
@@ -50,8 +57,17 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
             });
         let berry = lockfile.as_ref().is_some_and(|(_, classic)| !classic);
         let (project, classic) = lockfile.unwrap_or_else(|| (directory.clone(), false));
-        let base = if classic { &project } else { &directory };
-        for value in manifest.specifications() {
+        let values = manifest
+            .packages()
+            .map(|(_, value)| (value.as_str(), !classic || rewritten(value)))
+            .chain(
+                manifest
+                    .replacements()
+                    .into_iter()
+                    .map(|value| (value, !classic)),
+            );
+        for (value, local) in values {
+            let base = if local { &directory } else { &project };
             if berry {
                 local_specifications::validate_berry(value, base, &project)?;
             } else {

@@ -15,6 +15,7 @@ import { flush, liveDescriptor } from "./data_fakes.js";
 
 const GENERATION = "2".repeat(64);
 const HOME = "product/browse/home";
+const OTHER = "4".repeat(64);
 const DESCRIPTOR = liveDescriptor(GENERATION);
 
 function liveIndex(revision: number): CatalogueReadModel {
@@ -124,6 +125,25 @@ test("a 409 starts no refresh while one loads, after an adoption, after disconne
   late.answer.reject(new ComponentRenderError("stale-revision", "Stale."));
   await assert.rejects(late.rendered);
   assert.equal(fixture.source.indexes.length, 1);
+});
+
+test("a 409 that arrives after a replacement starts no refresh", async () => {
+  const fixture = await editing();
+  // A render of the installed revision is in flight when a detail of
+  // another deployment replaces the catalogue.
+  const { rendered, answer } = render(fixture, 1);
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source
+    .detail(HOME)
+    .resolve({ ...detailFixture({ path: HOME }), deploymentId: OTHER });
+  await flush();
+  assert.equal(fixture.controller.replaced, true);
+  answer.reject(
+    new ComponentRenderError("stale-revision", "The render failed."),
+  );
+  await assert.rejects(rendered);
+  await flush();
+  assert.equal(fixture.source.indexes.length, 0);
 });
 
 test("the controller's transport forwards every call to Serve's transport", async () => {

@@ -2639,8 +2639,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
   - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
-        resolutions, fall back for every other protocol, and force off a
-        fixed list of Berry settings that load project code. Cached git
+        resolutions, fall back for every other protocol, such as the `exec:`
+        generators, and force off a fixed list of Berry settings that load
+        project code. Cached git
         dependencies then stop installing. Effort Medium. It is a wider fix,
         so the hub grades no severity, and it is stricter validation, so it
         needs the user. Options: A, keep only the targeted fixes of findings
@@ -2656,6 +2657,26 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         follow-up line on `rebuild/base-pnpm-yarn-fix1` names the same wider
         fix. Options: A, keep the scalar scans with the targeted fixes, Small
         (estimate); B, the typed model, Large. Recommended: B.
+  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+        send unscoped tokens elsewhere. Severity High, security, effort
+        Small. Options: A, document it only, Small (estimate); B, clear
+        unscoped Yarn credentials for base installs, Small (estimate); C, B,
+        and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
+        D, fall back whenever the base configuration selects a registry or a
+        scope, Medium. Recommended: C.
+  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+        scope): a base `.npmrc` can choose npm's git program. npm gets the
+        base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
+        Git dependency can run a committed program. Severity High
+        (estimate), security, effort Small. Options: A, pin `git` to the
+        absolute program that Mokly resolves, Small (estimate); B, A, and
+        also no Git transport for npm base installs, as for pnpm and Yarn
+        under 120 C, so npm repositories with Git dependencies get tier
+        three, Small; C, fall back when the base npm configuration sets
+        `git`, Small (estimate). Recommended: B.
+  - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
+    `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
+    only `percent-encoding` and `yaml-rust2`.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
@@ -3588,21 +3609,34 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         escaped text inert. Evidence: `.context/defaults-engine-round1/foreign-end-red.log`
         and `.context/defaults-engine-round1/foreign-end-green.log`.
 
-  - Finding: `tests/actionlint_config.test.ts` scans only `.yml` workflows.
-    Include `.yaml` in the label coverage test. Severity Low, effort Small.
-    Recommended: A. User decision required because this is a missing-test
-    finding.
+  - [ ] Resolve user item 132 (actionlint review finding): the label
+        coverage test misses workflow labels. `tests/actionlint_config.test.ts`
+        scans only `.yml` workflows. It also ignores a job's own `runs-on`
+        label when the job also has a matrix, as three `ci.yml` jobs do.
+        Severity Low, effort Small. Options: A, include `.yaml` workflows and
+        each such job's own `runs-on` label in the label coverage test,
+        Small. Recommended: A. Missing tests need the user. The rebuild
+        branch records the first part as a "Finding" line here. Keep one
+        line when both reach the plan.
   - Follow-up: share a parsed dependency-input model for identity and source validation.
     Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
     Review and regression evidence: `.context/base-pnpm-yarn/`.
   - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
         Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
         `7e6ae9ad`, and `9855feb1`.
-  - [ ] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
+  - [x] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
         fix them only in part. Fix round 2 on `rebuild/base-pnpm-yarn-fix2`
         completes them when it lands: Berry `exec:` sources (finding 1),
         lockfile paths by position (finding 3), bounded workspace pattern
         walks (finding 5), and the nested Berry cache path (finding 9).
+        Fix round 2 landed in integration batch 21 (`d650b856`, which merged
+        `a3278e13`): `b6af79d7` (finding 1), `def5b7e5` and `f54a5ec7`
+        (finding 3), `4beb492f` (finding 5), and `dd51cf24` (finding 9).
+  - [x] Report item 40 (2026-10-21): Yarn Classic `file:` and `link:`
+        dependency values use their manifest folder, as Classic rewrites
+        them. Bare paths and resolutions keep the Classic root, and lockfile
+        values keep the lockfile folder. Branch
+        `rebuild/base-classic-manifest-paths`.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
@@ -3949,10 +3983,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Evidence: `.context/f21-item2-slot-red.log`,
         `.context/f21-item3-warning-red.log`, and
         `.context/f21-item4-sidecar-green-final.log`.
-  - Item 128: saved variant slot element checks. Option A keeps the
-    checks and states the rule in `mokly-html-components.md`; option B keeps
-    only the required `html-ignore-attribute` and `html-foster-parented`
-    warnings. Recommended: A. Apply B until the user answers.
+  - [ ] Resolve user item 128 (F21 decision): saved variant slot element
+        checks. The F21 record gives no severity or effort. Options: A, keep
+        the checks and state the rule in `mokly-html-components.md`; B, keep
+        only the required `html-ignore-attribute` and `html-foster-parented`
+        warnings. Recommended: A. The rebuild branch records this item as the
+        line "Item 128" after the F21 record. Keep one line when both reach
+        the plan.
+    - Saved slots skip the forbidden and unknown element checks, because a
+      new build error needs the user's yes (item 128 is open).
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
@@ -4081,7 +4120,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
           `rebuild/viewer-followups-v2` (`09d38589`): every component
           sentence says "variant", the term of the variants contract, and
           the protocol, guides, design copy and tests follow.
-  - [ ] Resolve user item 89 (F12 decision 6): what an embedded host shows
+  - [x] Resolve user item 89 (F12 decision 6): what an embedded host shows
         after another deployment. `mokly-viewer.md` says that a different
         `deploymentId` emits one `onError` and leaves the installed state in
         place, but not what the stage shows. Today the embedded host shows
@@ -4095,6 +4134,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         which needs new copy, a mockup, and spec rows, Large. Recommended: B,
         because it shows no action that cannot work.
     - User decision 89 (2026-10-21): B. Work: W1 on `rebuild/viewer-89b`.
+    - Done in `4980c9c4` on `rebuild/viewer-89b`: a detail of another
+      deployment no longer fails the entry, so an embedded host keeps the
+      loading stage until it replaces `index`. 89 B kept the loading stage by
+      removing the `reloadsOnDeployment` flag, not by setting it on the
+      embedded source as option B said. `mokly-viewer.md` and the shell
+      delivery contract state the rule. Evidence: `.context/viewer-89b/`.
   - [ ] Resolve user item 119 (viewer follow-ups round 2 follow-up): build
         each entry kind's sentences from one word.
         `packages/viewer/src/shell/entry_wording.ts` writes the sentences of
@@ -4107,7 +4152,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 119 (2026-10-21): B, build each kind's sentences in
       `entry_wording.ts` from one noun per kind. Work: W2 on
       `rebuild/viewer-119b`, after 84 B.
-  - [ ] Resolve user item 90 (F12 review finding 2): a failed step detail
+  - [x] Resolve user item 90 (F12 review finding 2): a failed step detail
         still flashes the error during a deployment reload. On a use-case
         route, the use case detail starts the page load, but a 404 for a
         removed step screen marks the route failed. So the old document
@@ -4120,7 +4165,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 90 (2026-10-21): C, a separate "replaced" delivery
       status. Work: W1 on `rebuild/viewer-90c`. The hub moved this work from
       W2 to W1 on 2026-10-21.
-  - [ ] Resolve user item 139 (90 C decision 1): what the replaced stage
+    - Done in `9ef52160` and `2a5f0768` on `rebuild/viewer-90c`: the first
+      deployment change stops every detail load, and a route that still
+      waits gets the replaced status. `0a420f28` on
+      `rebuild/viewer-139a-140b` applies option B of finding 1 of the fresh
+      review of 89 B and 90 C: the replacement also ends the live
+      connection, so no index loads after it. Evidence:
+      `.context/viewer-90c/` and `.context/viewer-139a-140b/`.
+  - [x] Resolve user item 139 (90 C decision 1): what the replaced stage
         shows. The replaced delivery status of 90 C shows the loading stage
         in both hosts, which is the stage that 89 B gives an embedded host.
         The spec has no words for a replaced catalogue. Severity Low, effort
@@ -4133,7 +4185,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         version…", Large. Recommended: A.
     - User decision 139 (2026-10-21): A. Work: W1 on
       `rebuild/viewer-139a-140b`.
-  - [ ] Resolve user item 140 (90 C decision 2): when a use case shows a
+    - Done in `57c2ca36` on `rebuild/viewer-139a-140b`: the `preview-loading`
+      design description and the shell design inventory say that the same
+      loading stage covers a replaced catalogue. The code already showed it.
+      Evidence: `.context/viewer-139a-140b/`.
+  - [x] Resolve user item 140 (90 C decision 2): when a use case shows a
         step failure. A use-case route loads the use case detail and each
         step detail at once. A step failure that arrives before any detail
         shows the new deployment makes the route show the unavailable stage
@@ -4146,6 +4202,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         (estimate). Recommended: B.
     - User decision 140 (2026-10-21): B. Work: W1 on
       `rebuild/viewer-139a-140b`.
+    - Done in `d77cb6de` on `rebuild/viewer-139a-140b`: a route fails only
+      after each of its details has arrived, failed, or been replaced, and
+      the embedded host still gets each failure's `onError` at once. A unit
+      test, a controller test, and a browser test that answers the removed
+      step first cover it. Evidence: `.context/viewer-139a-140b/`.
+  - [ ] Resolve user item 143 (89 B and 90 C review finding 2): a
+        deployment spec never delivers its step failure. On
+        `rebuild/viewer-90c`, `tests/browser/static_deployment_flow.spec.ts`
+        lines 130 to 182 pass on the abort alone: the replacement aborts the
+        step's load before its 404 can arrive. Severity Low, test, effort
+        Small. Options: A, rename the test, reword its comment and
+        `tests/browser/README.md` lines 82 to 88, and record and assert the
+        abort, Small. Recommended: A.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
@@ -4740,21 +4809,38 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        Details ending stays open below.
     2. Moved to user item 104 on 2026-10-21.
   - [ ] Resolve user item 104 (82 B delegate decision 6, with the second
-        user decision 82 follow-up): the component artboard shows only
-        screens in Affected, and no artboard depicts an affected-only
-        component's comparison, which reads "Components this variant uses
-        changed". Severity Low, effort Large for B, because B is a new
-        artboard. Options: A, keep the component case in the design copy
-        only, Small (estimate); B, draw it in the separate branch that fixes
-        the design's Affected list, as the viewer's list shows components
-        too, Large. Recommended: B. With either option, correct the sentence
-        of `mokly-component-design.md` that gives known unchanged shown views
-        no comparison row.
+        user decision 82 follow-up and 103 C review finding 1): the
+        component artboard shows only screens in Affected, and no artboard
+        depicts an affected-only component's comparison, which reads
+        "Components this variant uses changed". Severity Low, effort Large
+        for B, because B is a new artboard. Options: A, keep the component
+        case in the design copy only, Small (estimate); B, draw three states
+        in the separate branch that fixes the design's Affected list: the
+        affected component variant, an Unmodified view that stays in Changes
+        and shows the band, and the component's Affected list, which shows
+        components too, Large. Recommended: B. With either option, correct
+        the sentence of `mokly-component-design.md` that gives known
+        unchanged shown views no comparison row.
+    - 103 C review finding 1 widened option B on 2026-10-21. The
+      affected-screen artboard, `affectedScreenScreen` in
+      `examples/basic/specs/design/components/states/shared-impact/screens.tsx`,
+      already covers the screen state. The Moved artboard,
+      `review/outcomes/moved.tsx`, shows changed content, so it does not
+      cover an Unmodified affected view.
   - Outside the scope of user decision 82:
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
     components under "Affected screens and components". Separate branch.
     User item 104 covers it.
+  - [ ] Resolve user item 144 (103 C review finding 2): Affected link tests
+        do not check their axes. `tests/browser/branch_point_affected.ts`
+        lines 126 to 193 take the expected viewport from the link itself, and
+        `packages/viewer/tests/affected_comparison.test.ts` lines 134 to 168
+        do not read the Affected link URLs. Severity Low, test, effort
+        Medium. Options: A, add the expected viewport and scheme to the
+        fixture, and assert the query and the Details text, Small
+        (estimate); B, a shared helper with independent destination, axis,
+        comparison, and Details expectations, Medium. Recommended: B.
   - [x] Hub review of `rebuild/defaults-viewer-82b`, fixed on 2026-10-21 in
         `rebuild/defaults-viewer-82b-fix1`: finding 2, a Serve update
         reopened Side by side (`5c761b5d`, B); finding 3, the affected
@@ -4834,10 +4920,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - 34: settled on 2026-10-21 with option A, as the orchestrator asked: a
     new open Milestone 14 line names audit finding 7 and the branches that
     it waits for.
-  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
-    that setup always adds the unrelated rule to the first shared
-    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
-    close-out review. Separate branch.
+  - [x] `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+        that setup always adds the unrelated rule to the first shared
+        stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+        close-out review. Separate branch. Fixed by `661a9fe7` on
+        `rebuild/plan-bookkeeping-3`, which integration batch 21 merged
+        (`d650b856`): the paragraph now says that `--stylesheets 0` adds no rule.
   - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
     consumed-byte digests for the PostCSS module graph": it still names
     "supply immutable generation inputs" as a design path, but decision 56 A
@@ -5034,16 +5122,18 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
-      the Details end with a terminal line that says Changes has no
-      independent entry for it, so they deny the comparison that the entry
-      offers. Severity Low, effort Large. Options: A, keep the terminal
+      the Details end with the terminal line "No changes to this screen.",
+      while its band offers the comparison of the changed components that
+      its views use. Severity Low, effort Large. Options: A, keep the terminal
       line, Small (estimate); B, for an entry that Changes lists only as a
       move, show the shared-component sentence in a wording without "no
       independent entry in Changes", which the 84 B rewording can supply,
       and draw the design first, Large; C, leave out the terminal line when
       a shown view uses a changed component, design first, Large
       (estimate). Recommended: B.
-  - User decision 136 (2026-10-21): B, as work after the merge.
+  - User decision 136 (2026-10-21): B, as work after the merge. The rebuild
+    branch records this item as the line "User decision 103 follow-up for
+    the user" under item 104. Keep one line when both reach the plan.
 
 - [ ] Resolve user item 138 (F22 decision): JavaScript page wrappers get no
       attribute warning. Unknown attributes on ignore wrappers that a

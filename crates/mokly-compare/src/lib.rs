@@ -171,6 +171,10 @@ mod workspace_patterns_tests;
 mod berry_sources_tests;
 
 #[cfg(test)]
+#[path = "_tests_/classic_manifest_paths_tests.rs"]
+mod classic_manifest_paths_tests;
+
+#[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]
 mod manager_command_tests;
 
