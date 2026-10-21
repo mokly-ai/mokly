@@ -1,11 +1,11 @@
-//! A private checkout index contains requested leaves and their attribute ancestors only.
+//! A scoped object inventory includes requested leaves and their attribute ancestors.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
-use crate::tree::{Entry, Limits, Mode};
+use crate::tree::{Entry, Limits};
 
 impl GitRepository {
     fn checkout_entries(
@@ -55,21 +55,5 @@ impl GitRepository {
                 .into_values()
                 .collect::<Vec<_>>(),
         )
-    }
-
-    pub(crate) fn checkout_index(&self, commit: &ObjectId, entries: &[Entry]) -> Result<Vec<u8>> {
-        let indexed = self.checkout_entries(commit, entries)?;
-        self.ensure_objects(&indexed.values().cloned().collect::<Vec<_>>())?;
-        let mut input = Vec::new();
-        for entry in indexed.values() {
-            let mode = if entry.mode == Mode::Executable {
-                "100755"
-            } else {
-                "100644"
-            };
-            input
-                .extend_from_slice(format!("{mode} {}\t{}\0", entry.object, entry.path).as_bytes());
-        }
-        Ok(input)
     }
 }

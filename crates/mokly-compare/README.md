@@ -158,10 +158,10 @@ group links to a different-kind replacement at the parent's path.
 Metadata comparison keeps schema, controls, and declared slots on the parent.
 Variants compare their own metadata, props, and supplied slots independently.
 
-Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
-copies it to the destination. Digest cache misses each start one
-`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
-command. Hash-only preparation does not fill the source-byte LRU.
+Opaque Git asset delivery buffers one converted blob under the 64 MiB Git
+limit and copies it to the destination. Digest cache misses stream checkout-
+converted bytes into SHA-256. Delivery uses the same commit-pinned conversion
+context and byte bounds. Hash-only preparation does not fill the source-byte LRU.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.

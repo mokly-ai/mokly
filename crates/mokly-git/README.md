@@ -49,20 +49,24 @@ request retrieves each missing set before conversion. Failed fetches name the
 remote and a recovery command. Tree listings retain directory and link modes.
 Regular files and all metadata nodes have independent count bounds.
 
-Byte reads build a private path-scoped index with `update-index --index-info`.
-`checkout-index --temp` applies the base commit's attributes and the user's
-configuration. The real index and working files stay intact. Conversion includes
-line endings, smudge filters, encodings, and Git LFS downloads. A disk-size
-monitor and a 120-second deadline supervise checkout output. Failed optional
-filters also return typed `Conversion` errors instead of fallback pointer bytes.
-Callers can warn and retain independent resources.
+Byte reads, extraction, and digests share a commit-pinned `cat-file --filters`
+context in the real repository. `--attr-source` selects the base attributes,
+also when the caller exports a different `GIT_ATTR_SOURCE`. Relative smudge
+commands and relative file reads keep their normal repository context. The
+real index and working files stay intact.
 
-Checkout commands pin `GIT_ATTR_SOURCE` to the base commit. A caller's inherited
-attribute-source override cannot select the working commit's attributes.
+Effective attributes and `core.autocrlf` identify paths that need conversion.
+Only paths with no attributes and disabled automatic line endings use bounded
+raw `--batch -Z` capture. Their checkout bytes equal their raw bytes. The decoder
+validates object identity, proved length, binary payload, and NUL framing.
+All other paths use `--filters` streams. Large raw files also stream. A 64 KiB
+buffer writes owned flat temporary files outside the repository. Their byte bound stops the process before more data is written.
+A 120-second deadline and process-tree cancellation supervise every conversion.
+Failed optional filters return typed `Conversion` errors instead of raw fallback
+bytes. Conversion includes line endings, encodings, filters, and LFS downloads.
 
-Opaque digests use `cat-file --filters --path` with `--attr-source` pinned to
-the base commit. Stdout streams into SHA-256 without a temporary blob spool.
-Stderr, cancellation, and filter deadlines keep the same supervision. Working
+Opaque digests stream converted stdout into SHA-256 without a temporary spool.
+Working
 dependency inputs retain Git clean normalization through `hash-object --stdin-paths`.
 Extraction copies regular converted files in bounded batches and preserves
 executable mode. It omits links and submodules. Copying checks cancellation

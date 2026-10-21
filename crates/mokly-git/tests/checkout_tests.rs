@@ -1,15 +1,23 @@
 //! Checkout conversion and promisor fetch integration cases.
 
+#[cfg(unix)]
 use std::sync::Arc;
+#[cfg(unix)]
 use std::time::Duration;
 
+#[cfg(unix)]
 use mokly_git::control::{Clock, Token};
+#[cfg(unix)]
 use mokly_git::disk::SystemDisk;
+#[cfg(unix)]
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
+#[cfg(unix)]
 use mokly_git::repository::{GitRepositories, Repositories};
+#[cfg(unix)]
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
+#[cfg(unix)]
 use mokly_platform::processes::SystemProcessGroups;
 use sha2::{Digest, Sha256};
 
@@ -54,6 +62,7 @@ fn base_reads_smudge_local_lfs_objects() {
 fn converted_digest_streams_files_larger_than_the_capture_limit() {
     let fixture = Fixture::new();
     let bytes = vec![7; 65 * 1024 * 1024];
+    fixture.write(".gitattributes", b"large.bin -text\n");
     fixture.write("large.bin", &bytes);
     let base = fixture.commit();
     let entry = fixture
@@ -138,9 +147,11 @@ fn a_hanging_checkout_filter_is_bounded() {
     );
 }
 
+#[cfg(unix)]
 #[derive(Default)]
 struct FastClock(std::sync::atomic::AtomicU64);
 
+#[cfg(unix)]
 impl Clock for FastClock {
     fn now(&self) -> Duration {
         Duration::from_millis(self.0.load(std::sync::atomic::Ordering::Relaxed))

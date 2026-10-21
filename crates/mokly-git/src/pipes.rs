@@ -56,6 +56,28 @@ pub(crate) fn copy(
     bytes: usize,
     group: &dyn ProcessGroup,
 ) -> Result<Vec<u8>> {
+    copy_stream(reader, output, bytes, true, group)
+}
+
+pub(crate) fn copy_bounded(
+    reader: &mut dyn Read,
+    output: &mut dyn Write,
+    bytes: usize,
+    group: &dyn ProcessGroup,
+) -> Result<Vec<u8>> {
+    match copy_stream(reader, output, bytes, false, group) {
+        Err(Error::OutputLimit { limit }) => Err(Error::ByteLimit { limit }),
+        other => other,
+    }
+}
+
+fn copy_stream(
+    reader: &mut dyn Read,
+    output: &mut dyn Write,
+    bytes: usize,
+    exact: bool,
+    group: &dyn ProcessGroup,
+) -> Result<Vec<u8>> {
     let mut total = 0usize;
     let mut chunk = [0u8; 64 * 1024];
     loop {
@@ -67,7 +89,7 @@ pub(crate) fn copy(
             }
         };
         if count == 0 {
-            if total != bytes {
+            if exact && total != bytes {
                 let _ = group.kill();
                 return Err(Error::MalformedOutput);
             }

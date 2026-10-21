@@ -33,7 +33,12 @@ fn blobless_clone_fetches_missing_base_blobs_in_one_batch() {
     let base = source.commit();
     let temporary = tempfile::tempdir().unwrap();
     let clone = temporary.path().join("blobless");
-    let remote = format!("file://{}", source.root().display());
+    let remote_path = source.root().to_string_lossy().replace('\\', "/");
+    let remote = if cfg!(windows) {
+        format!("file:///{remote_path}")
+    } else {
+        format!("file://{remote_path}")
+    };
     let output = Command::new("git")
         .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
         .arg(&clone)
@@ -117,7 +122,12 @@ fn failed_promisor_fetch_names_recovery_command() {
     let base = source.commit();
     let temporary = tempfile::tempdir().unwrap();
     let clone = temporary.path().join("blobless");
-    let remote = format!("file://{}", source.root().display());
+    let remote_path = source.root().to_string_lossy().replace('\\', "/");
+    let remote = if cfg!(windows) {
+        format!("file:///{remote_path}")
+    } else {
+        format!("file://{remote_path}")
+    };
     let output = Command::new("git")
         .args(["clone", "--filter=blob:none", "--no-checkout", &remote])
         .arg(&clone)

@@ -53,6 +53,18 @@ impl Runner for CancelledCopy {
             timeout,
         )
     }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        let _ = (request, cancellation, environment, timeout, output, limit);
+        Err(Error::Cancelled)
+    }
     fn run_cancellable_with_environment(
         &self,
         request: &Request,

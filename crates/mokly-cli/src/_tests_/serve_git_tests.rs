@@ -68,6 +68,17 @@ fn closed_admission_rejects_every_runner_operation() {
         ),
         Err(Error::Cancelled)
     ));
+    assert!(matches!(
+        runner.stream_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+            &mut Vec::new(),
+            32,
+        ),
+        Err(Error::Cancelled)
+    ));
 }
 
 #[test]
@@ -82,6 +93,9 @@ fn checkout_environment_and_timeout_reach_the_inner_runner() {
         RunnerMock::digest_cancellable_with_environment_timeout
             .next_call(matching!((req, _, environment, timeout) if **req == request() && *environment == [("LC_ALL", "C".into())] && *timeout == Duration::from_secs(120)))
             .returns(Ok("converted-digest".into())),
+        RunnerMock::stream_cancellable_with_environment_timeout
+            .next_call(matching!((req, _, environment, timeout, _, limit) if **req == request() && *environment == [("LC_ALL", "C".into())] && *timeout == Duration::from_secs(120) && *limit == 32))
+            .answers(&|_, _, _, _, _, output, _| { output.write_all(b"converted").unwrap(); Ok(()) }),
     ));
     let inner: Arc<dyn Runner> = Arc::new(inner);
     let runners = Unimock::new(
@@ -110,6 +124,18 @@ fn checkout_environment_and_timeout_reach_the_inner_runner() {
             .unwrap(),
         "converted-digest"
     );
+    let mut bytes = Vec::new();
+    runner
+        .stream_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("LC_ALL", "C".into())],
+            Duration::from_secs(120),
+            &mut bytes,
+            32,
+        )
+        .unwrap();
+    assert_eq!(bytes, b"converted");
 }
 
 #[test]

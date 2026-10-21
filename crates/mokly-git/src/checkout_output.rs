@@ -1,45 +1,49 @@
-//! Decode owned checkout filenames and classify recoverable conversion failures.
-
-use std::path::{Path, PathBuf};
+//! Decode bounded identity-conversion batches and classify conversion failures.
 
 use crate::error::{Error, Result};
-use crate::identity::RepoPath;
 use crate::tree::{Entry, text};
 
-pub(crate) fn parse_output(
-    output: &[u8],
-    worktree: &Path,
+pub(crate) fn decode_batch<'a>(
+    mut output: &'a [u8],
     entries: &[Entry],
-) -> Result<std::collections::BTreeMap<RepoPath, PathBuf>> {
-    let expected: std::collections::BTreeSet<_> =
-        entries.iter().map(|entry| entry.path.clone()).collect();
-    let mut files = std::collections::BTreeMap::new();
-    for record in output
-        .split(|byte| *byte == 0)
-        .filter(|record| !record.is_empty())
-    {
-        let Some(tab) = record.iter().position(|byte| *byte == b'\t') else {
+    limit: usize,
+) -> Result<Vec<&'a [u8]>> {
+    let mut result = Vec::with_capacity(entries.len());
+    let mut total = 0usize;
+    for entry in entries {
+        let Some(end) = output.iter().position(|byte| *byte == 0) else {
             return Err(Error::MalformedOutput);
         };
-        let temporary = text(&record[..tab])?;
-        let path = RepoPath::parse(text(&record[tab + 1..])?)?;
-        if !expected.contains(&path) || files.contains_key(&path) {
+        let fields = text(&output[..end])?
+            .split_ascii_whitespace()
+            .collect::<Vec<_>>();
+        let [object, "blob", size] = fields.as_slice() else {
+            return Err(Error::MalformedOutput);
+        };
+        if *object != entry.object.as_str() {
             return Err(Error::MalformedOutput);
         }
-        let temporary = Path::new(temporary);
-        if temporary.is_absolute()
-            || temporary
-                .components()
-                .any(|component| matches!(component, std::path::Component::ParentDir))
-        {
+        let Ok(size) = size.parse::<usize>() else {
+            return Err(Error::MalformedOutput);
+        };
+        if size != entry.size {
             return Err(Error::MalformedOutput);
         }
-        files.insert(path, worktree.join(temporary));
+        total = total.saturating_add(size);
+        if total > limit {
+            return Err(Error::ByteLimit { limit });
+        }
+        output = &output[end + 1..];
+        if output.len() <= size || output[size] != 0 {
+            return Err(Error::MalformedOutput);
+        }
+        result.push(&output[..size]);
+        output = &output[size + 1..];
     }
-    if files.len() != expected.len() {
+    if !output.is_empty() {
         return Err(Error::MalformedOutput);
     }
-    Ok(files)
+    Ok(result)
 }
 
 pub(crate) fn conversion<T>(result: Result<T>, entries: &[Entry]) -> Result<T> {
@@ -60,3 +64,7 @@ pub(crate) fn conversion<T>(result: Result<T>, entries: &[Entry]) -> Result<T> {
         other => other,
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/checkout_output_tests.rs"]
+mod checkout_output_tests;

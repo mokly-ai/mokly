@@ -60,6 +60,16 @@ pub trait Runner: Send + Sync {
         environment: &[(&str, OsString)],
         timeout: Duration,
     ) -> Result<String>;
+    /// Stream converted stdout into owned storage under a byte bound and deadline.
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, OsString)],
+        timeout: Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()>;
     /// Execute with temporary Git environment entries and cancellation.
     fn run_cancellable_with_environment(
         &self,

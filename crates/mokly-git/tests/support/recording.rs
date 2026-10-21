@@ -43,6 +43,25 @@ impl Runner for Recorded {
         self.record(request);
         self.inner.run_cancellable(request, cancellation)
     }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        self.record(request);
+        self.inner.stream_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+            output,
+            limit,
+        )
+    }
     fn run_cancellable_with_environment(
         &self,
         request: &Request,

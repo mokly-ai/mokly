@@ -61,6 +61,25 @@ impl Runner for Counted {
             timeout,
         )
     }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        self.blobs.fetch_add(1, Ordering::SeqCst);
+        self.inner.stream_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+            output,
+            limit,
+        )
+    }
     fn run_cancellable_with_environment(
         &self,
         request: &Request,
@@ -77,7 +96,7 @@ impl Runner for Counted {
         environment: &[(&str, std::ffi::OsString)],
         timeout: std::time::Duration,
     ) -> Result<Output> {
-        if request.args.iter().any(|arg| arg == "checkout-index") {
+        if request.args.iter().any(|arg| arg == "cat-file") {
             self.blobs.fetch_add(1, Ordering::SeqCst);
         }
         self.inner.run_cancellable_with_environment_timeout(

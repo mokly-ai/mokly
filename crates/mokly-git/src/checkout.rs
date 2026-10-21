@@ -1,25 +1,22 @@
-//! Commit-pinned checkout conversion through an isolated temporary index.
+//! Checkout-converted bytes retain the user's real repository filter context.
 
-use std::ffi::OsString;
+use std::collections::BTreeMap;
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
-use crate::checkout_bounds::{SizeBound, filter_failed};
-use crate::checkout_output::{conversion, parse_output};
-use crate::command::{self, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
+use crate::checkout_output::{conversion, decode_batch};
+use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
 use crate::error::{Error, IoResult, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{Entry, Limits};
 
 const FILTER_TIMEOUT: Duration = Duration::from_secs(120);
-const MAX_CHECKOUT_OUTPUT: usize = DEFAULT_OUTPUT_LIMIT;
 
-struct NeverCancelled;
-
-impl command::Cancellation for NeverCancelled {
+struct Active;
+impl Cancellation for Active {
     fn is_cancelled(&self) -> bool {
         false
     }
@@ -50,10 +47,7 @@ impl GitRepository {
         if entries.is_empty() {
             return Ok(Vec::new());
         }
-        let checkout = conversion(
-            Checkout::new(self, commit, entries, Some(limits.bytes)),
-            entries,
-        )?;
+        let checkout = self.checkout(entries, commit, limits)?;
         let mut total = 0usize;
         let mut result = Vec::with_capacity(entries.len());
         for entry in entries {
@@ -74,30 +68,34 @@ impl GitRepository {
 
     pub(crate) fn checkout_digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
         validate_entries(std::slice::from_ref(entry), Limits::default())?;
-        self.checkout_index(commit, std::slice::from_ref(entry))?;
-        let request = Request {
-            directory: self.directory.clone(),
-            args: vec![
-                "--no-optional-locks".into(),
-                format!("--attr-source={commit}").into(),
-                "cat-file".into(),
-                "--filters".into(),
-                format!("--path={}", entry.path).into(),
-                entry.object.as_str().into(),
-            ],
-            stdin: Vec::new(),
-            output_limit: DEFAULT_OUTPUT_LIMIT,
-            stderr_limit: DEFAULT_STDERR_LIMIT,
-        };
+        self.ensure_checkout_objects(commit, std::slice::from_ref(entry))?;
+        let converted = self.converted_paths(commit, std::slice::from_ref(entry))?;
+        let request = request(
+            self,
+            commit,
+            conversion_args(entry, converted.contains(&entry.path)),
+            Vec::new(),
+        );
         conversion(
             self.runner.digest_cancellable_with_environment_timeout(
                 &request,
-                &NeverCancelled,
+                &Active,
                 &[("LC_ALL", "C".into())],
                 FILTER_TIMEOUT,
             ),
             std::slice::from_ref(entry),
         )
+    }
+
+    pub(crate) fn checkout(
+        &self,
+        entries: &[Entry],
+        commit: &ObjectId,
+        limits: Limits,
+    ) -> Result<Checkout> {
+        validate_entries(entries, limits)?;
+        self.ensure_checkout_objects(commit, entries)?;
+        conversion(Checkout::new(self, commit, entries, limits.bytes), entries)
     }
 }
 
@@ -119,7 +117,7 @@ fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
 
 pub(crate) struct Checkout {
     _root: tempfile::TempDir,
-    files: std::collections::BTreeMap<RepoPath, PathBuf>,
+    files: BTreeMap<RepoPath, PathBuf>,
 }
 
 impl Checkout {
@@ -127,72 +125,74 @@ impl Checkout {
         repository: &GitRepository,
         commit: &ObjectId,
         entries: &[Entry],
-        byte_limit: Option<usize>,
+        limit: usize,
     ) -> Result<Self> {
-        let index_input = repository.checkout_index(commit, entries)?;
         let root = tempfile::Builder::new()
-            .prefix("mokly-git-checkout-")
+            .prefix("mokly-git-converted-")
             .tempdir()
             .git()?;
-        let worktree = root.path().join("worktree");
-        fs::create_dir(&worktree).git()?;
-        let index = root.path().join("index");
-        let environment = [
-            ("GIT_INDEX_FILE", index.as_os_str().to_os_string()),
-            ("GIT_WORK_TREE", worktree.as_os_str().to_os_string()),
-            ("GIT_ATTR_SOURCE", OsString::from(commit.as_str())),
-            ("LC_ALL", OsString::from("C")),
-        ];
-        let cancellation = NeverCancelled;
-        run(
-            repository.runner.as_ref(),
-            repository,
-            &["update-index", "-z", "--index-info"],
-            index_input,
-            &environment,
-            &cancellation,
-            MAX_CHECKOUT_OUTPUT,
-            None,
-        )?;
-        let mut input = Vec::new();
-        for entry in entries {
-            input.extend_from_slice(entry.path.as_str().as_bytes());
-            input.push(0);
-        }
-        let size_bound = byte_limit.map(|limit| SizeBound {
-            root: worktree.clone(),
-            limit,
-        });
-        let filter_cancellation: &dyn command::Cancellation =
-            size_bound.as_ref().map_or(&cancellation, |bound| bound);
-        let output = match run(
-            repository.runner.as_ref(),
-            repository,
-            &["checkout-index", "--force", "--temp", "--stdin", "-z"],
-            input,
-            &environment,
-            filter_cancellation,
-            MAX_CHECKOUT_OUTPUT,
-            Some(FILTER_TIMEOUT),
-        ) {
-            Err(Error::Cancelled) if size_bound.as_ref().is_some_and(SizeBound::exceeded) => {
-                return Err(Error::ByteLimit {
-                    limit: size_bound.as_ref().map_or(0, |bound| bound.limit),
-                });
+        let mut files = BTreeMap::new();
+        let converted = repository.converted_paths(commit, entries)?;
+        let batch_bytes = entries
+            .iter()
+            .fold(0usize, |total, entry| total.saturating_add(entry.size));
+        let raw: Vec<_> = entries
+            .iter()
+            .filter(|entry| !converted.contains(&entry.path) && batch_bytes <= 48 * 1024 * 1024)
+            .cloned()
+            .collect();
+        let mut remaining = limit;
+        if !raw.is_empty() {
+            let input = raw
+                .iter()
+                .map(|entry| format!("{}\0", entry.object))
+                .collect::<String>()
+                .into_bytes();
+            let request = request(
+                repository,
+                commit,
+                vec!["--batch".into(), "-Z".into()],
+                input,
+            );
+            let output = repository.runner.run_cancellable_with_environment_timeout(
+                &request,
+                &Active,
+                &[("LC_ALL", "C".into())],
+                FILTER_TIMEOUT,
+            )?;
+            let bytes = decode_batch(&output.stdout, &raw, remaining)?;
+            for (index, (entry, bytes)) in raw.iter().zip(bytes).enumerate() {
+                let path = root.path().join(format!("raw-{index}"));
+                fs::File::create(&path).git()?.write_all(bytes).git()?;
+                remaining -= bytes.len();
+                files.insert(entry.path.clone(), path);
             }
-            result => result,
-        }?;
-        if size_bound.as_ref().is_some_and(SizeBound::exceeded) {
-            return Err(Error::ByteLimit {
-                limit: size_bound.as_ref().map_or(0, |bound| bound.limit),
-            });
         }
-        if filter_failed(&output.stderr) {
-            return Err(Error::CheckoutFailed {
-                stderr: output.stderr,
-            });
+        for (index, entry) in entries.iter().enumerate() {
+            if files.contains_key(&entry.path) {
+                continue;
+            }
+            let path = root.path().join(format!("converted-{index}"));
+            let mut output = fs::File::create(&path).git()?;
+            let request = request(
+                repository,
+                commit,
+                conversion_args(entry, converted.contains(&entry.path)),
+                Vec::new(),
+            );
+            repository
+                .runner
+                .stream_cancellable_with_environment_timeout(
+                    &request,
+                    &Active,
+                    &[("LC_ALL", "C".into())],
+                    FILTER_TIMEOUT,
+                    &mut output,
+                    remaining,
+                )?;
+            remaining = remaining.saturating_sub(output.metadata().git()?.len() as usize);
+            files.insert(entry.path.clone(), path);
         }
-        let files = parse_output(&output.stdout, &worktree, entries)?;
         Ok(Self { _root: root, files })
     }
 
@@ -202,13 +202,12 @@ impl Checkout {
 
     fn read(&self, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
         let file = self.file(path)?;
-        let metadata = fs::metadata(file.clone()).git()?;
-        if metadata.len() > limit as u64 {
+        if fs::metadata(&file).git()?.len() > limit as u64 {
             return Err(Error::ByteLimit { limit });
         }
-        let input = fs::File::open(file).git()?;
         let mut bytes = Vec::new();
-        input
+        fs::File::open(file)
+            .git()?
             .take(limit.saturating_add(1) as u64)
             .read_to_end(&mut bytes)
             .git()?;
@@ -219,49 +218,37 @@ impl Checkout {
     }
 }
 
-impl GitRepository {
-    pub(crate) fn checkout(
-        &self,
-        entries: &[Entry],
-        commit: &ObjectId,
-        limits: Limits,
-    ) -> Result<Checkout> {
-        validate_entries(entries, limits)?;
-        conversion(
-            Checkout::new(self, commit, entries, Some(limits.bytes)),
-            entries,
-        )
+fn request(
+    repository: &GitRepository,
+    commit: &ObjectId,
+    args: Vec<String>,
+    stdin: Vec<u8>,
+) -> Request {
+    Request {
+        directory: repository.directory.clone(),
+        args: [
+            "--no-optional-locks".to_owned(),
+            format!("--attr-source={commit}"),
+            "cat-file".into(),
+        ]
+        .into_iter()
+        .chain(args)
+        .map(Into::into)
+        .collect(),
+        stdin,
+        output_limit: DEFAULT_OUTPUT_LIMIT,
+        stderr_limit: DEFAULT_STDERR_LIMIT,
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "keeps the checkout command adapter explicit"
-)]
-fn run(
-    runner: &dyn Runner,
-    repository: &GitRepository,
-    args: &[&str],
-    stdin: Vec<u8>,
-    environment: &[(&str, OsString)],
-    cancellation: &dyn command::Cancellation,
-    output_limit: usize,
-    timeout: Option<Duration>,
-) -> Result<crate::command::Output> {
-    let request = Request {
-        directory: repository.directory.clone(),
-        args: args.iter().map(OsString::from).collect(),
-        stdin,
-        output_limit,
-        stderr_limit: DEFAULT_STDERR_LIMIT,
-    };
-    match timeout {
-        Some(timeout) => runner.run_cancellable_with_environment_timeout(
-            &request,
-            cancellation,
-            environment,
-            timeout,
-        ),
-        None => runner.run_cancellable_with_environment(&request, cancellation, environment),
+fn conversion_args(entry: &Entry, converted: bool) -> Vec<String> {
+    if converted {
+        vec![
+            "--filters".into(),
+            format!("--path={}", entry.path),
+            entry.object.to_string(),
+        ]
+    } else {
+        vec!["blob".into(), entry.object.to_string()]
     }
 }

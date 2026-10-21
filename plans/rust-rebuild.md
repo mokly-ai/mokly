@@ -3102,6 +3102,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     These attempts are failed checks, not evidence of unrelated product defects.
   - [x] Pin checkout attribute selection despite an inherited `GIT_ATTR_SOURCE`.
         Keep the base commit's attribute rule for byte reads and extraction.
+  - [x] Git base-read fresh review finding 1: share the real repository
+        conversion context across bytes, digests, and extraction. Use bounded
+        raw NUL-framed batches only when checkout conversion is proved to be
+        identity. Other files use bounded `cat-file --filters` streams into
+        owned temporary files. Relative filters keep their repository context.
+  - [x] Git base-read fresh review finding 2: update the opaque-resource README
+        to describe checkout conversion and the retained byte bounds.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.

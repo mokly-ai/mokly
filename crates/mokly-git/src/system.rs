@@ -10,17 +10,17 @@ use std::time::Duration;
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
 use crate::cancellation::signal;
-use crate::checkout_bounds::filter_failed;
-use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request};
 use crate::control::{Cancellation, Clock, Shutdown};
 use crate::error::{Error, InternalError, IoResult, Result};
-use crate::pipes::{capture, copy, digest};
+use crate::pipes::{capture, copy, copy_bounded, digest};
 use crate::system_command::git_command;
 
-enum OutputMode<'a> {
+pub(crate) enum OutputMode<'a> {
     Capture,
     Digest,
     Copy(&'a mut (dyn Write + Send), usize),
+    BoundedCopy(&'a mut (dyn Write + Send), usize),
 }
 
 /// Git process adapter composed with tree ownership, cancellation and time.
@@ -33,98 +33,8 @@ pub struct SystemRunner {
     pub clock: Arc<dyn Clock>,
 }
 
-impl Runner for SystemRunner {
-    fn checkpoint(&self) -> Result<()> {
-        if self.cancellation.cancelled() {
-            Err(Error::Cancelled)
-        } else {
-            Ok(())
-        }
-    }
-    fn run(&self, request: &Request) -> Result<Output> {
-        self.execute(request, None, OutputMode::Capture, &[], None)
-    }
-
-    fn digest(&self, request: &Request) -> Result<String> {
-        let output = self.execute(request, None, OutputMode::Digest, &[], None)?;
-        match String::from_utf8(output.stdout) {
-            Ok(digest) => Ok(digest),
-            Err(_) => Err(Error::MalformedOutput),
-        }
-    }
-
-    fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
-        self.execute(request, None, OutputMode::Copy(output, bytes), &[], None)?;
-        Ok(())
-    }
-
-    fn run_cancellable(
-        &self,
-        request: &Request,
-        cancellation: &dyn command::Cancellation,
-    ) -> Result<Output> {
-        self.execute(request, Some(cancellation), OutputMode::Capture, &[], None)
-    }
-
-    fn digest_cancellable_with_environment_timeout(
-        &self,
-        request: &Request,
-        cancellation: &dyn command::Cancellation,
-        environment: &[(&str, OsString)],
-        timeout: Duration,
-    ) -> Result<String> {
-        let output = self.execute(
-            request,
-            Some(cancellation),
-            OutputMode::Digest,
-            environment,
-            Some(timeout),
-        )?;
-        if filter_failed(&output.stderr) {
-            return Err(Error::CheckoutFailed {
-                stderr: output.stderr,
-            });
-        }
-        match String::from_utf8(output.stdout) {
-            Ok(hash) => Ok(hash),
-            Err(_) => Err(Error::MalformedOutput),
-        }
-    }
-
-    fn run_cancellable_with_environment(
-        &self,
-        request: &Request,
-        cancellation: &dyn command::Cancellation,
-        environment: &[(&str, OsString)],
-    ) -> Result<Output> {
-        self.execute(
-            request,
-            Some(cancellation),
-            OutputMode::Capture,
-            environment,
-            None,
-        )
-    }
-
-    fn run_cancellable_with_environment_timeout(
-        &self,
-        request: &Request,
-        cancellation: &dyn command::Cancellation,
-        environment: &[(&str, OsString)],
-        timeout: Duration,
-    ) -> Result<Output> {
-        self.execute(
-            request,
-            Some(cancellation),
-            OutputMode::Capture,
-            environment,
-            Some(timeout),
-        )
-    }
-}
-
 impl SystemRunner {
-    fn execute(
+    pub(crate) fn execute(
         &self,
         request: &Request,
         cancellation: Option<&dyn command::Cancellation>,
@@ -183,6 +93,10 @@ impl SystemRunner {
                 OutputMode::Copy(output, bytes) => {
                     let mut stdout = stdout;
                     copy(&mut stdout, output, bytes, output_group.as_ref())
+                }
+                OutputMode::BoundedCopy(output, bytes) => {
+                    let mut stdout = stdout;
+                    copy_bounded(&mut stdout, output, bytes, output_group.as_ref())
                 }
             });
             let errors =

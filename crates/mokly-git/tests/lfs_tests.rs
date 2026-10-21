@@ -21,7 +21,12 @@ fn missing_lfs_content_downloads_from_the_local_remote() {
     let base = source.commit();
     let temporary = tempfile::tempdir().unwrap();
     let root = temporary.path().join("clone");
-    let remote = format!("file://{}", source.root().display());
+    let remote_path = source.root().to_string_lossy().replace('\\', "/");
+    let remote = if cfg!(windows) {
+        format!("file:///{remote_path}")
+    } else {
+        format!("file://{remote_path}")
+    };
     let output = Command::new("git")
         .args(["clone", &remote])
         .arg(&root)

@@ -1,5 +1,7 @@
 //! Failed historical filters keep independent files without caching partial sources.
 
+#![cfg(unix)]
+
 use std::fs;
 use std::sync::Arc;
 
@@ -13,7 +15,6 @@ mod engine_support;
 #[expect(dead_code, reason = "this case needs cache and Git fixtures only")]
 mod support;
 
-#[cfg(unix)]
 #[test]
 fn partial_extraction_warns_and_a_new_generation_can_recover() {
     let temporary = tempfile::tempdir().unwrap();
