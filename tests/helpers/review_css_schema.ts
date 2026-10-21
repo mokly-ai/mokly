@@ -3,26 +3,6 @@ import type {
   ReviewView,
 } from "../../packages/viewer/dist/review/types.js";
 
-/** Snapshot closure for both valid schema fixtures. */
-export function cssSchemaFiles(): Map<string, string> {
-  return new Map(
-    ["before", "after"].flatMap(
-      (side) =>
-        [
-          [`snapshots/${side}/shared.css`, ".auth { color: red; }"],
-          [
-            `snapshots/${side}/mokly-generated/auth/index.mobile.html`,
-            `<!doctype html><link rel="stylesheet" href="../../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
-          ],
-          [
-            `snapshots/${side}/mokly-generated/auth/index.desktop.html`,
-            '<!doctype html><link rel="stylesheet" href="../../shared.css"><p>Guide</p>',
-          ],
-        ] as [string, string][],
-    ),
-  );
-}
-
 /**
  * Shared review v8 fixture: a material screen change whose mobile view keeps
  * two page-owned rules of a changed stylesheet, and whose desktop view keeps

@@ -109,6 +109,13 @@ publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never
 rebuilds a partially published version.
 
+The pre-merge release-check workflow runs only on pushes to
+`rebuild/ci-release-check`, and its post-merge copy also accepts a manual
+dispatch. It builds all five target archives from the pushed commit, checks
+native TLS dependencies, packs all seven packages, rechecks the archives, and
+smoke-tests clean consumers. It has contents-read permission only and cannot
+publish, use the npm environment, request OIDC, or read secrets.
+
 Publication order is the platform packages, then the viewer, then the CLI. Each
 publication completes its registry verification before the next starts, so an
 installable CLI always resolves published platform packages and a published

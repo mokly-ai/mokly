@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { entryWording } from "../packages/viewer/dist/client/entry_wording.js";
+import {
+  COMPONENT_STYLE_COPY,
+  PAGE_STYLE_COPY,
+  SCREEN_STYLE_COPY,
+} from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
+import { entryWording } from "../packages/viewer/dist/shell/entry_wording.js";
 
-test("entry wording keeps screen copy and recasts it for a saved view", () => {
+test("entry wording keeps screen copy and recasts it for a variant", () => {
   const screen = entryWording("screen");
   assert.equal(
     screen.label("Styles this screen uses changed"),
@@ -18,7 +23,7 @@ test("entry wording keeps screen copy and recasts it for a saved view", () => {
     "Styles this variant uses changed",
   );
   assert.equal(component.label("Screen changed"), "Variant changed");
-  assert.equal(component.noChanges, "No changes to this saved view.");
+  assert.equal(component.noChanges, "No changes to this variant.");
 });
 
 test("a component recasts each stage label for its variant", () => {
@@ -31,4 +36,66 @@ test("a component recasts each stage label for its variant", () => {
     ["Only excluded content changed", "Only excluded content changed"],
   ] as const)
     assert.equal(component.label(screen), variant);
+});
+
+test("each entry kind's copy matches the shared design copy", () => {
+  const screen = entryWording("screen");
+  assert.deepEqual(
+    [
+      screen.filesLead,
+      screen.matchedStylesWithSelectors,
+      screen.pageOutsideStyles,
+      screen.unresolvedStylesWithSelectors,
+      screen.unresolvedStylesWithoutSelectors,
+      screen.excludedStylesheet,
+      screen.noChanges,
+      screen.stylesChanged,
+      screen.componentsChanged,
+    ],
+    [
+      SCREEN_STYLE_COPY.files,
+      SCREEN_STYLE_COPY.matched,
+      SCREEN_STYLE_COPY.outside,
+      SCREEN_STYLE_COPY.unresolved,
+      SCREEN_STYLE_COPY.unnamed,
+      SCREEN_STYLE_COPY.excluded,
+      SCREEN_STYLE_COPY.noChanges,
+      SCREEN_STYLE_COPY.stylesChanged,
+      SCREEN_STYLE_COPY.componentsChanged,
+    ],
+  );
+  const component = entryWording("component");
+  assert.deepEqual(
+    [
+      component.filesLead,
+      component.matchedStylesWithSelectors,
+      component.excludedStylesheet,
+      component.noChanges,
+      component.stylesChanged,
+      component.componentsChanged,
+    ],
+    [
+      COMPONENT_STYLE_COPY.files,
+      COMPONENT_STYLE_COPY.matched,
+      COMPONENT_STYLE_COPY.excluded,
+      COMPONENT_STYLE_COPY.noChanges,
+      COMPONENT_STYLE_COPY.stylesChanged,
+      COMPONENT_STYLE_COPY.componentsChanged,
+    ],
+  );
+  const page = entryWording("page");
+  assert.deepEqual(
+    [
+      page.filesLead,
+      page.matchedStylesWithSelectors,
+      page.pageOutsideStyles,
+      page.unresolvedStylesWithSelectors,
+    ],
+    [
+      PAGE_STYLE_COPY.files,
+      PAGE_STYLE_COPY.matched,
+      PAGE_STYLE_COPY.outside,
+      PAGE_STYLE_COPY.unresolved,
+    ],
+  );
 });

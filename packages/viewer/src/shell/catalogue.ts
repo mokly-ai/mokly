@@ -11,9 +11,12 @@ import type {
 
 import type { CatalogueMetadata, RemovedEntrySnapshot } from "./metadata.js";
 
-/** Validated lookup model used by server routes. */
+/**
+ * Validated lookup model used by server routes. Every catalogue that a
+ * delivery builds carries its published records.
+ */
 export interface Catalogue {
-  publicModel?: ShellCatalogueReadModel;
+  publicModel: ShellCatalogueReadModel;
   byPath: ReadonlyMap<string, CatalogueManifestEntry>;
   /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;
@@ -75,12 +78,13 @@ function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
 /**
  * Build a deterministic id index from a validated manifest, its retained
  * removed entries, and the current entries the move contract paired.
+ * `viewerCatalogue` adds the published records that complete a catalogue.
  */
 export function createCatalogue(
   manifest: CatalogueMetadata,
   removedEntries: readonly RemovedEntrySnapshot[] = [],
   moves: readonly { path: string; previousPath: string }[] = [],
-): Catalogue {
+): Omit<Catalogue, "publicModel"> {
   const removedScreens = removedEntries.flatMap(({ entry }) =>
     entry.kind === "screen" ? [entry] : [],
   );

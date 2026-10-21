@@ -41,7 +41,7 @@ const ENTRIES = [
     rest:
       "<p>This stylesheet changed, but none of the changed styles apply to this variant.</p>" +
       "<p>Examined and excluded:</p><ul><li>mockups/action.css</li></ul>" +
-      "<p>No changes to this saved view.</p>",
+      "<p>No changes to this variant.</p>",
   },
   {
     kind: "document page",

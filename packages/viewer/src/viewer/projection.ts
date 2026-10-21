@@ -182,20 +182,14 @@ export function viewerView(
   selection: ViewerSelection,
 ): ShellView {
   if (selection.screenPath === null) return { kind: "home" };
-  const selected = catalogue.publicModel
-    ? resolveCatalogueSelection(
-        catalogue.publicModel,
-        selection.screenPath,
-        selection.snapshotId,
-      )
+  const selected = resolveCatalogueSelection(
+    catalogue.publicModel,
+    selection.screenPath,
+    selection.snapshotId,
+  );
+  const entry = selected
+    ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
     : undefined;
-  const entry = catalogue.publicModel
-    ? selected
-      ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
-      : undefined
-    : selection.snapshotId === undefined
-      ? catalogue.byPath.get(selection.screenPath)
-      : undefined;
   const target = entry && toRouteTarget(entry);
   return target
     ? { kind: "target", target }

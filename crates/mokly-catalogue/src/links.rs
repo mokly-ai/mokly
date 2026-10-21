@@ -1,13 +1,14 @@
 //! Validate static logical targets before rendering resolves document fragments.
 
-use html5gum::{DefaultEmitter, Token, Tokenizer};
+use html5gum::Token;
 use mokly_model::catalogue::{ModelEntry, SourceLocation};
 use pulldown_cmark::{Event, Parser, Tag};
 
 use crate::diagnostic::Issue;
+use crate::html_tokens;
 use crate::locations::at;
 use crate::relationships;
-use crate::template_types::{ElementRegistry, Template, ignore_attribute_allowed};
+use crate::template_types::{ElementRegistry, Template};
 
 /// A logical destination retains its coordinate before the full source is released.
 pub(crate) struct MarkdownTarget {
@@ -22,17 +23,12 @@ pub(crate) fn html(
     registry: &ElementRegistry,
 ) -> Vec<Issue> {
     let mut issues = Vec::new();
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(true);
-    for token in Tokenizer::new_with_emitter(template.body.as_str(), emitter).flatten() {
-        let Token::StartTag(tag) = token else {
+    for parsed in html_tokens::parse(&template.body) {
+        let Token::StartTag(tag) = parsed.token else {
             continue;
         };
         let element = String::from_utf8_lossy(&tag.name);
         for (name, value) in &tag.attributes {
-            if !ignore_attribute_allowed(&element, &String::from_utf8_lossy(name)) {
-                continue;
-            }
             let text = String::from_utf8_lossy(&value.value);
             let target = if name.as_ref() == b"href" {
                 text.strip_prefix("mock:")

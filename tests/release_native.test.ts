@@ -102,6 +102,7 @@ test("the built CLI inventory requires runtime, changelog, and receiver fixtures
     "docs/protocol/fixtures/export-ownership-v3.json",
     "bin/mokly.mjs",
     "dist/sidecar.js",
+    "dist/sidecar/postcss-preload.cjs",
     "dist/index.d.ts",
     "config.schema.json",
     "docs/guides/start/install.md",
@@ -118,7 +119,11 @@ test("the built CLI inventory requires runtime, changelog, and receiver fixtures
       /missing/,
     );
   }
-  for (const added of ["src/sidecar.ts", "tests/fixture.js"])
+  for (const added of [
+    "src/sidecar.ts",
+    "tests/fixture.js",
+    "dist/sidecar/unrelated.cjs",
+  ])
     assert.throws(
       () =>
         validatePackageReport(

@@ -1,13 +1,16 @@
-import { performance } from "node:perf_hooks";
-
 import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
+import { performance } from "node:perf_hooks";
 
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
-import { observeModuleLoads, readEvidence } from "./postcss-evidence.js";
+import {
+  observeModuleLoads,
+  preloadedObserver,
+  readEvidence,
+} from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
@@ -31,8 +34,10 @@ process.on("disconnect", () => process.exit());
 const spawned = phases.start("spawn");
 process.once("message", (workerData: WorkerData) => {
   spawned("ok");
-  observeFileReads();
-  observeModuleLoads((url) => phases.moduleUrl(url));
+  if (!preloadedObserver()) {
+    observeFileReads();
+    observeModuleLoads((url) => phases.moduleUrl(url));
+  }
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,

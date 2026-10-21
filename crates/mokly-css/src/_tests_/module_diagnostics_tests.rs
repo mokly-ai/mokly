@@ -1,6 +1,7 @@
 //! CSS Modules failures come from the check that owns them, at the authored
 //! line and column.
 
+use crate::module_integrity;
 use crate::modules::{scope, scoped_name};
 
 const PATH: &str = "ui/diagnostics.module.css";
@@ -98,6 +99,39 @@ fn syntax_failures_point_at_the_authored_character() {
     }
 }
 
+/// The token check points at the first authored token that scoping would
+/// change or drop, with CSS line breaks and character columns, or at the end
+/// of the stylesheet when scoping only adds tokens there.
+#[test]
+fn token_check_failures_point_at_the_first_changed_token() {
+    let message = |line: usize, column: usize| {
+        format!(
+            "[mokly-css/build-invalid] CSS Modules scoping would change more than local names in {PATH}:{line}:{column}; move this CSS to a plain stylesheet"
+        )
+    };
+    for (name, newline) in [("LF", "\n"), ("CR", "\r"), ("CRLF", "\r\n"), ("FF", "\x0C")] {
+        let source = format!("a{{}}{newline}.é{{x:y}}");
+        let output = format!("a{{}}{newline}.é{{x:z}}");
+        let failure = module_integrity::check(PATH, &source, &output).unwrap_err();
+        assert_eq!(failure.to_string(), message(2, 6), "{name}");
+    }
+    for (source, output, column) in [
+        ("a{}", "b{}", 1),
+        ("a{}", "a{}b", 4),
+        ("a b", "a b b", 4),
+        ("a{}b", "a{}", 4),
+        ("a{}", "a b{}", 2),
+        ("a:b{}", "a b{}", 2),
+        ("a{}", "a{b}", 3),
+        ("a{x:y;}", "a{x:y}", 6),
+        ("a{b:f(x)}", "a{b:f(x y)}", 8),
+    ] {
+        let failure = module_integrity::check(PATH, source, output).unwrap_err();
+        assert_eq!(failure.to_string(), message(1, column), "{source} {output}");
+    }
+    assert_eq!(error(".a :global(.b)c{color:red}"), message(1, 13));
+}
+
 /// Every diagnostic counts columns in characters, `@value` included.
 #[test]
 fn value_rules_count_columns_in_characters() {
@@ -107,4 +141,49 @@ fn value_rules_count_columns_in_characters() {
         "{}",
         error("/*😀*/@value x: 1;")
     );
+}
+
+/// The renamer and the token check read every statement through one
+/// classification, so no statement form, with or without a block and at any
+/// nesting level, fails the token check.
+#[test]
+fn no_statement_form_fails_the_token_check() {
+    let statements = [
+        "color:red",
+        "--x:{a:b}",
+        ".a",
+        "a",
+        "a:hover",
+        "@keyframes x",
+        "@scope (.a)",
+        "@apply x",
+        ":export",
+        ":global(.a)",
+        "*zoom:1",
+        "",
+        "composes:b",
+        "animation:spin 1s",
+        ".b :global(.a",
+        "@keyframes :local(k",
+    ];
+    let levels = [
+        ("", ""),
+        ("@media all{", "}"),
+        (".p{", "}"),
+        ("@font-face{", "}"),
+    ];
+    for statement in statements {
+        for block in ["", ";", "{}", "{color:red}"] {
+            for (open, close) in levels {
+                let source = format!(".b{{}}{open}{statement}{block}{close}");
+                if let Err(error) = scope(PATH, &source) {
+                    let message = error.to_string();
+                    assert!(
+                        !message.contains("would change more than local names"),
+                        "{source:?}: {message}"
+                    );
+                }
+            }
+        }
+    }
 }

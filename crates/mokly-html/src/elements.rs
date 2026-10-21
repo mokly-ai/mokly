@@ -11,7 +11,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::tree::{Element, Node};
-use crate::{conditions, ignore_checks, relative_links, serialize};
+use crate::{conditions, relative_links, serialize};
 
 impl Engine<'_> {
     pub(crate) fn element(
@@ -19,7 +19,6 @@ impl Engine<'_> {
         mut element: Element,
         context: Arc<Context>,
     ) -> Result<Expansion> {
-        ignore_checks::attributes(&mut element);
         let viewport = match self.request.viewport {
             Viewport::Mobile => "mobile",
             Viewport::Desktop => "desktop",

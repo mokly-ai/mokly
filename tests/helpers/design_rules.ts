@@ -44,7 +44,7 @@ function focusStop(element: HtmlElement): boolean {
   );
 }
 
-export const designViews = (catalogue: ServedCatalogue) =>
+const designViews = (catalogue: ServedCatalogue) =>
   catalogue.views.filter((view) => view.path.startsWith("design/"));
 
 const label = (view: ServedView) => view.route;

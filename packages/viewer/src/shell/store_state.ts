@@ -37,6 +37,17 @@ export interface ShellState {
    */
   revealedFolder: { key: string; selection: ViewerSelection } | undefined;
   route: ShellRoute;
+  /**
+   * Counts route installations: the first route, each navigation, and each
+   * history step. A publication that rebinds the route keeps the count.
+   */
+  routeInstallation: number;
+  /**
+   * The installed route still holds its comparison intent, a shell-owned
+   * link's request for Side by side. The routed workspace settles it once;
+   * only a new route installation sets it again.
+   */
+  comparisonIntent: boolean;
   selection: ViewerSelection;
   tagPickerIndex: number;
   tagPickerOpen: boolean;

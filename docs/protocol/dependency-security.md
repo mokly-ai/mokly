@@ -53,8 +53,9 @@ lockfiles, including dependencies they bring to their renderer or application.
 
 The Rust dependency audit is independent of npm baseline comparisons and
 exceptions. `npm run dependencies:check:rust` audits every crate in the committed
-`Cargo.lock` against the current RustSec advisory database. It installs pinned
-`cargo-audit` 0.22.2 with its locked dependencies before running the audit.
+`Cargo.lock` against the current RustSec advisory database. It verifies pinned
+`cargo-audit` 0.22.2 source before extraction, then builds it with the committed
+tool lock and locked resolution, so no update silently changes the tool.
 Reported vulnerabilities and audit errors fail verification. Informational
 warnings remain visible. The repository `.cargo/audit.toml` configuration exempts
 only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires

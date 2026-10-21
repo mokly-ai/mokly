@@ -124,3 +124,42 @@ for (const width of [1440, 900, 390, 320]) {
     });
   }
 }
+
+for (const rootFontSize of [10, 20]) {
+  test(`the compact search follows a 560px viewer with a ${rootFontSize}px root font`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 900, height: 900 });
+    await page.goto(fixture.host.url);
+    await page.waitForFunction(() => Boolean(window.viewerHarness));
+    await page.evaluate((size) => {
+      document.documentElement.style.fontSize = `${size}px`;
+      window.viewerHarness.start("one", { responsive: true });
+    }, rootFontSize);
+    await page.waitForFunction(() =>
+      Boolean(window.viewerHarness.get("one").ref.current),
+    );
+
+    const host = page.locator("#one");
+    const control = host.getByRole("button", { name: "Search catalogue" });
+    const field = host.getByRole("searchbox", { name: "Search catalogue" });
+    // The viewer contract switches at a 560px container, whatever the root font.
+    for (const [width, compact] of [
+      [560, true],
+      [561, false],
+    ] as const) {
+      await host.evaluate((element, value) => {
+        element.style.width = `${value}px`;
+      }, width);
+      await expect
+        .poll(() =>
+          host
+            .locator(".mokly-top-host")
+            .evaluate((top) => top.getBoundingClientRect().width),
+        )
+        .toBe(width);
+      await expect(compact ? control : field).toBeVisible();
+      await expect(compact ? field : control).toBeHidden();
+    }
+  });
+}

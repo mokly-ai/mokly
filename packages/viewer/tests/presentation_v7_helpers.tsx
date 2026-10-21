@@ -36,7 +36,7 @@ import {
 } from "./catalogue_v7_fixture.js";
 
 /** The artifact origin an embedded render resolves its frame URLs against. */
-export const EMBEDDED_ORIGIN = "https://catalogue.example";
+const EMBEDDED_ORIGIN = "https://catalogue.example";
 
 /** One embedded first render. */
 export interface EmbeddedMarkupOptions {

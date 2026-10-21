@@ -31,6 +31,8 @@ JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
 The working tree uses the shared `dunce` path spelling, including Windows
 repository identities, so output confinement and input rechecks use matching paths.
+Its file-object metadata uses the opened device and file identifier. Static
+builds can detect equal-byte replacements and symlink retargets after consumer reads.
 Configuration aliases retain both private source names when a repository's
 parent path is a symbolic link. Discovery compares output and root identities
 so an aliased output directory stays outside the entry inventory.
@@ -100,6 +102,10 @@ HTML checks cover forbidden and unknown elements, reserved names, slots,
 component cycles, template references, and unused props. Unknown ignore-wrapper
 attributes warn once per shared body and attribute. Their values are ignored.
 They do not validate logical links or select component slots.
+The shared token boundary removes these attributes before validation, link
+checks, or source-location collection. It retains their names for warnings
+and preserves reserved-navigation evidence and duplicate-attribute errors.
+Opaque wrapper signatures retain source identity without exposing discarded values.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
@@ -176,10 +182,12 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 
 ### Key Code
 
+- [Opened-file identity](./src/working_tree_identity.rs) supplies portable source evidence.
 - [Configuration](./src/config.rs) and [schema validation](./src/config_validation.rs).
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
+- [HTML token boundary](./src/html_tokens.rs) filters ignore-wrapper attributes before token consumers run.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).
 
