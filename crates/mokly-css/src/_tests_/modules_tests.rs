@@ -185,6 +185,28 @@ fn nested_group_rules_scope_animation_names_like_their_rule() {
     assert_eq!(css, expected);
 }
 
+/// cssparser skips top-level HTML comment tokens before reading a statement.
+#[test]
+fn top_level_html_comments_keep_at_rule_kinds() {
+    let path = "ui/comment.module.css";
+    let error = scope(path, "<!-- @value theme: red;").unwrap_err();
+    assert!(
+        error.to_string().contains("@value is unsupported"),
+        "{error}"
+    );
+
+    let spin = scoped_name(path, "spin");
+    let class = scoped_name(path, "card");
+    let source = "-->@keyframes spin{to{opacity:0}}.card{animation:spin 1s}";
+    let (css, exports) = scope(path, source).unwrap();
+    assert_eq!(
+        css,
+        format!("-->@keyframes {spin}{{to{{opacity:0}}}}.{class}{{animation:{spin} 1s}}")
+    );
+    assert_eq!(exports["spin"], spin);
+    assert_eq!(exports["card"], class);
+}
+
 #[test]
 fn value_rules_report_their_own_line_and_column() {
     let source = ".a{}\n/* note */\n@value x: red;";
