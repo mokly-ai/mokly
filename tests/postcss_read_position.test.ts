@@ -9,6 +9,7 @@ import {
   closed,
   finish,
   opened,
+  wholeRead,
 } from "../packages/mokly/src/sidecar/postcss-read-position.js";
 
 test("ambiguous sequential reads never guess offsets and descriptor reuse starts a new generation", () => {
@@ -66,4 +67,34 @@ test("bigint sentinels advance the cursor and unproven positions invalidate it",
       [5, createHash("sha256").update("f").digest("hex")],
     ],
   );
+});
+
+test("identity probes scale one-for-one with tracked reads", () => {
+  const probesFor = (size: number, wholeFile: boolean): number => {
+    let probes = 0;
+    for (let index = 0; index < size; index++) {
+      const fd = 100 + index;
+      const file = path.resolve(`/inputs/probe-${size}-${index}.txt`);
+      const read = () => {
+        opened(fd, file, () => {
+          probes++;
+          return { object: `${size}:${index}` };
+        });
+        finish(begin(fd, wholeFile ? null : 0), Buffer.from("read"));
+      };
+      if (wholeFile) wholeRead(read, () => undefined);
+      else read();
+      closed(fd);
+    }
+    return probes;
+  };
+
+  for (const wholeFile of [false, true]) {
+    const small = probesFor(1, wholeFile);
+    const large = probesFor(4, wholeFile);
+    assert.equal(small, 1);
+    assert.equal(large, 4);
+    assert.ok(small > 0);
+    assert.ok(large <= small * 4.5);
+  }
 });

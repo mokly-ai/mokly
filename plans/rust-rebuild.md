@@ -2849,6 +2849,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Retain known native resolution manifests as late inputs. Public hooks
         do not expose the bytes used by private `exports` and `imports` reads.
         Preserve native resolution and its cache. Do not manufacture read receipts.
+  - [x] User decision 118 (2026-10-21): A. Probe file identity only where a
+        read needs it, and add operation-count coverage for one probe per
+        tracked read.
+  - [x] User decision 117 (2026-10-21): A now, C after the merge, in parallel
+        if possible, but do not block the merge. State the asynchronous-loader
+        module-path gap now, and continue the loader-path fix after the merge.
   - [x] Resolve user item 114 (W6 decision 1, closure decision M14-PC2,
         proposed 2026-10-20): close this PostCSS evidence item? Observed-read
         evidence now covers every read that JavaScript hooks can see. Reads
@@ -2903,7 +2909,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - User decision 117 (2026-10-21): A now, and C after the merge, in
     parallel if possible, without blocking the merge. Work: the new
     PostCSS follow-ups workspace.
-- [ ] Resolve user item 118 (W6 review finding 3): each file open probes
+- [x] Resolve user item 118 (W6 review finding 3): each file open probes
       identity twice. Every tracked open runs one wasted `fstat`,
       `realpath`, and `stat` probe. Severity Low, effort Small. Performance
       findings wait for the user. Options: A, probe in `opened()` only when
@@ -2913,6 +2919,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       the probes of each read at two sizes, Medium. Recommended: A.
   - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
     workspace.
+  - Completed by `4739f11a`: retain one identity probe per tracked read.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

@@ -75,7 +75,10 @@ the existing 64 MiB PostCSS and stylesheet cache bounds and the frame bound.
 Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
 This includes native scanners, memory maps, inherited or transferred handles,
-and asynchronous loader workers. Such reads retain their late opaque baseline.
+and asynchronous loader workers. Known inputs retain their late opaque baseline.
+Asynchronous loaders and consumer hooks that bypass later providers can supply
+modules without exposing their paths or raw read witnesses. These modules have
+no late baseline unless another input report identifies their paths.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
