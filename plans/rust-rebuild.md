@@ -2835,6 +2835,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         configuration, with fixed private folders, mirror, and lock file.
         Fix round 2 implements it; the local registry tests are in
         `tests/static_base_registry.test.ts`.
+  - [x] Report item 40 (2026-10-21): Yarn Classic `file:` and `link:`
+        dependency values use their manifest folder, as Classic rewrites
+        them. Bare paths and resolutions keep the Classic root, and lockfile
+        values keep the lockfile folder. Branch
+        `rebuild/base-classic-manifest-paths`.
   - User item 121: pnpm/Yarn finding 7, manager guard regressions lack
     fixtures. Severity Medium. Recommended B, add marker fixtures for every
     script and hook guard. Fix round 2 finding 5 joins it: the marker
