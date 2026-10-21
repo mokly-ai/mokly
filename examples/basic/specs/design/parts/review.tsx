@@ -11,8 +11,12 @@ import {
   StylesheetEvidenceList,
 } from "./stylesheet_evidence.js";
 
-/** Comparison classification states depicted inside a loaded comparison. */
-export type ReviewState = "added" | "changed" | "removed" | "styles-changed";
+/**
+ * Comparison classification states depicted inside a loaded comparison. An
+ * unchanged view that changed components affect reads `components-changed`.
+ */
+export type ReviewState =
+  "added" | "changed" | "components-changed" | "removed" | "styles-changed";
 
 const CHANGED_NODES: readonly NavNode[] = [
   {

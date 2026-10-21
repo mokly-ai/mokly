@@ -198,6 +198,7 @@ function workspace(): WorkspaceData {
     status: "Changed",
     comparisons: true,
     comparisonEligible: true,
+    affectedComparison: false,
     entry: {
       colorSchemes: ["light"],
       path: "home",

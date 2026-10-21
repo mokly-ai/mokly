@@ -126,7 +126,8 @@ test("Testbox sessions receive the job PATH only", async (context) => {
 });
 
 test("the release complete gate verifies the checked-out tag commit", async (context) => {
-  const { run } = (await workflowStep("release.yml", RELEASE_GATE)).step;
+  const { run } = (await workflowStep("release-prepare.yml", RELEASE_GATE))
+    .step;
   assert.ok(run, `"${RELEASE_GATE}" must run a shell script`);
   if (process.platform === "win32") return;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-release-gate-"));

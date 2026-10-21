@@ -58,6 +58,11 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   const source = await workflowSource("release.yml");
   const workflow = parse(source) as Workflow;
   const publish = workflow.jobs.publish;
+  const preparationWorkflow = parse(
+    await workflowSource("release-prepare.yml"),
+  ) as Workflow;
+  const prepare = preparationWorkflow.jobs.prepare;
+  assert.ok(prepare);
   const selection = workflow.jobs["select-release"];
   assert.ok(publish);
   assert.ok(selection);
@@ -89,10 +94,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     selection.outputs?.verification,
     "${{ steps.select.outputs.verification }}",
   );
-  assert.equal(
-    publish.env?.RELEASE_VERIFICATION,
-    "${{ needs.select-release.outputs.verification }}",
-  );
+  assert.equal(prepare.env?.RELEASE_VERIFICATION, "${{ inputs.verification }}");
   assert.equal(source.includes("NPM_TOKEN"), false);
   assert.equal(source.includes("NODE_AUTH_TOKEN"), false);
   assert.match(source, /package-manager-cache: false/);
@@ -102,7 +104,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /release-please-action@[a-f0-9]{40}/);
   assert.match(source, /outputs\['packages\/viewer--release_created'\]/);
   assert.match(source, /outputs\['packages\/viewer--tag_name'\]/);
-  const names = publish.steps.map((step) => step.name);
+  const names = [...prepare.steps, ...publish.steps].map((step) => step.name);
   const gateOrder = [
     "Verify immutable tags",
     "Install dependencies",
@@ -123,48 +125,48 @@ test("release workflow selects only releases and isolates OIDC publish", async (
       );
   }
   assert.equal(
-    publish.steps.find((step) => step.name === "Audit workspace dependencies")
+    prepare.steps.find((step) => step.name === "Audit workspace dependencies")
       ?.run,
     "npm run dependencies:check",
   );
   assert.equal(
-    publish.steps.find((step) => step.name === "Run complete verification")
+    prepare.steps.find((step) => step.name === "Run complete verification")
       ?.run,
     'GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict',
   );
   assert.equal(
-    publish.steps.find((step) => step.name === "Run complete verification")?.env
+    prepare.steps.find((step) => step.name === "Run complete verification")?.env
       ?.PLAYWRIGHT_CHANNEL,
     "chromium",
   );
   assert.equal(
-    publish.steps.find(
+    prepare.steps.find(
       (step) => step.name === "Install Chromium for verification and smoke",
     )?.run,
     "npx playwright install --with-deps chromium",
   );
   const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
   assert.equal(
-    publish.steps.find((step) => step.name === "Run complete verification")?.if,
+    prepare.steps.find((step) => step.name === "Run complete verification")?.if,
     fallbackCondition,
   );
   for (const name of ["Set up Rust", "Audit Rust dependencies"])
     assert.equal(
-      publish.steps.find((step) => step.name === name)?.if,
+      prepare.steps.find((step) => step.name === name)?.if,
       undefined,
       `${name} must run with reused evidence too`,
     );
   assert.equal(
-    publish.steps.find((step) => step.name === "Audit Rust dependencies")?.run,
+    prepare.steps.find((step) => step.name === "Audit Rust dependencies")?.run,
     "npm run dependencies:check:rust",
   );
-  const evidence = publish.steps.find(
+  const evidence = prepare.steps.find(
     (step) => step.name === "Select verification evidence",
   );
   assert.equal(evidence?.id, "evidence");
   assert.deepEqual(evidence?.env, { GITHUB_TOKEN: "${{ github.token }}" });
   assert.deepEqual(
-    publish.steps
+    prepare.steps
       .filter((step) => step.env?.GITHUB_TOKEN)
       .map((step) => step.name),
     [
@@ -172,7 +174,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
       "Select verification evidence",
     ],
   );
-  const preserve = publish.steps.find(
+  const preserve = prepare.steps.find(
     (step) => step.name === "Preserve checked artifacts",
   );
   assert.match(
@@ -207,8 +209,17 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   const setupNode = publish.steps.find((step) =>
     step.uses?.startsWith("actions/setup-node@"),
   );
-  assert.equal(setupNode?.with?.["node-version"], 24);
+  assert.equal(
+    setupNode?.with?.["node-version"],
+    "${{ needs.prepare-release.outputs.node_version }}",
+  );
+  assert.equal(
+    prepare.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
+      ?.with?.["node-version"],
+    24,
+  );
   assertPinnedActions(workflow);
+  assertPinnedActions(preparationWorkflow);
 });
 
 async function workflowSource(name: string): Promise<string> {
@@ -220,7 +231,7 @@ async function workflowSource(name: string): Promise<string> {
 
 function assertPinnedActions(workflow: Workflow): void {
   const actions = Object.values(workflow.jobs).flatMap((job) =>
-    job.steps.flatMap((step) => (step.uses ? [step.uses] : [])),
+    (job.steps ?? []).flatMap((step) => (step.uses ? [step.uses] : [])),
   );
   assert.ok(actions.length > 0);
   for (const action of actions) assert.match(action, /@[a-f0-9]{40}$/);

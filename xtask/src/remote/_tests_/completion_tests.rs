@@ -96,6 +96,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
         "browser-2-of-4",
         "browser-3-of-4",
         "browser-4-of-4",
+        "static-delivery",
     ]
     .into_iter()
     .map(|name| format!("tbx_{name}"))
@@ -125,7 +126,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 DependencyAudit::Baseline,
             )
             .len(),
-        6
+        7
     );
     assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();

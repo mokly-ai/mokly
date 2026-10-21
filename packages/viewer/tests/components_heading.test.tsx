@@ -10,6 +10,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { parseReviewResult } from "../src/review/result_validation.js";
+import { viewsUsingComponents } from "../src/review/shared_impact.js";
 import type {
   AffectedConsumer,
   ReviewEntry,
@@ -114,6 +115,7 @@ function headings(
   route: string,
   kind: "component" | "screen",
   affected: readonly AffectedConsumer[] = [],
+  usingChanged?: ReadonlySet<string>,
 ): string[] {
   const result = parseReviewResult({
     schemaVersion: 8,
@@ -126,7 +128,13 @@ function headings(
     result,
     url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`,
   };
-  const views = selectedComparisonViews(loaded, BOTH, kind, route);
+  const views = selectedComparisonViews(
+    loaded,
+    BOTH,
+    kind,
+    route,
+    usingChanged,
+  );
   const markup = renderToStaticMarkup(
     <ComparisonViews
       entryId={route}
@@ -174,6 +182,30 @@ test("affected evidence names only the views it proves", () => {
     [
       "Mobile · No changes to this screen",
       "Desktop · Components this screen uses changed",
+    ],
+  );
+});
+
+test("without affected records, a view that uses a changed component reads the heading", () => {
+  // A selected comparison in Serve omits the affected records, and a markup
+  // change in Card leaves no record on the screen's own views.
+  const home = screen([view("mobile"), view("desktop")]);
+  const usingChanged = viewsUsingComponents(
+    [
+      {
+        viewport: "mobile",
+        colorScheme: "light",
+        usage: { instances: [{ componentId: CARD }] },
+      },
+      { viewport: "desktop", colorScheme: "light", usage: { instances: [] } },
+    ],
+    [{ path: CARD }],
+  );
+  assert.deepEqual(
+    headings([card, home], "screens/home", "screen", [], usingChanged),
+    [
+      "Mobile · Components this screen uses changed",
+      "Desktop · No changes to this screen",
     ],
   );
 });

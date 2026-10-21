@@ -3,6 +3,9 @@
 use std::fs::{self, File};
 use std::os::fd::FromRawFd;
 use std::path::{Path, PathBuf};
+use std::ptr;
+
+use url::Url;
 
 pub(super) fn terminal(root: &Path, workspace: &Path) -> (PathBuf, File, File) {
     let package = root.join(".fixture-sidecar");
@@ -15,7 +18,7 @@ pub(super) fn terminal(root: &Path, workspace: &Path) -> (PathBuf, File, File) {
     let target = workspace.join("packages/mokly/dist/sidecar.js");
     fs::write(package.join("dist/sidecar.js"), format!(
             "const write=process.stdout.write.bind(process.stdout); process.stdout.write=(chunk,...args)=>{{try{{const value=JSON.parse(String(chunk)); if(value.event==='operation'&&value.params.operation==='esbuild') process.stderr.write('fixture-esbuild\\n');}}catch{{}} return write(chunk,...args);}}; await import({});",
-            serde_json::to_string(&format!("file://{}", target.display())).unwrap()
+            serde_json::to_string(Url::from_file_path(&target).unwrap().as_str()).unwrap()
         )).unwrap();
     let mut master = -1;
     let mut slave = -1;
@@ -25,9 +28,9 @@ pub(super) fn terminal(root: &Path, workspace: &Path) -> (PathBuf, File, File) {
             libc::openpty(
                 &mut master,
                 &mut slave,
-                std::ptr::null_mut(),
-                std::ptr::null(),
-                std::ptr::null(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
             )
         },
         0

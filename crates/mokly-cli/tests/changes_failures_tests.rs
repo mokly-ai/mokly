@@ -92,22 +92,29 @@ fn missing_repository_and_missing_ref_fail_with_git_failed_and_the_ref() {
 #[test]
 fn shallow_history_without_a_merge_base_fails_even_when_both_refs_exist() {
     let source = catalogue();
-    git(source.path(), &["init", "--initial-branch=fixture-base"]);
-    commit(source.path());
-    git(source.path(), &["branch", "comparison-base"]);
-    fs::write(source.path().join("revision"), "new").unwrap();
-    commit(source.path());
+    let transport_root = source.path().join("history %20 #");
+    fs::create_dir(&transport_root).unwrap();
+    for name in ["mokly.config.json", "specs"] {
+        fs::rename(source.path().join(name), transport_root.join(name)).unwrap();
+    }
+    git(&transport_root, &["init", "--initial-branch=fixture-base"]);
+    commit(&transport_root);
+    git(&transport_root, &["branch", "comparison-base"]);
+    fs::write(transport_root.join("revision"), "new").unwrap();
+    commit(&transport_root);
     let root = TempDir::new().unwrap();
     git(
         root.path(),
         &[
             "clone",
+            "--no-local",
             "--depth=1",
             "--branch=fixture-base",
-            &format!("file://{}", source.path().display()),
+            transport_root.to_str().unwrap(),
             ".",
         ],
     );
+    assert!(root.path().join(".git/shallow").is_file());
     git(
         root.path(),
         &[
