@@ -850,9 +850,15 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       0.103.15 may accept distrusted intermediate certificates. It reaches
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
-      failed on it in M14 nesting round 7, 2026-10-20.
+      failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17
+      and CI round 5 made the same lockfile change on 2026-10-20, and this
+      line now records all three.
       Evidence: `.context/m14-nesting/r7/audit-before.txt` and
-      `.context/m14-nesting/r7/audit-after.txt`.
+      `.context/m14-nesting/r7/audit-after.txt`; batch 17:
+      `.context/integration-17/security-audit.log` and
+      `.context/integration-17/security-publish-tests.log`; CI round 5:
+      `.context/ci-shard-balance/webpki-advisory.md`,
+      `webpki-dependents.log`, and `webpki-green.log`.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The
@@ -2213,11 +2219,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
-- [x] Patch the newly reported RUSTSEC-2026-0382 certificate distrust defect
-      with locked `rustls-webpki` 0.103.16. Keep all other dependency edges.
-      Evidence: `.context/integration-17/security-audit.log` and
-      `.context/integration-17/security-publish-tests.log`.
-
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
       cancellation, fallback, and every charge and bound. Trims preserve the
@@ -2659,14 +2660,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       the median cost. Hosted confirmation belongs to the hub.
       Evidence, exact trees, source reports, and final remote observations:
       `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
-
-- [x] CI round 5 audit follow-up (2026-10-20): update `rustls-webpki` from
-      0.103.15 to 0.103.16 for newly published RUSTSEC-2026-0382. The live
-      remote audit reproduced the certificate-verification advisory. Keep
-      every exception and unrelated lockfile edge unchanged. The live audit
-      and publication/TLS tests pass with the patch.
-      Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
-      `webpki-dependents.log`, and `webpki-green.log`.
 
 - [x] CI round 5 measurement follow-up (2026-10-20): calibrate scheduling
       costs with both the hosted per-test observations and remote run
