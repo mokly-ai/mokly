@@ -7,8 +7,8 @@ import { promisify } from "node:util";
 
 import { scenarios } from "../scripts/large/benchmark.js";
 import { processRows, treeRss } from "../scripts/large/memory.js";
-import { commitFixture } from "../scripts/large/setup.js";
 import { writeJsonArray } from "../scripts/large/run_output.js";
+import { commitFixture } from "../scripts/large/setup.js";
 import { prepareToolchain } from "../scripts/large/toolchain.js";
 import { NATIVE_TARGETS } from "../scripts/release/targets.mjs";
 
