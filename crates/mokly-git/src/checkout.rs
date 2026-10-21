@@ -140,6 +140,7 @@ impl Checkout {
         let environment = [
             ("GIT_INDEX_FILE", index.as_os_str().to_os_string()),
             ("GIT_WORK_TREE", worktree.as_os_str().to_os_string()),
+            ("GIT_ATTR_SOURCE", OsString::from(commit.as_str())),
             ("LC_ALL", OsString::from("C")),
         ];
         let cancellation = NeverCancelled;

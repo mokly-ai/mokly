@@ -57,6 +57,9 @@ monitor and a 120-second deadline supervise checkout output. Failed optional
 filters also return typed `Conversion` errors instead of fallback pointer bytes.
 Callers can warn and retain independent resources.
 
+Checkout commands pin `GIT_ATTR_SOURCE` to the base commit. A caller's inherited
+attribute-source override cannot select the working commit's attributes.
+
 Opaque digests use `cat-file --filters --path` with `--attr-source` pinned to
 the base commit. Stdout streams into SHA-256 without a temporary blob spool.
 Stderr, cancellation, and filter deadlines keep the same supervision. Working

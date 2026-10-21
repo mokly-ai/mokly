@@ -24,7 +24,8 @@ A command therefore reads the requested checkout and its history even when
 Mokly starts inside a Git hook. `GIT_CONFIG_*` variables stay inherited.
 This preserves CI overrides such as `safe.directory`. Other environment
 values stay inherited. Checkout conversion uses a private index and work tree
-for the pinned commit, then removes both after the read.
+for the pinned commit, then removes both after the read. An inherited attribute
+source cannot replace the pinned commit's attributes.
 
 ## Batches And Cancellation
 

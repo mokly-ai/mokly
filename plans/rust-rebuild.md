@@ -3100,6 +3100,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Git base-read check evidence: `.context/git-base-reads/verification.md`.
     Earlier remote attempts used the wrong workflow ref and Node 22.14.0.
     These attempts are failed checks, not evidence of unrelated product defects.
+  - [x] Pin checkout attribute selection despite an inherited `GIT_ATTR_SOURCE`.
+        Keep the base commit's attribute rule for byte reads and extraction.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
