@@ -4,7 +4,7 @@ use std::cell::RefCell;
 
 use html5ever::{QualName, local_name, ns};
 
-use crate::source_locations::Locations;
+use crate::source_locations::WrapperLocations;
 use crate::tree::Node;
 
 #[derive(Clone)]
@@ -23,7 +23,7 @@ pub(crate) struct Entry {
 
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
-    pub(crate) locations: RefCell<Locations>,
+    pub(crate) locations: RefCell<WrapperLocations>,
 }
 
 impl Default for Arena {
@@ -57,7 +57,7 @@ impl Handle {
 }
 
 impl Arena {
-    pub(crate) fn with_locations(locations: Locations) -> Self {
+    pub(crate) fn with_locations(locations: WrapperLocations) -> Self {
         Self {
             locations: RefCell::new(locations),
             ..Self::default()

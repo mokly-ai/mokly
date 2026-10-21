@@ -6,6 +6,15 @@ describes the complete gate and focused commands.
 Public test commands and strict evidence rules live in the
 [verification contract](../../docs/protocol/ci-verification.md).
 
+## Workflow syntax
+
+Run `actionlint` without arguments from the repository root to check every
+GitHub Actions workflow. It automatically reads
+[`.github/actionlint.yaml`](../../.github/actionlint.yaml), which lists the
+exact Blacksmith runner labels used by the workflows. Keep this list aligned
+with the workflow runners. Use no runner-label ignore pattern or alternate
+configuration file. This is a separate manual check.
+
 ## Rust advisory audit
 
 Run `npm run dependencies:check:rust`. It needs Node, Cargo, and the installed
@@ -68,17 +77,18 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They combine per-test observations
-from hosted run `39455750846` at `b1f3c86f` and remote runs
-`20261020T191118Z-972099` at `300c4dae` and `20261020T194406Z-997895` at
-`ec47233e`. All three browser report sets passed. The first remote complete
-gate failed its repository audit on a new advisory. The second gate passed.
+inputs in estimated milliseconds per test. They use the median per-test cost
+from hosted runs `39581933162`, `39586827857`, and `39592076732`, all on
+`cdb32803`. Each run kept the same four-shard assignment and all browser
+reports passed. Earlier remote observations remain in the plan and its
+evidence; they do not replace these hosted measurements.
 
 For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Average the available per-test sample costs for each
-file and round to three decimal places. A file absent from an older sample
-uses the available samples. Refresh from complete, successful browser report
-sets and retain the source reports and calculations under `.context/`.
+its observed test count. Take the median of the available per-test sample
+costs for each file and round to three decimal places. A file absent from an
+older sample uses the available samples. Refresh from complete, successful
+browser report sets and retain the source reports and calculations under
+`.context/`.
 Report fixture and whole-job durations separately to check the actual balance.
 
 The scheduler multiplies each weight by the current discovered test count.

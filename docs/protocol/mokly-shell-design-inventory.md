@@ -94,7 +94,7 @@ its feature contract.
 | `design/browse/loading/catalogue-loading`                     | Browse shell › Loading and recovery                                  | One status line until the catalogue index arrives             |
 | `design/browse/loading/catalogue-failed`                      | Browse shell › Loading and recovery                                  | Catalogue index unavailable, with Try again                   |
 | `design/browse/loading/viewer-version`                        | Browse shell › Loading and recovery                                  | Catalogue from another Mokly version, with Reload             |
-| `design/browse/loading/preview-loading`                       | Browse shell › Loading and recovery                                  | Stage while the selected entry's detail loads                 |
+| `design/browse/loading/preview-loading`                       | Browse shell › Loading and recovery                                  | Stage while the detail loads or the catalogue is replaced     |
 
 The six entries marked as variants are variants of `design/browse/views/screen` and
 stay under that entry in authored order rather than becoming folder members.

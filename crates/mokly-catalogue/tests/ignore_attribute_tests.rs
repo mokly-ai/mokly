@@ -116,3 +116,84 @@ fn ignore_attributes_warn_once_per_shared_screen_component_and_page_body() {
         );
     }
 }
+
+#[test]
+fn saved_variant_slots_warn_for_unknown_ignore_attributes() {
+    let root = tempfile::tempdir().unwrap();
+    support::write(root.path(), "mokly.config.json", "{}");
+    support::write(
+        root.path(),
+        "specs/button.component.html",
+        "---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\nvariants:\n  - slug: warning\n    title: Warning\n    props: {}\n    slots:\n      children: >-\n        <mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope>\n---\n<slot></slot>",
+    );
+    let prepared = support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+    let warnings: Vec<_> = prepared
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == "html-ignore-attribute")
+        .collect();
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(
+        warnings[0].message,
+        "unknown attribute typo on <mokly-ignore-scope> is ignored"
+    );
+}
+
+#[test]
+fn reserved_navigation_warning_names_rejection_instead_of_ignoring() {
+    let root = tempfile::tempdir().unwrap();
+    support::write(root.path(), "mokly.config.json", "{}");
+    support::write(
+        root.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<mokly-ignore-scope enabled='true' data-mokly-link='forged'>Home</mokly-ignore-scope>",
+    );
+    let prepared = support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+    assert_eq!(
+        prepared.warnings[0].message,
+        "reserved navigation metadata data-mokly-link on <mokly-ignore-scope> is rejected"
+    );
+}
+
+#[test]
+fn saved_variant_slots_do_not_create_component_cycles() {
+    let root = tempfile::tempdir().unwrap();
+    support::write(root.path(), "mokly.config.json", "{}");
+    support::write(
+        root.path(),
+        "specs/tree.component.html",
+        "---
+title: Tree
+element: tree-item
+propSchema: {type: object, additionalProperties: false, properties: {}}
+slots: [children]
+variants:
+  - slug: self
+    title: Self
+    props: {}
+    slots:
+      children: '<tree-item></tree-item>'
+---
+<slot></slot>",
+    );
+    support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+}
+
+#[test]
+fn saved_variant_slots_keep_element_failures_deferred() {
+    for body in [
+        "<unknown-widget></unknown-widget>",
+        "<script>ignored</script>",
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        support::write(root.path(), "mokly.config.json", "{}");
+        support::write(
+            root.path(),
+            "specs/tree.component.html",
+            &format!(
+                "---\ntitle: Tree\nelement: tree-item\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {{}}\n    slots:\n      children: {body:?}\n---\n<slot></slot>"
+            ),
+        );
+        support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+    }
+}

@@ -86,8 +86,12 @@ It checks catalog and package-extension ranges like manifest specifications,
 and it requires the `npm:` default protocol.
 Classic reads its project and user configuration. Command-line flags and
 environment settings fix its folders, mirror, and lock file inside the private
-entry, and a confined committed mirror stays in use. Each fixed environment
-setting replaces every inherited spelling of its name.
+entry, and a confined committed mirror stays in use. Each install starts from
+an allowed list of environment variables — paths, proxies, certificates,
+process-start names, and the names that Mokly fixes — and Mokly removes every
+other inherited variable, so no base configuration can read an inherited
+secret such as `MOKLY_TOKEN` or `GITHUB_TOKEN`. Yarn Berry also reads no
+project environment file.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
@@ -110,7 +114,9 @@ the caller proves base usage. Static output and Serve share this policy.
 Affected Usage links resolve each evidence entry from its own side. They keep
 current variants through accepted moves and retain selected historical variants.
 Canonical impact groups stay at the consumer level. A different entry kind
-at an old path supplies no destination.
+at an old path supplies no destination. Each link's destination is the entry
+whose views its evidence names, and that entry's own detail names the changed
+component and can compare, so a variant does not borrow its parent's.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states and measure changed-path collection,
@@ -254,6 +260,7 @@ so process startup speed cannot exhaust its readiness wait.
   between rendering and the scripts-on runtime probe.
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
+  [the install environment allowlist](./src/manager_environment.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
   [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and

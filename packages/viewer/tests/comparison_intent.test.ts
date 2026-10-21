@@ -124,8 +124,9 @@ test("eligibility is known once the classification and the detail settle", () =>
       comparisonEligibilityKnown(status, { status: "ready" }),
       false,
     );
-  assert.equal(
-    comparisonEligibilityKnown("ready", { status: "loading" }),
-    false,
-  );
+  for (const delivery of [
+    { status: "loading" as const },
+    { status: "replaced" as const },
+  ])
+    assert.equal(comparisonEligibilityKnown("ready", delivery), false);
 });

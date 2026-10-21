@@ -55,7 +55,6 @@ export function standaloneDataSource(win: StandaloneWindow): ShellDataSource {
     deploymentChanged() {
       win.location.reload();
     },
-    reloadsOnDeployment: true,
     live: standaloneLiveSource(win),
   };
 }

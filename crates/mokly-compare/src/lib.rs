@@ -29,6 +29,7 @@ mod local_specifications;
 mod manager;
 mod manager_classic;
 mod manager_command;
+mod manager_environment;
 mod manager_local;
 mod manager_lockfiles;
 mod manager_plan;
@@ -169,6 +170,10 @@ mod workspace_patterns_tests;
 #[cfg(test)]
 #[path = "_tests_/berry_sources_tests.rs"]
 mod berry_sources_tests;
+
+#[cfg(test)]
+#[path = "_tests_/classic_manifest_paths_tests.rs"]
+mod classic_manifest_paths_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]

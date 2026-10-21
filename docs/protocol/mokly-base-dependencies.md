@@ -71,9 +71,10 @@ workspace paths, bare relative and absolute paths, home paths and local
 `.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from the
 declaring manifest. A workspace pattern falls back when any of its brace
 expansions leaves the repository, with `**` counted as zero folders. Yarn
-Classic resolves bare local paths from its lockfile folder, so every
-specification in a Classic project normalizes from that folder. A nested
-`file:../x` that leaves that folder therefore falls back.
+Classic rewrites `file:` and `link:` dependency values from their manifest
+folder, so those normalize from the declaring manifest. Classic resolves every
+other local value from its lockfile folder, so those normalize from that
+folder.
 
 Normalize each lockfile value from the folder that its manager reads it from:
 pnpm importer specifiers and `link:` versions from their importer, other pnpm
@@ -113,8 +114,9 @@ Copy the base sources into the private dependency entry. Install without a
 shell. Lifecycle scripts do not run by default, including workspace scripts and
 scripts that dependency metadata would otherwise enable. The working-tree
 `review.baseInstallScripts` setting or its command-line override enables them
-for one invocation. Installs do not read or change the working installation or
-a shared package store.
+for one invocation. Enabled scripts run as children of the manager and receive
+the same allowed environment as the manager. Installs do not read or change the
+working installation or a shared package store.
 
 Every manager may download packages from the registry that the base and user
 configuration select, as npm does. Installs use registry access rather than
@@ -129,14 +131,33 @@ tier three.
 Each manager reads the base project configuration and the user configuration,
 with its credentials, as npm reads `.npmrc`: pnpm reads `.npmrc` and
 `pnpm-workspace.yaml`, Yarn Classic reads `.yarnrc` and `.npmrc`, and Yarn
-Berry reads `.yarnrc.yml`. Inherited environment settings also apply. Each
-setting that Mokly fixes replaces every inherited spelling of its variable, in
-any case and with a dash or an underscore. Yarn Classic needs rules that npm
-does not have, because its configuration files can move folders that it
-creates: Mokly fixes its working folder, cache, global, link, modules, and
-offline cache folders, its offline mirror, and its lock file inside the
-private entry. A confined committed offline mirror stays in use. The Classic
-self-update check stays off.
+Berry reads `.yarnrc.yml`. Each install starts from an allowed list of
+environment variables, not the inherited environment, so no base configuration
+can read an inherited secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or
+`NPM_TOKEN`. The allowed list holds no secret:
+
+- `PATH` and `HOME`.
+- The proxy variables `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, and `ALL_PROXY`,
+  in upper and lower case.
+- The certificate variables `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, and
+  `SSL_CERT_DIR`.
+- The variables that a process needs to start. Unix uses `TMPDIR`, `LANG`,
+  `LC_ALL`, every `LC_*`, `TZ`, `USER`, and `LOGNAME`. Windows uses
+  `SystemRoot`, `windir`, `ComSpec`, `PATHEXT`, `TEMP`, `TMP`, `USERPROFILE`,
+  `APPDATA`, `LOCALAPPDATA`, `HOMEDRIVE`, `HOMEPATH`, `NUMBER_OF_PROCESSORS`,
+  and `PROCESSOR_ARCHITECTURE`.
+- The names that Mokly fixes, with the values that Mokly sets.
+
+Mokly removes every other inherited variable. Windows matches a variable name
+without case. A private registry whose token comes only from the environment,
+for example `NODE_AUTH_TOKEN` or a user `.npmrc` that reads `${NPM_TOKEN}`, no
+longer authenticates in a base install, so that base uses the fallback tier
+with the install-failed reason. Yarn Classic needs rules that npm does not
+have, because its configuration files can move folders that it creates: Mokly
+fixes its working folder, cache, global, link, modules, and offline cache
+folders, its offline mirror, and its lock file inside the private entry. A
+confined committed offline mirror stays in use. The Classic self-update check
+stays off.
 
 | Manager            | Locked install policy                                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -150,8 +171,11 @@ stay inside the private entry. Remove temporary download caches before byte
 counting and durability synchronization. Installed pnpm links continue to
 resolve inside their private `node_modules` store. Yarn node modules use the
 same selected-directory mapping as npm. Yarn path redirection is disabled.
-Berry configurations with executable plugins, per-host network overrides, or
-a `defaultProtocol` other than `npm:` use the fallback tier. A Yarn `exec:`
+Yarn Berry reads no project environment file: Mokly replaces Berry's
+environment-file list with one optional path above the private entry, so an
+`injectEnvironmentFiles` setting in a base `.yarnrc.yml` reads nothing and
+sends nothing. Berry configurations with executable plugins, per-host network
+overrides, or a `defaultProtocol` other than `npm:` use the fallback tier. A Yarn `exec:`
 source uses the fallback tier wherever it appears, also inside a patch
 source, a catalog, or a package extension, because Berry runs its generator
 during resolution. Berry `catalog`, `catalogs`, and `packageExtensions`

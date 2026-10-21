@@ -2,11 +2,13 @@
 //!
 //! Installs may download from the registry that the base and user
 //! configuration select, as npm does. Mokly still pins every cache, store,
-//! mirror, and state folder inside the private entry, keeps scripts, hooks,
-//! Git transports, and Corepack downloads off, and gives every variable it
-//! sets precedence over each inherited spelling of the same name.
+//! mirror, and state folder inside the private entry, keeps lifecycle scripts
+//! off unless the working tree or the command line opts in, keeps hooks, Git
+//! transports, and Corepack downloads off, and starts each install from an
+//! allowed list of variables, so no base configuration or lifecycle script
+//! can read an inherited secret.
 
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::path::Path;
 
 use crate::commands::Command;
@@ -170,6 +172,10 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         let cache = request.cache.clone();
         variables.extend([
             (
+                "YARN_INJECT_ENVIRONMENT_FILES",
+                no_environment_files(request),
+            ),
+            (
                 "YARN_CACHE_FOLDER",
                 cache
                     .unwrap_or_else(|| directory.join(".yarn/cache"))
@@ -200,24 +206,27 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         ]);
     } else if request.args == ["--version"] {
         variables.extend(fixed(&[("YARN_RC_FILENAME", ".mokly-unused-yarnrc.yml")]));
+        variables.push((
+            "YARN_INJECT_ENVIRONMENT_FILES",
+            no_environment_files(request),
+        ));
     }
     variables
 }
 
-/// Inherited variables that the install never receives.
-pub(crate) fn removed(request: &Command) -> &'static [&'static str] {
-    if request.program == "yarn" {
-        &["MOKLY_TOKEN", "YARN_PLUGINS", "YARN_ENABLE_SCRIPTS"]
-    } else {
-        &["MOKLY_TOKEN", "npm_config_ignore_scripts"]
-    }
-}
-
-/// Whether an inherited name spells `name`. Managers read variable names
-/// without case, and Yarn reads a dash as an underscore.
-pub(crate) fn same(inherited: &OsStr, name: &str) -> bool {
-    let spelling = |value: &str| value.to_ascii_lowercase().replace('-', "_");
-    spelling(&inherited.to_string_lossy()) == spelling(name)
+/// The single optional environment-file path that replaces Yarn Berry's own
+/// list, so no base environment file is injected. The path sits above the
+/// private entry, where a base cannot commit a file, and the trailing `?`
+/// marks it optional, so Berry injects nothing.
+fn no_environment_files(request: &Command) -> OsString {
+    let anchor = request
+        .size_root
+        .as_deref()
+        .and_then(Path::parent)
+        .unwrap_or(&request.directory);
+    let mut value = anchor.join(".mokly-no-environment-file").into_os_string();
+    value.push("?");
+    value
 }
 
 fn fixed(values: &[(&'static str, &str)]) -> Vec<(&'static str, OsString)> {

@@ -106,7 +106,6 @@ test("another deployment reloads the requested page", () => {
   const source = standaloneDataSource(fake.win);
   source.deploymentChanged();
   assert.equal(fake.reloads(), 1);
-  assert.equal(source.reloadsOnDeployment, true);
 });
 
 test("the descriptor is read from the live route of the same origin", async () => {

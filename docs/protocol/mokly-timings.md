@@ -131,11 +131,14 @@ Markdown documents, imported CSS, and images, with configurable sizes. A small
 instance of the generator runs in automated tests; a full-sized instance is
 smoke-tested with the opt-in benchmark. It is a repeatable workload for
 locating scaling costs, not a claim of identical production data or timings.
+Shared stylesheets have a configurable count and per-area screen share. The
+defaults are four sheets and a share of 0.5, rounded up to whole screens.
 
 The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
 stylesheet, so classification exercises real rule evidence and attribution
-excludes the unrelated rule from every linked screen; the benchmark expects
+excludes the unrelated rule from every linked screen. With `--stylesheets 0` the
+fixture has no shared stylesheet, so setup adds no rule. The benchmark expects
 zero Changes, including use cases. `--toolchain install` archives the CLI,
 viewer, native package, and consumer lockfile, then installs head dependencies.
 `--toolchain workspace` reuses the workspace dependencies and saves their
@@ -160,6 +163,8 @@ A focused `startup` selection measures the same cold/warm usable startup and
 checks previews, axes, live props, cached bytes, and pages with the real base.
 It finishes without waiting for Changes or review availability and reports
 neither value. `all` retains the four complete scenarios above.
+A scenario that waits for Changes fails when Changes is unavailable.
+Unavailable Changes never counts as zero Changes.
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
@@ -180,8 +185,12 @@ sets `MOKLY_SIDECAR_TIMEOUT_MS` for the child. Each report records this option,
 the inherited timeout variable, exact `NODE_OPTIONS`, Node heap limit,
 `GOMAXPROCS`, and `GOMEMLIMIT`. Overrides affect measurements and must accompany
 any comparison. Build and listening waits have 300-second liveness deadlines.
-Browser operations allow 60 seconds. A deadline fails the run and preserves
-its diagnostic. Shutdown sends SIGTERM, then SIGKILL after 10 seconds if needed.
+Browser operations allow 60 seconds. The full-size watch scenario uses a
+30-minute browser liveness allowance for initial rendering, delivered Changes,
+review fetches, and source restoration. This allowance is a harness liveness
+guard, not an edit-to-reload budget or a product timeout. A deadline fails the
+run and preserves its diagnostic. Shutdown sends SIGTERM, then SIGKILL after
+10 seconds if needed.
 
 Fixtures and logs belong in ignored directories. The CLI checks `git check-ignore`
 and warns when the chosen root is not confirmed ignored. It rejects options
@@ -210,8 +219,10 @@ CI's small correctness fixtures have
 Startup acceptance uses an optimized release native binary. The harness
 verifies that binary before timing and identifies its profile and digest in
 the results. Build preparation is outside the startup measurement.
-The React budget retains complete-catalogue readiness. Compilation redesign
-is deferred rather than changing readiness to partial navigation.
+Decision: React startup keeps complete-catalogue readiness under its own
+budget. Usable navigation before every entry is ready was not chosen because
+it changes the readiness and validation order and needs pending entries and
+delayed errors.
 
 Isolated setup includes catalogue generation, package archives, dependency
 installation, and Git setup. The product build is a prerequisite outside this
