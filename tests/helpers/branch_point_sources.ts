@@ -98,4 +98,6 @@ export const branchPointPaths = {
   impactPrevious: "branch/impact/slip",
   /** In Changes for its desktop view; its mobile view stays unchanged. */
   impactLedger: "branch/impact/ledger",
+  /** Added consumer with no base side. */
+  impactAdded: "branch/impact/new",
 } as const;

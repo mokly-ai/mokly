@@ -125,10 +125,11 @@ export async function movedConsumers(
 
 /** Tally's Affected links in list order, each with its stage noun and row. */
 const TALLY_AFFECTED = [
-  ["Meter", paths.impactParent, "variant", false],
-  ["default", paths.impactVariant, "variant", false],
-  ["Slip", paths.impactMoved, "screen", true],
-  ["Ledger", paths.impactLedger, "screen", true],
+  ["Meter", paths.impactParent, "variant", false, "Unmodified", "side"],
+  ["default", paths.impactVariant, "variant", false, "Unmodified", "side"],
+  ["Slip", paths.impactMoved, "screen", true, "Unmodified", "side"],
+  ["Ledger", paths.impactLedger, "screen", true, "Unmodified", "side"],
+  ["New consumer", paths.impactAdded, "screen", true, "Added", null],
 ] as const;
 
 /**
@@ -139,8 +140,13 @@ async function follow(
   page: Page,
   host: BranchPointHost,
   link: Locator,
+  comparison: string | null,
 ): Promise<void> {
-  if (host.comparisons === "on demand" && host.affectedLinks === "side by side")
+  if (
+    comparison !== null &&
+    host.comparisons === "on demand" &&
+    host.affectedLinks === "side by side"
+  )
     await awaitSelectedComparison(page, () => link.click());
   else await link.click();
 }
@@ -155,11 +161,13 @@ async function expectAffectedBand(
   host: BranchPointHost,
   viewport: string,
   noun: "screen" | "variant",
+  status: "Added" | "Unmodified",
+  offered: boolean,
 ): Promise<void> {
-  await expect(page.locator("[data-workspace-status]")).toHaveText(
-    "Unmodified",
-  );
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+  await expect(page.locator("[data-workspace-status]")).toHaveText(status);
+  if (offered) await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+  else await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  if (!offered) return;
   const mode = host.affectedLinks === "current" ? "current" : "side";
   await expect(page.locator(`[data-diff-mode=${mode}]`)).toHaveAttribute(
     "aria-pressed",
@@ -184,13 +192,27 @@ export async function affectedDestinations(
   expect(
     facts.map(({ text, path, comparison }) => [text, path, comparison]),
   ).toEqual(
-    TALLY_AFFECTED.map(([text, path]) => [text, `/view/${path}/`, "side"]),
+    TALLY_AFFECTED.map(([text, path, , , , comparison]) => [
+      text,
+      `/view/${path}/`,
+      comparison,
+    ]),
   );
-  for (const [index, [, path, noun, listed]] of TALLY_AFFECTED.entries()) {
+  for (const [
+    index,
+    [, path, noun, listed, status, comparison],
+  ] of TALLY_AFFECTED.entries()) {
     if (index > 0) await open();
-    await follow(page, host, affected.nth(index));
+    await follow(page, host, affected.nth(index), comparison);
     await expectRouted(page, host, path);
-    await expectAffectedBand(page, host, facts[index]!.viewport!, noun);
+    await expectAffectedBand(
+      page,
+      host,
+      facts[index]!.viewport!,
+      noun,
+      status,
+      comparison !== null,
+    );
     const row = (await openChanges(page)).locator(
       `a[data-nav-row][data-entry-id="${path}"]`,
     );
