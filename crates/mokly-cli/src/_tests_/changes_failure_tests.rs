@@ -74,6 +74,22 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
 }
 
 #[test]
+fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
+    let error = Error::BaseInstallScripts {
+        source: Box::new(Error::Graph {
+            source: mokly_graph::error::GraphError::Invalid {
+                route: "base/index.html".into(),
+                message: "render failed".into(),
+                code: mokly_html::diagnostic_code::Code::BuildInvalid,
+            },
+        }),
+    };
+    let message = changes_diagnostics::failure_detail(&error);
+    assert!(message.contains("review.baseInstallScripts"));
+    assert!(message.contains("--base-install-scripts"));
+}
+
+#[test]
 fn an_invalid_internal_review_is_a_fatal_build_error() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {

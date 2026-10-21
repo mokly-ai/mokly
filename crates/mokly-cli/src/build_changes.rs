@@ -78,6 +78,7 @@ impl CatalogueBuild {
 
 fn changed_input(error: &Error) -> Option<&Path> {
     match error {
+        Error::BaseInstallScripts { source } => changed_input(source),
         Error::Base { source, .. } => changed_input(source),
         Error::SourceFailure { source } => changed_input(source),
         Error::Graph {

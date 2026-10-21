@@ -11,6 +11,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
 use mokly_compare::base_render::{BaseProvider, BaseRequest};
+use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_render::runtime::Runtime;
@@ -68,6 +69,9 @@ impl BaseProvider for NativeBase {
         } else {
             None
         };
+        let scripts_hint = base.as_ref().is_some_and(|base| {
+            base.dependencies.tier == Tier::Installed && !request.install_scripts
+        });
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
@@ -87,7 +91,16 @@ impl BaseProvider for NativeBase {
         };
         let catalogue = match builder.prepare(&config, None) {
             Ok(catalogue) => catalogue,
-            Err(source) => return Err(Error::Catalogue { source }),
+            Err(source) => {
+                let error = Error::Catalogue { source };
+                return Err(if scripts_hint {
+                    Error::BaseInstallScripts {
+                        source: Box::new(error),
+                    }
+                } else {
+                    error
+                });
+            }
         };
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
@@ -95,11 +108,29 @@ impl BaseProvider for NativeBase {
         let factory: &dyn GraphFactory = runtime.as_ref();
         let graph = match factory.create(&config) {
             Ok(graph) => graph,
-            Err(source) => return Err(Error::Graph { source }),
+            Err(source) => {
+                let error = Error::Graph { source };
+                return Err(if scripts_hint {
+                    Error::BaseInstallScripts {
+                        source: Box::new(error),
+                    }
+                } else {
+                    error
+                });
+            }
         };
         match graph.prepare(config, catalogue, None) {
             Ok(generation) => Ok(generation),
-            Err(source) => Err(Error::Graph { source }),
+            Err(source) => {
+                let error = Error::Graph { source };
+                Err(if scripts_hint {
+                    Error::BaseInstallScripts {
+                        source: Box::new(error),
+                    }
+                } else {
+                    error
+                })
+            }
         }
     }
 }

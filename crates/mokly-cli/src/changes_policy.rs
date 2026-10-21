@@ -13,6 +13,7 @@ const VALIDATION: &str = "base validation failed";
 
 pub(crate) fn unavailable(error: &Error) -> Option<&'static str> {
     match error {
+        Error::BaseInstallScripts { source } => unavailable(source),
         Error::Catalogue { source } => match source {
             CatalogueError::Runtime { source } => runtime(source.code),
             CatalogueError::Internal(_) => None,

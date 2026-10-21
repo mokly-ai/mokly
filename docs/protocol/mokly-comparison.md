@@ -157,7 +157,7 @@ Third-party dependencies follow three tiers:
    bundle resolves third-party dependencies from the working tree's `node_modules`
    through the module resolution settings.
 2. They differ: the base's dependencies are installed, with lifecycle scripts
-   disabled and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
+   disabled by default and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
    the package manager and its version, manager configuration, selected install roots, and the immutable source
    identity when local packages or workspaces participate, and the bundle resolves
    third-party dependencies from there.
@@ -169,8 +169,8 @@ Third-party dependencies follow three tiers:
    gives the fallback reason.
 
 Base dependency installation supports npm, pnpm 10 through 12, Yarn Classic 1, and Yarn
-Berry 4 with `nodeLinker: node-modules`. pnpm and Yarn install offline with
-lifecycle scripts disabled. Missing managers, unsupported versions, Bun,
+Berry 4 with `nodeLinker: node-modules`. Lifecycle scripts stay disabled unless
+`review.baseInstallScripts` or its command-line override enables them. Missing managers, unsupported versions, Bun,
 and Yarn Plug'n'Play use tier three with the `base-dependencies` warning.
 Plug'n'Play has its own fallback reason because the sidecar lacks its resolver. Equal dependency identities still use tier one without an install or
 an unsupported-manager warning. Repository-owned workspace sources retain

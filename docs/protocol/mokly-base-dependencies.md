@@ -108,9 +108,11 @@ tsconfig paths use base files. Working tsconfig paths cannot remap base package 
 An unmappable lookup selects tier three with a `base-dependencies` warning. Each fallback emits its typed trace reason.
 
 Copy the base sources into the private dependency entry. Install without a
-shell. Lifecycle scripts do not run, including workspace scripts and scripts
-that dependency metadata would otherwise enable. Installs do not read or
-change the working installation or a shared package store.
+shell. Lifecycle scripts do not run by default, including workspace scripts and
+scripts that dependency metadata would otherwise enable. The working-tree
+`review.baseInstallScripts` setting or its command-line override enables them
+for one invocation. Installs do not read or change the working installation or
+a shared package store.
 
 Every manager may download packages from the registry that the base and user
 configuration select, as npm does. Installs use registry access rather than
@@ -136,10 +138,10 @@ self-update check stays off.
 
 | Manager            | Locked install policy                                                                      |
 | ------------------ | ------------------------------------------------------------------------------------------ |
-| npm                | `ci --ignore-scripts --no-audit --no-fund`                                                 |
-| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts`; disable pnpmfile hooks and manager switching |
-| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive`; fix its folders and mirror |
-| Yarn Berry 4       | `install --immutable --mode=skip-build`; disable scripts, telemetry, and shared mirrors    |
+| npm                | `ci --ignore-scripts --no-audit --no-fund` by default; omit `--ignore-scripts` when enabled |
+| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts` by default; omit it when enabled; disable pnpmfile hooks and manager switching |
+| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive` by default; omit it when enabled; fix its folders and mirror |
+| Yarn Berry 4       | `install --immutable --mode=skip-build` by default; omit `--mode=skip-build` when enabled; disable telemetry and shared mirrors |
 
 All install caches, logs, stores, module directories, and installation state
 stay inside the private entry. Remove temporary download caches before byte
