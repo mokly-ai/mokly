@@ -42,6 +42,7 @@ impl Worker for ProcessWorker {
     fn request(&mut self, request: &Request, deadline_ms: u64) -> Result<MethodResult> {
         self.deadline(deadline_ms);
         if matches!(&request.call, Call::ProcessCss(_)) {
+            self.phases.reset_stylesheet();
             self.discover_memory.store(true, Ordering::Relaxed);
         }
         let result = self.client.request(request);

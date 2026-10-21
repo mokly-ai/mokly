@@ -31,6 +31,13 @@ struct Record {
 }
 
 impl PhaseState {
+    pub(super) fn reset_stylesheet(&self) {
+        self.0
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .records[3] = None;
+    }
+
     pub(super) fn record(&self, line: &str) -> bool {
         let Some(payload) = line.strip_prefix(PREFIX) else {
             return false;
