@@ -40,6 +40,12 @@ pub struct Common {
     /// Comparison base ref; overrides review.base (default origin/main).
     #[arg(long, value_parser = nonempty, allow_hyphen_values = false)]
     pub base: Option<String>,
+    /// Run lifecycle scripts during base dependency installation.
+    #[arg(long, conflicts_with = "no_base_install_scripts")]
+    pub base_install_scripts: bool,
+    /// Keep lifecycle scripts disabled during base dependency installation.
+    #[arg(long)]
+    pub no_base_install_scripts: bool,
     /// Sidecar count; defaults to MOKLY_SIDECARS or the core count.
     #[arg(long, value_parser = positive)]
     pub sidecars: Option<usize>,
@@ -162,6 +168,19 @@ impl Cli {
             Some(Verb::Build(command)) => &mut command.common,
             Some(Verb::Publish(command)) => &mut command.common,
             None => &mut self.common,
+        }
+    }
+}
+
+impl Common {
+    /// Return the one-run base install script override, when supplied.
+    pub fn base_install_scripts_override(&self) -> Option<bool> {
+        if self.base_install_scripts {
+            Some(true)
+        } else if self.no_base_install_scripts {
+            Some(false)
+        } else {
+            None
         }
     }
 }

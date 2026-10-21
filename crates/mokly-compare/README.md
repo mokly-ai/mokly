@@ -21,7 +21,8 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 - Store source and dependency caches outside the repository.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
-- Install base dependencies with scripts disabled, a deadline, and a size bound.
+- Install base dependencies with scripts disabled by default, a deadline, and a
+  size bound. The working-tree configuration or CLI can opt into scripts.
 - Return bundle settings and a configuration warning when an install fails.
 
 ## What This Crate Does

@@ -58,6 +58,12 @@ pub enum Error {
         /// Typed validation or preparation failure.
         source: Box<Error>,
     },
+    /// Base rendering failed after a scripts-off tier-two install.
+    #[error("{source}")]
+    BaseInstallScripts {
+        /// Original base preparation failure.
+        source: Box<Error>,
+    },
     /// Catalogue configuration or historical sources failed current validation.
     #[error("[mokly-compare/catalogue] {source}")]
     Catalogue {

@@ -33,6 +33,9 @@ Options:
   -v, --version              Show the installed package version
       --config <CONFIG>      Configuration JSON path; otherwise search upward
       --base <BASE>          Comparison base ref; overrides review.base (default origin/main)
+      --base-install-scripts Run lifecycle scripts during base dependency installation
+      --no-base-install-scripts
+                             Keep lifecycle scripts disabled during base dependency installation
       --sidecars <SIDECARS>  Sidecar count; defaults to MOKLY_SIDECARS or the core count
       --debug-timings        Write timing JSON to stderr and select plain output
       --port <PORT>          Starting port, 0 through 65535 (default 4173)
@@ -55,6 +58,9 @@ Options:
       --config <CONFIG>      Configuration JSON path; otherwise search upward
   -v, --version              Show the installed package version
       --base <BASE>          Comparison base ref; overrides review.base (default origin/main)
+      --base-install-scripts Run lifecycle scripts during base dependency installation
+      --no-base-install-scripts
+                             Keep lifecycle scripts disabled during base dependency installation
       --sidecars <SIDECARS>  Sidecar count; defaults to MOKLY_SIDECARS or the core count
       --debug-timings        Write timing JSON to stderr and select plain output
       --port <PORT>          Starting port, 0 through 65535 (default 4173)
@@ -75,6 +81,9 @@ Options:
       --config <CONFIG>      Configuration JSON path; otherwise search upward
   -v, --version              Show the installed package version
       --base <BASE>          Comparison base ref; overrides review.base (default origin/main)
+      --base-install-scripts Run lifecycle scripts during base dependency installation
+      --no-base-install-scripts
+                             Keep lifecycle scripts disabled during base dependency installation
       --sidecars <SIDECARS>  Sidecar count; defaults to MOKLY_SIDECARS or the core count
       --debug-timings        Write timing JSON to stderr and select plain output
       --out <OUT>            Static output directory (default mokly-static/)
@@ -97,6 +106,10 @@ Options:
           Show the installed package version
       --base <BASE>
           Comparison base ref; overrides review.base (default origin/main)
+      --base-install-scripts
+          Run lifecycle scripts during base dependency installation
+      --no-base-install-scripts
+          Keep lifecycle scripts disabled during base dependency installation
       --sidecars <SIDECARS>
           Sidecar count; defaults to MOKLY_SIDECARS or the core count
       --debug-timings

@@ -131,8 +131,9 @@ more than re-deriving the behaviour from the requirements.
     widened 2026-10-13): an identical lockfile uses the working tree's
     dependencies; a different lockfile installs the base's dependencies into
     a bounded content-addressed cache with lifecycle scripts disabled under a
-    time limit; an impossible install uses the working tree's dependencies
-    with a warning.
+    time limit by default; user decision 135 B adds a working-tree and CLI
+    opt-in; an impossible install uses the working tree's dependencies with a
+    warning.
 13. Markers (2026-10-12): the core attaches ownership and ignore regions to
     tree nodes; comment markers exist only in the fragments a sidecar
     returns; ignore scopes resolve at render time; the `mokly-` prefix is
@@ -3698,6 +3699,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     needs no TODO.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
+  - [x] User decision 135 (2026-10-21): B. Resolve user item 135. Keep base
+        lifecycle scripts disabled by default and adds `review.baseInstallScripts`
+        plus `--base-install-scripts` and `--no-base-install-scripts` overrides.
+        The setting comes from the working tree only. Scripts-on cache keys add
+        Node version and platform, `MOKLY_TOKEN` stays out of installs, and the
+        existing process-tree owner stops script children. Evidence is recorded
+        under `.context/base-install-scripts/`.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The

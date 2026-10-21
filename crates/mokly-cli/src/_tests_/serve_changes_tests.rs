@@ -93,6 +93,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
             style,
             redactor,
             base: None,
+            install_scripts: None,
         },
     };
     let mut dependency = warning("Uses current dependencies.");

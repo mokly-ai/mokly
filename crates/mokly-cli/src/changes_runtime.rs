@@ -33,6 +33,10 @@ use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
 use crate::changes_static::StaticBase;
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the composition root passes independent runtime seams"
+)]
 pub(super) fn service(
     runtime: Arc<Runtime>,
     inputs: Arc<dyn InputTree>,
@@ -41,6 +45,7 @@ pub(super) fn service(
     style: Style,
     redactor: Arc<Redactor>,
     phases: Arc<dyn Phases>,
+    install_scripts: Option<bool>,
 ) -> Arc<dyn ChangesService> {
     let token: Arc<dyn control::Cancellation> = Arc::new(GitCancellation {
         command: cancellation.clone(),
@@ -79,7 +84,11 @@ pub(super) fn service(
             css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
         }),
     });
-    Arc::new(PhasedChanges { changes, phases })
+    Arc::new(PhasedChanges {
+        changes,
+        phases,
+        install_scripts,
+    })
 }
 
 pub(super) fn pin(
@@ -123,6 +132,7 @@ fn repositories(token: Arc<dyn control::Cancellation>) -> Arc<dyn Repositories> 
 struct PhasedChanges {
     changes: Arc<dyn ChangesService>,
     phases: Arc<dyn Phases>,
+    install_scripts: Option<bool>,
 }
 impl ChangesService for PhasedChanges {
     fn classify(
@@ -130,10 +140,12 @@ impl ChangesService for PhasedChanges {
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
+        _: Option<bool>,
     ) -> Result<ComparisonResult> {
         self.phases
             .start(Phase::Comparing(selected_base(config, base).into()));
-        self.changes.classify(config, base, head)
+        self.changes
+            .classify(config, base, head, self.install_scripts)
     }
 }
 

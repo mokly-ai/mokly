@@ -97,7 +97,8 @@ include the numeric dependency tier, final comparison view counts, and
 changed-path collection. A failed phase keeps error status.
 Capture spans separate validation, composition, encoding, and closure work.
 
-Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
+Common options are `--config`, `--base`, `--base-install-scripts`,
+`--no-base-install-scripts`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a
 lazy sidecar pool with the normalized `--sidecars` or environment count.
 The npm shim supplies its package root and Node executable. Direct binary
