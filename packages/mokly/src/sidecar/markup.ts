@@ -7,6 +7,7 @@ import type { MarkerDraft } from "../generated/sidecar/MarkerDraft.js";
 
 import { uniqueMarkerIds } from "./marker-ids.js";
 import { markerRecords } from "./markup-records.js";
+import type { InlineAttribution } from "./style-ownership.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 
@@ -15,6 +16,7 @@ export function finishMarkup(
   html: string,
   session: RenderSession,
   extractStyles = true,
+  inlineAttribution?: InlineAttribution,
 ): { html: string; styles: CollectedStyle[]; markers: MarkerDraft[] } {
   uniqueMarkerIds(session);
   const document = parseFragment(html, { sourceCodeLocationInfo: true });
@@ -79,7 +81,12 @@ export function finishMarkup(
       const text = node.childNodes
         .map((child) => ("value" in child ? child.value : ""))
         .join("");
-      styles.push({ css: text, owners: markers.owner() });
+      const attribution = inlineAttribution?.(text, node.attrs);
+      styles.push({
+        css: text,
+        owners: markers.owner(),
+        ...(attribution ? { attribution } : {}),
+      });
       const location = node.sourceCodeLocation!;
       replacements.push({
         start: location.startOffset,

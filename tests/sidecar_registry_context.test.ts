@@ -58,6 +58,37 @@ test("ownership retains a consumer Emotion cache key and its inline CSS", () => 
 });
 
 const Styled = styled.styled.div`display:flex; color:red`;
+
+test("consumer Emotion Global styles keep their component owner", () => {
+  const result = collectStyles(
+    generation,
+    renderToStaticMarkup,
+    React.createElement(
+      emotion.CacheProvider,
+      { value: createCache({ key: "product" }) },
+      React.createElement(Owner, {
+        name: "card",
+        capture: true,
+        children: React.createElement(emotion.Global, {
+          styles: emotion.css`.card{color:red}`,
+        }),
+      }),
+    ),
+  );
+  const match = result.html.match(
+    /<style data-emotion="([^"]+)"[^>]*>(.*?)<\/style>/,
+  );
+  assert.ok(match);
+  assert.deepEqual(
+    result
+      .inlineAttribution(match[2]!, [
+        { name: "data-emotion", value: match[1]! },
+      ])
+      ?.flatMap((record) => record.owners),
+    ["card"],
+  );
+});
+
 test("ownership retains the consumer styled-components forwarding policy", () => {
   const render = (capture: boolean) =>
     collectStyles(

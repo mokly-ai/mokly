@@ -164,7 +164,12 @@ export async function render(
           server.renderToStaticMarkup(
             componentOutput(generation.runtime, session, null),
           ) + collected.html;
-      const result = finishMarkup(collected.html, session);
+      const result = finishMarkup(
+        collected.html,
+        session,
+        true,
+        collected.inlineAttribution,
+      );
       const owners =
         kind === "component" && "entry" in params
           ? [generation.bindings![name]!.path]

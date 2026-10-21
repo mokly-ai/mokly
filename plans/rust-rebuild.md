@@ -1781,6 +1781,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         `.context/defaults-engine-round6/fresh-review.md`,
         `.context/defaults-engine-round6/context-red2.log`, and
         `.context/defaults-engine-round6/metadata-weight-red.log`.
+  - [x] Decision 110 re-review finding 4: observe consumer caches and sheets
+        as well as root collectors. Inline registry extraction receives all
+        users of each adapter identity without changing delivered bytes.
+        The shared rule and keyframe cases fail in both orders before the fix.
+        Evidence: `.context/defaults-engine-round6/fresh-rereview.md` and
+        `.context/defaults-engine-round6/foreign-context-red.log`.
     - Outside the scope: `tests/browser/large_watch.spec.ts`, React journey,
       failed with `Test timeout of 300000ms exceeded` and
       `page.waitForFunction: Test ended` in round 6 gate 4; gate 5 passed

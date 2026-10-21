@@ -29,14 +29,34 @@ export function styledOwners(
 ): {
   forOwner(owner: string | undefined, current?: Sheet): Sheet;
   records(): StyleAttribution[];
+  inlineAttribution(): (css: string) => StyleAttribution[] | undefined;
 } {
-  const ledger = new StyleOwners();
-  const has = root.hasNameForId.bind(root);
-  const insert = root.insertRules.bind(root);
-  const ownedViews = new WeakSet<object>();
-  const views = new Map<string | undefined, Sheet>();
+  const sources = new WeakMap<Sheet, Sheet>();
+  const captures = new Map<
+    Sheet,
+    {
+      ledger: StyleOwners;
+      views: Map<string | undefined, Sheet>;
+      has: Sheet["hasNameForId"];
+      insert: Sheet["insertRules"];
+    }
+  >();
+  function capture(sheet: Sheet) {
+    let state = captures.get(sheet);
+    if (!state) {
+      state = {
+        ledger: new StyleOwners(),
+        views: new Map(),
+        has: sheet.hasNameForId.bind(sheet),
+        insert: sheet.insertRules.bind(sheet),
+      };
+      captures.set(sheet, state);
+    }
+    return state;
+  }
   function forOwner(owner: string | undefined, current?: Sheet): Sheet {
-    if (current && current !== root && !ownedViews.has(current)) return current;
+    const sheet = current ? (sources.get(current) ?? current) : root;
+    const { ledger, views, has, insert } = capture(sheet);
     let view = views.get(owner);
     if (view) return view;
     const methods = {
@@ -49,7 +69,7 @@ export function styledOwners(
         return insert(id, name, rules);
       },
     };
-    view = new Proxy(root, {
+    view = new Proxy(sheet, {
       get(target, key, receiver) {
         if (key === "hasNameForId") return methods.hasNameForId;
         if (key === "insertRules") return methods.insertRules;
@@ -57,7 +77,7 @@ export function styledOwners(
         return typeof value === "function" ? value.bind(target) : value;
       },
     });
-    ownedViews.add(view);
+    sources.set(view, sheet);
     views.set(owner, view);
     return view;
   }
@@ -65,5 +85,38 @@ export function styledOwners(
   const base = forOwner(fallback);
   root.hasNameForId = base.hasNameForId;
   root.insertRules = base.insertRules;
-  return { forOwner, records: () => ledger.records() };
+  return {
+    forOwner,
+    records: () => capture(root).ledger.records(),
+    inlineAttribution() {
+      const tokens = new Map<string, StyleAttribution[]>();
+      for (const { ledger } of captures.values()) {
+        for (const [identity, record] of ledger.entries()) {
+          let records = tokens.get(identity);
+          if (!records) tokens.set(identity, (records = []));
+          records.push(record);
+        }
+      }
+      return (css) => {
+        const records = new Map<string, StyleAttribution>();
+        const normalized = css.replaceAll("/*!sc*/\n", "\n");
+        for (const match of css.matchAll(
+          /data-styled\.g\d+\[id="([^"]+)"\]\{content:"([^"]*)"\}/g,
+        )) {
+          for (const name of match[2]!.split(",")) {
+            for (const record of tokens.get(JSON.stringify([match[1], name])) ??
+              []) {
+              if (normalized.includes(record.css))
+                records.set(JSON.stringify(record), record);
+            }
+          }
+        }
+        return records.size
+          ? [...records]
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+              .map(([, record]) => record)
+          : undefined;
+      };
+    },
+  };
 }

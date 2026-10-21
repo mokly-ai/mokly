@@ -7,6 +7,7 @@ import type { Generation } from "./bundle.js";
 import { emotionOwners } from "./emotion-ownership.js";
 import type { EmotionCache } from "./emotion-ownership.js";
 import { registryStyles } from "./registry-styles.js";
+import type { InlineAttribution } from "./style-ownership.js";
 import { styledOwners } from "./styled-ownership.js";
 import type { StyledAdapter } from "./styled-ownership.js";
 
@@ -16,7 +17,11 @@ export function collectStyles(
   render: (node: ReactNode) => string,
   node: ReactNode,
   entryOwner?: string,
-): { html: string; styles: CollectedStyle[] } {
+): {
+  html: string;
+  styles: CollectedStyle[];
+  inlineAttribution: InlineAttribution;
+} {
   const styles: CollectedStyle[] = [];
   const React = generation.runtime.react;
   const optional = (name: string) => {
@@ -143,7 +148,21 @@ export function collectStyles(
     }
     const registry = registryStyles(nativeSheet(), html);
     if (registry) styles.push({ css: registry, owners: [] });
-    return { html, styles };
+    const emotionInline = emotionCapture?.inlineAttribution();
+    const styledInline = styledCapture?.inlineAttribution();
+    return {
+      html,
+      styles,
+      inlineAttribution(css, attributes) {
+        const emotionToken = attributes.find(
+          (attribute) => attribute.name === "data-emotion",
+        )?.value;
+        if (emotionToken) return emotionInline?.(emotionToken, css);
+        if (attributes.some((attribute) => attribute.name === "data-styled"))
+          return styledInline?.(css);
+        return undefined;
+      },
+    };
   } finally {
     sheet?.seal();
   }

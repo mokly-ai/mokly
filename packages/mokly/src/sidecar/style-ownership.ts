@@ -1,5 +1,10 @@
 import type { StyleAttribution } from "../generated/sidecar/StyleAttribution.js";
 
+export type InlineAttribution = (
+  css: string,
+  attributes: readonly { name: string; value: string }[],
+) => StyleAttribution[] | undefined;
+
 /** Adapter identities join all users even when the adapter inserts CSS only once. */
 export class StyleOwners {
   private dependencies = new Map<string, Set<string>>();
@@ -24,7 +29,9 @@ export class StyleOwners {
     edges.add(dependency);
   }
 
-  records(read?: (identity: string) => string | undefined): StyleAttribution[] {
+  *entries(
+    read?: (identity: string) => string | undefined,
+  ): Generator<[string, StyleAttribution]> {
     const pending = [...this.rules.keys()];
     for (let cursor = 0; cursor < pending.length; cursor++) {
       const identity = pending[cursor]!;
@@ -39,15 +46,20 @@ export class StyleOwners {
         }
       }
     }
-    const records = new Map<string, StyleAttribution>();
     for (const [identity, rule] of this.rules) {
       const css = read ? read(identity) : rule.css;
       if (!css) continue;
       for (const owner of rule.owners) {
         const owners = owner === undefined ? [] : [owner];
-        records.set(JSON.stringify([css, owners]), { css, owners });
+        yield [identity, { css, owners }];
       }
     }
+  }
+
+  records(read?: (identity: string) => string | undefined): StyleAttribution[] {
+    const records = new Map<string, StyleAttribution>();
+    for (const [, record] of this.entries(read))
+      records.set(JSON.stringify([record.css, record.owners]), record);
     return [...records]
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([, record]) => record);
