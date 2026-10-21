@@ -11,6 +11,7 @@ use mokly_platform::processes::ProcessGroups;
 use crate::client::Client;
 use crate::error::{Error, InternalError, Result};
 use crate::pool_options::Launch;
+use crate::postcss_phase::PhaseState;
 use crate::process_clock::Wait;
 use crate::process_completion::{ProcessCompletion, complete};
 use crate::process_control::ProcessControl;
@@ -83,6 +84,7 @@ impl WorkerFactory for NodeFactory {
             .arg(&launch.entry)
             .current_dir(&repository)
             .env("PWD", &repository)
+            .env("MOKLY_POSTCSS_PHASES", "1")
             .env_remove("INIT_CWD")
             .env_remove("npm_package_json")
             .env_remove("npm_config_local_prefix")
@@ -130,11 +132,13 @@ impl WorkerFactory for NodeFactory {
         });
         let diagnostics = Arc::clone(&self.diagnostics);
         let timings = self.timings;
+        let phases = PhaseState::default();
+        let diagnostic_phases = phases.clone();
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
             Box::new(move || read_frames(stdout, incoming_frames)),
             Box::new(move || {
-                read_diagnostics(stderr, diagnostics, timings);
+                read_diagnostics(stderr, diagnostics, timings, diagnostic_phases);
                 let _ = drained.send(());
             }),
             Box::new(move || {
@@ -165,7 +169,10 @@ impl WorkerFactory for NodeFactory {
         };
         let client = Client::new(
             Box::new(transport),
-            Box::new(ForwardEvents(Arc::clone(&self.diagnostics))),
+            Box::new(ForwardEvents {
+                diagnostics: Arc::clone(&self.diagnostics),
+                phases: phases.clone(),
+            }),
             launch.version.clone(),
         )
         .with_timings(self.timings);
@@ -178,6 +185,7 @@ impl WorkerFactory for NodeFactory {
                 memory: self.memory.monitor(pid),
                 discover_memory: AtomicBool::new(false),
                 deadlines,
+                phases,
             }),
             control,
         })

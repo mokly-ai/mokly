@@ -7,6 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::client::ClientMock;
 use crate::methods::{Call, Empty};
+use crate::postcss_phase::PhaseState;
 use crate::process_transport::Deadlines;
 use crate::process_worker::ProcessWorker;
 use crate::wire::{MethodResult, Request};
@@ -36,6 +37,7 @@ fn deadline_uses_the_injected_clock_and_the_method_duration() {
         memory: Box::new(Unimock::new(())),
         discover_memory: AtomicBool::new(false),
         deadlines,
+        phases: PhaseState::default(),
     };
     worker
         .request(
