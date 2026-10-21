@@ -2981,6 +2981,13 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
       the source reloads the page. Option C: a separate "replaced" delivery
       status, effort Large. Recommended: B. Covers F12 review finding 2.
       Previous examples: F11 and `89f8f6cd` for a route with one detail.
+    - [x] Outside the scope of F12 review 1, line 93, and review 2, line 86:
+          component copy used both "variant" and "saved view". The stage
+          read "No changes to this variant", and Details read "No changes
+          to this saved view." Fixed on 2026-10-21 by
+          `rebuild/viewer-followups-v2` (`09d38589`): every component
+          sentence says "variant", the term of the variants contract, and
+          the protocol, guides, design copy and tests follow.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
