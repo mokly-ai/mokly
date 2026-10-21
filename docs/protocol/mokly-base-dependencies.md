@@ -112,8 +112,9 @@ Copy the base sources into the private dependency entry. Install without a
 shell. Lifecycle scripts do not run by default, including workspace scripts and
 scripts that dependency metadata would otherwise enable. The working-tree
 `review.baseInstallScripts` setting or its command-line override enables them
-for one invocation. Installs do not read or change the working installation or
-a shared package store.
+for one invocation. Enabled scripts run as children of the manager and receive
+the same allowed environment as the manager. Installs do not read or change the
+working installation or a shared package store.
 
 Every manager may download packages from the registry that the base and user
 configuration select, as npm does. Installs use registry access rather than
