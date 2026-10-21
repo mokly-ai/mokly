@@ -50,9 +50,9 @@ async function recordStepAnswer(page: Page): Promise<void> {
         childList: true,
         subtree: true,
       });
-      const original = window.fetch;
+      const original = window.fetch.bind(window);
       window.fetch = (input, init) => {
-        const answer = original.call(window, input, init);
+        const answer = original(input, init);
         const url = input instanceof Request ? input.url : String(input);
         const report = () =>
           setTimeout(() =>
@@ -62,7 +62,7 @@ async function recordStepAnswer(page: Page): Promise<void> {
                 stageKey,
                 stage?.getAttribute("aria-busy") ?? "absent",
               );
-              void original.call(window, settledUrl);
+              void original(settledUrl);
             }),
           );
         if (url.endsWith(stepUrl)) answer.then(report, report);

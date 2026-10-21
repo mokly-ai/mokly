@@ -167,7 +167,7 @@ export function routeKey(route: ShellRoute): string {
 }
 
 /** Whether every request of a route has an accepted detail. */
-export function routeReady(
+function routeReady(
   held: ReadonlyMap<string, EntryDetailV2>,
   requests: readonly DetailRequest[],
 ): boolean {
