@@ -2705,7 +2705,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         .context/rust-rebuild/m14-postcss-read-evidence-3/ledger-boundary-node24-unique.log,
         ledger-100x1m-4k-fd-node22.log, and
         ledger-100x1m-4k-fd-node24.log.
-- [ ] Resolve user item 125 (W6 decision, first recorded here as decision
+- [x] Resolve user item 125 (W6 decision, first recorded here as decision
       119, proposed 2026-10-21): the cumulative range ledger can pass the
       existing 64 MiB frame limit. It does not block the merge, because
       only plugins that read files through descriptors or streams in small
