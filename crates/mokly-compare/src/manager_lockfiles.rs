@@ -169,8 +169,12 @@ fn pnpm_importers(text: &str, project: &str, path: &str) -> Result<Vec<(String, 
             }
             continue;
         }
-        if indent == 2 && value.ends_with(':') {
-            let name = value[..value.len() - 1].trim_matches(['"', '\'']);
+        let key = value
+            .split_once('#')
+            .map(|(key, _)| key.trim())
+            .unwrap_or(value);
+        if indent == 2 && key.ends_with(':') {
+            let name = key[..key.len() - 1].trim_matches(['"', '\'']);
             importer = Some(manifest::target(project, name)?);
             continue;
         }
@@ -178,7 +182,7 @@ fn pnpm_importers(text: &str, project: &str, path: &str) -> Result<Vec<(String, 
             continue;
         };
         let raw = raw.trim().trim_matches(['"', '\'']);
-        if (raw.starts_with("link:") || raw.starts_with("file:"))
+        if raw.starts_with("link:")
             && let Some(parent) = &importer
         {
             values.push((raw.to_owned(), parent.clone()));

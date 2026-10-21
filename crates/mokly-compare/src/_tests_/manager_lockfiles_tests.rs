@@ -177,6 +177,23 @@ fn pnpm_importer_links_use_the_importer_directory_and_registry_urls_are_not_path
 }
 
 #[test]
+fn lockfile_values_use_position_context_not_matching_text() {
+    for lock in [
+        "importers:\n  packages/a/b:\n    dependencies:\n      ui:\n        specifier: file:../../x.tgz\n        version: file:../../x.tgz\npackages:\n  ui@1.0.0:\n    resolution: {tarball: 'file:../../x.tgz'}",
+        "importers:\n  .: # root importer\n    dependencies:\n      ui:\n        specifier: link:../../../outside\n        version: link:../../../outside",
+    ] {
+        let files = BTreeMap::from([(
+            RepoPath::parse("pnpm-lock.yaml").unwrap(),
+            lock.as_bytes().to_vec(),
+        )]);
+        assert!(
+            matches!(validate(&files), Err(Error::LocalOutside { .. })),
+            "{lock}"
+        );
+    }
+}
+
+#[test]
 fn classic_file_patterns_reuse_the_manifest_importer_context() {
     let files = BTreeMap::from([
         (
