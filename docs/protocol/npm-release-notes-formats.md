@@ -91,11 +91,13 @@ configuration, authoring modules, generated output, or caches.
   `package.json` or `tsconfig.json` files, to missing resolution candidates,
   to the file list of a directory that a PostCSS plugin reports, to files that
   a PostCSS plugin reads without reporting them, and to files that render
-  callbacks read without an import. Edits to installed stylesheets, their
-  `url()` assets, the `package.json` files that stylesheet resolution reads,
-  and PostCSS plugin modules stop the build. A PostCSS plugin can also read a
-  file that it reports in a way that Mokly cannot observe, such as through a
-  native addon. Mokly then records that file's digest after the read and does
+  callbacks read without an import. These include an installed stylesheet
+  that a PostCSS plugin inlines. Edits to installed stylesheets that Mokly
+  resolves itself, their `url()` assets, the `package.json` files that this
+  resolution reads, and PostCSS plugin modules stop the build. A PostCSS
+  plugin can also read a file that it reports in a way that Mokly cannot
+  observe, such as through a native addon. For a reported repository file
+  outside `node_modules`, Mokly records its digest after the read and does
   not detect an edit between the two. Such output is consistent but stale.
   Build again after such an edit. `publish` checks the repository status again
   before upload and rejects an edit to any file that Git does not ignore.
