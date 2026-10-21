@@ -2969,6 +2969,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `tests/fixtures` and the export check stay as they are. The wider
         check is item 109 for the user. Search record:
         `.context/m10/f20/item4-searches.txt`.
+  - [x] F20 review finding 43, on 2026-10-21: settled by option C as the
+        hub's default. User item 109 option B now needs no baseline entries,
+        because F20 removed all 47 unused exports.
   - [x] F20 merge of the rebuild tip `24982bb7`, on 2026-10-20: the plan
         keeps both sides' new records. F17's replacement of the remote
         discovery line stays, and user decision 105 settles the tip's React
@@ -2985,14 +2988,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] F20 review, on 2026-10-21: finding 41 is fixed by option A. The path
         identity release note says that the viewer data release note lists
         the names that this release removes from `@mokly/viewer/data`.
-  - F20 review finding 42 for the user: the merged plan keeps a settled line
-    open. Severity Low, effort Small. Recommended: A, rewrite the React
-    large watch timeout line as one checked record of user decision 105 and
-    delete its child line.
-  - F20 review finding 43 for the user: the premise of item 109 is stale
-    after item 4. Severity Low, effort Small. Recommended: A, add to the item
-    4 record that the three trees now have no unused runtime export, so
-    option B of item 109 needs no baseline entries.
+  - [x] F20 review finding 42, on 2026-10-21: settled by option B as the
+        hub's default. The open React large watch timeout line no longer
+        says "Separate branch." or names an unproven suspected cause, and its
+        checked child stays.
+  - F20 review finding 43: settled on 2026-10-21 by option C as the hub's
+    default. The record follows the F20 item 4 record.
   - Outside the F20 review scope:
     - `docs/protocol/ci-test-timing.md`: the duration helper section and the
       fixture budget sentence name test helper files and functions, which
@@ -3006,10 +3007,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         lists the 0.15.0 successors of the released types, such as
         `ManifestV10` and `ReviewResultV7`. The full report is
         `.context/m10/f20/review_2.md`.
-  - F20 re-review finding 45 for the user: the options recorded for
-    findings 42 and 43 would edit history lines. Severity Low, effort Small.
-    Recommended: A, record options for 42 and 43 that edit only live lines
-    or add new lines beside the checked records.
+  - [x] F20 re-review finding 45, on 2026-10-21: settled by option A as the
+        hub's default. Options 42 B and 43 C edit only live lines or add a
+        new line beside a checked record.
   - Outside the F20 re-review scope:
     - `docs/protocol/npm-release-notes.md`: no note tells
       `@mokly/viewer/data` users to import `ComponentInstanceRecord` and six
@@ -3051,10 +3051,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     The hub must decide the Testbox guard before any timeout change.
     Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
     `.context/ci-release-fixes/remote-floor-final.log`.
-  - `tests/browser/large_watch.spec.ts`: `large watch delivers browser evidence
-for react` hit `Test timeout of 300000ms exceeded` during the Node 22
-    remote gate. The unchanged isolated Node 22 rerun passed. Suspected source:
-    real watcher readiness or runner contention, not proven. Separate branch.
+  - `tests/browser/large_watch.spec.ts`:
+    `large watch delivers browser evidence for react` hit
+    `Test timeout of 300000ms exceeded` during the Node 22 remote gate. The
+    unchanged isolated Node 22 rerun passed.
     Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
     and `.context/ci-release-fixes/watch-react-rerun.log`.
     - [x] Settled by user decision 105 (2026-10-20): the combined React
