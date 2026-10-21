@@ -2894,6 +2894,10 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         Evidence: `.context/f21-item2-slot-red.log`,
         `.context/f21-item3-warning-red.log`, and
         `.context/f21-item4-sidecar-green-final.log`.
+  - Item 128: saved variant slot element checks. Option A keeps the
+    checks and states the rule in `mokly-html-components.md`; option B keeps
+    only the required `html-ignore-attribute` and `html-foster-parented`
+    warnings. Recommended: A. Apply B until the user answers.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
