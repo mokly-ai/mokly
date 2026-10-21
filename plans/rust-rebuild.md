@@ -853,8 +853,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
       failed on it in M14 nesting round 7, 2026-10-20. Integration batch 17,
-      CI round 5, native CI round 2, F18, and F19 made the same lockfile
-      change on 2026-10-20, and this line records all six.
+      CI round 5, native CI round 2, F18, F19, and the pnpm and Yarn base
+      install made the same lockfile change on 2026-10-20, and this line
+      records all seven.
       Evidence: `.context/m14-nesting/r7/audit-before.txt` and
       `.context/m14-nesting/r7/audit-after.txt`; batch 17:
       `.context/integration-17/security-audit.log` and
@@ -862,8 +863,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `.context/ci-shard-balance/webpki-advisory.md`,
       `webpki-dependents.log`, and `webpki-green.log`; F19:
       `.context/f19/repository.log`, `.context/f19/rust-audit-fixed.log`,
-      and `.context/f19/publish-tests.log`. The native CI round 2 and F18
-      records named no evidence file.
+      and `.context/f19/publish-tests.log`; pnpm and Yarn base install:
+      `.context/base-pnpm-yarn/early-repository.log`. The native CI round 2
+      and F18 records named no evidence file.
 - [x] Keep the braces audit exception through 2026-11-03 UTC. User decision
       72 (2026-10-20): A. Do not renew or extend the exception, and leave
       `rebuild/audit-braces` unmerged. From 2026-11-04 UTC, the strict audit
@@ -2161,9 +2163,6 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       Design and verification: `.context/base-pnpm-yarn/`.
       Implementation of default decision 10 B on 2026-10-20 replaces the
       npm-only install limit for these supported manager families.
-- [x] Update the inherited rustls-webpki dependency to its fixed patch release
-      for RUSTSEC-2026-0382. Keep the existing TLS verification requirement.
-      Gate evidence: `.context/base-pnpm-yarn/early-repository.log`.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
@@ -2822,14 +2821,23 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
         Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
         `7e6ae9ad`, and `9855feb1`.
-  - User item 120: Berry protocol allowlist for findings 1 and 2. Wider option B.
-  - User item 121: typed lockfile model for finding 3. Wider option B.
-  - User item 122: typed lockfile model for finding 4. Wider option B.
-  - User item 123: typed lockfile model for findings 3 and 4. Wider option B.
-  - pnpm/Yarn finding 6: offline installs rarely reach tier two. Severity Medium.
-    Recommended A, keep offline installs and avoid the wasted copy when registry data is absent.
-  - pnpm/Yarn finding 7: manager guard regressions lack fixtures. Severity Medium.
-    Recommended B, add marker fixtures for every script and hook guard.
+  - [ ] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
+        fix them only in part. Fix round 2 on `rebuild/base-pnpm-yarn-fix2`
+        completes them when it lands: Berry `exec:` sources (finding 1),
+        lockfile paths by position (finding 3), bounded workspace pattern
+        walks (finding 5), and the nested Berry cache path (finding 9).
+  - User item 120: pnpm/Yarn finding 6, offline installs rarely reach tier
+    two. Severity Medium.
+  - User item 121: pnpm/Yarn finding 7, manager guard regressions lack
+    fixtures. Severity Medium. Recommended B, add marker fixtures for every
+    script and hook guard. Fix round 2 finding 5 joins it: the marker
+    fixtures in `tests/static_base_managers.test.ts` and
+    `tests/helpers/base_manager_fixture.ts` look in the wrong place.
+  - User item 122: Berry protocol allowlist for pnpm/Yarn findings 1 and 2.
+    Wider option B. Option C: the Yarn 4.14 floor and the `built` fallback
+    from fix round 2 finding 2.
+  - User item 123: one typed lockfile model for pnpm/Yarn findings 3 and 4.
+    Wider option B.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
