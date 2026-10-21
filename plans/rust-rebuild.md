@@ -2890,7 +2890,8 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] F21: restore empty wrapper source slots during plaintext repair,
         follow HTML parser markup contexts for noscript and foreign style or title
         content, validate saved variant slot fragments, name reserved navigation
-        warnings as rejections, and reject raw mokly elements in renderPage output.
+        warnings as rejections, and preserve authored page ignore wrappers for
+        Rust region composition.
         Evidence: `.context/f21-item2-slot-red.log`,
         `.context/f21-item3-warning-red.log`, and
         `.context/f21-item4-sidecar-green-final.log`.
