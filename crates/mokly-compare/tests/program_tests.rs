@@ -158,3 +158,79 @@ fn environment_probe_runs_with_a_token_and_absolute_manager_path() {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn cancellation_kills_a_script_child_tree() {
+    use std::sync::Arc;
+
+    use mokly_git::control::{SystemClock, Token};
+    use mokly_platform::flush::SystemFlush;
+
+    let temporary = tempfile::tempdir().unwrap();
+    let marker = temporary.path().join("child.pid");
+    let script = temporary.path().join("manager");
+    std::fs::write(
+        &script,
+        format!(
+            "#!/bin/sh\nsleep 1000 &\nchild=$!\nprintf '%s' \"$child\" > {}\nwait $child\n",
+            marker.display()
+        ),
+    )
+    .unwrap();
+    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let cancellation = Arc::new(Token::default());
+    let commands = mokly_compare::commands::TimedCommands {
+        spawner: Arc::new(mokly_compare::process::SystemSpawner {
+            groups: Arc::new(mokly_platform::processes::SystemProcessGroups),
+        }),
+        clock: Arc::new(SystemClock::default()),
+        cancellation: cancellation.clone(),
+        storage: Arc::new(mokly_compare::storage::SystemStorage {
+            root: temporary.path().to_owned(),
+            cancellation: cancellation.clone(),
+            flush: Arc::new(SystemFlush),
+        }),
+    };
+    let command = mokly_compare::commands::Command {
+        program: script.into_os_string(),
+        args: Vec::new(),
+        directory: temporary.path().to_owned(),
+        timeout: std::time::Duration::from_secs(120),
+        byte_limit: None,
+        size_root: None,
+        cache: None,
+    };
+    let worker = std::thread::spawn(move || {
+        use mokly_compare::commands::Commands;
+        commands.run(&command)
+    });
+    for _ in 0..1_000_000 {
+        if std::fs::read_to_string(&marker).is_ok_and(|value| !value.trim().is_empty()) {
+            break;
+        }
+        std::thread::yield_now();
+    }
+    assert!(
+        std::fs::read_to_string(&marker).is_ok_and(|value| !value.trim().is_empty()),
+        "script did not report its child"
+    );
+    let pid = std::fs::read_to_string(&marker).unwrap().trim().to_owned();
+    assert!(!pid.is_empty(), "script child pid was not recorded");
+    cancellation.cancel();
+    assert!(matches!(
+        worker.join().unwrap(),
+        Err(mokly_compare::error::Error::Cancelled)
+    ));
+    for _ in 0..1_000_000 {
+        let gone = std::process::Command::new("kill")
+            .args(["-0", &pid])
+            .status()
+            .map_or(true, |status| !status.success());
+        if gone {
+            return;
+        }
+        std::thread::yield_now();
+    }
+    panic!("script child {pid} remains after cancellation");
+}
