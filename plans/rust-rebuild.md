@@ -435,6 +435,12 @@ readiness rather than blocking this acceptance round on further startup work.
   keeps the old rule and uses explicit item classes in the Stack fixture.
   A implements the requested example. No answer followed the question.
 
+- User decision 107 (2026-10-20): C. Extend the scoped-universal default to
+  native nested CSS. A substituted nesting parent counts as an outer anchor
+  when every branch has a positive type, class, ID, or attribute anchor.
+  Authored `:is()` arguments remain conservative. Linked and head-style
+  Stack regressions use the same evidence as the flat selector.
+
 - Defaults-engine round 4 focused re-review finding 3 B (2026-10-20): applied
   by default (user rule). Carry kept own-page stylesheet paths through the
   shared reducer and comparison. Use them for preview states, component
@@ -2730,6 +2736,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         proof retain the nested record. Evidence:
         `.context/defaults-engine-round4/provenance-cli-red.log` and
         `.context/defaults-engine-round4/provenance-unit-red.log`.
+  - [x] Defaults-engine round 5 finding 2 A: validate every raw-text repair
+        identity and retry with escaped text on foreign or mismatched tags.
+        Evidence: `.context/defaults-engine-round5/raw-text-red.log`.
+  - [x] Defaults-engine round 5 finding 3 A: annotate a fresh source tree and
+        disable plaintext prediction during the escaped retry. Evidence:
+        `.context/defaults-engine-round5/retry-red2.log`.
+  - [x] Defaults-engine round 5 finding 5 A: align the three sidecar and
+        membership passages with shared ownership and excluded evidence.
+  - [x] Defaults-engine round 5 finding 6 B: remove the unread proof owner
+        copy and keep proof storage private. Evidence:
+        `.context/defaults-engine-round5/proof-owner-green.log`.
+  - [x] Defaults-engine round 5 decision 107 C: count an anchored substituted
+        nesting parent for scoped universal matching. Linked and head-style
+        tests pass. Evidence: `.context/defaults-engine-round5/nested-unit-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.

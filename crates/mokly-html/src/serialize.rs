@@ -115,13 +115,11 @@ pub(crate) fn document_with_options(
                 let raw = token.is_html()
                     && raw_text(&element.name)
                     && (element.name != "plaintext" || mode.plaintext());
-                if raw {
-                    if let Some(id) = element.get(ATTRIBUTE) {
-                        raw_text_starts.push(RawTextStart {
-                            id: id.into(),
-                            name: element.name.clone(),
-                        });
-                    }
+                if raw && let Some(id) = element.get(ATTRIBUTE) {
+                    raw_text_starts.push(RawTextStart {
+                        id: id.into(),
+                        name: element.name.clone(),
+                    });
                 }
                 pending.extend(
                     element

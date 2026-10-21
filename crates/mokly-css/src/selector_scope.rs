@@ -12,11 +12,11 @@ pub(crate) struct Scope {
     pub(crate) relational: bool,
 }
 
-pub(crate) fn broaden(source: &str) -> Scope {
-    walk(&mut Parser::new(source), false)
+pub(crate) fn broaden_nested(source: &str, parent_anchor: bool) -> Scope {
+    walk(&mut Parser::new(source), false, parent_anchor)
 }
 
-fn walk(parser: &mut Parser<'_>, argument: bool) -> Scope {
+fn walk(parser: &mut Parser<'_>, argument: bool, parent_anchor: bool) -> Scope {
     let mut scope = Scope {
         text: String::new(),
         unresolved: false,
@@ -26,7 +26,7 @@ fn walk(parser: &mut Parser<'_>, argument: bool) -> Scope {
     let mut colons = 0;
     let mut previous = None;
     let mut universal = false;
-    let mut anchored = false;
+    let mut anchored = parent_anchor;
     while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
         if matches!(token, Token::Colon) {
             colons += 1;
@@ -54,7 +54,7 @@ fn walk(parser: &mut Parser<'_>, argument: bool) -> Scope {
             Token::Function(name) => {
                 let name = name.to_ascii_lowercase();
                 let nested: result::Result<_, ParseError<()>> =
-                    parser.parse_nested_block(|nested| Ok(walk(nested, true)));
+                    parser.parse_nested_block(|nested| Ok(walk(nested, true, false)));
                 let nested = nested.unwrap_or(Scope {
                     text: String::new(),
                     unresolved: true,
@@ -123,6 +123,41 @@ fn walk(parser: &mut Parser<'_>, argument: bool) -> Scope {
     prefix(&mut scope.text, colons);
     scope.unresolved |= universal && !anchored;
     scope
+}
+
+pub(crate) fn parent_has_anchor(source: &str) -> bool {
+    let mut parser = Parser::new(source);
+    let mut branch = false;
+    let mut all = true;
+    let mut previous_dot = false;
+    while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
+        match token {
+            Token::Comma => {
+                all &= branch;
+                branch = false;
+                previous_dot = false;
+            }
+            Token::IDHash(_) | Token::SquareBracketBlock => {
+                branch = true;
+                previous_dot = false;
+            }
+            Token::Delim('.') => previous_dot = true,
+            Token::Ident(name) => {
+                let lower = name.to_ascii_lowercase();
+                branch |= previous_dot || !matches!(lower.as_str(), "html" | "body");
+                previous_dot = false;
+            }
+            Token::Function(_) | Token::ParenthesisBlock => {
+                let _: result::Result<_, ParseError<()>> = parser.parse_nested_block(|nested| {
+                    consume(nested);
+                    Ok(())
+                });
+                previous_dot = false;
+            }
+            _ => previous_dot = false,
+        }
+    }
+    all && branch
 }
 
 fn prefix(text: &mut String, count: usize) {

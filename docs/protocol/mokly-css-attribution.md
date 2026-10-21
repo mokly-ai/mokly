@@ -170,6 +170,10 @@ exclusions beyond it.
   condition outside pseudo-class arguments in the same selector branch.
   A scoped universal selector uses ordinary matching. `:root`, `html`, and
   `body` selectors remain unresolved, including scoped combinations.
+- Native nesting may substitute a parent selector list into `:is()`. That
+  substituted parent counts as an outer anchor only when every parent branch
+  has a positive type, class, ID, or attribute anchor. Authored `:is()`
+  arguments remain conservative.
 - A rule inside a nesting parent whose combined selector cannot be resolved.
 - Any changed custom property declaration (`--*`), because inheritance can
   reach any descendant.

@@ -61,6 +61,28 @@ fn matched(selector: &str) -> (bool, Vec<usize>) {
     )
 }
 
+fn matched_css(css: &str) -> (bool, Vec<usize>) {
+    let tree = tree();
+    let changes = diff(
+        &collect(css.replace("8px", "7px").as_bytes()),
+        &collect(css.replace("8px", "9px").as_bytes()),
+    );
+    let DocumentMatching::Resolved(rules) = match_document(&changes, None, Some(&tree)) else {
+        panic!("selector fixture must parse")
+    };
+    assert_eq!(rules.len(), 1);
+    assert_eq!(rules[0].selectors.len(), 1);
+    let result = &rules[0].selectors[0];
+    (
+        result.unresolved,
+        result
+            .elements
+            .iter()
+            .map(|element| element.element)
+            .collect(),
+    )
+}
+
 #[test]
 fn scoped_universal_siblings_match_only_the_second_child() {
     for selector in [
@@ -93,5 +115,15 @@ fn a_bare_universal_or_global_context_keeps_conservative_evidence() {
         ":root .stack > *",
     ] {
         assert!(matched(selector).0, "{selector}");
+    }
+}
+
+#[test]
+fn native_nested_scoped_universals_match_like_flat_rules() {
+    for css in [
+        ".stack { & > * + * { margin-top: 8px } }",
+        ".stack { > * + * { margin-top: 8px } }",
+    ] {
+        assert_eq!(matched_css(css), (false, vec![2]), "{css}");
     }
 }
