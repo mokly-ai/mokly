@@ -2664,6 +2664,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         document the projected session bound, Small. Recommended: B, because
         it preserves exact evidence for long Serve sessions without changing
         the frame limit. No option is applied.
+    - User decision 125 (2026-10-21): D, a new option: the PostCSS child
+      keeps read evidence for one generation only. Work: the PostCSS
+      follow-ups workspace.
   - [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
         loader-supplied modules. The preload now registers Mokly's hooks
         first, so a consumer load hook that returns source without
