@@ -41,7 +41,7 @@ fn manager_path_probe() {
         timeout: Duration::from_secs(120),
         byte_limit: None,
         size_root: None,
-        berry_cache: None,
+        cache: None,
     };
     if env::var_os("MOKLY_MANAGER_INTERPRETER_PROBE").is_some() {
         assert_eq!(

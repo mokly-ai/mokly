@@ -1,4 +1,4 @@
-//! Classic installations use only confined committed mirror settings.
+//! Classic installs pin a confined committed or private mirror and folders.
 
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
@@ -11,7 +11,7 @@ use crate::commands::Command;
 use crate::error::Error;
 use crate::inputs::Inputs;
 use crate::manager_classic::Configuration;
-use crate::manager_command::external_classic_setting;
+use crate::manager_command::{same, variables};
 
 fn inputs(config: &str) -> Inputs {
     Inputs {
@@ -24,28 +24,27 @@ fn inputs(config: &str) -> Inputs {
 }
 
 #[test]
-fn classic_private_configuration_keeps_the_ancestor_mirror_and_drops_other_settings() {
+fn classic_mirror_comes_from_the_nearest_confined_yarnrc_setting() {
     let base = inputs(
         "yarn-offline-mirror \"./offline\"\nyarn-path \"./historic.cjs\"\n--install.modules-folder \"../outside\"\n",
     );
     let config = Configuration::read(&base, "app").unwrap();
-    let content = String::from_utf8(config.contents(Path::new("/private")).unwrap()).unwrap();
     assert_eq!(
-        content,
-        "yarn-offline-mirror \"/private/offline\"\nyarn-offline-mirror-pruning false\n"
+        config
+            .mirror()
+            .map(|path| path.under(Path::new("/private"))),
+        Some("/private/offline".into())
     );
     let mut base = base;
     base.files.insert(
         RepoPath::parse("app/.yarnrc").unwrap(),
         b"yarn-offline-mirror false".to_vec(),
     );
-    let content = Configuration::read(&base, "app")
-        .unwrap()
-        .contents(Path::new("/private"))
-        .unwrap();
-    assert_eq!(
-        content,
-        b"yarn-offline-mirror false\nyarn-offline-mirror-pruning false\n"
+    assert!(
+        Configuration::read(&base, "app")
+            .unwrap()
+            .mirror()
+            .is_none()
     );
 }
 
@@ -62,45 +61,53 @@ fn classic_mirror_paths_obey_repository_confinement() {
         );
     }
     let base = inputs("'yarn-offline-mirror': './offline'");
-    assert!(
+    assert_eq!(
         Configuration::read(&base, "")
             .unwrap()
-            .contents(Path::new("/private"))
-            .unwrap()
-            .starts_with(b"yarn-offline-mirror \"/private/offline\"")
+            .mirror()
+            .map(|path| path.under(Path::new("/private"))),
+        Some("/private/offline".into())
     );
 }
 
 #[test]
-fn classic_external_environment_cannot_replace_the_private_configuration() {
+fn classic_pins_its_mirror_and_folders_against_every_inherited_spelling() {
     let request = Command {
         program: "yarn".into(),
-        args: vec![
-            "install".into(),
-            "--use-yarnrc".into(),
-            "/private/.yarnrc".into(),
-        ],
+        args: vec!["install".into(), "--frozen-lockfile".into()],
         directory: "/private".into(),
         timeout: Duration::from_secs(120),
         byte_limit: Some(1000),
         size_root: Some("/private".into()),
-        berry_cache: None,
+        cache: Some("/private/offline".into()),
+    };
+    let pinned = variables(&request);
+    let pins = |inherited: &str| {
+        pinned
+            .iter()
+            .any(|(name, _)| same(OsStr::new(inherited), name))
     };
     for name in [
         "YARN_YARN_OFFLINE_MIRROR",
         "yarn_yarn_offline_mirror",
         "npm_config_yarn_offline_mirror",
-        "NPM_CONFIG_CACHE",
+        "yarn_cache_folder",
+        "YARN_OFFLINE_CACHE_FOLDER",
     ] {
-        assert!(
-            external_classic_setting(&request, OsStr::new(name)),
-            "{name}"
-        );
+        assert!(pins(name), "{name}");
     }
-    for name in ["PATH", "NODE_OPTIONS", "HOME"] {
-        assert!(
-            !external_classic_setting(&request, OsStr::new(name)),
-            "{name}"
-        );
+    for name in [
+        "PATH",
+        "NODE_OPTIONS",
+        "HOME",
+        "NPM_CONFIG_CACHE",
+        "YARN_REGISTRY",
+    ] {
+        assert!(!pins(name), "{name}");
     }
+    assert!(
+        pinned
+            .iter()
+            .any(|(name, value)| *name == "YARN_YARN_OFFLINE_MIRROR" && value == "/private/offline")
+    );
 }

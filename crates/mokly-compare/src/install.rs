@@ -1,7 +1,7 @@
 //! Locked package-manager installations sharing one deadline and disk budget.
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use sha2::{Digest, Sha256};
@@ -49,12 +49,11 @@ impl Builder for Install<'_> {
             self.owner.install_bytes,
         )?;
         for root in &self.roots {
-            if let Some(config) = &root.classic {
-                let path = destination.join(&root.directory).join(".yarnrc");
-                self.owner.storage.remove(&path)?;
-                self.owner
-                    .storage
-                    .write(&path, &config.contents(destination)?)?;
+            let cache = cache(root, destination);
+            if root.manager == Manager::YarnClassic
+                && let Some(mirror) = &cache
+            {
+                self.owner.storage.prepare(mirror)?;
             }
             let timeout = self.deadline.saturating_sub(self.owner.clock.now());
             if timeout.is_zero() {
@@ -67,10 +66,7 @@ impl Builder for Install<'_> {
                 timeout,
                 byte_limit: Some(self.owner.install_bytes),
                 size_root: Some(destination.to_owned()),
-                berry_cache: root
-                    .berry_cache
-                    .as_ref()
-                    .map(|path| path.under(destination)),
+                cache,
             })?;
         }
         let mut caches = BTreeSet::new();
@@ -90,6 +86,13 @@ impl Builder for Install<'_> {
             {
                 caches.insert(cache.under(destination));
             }
+            if root
+                .classic
+                .as_ref()
+                .is_some_and(|config| config.mirror().is_none())
+            {
+                caches.insert(directory.join(PRIVATE_MIRROR));
+            }
         }
         for cache in caches {
             self.owner.storage.remove(&cache)?;
@@ -98,6 +101,31 @@ impl Builder for Install<'_> {
     }
 }
 
+/// The Classic mirror that Mokly creates when the base configures none.
+const PRIVATE_MIRROR: &str = ".yarn-mirror";
+
+/// The private cache or mirror path that the manager command pins.
+fn cache(root: &Root, destination: &Path) -> Option<PathBuf> {
+    match root.manager {
+        Manager::YarnBerry => root
+            .berry_cache
+            .as_ref()
+            .map(|path| path.under(destination)),
+        Manager::YarnClassic => Some(
+            root.classic
+                .as_ref()
+                .and_then(|config| config.mirror())
+                .map(|path| path.under(destination))
+                .unwrap_or_else(|| destination.join(&root.directory).join(PRIVATE_MIRROR)),
+        ),
+        Manager::Npm | Manager::Pnpm => None,
+    }
+}
+
 #[cfg(test)]
 #[path = "_tests_/install_tests.rs"]
 mod install_tests;
+
+#[cfg(test)]
+#[path = "_tests_/classic_install_tests.rs"]
+mod classic_install_tests;

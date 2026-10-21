@@ -85,7 +85,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
             timeout: Duration::from_secs(120),
             byte_limit: None,
             size_root: None,
-            berry_cache: None,
+            cache: None,
         })
         .unwrap();
     let outside_logs = temporary.path().join("outside-npm-logs");

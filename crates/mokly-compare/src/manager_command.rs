@@ -1,8 +1,13 @@
 //! Fixed install arguments and process settings for supported manager dialects.
+//!
+//! Installs may download from the registry that the base and user
+//! configuration select, as npm does. Mokly still pins every cache, store,
+//! mirror, and state folder inside the private entry, keeps scripts, hooks,
+//! Git transports, and Corepack downloads off, and gives every variable it
+//! sets precedence over each inherited spelling of the same name.
 
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
-use std::process;
 
 use crate::commands::Command;
 use crate::manager::{Manager, Root};
@@ -13,7 +18,6 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
         Manager::Npm => &["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
         Manager::Pnpm => &[
             "install",
-            "--offline",
             "--frozen-lockfile",
             "--ignore-scripts",
             "--ignore-pnpmfile",
@@ -31,12 +35,10 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
         ],
         Manager::YarnClassic => &[
             "install",
-            "--offline",
             "--frozen-lockfile",
             "--ignore-scripts",
             "--non-interactive",
             "--no-progress",
-            "--no-default-rc",
         ],
         Manager::YarnBerry => &["install", "--immutable", "--mode=skip-build"],
     };
@@ -57,7 +59,7 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
             ("--lockfile-dir", ""),
         ],
         Manager::YarnClassic => &[
-            ("--use-yarnrc", ".yarnrc"),
+            ("--cwd", ""),
             ("--cache-folder", ".yarn-cache"),
             ("--modules-folder", "node_modules"),
             ("--global-folder", ".yarn-global"),
@@ -85,74 +87,128 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
             args.push(cache_root.join(path).into_os_string());
         }
     }
+    if root.manager == Manager::YarnClassic {
+        let mut mutex = OsString::from("file:");
+        mutex.push(directory.join(".yarn-mutex"));
+        args.extend([OsString::from("--mutex"), mutex]);
+    }
     args
-}
-
-pub(crate) fn external_classic_setting(request: &Command, name: &OsStr) -> bool {
-    let name = name.to_string_lossy().to_ascii_lowercase();
-    request.program == "yarn"
-        && request.args.iter().any(|arg| arg == "--use-yarnrc")
-        && (name.starts_with("yarn_") || name.starts_with("npm_config_"))
 }
 
 pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {
     match manager {
         Manager::Npm => &[".npm-cache"],
         Manager::Pnpm => &[".pnpm-store", ".pnpm-cache", ".pnpm-state"],
-        Manager::YarnClassic => &[".yarn-cache", ".yarn-global", ".yarn-links"],
+        Manager::YarnClassic => &[
+            ".yarn-cache",
+            ".yarn-global",
+            ".yarn-links",
+            ".yarn-offline-cache",
+            ".yarn-mutex.lock",
+        ],
         Manager::YarnBerry => &[".yarn/cache", ".yarn/global"],
     }
 }
 
-pub(crate) fn environment(request: &Command, command: &mut process::Command) {
+/// Variables that the install receives. Each replaces every inherited
+/// spelling of its name.
+pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
+    let mut variables = fixed(&[
+        ("npm_config_ignore_scripts", "true"),
+        ("npm_config_audit", "false"),
+        ("npm_config_fund", "false"),
+        ("npm_config_update_notifier", "false"),
+    ]);
     if request.program != "pnpm" && request.program != "yarn" {
-        return;
+        return variables;
     }
-    command
-        .env("COREPACK_ENABLE_NETWORK", "0")
-        .env("COREPACK_DEFAULT_TO_LATEST", "0")
-        .env("COREPACK_ENABLE_AUTO_PIN", "0")
-        .env("COREPACK_ENV_FILE", "0")
-        .env("COREPACK_ENABLE_DOWNLOAD_PROMPT", "0")
-        .env("GIT_ALLOW_PROTOCOL", "")
-        .env("npm_config_manage_package_manager_versions", "false")
-        .env("npm_config_ignore_pnpmfile", "true")
-        .env("pnpm_config_ignore_pnpmfile", "true")
-        .env("pnpm_config_pm_on_fail", "ignore")
-        .env("npm_config_update_notifier", "false")
-        .env("npm_config_offline", "true");
+    variables.extend(fixed(&[
+        ("COREPACK_ENABLE_NETWORK", "0"),
+        ("COREPACK_DEFAULT_TO_LATEST", "0"),
+        ("COREPACK_ENABLE_AUTO_PIN", "0"),
+        ("COREPACK_ENV_FILE", "0"),
+        ("COREPACK_ENABLE_DOWNLOAD_PROMPT", "0"),
+        ("GIT_ALLOW_PROTOCOL", ""),
+        ("npm_config_manage_package_manager_versions", "false"),
+        ("npm_config_ignore_pnpmfile", "true"),
+        ("pnpm_config_ignore_pnpmfile", "true"),
+        ("pnpm_config_pm_on_fail", "ignore"),
+    ]));
+    if request.program != "yarn" {
+        return variables;
+    }
+    variables.extend(fixed(&[
+        ("YARN_IGNORE_PATH", "1"),
+        ("YARN_ENABLE_TELEMETRY", "0"),
+    ]));
+    let directory = &request.directory;
+    if request.args.iter().any(|arg| arg == "--immutable") {
+        variables.extend(fixed(&[
+            ("YARN_RC_FILENAME", ".yarnrc.yml"),
+            ("YARN_ENABLE_CONSTRAINTS_CHECKS", "0"),
+            ("YARN_ENABLE_SCRIPTS", "0"),
+            ("YARN_ENABLE_GLOBAL_CACHE", "0"),
+            ("YARN_ENABLE_MIRROR", "0"),
+            ("YARN_ENABLE_HARDENED_MODE", "0"),
+            ("YARN_NODE_LINKER", "node-modules"),
+            ("YARN_NM_MODE", "classic"),
+        ]));
+        let cache = request.cache.clone();
+        variables.extend([
+            (
+                "YARN_CACHE_FOLDER",
+                cache
+                    .unwrap_or_else(|| directory.join(".yarn/cache"))
+                    .into_os_string(),
+            ),
+            ("YARN_GLOBAL_FOLDER", directory.join(".yarn/global").into()),
+            (
+                "YARN_INSTALL_STATE_PATH",
+                directory.join(".yarn/install-state.gz").into(),
+            ),
+        ]);
+    } else if request.args.iter().any(|arg| arg == "--frozen-lockfile") {
+        let mirror = request
+            .cache
+            .clone()
+            .unwrap_or_else(|| directory.join(".yarn-mirror"));
+        variables.extend([
+            ("YARN_YARN_OFFLINE_MIRROR", mirror.clone().into_os_string()),
+            ("npm_config_yarn_offline_mirror", mirror.into_os_string()),
+            ("YARN_YARN_OFFLINE_MIRROR_PRUNING", "false".into()),
+            ("YARN_CACHE_FOLDER", directory.join(".yarn-cache").into()),
+            ("YARN_GLOBAL_FOLDER", directory.join(".yarn-global").into()),
+            (
+                "YARN_OFFLINE_CACHE_FOLDER",
+                directory.join(".yarn-offline-cache").into(),
+            ),
+            ("YARN_DISABLE_SELF_UPDATE_CHECK", "true".into()),
+        ]);
+    } else if request.args == ["--version"] {
+        variables.extend(fixed(&[("YARN_RC_FILENAME", ".mokly-unused-yarnrc.yml")]));
+    }
+    variables
+}
+
+/// Inherited variables that the install never receives.
+pub(crate) fn removed(request: &Command) -> &'static [&'static str] {
     if request.program == "yarn" {
-        command
-            .env("YARN_IGNORE_PATH", "1")
-            .env("YARN_ENABLE_NETWORK", "0")
-            .env("YARN_ENABLE_TELEMETRY", "0")
-            .env_remove("YARN_PLUGINS");
-        if request.args.iter().any(|arg| arg == "--immutable") {
-            command
-                .env("YARN_RC_FILENAME", ".yarnrc.yml")
-                .env("YARN_ENABLE_NETWORK", "0")
-                .env("YARN_ENABLE_TELEMETRY", "0")
-                .env("YARN_ENABLE_CONSTRAINTS_CHECKS", "0")
-                .env("YARN_ENABLE_SCRIPTS", "0")
-                .env("YARN_ENABLE_GLOBAL_CACHE", "0")
-                .env("YARN_ENABLE_MIRROR", "0")
-                .env("YARN_ENABLE_HARDENED_MODE", "0")
-                .env("YARN_NODE_LINKER", "node-modules")
-                .env("YARN_NM_MODE", "classic")
-                .env(
-                    "YARN_CACHE_FOLDER",
-                    request
-                        .berry_cache
-                        .clone()
-                        .unwrap_or_else(|| request.directory.join(".yarn/cache")),
-                )
-                .env("YARN_GLOBAL_FOLDER", request.directory.join(".yarn/global"))
-                .env(
-                    "YARN_INSTALL_STATE_PATH",
-                    request.directory.join(".yarn/install-state.gz"),
-                );
-        } else if request.args == ["--version"] {
-            command.env("YARN_RC_FILENAME", ".mokly-unused-yarnrc.yml");
-        }
+        &["YARN_PLUGINS"]
+    } else {
+        &[]
     }
+}
+
+/// Whether an inherited name spells `name`. Managers read variable names
+/// without case, and Yarn reads a dash as an underscore.
+pub(crate) fn same(inherited: &OsStr, name: &str) -> bool {
+    let spelling = |value: &str| value.to_ascii_lowercase().replace('-', "_");
+    spelling(&inherited.to_string_lossy()) == spelling(name)
+}
+
+fn fixed(values: &[(&'static str, &str)]) -> Vec<(&'static str, OsString)> {
+    values
+        .iter()
+        .map(|(name, value)| (*name, OsString::from(value)))
+        .collect()
 }

@@ -31,22 +31,27 @@ struct OwnedChild {
 impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
         let mut command = command(request)?;
-        for (name, _) in env::vars_os() {
-            if manager_command::external_classic_setting(request, &name) {
-                command.env_remove(name);
+        let variables = manager_command::variables(request);
+        let names = variables
+            .iter()
+            .map(|(name, _)| *name)
+            .chain(manager_command::removed(request).iter().copied())
+            .collect::<Vec<_>>();
+        for (inherited, _) in env::vars_os() {
+            if names
+                .iter()
+                .any(|name| manager_command::same(&inherited, name))
+            {
+                command.env_remove(inherited);
             }
         }
-        manager_command::environment(request, &mut command);
         command
+            .envs(variables)
             .args(&request.args)
             .current_dir(&request.directory)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .env("npm_config_ignore_scripts", "true")
-            .env("npm_config_audit", "false")
-            .env("npm_config_fund", "false")
-            .env("npm_config_update_notifier", "false");
+            .stderr(Stdio::piped());
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }

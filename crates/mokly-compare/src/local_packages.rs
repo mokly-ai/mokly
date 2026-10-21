@@ -48,10 +48,15 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
                     .find(|(candidate, _)| candidate.as_str() == path)
                     .map(|(_, bytes)| (root, manager_classic::lockfile(bytes)))
             });
+        let berry = lockfile.as_ref().is_some_and(|(_, classic)| !classic);
         let (project, classic) = lockfile.unwrap_or_else(|| (directory.clone(), false));
         let base = if classic { &project } else { &directory };
         for value in manifest.specifications() {
-            local_specifications::validate(value, base, &project)?;
+            if berry {
+                local_specifications::validate_berry(value, base, &project)?;
+            } else {
+                local_specifications::validate(value, base, &project)?;
+            }
         }
         for workspace in manifest.workspaces() {
             workspace_patterns::confine(&directory, workspace)?;

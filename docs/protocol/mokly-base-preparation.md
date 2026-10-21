@@ -150,5 +150,5 @@ defines clean identities, supported managers, and installation cache keys.
 ## Installation And Bundle Settings
 
 The [dependency contract](./mokly-base-dependencies.md#installation-and-bundle-settings)
-defines offline pnpm and Yarn installs, npm installs, version discovery,
-manager fallback reasons, and sidecar directory mappings.
+defines npm, pnpm, and Yarn installs, their registry access and configuration,
+version discovery, manager fallback reasons, and sidecar directory mappings.

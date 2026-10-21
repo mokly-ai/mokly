@@ -2826,8 +2826,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         completes them when it lands: Berry `exec:` sources (finding 1),
         lockfile paths by position (finding 3), bounded workspace pattern
         walks (finding 5), and the nested Berry cache path (finding 9).
-  - User item 120: pnpm/Yarn finding 6, offline installs rarely reach tier
-    two. Severity Medium.
+  - [x] User decision 120 (2026-10-21): C, for pnpm/Yarn finding 6, offline
+        installs rarely reach tier two. pnpm and Yarn base installs use the
+        registry that the base and user configuration select, with its
+        credentials, as npm base installs do. Scripts, pnpmfile hooks, Git
+        transports, and Corepack downloads stay off. Yarn Berry Git and
+        GitHub sources fall back. Yarn Classic now reads its project and user
+        configuration, with fixed private folders, mirror, and lock file.
+        Fix round 2 implements it; the local registry tests are in
+        `tests/static_base_registry.test.ts`.
   - User item 121: pnpm/Yarn finding 7, manager guard regressions lack
     fixtures. Severity Medium. Recommended B, add marker fixtures for every
     script and hook guard. Fix round 2 finding 5 joins it: the marker

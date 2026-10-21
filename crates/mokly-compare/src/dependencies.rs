@@ -73,7 +73,7 @@ impl Dependencies for DependencyTiers {
                     timeout,
                     byte_limit: None,
                     size_root: None,
-                    berry_cache: None,
+                    cache: None,
                 })?;
                 root.validate_version(&version)?;
             }

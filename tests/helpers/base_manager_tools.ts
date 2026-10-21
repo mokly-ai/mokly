@@ -54,7 +54,8 @@ function directory(manager: Manager) {
   );
 }
 
-function cli(manager: Manager) {
+/** The pinned development CLI of a manager, run with the current Node. */
+export function cli(manager: Manager) {
   return path.join(directory(manager), manager.cli);
 }
 
@@ -149,8 +150,11 @@ export async function managerPath(
   return safe.join(path.delimiter);
 }
 
-/** Count real manager installs and reject any attempted socket connection. */
-export async function instrumentManagers(root: string) {
+/**
+ * Count real manager installs and reject any attempted socket connection,
+ * except to the local registry `port` when one is given.
+ */
+export async function instrumentManagers(root: string, port?: number) {
   const preload = path.join(root, ".context/manager-probe.cjs");
   const calls = path.join(root, ".context/manager-calls.jsonl");
   const output = path.join(root, ".context/manager-output.log");
@@ -163,7 +167,13 @@ export async function instrumentManagers(root: string) {
     `
 const fs = require('node:fs');
 const net = require('node:net');
-net.Socket.prototype.connect = function () { fs.appendFileSync(${JSON.stringify(network)}, 'attempted\\n'); throw new Error('network is forbidden in this fixture'); };
+const allowed = ${JSON.stringify(port ?? null)};
+const connect = net.Socket.prototype.connect;
+net.Socket.prototype.connect = function (...args) {
+  const target = Array.isArray(args[0]) ? args[0][0] : typeof args[0] === 'object' && args[0] !== null ? args[0] : { port: args[0], host: args[1] };
+  if (allowed !== null && Number(target?.port) === allowed && ['127.0.0.1', 'localhost'].includes(target?.host)) return connect.apply(this, args);
+  fs.appendFileSync(${JSON.stringify(network)}, 'attempted\\n'); throw new Error('network is forbidden in this fixture');
+};
 if (/[/\\\\](pnpm(?:\\.(cjs|mjs))?|yarn\\.js)$/.test(process.argv[1] ? fs.realpathSync(process.argv[1]) : '') && process.argv.includes('install')) {
   fs.appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ args: process.argv.slice(2), cwd: process.cwd() }) + '\\n');
   for (const stream of [process.stdout, process.stderr]) {

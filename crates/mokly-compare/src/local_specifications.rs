@@ -7,13 +7,24 @@ use std::borrow::Cow;
 
 use percent_encoding::percent_decode_str;
 
+use crate::berry_sources;
 use crate::error::{Error, Result};
 use crate::manifest;
 
 pub(crate) fn validate(value: &str, parent: &str, project: &str) -> Result<()> {
+    walk(value, parent, project, false)
+}
+
+/// Validate a Yarn Berry range, which also falls back for Git and GitHub
+/// sources, also inside a patch.
+pub(crate) fn validate_berry(value: &str, parent: &str, project: &str) -> Result<()> {
+    walk(value, parent, project, true)
+}
+
+fn walk(value: &str, parent: &str, project: &str, berry: bool) -> Result<()> {
     let mut pending = value.to_owned();
     loop {
-        if pending.starts_with("exec:") {
+        if pending.starts_with("exec:") || (berry && berry_sources::git(&pending, true)) {
             return Err(Error::InvalidInput { path: value.into() });
         }
         let Some(patch) = pending.strip_prefix("patch:") else {

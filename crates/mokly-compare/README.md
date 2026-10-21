@@ -60,9 +60,11 @@ the sidecar maps resolved repository-owned paths into that side's sources.
 Different inputs use
 locked npm, pnpm 10 through 12, Yarn Classic 1, or Yarn Berry 4 node-modules installs at
 configuration and package-root ancestors in the dependency cache. They share one deadline. Successful installs
-remove their private download caches before publication. pnpm and Yarn run
-offline from local archives or offline data copied with the base sources.
-They use installed manager executables or cached Corepack shims and check
+remove their private download caches before publication. Every manager may
+download from the registry that the base and user configuration select, as
+npm does, with that configuration's credentials. Scripts, pnpmfile hooks, Git
+transports, and Corepack downloads stay off, and Yarn Berry Git and GitHub
+sources fall back. Managers use installed executables or cached Corepack shims and check
 exact `packageManager` pins. Yarn Plug'n'Play retains a specific fallback reason. The key includes the exact
 lockfiles, manifests, manager configurations, manager families, and actual versions. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
@@ -73,8 +75,10 @@ Yarn planning collects repository ancestor settings. Berry uses the nearest
 linker setting and rejects the existing restricted keys anywhere in that chain.
 It checks catalog and package-extension ranges like manifest specifications,
 and it requires the `npm:` default protocol.
-Classic copies only a confined offline mirror setting into private configuration.
-It excludes external configuration and keeps the fixed install policy.
+Classic reads its project and user configuration. Command-line flags and
+environment settings fix its folders, mirror, and lock file inside the private
+entry, and a confined committed mirror stays in use. Each fixed environment
+setting replaces every inherited spelling of its name.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
@@ -215,8 +219,10 @@ cargo clippy -p mokly-compare --all-targets -- -D warnings
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
 isolated Git repositories, OS locks, and local packages. The Node tests in
 `tests/static_base_managers.test.ts` run cold builds with pnpm and both Yarn
-families. Pinned test CLIs come from development dependencies. Local archives
-keep the builds offline. Tests cover script suppression, timing tiers,
+families from local archives. `tests/static_base_registry.test.ts` runs one
+cold build per manager from a local registry that requires the user token.
+Pinned test CLIs come from development dependencies, and no test uses the
+internet. Tests cover script suppression, timing tiers, registry access,
 comparison output, cache reuse, executable selection, and fallback reasons.
 
 ### Key Code
@@ -239,6 +245,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   package-extension settings.
   [Workspace patterns](./src/workspace_patterns.rs) confine every brace and
   `**` expansion in one linear pass.
+  [Berry Git sources](./src/berry_sources.rs) detect the Git and GitHub ranges
+  that fall back.
 - [Lockfile source confinement](./src/manager_lockfiles.rs) checks each
   lockfile value from the folder its manager reads it from.
   [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its

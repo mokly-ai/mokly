@@ -1,16 +1,15 @@
 //! Scalar tokens from Yarn Classic lockfiles and configuration without execution.
 
-use std::path::Path;
-
 use crate::ancestor_roots;
-use crate::error::{Error, InternalError, Result};
+use crate::error::{Error, Result};
 use crate::inputs::Inputs;
+use crate::manager::RepositoryPath;
 use crate::manager_yaml;
-use crate::manifest;
 
+/// The confined committed offline mirror of a Yarn Classic root, if any.
 #[derive(Clone, Debug)]
 pub(crate) struct Configuration {
-    mirror: Option<String>,
+    mirror: Option<RepositoryPath>,
 }
 
 impl Configuration {
@@ -45,7 +44,7 @@ impl Configuration {
                     mirror: if mirror == "false" {
                         None
                     } else {
-                        Some(manifest::target(&directory, mirror)?)
+                        Some(RepositoryPath::confine(&directory, mirror)?)
                     },
                 });
             }
@@ -53,20 +52,9 @@ impl Configuration {
         Ok(Self { mirror: None })
     }
 
-    pub(crate) fn contents(&self, destination: &Path) -> Result<Vec<u8>> {
-        let value = match &self.mirror {
-            Some(relative) => {
-                match serde_json::to_string(&destination.join(relative).to_string_lossy()) {
-                    Ok(value) => value,
-                    Err(source) => return Err(InternalError::Json { source }.into()),
-                }
-            }
-            None => "false".into(),
-        };
-        Ok(
-            format!("yarn-offline-mirror {value}\nyarn-offline-mirror-pruning false\n")
-                .into_bytes(),
-        )
+    /// The committed mirror, which the install pins instead of a private one.
+    pub(crate) fn mirror(&self) -> Option<&RepositoryPath> {
+        self.mirror.as_ref()
     }
 }
 

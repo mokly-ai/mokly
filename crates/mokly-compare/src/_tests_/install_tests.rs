@@ -204,7 +204,7 @@ fn a_nested_berry_cache_joins_the_private_repository_root_once() {
         ))),
         commands: Arc::new(Unimock::new(
             CommandsMock::run
-                .next_call(matching!((command) if command.directory == Path::new("/install/app") && command.berry_cache.as_deref() == Some(Path::new("/install/app/.yarn/app-cache"))))
+                .next_call(matching!((command) if command.directory == Path::new("/install/app") && command.cache.as_deref() == Some(Path::new("/install/app/.yarn/app-cache"))))
                 .returns(Ok(vec![])),
         )),
         clock: Arc::new(Unimock::new(

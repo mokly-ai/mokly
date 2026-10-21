@@ -29,7 +29,7 @@ pub(crate) fn validate(bytes: &[u8], path: &str, directory: &str, project: &str)
     let Ok(text) = str::from_utf8(bytes) else {
         return Err(invalid());
     };
-    let check = |value: &str| local_specifications::validate(value, directory, project);
+    let check = |value: &str| local_specifications::validate_berry(value, directory, project);
     let mut parser = Parser::new_from_str(text);
     let mut frames: Vec<Frame> = Vec::new();
     let mut scalars: Vec<String> = Vec::new();

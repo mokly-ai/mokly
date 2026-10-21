@@ -7,6 +7,7 @@
 use percent_encoding::percent_decode_str;
 use yaml_rust2::parser::{Event, Parser};
 
+use crate::berry_sources;
 use crate::error::{Error, Result};
 use crate::local_specifications;
 use crate::manager_classic;
@@ -133,8 +134,11 @@ fn berry(value: &str, project: &str) -> Result<()> {
     while let Some(value) = pending {
         let parent = importer(&value, project)?;
         let value_range = range(&value);
+        if berry_sources::git(value_range, value_range.len() < value.len()) {
+            return Err(Error::InvalidInput { path: value });
+        }
         if value_range.starts_with("patch:") {
-            local_specifications::validate(value_range, &parent, project)?;
+            local_specifications::validate_berry(value_range, &parent, project)?;
         } else {
             let reference = value_range.split("::").next().unwrap_or(value_range);
             source(reference, &parent, project)?;

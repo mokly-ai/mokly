@@ -18,6 +18,7 @@ pub mod storage;
 mod storage_tree;
 pub mod working_inputs;
 
+mod berry_sources;
 mod cache_maintenance;
 pub mod dependency_types;
 mod durability;
@@ -162,6 +163,10 @@ mod pnpm_lockfile_tests;
 #[cfg(test)]
 #[path = "_tests_/workspace_patterns_tests.rs"]
 mod workspace_patterns_tests;
+
+#[cfg(test)]
+#[path = "_tests_/berry_sources_tests.rs"]
+mod berry_sources_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]

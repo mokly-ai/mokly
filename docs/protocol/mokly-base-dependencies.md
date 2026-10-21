@@ -109,17 +109,37 @@ An unmappable lookup selects tier three with a `base-dependencies` warning. Each
 
 Copy the base sources into the private dependency entry. Install without a
 shell. Lifecycle scripts do not run, including workspace scripts and scripts
-that dependency metadata would otherwise enable. pnpm and Yarn installs are
-offline. They use local archives or offline cache data copied with the base
-sources. Missing offline packages use tier three. They do not read or change
-the working installation or a shared package store.
+that dependency metadata would otherwise enable. Installs do not read or
+change the working installation or a shared package store.
 
-| Manager            | Locked install policy                                                                                 |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| npm                | `ci --ignore-scripts --no-audit --no-fund`                                                            |
-| pnpm 10 through 12 | `install --offline --frozen-lockfile --ignore-scripts`; disable pnpmfile hooks and manager switching  |
-| Yarn Classic 1     | `install --offline --frozen-lockfile --ignore-scripts --non-interactive`; ignore external RC settings |
-| Yarn Berry 4       | `install --immutable --mode=skip-build`; disable network, scripts, telemetry, and shared mirrors      |
+Every manager may download packages from the registry that the base and user
+configuration select, as npm does. Installs use registry access rather than
+offline mode, because offline installs reached tier two only when a repository
+committed its archives or offline data. Git transports stay off, so no install
+clones a Git repository. Yarn Berry Git and GitHub sources use the fallback
+tier, because Berry packs them with their own scripts. Corepack network access
+stays off, and Mokly never downloads or updates a package-manager executable.
+The time, byte, and cache bounds also bound downloads. A failed download uses
+tier three.
+
+Each manager reads the base project configuration and the user configuration,
+with its credentials, as npm reads `.npmrc`: pnpm reads `.npmrc` and
+`pnpm-workspace.yaml`, Yarn Classic reads `.yarnrc` and `.npmrc`, and Yarn
+Berry reads `.yarnrc.yml`. Inherited environment settings also apply. Each
+setting that Mokly fixes replaces every inherited spelling of its variable, in
+any case and with a dash or an underscore. Yarn Classic needs rules that npm
+does not have, because its configuration files can move folders that it
+creates: Mokly fixes its working folder, cache, global, link, modules, and
+offline cache folders, its offline mirror, and its lock file inside the
+private entry. A confined committed offline mirror stays in use. The Classic
+self-update check stays off.
+
+| Manager            | Locked install policy                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| npm                | `ci --ignore-scripts --no-audit --no-fund`                                                 |
+| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts`; disable pnpmfile hooks and manager switching |
+| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive`; fix its folders and mirror |
+| Yarn Berry 4       | `install --immutable --mode=skip-build`; disable scripts, telemetry, and shared mirrors    |
 
 All install caches, logs, stores, module directories, and installation state
 stay inside the private entry. Remove temporary download caches before byte
@@ -144,7 +164,7 @@ Version discovery and every selected install share one monotonic deadline.
 Size supervision walks the whole private entry at most once per second.
 Vanished files or directories do not stop the install. Only a failed spawn
 or unavailable executable has the typed command-unavailable result. Tests
-use fake time and local offline fixtures without registry access.
+use fake time, local archives, and a local registry. No test uses the internet.
 
 The result carries third-party `node_modules`, the install lease when needed,
 the complete sidecar `ModuleResolution`, and typed repository root paths.
