@@ -2870,6 +2870,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       serialize first with all text escaped, find the first HTML `plaintext`
       element by its repair id, and write raw text only after it, Large.
       Recommended: A now, and B as a post-merge follow-up.
+  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
+    now also covers the source-identity redesign: the M15 follow-up "carry
+    source identities through HTML5 token processing for all elements", F19
+    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
+    in which html5ever's tree builder reads the tokens of the token pass,
+    chooses every text mode, and gives each element its source position.
+    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
+    request.
 - [x] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
@@ -3477,6 +3485,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     elements instead of matching tag signatures. Effort Large. Covers F19
     review finding 2, option B. Previous example: the existing source-location
     queues. The scoped wrapper repair applies option A.
+    - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item
+      98 now covers this follow-up and F21 review finding 5: one HTML
+      pipeline in which html5ever's tree builder reads the tokens of the
+      token pass, chooses every text mode, and gives each element its source
+      position. Work: W6 on `rebuild/html-pipeline`. It must not delay the
+      final pull request.
   - [ ] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
         delivered documents lose wrapper-named attributes. The tree sink
         filters every HTML5 parse. So a raw delivered `.html` file, a
