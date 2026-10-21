@@ -64,7 +64,12 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
         authored_inputs: vec![],
     };
     assert!(matches!(
-        service.classify(&config, Some("changed-ref"), Arc::new(Unimock::new(()))),
+        service.classify(
+            &config,
+            Some("changed-ref"),
+            Arc::new(Unimock::new(())),
+            None
+        ),
         Err(Error::UnsupportedManager)
     ));
 }

@@ -227,8 +227,10 @@ total runner minutes. Record hosted-run billing data when GitHub exposes it;
 otherwise record the applicable repository plan and the calculated
 runner-minute consumption. Keep the measurement record under `.context/`.
 
-Browser shards, static-delivery jobs, and native jobs have 60-minute hang guards. Other CI jobs keep
-30-minute hang guards. The optional design matrix uses its separate
+Repository jobs have 75-minute hang guards, and Viewer jobs have 40-minute
+hang guards. Browser shards, static-delivery jobs, and native jobs have
+60-minute hang guards. Required CI and other jobs keep 30-minute hang guards.
+The optional design matrix uses its separate
 [workflow guards](./ci-workflow.md#design-attribution-matrix). Compare each complete job's typical duration with its
 guard and retain at least three times that duration. Record a shortfall for
 review without changing assertion deadlines, coverage, or the four shards.

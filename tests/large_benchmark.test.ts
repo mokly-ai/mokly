@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { scenarios } from "../scripts/large/benchmark.js";
 import { processRows, treeRss } from "../scripts/large/memory.js";
+import { writeJsonArray } from "../scripts/large/run_output.js";
 import { commitFixture } from "../scripts/large/setup.js";
 import { prepareToolchain } from "../scripts/large/toolchain.js";
 import { NATIVE_TARGETS } from "../scripts/release/targets.mjs";
@@ -126,6 +127,22 @@ test("timing records survive chunk and UTF-8 splits with observer timestamps", a
   assert.equal(collector.records.length, 0);
   collector.accept(bytes.subarray(split));
   assert.deepEqual(collector.records, [{ event, receivedMs: 150 }]);
+});
+
+test("large timing arrays write as valid JSON without one giant string", async (t) => {
+  const file = path.join(
+    await fs.mkdtemp(path.join(repositoryRoot, ".context/large-timings-")),
+    "records.json",
+  );
+  t.after(() => fs.rm(path.dirname(file), { recursive: true, force: true }));
+  const records = Array.from({ length: 20_000 }, (_, index) => ({
+    event: { schemaVersion: 1 as const, stage: "detail.build", index },
+    receivedMs: index,
+  }));
+  await writeJsonArray(file, records);
+  const parsed = JSON.parse(await fs.readFile(file, "utf8"));
+  assert.equal(parsed.length, records.length);
+  assert.deepEqual(parsed.at(-1), records.at(-1));
 });
 
 test("a failed CLI preserves a failed measurement and its diagnostic", async (t) => {

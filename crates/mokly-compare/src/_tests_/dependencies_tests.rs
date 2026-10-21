@@ -37,6 +37,7 @@ fn request() -> Request {
         head_root: "/repo".into(),
         unmapped_directories: vec![],
         used_directories: Vec::new(),
+        install_scripts: false,
         source_identity: "commit".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),
         resolution: ModuleResolution {

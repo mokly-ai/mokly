@@ -21,6 +21,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::render_runtime::Services;
 use crate::serve_pool::{PoolScheduling, ServePool};
+use mokly_cli::options;
 
 pub(super) struct ServeServices {
     pub(super) sidecars: Arc<dyn PoolScheduling>,
@@ -43,10 +44,11 @@ impl ServeServices {
             cancellation: cancellation.clone(),
         });
         let loader = Arc::new(Loader { tree: tree.clone() });
-        let config = match loader.load(cwd, common.config.as_deref()) {
+        let mut config = match loader.load(cwd, common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        options::apply_base_install_scripts(&mut config, common.base_install_scripts_override());
         let services = match Services::new(
             tree.clone(),
             cwd,
@@ -94,10 +96,11 @@ impl ServePreparation for AttemptPreparation {
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError> {
         let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
         let loader = Loader { tree: tree.clone() };
-        let config = match loader.load(cwd, options.config.as_deref()) {
+        let mut config = match loader.load(cwd, options.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        options::apply_base_install_scripts(&mut config, options.base_install_scripts_override());
         self.settings.validate(&config)?;
         let runtime = Arc::new(self.runtime.with_tree(tree.clone()));
         let preparation: &dyn ServePreparation = &CatalogueServe {

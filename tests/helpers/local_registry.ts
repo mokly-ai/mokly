@@ -3,8 +3,12 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import type { TestContext } from "node:test";
 
-/** One registry request, with whether it carried the expected token. */
-export type RegistryRequest = { path: string; authorized: boolean };
+/** One registry request, with its raw token and whether it is the expected one. */
+export type RegistryRequest = {
+  path: string;
+  authorized: boolean;
+  authorization: string | null;
+};
 
 /**
  * A local npm registry for one package. It serves the packument and the
@@ -26,8 +30,9 @@ export async function localRegistry(
   );
   const server = http.createServer((request, response) => {
     const path = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
-    const authorized = request.headers.authorization === `Bearer ${token}`;
-    requests.push({ path, authorized });
+    const authorization = request.headers.authorization ?? null;
+    const authorized = authorization === `Bearer ${token}`;
+    requests.push({ path, authorized, authorization });
     const tarball = tarballs.get(path);
     if (!authorized) {
       response.writeHead(401).end();

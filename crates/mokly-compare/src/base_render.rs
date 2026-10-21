@@ -77,6 +77,8 @@ pub struct BaseRequest<'a> {
     pub commit: ObjectId,
     /// Shared source tree and batched dependency reader.
     pub sources: HistoricalSources,
+    /// Effective lifecycle-script setting from the working configuration and CLI.
+    pub install_scripts: bool,
 }
 
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
@@ -95,6 +97,7 @@ pub trait ChangesService: Send + Sync {
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
+        install_scripts: Option<bool>,
     ) -> Result<ComparisonResult>;
 }
 
@@ -118,7 +121,17 @@ impl ChangesService for Changes {
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
+        install_scripts: Option<bool>,
     ) -> Result<ComparisonResult> {
+        let install_scripts = install_scripts
+            .or_else(|| {
+                config
+                    .input
+                    .review
+                    .as_ref()
+                    .and_then(|review| review.base_install_scripts)
+            })
+            .unwrap_or(false);
         let selected = match &self.pinned {
             Some(pinned) => pinned.clone(),
             None => self
@@ -140,6 +153,7 @@ impl ChangesService for Changes {
                 repository,
                 commit: commit.clone(),
                 sources,
+                install_scripts,
             });
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {

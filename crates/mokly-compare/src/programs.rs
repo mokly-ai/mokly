@@ -10,6 +10,11 @@ use crate::commands::Command;
 use crate::error::{Error, Result};
 
 pub(crate) fn command(request: &Command) -> Result<process::Command> {
+    if request.program == "node" {
+        return Ok(process::Command::new(
+            env::var_os("MOKLY_NODE_EXECUTABLE").unwrap_or_else(|| "node".into()),
+        ));
+    }
     if !["npm", "pnpm", "yarn"]
         .iter()
         .any(|name| request.program == *name)
