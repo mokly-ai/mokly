@@ -71,7 +71,12 @@ impl GitRepository {
 
     pub(crate) fn checkout_digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
         validate_entries(std::slice::from_ref(entry), Limits::default())?;
-        let checkout = Checkout::new(self, commit, std::slice::from_ref(entry), None)?;
+        let checkout = Checkout::new(
+            self,
+            commit,
+            std::slice::from_ref(entry),
+            Some(entry.size.max(DEFAULT_OUTPUT_LIMIT)),
+        )?;
         let path = checkout.file(&entry.path)?;
         let mut input = fs::File::open(path).git()?;
         let mut digest = Sha256::new();
