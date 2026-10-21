@@ -3783,7 +3783,7 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     that setup always adds the unrelated rule to the first shared
     stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
     close-out review. Separate branch.
-  - `plans/rust-rebuild.md:2267`: the open PostCSS TODO still names "supply
+  - `plans/rust-rebuild.md:2305`: the open PostCSS TODO still names "supply
     immutable generation inputs" as a design path, but decision 56 A and the
     PostCSS page reject enforced immutable inputs. Found by the gap sweep
     close-out review. Separate branch.
