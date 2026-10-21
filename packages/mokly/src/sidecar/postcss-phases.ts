@@ -69,12 +69,17 @@ export class PostcssPhases {
   }
 
   moduleUrl(url: string): void {
+    const safe = url.startsWith("data:")
+      ? "data:"
+      : url.length > 512
+        ? `${url.slice(0, 512)}…`
+        : url;
     this.write(
       phaseLine({
         phase: "module",
         event: "module",
         elapsedMs: Math.round(this.clock.now() - this.origin),
-        moduleUrl: url,
+        moduleUrl: safe,
       }),
     );
   }
