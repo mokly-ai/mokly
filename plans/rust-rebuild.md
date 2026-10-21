@@ -3562,7 +3562,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     checks and states the rule in `mokly-html-components.md`; option B keeps
     only the required `html-ignore-attribute` and `html-foster-parented`
     warnings. Recommended: A. Apply B until the user answers.
-  - Item 131: unknown attributes on ignore wrappers returned by a
+  - Item 138: unknown attributes on ignore wrappers returned by a
     JavaScript `renderPage` callback. The HTML screens protocol requires
     this warning for authored bodies, but the sidecar render-record
     contract does not define warning transport for callback HTML.
