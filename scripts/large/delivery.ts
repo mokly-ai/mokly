@@ -69,6 +69,7 @@ export async function delivered(
     afterRevision?: number;
     previousGeneration?: string;
     ready?: boolean;
+    timeoutMs?: number;
   } = {},
 ) {
   const handle = await page.waitForFunction(
@@ -110,7 +111,7 @@ export async function delivered(
       return { value, publication, indexReceivedMs: state.index.receivedMs };
     },
     options,
-    { timeout: 60_000 },
+    { timeout: options.timeoutMs ?? 60_000 },
   );
   const observed = await handle.jsonValue();
   await handle.dispose();

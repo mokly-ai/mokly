@@ -3,6 +3,11 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { withFixtureEdit } from "../scripts/large/watch_edits.js";
+import { WATCH_BROWSER_TIMEOUT_MS } from "../scripts/large/watch.js";
+
+test("full-size watch allows slow React publication before timing an edit", () => {
+  assert.ok(WATCH_BROWSER_TIMEOUT_MS > 60_000);
+});
 
 test("an edit restores its source after a failed measurement", async (t) => {
   const writes: unknown[][] = [];
