@@ -3320,11 +3320,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [x] Fix pnpm/Yarn review findings 1, 2, 3, 4, 5, 9, and 10 with options A.
         Commits: `f0c46adf`, `ed897229`, `5c7ad760`, `24b53562`, `6d62ca8a`,
         `7e6ae9ad`, and `9855feb1`.
-  - [ ] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
+  - [x] Complete pnpm/Yarn review findings 1, 3, 5, and 9. The commits above
         fix them only in part. Fix round 2 on `rebuild/base-pnpm-yarn-fix2`
         completes them when it lands: Berry `exec:` sources (finding 1),
         lockfile paths by position (finding 3), bounded workspace pattern
         walks (finding 5), and the nested Berry cache path (finding 9).
+        Fix round 2 landed in integration batch 21 (`d650b856`, which merged
+        `a3278e13`): `b6af79d7` (finding 1), `def5b7e5` and `f54a5ec7`
+        (finding 3), `4beb492f` (finding 5), and `dd51cf24` (finding 9).
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
@@ -4608,10 +4611,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - 34: settled on 2026-10-21 with option A, as the orchestrator asked: a
     new open Milestone 14 line names audit finding 7 and the branches that
     it waits for.
-  - `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
+  - [x] `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
     that setup always adds the unrelated rule to the first shared
     stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
-    close-out review. Separate branch.
+    close-out review. Separate branch. Fixed by `661a9fe7` on
+    `rebuild/plan-bookkeeping-3`, which integration batch 21 merged
+    (`d650b856`): the paragraph now says that `--stylesheets 0` adds no rule.
   - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
     consumed-byte digests for the PostCSS module graph": it still names
     "supply immutable generation inputs" as a design path, but decision 56 A
