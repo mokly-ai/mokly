@@ -1442,6 +1442,9 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
       but the span measures snapshot changed-entry collection. The comparison
       contract names Git changed paths as an input that production code does
       not read. Keep the span and the M12 tick pending the decision.
+  - Item 45 B is in the code on the unmerged `rebuild/defaults-engine` from
+    an earlier default: it removes `review.changed-paths` and the claimed
+    Git changed-path comparison input. It stays until the user decides.
 
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
@@ -2764,6 +2767,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         matching path. Its subtree search uses one native frame per rendered
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
+    - Item 48 B is in the code on the unmerged `rebuild/defaults-engine`
+      from an earlier default: matching trees deeper than 512 elements keep
+      changed `:has()` selectors as unresolved evidence. It stays until the
+      user decides.
   - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
@@ -2823,6 +2830,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Decide whether reconstructed `plaintext` text writes raw characters;
       keep its escaping rules until approved (M14 review 1a finding 1B).
+  - Item 37 B is in the code on the unmerged `rebuild/defaults-engine` from
+    an earlier default: it writes all text raw while plaintext mode is
+    active. It stays until the user decides. User decision 76 B covers the
+    `noscript` case: the unmerged `rebuild/followups-f14` escapes raw
+    `noscript` closing text in `4beca842`.
 - [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
       decision): let the parser choose the plaintext point. Four cases of
       serializer-versus-parser divergence so far: hub review 1 finding 2,
@@ -4055,6 +4067,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
     HTML-only catalogues that import package CSS; retain working dependencies
     until the user decides.
+    - Settled on 2026-10-20 by user decision 74 C on the unmerged
+      `rebuild/defaults-engine-deps`, which narrows default item 27 B:
+      HTML-only catalogues use the working-tree dependencies for package CSS,
+      and they warn when the dependency identities that govern the used
+      directories differ. Mark this line settled when that branch merges.
   - [x] M8 core review 3, finding 2, and review 6, finding 7: settled on
         2026-10-20 by item 22 A and extended A, applied by default (user rule).
         Keep complete merged bounds checks, warn on saved values outside bounds,
