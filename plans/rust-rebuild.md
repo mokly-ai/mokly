@@ -2592,12 +2592,26 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       and reached closure files. Measure this boundary under the large fixtures.
   - [x] Verify captured bundle inputs against sidecar module digests before
         document callbacks; retain those baselines through the live recheck.
-- [ ] Report exact consumed-byte digests for the PostCSS module graph and
-      plugin file dependencies, and use them as static fingerprint baselines.
-      Design how to capture the bytes that module evaluation and plugins read,
-      or supply immutable generation inputs. Paths and rereads after a plugin
-      runs cannot establish the consumed bytes. Plugin file dependencies outside
-      roots and bundle modules without witnesses retain an accepted late baseline.
+- [x] Report observed-read evidence for the PostCSS module graph and plugin
+      file dependencies, and use it as static fingerprint baselines: record
+      the bytes that module evaluation and plugins read through observed
+      APIs, and keep explicit incomplete coverage and late opaque baselines
+      for other reads. Paths and rereads after a plugin runs cannot establish
+      the consumed bytes. Plugin file dependencies outside roots and bundle
+      modules without witnesses retain an accepted late baseline.
+      User decision 114 (2026-10-21): A. It changes this TODO from exact
+      consumed-byte digests to this observed-read guarantee, and it removes
+      the immutable generation inputs path, which decision 56 A rejects.
+      Ticked on 2026-10-21 in plan bookkeeping pass 3: the observed-read
+      children are done. The Read Evidence and Incomplete Coverage sections
+      of `docs/protocol/mokly-sidecar-postcss.md` state the guarantee.
+      `sidecar_postcss_evidence.test.ts`,
+      `sidecar_postcss_module_evidence.test.ts`,
+      `sidecar_postcss_loader_evidence.test.ts`,
+      `sidecar_postcss_ranges.test.ts`, `sidecar_postcss_streams.test.ts`,
+      and `postcss_evidence_ledger.test.ts` under `tests` check it. Stage
+      evidence: `.context/rust-rebuild/m14-postcss-read-evidence/` and its
+      `-2` and `-3` siblings.
   - [x] Compare read observers with immutable PostCSS inputs, including native
         plugins, child processes, descriptors, cost, and supported platforms.
   - [x] Decision 56 A, approved 2026-10-19: add observed-read evidence in
@@ -2620,12 +2634,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         ranges. Track FileHandle, Node streams, and FileHandle web streams.
         Keep unknown or overlapping sequential positions opaque. Verify ranges
         in one streamed pass per path and preserve them through both caches.
-  - [ ] Complete the remaining coverage: native/helper/worker reads,
-        private resolution metadata, unknown descriptor positions, opaque
-        providers and options, and unavailable native identity. The full M14 item
-        remains open. No path or context is labelled complete.
-        Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
-        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
+  - Moved on 2026-10-21 to the post-merge follow-up for confined inputs, by
+    user decision 114 A: native, helper, and worker reads, private
+    resolution metadata, unknown descriptor positions, opaque providers and
+    options, and unavailable native identity.
   - [x] Retain descriptor-bound file identity and verified resolved names.
         Detect equal-byte replacements and symlink retargets before callbacks
         and installation. Keep helper, worker, and native cursor changes opaque.
@@ -2636,7 +2648,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Retain known native resolution manifests as late inputs. Public hooks
         do not expose the bytes used by private `exports` and `imports` reads.
         Preserve native resolution and its cache. Do not manufacture read receipts.
-  - [ ] Resolve user item 114 (W6 decision 1, closure decision M14-PC2,
+  - [x] Resolve user item 114 (W6 decision 1, closure decision M14-PC2,
         proposed 2026-10-20): close this PostCSS evidence item? Observed-read
         evidence now covers every read that JavaScript hooks can see. Reads
         by native addons, helper processes, workers, private Node package
@@ -2648,6 +2660,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Recommended: B, because native reads can still produce CSS from
         bytes that differ from their late baseline. Neither option is
         applied. The user reserved the parent checkbox.
+    - User decision 114 (2026-10-21): A. This pass changes and ticks the
+      parent TODO, and a post-merge follow-up holds the confined input
+      design.
   - [x] Measure cumulative range-ledger growth during repeated Serve-style
         updates. A 1 MiB file read in 4 KiB chunks with unique bytes on every
         update reached 31,426,890 JSON bytes at 400 updates on Node 24.21.0.
@@ -2657,46 +2672,46 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         .context/rust-rebuild/m14-postcss-read-evidence-3/ledger-boundary-node24-unique.log,
         ledger-100x1m-4k-fd-node22.log, and
         ledger-100x1m-4k-fd-node24.log.
-  - [ ] Resolve user item 125 (W6 decision, first recorded here as decision
-        119, proposed 2026-10-21): the cumulative range ledger can pass the
-        existing 64 MiB frame limit. It does not block the merge, because
-        only plugins that read files through descriptors or streams in small
-        chunks add range witnesses. Severity High, effort Large for B.
-        Options: A, add a per-context evidence cap below the frame limit and
-        retain an explicit incomplete or late class after the cap, Medium;
-        B, send evidence deltas or an out-of-band ledger while keeping each
-        frame below 64 MiB, Large; C, keep the current cumulative response and
-        document the projected session bound, Small. Recommended: B, because
-        it preserves exact evidence for long Serve sessions without changing
-        the frame limit. No option is applied.
-    - User decision 125 (2026-10-21): D, a new option: the PostCSS child
-      keeps read evidence for one generation only. Work: the PostCSS
-      follow-ups workspace.
-  - [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
-        loader-supplied modules. The preload now registers Mokly's hooks
-        first, so a consumer load hook that returns source without
-        `nextLoad` hides that module. Contexts with an asynchronous loader
-        record no ESM module. Such plugin files get no witness, no path, and
-        no late baseline, so the protocol's rule that unobserved reads keep a
-        late opaque baseline is not true for them. Severity Low, effort
-        Medium. Options: A, state the gap in the protocol and the README,
-        Small (estimate); B, register a second, path-only hook set after the
-        consumer preloads, as the base did, and state the remaining
-        asynchronous-loader gap, Medium; C, record module paths through an
-        asynchronous resolve hook and a message port, Large. Recommended: B.
-    - User decision 117 (2026-10-21): A now, and C after the merge, in
-      parallel if possible, without blocking the merge. Work: the new
-      PostCSS follow-ups workspace.
-  - [ ] Resolve user item 118 (W6 review finding 3): each file open probes
-        identity twice. Every tracked open runs one wasted `fstat`,
-        `realpath`, and `stat` probe. Severity Low, effort Small. Performance
-        findings wait for the user. Options: A, probe in `opened()` only when
-        a whole-file read needs it, and in `begin()` only for unsuppressed
-        tickets, Small; B, A and also keep the descriptor's object until the
-        descriptor closes, Small (estimate); C, an operation-count test for
-        the probes of each read at two sizes, Medium. Recommended: A.
-    - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
-      workspace.
+- [ ] Resolve user item 125 (W6 decision, first recorded here as decision
+      119, proposed 2026-10-21): the cumulative range ledger can pass the
+      existing 64 MiB frame limit. It does not block the merge, because
+      only plugins that read files through descriptors or streams in small
+      chunks add range witnesses. Severity High, effort Large for B.
+      Options: A, add a per-context evidence cap below the frame limit and
+      retain an explicit incomplete or late class after the cap, Medium;
+      B, send evidence deltas or an out-of-band ledger while keeping each
+      frame below 64 MiB, Large; C, keep the current cumulative response and
+      document the projected session bound, Small. Recommended: B, because
+      it preserves exact evidence for long Serve sessions without changing
+      the frame limit. No option is applied.
+  - User decision 125 (2026-10-21): D, a new option: the PostCSS child
+    keeps read evidence for one generation only. Work: the PostCSS
+    follow-ups workspace.
+- [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
+      loader-supplied modules. The preload now registers Mokly's hooks
+      first, so a consumer load hook that returns source without
+      `nextLoad` hides that module. Contexts with an asynchronous loader
+      record no ESM module. Such plugin files get no witness, no path, and
+      no late baseline, so the protocol's rule that unobserved reads keep a
+      late opaque baseline is not true for them. Severity Low, effort
+      Medium. Options: A, state the gap in the protocol and the README,
+      Small (estimate); B, register a second, path-only hook set after the
+      consumer preloads, as the base did, and state the remaining
+      asynchronous-loader gap, Medium; C, record module paths through an
+      asynchronous resolve hook and a message port, Large. Recommended: B.
+  - User decision 117 (2026-10-21): A now, and C after the merge, in
+    parallel if possible, without blocking the merge. Work: the new
+    PostCSS follow-ups workspace.
+- [ ] Resolve user item 118 (W6 review finding 3): each file open probes
+      identity twice. Every tracked open runs one wasted `fstat`,
+      `realpath`, and `stat` probe. Severity Low, effort Small. Performance
+      findings wait for the user. Options: A, probe in `opened()` only when
+      a whole-file read needs it, and in `begin()` only for unsuppressed
+      tickets, Small; B, A and also keep the descriptor's object until the
+      descriptor closes, Small (estimate); C, an operation-count test for
+      the probes of each read at two sizes, Medium. Recommended: A.
+  - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
+    workspace.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -4571,6 +4586,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 - [ ] Replace the Intel macOS release runner before GitHub retires its Intel
       images, preserving native build and execution coverage.
+
+- [ ] Design confined inputs for the PostCSS reads that observation leaves
+      opaque: native addons, helper processes, workers, metadata reads,
+      `fs.openAsBlob`, and WASI. Cover native, helper, and worker reads,
+      private resolution metadata, unknown descriptor positions, opaque
+      providers and options, and unavailable native identity. User decision
+      114 A (2026-10-21) moved this work after the merge. Design:
+      `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.
