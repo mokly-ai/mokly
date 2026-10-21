@@ -52,7 +52,8 @@ its complete key. Explicit case spellings, moved aliases, and missing targets
 keep their requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
-trees, and evidence. It evicts by access order. Oversized artifacts return
+trees, and evidence, including registry ownership in documents and fragments.
+It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
 Cross-view anchor checks retain successful destination renders in this same

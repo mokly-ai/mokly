@@ -184,6 +184,8 @@ The [registry collectors](./src/sidecar/styles.ts) retain one delivery sheet.
 [Styled-components views](./src/sidecar/styled-ownership.ts) observe rule names
 on cache hits and insertions. [Emotion views](./src/sidecar/emotion-ownership.ts)
 observe serialized identities. Both keep all users of a deduplicated rule.
+Ownership views retain consumer cache keys, sheets, and rendering policies.
+Dependent keyframes keep every owner of the rules that use them.
 Component and slot contexts select the owner; React private owner fields and
 injection order do not select it. Typed comparison records stay separate from
 served CSS and its existing style-block grouping.

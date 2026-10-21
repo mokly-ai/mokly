@@ -1774,6 +1774,18 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Merge resolutions: `.context/defaults-engine-round6/merge-resolutions.md`.
         Round 5 byte reference and red test:
         `.context/defaults-engine-round6/byte-parity-red.log`.
+  - [x] Decision 110 fresh review fixes: retain consumer Emotion caches and
+        styled-components context; join dependent keyframe owners on cache
+        hits; charge fragment attribution through the shared style accounting.
+        Failing regressions and review:
+        `.context/defaults-engine-round6/fresh-review.md`,
+        `.context/defaults-engine-round6/context-red2.log`, and
+        `.context/defaults-engine-round6/metadata-weight-red.log`.
+    - Outside the scope: `tests/browser/large_watch.spec.ts`, React journey,
+      failed with `Test timeout of 300000ms exceeded` and
+      `page.waitForFunction: Test ended` in round 6 gate 4; gate 5 passed
+      that command. Suspected source: contention in the combined React watch
+      journey; the timing contract accepts rare timeouts. Separate branch.
     - Earlier options: A, keep the behaviour, state it, and add a
       React-parent test that asserts it, so the false rows stay, Small
       (estimate); B, remove the supplier-ancestry condition from the owned

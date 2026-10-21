@@ -12,7 +12,7 @@ import type { StyledAdapter } from "./styled-ownership.js";
 
 /** Delivery uses the original sheet bytes. Comparison uses separate rule owners. */
 export function collectStyles(
-  generation: Generation,
+  generation: Pick<Generation, "runtime" | "require" | "exports">,
   render: (node: ReactNode) => string,
   node: ReactNode,
   entryOwner?: string,
@@ -53,7 +53,11 @@ export function collectStyles(
   try {
     if (sheet) node = sheet.collectStyles(node);
     const emotion = generation.exports?.styleAdapters?.emotion as
-      { CacheProvider: React.ElementType } | undefined;
+      | {
+          CacheProvider: React.ElementType;
+          __unsafe_useEmotionCache(): EmotionCache | null;
+        }
+      | undefined;
     const createCache = optional("@emotion/cache");
     const createServer = optional("@emotion/server/create-instance");
     let emotionCapture: ReturnType<typeof emotionOwners> | undefined;
@@ -73,23 +77,43 @@ export function collectStyles(
         node,
       );
     }
+    function Scope({
+      owner,
+      children,
+    }: {
+      owner: string | undefined;
+      children: ReactNode;
+    }) {
+      let output = children;
+      if (styled && styledCapture) {
+        const context = React.useContext(styled.StyleSheetContext);
+        output = React.createElement(
+          styled.StyleSheetContext.Provider,
+          {
+            value: {
+              ...context,
+              styleSheet: styledCapture.forOwner(owner, context.styleSheet),
+            },
+          },
+          output,
+        );
+      }
+      if (emotion && emotionCapture) {
+        const cache = emotion.__unsafe_useEmotionCache();
+        output = React.createElement(
+          emotion.CacheProvider,
+          {
+            value: emotionCapture.forOwner(owner, cache),
+          },
+          output,
+        );
+      }
+      return output;
+    }
     const capture: StyleCapture = {
       entryOwner,
-      wrap(owner, child) {
-        if (styled && styledCapture)
-          child = React.createElement(
-            styled.StyleSheetManager,
-            { sheet: styledCapture.forOwner(owner) },
-            child,
-          );
-        if (emotion && emotionCapture)
-          child = React.createElement(
-            emotion.CacheProvider,
-            { value: emotionCapture.forOwner(owner) },
-            child,
-          );
-        return child;
-      },
+      wrap: (owner, children) =>
+        React.createElement(Scope, { owner, children }),
     };
     node = React.createElement(
       generation.runtime.contexts.styles.Provider,

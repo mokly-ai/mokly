@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { Context, ReactNode } from "react";
 
 import type { StyleAttribution } from "../generated/sidecar/StyleAttribution.js";
 
@@ -19,6 +19,7 @@ export interface StyledAdapter {
     seal(): void;
   };
   StyleSheetManager: React.ElementType;
+  StyleSheetContext: Context<{ styleSheet: Sheet; [key: string]: unknown }>;
 }
 
 /** Share the real sheet, its name cache and global counters across owner views. */
@@ -26,14 +27,16 @@ export function styledOwners(
   root: Sheet,
   fallback: string | undefined,
 ): {
-  forOwner(owner: string | undefined): Sheet;
+  forOwner(owner: string | undefined, current?: Sheet): Sheet;
   records(): StyleAttribution[];
 } {
   const ledger = new StyleOwners();
   const has = root.hasNameForId.bind(root);
   const insert = root.insertRules.bind(root);
+  const ownedViews = new WeakSet<object>();
   const views = new Map<string | undefined, Sheet>();
-  function forOwner(owner: string | undefined): Sheet {
+  function forOwner(owner: string | undefined, current?: Sheet): Sheet {
+    if (current && current !== root && !ownedViews.has(current)) return current;
     let view = views.get(owner);
     if (view) return view;
     const methods = {
@@ -54,6 +57,7 @@ export function styledOwners(
         return typeof value === "function" ? value.bind(target) : value;
       },
     });
+    ownedViews.add(view);
     views.set(owner, view);
     return view;
   }

@@ -5,6 +5,7 @@ import { StyleOwners } from "./style-ownership.js";
 interface Serialized {
   name: string;
   styles: string;
+  next?: Serialized;
 }
 
 export interface EmotionCache {
@@ -19,13 +20,19 @@ export interface EmotionCache {
 
 /** Observe cache hits as well as inserts without regenerating or renaming CSS. */
 export function emotionOwners(root: EmotionCache): {
-  forOwner(owner: string | undefined): EmotionCache;
+  forOwner(
+    owner: string | undefined,
+    current?: EmotionCache | null,
+  ): EmotionCache;
   records(ids: readonly string[]): StyleAttribution[];
 } {
   const ledger = new StyleOwners();
+  const ownedViews = new WeakSet<object>();
   const views = new Map<string | undefined, EmotionCache>();
   return {
-    forOwner(owner) {
+    forOwner(owner, current) {
+      if (current && current !== root && !ownedViews.has(current))
+        return current;
       let view = views.get(owner);
       if (view) return view;
       const inserted = new Proxy(root.inserted, {
@@ -41,6 +48,8 @@ export function emotionOwners(root: EmotionCache): {
         shouldCache: boolean,
       ) => {
         ledger.use(serialized.name, owner);
+        for (let next = serialized.next; next; next = next.next)
+          ledger.link(serialized.name, next.name);
         return root.insert(selector, serialized, sheet, shouldCache);
       };
       view = new Proxy(root, {
@@ -50,6 +59,7 @@ export function emotionOwners(root: EmotionCache): {
           return Reflect.get(target, key, receiver);
         },
       });
+      ownedViews.add(view);
       views.set(owner, view);
       return view;
     },

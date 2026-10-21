@@ -2,6 +2,7 @@ import type { StyleAttribution } from "../generated/sidecar/StyleAttribution.js"
 
 /** Adapter identities join all users even when the adapter inserts CSS only once. */
 export class StyleOwners {
+  private dependencies = new Map<string, Set<string>>();
   private rules = new Map<
     string,
     { css?: string; owners: Set<string | undefined> }
@@ -17,7 +18,27 @@ export class StyleOwners {
     if (css !== undefined) rule.css = css;
   }
 
+  link(identity: string, dependency: string) {
+    let edges = this.dependencies.get(identity);
+    if (!edges) this.dependencies.set(identity, (edges = new Set()));
+    edges.add(dependency);
+  }
+
   records(read?: (identity: string) => string | undefined): StyleAttribution[] {
+    const pending = [...this.rules.keys()];
+    for (let cursor = 0; cursor < pending.length; cursor++) {
+      const identity = pending[cursor]!;
+      const source = this.rules.get(identity)!;
+      for (const dependency of this.dependencies.get(identity) ?? []) {
+        const target = this.rules.get(dependency);
+        if (!target) continue;
+        for (const owner of source.owners) {
+          if (target.owners.has(owner)) continue;
+          target.owners.add(owner);
+          pending.push(dependency);
+        }
+      }
+    }
     const records = new Map<string, StyleAttribution>();
     for (const [identity, rule] of this.rules) {
       const css = read ? read(identity) : rule.css;
