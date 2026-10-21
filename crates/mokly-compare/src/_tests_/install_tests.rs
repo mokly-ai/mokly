@@ -34,6 +34,7 @@ fn npm(directory: &str) -> Root {
         requested: None,
         version: "11.0.0".into(),
         classic: None,
+        berry_cache: None,
     }
 }
 

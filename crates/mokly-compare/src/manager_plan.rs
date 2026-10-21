@@ -7,6 +7,7 @@ use crate::local_packages;
 use crate::manager::{Manager, Root, version_major};
 use crate::manager_classic::Configuration;
 use crate::manager_yaml;
+use crate::manifest;
 
 pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>> {
     let manifests = local_packages::manifests(&inputs.files)?;
@@ -77,12 +78,18 @@ pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>>
         if lock.is_none() {
             return Err(Error::UnsupportedManager);
         }
+        let berry_cache = if manager == Manager::YarnBerry {
+            berry_config(inputs, &directory)?.1
+        } else {
+            None
+        };
         roots.push(Root {
             classic: if manager == Manager::YarnClassic {
                 Some(Configuration::read(inputs, &directory)?)
             } else {
                 None
             },
+            berry_cache,
             directory,
             manager,
             requested,
@@ -129,7 +136,12 @@ fn yarn(inputs: &Inputs, root: &str) -> Result<Manager> {
 }
 
 fn berry_linker(inputs: &Inputs, root: &str) -> Result<Option<String>> {
+    Ok(berry_config(inputs, root)?.0)
+}
+
+fn berry_config(inputs: &Inputs, root: &str) -> Result<(Option<String>, Option<String>)> {
     let mut linker = None;
+    let mut cache = None;
     for directory in ancestor_roots::directories(root) {
         let Some(bytes) = file(inputs, &directory, ".yarnrc.yml") else {
             continue;
@@ -142,10 +154,22 @@ fn berry_linker(inputs: &Inputs, root: &str) -> Result<Option<String>> {
         if linker.is_none()
             && let Some(value) = config.get("nodeLinker")
         {
-            linker = Some(value.clone().ok_or(Error::InvalidInput { path })?);
+            linker = Some(
+                value
+                    .clone()
+                    .ok_or(Error::InvalidInput { path: path.clone() })?,
+            );
+        }
+        if cache.is_none()
+            && let Some(value) = config.get("cacheFolder")
+        {
+            cache = Some(manifest::target(
+                &directory,
+                value.as_deref().ok_or(Error::InvalidInput { path })?,
+            )?);
         }
     }
-    Ok(linker)
+    Ok((linker, cache))
 }
 
 fn file<'a>(inputs: &'a Inputs, root: &str, name: &str) -> Option<&'a [u8]> {

@@ -26,6 +26,8 @@ pub struct Command {
     pub byte_limit: Option<u64>,
     /// Whole private install root when the command runs in a configured package.
     pub size_root: Option<PathBuf>,
+    /// Optional confined Berry cache path from repository configuration.
+    pub berry_cache: Option<PathBuf>,
 }
 
 /// Reaped process result after pipe workers close.

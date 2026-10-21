@@ -50,6 +50,7 @@ pub(crate) struct Root {
     pub(crate) requested: Option<String>,
     pub(crate) version: String,
     pub(crate) classic: Option<Configuration>,
+    pub(crate) berry_cache: Option<String>,
 }
 
 impl Root {

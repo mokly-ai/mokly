@@ -84,6 +84,7 @@ fn classic_external_environment_cannot_replace_the_private_configuration() {
         timeout: Duration::from_secs(120),
         byte_limit: Some(1000),
         size_root: Some("/private".into()),
+        berry_cache: None,
     };
     for name in [
         "YARN_YARN_OFFLINE_MIRROR",

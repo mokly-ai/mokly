@@ -158,3 +158,18 @@ fn berry_uses_the_nearest_linker_setting_from_its_configuration_chain() {
     );
     assert!(matches!(roots(&base, &["app".into()]), Err(Error::YarnPnp)));
 }
+
+#[test]
+fn berry_keeps_the_confined_nearest_cache_folder() {
+    let base = inputs(&[
+        (
+            ".yarnrc.yml",
+            "nodeLinker: node-modules\ncacheFolder: .yarn/root-cache",
+        ),
+        ("app/package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+        ("app/yarn.lock", "__metadata:\n  version: 8"),
+        ("app/.yarnrc.yml", "cacheFolder: .yarn/app-cache"),
+    ]);
+    let root = roots(&base, &["app".into()]).unwrap().remove(0);
+    assert_eq!(root.berry_cache.as_deref(), Some("app/.yarn/app-cache"));
+}

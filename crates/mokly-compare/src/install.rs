@@ -67,6 +67,10 @@ impl Builder for Install<'_> {
                 timeout,
                 byte_limit: Some(self.owner.install_bytes),
                 size_root: Some(destination.to_owned()),
+                berry_cache: root
+                    .berry_cache
+                    .as_ref()
+                    .map(|path| destination.join(&root.directory).join(path)),
             })?;
         }
         let mut caches = BTreeSet::new();
@@ -81,6 +85,11 @@ impl Builder for Install<'_> {
                     .iter()
                     .map(|cache| directory.join(cache)),
             );
+            if root.manager == Manager::YarnBerry
+                && let Some(cache) = &root.berry_cache
+            {
+                caches.insert(directory.join(cache));
+            }
         }
         for cache in caches {
             self.owner.storage.remove(&cache)?;
