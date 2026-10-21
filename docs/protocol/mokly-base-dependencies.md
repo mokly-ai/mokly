@@ -136,11 +136,11 @@ offline cache folders, its offline mirror, and its lock file inside the
 private entry. A confined committed offline mirror stays in use. The Classic
 self-update check stays off.
 
-| Manager            | Locked install policy                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| npm                | `ci --ignore-scripts --no-audit --no-fund` by default; omit `--ignore-scripts` when enabled |
-| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts` by default; omit it when enabled; disable pnpmfile hooks and manager switching |
-| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive` by default; omit it when enabled; fix its folders and mirror |
+| Manager            | Locked install policy                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| npm                | `ci --ignore-scripts --no-audit --no-fund` by default; omit `--ignore-scripts` when enabled                                     |
+| pnpm 10 through 12 | `install --frozen-lockfile --ignore-scripts` by default; omit it when enabled; disable pnpmfile hooks and manager switching     |
+| Yarn Classic 1     | `install --frozen-lockfile --ignore-scripts --non-interactive` by default; omit it when enabled; fix its folders and mirror     |
 | Yarn Berry 4       | `install --immutable --mode=skip-build` by default; omit `--mode=skip-build` when enabled; disable telemetry and shared mirrors |
 
 All install caches, logs, stores, module directories, and installation state

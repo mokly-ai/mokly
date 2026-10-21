@@ -19,20 +19,20 @@ is the receiver's Plan URL. For Mokly Cloud it is
 
 ## Options
 
-| Option                           | Meaning                                                      |
-| -------------------------------- | ------------------------------------------------------------ |
-| `--config {path}`                | Load a JSON configuration file.                              |
-| `--endpoint {url}`               | Override `MOKLY_ENDPOINT`.                                   |
-| `--token {token}`                | Override `MOKLY_TOKEN`. Prefer the environment for secrets.  |
-| `--repository {host/owner/name}` | Override repository identity detection.                      |
-| `--base {ref}`                   | Override `review.base`, whose default is `origin/main`.      |
-| `--base-install-scripts`         | Run lifecycle scripts during base dependency installation.   |
+| Option                           | Meaning                                                              |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `--config {path}`                | Load a JSON configuration file.                                      |
+| `--endpoint {url}`               | Override `MOKLY_ENDPOINT`.                                           |
+| `--token {token}`                | Override `MOKLY_TOKEN`. Prefer the environment for secrets.          |
+| `--repository {host/owner/name}` | Override repository identity detection.                              |
+| `--base {ref}`                   | Override `review.base`, whose default is `origin/main`.              |
+| `--base-install-scripts`         | Run lifecycle scripts during base dependency installation.           |
 | `--no-base-install-scripts`      | Keep lifecycle scripts disabled during base dependency installation. |
-| `--no-changes`                   | Publish current content without base history or comparisons. |
-| `--upload-concurrency {count}`   | Send 1 to 32 missing blobs at once. The default is 8.        |
-| `--strict`                       | Fail on build warnings before output installation or upload. |
-| `--sidecars {count}`             | Set the positive JavaScript worker count.                    |
-| `--debug-timings`                | Select plain output and report timing records.               |
+| `--no-changes`                   | Publish current content without base history or comparisons.         |
+| `--upload-concurrency {count}`   | Send 1 to 32 missing blobs at once. The default is 8.                |
+| `--strict`                       | Fail on build warnings before output installation or upload.         |
+| `--sidecars {count}`             | Set the positive JavaScript worker count.                            |
+| `--debug-timings`                | Select plain output and report timing records.                       |
 
 Value options also accept `--name=value`. Use `--token=-TOKEN` for a token
 that starts with a hyphen. `--base` conflicts with `--no-changes`.
