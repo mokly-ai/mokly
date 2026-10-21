@@ -131,7 +131,10 @@ export function WorkspacePropsTab({
   return <WorkspaceProps data={data} selection={usage ? { usage } : {}} />;
 }
 
-/** Props while the routed entry's detail loads, or after its load failed. */
+/**
+ * Props while the routed entry's detail loads, or after its load failed. A
+ * replaced catalogue brings new details, so the fields keep waiting for them.
+ */
 function PropsDelivery({
   delivery,
 }: {
@@ -139,9 +142,7 @@ function PropsDelivery({
 }) {
   return (
     <section aria-label="Props status" data-props-section="status">
-      {delivery.status === "loading" ? (
-        <p role="status">{CONTROLS_COPY.loading}</p>
-      ) : (
+      {delivery.status === "failed" ? (
         <>
           <p role="alert">{CONTROLS_COPY.loadFailed}</p>
           <button
@@ -152,6 +153,8 @@ function PropsDelivery({
             {CONTROLS_COPY.retry}
           </button>
         </>
+      ) : (
+        <p role="status">{CONTROLS_COPY.loading}</p>
       )}
     </section>
   );

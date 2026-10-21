@@ -193,6 +193,11 @@ test("own props wait for the routed detail, which alone carries their order", ()
     tab({ status: "failed", retry: () => (retries += 1) }),
     '<section aria-label="Props status" data-props-section="status"><p role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button" type="button">Try again</button></section>',
   );
+  // A replaced catalogue brings new details, so Props keep waiting, as Usage does.
+  assert.equal(
+    tab({ status: "replaced" }),
+    '<section aria-label="Props status" data-props-section="status"><p role="status">Loading props…</p></section>',
+  );
   assert.equal(tab({ status: "ready" }), "<p>Own props</p>");
   // A screen without own props never waits: the detail orders no fields.
   const bare: ControlTarget = {
