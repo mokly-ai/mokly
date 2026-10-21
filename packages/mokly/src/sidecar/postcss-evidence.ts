@@ -88,7 +88,6 @@ export function initializeReadEvidenceGeneration(generation: string): void {
     return;
   }
   activeGeneration = generation;
-  moduleBaseline = new Set(Object.keys(require.cache));
 }
 
 /** Async loaders cannot certify raw source or synchronously load an ESM preload. */
