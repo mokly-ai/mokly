@@ -3051,14 +3051,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
 
-- [ ] Resolve user item 100: CI jobs exceed the three-times rule of the CI
-      timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
-      its 30 minutes and Viewer took 11.3 of its 30 minutes. Severity Medium,
-      effort Small for A. Options: A, raise the limits to at least three
-      times the measured durations, Repository 75 and Viewer 40 minutes,
-      Small; B, larger runners. The task message cut this record, so the hub
-      decision log holds the rest of B, any other option, and the
-      recommendation.
+- [x] User decision 100 (2026-10-21): apply option A to the CI job limits
+      using the same three hosted repeats. The median job durations are
+      Repository 15.92, Viewer 10.63, Static delivery 11.68, and browser
+      shards 13.05, 13.42, 12.65, and 13.05 minutes. Repository now has a
+      75-minute limit and Viewer 40 minutes. Static delivery and browser jobs
+      retain 60 minutes because those guards already exceed three times their
+      medians. Native jobs are excluded from the median calculation: Windows
+      failed in all three runs and macOS failed in two. Native limits stay at
+      60 minutes. Required CI stays at 30 minutes because it was not a suite
+      timing sample. Evidence: `.context/ci-timing/hosted-timing.md`.
 - [x] User decision 124 (2026-10-21): apply option A for CI round 8. Use
       three controlled hosted repeats of commit `cdb32803` with one four-shard
       assignment. The median per-test duration from runs `39581933162`,
