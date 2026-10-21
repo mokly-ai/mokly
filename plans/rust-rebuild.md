@@ -2539,13 +2539,17 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
       which `exec:` generators can still run (`b1604f5b`).
     - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
       2 finding 2.
-  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+  - [x] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
         send unscoped tokens elsewhere. Severity High, security, effort
         Small. Options: A, document it only, Small (estimate); B, clear
         unscoped Yarn credentials for base installs, Small (estimate); C, B,
         and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
         D, fall back whenever the base configuration selects a registry or a
         scope, Medium. Recommended: C.
+    - User decision 141 (2026-10-21): A. Document it: Yarn sends an unscoped
+      user token to the registry that the base configuration selects, as the
+      project's own install of the base commit does. `mokly-base-dependencies.md`
+      states how each manager sends tokens (`b1604f5b`).
   - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
         scope): a base `.npmrc` can choose npm's git program. npm gets the
         base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
