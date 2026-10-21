@@ -44,15 +44,19 @@ old test names, not a port.
 
 1. List the previous protocol pages and the test files that owned the
    subsystem, read at the commit the plan names.
-2. For each rule or test case, decide one of three outcomes with one line of
+2. List every assertion of each old test, including its helpers and its host
+   branches, and every section of each old protocol page. Mark each one as
+   proved or not proved, and check that the title of each port states what
+   the port proves.
+3. For each rule or test case, decide one of three outcomes with one line of
    reason: adopt, adopt with a change, or drop.
-3. Write the adopted and changed rules into the new spec page in the same
+4. Write the adopted and changed rules into the new spec page in the same
    change. Dropped rules need no record beyond the sweep file.
-4. Produce the behaviour table from the Rust core for every captured scenario
+5. Produce the behaviour table from the Rust core for every captured scenario
    and compare it with the reference table. Put each difference into one bin:
    an improvement the spec already states, a spec gap to close before the
    milestone closes, or a regression to fix.
-5. Save the sweep and the comparison under
+6. Save the sweep and the comparison under
    `.context/rust-rebuild/sweeps/<milestone>.md` and name that file in one
    line under the milestone in the plan.
 
