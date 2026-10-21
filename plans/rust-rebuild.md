@@ -1309,10 +1309,18 @@ renders again.
         desktop divider alignment, comparison bars, the stacked frames, mobile
         sheets, responsive overflow, bounded scrolling, and portable link round
         trips.
-  - [ ] Add the Changes checks after Milestone 9: the attribution matrix, one
+  - [x] Add the Changes checks after Milestone 9: the attribution matrix, one
         classification of the nine shared sheets per scenario, the rule
         records and the changed-entry union, and bounded base-side Git
         batching.
+        Ticked on 2026-10-21 in plan bookkeeping pass 1. The design
+        attribution matrix of the M9 TODO "Add the stylesheet attribution
+        tests over the design catalogue" holds the first three parts.
+        `end_to_end_planning_batches_are_constant_at_ten_and_forty_screens`
+        in `crates/mokly-compare/tests/planning_io_tests.rs` bounds base-side
+        Git reads by command count: at most four `cat-file` processes, the
+        same at 10 and 40 screens. That test uses a generated catalogue, not
+        the design catalogue.
   - [x] Add the Rust behaviour tests over the design catalogue after
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
