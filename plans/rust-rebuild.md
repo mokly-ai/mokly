@@ -1792,7 +1792,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       `rebuild/defaults-engine` implements. The decision is settled, so the
       hub had this TODO ticked on 2026-10-21. The code reaches the rebuild
       branch when that branch merges.
-  - [ ] Resolve user item 110 (review 3 finding 1): React component parents
+  - [x] Resolve user item 110 (review 3 finding 1): React component parents
         get false rows from page-wide registry copies. Severity High, effort
         Large for C. Options: A, keep the behaviour, state it, and add a
         React-parent test that asserts it, so the false rows stay, Small
@@ -1818,6 +1818,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           membership protocols state this ownership contract. Evidence:
           `tests/sidecar_styles.test.ts` and
           `crates/mokly-cli/tests/changes_registry_ownership_tests.rs`.
+    - Ticked on 2026-10-21 in integration batch 25: `rebuild/defaults-engine`
+      merged as `6a4dcd30`.
   - [x] Decision 110 round 6 audit: keep original style text and delivery
         grouping; store rule ownership as separate trusted metadata through
         repair and capture. Join owners by adapter identity, including cache
@@ -1844,12 +1846,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       `page.waitForFunction: Test ended` in round 6 gate 4; gate 5 passed
       that command. Suspected source: contention in the combined React watch
       journey; the timing contract accepts rare timeouts. Separate branch.
-  - [ ] Resolve user item 101 (engine review auto-fix): an HTML component's
+  - [x] Resolve user item 101 (engine review auto-fix): an HTML component's
         own plaintext page lost its root range after parser repair and
         failed static detail validation. Severity Medium, product bug.
         `rebuild/defaults-engine` fixes it as a review auto-fix in
         `3387f236`, and the fix lands when that branch merges. Tick this TODO
         at that merge.
+    - Ticked on 2026-10-21 in integration batch 25: the engine merge
+      `6a4dcd30` brings the fix.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -2129,7 +2133,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
         Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
-- [ ] Resolve user item 69 (engine defaults decision 11.1): offline custom
+- [x] Resolve user item 69 (engine defaults decision 11.1): offline custom
       Git filters for base resources. Default item 11 A needs checkout
       conversion of raw base blobs without network access. Git's transport
       restrictions do not isolate external filter programs. Severity Medium,
@@ -2148,7 +2152,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         timeout, or bound failure leaves that resource unavailable with a
         warning while other resources continue. Custom filters are not
         network-isolated; their configured Git behaviour is the contract.
-- [ ] Resolve user item 127 (integration batch 18 decision 1): blobless
+  - Ticked on 2026-10-21 in integration batch 25: `rebuild/git-base-reads`
+    merged as `8490e636`.
+- [x] Resolve user item 127 (integration batch 18 decision 1): blobless
       clones fail comparison base reads. Mokly reads base files with several
       `git cat-file` processes at once. In a blobless partial clone, Git's
       parallel lazy fetches fail, so `mokly build --base` and Serve's
@@ -2162,6 +2168,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         requested object ids with lazy fetch disabled. Fetch missing ids through
         the configured promisor remote in one bounded `git fetch --stdin`
         request. A failed fetch reports the remote and the recovery command.
+  - Ticked on 2026-10-21 in integration batch 25: `rebuild/git-base-reads`
+    merged as `8490e636`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -3197,7 +3205,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
-  - [ ] Resolve rendered-depth recursion in the `selectors` crate's `:has()`
+  - [x] Resolve rendered-depth recursion in the `selectors` crate's `:has()`
         matching path. Its subtree search uses one native frame per rendered
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
@@ -3205,6 +3213,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       from an earlier default: matching trees deeper than 512 elements keep
       changed `:has()` selectors as unresolved evidence. User decision 131
       (2026-10-21) keeps it. Tick this TODO when that branch merges.
+    - Ticked on 2026-10-21 in integration batch 25: `rebuild/defaults-engine`
+      merged as `6a4dcd30`.
   - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
@@ -3257,7 +3267,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       subtree copies in link controls. Evidence:
       `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
 - [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
-- [ ] Decide whether reconstructed `plaintext` text writes raw characters;
+- [x] Decide whether reconstructed `plaintext` text writes raw characters;
       keep its escaping rules until approved (M14 review 1a finding 1B).
   - Item 37 B is in the code on the unmerged `rebuild/defaults-engine` from
     an earlier default: it writes all text raw while plaintext mode is
@@ -3265,6 +3275,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
     covers the `noscript` case: the unmerged `rebuild/followups-f14` escapes
     raw `noscript` closing text in `4beca842`. Tick this TODO when both
     branches merge.
+  - Ticked on 2026-10-21 in integration batch 25: `rebuild/defaults-engine`
+    merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
 - [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
       decision): let the parser choose the plaintext point. Four cases of
       serializer-versus-parser divergence so far: hub review 1 finding 2,
@@ -3468,10 +3480,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       every entry below is done. Everything else is post-merge work; items
       98 B, 111 C, 115 C, 116 C, and 117 C stay post-merge, as the user
       chose earlier.
-  - [ ] `rebuild/defaults-engine` with user decision 110 C, and its two
+  - [x] `rebuild/defaults-engine` with user decision 110 C, and its two
         companion branches: `rebuild/defaults-engine-deps`, with user
         decision 74 C, and `rebuild/followups-f14`, with user decision 76 B.
         They hold work that `main` already has.
+        Integration batch 25 merged them as `6a4dcd30`, `bb6928db`, and
+        `7a14845e`.
   - [ ] Passing hosted macOS and Windows CI, in native CI round 5.
   - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
@@ -4871,14 +4885,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     Used by lists unavailable after one unavailable view until the next generation.
   - M8 sidecar review D2: settled by F8 decision 12 C. The wrapper uses the
     viewer profile pre-check, and Rust rechecks every returned instance.
-  - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
-    HTML-only catalogues that import package CSS; retain working dependencies
-    until the user decides.
+  - [x] Milestone 9 part 2 review 3, finding 2: settle dependency selection
+        for HTML-only catalogues that import package CSS; retain working
+        dependencies until the user decides.
     - Settled on 2026-10-20 by user decision 74 C on the unmerged
       `rebuild/defaults-engine-deps`, which narrows default item 27 B:
       HTML-only catalogues use the working-tree dependencies for package CSS,
       and they warn when the dependency identities that govern the used
       directories differ. Mark this line settled when that branch merges.
+    - Settled on 2026-10-21 in integration batch 25: `rebuild/defaults-engine-deps`
+      merged as `bb6928db`.
   - [x] M8 core review 3, finding 2, and review 6, finding 7: settled on
         2026-10-20 by item 22 A and extended A, applied by default (user rule).
         Keep complete merged bounds checks, warn on saved values outside bounds,
@@ -5049,7 +5065,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         per-view band rule (`80f48c61`), and the `affected-destinations` case
         of the shared branch-point set, whose journeys run in Serve, the
         static build, and a React host (`6dbdb181`).
-  - [ ] Resolve user item 137 (viewer-103c decision 2): links to added
+  - [x] Resolve user item 137 (viewer-103c decision 2): links to added
         consumers ask for a comparison. `projection_affected.rs:105` sets
         `comparisonEligible` from the entry kind only, so an Affected link to
         an Added view asks for a comparison that the view cannot have.
@@ -5060,6 +5076,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         (estimate). Recommended: B.
     - User decision 137 (2026-10-21): B. Work: another workspace, on
       `rebuild/viewer-137b`.
+    - Ticked on 2026-10-21 in integration batch 25: integration batch 24
+      merged `rebuild/viewer-137b` as `3e33bcb0`.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
         `HistoricalManifest` had no user and no published export since
         `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
