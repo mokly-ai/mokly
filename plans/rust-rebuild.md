@@ -3059,16 +3059,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Small; B, larger runners. The task message cut this record, so the hub
       decision log holds the rest of B, any other option, and the
       recommendation.
-- [ ] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
-      browser shards. The same files vary above 15 percent in 208 of 267
-      comparisons between two hosted runs, so these data do not separate
-      runner noise from cache, fixture, and order effects. Severity Medium,
-      effort Small. Options: A, three controlled hosted repeats of one
-      commit and assignment, with the median shard times as the target,
-      Small; B, a dynamic whole-file queue across the four runners, Large
-      (estimate). Recommended: A, because it is the smallest way to separate
-      stable costs from run variation. The unmerged
-      `rebuild/ci-shard-hosted-2` records the measurements.
+- [x] User decision 124 (2026-10-21): apply option A for CI round 8. Use
+      three controlled hosted repeats of commit `cdb32803` with one four-shard
+      assignment. The median per-test duration from runs `39581933162`,
+      `39586827857`, and `39592076732` now drives the whole-file weights.
+      The resulting weighted work is 429429, 429334, 410238, and 402429 ms
+      for shards 1 to 4, a 6.71 percent range. The assignment has 342, 493,
+      696, and 696 tests under the 696-test cap. Keep the four shards and every
+      test. Evidence: `.context/ci-timing/hosted-analysis.json` and
+      `.context/ci-timing/hosted-timing.md`.
 - [ ] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
