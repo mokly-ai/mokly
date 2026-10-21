@@ -558,6 +558,17 @@ named a page, but in Mokly a page is a whole-document page entry. A page has
 no usage records, so it never shows the sentence. Item 119, building each
 kind's sentences from one noun, stays open, so only this sentence changes.
 
+**User decision 119 (2026-10-21): B.** Each kind of Details entry declares its
+nouns in one place in the shared entry wording, and every sentence of the kind
+takes its noun from there. So one kind cannot name one thing with two words
+again, as component copy did with "saved view" and "variant". A screen's
+sentences name the screen, and a whole-document page's sentences name the
+page. A component's sentences name the shown entry a variant. Its file list
+and the sentences of its own rules name the component, because the CSS
+evidence presentation contract names two things there. The visible copy stays
+the same. The rejected option A kept each kind's sentences written out
+separately.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -2141,6 +2152,19 @@ Tags: ui
       shared entry wording. Update the CSS evidence contracts, the Details
       guide, and the tests. The copy test failed first. Evidence:
       `.context/viewer-84b/` (red and green logs).
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Evidence: `.context/viewer-84b/gate.log`.
+
+## Milestone 10.7: One noun source per kind in the viewer
+
+Tags: ui
+
+The design copy keeps its sentences, so decision 119 B needs no mockup
+milestone.
+
+- [ ] User decision 119 B: declare each Details kind's nouns once in the
+      shared entry wording, and build every sentence of the kind from them.
+      The visible copy stays the same. The noun test fails first.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
@@ -4102,7 +4126,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `relatedComponents` by the entry whose views each evidence item
         names, in place of the parent, and update the Status Lines rule,
         Small. Recommended: B. User item 103 option C includes B.
-  - [ ] Resolve user item 84 (review finding 6): the shared-component
+  - [x] Resolve user item 84 (review finding 6): the shared-component
         sentence calls a screen "this page". "Shared component changes
         affect this preview. This page has no independent entry in
         Changes." now shows on live screens and saved views, but "page" also
@@ -4110,7 +4134,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `packages/viewer/src/shell/workspace_evidence.tsx`, the design copy,
         and `mokly-css-evidence-presentation.md`. Severity Low, effort Large
         for B. The task message cut this record, so the hub decision log
-        holds the options and the recommendation.
+        holds the options and the recommendation. The user chose B on
+        2026-10-21, and Milestones 10.5 and 10.6 apply it.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
         2026-10-20: no artboard shows the pane heading “Components this
         screen uses changed”. Severity Low. Milestone 10.3 closes it: the
