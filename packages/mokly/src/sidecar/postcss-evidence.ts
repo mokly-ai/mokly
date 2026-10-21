@@ -26,7 +26,13 @@ const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
 const observerKey = Symbol.for("mokly.postcss.readEvidence");
+const modulePathKey = Symbol.for("mokly.postcss.modulePath");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
+type ModulePathRecorder = (url: string) => void;
+
+function isModulePathRecorder(value: unknown): value is ModulePathRecorder {
+  return typeof value === "function";
+}
 let asyncHookInstalled = false;
 let asyncHookRegistering = false;
 let asyncHookActive = false;
@@ -46,6 +52,7 @@ export function preloadedObserver(): Observer | undefined {
 
 export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, observerKey, { value: readEvidence });
+  Object.defineProperty(globalThis, modulePathKey, { value: recordModulePath });
 }
 
 /** Record file URLs resolved by an asynchronous consumer loader. */
@@ -126,6 +133,11 @@ function registerAsyncHook(): void {
 /** Add a resolved file URL to the current module inventory. */
 export function recordModulePath(url: string): void {
   if (!url.startsWith("file:")) return;
+  const recorder: unknown = Reflect.get(globalThis, modulePathKey);
+  if (isModulePathRecorder(recorder) && recorder !== recordModulePath) {
+    recorder(url);
+    return;
+  }
   try {
     modules.add(fileURLToPath(url));
   } catch {
