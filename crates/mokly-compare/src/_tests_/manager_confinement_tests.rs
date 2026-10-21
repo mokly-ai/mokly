@@ -138,6 +138,18 @@ fn berry_exec_descriptors_fall_back_before_the_manager_runs() {
             "yarn.lock",
             b"__metadata: {version: 8}\ngenerator:\n  resolution: 'generator@exec:./generator.cjs::locator=root%40workspace%3A.'".to_vec(),
         ),
+        (
+            "package.json",
+            br#"{"dependencies":{"gen":"patch:gen@exec:./gen.cjs#./gen.patch"}}"#.to_vec(),
+        ),
+        (
+            "package.json",
+            br#"{"dependencies":{"gen":"patch:gen@exec%3A./gen.cjs#./gen.patch"}}"#.to_vec(),
+        ),
+        (
+            "yarn.lock",
+            b"__metadata: {version: 8}\ngen:\n  resolution: 'gen@patch:gen@exec%3A./gen.cjs#./gen.patch::version=1&hash=a&locator=root%40workspace%3A.'".to_vec(),
+        ),
     ] {
         let files = BTreeMap::from([(RepoPath::parse(path).unwrap(), bytes)]);
         assert!(matches!(validate(&files), Err(Error::InvalidInput { .. })), "{path}");

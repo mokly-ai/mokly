@@ -118,8 +118,12 @@ stay inside the private entry. Remove temporary download caches before byte
 counting and durability synchronization. Installed pnpm links continue to
 resolve inside their private `node_modules` store. Yarn node modules use the
 same selected-directory mapping as npm. Yarn path redirection is disabled.
-Berry configurations with executable plugins or per-host network overrides
-use the fallback tier.
+Berry configurations with executable plugins, per-host network overrides, or
+a `defaultProtocol` other than `npm:` use the fallback tier. A Yarn `exec:`
+source uses the fallback tier wherever it appears, also inside a patch
+source, a catalog, or a package extension, because Berry runs its generator
+during resolution. Berry `catalog`, `catalogs`, and `packageExtensions`
+ranges get the manifest path checks from their configuration folder.
 
 Resolve managers in the parent through absolute PATH entries only. The child
 also receives only absolute PATH entries, so a script interpreter cannot

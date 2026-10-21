@@ -173,3 +173,55 @@ fn berry_keeps_the_confined_nearest_cache_folder() {
     let root = roots(&base, &["app".into()]).unwrap().remove(0);
     assert_eq!(root.berry_cache.as_deref(), Some("app/.yarn/app-cache"));
 }
+
+#[test]
+fn berry_configuration_ranges_cannot_add_exec_or_outside_sources() {
+    for (config, local) in [
+        ("catalog:\n  gen: 'exec:./gen.cjs'", false),
+        ("catalogs:\n  tools:\n    gen: 'exec:./gen.cjs'", false),
+        (
+            "packageExtensions:\n  'ui@*':\n    dependencies:\n      gen: 'exec:./gen.cjs'",
+            false,
+        ),
+        (
+            "catalog:\n  gen: 'patch:gen@exec%3A./gen.cjs#./gen.patch'",
+            false,
+        ),
+        (
+            "shared: &gen 'exec:./gen.cjs'\ncatalog:\n  gen: *gen",
+            false,
+        ),
+        ("defaultProtocol: 'exec:'", false),
+        ("catalog:\n  ui: 'file:../outside.tgz'", true),
+    ] {
+        let base = inputs(&[
+            ("package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+            ("yarn.lock", "__metadata:\n  version: 8"),
+            (
+                ".yarnrc.yml",
+                &format!("nodeLinker: node-modules\n{config}"),
+            ),
+        ]);
+        let result = roots(&base, &[]);
+        if local {
+            assert!(
+                matches!(result, Err(Error::LocalOutside { .. })),
+                "{config}"
+            );
+        } else {
+            assert!(
+                matches!(result, Err(Error::InvalidInput { .. })),
+                "{config}"
+            );
+        }
+    }
+    let base = inputs(&[
+        ("package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+        ("yarn.lock", "__metadata:\n  version: 8"),
+        (
+            ".yarnrc.yml",
+            "nodeLinker: node-modules\ndefaultProtocol: 'npm:'\ncatalog:\n  ui: ^1.0.0",
+        ),
+    ]);
+    assert_eq!(roots(&base, &[]).unwrap()[0].manager, Manager::YarnBerry);
+}

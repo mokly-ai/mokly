@@ -1,4 +1,7 @@
 //! Confinement of local specifications wrapped by Yarn patch descriptors.
+//!
+//! Each unwrapped patch source gets the same checks, so a Yarn `exec:`
+//! generator cannot hide inside a patch.
 
 use std::borrow::Cow;
 
@@ -8,11 +11,11 @@ use crate::error::{Error, Result};
 use crate::manifest;
 
 pub(crate) fn validate(value: &str, parent: &str, project: &str) -> Result<()> {
-    if value.strip_prefix("exec:").is_some() {
-        return Err(Error::InvalidInput { path: value.into() });
-    }
     let mut pending = value.to_owned();
     loop {
+        if pending.starts_with("exec:") {
+            return Err(Error::InvalidInput { path: value.into() });
+        }
         let Some(patch) = pending.strip_prefix("patch:") else {
             if let Some(local) = manifest::local(&pending) {
                 manifest::target(parent, local)?;

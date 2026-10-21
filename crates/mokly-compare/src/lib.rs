@@ -31,6 +31,7 @@ mod manager_local;
 mod manager_lockfiles;
 mod manager_plan;
 mod manager_yaml;
+mod manager_yarnrc;
 mod manifest;
 mod npm_lockfiles;
 mod pnpm_lockfile;

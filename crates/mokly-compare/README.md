@@ -71,6 +71,8 @@ expired, or oversized installs use the working installation with a typed
 
 Yarn planning collects repository ancestor settings. Berry uses the nearest
 linker setting and rejects the existing restricted keys anywhere in that chain.
+It checks catalog and package-extension ranges like manifest specifications,
+and it requires the `npm:` default protocol.
 Classic copies only a confined offline mirror setting into private configuration.
 It excludes external configuration and keeps the fixed install policy.
 
@@ -233,6 +235,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [install commands](./src/manager_command.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
+  [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and
+  package-extension settings.
 - [Lockfile source confinement](./src/manager_lockfiles.rs) checks each
   lockfile value from the folder its manager reads it from.
   [pnpm lockfile positions](./src/pnpm_lockfile.rs) give each pnpm value its

@@ -7,6 +7,7 @@ use crate::local_packages;
 use crate::manager::{Manager, Root, version_major};
 use crate::manager_classic::{self, Configuration};
 use crate::manager_yaml;
+use crate::manager_yarnrc;
 use crate::manifest;
 
 pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>> {
@@ -145,9 +146,15 @@ fn berry_config(inputs: &Inputs, root: &str) -> Result<(Option<String>, Option<S
         };
         let path = path(&directory, ".yarnrc.yml");
         let config = manager_yaml::fields(bytes, &path)?;
-        if config.contains_key("plugins") || config.contains_key("networkSettings") {
+        if config.contains_key("plugins")
+            || config.contains_key("networkSettings")
+            || config
+                .get("defaultProtocol")
+                .is_some_and(|value| value.as_deref() != Some("npm:"))
+        {
             return Err(Error::InvalidInput { path });
         }
+        manager_yarnrc::validate(bytes, &path, &directory, root)?;
         if linker.is_none()
             && let Some(value) = config.get("nodeLinker")
         {
