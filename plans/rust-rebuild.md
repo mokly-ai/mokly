@@ -193,7 +193,7 @@ more than re-deriving the behaviour from the requirements.
 21. Client-rendered shell (2026-10-13): the Browse shell renders only in the
     browser. Serve and `build` deliver one identical stub page per shell
     route, the catalogue index v7 without per-view usage at
-    `mokly-viewer/index.json`, and one entry detail v1 per entry with its
+    `mokly-viewer/index.json`, and one entry detail v2 per entry with its
     usage, resource evidence, and workspace lists; Serve adds the live
     descriptor v3 at `mokly-viewer/live.json`. No process renders shell HTML,
     so the sidecar starts only for JavaScript rendering, and `renderShell`,
@@ -204,7 +204,9 @@ more than re-deriving the behaviour from the requirements.
     [shell delivery contract](../docs/protocol/mokly-shell-delivery.md) owns
     the routes; the example-export measurements behind the decision are in
     `.context/rust-rebuild/shell-delivery-measurements-2026-10-13.md`.
-    Amended on 2026-10-14 under Decision 27.
+    Amended on 2026-10-14 under Decision 27. Amended on 2026-10-20 under
+    decision default item 23 B: entry detail v2 replaces v1 and carries the
+    control declaration order.
 22. Prop schema details (2026-10-13): every object schema, the root included,
     carries `additionalProperties: false`, and a schema without it fails;
     inference reads the entry's own props and every variant's merged props,
@@ -3198,17 +3200,66 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         edited viewer README passages to `packages/viewer/docs/`. The merge
         carries each side's edits to the passage's new place. Merge
         decisions: `.context/m10/f15/merge2-decisions.md`.
-  - F15 review finding 33 for the user: the delivery spec selects the
-    reused-parent check by its case name. Severity Low, effort Small.
-    Recommended: A, add the document path to the case's delivery facts.
-  - F15 review finding 34 for the user: the delivery pairs repeat the shared
-    moves. Severity Low, effort Small. Recommended: B, derive each moved
-    pair's previous path and flag from the case's moves.
+  - [x] F18 merge of the rebuild tip `780f84ad`, on 2026-10-20: the tip's
+        batch 15 merge kept the F9b host specs beside the D1 specs, which
+        the first F15 merge had joined under decision 10. This merge keeps
+        the F15 resolution and the `compactSearch` marker. The tip's copies
+        of the F9b specs equal the originals. Merge decisions:
+        `.context/m10/f18/merge-decisions.md`.
+  - [x] F18 gate, on 2026-10-20: RUSTSEC-2026-0382, published that day,
+        flags `rustls-webpki` 0.103.15, which `mokly publish` uses to verify
+        certificates. The Rust audit then failed on every branch.
+        `Cargo.lock` takes the patched 0.103.16 as a reviewed dependency
+        change, and only that entry changes.
+  - [x] F18 review, on 2026-10-20: finding 36, a re-export of
+        `branchPointPaths` in `tests/browser/branch_point_test.ts` that item
+        1 left without a reader, is fixed by option A. The full report is
+        `.context/m10/f18/review_1.md`.
+  - F18 review decision for the user: extend the unused internal export
+    check to the test helper trees. Severity Low, effort Medium. Covers
+    finding 36. Previous examples: `ec52f856` and `fe3624df`. Recommended: B,
+    check `tests/browser`, `tests/helpers`, and `packages/viewer/tests` with
+    a shrinking baseline of their 47 current entries, and leave the
+    catalogue fixtures out.
+  - Outside the F18 review scope:
+    - `packages/viewer/src/shell/layout_breakpoint.ts`: its header and
+      `packages/viewer/src/shell/README.md` say that every shell and viewer
+      rule reads `NARROW_SHELL`, but the phone layout and the compact search
+      use their own widths. Separate branch.
+    - `packages/viewer/src/shell/css_previews.ts`: in the embedded viewer,
+      the `24rem` width limit of the preview note follows the host page's
+      root font size, but its 13px text does not. Separate branch.
+  - [x] F18 re-review, on 2026-10-20: finding 37, a guide sentence that
+        said specs import `branchPointPaths`, is fixed by option A. The full
+        report is `.context/m10/f18/review_2.md`.
+  - F18 re-review finding 38 for the user: the F18 review decision line has
+    no number. Severity Low, effort Small. Recommended: A, add the number
+    that the F18 final report gives the decision, 39.
+  - Outside the F18 re-review scope:
+    - `xtask/src/check/commands.rs`: the gate runs cargo without `--locked`,
+      so a stale `Cargo.lock` passes the gate and fails only the release
+      build. Separate branch.
+  - [x] F15 review finding 33: the delivery spec selected the reused-parent
+        check by its case name. Applied A as follow-up F18 item 1, as the
+        orchestrator directed on 2026-10-20. The case's delivery facts hold
+        the document path, and the spec checks the index for each case that
+        has one. A mutation that points the fact at a component fails both
+        reused-parent tests.
+  - [x] F15 review finding 34: the delivery pairs repeated the shared moves.
+        Applied B as follow-up F18 item 2, as the orchestrator directed on
+        2026-10-20. Each moved pair takes its base path and its moved flag
+        from the case's moves, and only the case-only renames write a base
+        path. A mutation of one shared move fails both moved-consumers tests.
   - Outside the F15 review scope:
     - `packages/viewer/src/viewer/styles.ts`: the `mokly-top-host` container
       query of the compact search uses `35rem`, so a host page with another
       root font size leaves the 560px compact search width that
       `docs/protocol/mokly-viewer.md` requires. Separate branch.
+      - [x] Follow-up F18 item 3: the rule switches at a container width of
+            560px, in pixels. `tests/browser/viewer_layout.spec.ts` sets a
+            10px and a 20px root font size and expects the compact control
+            at 560px and the field at 561px. Both cases failed before the
+            fix.
   - [x] F15 re-review, on 2026-10-20: finding 35, a live plan line that
         cited a line of `styles.ts` that the merge shifted, is fixed by
         option B. The line names the rule now. The full report is
@@ -3217,12 +3268,20 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     - `tests/browser/serve_comparison_ui.ts`: the header says that Serve
       captures each selected comparison on demand, but Serve returns a kept
       comparison when the same entry is selected again. Separate branch.
+      - [x] Follow-up F18 item 4: the header says that Serve reuses the
+            stored comparison for the same entry while it keeps it, and that
+            a refresh captures again.
     - `plans/rust-rebuild.md`: a live line cites
       `docs/protocol/mokly-component-controls.md:69`, but the tip moved the
       local storage rule to line 64. Separate branch.
+      - [x] Follow-up F18 item 4: the line cites the local storage rule, not
+            a line number.
     - `plans/rust-rebuild.md`: Decision 21 still names entry detail v1, but
       the tip moved the code and `docs/protocol/mokly-shell-delivery.md` to
       v2 without an amendment note. Separate branch.
+      - [x] Follow-up F18 item 4: Decision 21 names entry detail v2 and has a
+            dated amendment for decision default item 23 B. The checked TODOs
+            that name detail v1 stay as history.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
@@ -3282,8 +3341,8 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
             `tests/helpers/comparison_catalogue.ts`, which also writes the
             colours into `theme.css`. With only the fixture's Before colour
             changed, they and the Serve Card panes still passed.
-    - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
-      temporary prop edit stays out of local storage. Separate branch.
+    - `docs/protocol/mokly-component-controls.md`: no test checks its rule
+      that temporary state never enters local storage. Separate branch.
       - [x] Follow-up F9b item 3: `serve_temporary_props_status.spec.ts`
             checks that a temporary edit leaves local storage unchanged and
             that a reload shows the saved props. A mutation that stores the
