@@ -1548,13 +1548,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         addresses. Connect page head styles.
   - [x] Connect sidecar style ownership through the base render provider.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/b-regression-final.log`.
-  - [ ] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
+  - [x] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
         sheets are owned by the rendered parent in the code, so a child-only
         rule edit can create a direct parent change. Keep this behaviour until
         the user chooses the ownership rule.
     - Replaced by user decisions 73 C and 96 C of 2026-10-20 and 110 C of
-      2026-10-21, which `rebuild/defaults-engine` implements. Tick this TODO
-      when that branch merges.
+      2026-10-21, which `rebuild/defaults-engine` implements. The decision is
+      settled, so the hub had this TODO ticked on 2026-10-21. The code
+      reaches the rebuild branch when that branch merges.
   - [x] Resolve user item 40 (review 6b finding 3): owned styles set material
         flags without per-rule records in the code. Consumer-instance matches
         of owned styles also supply implementation proof without those records.
