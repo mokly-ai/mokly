@@ -162,6 +162,8 @@ A focused `startup` selection measures the same cold/warm usable startup and
 checks previews, axes, live props, cached bytes, and pages with the real base.
 It finishes without waiting for Changes or review availability and reports
 neither value. `all` retains the four complete scenarios above.
+A scenario that waits for Changes fails when Changes is unavailable.
+Unavailable Changes never counts as zero Changes.
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
