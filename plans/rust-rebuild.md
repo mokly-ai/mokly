@@ -3697,7 +3697,10 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        Recommended: B, key `relatedComponents` by the entry whose views each
        evidence item names, in place of the parent, and update the Status
        Lines rule. Option A documents that only the parent page explains the
-       shared change.
+       shared change. Settled on 2026-10-21 by user decision 103 C, which
+       includes this item as item 83 B: `rebuild/viewer-103c` keys
+       `relatedComponents` and detail eligibility by the entry whose views
+       each evidence item names (`3a30e389`).
   - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
         2026-10-20: no artboard shows the pane heading “Components this
         screen uses changed”. Severity Low. Milestone 10.3 closes it: the
@@ -3720,12 +3723,22 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
        screen." Recommended: B, apply the affected rule to every entry whose
        own views are all unchanged and whose detail names changed components,
        with the shared-component sentence. Option A keeps the rule to entries
-       that Changes does not list.
+       that Changes does not list. Settled on 2026-10-21 by user decision 103
+       C, which applies this item's option C: each Unmodified view whose usage
+       holds a changed component that the detail names offers the band, in or
+       out of Changes (`80f48c61`). Its Details ending stays open below.
     2. No artboard depicts an affected-only component's comparison, which
        reads "Components this variant uses changed". Severity Low, effort
        Large, because it is a new artboard. Recommended: B, draw it when the
        design's Affected screens list also shows components, as the viewer's
        list does. Option A keeps the component case in the design copy only.
+  - User decision 103 follow-up for the user, raised on 2026-10-21: a pure
+    move's Details end with "No changes to this screen." while its band offers
+    the comparison of the changed components that its views use. Severity
+    Low, effort Large. Recommended: B, show the shared-component sentence in
+    place of that line, with a wording for an entry that Changes lists, which
+    the item 84 B rewording can give, and draw it in the design first. Option
+    A keeps the line, and option C drops it.
   - Outside the scope of user decision 82:
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
@@ -3741,16 +3754,22 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         assigned two problems outside its scope: the design and the viewer
         now say that a comparison is selected when highlighting is off, and
         the shell README no longer cites "implemented in M31" (`8bf3cc4c`).
-  - Hub review of `rebuild/defaults-viewer-82b`, finding 1 for the user:
-    Affected links ask for refused comparisons. A consumer that Changes
-    lists as a pure move, a component variant consumer, and a consumer in
-    Changes whose linked view is Unmodified each open Current with no band,
-    against the intent rule of `docs/protocol/mokly-changes-controls.md`.
-    Severity Medium, effort Large. Recommended: C, every Affected
-    destination offers the band for the view that its link names, with
-    `relatedComponents` and detail eligibility keyed by the entry that each
-    evidence item names. If the user declines C, apply A: add the intent
-    only when the destination will show the band.
+  - [x] Hub review of `rebuild/defaults-viewer-82b`, finding 1 for the
+        user: Affected links ask for refused comparisons. A consumer that
+        Changes lists as a pure move, a component variant consumer, and a
+        consumer in Changes whose linked view is Unmodified each open Current
+        with no band, against the intent rule of
+        `docs/protocol/mokly-changes-controls.md`. Severity Medium, effort
+        Large. Recommended: C, every Affected destination offers the band for
+        the view that its link names, with `relatedComponents` and detail
+        eligibility keyed by the entry that each evidence item names. If the
+        user declines C, apply A: add the intent only when the destination
+        will show the band. User decision 103 (2026-10-21): C, which includes
+        item 83 B. Done in `rebuild/viewer-103c`: the projection keys
+        (`3a30e389`), the per-view band rule (`80f48c61`), and the
+        `affected-destinations` case of the shared branch-point set, whose
+        journeys run in Serve, the static build, and a React host
+        (`6dbdb181`).
   - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
         `HistoricalManifest` had no user and no published export since
         `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
