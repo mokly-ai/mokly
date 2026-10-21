@@ -30,10 +30,7 @@ export function finishMarkup(
     )
       throw new Error("consumer output contains a reserved mokly- comment");
     if ("tagName" in node && node.tagName.startsWith("mokly-")) {
-      const authoredScope =
-        !extractStyles &&
-        ["mokly-ignore", "mokly-ignore-scope"].includes(node.tagName);
-      if (node.tagName !== "mokly-slot" && !authoredScope)
+      if (node.tagName !== "mokly-slot")
         throw new Error("consumer output contains a reserved mokly- element");
       if (node.tagName === "mokly-slot") {
         const name = node.attrs.find(

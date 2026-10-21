@@ -22,6 +22,8 @@ export const screen = defineScreen({...metadata,path:'screen',title:'Screen',
   render:({value})=><leaf.Component {...value}><i>Slot</i></leaf.Component>});
 export const probe = definePage({...metadata,path:'probe',title:'Probe',
   render:()=> '<!doctype html><html><head></head><body>'+calls+'</body></html>'});
+export const rawIgnore = definePage({...metadata,path:'raw-ignore',title:'Raw ignore',
+  render:()=> '<!doctype html><html><head></head><body><mokly-ignore id="x">Ignored</mokly-ignore></body></html>'});
 `;
 
 test("dynamic wrapper props fail the profile before the adapter runs", async (context) => {
@@ -73,5 +75,24 @@ test("dynamic wrapper props fail the profile before the adapter runs", async (co
     handle: `${callbackEntry}#probe`,
   });
   assert.match(probe.html, /<body>1<\/body>/u);
+  await sidecar.call("shutdown");
+});
+
+test("renderPage rejects authored ignore elements", async (context) => {
+  const root = await callbackConsumer(context, source);
+  const sidecar = startSidecar(context, root);
+  await sidecar.call("hello");
+  const { generation } = await describeCallbacks(sidecar, root);
+  await assert.rejects(
+    sidecar.call("renderPage", {
+      generation,
+      handle: `${callbackEntry}#rawIgnore`,
+    }),
+    (error: Error) => {
+      assert.equal(Reflect.get(error, "code"), "render-failed");
+      assert.match(error.message, /reserved mokly- element/u);
+      return true;
+    },
+  );
   await sidecar.call("shutdown");
 });

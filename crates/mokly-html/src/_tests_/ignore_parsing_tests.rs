@@ -129,7 +129,7 @@ fn plaintext_reparse_keeps_noscript_wrapper_locations_in_source_order() {
             .source
             .as_ref()
             .map(|source| (source.line, source.column)),
-        Some((1, 1))
+        Some((1, 11))
     );
     assert_eq!(
         scopes[1]
