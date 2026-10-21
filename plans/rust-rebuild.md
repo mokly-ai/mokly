@@ -3283,7 +3283,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
 
-- [ ] Resolve user item 100: CI jobs exceed the three-times rule of the CI
+- [x] Resolve user item 100: CI jobs exceed the three-times rule of the CI
       timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
       its 30 minutes and Viewer took 11.3 of its 30 minutes. Severity Medium,
       effort Small. Options: A, raise the limits to at least three times the
@@ -3294,8 +3294,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       example Rust tests apart from lint, types, and audits, and keep the
       30-minute limits, Medium. Recommended: B, with A as the safety margin,
       to be confirmed by a second measured run.
-  - User decision 100 (2026-10-21): A. Work: the CI gates workspace.
-- [ ] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
+  - [x] User decision 100 (2026-10-21): apply option A to the CI job limits
+        using the same three hosted repeats. The median job durations are
+        Repository 15.92, Viewer 10.63, Static delivery 11.68, and browser
+        shards 13.05, 13.42, 12.65, and 13.05 minutes. Repository now has a
+        75-minute limit and Viewer 40 minutes. Static delivery and browser jobs
+        retain 60 minutes because those guards already exceed three times their
+        medians. Native jobs are excluded from the median calculation: Windows
+        failed in all three runs and macOS failed in two. Native limits stay at
+        60 minutes. Required CI stays at 30 minutes because it was not a suite
+        timing sample. Evidence: `.context/ci-timing/hosted-timing.md`.
+- [x] Resolve user item 124 (CI round 8 decision 1): how to balance hosted
       browser shards. The same files vary above 15 percent in 208 of 267
       comparisons between two hosted runs, so these data do not separate
       runner noise from cache, fixture, and order effects. Severity Medium,
@@ -3305,7 +3314,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       (estimate). Recommended: A, because it is the smallest way to separate
       stable costs from run variation. The unmerged
       `rebuild/ci-shard-hosted-2` records the measurements.
-  - User decision 124 (2026-10-21): A. Work: the CI gates workspace.
+  - [x] User decision 124 (2026-10-21): apply option A for CI round 8. Use
+        three controlled hosted repeats of commit `cdb32803` with one four-shard
+        assignment. The median per-test duration from runs `39581933162`,
+        `39586827857`, and `39592076732` now drives the whole-file weights.
+        The resulting weighted work is 429429, 429334, 410238, and 402429 ms
+        for shards 1 to 4, a 6.71 percent range. The assignment has 342, 493,
+        696, and 696 tests under the 696-test cap. Keep the four shards and every
+        test. The observed shard job medians are 13.05, 13.42, 12.65, and 13.05
+        minutes, a 6.06 percent range. Evidence:
+        `.context/ci-timing/hosted-analysis.json` and
+        `.context/ci-timing/hosted-timing.md`. These medians are the target from
+        the fixed assignment. The new weighted assignment needs hosted
+        confirmation after integration.
 - [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
