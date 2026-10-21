@@ -1,5 +1,6 @@
 //! Host Git adapter with concurrent bounded input and output.
 
+use std::ffi::OsString;
 use std::io::Write;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
@@ -32,11 +33,11 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
-        self.execute(request, None, OutputMode::Capture)
+        self.execute(request, None, OutputMode::Capture, &[], None)
     }
 
     fn digest(&self, request: &Request) -> Result<String> {
-        let output = self.execute(request, None, OutputMode::Digest)?;
+        let output = self.execute(request, None, OutputMode::Digest, &[], None)?;
         match String::from_utf8(output.stdout) {
             Ok(digest) => Ok(digest),
             Err(_) => Err(Error::MalformedOutput),
@@ -44,7 +45,7 @@ impl Runner for SystemRunner {
     }
 
     fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
-        self.execute(request, None, OutputMode::Copy(output, bytes))?;
+        self.execute(request, None, OutputMode::Copy(output, bytes), &[], None)?;
         Ok(())
     }
 
@@ -53,7 +54,38 @@ impl Runner for SystemRunner {
         request: &Request,
         cancellation: &dyn command::Cancellation,
     ) -> Result<Output> {
-        self.execute(request, Some(cancellation), OutputMode::Capture)
+        self.execute(request, Some(cancellation), OutputMode::Capture, &[], None)
+    }
+
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, OsString)],
+    ) -> Result<Output> {
+        self.execute(
+            request,
+            Some(cancellation),
+            OutputMode::Capture,
+            environment,
+            None,
+        )
+    }
+
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, OsString)],
+        timeout: Duration,
+    ) -> Result<Output> {
+        self.execute(
+            request,
+            Some(cancellation),
+            OutputMode::Capture,
+            environment,
+            Some(timeout),
+        )
     }
 }
 
@@ -63,6 +95,8 @@ impl SystemRunner {
         request: &Request,
         cancellation: Option<&dyn command::Cancellation>,
         mode: OutputMode<'_>,
+        environment: &[(&str, OsString)],
+        timeout: Option<Duration>,
     ) -> Result<Output> {
         if request.output_limit > DEFAULT_OUTPUT_LIMIT
             || request.stderr_limit > DEFAULT_OUTPUT_LIMIT
@@ -86,7 +120,7 @@ impl SystemRunner {
             arguments = request.args.len(),
             "starting bounded Git command"
         );
-        let mut command = git_command(request);
+        let mut command = git_command(request, environment);
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(Error::Platform { source });
         }
@@ -129,6 +163,8 @@ impl SystemRunner {
             });
             let mut shutdown = Shutdown::default();
             let mut cancelled = false;
+            let started = self.clock.now();
+            let mut timed_out = false;
             let mut status = None;
             let mut failure = None;
             while status.is_none()
@@ -138,6 +174,13 @@ impl SystemRunner {
             {
                 cancelled |= self.cancellation.cancelled()
                     || cancellation.is_some_and(command::Cancellation::is_cancelled);
+                if !cancelled
+                    && timeout
+                        .is_some_and(|limit| self.clock.now().saturating_sub(started) >= limit)
+                {
+                    timed_out = true;
+                    cancelled = true;
+                }
                 if let Err(error) =
                     signal(&mut shutdown, group.as_ref(), self.clock.now(), cancelled)
                 {
@@ -173,6 +216,9 @@ impl SystemRunner {
             }
             let _ = group.kill();
             if cancelled {
+                if timed_out {
+                    return Err(Error::CheckoutTimeout);
+                }
                 return Err(Error::Cancelled);
             }
             let stdout = joined(stdout);
@@ -209,7 +255,7 @@ fn joined(result: thread::Result<Result<Vec<u8>>>) -> Result<Vec<u8>> {
     }
 }
 
-fn git_command(request: &Request) -> Command {
+fn git_command(request: &Request, environment: &[(&str, OsString)]) -> Command {
     let mut command = Command::new("git");
     command
         .args(&request.args)
@@ -233,6 +279,10 @@ fn git_command(request: &Request) -> Command {
         "GIT_IMPLICIT_WORK_TREE",
     ] {
         command.env_remove(variable);
+    }
+    command.env("GIT_NO_LAZY_FETCH", "1");
+    for (name, value) in environment {
+        command.env(name, value);
     }
     command
 }

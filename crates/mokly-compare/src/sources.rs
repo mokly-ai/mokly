@@ -134,15 +134,16 @@ impl Sources for GitSources {
             })
             .collect::<Result<Vec<_>>>()?;
         for entry in &entries {
-            if entry.size > limits.blob {
-                return Err(Error::Limit {
-                    path: entry.path.to_string(),
-                    source: error::Error::ByteLimit { limit: limits.blob },
+            if !entry.mode.regular() {
+                return Err(Error::Git {
+                    source: error::Error::NotRegular {
+                        path: entry.path.to_string(),
+                    },
                 });
             }
         }
         self.repository
-            .read_many(&entries, limits)
+            .read_many(&self.commit, &entries, limits)
             .at_path(paths.first().map_or(".", RepoPath::as_str))
     }
 
@@ -207,7 +208,9 @@ impl Sources for GitSources {
                 path: path.to_string(),
             },
         })?;
-        self.repository.digest(entry).at_path(path.as_str())
+        self.repository
+            .digest(&self.commit, entry)
+            .at_path(path.as_str())
     }
 }
 

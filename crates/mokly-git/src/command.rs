@@ -4,6 +4,7 @@ use std::ffi::OsString;
 use std::fmt;
 use std::io::Write;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use crate::error::Result;
 
@@ -49,6 +50,27 @@ pub trait Runner: Send + Sync {
     /// Execute with explicit command cancellation and process-tree cleanup.
     fn run_cancellable(&self, request: &Request, cancellation: &dyn Cancellation)
     -> Result<Output>;
+    /// Execute with temporary Git environment entries and cancellation.
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, OsString)],
+    ) -> Result<Output> {
+        let _ = environment;
+        self.run_cancellable(request, cancellation)
+    }
+    /// Execute with a bounded filter deadline and temporary Git environment.
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+        environment: &[(&str, OsString)],
+        timeout: Duration,
+    ) -> Result<Output> {
+        let _ = timeout;
+        self.run_cancellable_with_environment(request, cancellation, environment)
+    }
 }
 
 /// Cancellation observed only while this Git operation is active.

@@ -1822,28 +1822,19 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
         Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
-- [ ] Resolve user item 69 (engine defaults decision 11.1): offline custom
-      Git filters for base resources. Default item 11 A needs checkout
-      conversion of raw base blobs without network access. Git's transport
-      restrictions do not isolate external filter programs. Severity Medium,
-      effort Large. Options: A, support Git's built-in conversions and local
-      LFS objects without external filters, and make a resource with an
-      unsupported custom filter unavailable, Large; B, add network isolation
-      for arbitrary clean and checkout filters on every supported operating
-      system, Large. Recommended: A, because it covers line endings and LFS
-      with a clear offline rule. Raw-blob comparison stays until the user
-      decides. `rebuild/defaults-engine` records this decision and is not
-      merged yet.
-- [ ] Resolve user item 127 (integration batch 18 decision 1): blobless
-      clones fail comparison base reads. Mokly reads base files with several
-      `git cat-file` processes at once. In a blobless partial clone, Git's
-      parallel lazy fetches fail, so `mokly build --base` and Serve's
-      Changes can fail. Plain Git also failed 3 of 8 parallel readers.
-      Severity Medium, effort Medium. Options: A, find the missing base blobs
-      first, fetch them in one batch, then read, Medium; B, keep the reads
-      and show the recovery fetch command on this failure, Small (estimate);
-      C, document that comparisons need a full clone, Small (estimate).
-      Recommended: A.
+- [x] Resolve user item 69 (engine defaults decision 11.1): use Git checkout
+      conversion for every base source read and extraction. The private
+      temporary index applies the base commit's attributes and the user's
+      filters, including line endings, local Git LFS objects, and custom
+      smudge commands. A conversion failure, timeout, or bound failure leaves
+      that resource unavailable with a warning while other resources continue.
+      Custom filters are not network-isolated; their configured Git behaviour
+      is the contract. User decision 69 (2026-10-21): C.
+- [x] Resolve user item 127 (integration batch 18 decision 1): before base
+      conversion, check all requested object ids with lazy fetch disabled.
+      Fetch missing ids through the configured promisor remote in one bounded
+      `git fetch --stdin` request. A failed fetch reports the remote and the
+      recovery command. User decision 127 (2026-10-21): A.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4

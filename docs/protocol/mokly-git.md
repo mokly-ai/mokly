@@ -12,7 +12,7 @@ Requests can select smaller independent bounds. A request above 64 MiB fails wit
 
 ## Child Environment
 
-Every Git command removes repository and history selection variables:
+Ordinary Git commands remove repository and history selection variables:
 
 - `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, and `GIT_COMMON_DIR`;
 - `GIT_OBJECT_DIRECTORY` and `GIT_ALTERNATE_OBJECT_DIRECTORIES`;
@@ -23,7 +23,8 @@ Every Git command removes repository and history selection variables:
 A command therefore reads the requested checkout and its history even when
 Mokly starts inside a Git hook. `GIT_CONFIG_*` variables stay inherited.
 This preserves CI overrides such as `safe.directory`. Other environment
-values stay inherited.
+values stay inherited. Checkout conversion uses a private index and work tree
+for the pinned commit, then removes both after the read.
 
 ## Batches And Cancellation
 
@@ -36,6 +37,10 @@ runner. Cancellation requests SIGTERM for the whole process group, then
 SIGKILL after one second if it remains. Windows uses the owned job. A command
 settles after the process and its pipes close. The
 [runtime shutdown contract](./mokly-runtime.md#shutdown) owns shutdown order.
+Base reads disable Git's lazy fetch while they check object presence. A
+promisor remote fetches every missing base object in one bounded request before
+the converted read starts. A failed fetch names a recovery `git fetch`
+command. Missing objects without a promisor remote retain a typed fetch error.
 
 ## Repository And History
 
@@ -77,27 +82,30 @@ root request starts no source query. A whole-tree query is explicit.
 The comparison source index loads configured roots and requested paths only.
 Exact path lookups use bounded nonrecursive batches and cache missing paths.
 
-A blob read first proves exact regular-file mode and size from the pinned
-commit's tree. A missing path and a nonregular path have distinct errors.
-Symbolic links are not followed. Cat-file batches receive full object ids on
-stdin. Each batch has at most 4,096 objects and 48 MiB of framed output.
-Headers, object ids, sizes, delimiters and trailing bytes are checked.
-An object that cannot fit one byte-read batch fails before a blob read starts.
+A base file read first proves exact regular-file mode from the pinned commit's
+tree. A missing path and a nonregular path have distinct errors. Symbolic
+links are not followed. Git checkout conversion applies the pinned commit's
+attributes with the user's Git configuration, including line endings, built-in
+encodings, custom smudge filters, and local Git LFS objects. The working file
+is never compared with the raw pointer blob. Converted bytes stay within the
+selected file and batch bounds.
 Opaque public resources instead use a streamed SHA-256 digest: stdout feeds
 the hash through a 64 KiB buffer, and stderr keeps its capture bound. The
 stream keeps process-tree ownership, cancellation, and exit validation.
 A comparison budget failure makes Changes unavailable with its limit and
 requested path; it does not fail the current build.
 
-A source archive contains regular blobs from the commit. Extraction checks
-leaf count and total uncompressed bytes before file writes.
+A source archive contains checkout-converted regular files from the commit.
+Extraction checks leaf count and total converted bytes before file writes.
 The aggregate is a disk bound; base extraction sets it from the source cache
 capacity. Files are written one batch at a time, so a commit larger than one
-batch does not require its full contents in memory. Blobs larger than one
-batch stream directly to disk through a 64 KiB buffer. The stream checks the
-proved blob size, exit status, and cancellation; stderr keeps its capture bound.
-Extraction preserves executable files and omits links and submodules. It
-never applies `export-ignore`, `export-subst`, textconv or checkout filters.
+batch does not require its full contents in memory. Converted files larger than
+one batch stream directly to disk through a 64 KiB buffer. The stream checks
+the converted file size, exit status, and cancellation; stderr keeps its
+capture bound. Extraction preserves executable files and omits links and
+submodules. It does not apply archive-only substitutions. If a conversion
+filter fails, reaches its time limit, or exceeds a byte bound, that resource is
+unavailable with a warning and independent resources continue.
 The destination must not exist. A partial extraction is removed on failure.
 Git metadata directories are never extracted. A name unsupported by the host
 is skipped with a trace: Windows cannot store colon or backslash names,

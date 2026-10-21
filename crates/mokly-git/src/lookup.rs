@@ -4,7 +4,7 @@ use std::ffi::OsString;
 
 use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{self, Entry, Limits};
@@ -45,28 +45,5 @@ impl GitRepository {
             entries.extend(tree::parse(&output.stdout, limits)?);
         }
         Ok(entries)
-    }
-
-    pub(crate) fn digest_blob(&self, entry: &Entry) -> Result<String> {
-        if !entry.mode.regular() {
-            return Err(Error::NotRegular {
-                path: entry.path.to_string(),
-            });
-        }
-        self.runner.digest(&Request {
-            directory: self.directory.clone(),
-            args: [
-                "--no-optional-locks",
-                "cat-file",
-                "blob",
-                entry.object.as_str(),
-            ]
-            .into_iter()
-            .map(OsString::from)
-            .collect(),
-            stdin: Vec::new(),
-            output_limit: DEFAULT_OUTPUT_LIMIT,
-            stderr_limit: DEFAULT_STDERR_LIMIT,
-        })
     }
 }

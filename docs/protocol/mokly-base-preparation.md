@@ -20,26 +20,26 @@ source diagnostics. `GitTree` implements `SourceTree` over that index. Projectio
 queries reuse cached metadata. Exact catalogue inventories, generation-wide
 planning inputs, and discovered closure targets use bounded blob batches. A byte-bounded file LRU serves repeated reads;
 a miss reads only its requested path, without holding the cache mutex during IO.
-
-Reads by entry use the proved object id and run in bounded cat-file batches.
-Dependency input reads use this batch API. HTML, Markdown, YAML and CSS need
-no extraction. JavaScript, a renderer module and consumer PostCSS acquire an
-extraction lease. Keep that lease while a sidecar uses its root. A source
-archive copies exact regular blobs, including files that export attributes
-would omit or substitute. It writes and releases each batch before reading
-the next. A blob larger than one batch streams directly to disk. The total
-disk bound follows the source cache capacity; memory stays bounded by the
-blob batch or stream buffer, independently of total repository size.
-
+Reads by entry use the proved object id in bounded checkout-converted batches.
+HTML, Markdown, YAML and CSS need no extraction. JavaScript, a renderer module
+and consumer PostCSS acquire an extraction lease. Keep that lease while a
+sidecar uses its root. A source archive copies checkout-converted regular files
+with the pinned commit's attributes, including line endings, smudge filters,
+and Git LFS. Missing objects are fetched once in a bounded promisor request
+before these reads. It writes and releases each batch before reading the next. A
+converted blob larger than one batch streams directly to disk. The total disk
+bound follows the source cache capacity; memory stays bounded independently of
+repository size.
 Opaque public resources use SHA-256 digests. Oversized Git blobs and working
 files are hashed as streams with bounded memory. They need no full byte read
 for planning or comparison. Resource closure checks their confined regular
 file identity; only HTML and CSS files need reference parsing.
-
 If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.
 The current build remains valid. Genuine Git command and object failures
-remain fatal `git-failed` errors.
+remain fatal `git-failed` errors. A failed, timed out, or oversized conversion
+makes that resource unavailable with a warning, while other base resources
+continue. A failed batch fetch names the recovery command.
 
 ## Shared Render Runtime
 
@@ -199,7 +199,7 @@ select tier three with a `base-dependencies` warning naming that directory.
 JavaScript, stylesheet, and PostCSS package reads establish this usage.
 An unused ancestor directory does not cause a warning.
 
-Tracked base files supply their bytes before installed copies. Other bare
+Tracked base files supply their converted bytes before installed copies. Other bare
 imports start at the matching importer directory in the selected installation,
 before configuration and explicit package-root fallback. Source aliases and
 tsconfig paths use base files. Working tsconfig paths cannot remap base package imports.

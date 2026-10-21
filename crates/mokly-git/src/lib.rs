@@ -17,10 +17,10 @@ pub mod identity;
 pub mod repository;
 pub mod tree;
 
-mod blob_batches;
-
 pub mod access;
 
 mod lookup;
 
+mod checkout;
 mod extraction;
+mod fetch;

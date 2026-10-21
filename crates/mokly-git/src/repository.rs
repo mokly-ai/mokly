@@ -30,12 +30,17 @@ pub trait Repository: Send + Sync {
     ) -> Result<Vec<Entry>>;
     /// Look up exact paths without enumerating their descendants.
     fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>>;
-    /// Hash an immutable blob through a bounded streaming reader.
-    fn digest(&self, entry: &Entry) -> Result<String>;
-    /// Read an exact regular blob by path, without filters or symlink traversal.
+    /// Hash a commit file after Git checkout conversion.
+    fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String>;
+    /// Read an exact regular file after Git checkout conversion.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
-    /// Read regular entries in bounded batches using their already-proved object ids.
-    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>>;
+    /// Read regular commit files after checkout conversion.
+    fn read_many(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+    ) -> Result<Vec<Vec<u8>>>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
@@ -200,8 +205,8 @@ impl Repository for GitRepository {
         self.lookup_paths(commit, paths, limits)
     }
 
-    fn digest(&self, entry: &Entry) -> Result<String> {
-        self.digest_blob(entry)
+    fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
+        self.checkout_digest(commit, entry)
     }
 
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
@@ -219,16 +224,38 @@ impl Repository for GitRepository {
                 path: path.as_str().to_owned(),
             });
         }
-        if entry.size > limit {
-            return Err(Error::ByteLimit { limit });
-        }
-        self.load(&[entry], limit)?
-            .pop()
-            .ok_or(Error::MalformedOutput)
+        self.checkout_read(
+            commit,
+            &[entry],
+            Limits {
+                bytes: limit,
+                blob: limit,
+                ..Limits::default()
+            },
+        )?
+        .pop()
+        .ok_or(Error::MalformedOutput)
     }
 
-    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>> {
-        self.read_entries(entries, limits)
+    fn read_many(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+    ) -> Result<Vec<Vec<u8>>> {
+        if entries.len() > limits.files {
+            return Err(Error::FileCount {
+                limit: limits.files,
+            });
+        }
+        for entry in entries {
+            if !entry.mode.regular() {
+                return Err(Error::NotRegular {
+                    path: entry.path.to_string(),
+                });
+            }
+        }
+        self.checkout_read(commit, entries, limits)
     }
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {

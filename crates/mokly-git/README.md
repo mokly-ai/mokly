@@ -13,8 +13,8 @@ process groups and Windows job objects.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
 - Validate checkout identity before resolving a merge base.
-- Read changed paths, tree metadata, and regular source blobs.
-- Extract exact commit sources without Git export substitutions.
+- Read changed paths, tree metadata, and checkout-converted regular source files.
+- Extract exact commit sources with the pinned commit's checkout attributes.
 
 ## What This Crate Does
 
@@ -42,18 +42,24 @@ before `merge-base`. Changed paths include committed, staged, unstaged, and
 untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
 
-Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
-at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes. Regular files and all metadata
-nodes have independent count bounds.
+Tree queries use literal pathspecs and NUL records. Base reads check missing
+object ids first and fetch them in one promisor request before conversion. A
+private index applies the base commit's attributes, configured smudge filters,
+line-ending rules, and Git LFS. Tree listings retain directory and link modes.
+Regular files and all metadata nodes have independent count bounds.
 The commit source reader indexes requested roots and exact paths. Nonrecursive
 path lookups avoid enumerating unrelated directories. `digest` streams blob
 stdout through SHA-256 with bounded memory and the same cancellation and exit
 checks; stderr retains its capture limit. Working inputs compare
 bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
-proved entries and reads their blobs through bounded batches. Extraction has a total disk byte bound.
+proved entries and reads their converted files through bounded batches. A
+failed filter, timeout, or converted-byte bound leaves that resource
+unavailable with a warning while independent reads continue. Extraction has a
+total disk byte bound.
 It streams oversized files to disk and writes smaller files one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
 and submodules. Unsupported host names and non-UTF-8 candidates are traced
-and skipped. Ordinary colons and backslashes remain in Git path identities. Export attributes never change source bytes. A destination
+and skipped. Ordinary colons and backslashes remain in Git path identities.
+Archive-only attributes never change source bytes. A destination
 must be fresh; a failed extraction removes its partial directory.
 
 The runner writes and closes stdin concurrently with both output readers.
