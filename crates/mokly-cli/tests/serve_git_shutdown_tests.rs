@@ -28,9 +28,32 @@ async fn marker(path: &Path) -> String {
 }
 
 fn live(pid: &str) -> bool {
-    fs::read_to_string(format!("/proc/{pid}/stat"))
-        .ok()
-        .is_some_and(|stat| !stat.rsplit_once(") ").unwrap().1.starts_with('Z'))
+    let output = std::process::Command::new("ps")
+        .args(["-o", "stat=", "-p", pid])
+        .output()
+        .unwrap();
+    assert!(matches!(output.status.code(), Some(0 | 1)), "{output:?}");
+    active_state(&String::from_utf8(output.stdout).unwrap())
+}
+
+fn active_state(state: &str) -> bool {
+    let state = state.trim();
+    !state.is_empty() && !state.starts_with('Z')
+}
+
+#[test]
+fn process_probe_distinguishes_live_absent_and_zombie_states() {
+    for state in ["R", " S+\n", "Ss", "I"] {
+        assert!(active_state(state), "{state}");
+    }
+    for state in ["", " \n", "Z", " Z+\n"] {
+        assert!(!active_state(state), "{state}");
+    }
+}
+
+#[test]
+fn process_probe_recognizes_the_running_test_process() {
+    assert!(live(&std::process::id().to_string()));
 }
 
 #[tokio::test]

@@ -42,7 +42,12 @@ fn failed_capture_never_records_ok_or_success_counts() {
         };
         assert!(
             engine
-                .compare(&request, before, Arc::new(Unimock::new(())))
+                .capture_base(before)
+                .and_then(|before| engine.compare_prepared(
+                    &request,
+                    before,
+                    Arc::new(Unimock::new(()))
+                ))
                 .is_err()
         );
     });
@@ -147,7 +152,8 @@ fn empty_base_capture_emits_successful_zero_view_counts() {
             base_commit: "a".repeat(40),
             catalogue_identity: "b".repeat(64),
         };
-        assert!(engine.compare(&request, before, after).is_err());
+        let before = engine.capture_base(before).unwrap();
+        assert!(engine.compare_prepared(&request, before, after).is_err());
     });
     let records: Vec<_> = records
         .iter()
@@ -219,7 +225,8 @@ fn reused_full_partial_and_zero_captures_count_uncaptured_base_views() {
                 base_commit: "a".repeat(40),
                 catalogue_identity: "b".repeat(64),
             };
-            assert!(engine.compare(&request, before, after).is_err());
+            let before = engine.capture_base(before).unwrap();
+            assert!(engine.compare_prepared(&request, before, after).is_err());
         });
         let records: Vec<_> = records
             .iter()

@@ -13,6 +13,7 @@ const TOOLCHAIN_INSTALL = "rustup toolchain install";
 const RUST_WORKFLOWS = [
   "ci.yml",
   "release.yml",
+  "release-prepare.yml",
   "blacksmith-testbox.yml",
 ] as const;
 /** A rustup command that selects a toolchain outside `rust-toolchain.toml`. */

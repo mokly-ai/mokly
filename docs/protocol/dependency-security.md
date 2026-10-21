@@ -61,9 +61,16 @@ only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires
 `parcel_sourcemap` 2.1.1, which requires `rkyv` 0.7.46. Mokly never reads or
 writes source maps. Review this exception by 2027-01-31 or at the next
 `lightningcss` update, whichever comes first. Every other vulnerability fails.
+The shared audit command rejects the exception after 2027-01-31 UTC, when the
+locked `lightningcss` version changes, or when the effective audit configuration
+ignores any other advisory ID. These conditions require review before the audit
+can pass. After the date or a locked `lightningcss` change, the command fails
+until its reviewed script changes, even when the approved ID is absent.
 The repository suite, daily dependency audit, and release verification run it.
 A release with reusable CI evidence still runs a fresh Rust audit. The daily
-npm update automation keeps its npm report and does not update Rust crates.
+and release Rust audits run with read-only permissions and no publication
+credentials. Release publication depends on successful read-only preparation.
+The daily npm update automation keeps its npm report and does not update Rust crates.
 Rust fixes require a reviewed dependency change. A cached tool or build never
 replaces the live advisory check.
 

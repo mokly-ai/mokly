@@ -134,14 +134,6 @@ pub trait RenderGeneration: GeneratedResources {
         };
         Ok(ComparisonDocument { artifact, closure })
     }
-    /// Return one input per route in request order, or the first route's failure.
-    /// Callers limit each batch to comparison_parallelism; wrappers default to serial work.
-    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
-        routes
-            .iter()
-            .map(|route| self.comparison_input(route))
-            .collect()
-    }
     /// Read a confined resource by its public route. Missing regular targets return None.
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
     /// Hash a resource with bounded memory; absent resources return None.

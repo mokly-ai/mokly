@@ -16,7 +16,7 @@ export const SCREEN_STYLE_COPY = {
   stylesChanged: "Styles this screen uses changed",
   /**
    * The comparison pane heading of an unchanged view that changed components
-   * affect. The viewer follows it; no artboard draws that comparison yet.
+   * affect, as Screen affected by a changed component draws it.
    */
   componentsChanged: "Components this screen uses changed",
   /** Details of an entry that only changed components affect end with it. */

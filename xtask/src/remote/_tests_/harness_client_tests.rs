@@ -116,7 +116,7 @@ pub(super) fn client(
                 }
                 return Ok(result);
             }
-            assert_eq!(probes.load(Ordering::SeqCst), 6);
+            assert_eq!(probes.load(Ordering::SeqCst), 7);
             assert!(
                 log.unwrap()
                     .to_string_lossy()
@@ -135,6 +135,7 @@ pub(super) fn client(
                     case,
                     Case::Suite | Case::LogUnavailable | Case::CleanupFailedSuite
                 ) && command.contains("--suite repository")
+                    || case == Case::Delivery && command.contains("--suite static-delivery")
                 {
                     1
                 } else {

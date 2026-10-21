@@ -5,6 +5,7 @@ import { reviewEntry } from "../review/entries.js";
 import {
   affectedEntry,
   keepsComponentRecord,
+  viewAxesKey,
 } from "../review/shared_impact.js";
 import type { ReviewView } from "../review/types.js";
 
@@ -18,7 +19,8 @@ export interface SelectedComparisonView {
   documents: { after?: string; before?: string };
   /**
    * The view is unchanged, yet changed components affect it: it keeps a
-   * component-owned record, or the review's affected records name it.
+   * component-owned record, the review's affected records name it, or its
+   * usage holds a changed component that the entry detail names.
    */
   componentsOnly: boolean;
   /** The mode this view shows; one-sided views fall back to Side by side. */
@@ -48,12 +50,15 @@ function snapshotUrl(
 /**
  * The views a presentation shows, mobile first, each in the selected scheme
  * or its Light fallback. `undefined` means the identity has no result record.
+ * `usingChanged` holds the axes keys of the routed views whose usage holds a
+ * changed component.
  */
 export function selectedComparisonViews(
   loaded: LoadedComparison,
   presentation: ComparisonPresentation,
   kind: ViewRouteKind,
   id: string,
+  usingChanged: ReadonlySet<string> = new Set(),
 ): readonly SelectedComparisonView[] | undefined {
   const entry = reviewEntry(loaded.result, kind, id);
   if (!entry) return;
@@ -100,7 +105,8 @@ export function selectedComparisonViews(
         componentsOnly:
           view.state === "unchanged" &&
           (keepsComponentRecord(view) ||
-            affectedEntry(loaded.result, entry, view)),
+            affectedEntry(loaded.result, entry, view) ||
+            usingChanged.has(viewAxesKey(view))),
         mode: before && after ? presentation.mode : "side",
         styleOnly: isStyleOnlyView(view, entry.reasons),
         view,
