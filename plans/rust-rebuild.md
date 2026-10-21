@@ -3255,31 +3255,54 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         orchestrator asked: the failure points at the first authored token
         that scoping would change, or at the end of the stylesheet when
         scoping only adds tokens there.
-  - `crates/mokly-css/src/rename_selectors.rs:99`: removing a bare `:global`
-    or `:local` can change a statement. Before an at-keyword, it turns a rule
-    into an at-rule, for example `:global@media all{}` into `@media all{}`.
-    Alone in a statement without a block, it empties the statement, so
-    `.p{:local}` builds as `.p{}`. The token check misses both where the two
-    readings agree. Found by the M14 nesting round 7 differential. Each fix
-    rejects stylesheets that build today, so it needs a user decision
-    (nesting report item 27). Separate branch.
-  - `crates/mokly-css/src/rename_selectors.rs:181`: removing a `:global()`
-    wrapper before an at-keyword, as in `:global(@media all){.a{}}`, also
-    turns a rule into an at-rule. Found by the M14 nesting round 7 review.
-    Separate branch.
-  - `crates/mokly-css/src/module_checks.rs:30`: in a rule list, the module
-    check skips the block of a statement that starts like a custom property,
-    though the renamer and the token check read it as a rule. Reading it as
-    a rule rejects an `@value` there, also in keyframes and `@document`
-    blocks that build today, so it needs a user decision (nesting report
-    item 28). Found by the M14 nesting round 7 differential. Separate
-    branch.
+  - [ ] Resolve user item 111 (M14 nesting report item 24, round 7 review
+        finding 1): cssparser skips an HTML comment token (`<!--` or `-->`)
+        before a stylesheet statement, but the section reader keeps it. So
+        the scanners read `<!-- @value x: 1;` and `-->@keyframes k{…}` as
+        style rules, while lightningcss reads them as at-rules. The `@value`
+        ships, and the keyframes keep `k` while its references are renamed.
+        Severity Low. Options: A, record the gap and narrow the README parity
+        claim, Small; B, skip those tokens before a stylesheet statement
+        through a root grammar, Medium; C, read each statement's start and
+        kind from cssparser's own parsers, Large and blocked. Recommended: B,
+        because it aligns the scanners with lightningcss and with the
+        `@value` rule. B makes such a stylesheet fail, and it builds today,
+        so keep the behaviour until the user decides.
+  - [ ] Resolve user item 112 (M14 nesting report item 27, round 7
+        differential): removing a bare `:global` or `:local` at
+        `crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
+        Before an at-keyword, it turns a rule into an at-rule, for example
+        `:global@media all{}` into `@media all{}`. Alone in a statement
+        without a block, it empties the statement, so `.p{:local}` builds as
+        `.p{}`. The token check misses both where its two readings agree.
+        Severity Low. Options: A, keep the behaviour, Small; B, add the kind
+        of each statement to the token check's fingerprint, so that any edit
+        that changes a statement fails with the catalogued message, Small;
+        C, keep a bare wrapper that no selector follows, so that lightningcss
+        reports the syntax error, Small, but not for the `:global()` form.
+        Recommended: B, because one guard catches every edit that changes a
+        statement. B and C reject stylesheets that build today, so keep the
+        behaviour until the user decides.
+    - `crates/mokly-css/src/rename_selectors.rs:181`: removing a `:global()`
+      wrapper before an at-keyword, as in `:global(@media all){.a{}}`, also
+      turns a rule into an at-rule. Found by the M14 nesting round 7 review.
+      User item 112 covers it.
+  - [ ] Resolve user item 113 (M14 nesting report item 28, round 7
+        differential): in a rule list, the module check at
+        `crates/mokly-css/src/module_checks.rs:30` skips the block of a
+        statement that starts like a custom property, such as `--x:{…}`. The
+        renamer and the token check read the same statement as a rule with a
+        block, so an `@value` in that block passes the module check. In
+        keyframes and `@document` blocks, such a stylesheet builds today.
+        Severity Low. Options: A, keep the skip, Small; B, delete it, so that
+        an `@value` there fails with its catalogued message, Small.
+        Recommended: B, because it removes the last statement that one
+        scanner reads on its own, and `@value` fails at every rule level. B
+        rejects stylesheets that build today, so keep the skip until the
+        user decides.
   - Open from the M14 nesting round 7 review, report under
     `.context/m14-nesting/r7/review-r7.md`:
-  - 24: HTML comment token hides a stylesheet at-rule. Severity Low, effort
-    Medium. Recommended: B, skip those tokens before a stylesheet statement,
-    as cssparser does. It rejects such an `@value`, so it needs a user
-    decision.
+  - 24: moved to user item 111 on 2026-10-21.
   - 26: settled on 2026-10-21 with option B, the wider fix, as the
     orchestrator asked: the token check compares the optional fingerprint
     entries up to the longer length, so one rule covers changed, added, and
