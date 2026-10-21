@@ -147,7 +147,7 @@ export function collectStyles(
     }
     if (sheet) addSheet(styles, sheet, html, session, records);
     const registry = registryStyles(nativeSheet(), html);
-    if (registry) styles.push(...ownedStyles(registry, html, session, records));
+    if (registry) styles.push({ css: registry, owners: [] });
     return { html, styles };
   } finally {
     sheet?.seal();
