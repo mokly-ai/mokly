@@ -1,6 +1,7 @@
 //! Tracked Git admission closes before cancellation waits for active operations.
 
 use std::sync::{Arc, Mutex, mpsc};
+use std::time::Duration;
 
 use mokly_git::command::{Output, Request, Runner, RunnerMock};
 use mokly_git::error::Error;
@@ -40,6 +41,51 @@ fn closed_admission_rejects_every_runner_operation() {
         runner.run_cancellable(&request(), &Unimock::new(())),
         Err(Error::Cancelled)
     ));
+    assert!(matches!(
+        runner.run_cancellable_with_environment(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+        ),
+        Err(Error::Cancelled)
+    ));
+    assert!(matches!(
+        runner.run_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+            Duration::from_secs(1),
+        ),
+        Err(Error::Cancelled)
+    ));
+}
+
+#[test]
+fn checkout_environment_and_timeout_reach_the_inner_runner() {
+    let inner = Unimock::new(
+        RunnerMock::run_cancellable_with_environment_timeout
+            .next_call(matching!(_))
+            .returns(Ok(Output {
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            })),
+    );
+    let inner: Arc<dyn Runner> = Arc::new(inner);
+    let runners = Unimock::new(
+        GitRunnersMock::create
+            .next_call(matching!(_))
+            .returns(inner),
+    );
+    let git = ServeGit::new(Arc::new(runners));
+    let runner = git.runner(Arc::new(ChangeToken::default()));
+    runner
+        .run_cancellable_with_environment_timeout(
+            &request(),
+            &Unimock::new(()),
+            &[("GIT_INDEX_FILE", "index".into())],
+            Duration::from_secs(1),
+        )
+        .unwrap();
 }
 
 #[test]

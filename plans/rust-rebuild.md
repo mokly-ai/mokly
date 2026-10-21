@@ -3086,6 +3086,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Finding 1: checkout filter failures still abort Changes instead of making
+    one resource unavailable with a warning. Severity High, effort Large.
+    Recommended: B, return per-resource conversion results. User decision
+    required.
+  - Finding 2: checkout conversion writes all filter output before applying
+    byte bounds. Severity High, effort Medium. Recommended: A, monitor the
+    temporary directory and stop at the selected bound. Auto-fix.
+  - Finding 3: optional filter failures can return pointer bytes. Severity
+    Medium, effort Small. Recommended: A, classify filter diagnostics as a
+    conversion failure. Auto-fix.
+  - Finding 4: dependency identity text still described raw base bytes.
+    Severity Medium, effort Small. Fixed in the working tree. Auto-fix.
+  - Outside scope: remote browser host setup failures. Separate branch.
+  - Outside scope: remote sidecar lifecycle readiness failure. Separate branch.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.

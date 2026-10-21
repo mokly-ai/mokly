@@ -25,6 +25,23 @@ impl command::Cancellation for NeverCancelled {
     }
 }
 
+struct SizeBound {
+    root: PathBuf,
+    limit: usize,
+}
+
+impl command::Cancellation for SizeBound {
+    fn is_cancelled(&self) -> bool {
+        directory_bytes(&self.root, self.limit).is_some_and(|bytes| bytes > self.limit)
+    }
+}
+
+impl SizeBound {
+    fn exceeded(&self) -> bool {
+        command::Cancellation::is_cancelled(self)
+    }
+}
+
 impl GitRepository {
     pub(crate) fn checkout_read(
         &self,
@@ -36,7 +53,7 @@ impl GitRepository {
         if entries.is_empty() {
             return Ok(Vec::new());
         }
-        let checkout = Checkout::new(self, commit, entries)?;
+        let checkout = Checkout::new(self, commit, entries, Some(limits.bytes))?;
         let mut total = 0usize;
         let mut result = Vec::with_capacity(entries.len());
         for entry in entries {
@@ -54,7 +71,12 @@ impl GitRepository {
 
     pub(crate) fn checkout_digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
         validate_entries(std::slice::from_ref(entry), Limits::default())?;
-        let checkout = Checkout::new(self, commit, std::slice::from_ref(entry))?;
+        let checkout = Checkout::new(
+            self,
+            commit,
+            std::slice::from_ref(entry),
+            Some(DEFAULT_OUTPUT_LIMIT),
+        )?;
         let path = checkout.file(&entry.path)?;
         let mut input = fs::File::open(path).git()?;
         let mut digest = Sha256::new();
@@ -96,7 +118,12 @@ pub(crate) struct Checkout {
 }
 
 impl Checkout {
-    fn new(repository: &GitRepository, commit: &ObjectId, entries: &[Entry]) -> Result<Self> {
+    fn new(
+        repository: &GitRepository,
+        commit: &ObjectId,
+        entries: &[Entry],
+        byte_limit: Option<usize>,
+    ) -> Result<Self> {
         repository.ensure_objects(entries)?;
         let root = tempfile::Builder::new()
             .prefix("mokly-git-checkout-")
@@ -125,16 +152,34 @@ impl Checkout {
             input.extend_from_slice(entry.path.as_str().as_bytes());
             input.push(0);
         }
-        let output = run(
+        let size_bound = byte_limit.map(|limit| SizeBound {
+            root: worktree.clone(),
+            limit,
+        });
+        let filter_cancellation: &dyn command::Cancellation =
+            size_bound.as_ref().map_or(&cancellation, |bound| bound);
+        let output = match run(
             repository.runner.as_ref(),
             repository,
             &["checkout-index", "--force", "--temp", "--stdin", "-z"],
             input,
             &environment,
-            &cancellation,
+            filter_cancellation,
             MAX_CHECKOUT_OUTPUT,
             Some(FILTER_TIMEOUT),
-        )?;
+        ) {
+            Err(Error::Cancelled) if size_bound.as_ref().is_some_and(SizeBound::exceeded) => {
+                return Err(Error::ByteLimit {
+                    limit: size_bound.as_ref().map_or(0, |bound| bound.limit),
+                });
+            }
+            result => result,
+        }?;
+        if filter_failed(&output.stderr) {
+            return Err(Error::CheckoutFailed {
+                stderr: output.stderr,
+            });
+        }
         let files = parse_output(&output.stdout, &worktree, entries)?;
         Ok(Self { _root: root, files })
     }
@@ -162,6 +207,31 @@ impl Checkout {
     }
 }
 
+fn filter_failed(stderr: &[u8]) -> bool {
+    let stderr = String::from_utf8_lossy(stderr).to_ascii_lowercase();
+    stderr.contains("external filter") && stderr.contains("failed")
+}
+
+fn directory_bytes(root: &Path, limit: usize) -> Option<usize> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut total = 0usize;
+    while let Some(path) = pending.pop() {
+        let entries = fs::read_dir(path).ok()?;
+        for entry in entries.flatten() {
+            let metadata = entry.metadata().ok()?;
+            if metadata.is_dir() {
+                pending.push(entry.path());
+            } else if metadata.is_file() {
+                total = total.saturating_add(usize::try_from(metadata.len()).ok()?);
+                if total > limit {
+                    return Some(total);
+                }
+            }
+        }
+    }
+    Some(total)
+}
+
 impl GitRepository {
     pub(crate) fn checkout(
         &self,
@@ -170,7 +240,7 @@ impl GitRepository {
         limits: Limits,
     ) -> Result<Checkout> {
         validate_entries(entries, limits)?;
-        Checkout::new(self, commit, entries)
+        Checkout::new(self, commit, entries, Some(limits.bytes))
     }
 }
 

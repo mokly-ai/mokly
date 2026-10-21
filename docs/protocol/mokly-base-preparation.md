@@ -157,8 +157,9 @@ confined paths in one `hash-object --stdin-paths` call, without writing objects,
 and compare their Git clean identities with the corresponding base blob ids.
 This applies line ending and
 clean-filter conversion. Equal identities use the base blob bytes in the
-input set. A changed file or path set differs. This normalization is for
-dependency identity only; it does not change base render or resource bytes.
+input set. A changed file or path set differs. Clean normalization is for
+dependency identity. Checkout conversion supplies the base render and
+resource bytes before dependency selection.
 
 Repository-owned workspace and local directory packages always resolve from
 the side's own sources, in every tier. During bundling, a resolved real path

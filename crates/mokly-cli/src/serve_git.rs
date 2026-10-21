@@ -144,6 +144,31 @@ impl Runner for Tracked {
         let _active = self.enter()?;
         self.inner.run_cancellable(request, cancellation)
     }
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+    ) -> Result<Output> {
+        let _active = self.enter()?;
+        self.inner
+            .run_cancellable_with_environment(request, cancellation, environment)
+    }
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<Output> {
+        let _active = self.enter()?;
+        self.inner.run_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
+    }
 }
 
 #[cfg(test)]

@@ -162,6 +162,25 @@ fn a_failed_checkout_filter_does_not_return_pointer_bytes() {
 
 #[cfg(unix)]
 #[test]
+fn an_optional_checkout_filter_failure_does_not_return_pointer_bytes() {
+    let fixture = Fixture::new();
+    fixture.git(&["config", "filter.optional.clean", "cat"]);
+    fixture.git(&["config", "filter.optional.smudge", "sh -c 'exit 42'"]);
+    fixture.git(&["config", "filter.optional.required", "false"]);
+    fixture.write(".gitattributes", b"*.optional filter=optional\n");
+    fixture.write("value.optional", b"source\n");
+    let base = fixture.commit();
+
+    assert!(
+        fixture
+            .repository()
+            .read(&base, &RepoPath::parse("value.optional").unwrap(), 64)
+            .is_err()
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn a_hanging_checkout_filter_is_bounded() {
     let fixture = Fixture::new();
     fixture.git(&["config", "filter.wait.clean", "cat"]);

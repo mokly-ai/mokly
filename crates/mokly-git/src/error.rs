@@ -104,6 +104,12 @@ pub enum Error {
     /// A checkout conversion command exceeded its bounded filter deadline.
     #[error("[mokly-git/checkout] checkout filter reached its time limit")]
     CheckoutTimeout,
+    /// A checkout filter returned a failure diagnostic.
+    #[error("[mokly-git/checkout] checkout filter failed")]
+    CheckoutFailed {
+        /// Bounded filter diagnostic.
+        stderr: Vec<u8>,
+    },
     /// A promisor object fetch failed before checkout conversion.
     #[error(
         "[mokly-git/fetch] Git fetch {remote} failed; run `git fetch {remote} {object}` to recover the base objects"
