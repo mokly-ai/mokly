@@ -24,6 +24,10 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
     .unwrap();
     let sources: BTreeMap<String, String> =
         serde_json::from_value(fixture["files"].clone()).unwrap();
+    let reads: BTreeMap<_, _> = sources
+        .iter()
+        .map(|(path, text)| (Path::new("/repo").join(path), text.as_bytes().to_vec()))
+        .collect();
     let mut files: Vec<_> = sources
         .keys()
         .map(|path| SourceFile {
@@ -87,11 +91,7 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
         SourceTreeMock::read
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                Ok(
-                    sources[path.strip_prefix("/repo").unwrap().to_str().unwrap()]
-                        .as_bytes()
-                        .to_vec(),
-                )
+                Ok(reads[path].clone())
             })),
     )));
     let config = ResolvedConfig {

@@ -7,6 +7,7 @@
 
 import { expect } from "@playwright/test";
 
+import { awaitRoutedDetail } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import { selectedRequests } from "./serve_comparison_ui.js";
 
@@ -45,6 +46,7 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(page, stable);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   // The hidden band keeps Current as its only selection.
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(

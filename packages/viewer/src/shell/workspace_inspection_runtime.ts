@@ -71,7 +71,7 @@ export function inspectionAvailability(
   if (input.comparisonActive)
     return {
       available: false,
-      reason: "Highlighting is available in Current.",
+      reason: "A comparison is selected. Highlighting is available in Current.",
     };
   if (input.invalidSelection || input.data.removed)
     return { available: false, reason: "This preview is unavailable." };

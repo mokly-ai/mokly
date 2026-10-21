@@ -24,7 +24,7 @@ export function pageComparisonEvidence(
   catalogue: Catalogue,
   path: string,
 ): PageComparisonEvidence {
-  const page = catalogue.publicModel?.pages.find((item) => item.path === path);
+  const page = catalogue.publicModel.pages.find((item) => item.path === path);
   const status = page && publicEntryStatus(page);
   return status
     ? {

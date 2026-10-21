@@ -87,7 +87,7 @@ test("a published component keeps its selected saved view's evidence", () => {
       markup,
       /<p>This stylesheet changed, but none of the changed styles apply to this variant\.<\/p>/,
     );
-    assert.match(markup, /<p>No changes to this saved view\.<\/p><\/section>$/);
+    assert.match(markup, /<p>No changes to this variant\.<\/p><\/section>$/);
   }
 });
 

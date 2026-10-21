@@ -141,7 +141,7 @@ test("a consuming component shows its live view evidence before any comparison l
     markup.endsWith(`<p>${SCREEN_STYLE_COPY.sharedImpact}</p></section>`),
     markup,
   );
-  assert.doesNotMatch(markup, /No changes to this saved view\./);
+  assert.doesNotMatch(markup, /No changes to this variant\./);
 });
 
 test("the shared-component pane headings follow the design copy", () => {
@@ -159,8 +159,8 @@ test("a parent route closes with the selected saved view's own status", () => {
   const data = componentWorkspace("Unmodified", [rule(".frame")]);
   data.variants = savedViews("action/default", "Changed");
   const markup = render(data, "action/default");
-  assert.match(markup, /Changed styles that apply to this saved view:/);
-  assert.doesNotMatch(markup, /No changes to this saved view\./);
+  assert.match(markup, /Changed styles that apply to this variant:/);
+  assert.doesNotMatch(markup, /No changes to this variant\./);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 

@@ -9,7 +9,9 @@ write that tree. Plain Serve, export and publish compile in memory. Check uses
 Git-index tracking to choose its tracked or untracked validation boundary.
 Remove the old options; no default-output mode replaces them.
 
-`ManifestV10` replaces released `ManifestV9`; `Manifest` and `HistoricalManifest` now name v10.
+Manifest v10 replaces the released manifest v9. `@mokly/viewer/data` no longer
+exports the manifest types. The
+[viewer data release note](#breaking-viewer-data-release-note) lists them.
 V10 still requires `assetClosure`, `generatedFiles` and `blobHashAlgorithm` in
 addition to the identity-only entries and source inventory.
 The combined shape requires root ranges and inserted-stylesheet provenance, and
@@ -72,14 +74,16 @@ helpers. Import `ColorScheme`, `Viewport`, and `MoklyVersionError` from
 `ComponentUsageContext`, `ComponentValidationError`, `ComponentVariantReview`,
 `DataBudget`, `DependencyReason`, `EntryChangeReason`, `ExcludedResource`,
 `GeneratedComponentView`, `HierarchyEntry`, `HierarchyFolder`, `HierarchyNode`,
-`HistoricalManifestEntry`, `HistoricalManifestPage`, `HistoricalManifestScreen`,
-`HistoricalManifestUseCase`, `HistoricalSnapshotSource`, `HtmlSourceLocation`,
-`LogicalTarget`, `ManifestDocument`, `ManifestEntry`, `ManifestEntryBase`,
-`ManifestFolder`, `ManifestPage`, `ManifestScreen`, `RemovedPagePreview`,
+`HistoricalManifest`, `HistoricalManifestEntry`, `HistoricalManifestPage`,
+`HistoricalManifestScreen`, `HistoricalManifestUseCase`,
+`HistoricalSnapshotSource`, `HtmlSourceLocation`, `LogicalTarget`, `Manifest`,
+`ManifestDocument`, `ManifestEntry`, `ManifestEntryBase`, `ManifestFolder`,
+`ManifestPage`, `ManifestScreen`, `ManifestV10`, `RemovedPagePreview`,
 `RemovedPagePreviewArtifact`, `ReservedAttributeName`,
 `ReservedAttributeOccurrence`, `ResolvedCatalogueEntry`, `ReviewArtifact`,
-`ReviewArtifactContent`, `ReviewEntryAddress`, `ReviewResult`, `ReviewState`,
-`ReviewVariantAddress`, `ScreenResourceEvidence`, `ScreenReview`, `VIEWPORTS`,
+`ReviewArtifactContent`, `ReviewEntryAddress`, `ReviewResult`,
+`ReviewResultV7`, `ReviewState`, `ReviewVariantAddress`,
+`ScreenResourceEvidence`, `ScreenReview`, `ScreenReviewV7`, `VIEWPORTS`,
 `ViewResourceEvidence`, `ViewReview`, `affectedConsumerOrderKey`,
 `analyzeHierarchy`, `canonicalJson`, `catalogueComponentVariants`,
 `compareNavigationNodes`, `comparisonGeneration`, `comparisonPath`, `counter`,
@@ -185,9 +189,12 @@ path instead of `(kind, id)`; `snapshotPagePath` becomes
 becomes `previewMetadataPath(path)`; `documentRoute` is new; and
 `unavailableViewHref` is removed because `viewHref` of an unknown path opens
 the missing view. `parseViewHref` returns a path rather than a kind and id.
-Replace `ManifestV7` (0.13.0) or released `ManifestV9` (0.14.0) with `ManifestV10`,
-`ReviewResultV4` or `ReviewResultV6` with `ReviewResultV7`, and
-`ScreenReviewV4` or `ScreenReviewV6` with `ScreenReviewV7`. Replace
+The released manifest and review result types, such as `ManifestV7` (0.13.0),
+`ManifestV9` (0.14.0), `ReviewResultV6`, and `ScreenReviewV6`, have no public
+replacement. The
+[viewer data release note](#breaking-viewer-data-release-note) lists their
+0.15.0 successors, such as `ManifestV10` and `ReviewResultV7`, which the first
+Rust core release removes. Replace
 `isEntryId` and `isCatalogueId` with `isPathSegment` and `isEntryPath`;
 `isWindowsDeviceName` is unchanged.
 

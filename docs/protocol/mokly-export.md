@@ -135,26 +135,43 @@ Changes; Serve's watcher ignores the same paths.
    do not participate. Explicit inventoried inputs and reached closure files
    participate even beneath excluded directory names. Resolve each selected
    path inside the real repository before hashing its target bytes.
+   The fingerprint excludes JavaScript modules that the sidecar bundles from
+   `node_modules`, files under `node_modules` that a PostCSS plugin reports,
+   `.gitignore` and the Git index, ancestor `tsconfig.json` files, ancestor
+   `package.json` files that PostCSS module resolution does not name, missing
+   resolution candidates, the file list of a directory that a PostCSS plugin
+   reports, files that a PostCSS plugin reads without reporting them, and
+   files that a render callback reads without an import. An edit to one of
+   these during a build is not detected. These include an installed
+   stylesheet that a PostCSS plugin inlines. Installed stylesheets that Mokly
+   resolves itself, their `url()` assets, the `package.json` files that this
+   resolution reads, PostCSS plugin modules, and the package manifests that
+   PostCSS module resolution names participate. Decision: the fingerprint
+   covers only the build's inputs. A walk of every repository file was
+   rejected because it hashes unrelated files on every build and stops a
+   build when an unrelated file changes.
    For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
    of the exact bytes it bundled as the baseline. A missing module digest is
    an internal failure; a later source read cannot replace it. Compare captured digests with
    those baselines before document callbacks run. Keep the baseline for the
    final live recheck. Other reached inputs keep their first captured digest.
    For inventoried PostCSS inputs, retain SHA-256 witnesses from the exact raw
-   buffers delivered by observed whole-file reads and module loading. Compare
+   buffers delivered by observed whole-file reads and module loading. Retain
+   each observed byte range with its offset, length, and end-of-file evidence. Compare
    every witnessed version before document callbacks and at final checks.
    A conflicting version uses the existing `export-invalid` input-change outcome
    and preserves owned output. Cache hits and worker replacement retain the
    original witnesses. A later scan cannot replace them.
+   Retain observed descriptor identities and verified resolved names. Equal-byte
+   replacements and symlink retargets must not replace those read-time identities.
    PostCSS evidence always carries incomplete coverage. Native addons, helper
-   processes, uninstrumented workers, descriptor and partial reads, and private
+   processes, uninstrumented workers, unknown descriptor positions, and private
    loader metadata can escape observation. Known unobserved inputs retain their
    late baseline and the live recheck. That baseline does not detect an edit
    between an opaque read and capture. One observed read never makes a path or
    context complete. The [PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence)
-   defines this stage's coverage. Staged observation preserves compatible plugins;
-   enforced immutable inputs are not required. The full consumed-byte guarantee
-   remains open.
+   defines the coverage of PostCSS evidence. Mokly does not require enforced
+   immutable inputs, so compatible plugins keep working.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.

@@ -8,7 +8,7 @@ const reasons = {
   empty: "No registered components in this view",
   unavailable: "Component inspection is unavailable",
   loading: "Waiting for the component preview.",
-  comparison: "Highlighting is unavailable in comparisons",
+  comparison: "A comparison is selected. Highlighting is available in Current.",
   removed: "Highlighting is unavailable for removed screens",
 } as const;
 const viewportOptions = [

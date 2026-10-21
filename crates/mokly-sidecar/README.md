@@ -64,6 +64,8 @@ memory pressure doubles the replacement's check delay up to 500 completed
 requests and emits one notice per pressure episode. A sample at or below the
 bound restores normal checks. The 500-render rule always applies. Recycling
 starts after the in-flight request completes.
+PostCSS timeout diagnostics include phase timings for child spawn,
+configuration load, plugin construction, and the latest stylesheet run.
 
 `NodeFactory` uses the selected source working directory and sets `PWD` to it.
 It omits `INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
@@ -167,5 +169,5 @@ Collected style records carry CSS and component owner paths. Authored schemas re
 until the core validates them. A definition's source path identifies its
 helper module separately from the exporting module in its handle. PostCSS
 dependencies keep their plugin names and optional directory globs. Separate
-[read evidence](./src/postcss_evidence.rs) carries raw whole-file witnesses,
-known module paths, and an explicit incomplete coverage mark.
+[read evidence](./src/postcss_evidence.rs) carries raw whole-file and byte-range witnesses,
+known module paths, optional opened-file identity, and an explicit incomplete coverage mark.

@@ -18,15 +18,29 @@ Class-map changes and restored JavaScript generations follow the
 [bundling contract](./mokly-sidecar.md#bundling). Expected PostCSS errors carry a typed
 `postcss` failure in the error envelope. Rust selects its exact code and text
 from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
+Child startup errors, exit, IPC disconnection, and failed request writes settle
+affected requests without waiting for the request deadline. Errors raised before
+request attachment remain failures of that request. A failed child cannot accept
+later work; a later request starts a new child for the context.
+When a PostCSS request reaches its deadline, the timeout diagnostic includes
+deterministic timings for child spawn, configuration load, plugin construction,
+and the latest stylesheet run. Each phase reports its elapsed milliseconds or
+its running state. The diagnostic does not include authored paths or CSS text.
 
 ## Read Evidence
 
 Each result returns `readEvidence` separately from its dependency declarations.
-Its coverage is always `incomplete`. Its `reads` contain `whole-file` records,
+Its coverage is always `incomplete`. Its `reads` contain `whole-file` and `byte-range` records,
 with the absolute child-side path and the SHA-256 digest of the raw delivered
 bytes. Its `modules` identify known module inputs, including files without
 an observed read. A declaration or a module path alone is not a read witness.
 Runtime builtins use runtime identity and have no invented file digest.
+Each byte range retains its offset, delivered length, and any observed end of file.
+Never compare a range digest with a whole-file digest or infer unread bytes.
+When available, each witness retains the native identity of the descriptor
+that supplied its bytes. Keep a resolved name only when its metadata matches
+that open descriptor. Compare the retained identity before document callbacks
+and at final installation checks. Equal bytes cannot hide a changed target.
 
 Observe supported local compiler inputs before compilation, including JSON and
 configured loaders. Preserve the original byte digest across BOM handling and
@@ -34,6 +48,9 @@ text decoding. Observe native module source buffers where the runtime exposes
 them. Path-based synchronous, callback, and promise `readFile` operations record
 raw bytes before delivery. Preserve encodings, errors, cancellation, and return
 values. Instrumentation must not raise the supported Node minimum.
+Observe descriptor and `FileHandle` reads through supported whole-file, scalar,
+and vector APIs. Keep offsets through sequential reads and descriptor reuse.
+Node read streams retain their raw chunk witnesses before decoding or delivery.
 
 Keep all distinct witnessed versions for the child's context lifetime.
 Keep configuration observations for later stylesheet requests. Return the
@@ -57,23 +74,41 @@ the existing 64 MiB PostCSS and stylesheet cache bounds and the frame bound.
 
 Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
+This includes native scanners, memory maps, inherited or transferred handles,
+and asynchronous loader workers. Such reads retain their late opaque baseline.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
-Descriptor reads, `FileHandle` reads, streams, and partial ranges remain opaque
-in this stage. Exotic read options retain native behavior without a witness.
-Older Node runtimes without synchronous module customization retain ordinary
-file observation and local compiler witnesses. Unobserved transitive ESM loads,
-private resolution metadata, and read-time path identity remain incomplete.
+Untracked descriptors, unknown offsets, overlapping sequential operations, and
+exotic read options retain native behavior without a guessed range witness.
+Sharing a descriptor with a helper or worker makes its implicit cursor opaque.
+Native descriptor APIs, native addons, and consumer workers can move cursors
+without an observation. Such contexts retain late baselines for implicit reads.
+An explicit position can establish a later range after a cursor becomes unknown.
+FileHandle web streams retain raw witnesses without changing reader, cancellation,
+or buffer-transfer behavior. Custom streams retain witnesses only for underlying observed reads.
+Supported runtimes expose synchronous module customization. Ordinary transitive
+ESM, CommonJS, and JSON source reads retain witnesses on the supported Node floor.
+Node's private resolver reads and caches package manifests without exposing their
+consumed bytes. This includes `exports`, `imports`, and package-scope metadata.
+Known native manifest paths enter the late input inventory. A manifest path
+does not become a byte receipt. A second resolver call or content read cannot
+prove the version used by an earlier native resolution.
+Unavailable native identities and unobserved resolution metadata remain incomplete.
 Custom Node loaders can return transformed text. Without raw-byte provenance,
 that text cannot become a whole-file witness.
-Preloaded code can replace file APIs before observation starts. Such contexts
-keep late baselines for those APIs and compiler reads, even when they return buffers.
+Observation precedes consumer preloads. A provider that calls an observed file
+API retains the underlying raw witness, even when it transforms the result.
+Preserve the provider's encoding and transformed output. Generated provider
+bytes and providers that bypass observed APIs have no invented raw witness.
+Pre-existing or privately duplicated descriptors and caller-supplied asynchronous
+`readFile` buffers can bypass the observed boundaries. They retain native behavior.
 The late baseline detects only edits after capture for an unobserved input.
 
-Decision 56 selects staged observation to preserve plugin compatibility.
-Enforced immutable inputs need a separate isolation and input-domain contract.
-This stage does not meet the full M14 consumed-byte requirement.
+Decision: Mokly keeps native plugins compatible. It records a read witness
+only for the reads that it observes, and it reports its coverage as
+`incomplete`. Enforced immutable inputs were rejected because they need a
+separate isolation and input-domain contract.
 
 ## Related Docs
 

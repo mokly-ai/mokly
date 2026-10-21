@@ -121,6 +121,10 @@ impl Serve {
             .current_dir(root)
             .env("PATH", "")
             .env("MOKLY_OUTPUT", "rich")
+            .env(
+                "MOKLY_TEST_STATIC_COLUMNS",
+                (root.as_os_str().len() + 160).to_string(),
+            )
             .env("NO_COLOR", "1")
             .env("MOKLY_VIEWER_DIST", viewer)
             .stdin(Stdio::null())

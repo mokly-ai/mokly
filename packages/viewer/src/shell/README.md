@@ -1,11 +1,11 @@
 # Shared Browse shell
 
-## Delivery Status
+Serve, the static build, and React hosts render this same tree in the
+browser.
 
-The React Browse shell plan records
-how Serve, export and the public viewer converged on this tree.
-Retaining the known branch name in the exported navigation fallback is
-implemented in M31.
+## Branch name
+
+The exported navigation fallback retains the known branch name.
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
 keeps the sentence during loading; an index without a `base` omits it.
 
@@ -151,7 +151,7 @@ entry's fallback status and eligibility. `publicWorkspace` sets
 `affectedComparison` when Changes does not list the routed entry but its entry
 detail marks it comparison-eligible, because changed components affect it, and
 `workspace_views.ts` then keeps the comparison eligible while the shown views
-read Unmodified (user decision 82 B).
+read Unmodified.
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
@@ -166,6 +166,12 @@ so Props and highlighting remain read-only until Current is selected.
 resolves, so a removed variant of a moved or case-renamed parent opens in its
 siblings' workspace and keeps their mode. The mode owner also includes the
 index revision, so a publication returns an active comparison to Current.
+`comparison_intent.ts` applies a route's comparison intent once. The store
+counts route installations and keeps the installed route's intent; the
+routed workspace settles it when `comparisonEligibilityKnown` first reports
+final eligibility, and opens Side by side only for an eligible view. A
+publication keeps the count, so it cannot reopen the comparison, and the mode
+owner never reads the address.
 
 `css.ts` concatenates the shared stylesheet. Split string modules preserve
 its exact bytes. The standalone stylesheet adds one rule to it: a root without
@@ -178,7 +184,9 @@ paths.
 
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
-selects its exact removed record.
+selects its exact removed record. The `Catalogue` type requires `publicModel`:
+`createCatalogue` builds the lookup, and `viewerCatalogue` adds the published
+records that complete it.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
 An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the picker callback's focus handling.
@@ -259,7 +267,7 @@ metadata.
 
 `workspace_evidence_data.ts` merges an entry's own reasons, which
 `publicWorkspace` reads from the routed entry detail's `reasons`, the selected
-screen's or saved view's projected and live view evidence, and a loaded
+screen's or variant's projected and live view evidence, and a loaded
 comparison by path and rule key, so Current and a loaded comparison show the
 same facts once. `workspace_evidence_merge.ts` clears held reasons that a newer
 publication no longer carries. `workspace_stylesheet_evidence.ts` turns that evidence into
@@ -479,8 +487,8 @@ See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
 
-Markdown documents use `DocumentStageFrame` and the plain manifest embed with
-scheme-specific routes. `previews.tsx` and `use_removed_preview.ts` select the
-historical document's scheme through the same page preview lifecycle. Documents
-have no viewport or usage axis; logical links in a document reach the parent
-shell through the frame adapter.
+Markdown documents use `DocumentStageFrame` with scheme-specific routes.
+`previews.tsx` and `use_removed_preview.ts` select the historical document's
+scheme through the same page preview lifecycle. Documents have no viewport or
+usage axis; logical links in a document reach the parent shell through the
+frame adapter.

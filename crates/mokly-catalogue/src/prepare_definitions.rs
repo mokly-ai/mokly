@@ -47,7 +47,7 @@ impl Builder {
             issues.extend(described.issues);
             let mut pending = Vec::new();
             for source in described.sources {
-                if traversal(&source) || Path::new(&source).is_absolute() {
+                if traversal(&source) || Path::new(&source).has_root() {
                     issues.push(Issue::new(
                         Code::ConfigInvalid,
                         format!("invalid inventoried source {source}"),
@@ -167,3 +167,7 @@ impl Builder {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/source_paths_tests.rs"]
+mod source_paths_tests;

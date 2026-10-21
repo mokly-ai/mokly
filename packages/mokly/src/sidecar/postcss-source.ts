@@ -5,7 +5,7 @@ import { transform } from "esbuild";
 import type { Loader, OnLoadResult } from "esbuild";
 
 import { moduleContext } from "./postcss-context.js";
-import { moduleBytesAsync, preloadedCode } from "./postcss-evidence.js";
+import { moduleBytesAsync } from "./postcss-evidence.js";
 
 function loader(value: string | undefined): Loader | undefined {
   switch (value) {
@@ -55,7 +55,6 @@ export async function postcssSource(
   if (!selected) return undefined;
   const script = ["js", "jsx", "ts", "tsx"].includes(selected);
   const defaultAsset = !script && defaults[path.extname(file)] !== undefined;
-  if (preloadedCode && defaultAsset) return undefined;
   const bytes = await moduleBytesAsync(file, defaultAsset);
   if (!script) return { contents: bytes, loader: selected };
   const output = await transform(bytes.toString(), {

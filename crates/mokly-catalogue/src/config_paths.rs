@@ -1,14 +1,45 @@
 //! Physical confinement for configuration filesystem fields.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
-use crate::config::{invalid_path_text, normalize};
+use crate::config::{invalid_path_text, normalize, relative};
 use crate::config_postcss;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::Result;
+
+/// Keep the selected filename while resolving aliases above the repository.
+pub(crate) fn configuration_alias(
+    tree: &dyn SourceTree,
+    lexical: &Path,
+    config: &ResolvedConfig,
+) -> Result<Option<PathBuf>> {
+    if lexical == config.file {
+        return Ok(None);
+    }
+    let alias = if lexical.starts_with(&config.repo_root) {
+        lexical.to_owned()
+    } else if let Some(parent) = lexical.parent() {
+        match tree.project(parent) {
+            Ok(Some(node)) if node.identity.starts_with(&config.repo_root) => {
+                node.identity.join(lexical.file_name().unwrap_or_default())
+            }
+            Ok(_) => return Ok(None),
+            Err(error) => {
+                return Err(invalid(format!(
+                    "{}: {}",
+                    relative(parent, &config.repo_root),
+                    error.code()
+                )));
+            }
+        }
+    } else {
+        return Ok(None);
+    };
+    Ok((alias != config.file).then_some(alias))
+}
 
 pub(crate) fn validate_inputs(
     tree: &dyn SourceTree,

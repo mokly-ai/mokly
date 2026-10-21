@@ -99,4 +99,14 @@ fs.writeFileSync('helper.ts', "export const value = 'changed';");
     );
   }
   assert.equal(result.readEvidence.coverage, "incomplete");
+  const evaluated = path.join(pkg, "transitive.mjs");
+  assert.ok(
+    result.readEvidence.reads.some(
+      (read) =>
+        read.path === evaluated &&
+        read.identity?.canonical === evaluated &&
+        read.identity.object.includes(":"),
+    ),
+    "native module source must retain its opened-file identity",
+  );
 });

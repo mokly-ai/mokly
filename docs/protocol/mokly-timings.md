@@ -130,6 +130,8 @@ Markdown documents, imported CSS, and images, with configurable sizes. A small
 instance of the generator runs in automated tests; a full-sized instance is
 smoke-tested with the opt-in benchmark. It is a repeatable workload for
 locating scaling costs, not a claim of identical production data or timings.
+Shared stylesheets have a configurable count and per-area screen share. The
+defaults are four sheets and a share of 0.5, rounded up to whole screens.
 
 The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
@@ -159,6 +161,8 @@ A focused `startup` selection measures the same cold/warm usable startup and
 checks previews, axes, live props, cached bytes, and pages with the real base.
 It finishes without waiting for Changes or review availability and reports
 neither value. `all` retains the four complete scenarios above.
+A scenario that waits for Changes fails when Changes is unavailable.
+Unavailable Changes never counts as zero Changes.
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
@@ -209,8 +213,10 @@ CI's small correctness fixtures have
 Startup acceptance uses an optimized release native binary. The harness
 verifies that binary before timing and identifies its profile and digest in
 the results. Build preparation is outside the startup measurement.
-The React budget retains complete-catalogue readiness. Compilation redesign
-is deferred rather than changing readiness to partial navigation.
+Decision: React startup keeps complete-catalogue readiness under its own
+budget. Usable navigation before every entry is ready was rejected because it
+changes the readiness and validation order and needs pending entries and
+delayed errors.
 
 Isolated setup includes catalogue generation, package archives, dependency
 installation, and Git setup. The product build is a prerequisite outside this

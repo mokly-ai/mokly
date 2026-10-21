@@ -6,6 +6,7 @@ import type { ModulePaths } from "./module-paths.js";
 import { attributed } from "./postcss-attribution.js";
 import { PostcssError } from "./postcss-errors.js";
 import { importPostcssModule } from "./postcss-module.js";
+import type { PostcssPhases } from "./postcss-phases.js";
 import {
   importPlugin,
   plainObject,
@@ -16,16 +17,27 @@ import {
 export async function loadPostcss(
   file: string,
   paths: ModulePaths,
+  phases?: PostcssPhases,
 ): Promise<{ processor: ReturnType<typeof postcss>; modules: string[] }> {
-  const loaded = await importPostcssModule(file, paths).catch(
-    (error: unknown) => {
-      throw new PostcssError({
-        kind: "load",
-        module: paths.name(file),
-        detail: detail(error),
-      });
-    },
-  );
+  const loaded = await (
+    phases?.run("config-load", () => importPostcssModule(file, paths)) ??
+    importPostcssModule(file, paths)
+  ).catch((error: unknown) => {
+    throw new PostcssError({
+      kind: "load",
+      module: paths.name(file),
+      detail: detail(error),
+    });
+  });
+  const build = () => buildPostcss(file, loaded, paths);
+  return phases?.run("plugin-construction", build) ?? build();
+}
+
+async function buildPostcss(
+  file: string,
+  loaded: Awaited<ReturnType<typeof importPostcssModule>>,
+  paths: ModulePaths,
+): Promise<{ processor: ReturnType<typeof postcss>; modules: string[] }> {
   const { module, modules } = loaded;
   const config: unknown = module.default;
   if (!config || typeof config !== "object" || Array.isArray(config))

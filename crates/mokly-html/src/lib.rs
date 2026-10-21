@@ -117,3 +117,7 @@ mod style_metadata_tests;
 #[cfg(test)]
 #[path = "_tests_/plaintext_root_tests.rs"]
 mod plaintext_root_tests;
+
+#[cfg(test)]
+#[path = "_tests_/ignore_parsing_tests.rs"]
+mod ignore_parsing_tests;

@@ -32,20 +32,6 @@ export function fixtureCssAnalysis(
   };
 }
 
-/** Existing summary assertions remain separate from the rule-proof regression suites. */
-export function cssSummary(analysis: DependencyAnalysis | undefined) {
-  return analysis && { status: analysis.status, selectors: analysis.selectors };
-}
-
-export function resourceReasonSummaries(
-  reasons: readonly DependencyReason[] | undefined,
-) {
-  return reasons?.map((reason) => ({
-    ...reason,
-    ...(reason.analysis ? { analysis: cssSummary(reason.analysis) } : {}),
-  }));
-}
-
 /** One synthetic changed rule; omitted arrays are empty and the key is fixed. */
 export function cssRule(
   rule: Partial<CssRuleAttribution> & Pick<CssRuleAttribution, "selectors">,

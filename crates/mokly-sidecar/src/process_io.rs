@@ -7,6 +7,7 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::codec::Decoder;
 use crate::error::{Error, InternalError, Result};
+use crate::postcss_phase::PhaseState;
 use crate::wire::Frame;
 use crate::workers::Diagnostics;
 
@@ -69,14 +70,21 @@ pub(super) fn read_diagnostics(
     stderr: ChildStderr,
     diagnostics: Arc<dyn Diagnostics>,
     timings: bool,
+    phases: PhaseState,
 ) {
-    forward_diagnostics(&mut StderrInput(stderr), diagnostics.as_ref(), timings);
+    forward_diagnostics(
+        &mut StderrInput(stderr),
+        diagnostics.as_ref(),
+        timings,
+        &phases,
+    );
 }
 
 fn forward_diagnostics(
     reader: &mut dyn DiagnosticInput,
     diagnostics: &dyn Diagnostics,
     timings: bool,
+    phases: &PhaseState,
 ) {
     let mut buffer = [0; 4096];
     let mut carry = Vec::new();
@@ -92,6 +100,7 @@ fn forward_diagnostics(
                             &String::from_utf8_lossy(&carry[..end]),
                             diagnostics,
                             timings,
+                            phases,
                         );
                         carry.drain(..=end);
                     } else if carry.len() > 65_536 {
@@ -102,7 +111,12 @@ fn forward_diagnostics(
                         if end == 0 {
                             end = 65_536;
                         }
-                        forward_piece(&String::from_utf8_lossy(&carry[..end]), diagnostics, false);
+                        forward_piece(
+                            &String::from_utf8_lossy(&carry[..end]),
+                            diagnostics,
+                            false,
+                            phases,
+                        );
                         carry.drain(..end);
                     } else {
                         break;
@@ -116,11 +130,19 @@ fn forward_diagnostics(
         }
     }
     if !carry.is_empty() {
-        forward_piece(&String::from_utf8_lossy(&carry), diagnostics, timings);
+        forward_piece(
+            &String::from_utf8_lossy(&carry),
+            diagnostics,
+            timings,
+            phases,
+        );
     }
 }
 
-fn forward_piece(text: &str, diagnostics: &dyn Diagnostics, timings: bool) {
+fn forward_piece(text: &str, diagnostics: &dyn Diagnostics, timings: bool, phases: &PhaseState) {
+    if phases.record(text) {
+        return;
+    }
     if timings
         && let Some(payload) = text.strip_prefix("[mokly:timing] ")
         && let Ok(record) = serde_json::from_str::<serde_json::Value>(payload)

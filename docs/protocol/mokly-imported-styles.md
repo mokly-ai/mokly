@@ -118,6 +118,10 @@ reprints the stylesheet, so an authored comment may be dropped. Repeated
 builds with the same inputs and deterministic plugins give byte-identical
 output; plugin determinism is the consumer's responsibility. The plain and the
 module form of a stylesheet differ only in their scoped names.
+Mokly supports at least 32 levels of nested rules, at-rules, selector
+functions, and value functions. A deeper stylesheet can exceed the CSS
+parser's recursion limit and stop the process. Decision: Mokly accepts this
+parser limit. A nesting bound was rejected because real stylesheets nest far less deeply.
 
 Changes analyses the delivered stylesheets, not the sources, under
 [CSS change attribution](./mokly-css-attribution.md); equal normalized

@@ -38,6 +38,7 @@ import {
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   changesPaths,
   chooseFilter,
   comparisonIndex,
@@ -112,6 +113,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       const evidence = await openHandbook(page);
       await expect(headStatus(page)).toHaveText("Changed");
+      await awaitRoutedDetail(page, HANDBOOK);
       await expect(
         page.locator(
           "#mb-main [data-diff-screen], #mb-main [data-viewport-option], .mbk-diff-toolbar",
@@ -127,7 +129,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         afterList: "14px",
       });
       await expect(evidence).not.toContainText(
-        /Changed component|Shared component changes|this screen|saved view|[0-9a-f]{64}/u,
+        /Changed component|Shared component changes|this screen|saved view|this variant|[0-9a-f]{64}/u,
       );
       await expect(page.locator(".mbk-screen-head")).not.toContainText(
         /\.action|article h2|:root|\.css/u,

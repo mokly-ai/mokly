@@ -63,7 +63,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
   );
 });
 
-test("the terminal line names the screen or the saved view it compared", () => {
+test("the terminal line names the screen or the variant it compared", () => {
   const unmodified = {
     base: "main",
     status: "Unmodified",
@@ -92,8 +92,5 @@ test("the terminal line names the screen or the saved view it compared", () => {
     } as unknown as WorkspaceData,
     "default",
   );
-  assert.match(
-    component,
-    /<p>No changes to this saved view\.<\/p><\/section>$/,
-  );
+  assert.match(component, /<p>No changes to this variant\.<\/p><\/section>$/);
 });

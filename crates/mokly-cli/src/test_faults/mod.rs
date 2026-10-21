@@ -135,6 +135,9 @@ struct InjectedTree {
     faults: Faults,
 }
 impl SourceTree for InjectedTree {
+    fn file_object(&self, path: &Path) -> mokly_source_interface::error::Result<Option<String>> {
+        self.inner.file_object(path)
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         self.inner.prefetch(paths)
     }

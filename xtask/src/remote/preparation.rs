@@ -68,7 +68,7 @@ impl DefaultRemoteRunner {
         )?;
         dependencies
             .reporter
-            .executor("information: all 2 probes passed");
+            .executor(&format!("information: all {} probes passed", boxes.len()));
         Ok(PreparedRun { identity, snapshot })
     }
 }

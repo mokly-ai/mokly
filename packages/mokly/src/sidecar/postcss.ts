@@ -1,29 +1,31 @@
 import { fork } from "node:child_process";
-import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import type { EventEmitter } from "node:events";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { Operation } from "../generated/sidecar/Operation.js";
-import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { SidecarError, detail } from "./errors.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
+import { PostcssProcess } from "./postcss-process.js";
 import { sourceDependency } from "./source-dependencies.js";
 
 /** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
-  private workers = new Map<string, ChildProcess>();
+  private workers = new Map<string, PostcssProcess>();
   private contexts = new Map<string, string>();
   private id = 0;
 
   constructor(
     private readonly diagnostic: (message: string) => void,
     private readonly operation: (operation: Operation) => void = () => {},
+    private readonly launch: typeof fork = fork,
+    private readonly phase: (line: string) => void = () => {},
   ) {}
 
   async process(params: ProcessCssParams): Promise<CssResult> {
@@ -64,31 +66,39 @@ export class PostcssWorkers {
     const key = JSON.stringify([params.context, file]);
     let worker = this.workers.get(key);
     if (!worker) {
-      worker = fork(new URL("./postcss-worker.js", import.meta.url), [], {
-        cwd: root,
-        env: {
-          ...process.env,
-          PWD: root,
-          INIT_CWD: undefined,
-          npm_package_json: undefined,
-          npm_config_local_prefix: undefined,
-          NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
-            .filter(Boolean)
-            .join(path.delimiter),
+      const child = this.launch(
+        new URL("./postcss-worker.js", import.meta.url),
+        [],
+        {
+          cwd: root,
+          env: {
+            ...process.env,
+            PWD: root,
+            INIT_CWD: undefined,
+            npm_package_json: undefined,
+            npm_config_local_prefix: undefined,
+            NODE_OPTIONS: [
+              `--require=${JSON.stringify(fileURLToPath(new URL("./postcss-preload.cjs", import.meta.url)))}`,
+              process.env.NODE_OPTIONS,
+            ]
+              .filter(Boolean)
+              .join(" "),
+            NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
+              .filter(Boolean)
+              .join(path.delimiter),
+          },
+          stdio: ["pipe", "pipe", "pipe", "ipc"],
         },
-        stdio: ["pipe", "pipe", "pipe", "ipc"],
-      });
-      worker.stdout?.setEncoding("utf8");
-      worker.stderr?.setEncoding("utf8");
-      observePostcssProcess(
-        worker,
-        () => {
-          if (this.workers.get(key) === worker) this.workers.delete(key);
-        },
-        this.operation,
       );
-      worker.stdout?.on("data", (chunk) => this.diagnostic(String(chunk)));
-      worker.stderr?.on("data", (chunk) => this.diagnostic(String(chunk)));
+      const closed = () => {
+        if (this.workers.get(key) === worker) this.workers.delete(key);
+      };
+      worker = new PostcssProcess(child, closed, this.phase);
+      child.stdout?.setEncoding("utf8");
+      child.stderr?.setEncoding("utf8");
+      observePostcssProcess(child, closed, this.operation);
+      child.stdout?.on("data", (chunk) => this.diagnostic(String(chunk)));
+      child.stderr?.on("data", (chunk) => this.diagnostic(String(chunk)));
       this.workers.set(key, worker);
       worker.send({
         postcss: file,
@@ -99,43 +109,7 @@ export class PostcssWorkers {
     }
     const physical = stylesheetSource(paths, params.sourcePath);
     const sourcePath = (await sourceDependency(paths, physical)) ?? physical;
-    const id = ++this.id;
-    return new Promise((resolve, reject) => {
-      function cleanup() {
-        worker!.off("message", receive);
-        worker!.off("error", fail);
-        worker!.off("exit", exit);
-      }
-      function fail(error: Error) {
-        cleanup();
-        reject(new SidecarError("bundle-failed", error.message));
-      }
-      function exit(code: number | null) {
-        fail(new Error(`PostCSS worker exited with ${code}`));
-      }
-      function receive(message: {
-        id: number;
-        result?: CssResult;
-        error?: string;
-        postcss?: PostcssFailure;
-      }) {
-        if (message.id !== id) return;
-        cleanup();
-        if (message.error)
-          reject(
-            new SidecarError("bundle-failed", message.error, message.postcss),
-          );
-        else resolve(message.result!);
-      }
-      worker!.on("message", receive).once("error", fail).once("exit", exit);
-      worker!.send({
-        id,
-        params: {
-          ...params,
-          sourcePath,
-        },
-      });
-    });
+    return worker.request(++this.id, { ...params, sourcePath });
   }
 
   async dispose(context?: string): Promise<void> {
@@ -146,7 +120,7 @@ export class PostcssWorkers {
     if (context === undefined) this.contexts.clear();
     else this.contexts.delete(context);
     await Promise.all(
-      selected.map(async ([, worker]) => {
+      selected.map(async ([, { child: worker }]) => {
         if (worker.exitCode !== null || worker.signalCode !== null) return;
         const exited = once(worker, "exit");
         worker.kill("SIGKILL");

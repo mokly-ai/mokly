@@ -134,7 +134,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const current = stateRef.current.selection;
       const catalogue = catalogueRef.current;
       const next = mergeSelection(
-        catalogue.publicModel!,
+        catalogue.publicModel,
         folderTitleLookup(catalogue.hierarchy),
         current,
         partial,
@@ -183,7 +183,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         route.view.kind === "target" ? route.view.target.entry.path : null;
       const catalogue = catalogueRef.current;
       const next = mergeSelection(
-        catalogue.publicModel!,
+        catalogue.publicModel,
         folderTitleLookup(catalogue.hierarchy),
         stateRef.current.selection,
         {
