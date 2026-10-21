@@ -3071,7 +3071,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       test. The observed shard job medians are 13.05, 13.42, 12.65, and 13.05
       minutes, a 6.06 percent range. Evidence:
       `.context/ci-timing/hosted-analysis.json` and
-      `.context/ci-timing/hosted-timing.md`.
+      `.context/ci-timing/hosted-timing.md`. These medians are the target from
+      the fixed assignment. The new weighted assignment needs hosted
+      confirmation after integration.
 - [ ] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
