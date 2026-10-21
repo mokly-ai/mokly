@@ -17,10 +17,14 @@ Removed when any is Removed, else Unmodified. Comparison eligibility follows
 that shown status under the kind rule: Changed is eligible, and
 Removed is eligible only for a component. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
-controls and the `Changed views` row point to the views that changed. An
-entry that Changes does not list, whose entry detail marks it
-comparison-eligible because changed components affect it, stays eligible in
-every shown view while it shows Unmodified.
+controls and the `Changed views` row point to the views that changed. Changed
+components make the one exception: when the entry detail marks the entry
+comparison-eligible, an Unmodified view whose usage holds a changed component
+that the detail's `relatedComponents` names stays eligible while it shows
+Unmodified. This holds in or out of Changes: for an entry that Changes does not
+list, a pure move, a component variant, and an entry whose other views changed
+alike. With Both selected, one eligible shown view makes the comparison
+eligible.
 
 Per-view evidence is authoritative only when it names every effective view in
 the current selection. Unknown, pending, or partial per-view evidence preserves
@@ -35,11 +39,12 @@ Controlled selection and comparison deep links use the same decision; a deep lin
 evidence uses the fallback decision.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
-band beneath the heading. Added and Unmodified views of any other entry retain
-their current preview without that band; removed screens show their
-[previous version](./mokly-removed-previews.md) without it. Affected-only
-consumers can compare actual rendered differences while staying outside
-Changes. Current is selected initially, including after navigation and reload.
+band beneath the heading. Added views, and Unmodified views that use no changed
+component, retain their current preview without that band; removed screens show
+their [previous version](./mokly-removed-previews.md) without it. Affected
+consumers can compare actual rendered differences while their views stay
+Unmodified, and an affected-only consumer stays outside Changes. Current is
+selected initially, including after navigation and reload.
 Selecting Changes, opening a current screen, changing its viewport or color
 scheme in Current, and receiving a watched update do not generate comparison
 snapshots in development; opening a removed entry is the one selection that
@@ -49,7 +54,9 @@ explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
 Navigation must never let a late comparison response replace another screen.
 Shell-owned links carry comparison intent only when the destination view
-is eligible. The destination revalidates that eligibility before honoring a
+is eligible. An Affected link names a view that its destination can compare:
+a Changed view, or an Unmodified view whose usage holds the changed component.
+The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request. It honors the query
 once for each navigation, when that eligibility is first known; a watched
