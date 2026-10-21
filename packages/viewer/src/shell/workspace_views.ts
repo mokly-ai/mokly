@@ -2,8 +2,13 @@
 
 import type { GeneratedComponentView } from "../components/views.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import { viewAxesKey, viewsUsingComponents } from "../review/shared_impact.js";
 
-import { resolveViewPresentation, type EntryStatus } from "./view_status.js";
+import {
+  resolveViewPresentation,
+  type EntryStatus,
+  type ViewState,
+} from "./view_status.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import type { WorkspaceVariantSelection } from "./workspace_selection.js";
 
@@ -68,8 +73,8 @@ export function visibleWorkspaceViews(
 /**
  * Resolve requested axes to actual renders and use per-view evidence only when
  * it covers every shown render. Otherwise preserve selection-level fallbacks.
- * An entry that only changed components affect keeps its comparison while its
- * views show Unmodified.
+ * A shown view that changed components affect keeps its comparison while it
+ * shows Unmodified, in or out of Changes.
  */
 export function resolveWorkspaceView(
   data: WorkspaceData,
@@ -86,25 +91,49 @@ export function resolveWorkspaceView(
   );
   const evidenceKey =
     data.entry.kind === "component" ? variantPath : data.entry.path;
+  const states =
+    evidenceKey && Object.hasOwn(data.viewStates, evidenceKey)
+      ? data.viewStates[evidenceKey]
+      : undefined;
   const presentation = resolveViewPresentation({
     displayedViews: resolved.views,
     fallbackComparisonEligible: selection.comparisonEligible,
     fallbackStatus: selection.variant?.status ?? data.status,
     kind: data.entry.kind,
-    states:
-      evidenceKey && Object.hasOwn(data.viewStates, evidenceKey)
-        ? data.viewStates[evidenceKey]
-        : undefined,
+    states,
   });
   // The routed entry's detail decides; a parent route selects its own row.
   const affected =
     data.affectedComparison &&
     (selection.variant === undefined ||
-      selection.variant.value.path === data.entry.path);
+      selection.variant.value.path === data.entry.path) &&
+    affectedViewShown(resolved.views, states, data.relatedComponents);
   return {
     ...resolved,
     comparisonEligible: presentation.comparisonEligible || affected,
     evidence: presentation.evidence === "matching" ? "view" : "selection",
     status: presentation.status,
   };
+}
+
+/**
+ * Whether a shown view is known to be Unmodified and its usage holds a changed
+ * component that the routed entry's detail names.
+ */
+function affectedViewShown(
+  views: readonly GeneratedComponentView[],
+  states: readonly ViewState[] | undefined,
+  components: readonly { path: string }[],
+): boolean {
+  const using = viewsUsingComponents(views, components);
+  return views.some(
+    (view) =>
+      using.has(viewAxesKey(view)) &&
+      states?.some(
+        (state) =>
+          state.viewport === view.viewport &&
+          state.colorScheme === view.colorScheme &&
+          (state.state === "unchanged" || state.state === "ignored-only"),
+      ) === true,
+  );
 }

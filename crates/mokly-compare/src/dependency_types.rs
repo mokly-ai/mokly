@@ -24,6 +24,10 @@ pub enum Tier {
 pub enum Fallback {
     /// Manager, executable or lockfile is unavailable.
     Unavailable,
+    /// The manager version is unsupported or differs from the requested pin.
+    Version,
+    /// The sidecar cannot resolve a Yarn Plug'n'Play installation.
+    YarnPnp,
     /// Package-manager execution failed, including an offline install.
     Failed,
     /// The install reached its shared deadline.
@@ -68,6 +72,8 @@ impl Warning {
             .unwrap_or_default();
         let reason = match &self.reason {
             Fallback::Unavailable => "package manager or lockfile unavailable",
+            Fallback::Version => "package manager version unsupported",
+            Fallback::YarnPnp => "Yarn Plug'n'Play is unsupported",
             Fallback::Failed => "installation failed",
             Fallback::Timeout => "time limit",
             Fallback::Size => "cache size limit",

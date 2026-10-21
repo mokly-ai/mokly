@@ -14,6 +14,17 @@ test("the stage waits for the routed details with a quiet status", () => {
   assert.doesNotMatch(html, /<iframe/);
 });
 
+test("a replaced catalogue keeps the quiet loading status without an action", () => {
+  for (const kind of ["screen", "use-case"] as const) {
+    const html = renderToStaticMarkup(
+      <StageDelivery delivery={{ status: "replaced" }} kind={kind} />,
+    );
+    assert.match(html, /aria-busy="true"/);
+    assert.match(html, /<p role="status">Loading preview…<\/p>/);
+    assert.doesNotMatch(html, /role="alert"|could not be shown|<button/);
+  }
+});
+
 test("a failed detail names the entry and offers one retry", () => {
   const retry = () => undefined;
   for (const [kind, noun] of [

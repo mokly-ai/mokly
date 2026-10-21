@@ -18,7 +18,20 @@ pub(crate) struct Manifest {
     optional_dependencies: BTreeMap<String, String>,
     #[serde(default)]
     overrides: BTreeMap<String, Override>,
+    #[serde(default)]
+    resolutions: BTreeMap<String, String>,
+    #[serde(default)]
+    pnpm: Pnpm,
     workspaces: Option<Workspaces>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Pnpm {
+    #[serde(default)]
+    overrides: BTreeMap<String, Override>,
+    #[serde(default)]
+    patched_dependencies: BTreeMap<String, String>,
 }
 
 #[derive(Deserialize)]
@@ -38,10 +51,15 @@ enum Workspaces {
 impl Manifest {
     pub(crate) fn local(&self) -> bool {
         self.workspaces.is_some()
+            || !self.pnpm.patched_dependencies.is_empty()
             || self
                 .specifications()
                 .iter()
-                .any(|value| local(value).is_some())
+                .any(|value| value.starts_with("patch:") || local(value).is_some())
+    }
+
+    pub(crate) fn patches(&self) -> impl Iterator<Item = &str> {
+        self.pnpm.patched_dependencies.values().map(String::as_str)
     }
 
     pub(crate) fn packages(&self) -> impl Iterator<Item = (&String, &String)> {
@@ -63,7 +81,12 @@ impl Manifest {
             .packages()
             .map(|(_, value)| value.as_str())
             .collect::<Vec<_>>();
-        let mut pending = self.overrides.values().collect::<Vec<_>>();
+        values.extend(self.resolutions.values().map(String::as_str));
+        let mut pending = self
+            .overrides
+            .values()
+            .chain(self.pnpm.overrides.values())
+            .collect::<Vec<_>>();
         while let Some(value) = pending.pop() {
             match value {
                 Override::Version(value) => values.push(value),
@@ -84,6 +107,15 @@ pub(crate) fn parse(bytes: &[u8], path: &str) -> Result<Manifest> {
 }
 
 pub(crate) fn local(value: &str) -> Option<&str> {
+    if let Some(value) = value.strip_prefix("portal:") {
+        return Some(value);
+    }
+    if let Some(value) = value.strip_prefix("workspace:") {
+        return (value.starts_with(['.', '/', '\\'])
+            || value.starts_with("~/")
+            || value.as_bytes().get(1) == Some(&b':'))
+        .then_some(value);
+    }
     if value.get(..5).is_some_and(|prefix| {
         prefix.eq_ignore_ascii_case("file:") || prefix.eq_ignore_ascii_case("link:")
     }) {
