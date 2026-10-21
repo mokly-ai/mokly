@@ -5,10 +5,10 @@ import test from "node:test";
 
 import {
   ensureRustAuditTool,
-  runRustAudit,
   type RustAuditOutcome,
   type RustAuditToolDependencies,
 } from "../scripts/verification/rust-audit-tool.mjs";
+import { runRustAudit } from "../scripts/verification/rust-audit.mjs";
 
 function fixture() {
   const archive = Buffer.from("verified source fixture");
@@ -118,9 +118,23 @@ test("a cached tool skips installation but always queries live advisories", asyn
   f.io.download = async () => {
     throw new Error("unexpected download");
   };
-  assert.equal(await runRustAudit(f.root, f.pin, f.io), 0);
-  assert.deepEqual(f.commands, [
-    { file: binary, args: ["audit", "--file", "Cargo.lock"] },
+  const audits: Array<{ file: string; args: string[] }> = [];
+  await runRustAudit({
+    root: f.root,
+    now: () => new Date("2026-10-21T00:00:00.000Z"),
+    install: (root) => ensureRustAuditTool(root, f.pin, f.io),
+    execute: async (file, args) => {
+      const packages = [{ name: "lightningcss", version: "1.0.0-alpha.72" }];
+      if (args[0] === "metadata")
+        return { stdout: JSON.stringify({ packages }), stderr: "" };
+      audits.push({ file, args });
+      return { stdout: '{"settings":{"ignore":[]}}', stderr: "" };
+    },
+    write: () => undefined,
+  });
+  assert.deepEqual(f.commands, []);
+  assert.deepEqual(audits, [
+    { file: binary, args: ["audit", "--json", "--file", "Cargo.lock"] },
   ]);
 });
 
@@ -173,19 +187,6 @@ test("failed and signalled installs leave no reusable success stamp", async () =
     assert.equal(f.events.at(-1), `remove:${f.build}`);
     await ensureRustAuditTool(f.root, f.pin, f.io);
     assert.equal(f.commands.length, 2);
-  }
-});
-
-test("audit failures and signals preserve their process result", async () => {
-  const f = fixture();
-  await ensureRustAuditTool(f.root, f.pin, f.io);
-  for (const [outcome, expected] of [
-    [{ exitCode: 7 }, 7],
-    [{ exitCode: null, signal: "SIGINT" }, 130],
-    [{ exitCode: 0, interrupted: "SIGTERM" }, 143],
-  ] satisfies Array<[RustAuditOutcome, number]>) {
-    f.outcomes.push(outcome);
-    assert.equal(await runRustAudit(f.root, f.pin, f.io), expected);
   }
 });
 

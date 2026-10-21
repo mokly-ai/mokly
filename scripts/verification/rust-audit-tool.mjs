@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import { constants } from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { x as extractTar } from "tar";
 
@@ -76,16 +75,6 @@ export async function ensureRustAuditTool(
   }
 }
 
-/** A cached tool still runs a fresh workspace advisory query. */
-export async function runRustAudit(
-  root,
-  pin = release,
-  io = dependencies(root),
-) {
-  const binary = await ensureRustAuditTool(root, pin, io);
-  return exitCode(await io.run(binary, ["audit", "--file", "Cargo.lock"]));
-}
-
 function exitCode(result) {
   const signal = result.interrupted || result.signal;
   return signal
@@ -125,19 +114,4 @@ function dependencies(root) {
     remove: (directory) => fs.rm(directory, { recursive: true, force: true }),
     run: (file, args) => runInherited(file, args, { cwd: root }),
   };
-}
-
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
-  const root = path.resolve(import.meta.dirname, "../..");
-  process.exitCode = await runRustAudit(
-    root,
-    release,
-    dependencies(root),
-  ).catch((error) => {
-    process.stderr.write(`[verification/rust-audit-tool] ${error.message}\n`);
-    return 1;
-  });
 }

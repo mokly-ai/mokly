@@ -31,10 +31,3 @@ export function ensureRustAuditTool(
   pin?: RustAuditPin,
   dependencies?: RustAuditToolDependencies,
 ): Promise<string>;
-
-/** Always query current advisories after selecting the exact cached or new tool. */
-export function runRustAudit(
-  root: string,
-  pin?: RustAuditPin,
-  dependencies?: RustAuditToolDependencies,
-): Promise<number>;
