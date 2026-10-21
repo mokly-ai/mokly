@@ -4613,8 +4613,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 The user decided on 2026-10-21, at about 19:10Z, that the open review items
 and decisions do not block the merge into `main`. They become post-merge
-follow-ups, and the user decides each solution later. This decision answers
-user item 146: open items move after the merge.
+follow-ups, and the user decides each solution later. Only the merge set of
+Milestone 15 waits before the merge.
+
+User decision 146 (2026-10-21): C. From now on, a new review finding or
+decision goes to this post-merge section, unless it is a High security
+issue, a data-loss risk, or a failing check. The hub records it here and
+does not ask the user before the merge.
 
 - [ ] Resolve user item 64 (engine R20-1, from M14 review 6 finding 8):
       decide on streamed Git blob copies and batched digests. Each opaque
