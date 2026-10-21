@@ -57,13 +57,15 @@ A component page has Used by links for every known consumer. A changed
 component also has Affected screens, built from the union of base and head
 usage, including transitive use and removed consumers. Each canonical screen
 appears once with its affected view and instance evidence. A direct screen
-change does not remove it from the list. In Serve and in a static build, a link
-opens the consumer's Side by side comparison of that view, even when the
-consumer has no row in Changes; it then stays Unmodified and outside Changes.
-A React host opens the consumer in Current, where the band offers the same
-comparison. A consumer in Changes whose own views are unchanged, such as a pure
-move, opens Current, and a removed screen consumer opens its previous version. Affected describes usage evidence, not
-proof of a visual regression: a changed component can alter surrounding layout
+change does not remove it from the list. Each link names the entry whose views
+its evidence names, so a variant's own views link the variant. In Serve and in
+a static build, a link opens the consumer's Side by side comparison of that
+view, in or out of Changes. A consumer without a row stays Unmodified and
+outside Changes. A pure move, a consumer whose other views changed, and a
+component variant compare the linked view the same way. A React host opens the
+consumer in Current, where the band offers the same comparison. A removed
+screen consumer opens its previous version. Affected describes usage evidence,
+not proof of a visual regression: a changed component can alter surrounding layout
 without changing any screen-owned markup, and no pixel or layout-safety claim
 is inferred.
 

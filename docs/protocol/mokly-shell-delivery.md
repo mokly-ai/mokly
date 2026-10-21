@@ -98,8 +98,12 @@ Ready included current and removed entries carry `reasons`. A pure move carries 
 Reasons are independent of `workspace` and remain available before usage is proven.
 `usedBy` lists the current uses of a component, `affected` the consumers a
 changed component affects, `relatedComponents` the changed components that
-affect a screen, and `inputChanges` the instances whose props differ from the
-base render; the entry's change state is the index's `changes.kind`. The
+affect the entry's own views, and `inputChanges` the instances whose props
+differ from the base render. The affected evidence keys each changed component
+by the entry whose views it names, so a component variant's detail names the
+changed components that its own views use, and a parent's detail only those of
+the parent's own views. That entry's detail is `comparisonEligible` when it can
+be compared; the entry's change state is the index's `changes.kind`. The
 generated TypeScript types are normative, and a detail is canonical JSON. In
 Serve a view's usage is `pending` until its first render completes and the
 next publication replaces the detail; `build` renders every view before it

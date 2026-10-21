@@ -215,7 +215,8 @@ component: Title”. The shared-component sentence, “Shared component changes
 affect this preview. This page has no independent entry in Changes.”, appears
 when the routed entry's index record is ready and not `included` and changed
 components affect it: its detail's `relatedComponents` names a changed
-component, which the review's `affected` records give, a shown view keeps a
+component, which the review's `affected` records give for the entry whose views
+they name, a shown view keeps a
 `matched` or `unresolved` rule or a resource that a component owns, or the
 loaded review's `affected` evidence names the entry. It shows in Current and
 in a loaded comparison alike. A variant whose rules are all owned by the

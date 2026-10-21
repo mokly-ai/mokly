@@ -4238,7 +4238,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        apply: the shell offers the comparison for such an entry, opens it
        from Affected screens, and the design depicts its pane heading.
     2. Moved to user item 83 on 2026-10-21.
-  - [ ] Resolve user item 83 (viewer defaults decision 2, the second
+  - [x] Resolve user item 83 (viewer defaults decision 2, the second
         decision log item 32 follow-up): variant pages miss the shared
         change. The affected records name the parent as the consumer for
         every view of a component, so `projection_affected.rs` gives
@@ -4251,9 +4251,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         parent page explains the shared change, Small (estimate); B, key
         `relatedComponents` by the entry whose views each evidence item
         names, in place of the parent, and update the Status Lines rule,
-        Small. Recommended: B. User item 103 option C includes B.
-    - Covered by user decision 103 (2026-10-21): C, which includes 83 B.
-      Work: `rebuild/viewer-103c`.
+        Small. Recommended: B. User item 103 option C includes B. Settled on
+        2026-10-21 by user decision 103 C, which includes item 83 B:
+        `rebuild/viewer-103c` keys `relatedComponents` and detail
+        eligibility by the entry whose views each evidence item names
+        (`3a30e389`).
   - [ ] Resolve user item 84 (review finding 6): the shared-component
         sentence calls a screen "this page". "Shared component changes
         affect this preview. This page has no independent entry in
@@ -4290,7 +4292,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        screen." Recommended: B, apply the affected rule to every entry whose
        own views are all unchanged and whose detail names changed components,
        with the shared-component sentence. Option A keeps the rule to entries
-       that Changes does not list. User item 103 covers this case.
+       that Changes does not list. User item 103 covers this case. Settled on
+       2026-10-21 by user decision 103 C, which applies this item's option C:
+       each Unmodified view whose usage holds a changed component that the
+       detail names offers the band, in or out of Changes (`80f48c61`). Its
+       Details ending stays open below.
     2. Moved to user item 104 on 2026-10-21.
   - [ ] Resolve user item 104 (82 B delegate decision 6, with the second
         user decision 82 follow-up): the component artboard shows only
@@ -4303,6 +4309,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         too, Large. Recommended: B. With either option, correct the sentence
         of `mokly-component-design.md` that gives known unchanged shown views
         no comparison row.
+  - User decision 103 follow-up for the user, raised on 2026-10-21: a pure
+    move's Details end with "No changes to this screen." while its band offers
+    the comparison of the changed components that its views use. Severity
+    Low, effort Large. Recommended: B, show the shared-component sentence in
+    place of that line, with a wording for an entry that Changes lists, which
+    the item 84 B rewording can give, and draw it in the design first. Option
+    A keeps the line, and option C drops it.
   - Outside the scope of user decision 82:
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
@@ -4319,7 +4332,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         assigned two problems outside its scope: the design and the viewer
         now say that a comparison is selected when highlighting is off, and
         the shell README no longer cites "implemented in M31" (`8bf3cc4c`).
-  - [ ] Resolve user item 103 (hub review of `rebuild/defaults-viewer-82b`,
+  - [x] Resolve user item 103 (hub review of `rebuild/defaults-viewer-82b`,
         finding 1): Affected links ask for comparisons that the destination
         refuses. A consumer that Changes lists as a pure move, a component
         variant consumer, and a consumer in Changes whose linked view is
@@ -4332,9 +4345,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         offers the band, in or out of Changes, variants included, with
         `relatedComponents` and detail eligibility keyed by the entry that
         each evidence item names, Large. C includes user item 83 B.
-        Recommended: C. If the user declines C, apply A.
-    - User decision 103 (2026-10-21): C, which includes 83 B. Work:
-      `rebuild/viewer-103c`.
+        Recommended: C. If the user declines C, apply A. User decision 103
+        (2026-10-21): C, which includes item 83 B. Done in
+        `rebuild/viewer-103c`: the projection keys (`3a30e389`), the
+        per-view band rule (`80f48c61`), and the `affected-destinations` case
+        of the shared branch-point set, whose journeys run in Serve, the
+        static build, and a React host (`6dbdb181`).
   - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
         of an affected-only entry comes from view usage. Severity Low.
         Option B is applied by default (user rule): see the record "Serve

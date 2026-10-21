@@ -148,10 +148,12 @@ unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
 provenance together; missing or partial matching evidence retains the selected
 entry's fallback status and eligibility. `publicWorkspace` sets
-`affectedComparison` when Changes does not list the routed entry but its entry
-detail marks it comparison-eligible, because changed components affect it, and
-`workspace_views.ts` then keeps the comparison eligible while the shown views
-read Unmodified.
+`affectedComparison` when the routed entry's detail marks it
+comparison-eligible and names the changed components that affect it, in or out
+of Changes. `workspace_views.ts` then keeps the comparison eligible for each
+shown view that reads Unmodified while its usage holds one of those
+components, so a pure move, a component variant, and an entry whose other
+views changed compare as an affected-only entry does.
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
