@@ -16,7 +16,7 @@ export type IncompleteStatus = "pending" | "preparing" | "unavailable";
 type JsonRecord = Record<string, unknown>;
 
 /** A ready index with every Changes field in one incomplete state. */
-export function incompleteIndex(
+function incompleteIndex(
   index: JsonRecord,
   status: IncompleteStatus,
 ): JsonRecord {

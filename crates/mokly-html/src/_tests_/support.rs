@@ -1,7 +1,7 @@
 //! Prepared HTML and JavaScript definitions over a unimock source tree.
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
@@ -21,11 +21,11 @@ use unimock::{MockFn, Unimock, matching};
 pub(super) fn prepared(body: &str) -> PreparedCatalogue {
     let files = Arc::new(BTreeMap::from([
         (
-            "/repo/specs/home.screen.html".to_owned(),
+            PathBuf::from("/repo/specs/home.screen.html"),
             format!("---\ntitle: Home\nprops: {{label: Supplier}}\n---\n{body}"),
         ),
         (
-            "/repo/specs/shared.mockup.tsx".to_owned(),
+            PathBuf::from("/repo/specs/shared.mockup.tsx"),
             "export default component;".into(),
         ),
     ]));
@@ -58,19 +58,15 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                let path = path.to_string_lossy();
-                let kind = if projection.contains_key(path.as_ref()) {
+                let kind = if projection.contains_key(path) {
                     Some(FileKind::File)
-                } else if projection
-                    .keys()
-                    .any(|file| file.starts_with(&format!("{path}/")))
-                {
+                } else if projection.keys().any(|file| file.starts_with(path)) {
                     Some(FileKind::Directory)
                 } else {
                     None
                 };
                 Ok(kind.map(|kind| Node {
-                    identity: Path::new(path.as_ref()).into(),
+                    identity: path.into(),
                     lexical_kind: kind,
                     kind,
                 }))
@@ -78,16 +74,18 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
         SourceTreeMock::children
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                let prefix = format!("{}/", path.to_string_lossy().trim_end_matches('/'));
                 let mut found = BTreeMap::new();
                 for file in children.keys() {
-                    if let Some(relative) = file.strip_prefix(&prefix) {
-                        let (name, kind) = relative
-                            .split_once('/')
-                            .map_or((relative, FileKind::File), |(name, _)| {
-                                (name, FileKind::Directory)
-                            });
-                        found.insert(name.to_owned(), kind);
+                    if let Ok(relative) = file.strip_prefix(path) {
+                        let mut parts = relative.components();
+                        if let Some(name) = parts.next() {
+                            let kind = if parts.next().is_some() {
+                                FileKind::Directory
+                            } else {
+                                FileKind::File
+                            };
+                            found.insert(name.as_os_str().to_str().unwrap().to_owned(), kind);
+                        }
                     }
                 }
                 Ok(found
@@ -97,11 +95,7 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
             })),
         SourceTreeMock::read
             .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(reads[&path.to_string_lossy().to_string()]
-                    .as_bytes()
-                    .to_vec())
-            })),
+            .answers_arc(Arc::new(move |_, path| Ok(reads[path].as_bytes().to_vec()))),
         DefinitionProviderMock::describe
             .next_call(matching!(_, _))
             .returns(Ok(Definitions {

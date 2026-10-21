@@ -28,7 +28,7 @@ function harness(
   const store = shellStore({
     catalogue,
     context: {
-      ...viewerContext(catalogue.publicModel!, state.selection),
+      ...viewerContext(catalogue.publicModel, state.selection),
       changedEntries: options.changedEntries ?? [],
       changesStatus: "ready",
     },

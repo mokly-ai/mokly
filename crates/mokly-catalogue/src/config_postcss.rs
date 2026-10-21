@@ -28,7 +28,7 @@ pub(crate) fn validate(tree: &dyn SourceTree, config: &ResolvedConfig) -> Result
     if value.is_empty()
         || invalid_path_text(value)
         || value.contains(':')
-        || Path::new(value).is_absolute()
+        || Path::new(value).has_root()
     {
         return Err(path_error(value));
     }

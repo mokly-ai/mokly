@@ -75,7 +75,12 @@ pub(super) fn regression(test_name: &str, work_tree: bool) {
             .trim(),
     );
     assert!(git_directory.is_absolute());
-    assert!(git_directory.starts_with(repository.root.parent().unwrap()));
+    assert!(
+        git_directory
+            .canonicalize()
+            .unwrap()
+            .starts_with(repository.root.parent().unwrap().canonicalize().unwrap())
+    );
     let before = checkout(&repository, &workspace, &git_directory);
     assert_eq!(before.status, "A  staged\n");
     let mut command = Command::new(env::current_exe().unwrap());

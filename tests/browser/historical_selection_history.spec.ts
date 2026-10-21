@@ -16,6 +16,7 @@ import { similarTextPageBase } from "../helpers/comparison_evidence_groups.js";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   chooseFilter,
   comparisonIndex,
   navRow,
@@ -66,6 +67,7 @@ async function expectHistorical(page: Page, entry: HistoryCase) {
     "aria-current",
     "page",
   );
+  await awaitRoutedDetail(page, entry.previousPath);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   await expect(page.locator("#mb-main .mbk-empty")).toHaveCount(0);

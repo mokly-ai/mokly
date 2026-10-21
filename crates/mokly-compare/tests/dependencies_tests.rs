@@ -220,7 +220,8 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     assert_eq!(result.tier, Tier::Installed);
     assert_eq!(result.node_modules, first_directory);
     assert!(
-        result.module_resolution.package_roots[0].starts_with(temporary.path().to_str().unwrap())
+        Path::new(&result.module_resolution.package_roots[0])
+            .starts_with(temporary.path().canonicalize().unwrap())
     );
     request
         .base

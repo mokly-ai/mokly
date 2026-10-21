@@ -24,9 +24,9 @@ import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 import { shellModelFixture } from "./catalogue_v7_fixture.js";
 import {
   publishedScreen,
-  publishedScreensModel,
+  publishedModel,
   removedScreenVariant,
-} from "./published_screens_fixture.js";
+} from "./published_entries_fixture.js";
 
 const context: ShellContext = {
   base: "main",
@@ -133,7 +133,7 @@ test("search matches a folder's resolved title and shows every row below it", ()
 test("Changes activation searches a removed variant as its row does", () => {
   const parent = { path: "start/welcome", title: "Welcome" };
   const removed = "start/welcome/old";
-  const model = publishedScreensModel({
+  const model = publishedModel({
     screens: [
       publishedScreen(parent.path, parent.title),
       publishedScreen(

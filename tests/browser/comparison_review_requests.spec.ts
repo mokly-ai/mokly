@@ -7,7 +7,12 @@ import {
   markPaneDocuments,
 } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, modeButton, navRow } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  comparisonIndex,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
 
@@ -48,6 +53,7 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
   await passRenderingUpdates(page);
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
   await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
+  await awaitRoutedDetail(page, comparisonPaths.unchanged);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",

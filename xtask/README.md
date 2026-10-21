@@ -46,6 +46,8 @@ internal binary and is not published to npm or crates.io.
 Every subprocess starts at the workspace root, even when xtask starts in a
 subdirectory. `npm run build` builds the host target too, with the shim, the
 sidecar, and the viewer.
+Remote program discovery uses the command runner's Node shim resolver. On
+Windows it also finds native programs whose names omit the `.exe` suffix.
 On Windows, both subprocess adapters select the `.cmd` shims for npm, npx,
 Corepack, pnpm, and Yarn. Other executable names and explicit paths stay intact.
 Arguments remain separate from the program name.
@@ -151,7 +153,7 @@ inclusive UTC end dates, and a maximum 31-day window under the
 [dependency security contract](../docs/protocol/dependency-security.md#reviewed-workspace-exceptions).
 
 `npm run dependencies:check:rust` follows the npm audit in both modes. It
-installs locked `cargo-audit` 0.22.2 and audits `Cargo.lock` against the live
+builds pinned `cargo-audit` 0.22.2 with the reviewed tool lockfile and audits `Cargo.lock` against the live
 RustSec database with `.cargo/audit.toml`. Unexcepted vulnerabilities and audit
 errors stop the suite. The configuration records the single dated exception
 and its review conditions. The daily

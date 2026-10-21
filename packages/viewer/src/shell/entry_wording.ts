@@ -63,14 +63,14 @@ const WORDING: Record<EntryKind, EntryWording> = {
     matchedStylesWithSelectors: "Changed styles that apply to this component:",
     matchedStylesWithoutSelectors:
       "Changed styles that apply to this component.",
-    noChanges: "No changes to this saved view.",
-    pageStyles: "Changed styles that apply to this saved view:",
+    noChanges: "No changes to this variant.",
+    pageStyles: "Changed styles that apply to this variant:",
     pageOutsideStyles:
-      "These changed styles also apply outside the changed components in this saved view:",
+      "These changed styles also apply outside the changed components in this variant:",
     pageUnresolvedWithSelectors:
-      "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
+      "This change can apply anywhere on the variant, so the variant stays in Changes:",
     pageUnresolvedWithoutSelectors:
-      "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
+      "This change can apply anywhere on the variant, so the variant stays in Changes.",
     stylesChanged: "Styles this variant uses changed",
     componentsChanged: "Components this variant uses changed",
     unresolvedStylesWithSelectors:

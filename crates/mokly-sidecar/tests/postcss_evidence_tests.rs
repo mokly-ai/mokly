@@ -124,7 +124,9 @@ result.messages.push({type:'dependency',file:'tokens.txt'});
             .reads
             .iter()
             .filter_map(|read| {
-                let Read::WholeFile { path, digest } = read;
+                let Read::WholeFile { path, digest, .. } = read else {
+                    return None;
+                };
                 (path == &tokens.to_string_lossy()).then_some(digest.as_str())
             })
             .collect();

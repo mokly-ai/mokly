@@ -38,6 +38,13 @@ fn a_source_snapshot_reads_each_input_once_and_keeps_generation_bytes() {
 fn public_policy_caches_success_and_denial_and_allows_ordinary_browser_scripts() {
     let mock = Arc::new(Unimock::new((
         SourceTreeMock::project
+            .next_call(matching!((path) if *path == Path::new("/repo/site")))
+            .returns(Ok(Some(Node {
+                identity: "/repo/site".into(),
+                lexical_kind: FileKind::Directory,
+                kind: FileKind::Directory,
+            }))),
+        SourceTreeMock::project
             .next_call(matching!((path) if *path == Path::new("/repo/assets")))
             .returns(Ok(Some(Node {
                 identity: "/repo/assets".into(),

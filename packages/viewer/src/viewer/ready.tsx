@@ -49,7 +49,7 @@ const serverSnapshot = () => false;
 export function ReadyViewer(props: ReadyProps) {
   const [defaults] = useState(props.defaultSelection);
   const model = useMemo(
-    () => dataSnapshot(props.loaded.index, new Map()).catalogue.publicModel!,
+    () => dataSnapshot(props.loaded.index, new Map()).catalogue.publicModel,
     [props.loaded.index],
   );
   const normalized = useMemo(() => {

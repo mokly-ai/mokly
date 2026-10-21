@@ -24,6 +24,7 @@ mod folder_input;
 mod folders;
 mod front_matter;
 mod globs;
+pub mod html_tokens;
 mod identity;
 pub mod input;
 mod links;
@@ -56,4 +57,5 @@ pub mod yaml_limits;
 mod yaml_positions;
 mod yaml_value;
 
+mod working_tree_identity;
 mod working_tree_stream;

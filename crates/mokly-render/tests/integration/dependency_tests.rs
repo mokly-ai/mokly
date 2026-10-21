@@ -16,6 +16,7 @@ use mokly_graph::workers::ThreadWorkers;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::{Call, ModuleResolution};
+use mokly_source_interface::tree::SourceTree;
 use unimock::Unimock;
 
 use super::support::Consumer;
@@ -37,7 +38,14 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     )
     .unwrap();
     fs::write(package.join("icon.svg"), b"<svg>base asset</svg>").unwrap();
-    let expected_source = serde_json::to_string(&package.join("skin.module.css")).unwrap();
+    let expected_source = serde_json::to_string(
+        &WorkingTree
+            .project(&package.join("skin.module.css"))
+            .unwrap()
+            .unwrap()
+            .identity,
+    )
+    .unwrap();
     consumer.replace(
         "postcss.mjs",
         "Once(root, { result }) {",

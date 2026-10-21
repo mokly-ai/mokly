@@ -124,7 +124,7 @@ export function ComparisonDetails({
         </p>
       ))}
       {affected ? <p>{SCREEN_STYLE_COPY.sharedImpact}</p> : null}
-      {excludedStylesheets ? <p>No changes to this saved view.</p> : null}
+      {excludedStylesheets ? <p>{COMPONENT_STYLE_COPY.noChanges}</p> : null}
     </section>
   );
 }

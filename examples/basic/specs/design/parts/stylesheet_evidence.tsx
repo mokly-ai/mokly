@@ -30,6 +30,7 @@ export const COMPONENT_STYLE_COPY = {
   matched: "Changed styles that apply to this component:",
   excluded:
     "This stylesheet changed, but none of the changed styles apply to this variant.",
+  noChanges: "No changes to this variant.",
   stylesChanged: "Styles this variant uses changed",
   componentsChanged: "Components this variant uses changed",
 } as const;

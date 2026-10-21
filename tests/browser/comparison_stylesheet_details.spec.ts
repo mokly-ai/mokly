@@ -12,7 +12,7 @@ import {
   INSPECTOR_VIEWPORTS,
   MATCHED_LEAD,
   OUTSIDE_LEAD,
-  SAVED_VIEW_UNRESOLVED_LEAD,
+  VARIANT_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
   SHARED_IMPACT,
   UNRESOLVED_LEAD,
@@ -24,6 +24,7 @@ import {
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   changesPaths,
   chooseFilter,
   comparisonIndex,
@@ -134,6 +135,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
+      await awaitRoutedDetail(page, comparisonPaths.unchanged);
       await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
       const evidence = await openEvidence(page);
       // The paragraphs come from the entry detail; then the list stays empty.
@@ -231,7 +233,7 @@ test("the comparison heading leads with the style outcome", async ({
         sheets.card,
         [
           [COMPONENT_LEAD, [".accent"]],
-          [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
+          [VARIANT_UNRESOLVED_LEAD, [":root"]],
         ],
       ],
       [sheets.theme, [[COMPONENT_LEAD, [".accent"]]]],

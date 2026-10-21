@@ -46,6 +46,7 @@ export function ScreenPage({
   const highlighting = state === "highlight" || state === "nested";
   // Changed components affect this screen, so it compares while Unmodified.
   const affected = comparison !== undefined && "affected" in comparison;
+  const comparisonMode = affected ? "side-by-side" : "current";
   return (
     <ExplorerShell
       design={limit?.design ?? INSPECTION_PAGES[state]}
@@ -58,7 +59,7 @@ export function ScreenPage({
         title={title}
         crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
         path={path}
-        comparisonMode={affected ? "side-by-side" : "current"}
+        comparisonMode={comparisonMode}
         comparisons={comparison?.status === "changed" || affected}
         status={comparison?.status ?? "unmodified"}
         action={
@@ -66,13 +67,17 @@ export function ScreenPage({
             viewport={viewport}
             highlight={{
               active: highlighting,
-              unavailable: removed
-                ? "removed"
-                : state === "inspection-loading"
-                  ? "loading"
-                  : state === "unavailable" || state === "empty"
-                    ? state
-                    : undefined,
+              // Every mode but Current is a comparison, which cannot highlight.
+              unavailable:
+                comparisonMode !== "current"
+                  ? "comparison"
+                  : removed
+                    ? "removed"
+                    : state === "inspection-loading"
+                      ? "loading"
+                      : state === "unavailable" || state === "empty"
+                        ? state
+                        : undefined,
             }}
           />
         }

@@ -6,76 +6,91 @@ use cssparser::Token;
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::token_sections::{self, Grammar};
+use crate::source_position::line_column;
+use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::{Tokens, opening};
 
+/// Compare the authored and scoped tokens up to the longer list, where a
+/// missing token differs from every token. A failure points at the first
+/// authored token that scoping would change or drop, or at the end of the
+/// stylesheet when scoping only adds tokens there.
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
     let prefix = format!("mokly_{}_", &digest(path.as_bytes())[..12]);
-    if fingerprint(source, &prefix) == fingerprint(output, &prefix) {
+    let authored = fingerprint(source, &prefix);
+    let scoped = fingerprint(output, &prefix);
+    let Some(index) = (0..authored.len().max(scoped.len()))
+        .find(|&index| text(&authored, index) != text(&scoped, index))
+    else {
         return Ok(());
-    }
+    };
+    let offset = authored
+        .get(index)
+        .map_or(source.len(), |entry| entry.offset);
+    let (line, column) = line_column(source, offset);
     Err(CssError::Transform {
         kind: TransformFailure::Modules,
         message: format!(
-            "CSS Modules scoping would change more than local names in {path}:1:1; move this CSS to a plain stylesheet"
+            "CSS Modules scoping would change more than local names in {path}:{line}:{column}; move this CSS to a plain stylesheet"
         ),
     })
+}
+
+/// The text of the fingerprint entry at `index`, or `None` past the end.
+fn text(entries: &[Entry], index: usize) -> Option<&str> {
+    entries.get(index).map(|entry| entry.text.as_str())
+}
+
+/// One fingerprint token, and the byte offset of the source token it stands for.
+struct Entry {
+    text: String,
+    offset: usize,
+}
+
+impl Entry {
+    fn new(text: impl Into<String>, offset: usize) -> Self {
+        Self {
+            text: text.into(),
+            offset,
+        }
+    }
 }
 
 /// The tokens in authored order, without local-name prefixes, scope wrappers,
 /// or compositions, so only module renames compare equal. Whitespace and
 /// comments carry no CSS meaning and are left out: removing a composition
 /// keeps the comments before it.
-fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
+fn fingerprint(source: &str, prefix: &str) -> Vec<Entry> {
     let tokens = Tokens::new(source);
     let mut output = Vec::new();
     let mut pending = vec![Work::Block(tokens.root(), Grammar::Rules)];
     while let Some(work) = pending.pop() {
         match work {
-            Work::Emit(text) => output.push(text.into()),
+            Work::Emit(text, offset) => output.push(Entry::new(text, offset)),
             Work::Block(mut range, grammar) => {
                 let Some(section) = token_sections::next(&tokens, &mut range, grammar) else {
                     continue;
                 };
                 pending.push(Work::Block(range, grammar));
-                let mut header = section.prelude.clone();
-                let first = tokens
-                    .next_significant(&mut header)
-                    .map(|index| &tokens.nodes[index].token);
-                let at = section.at_rule(&tokens);
                 if let Some(block) = section.block {
-                    let names = renamed_prelude(at.as_deref());
-                    pending.push(Work::Emit("}"));
+                    let names = renamed_prelude(&section.statement);
+                    pending.push(Work::Emit("}", tokens.offset(block.range.end)));
                     pending.push(Work::Block(block.range, block.grammar));
-                    pending.push(Work::Emit("{"));
+                    pending.push(Work::Emit("{", section.end));
                     pending.push(Work::Tokens(section.prelude, names));
                 } else {
-                    let colon = tokens
-                        .next_significant(&mut header)
-                        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::Colon));
-                    let property = match first {
-                        Some(Token::Ident(name)) if grammar == Grammar::Declarations && colon => {
-                            Some(name.to_ascii_lowercase())
-                        }
-                        _ => None,
-                    };
-                    if property.as_deref() == Some("composes") {
-                        continue;
-                    }
-                    let names = match grammar {
-                        Grammar::Rules => renamed_prelude(at.as_deref()),
-                        Grammar::Declarations => property.as_deref().is_some_and(|name| {
-                            matches!(
-                                name,
-                                "animation"
-                                    | "animation-name"
-                                    | "-webkit-animation"
-                                    | "-webkit-animation-name"
-                            )
-                        }),
+                    let names = match &section.statement {
+                        Statement::Declaration(property) if property == "composes" => continue,
+                        Statement::Declaration(property) => matches!(
+                            property.as_str(),
+                            "animation"
+                                | "animation-name"
+                                | "-webkit-animation"
+                                | "-webkit-animation-name"
+                        ),
+                        statement => renamed_prelude(statement),
                     };
                     if section.semicolon {
-                        pending.push(Work::Emit(";"));
+                        pending.push(Work::Emit(";", section.end));
                     }
                     pending.push(Work::Tokens(section.prelude, names));
                 }
@@ -102,7 +117,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                         } else {
                             value
                         };
-                        output.push(format!("{kind}:{value}"));
+                        output.push(Entry::new(format!("{kind}:{value}"), node.start));
                     }
                     Token::Colon if names => {
                         let mut lookahead = range.clone();
@@ -121,14 +136,14 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                                 range = lookahead;
                                 child = Some(tokens.children(index));
                             }
-                            _ => output.push(":".into()),
+                            _ => output.push(Entry::new(":", node.start)),
                         }
                     }
                     token => {
-                        output.push(format!("{token:?}"));
+                        output.push(Entry::new(format!("{token:?}"), node.start));
                         if opening(token).is_some() {
                             pending.push(Work::Tokens(range, names));
-                            pending.push(Work::Emit("end"));
+                            pending.push(Work::Emit("end", node.body_end));
                             pending.push(Work::Tokens(tokens.children(index), names));
                             continue;
                         }
@@ -144,11 +159,14 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
     output
 }
 
-/// True where the renamer renames a prelude: a selector, a keyframes name, or
-/// an `@scope` prelude. A statement in a rule list follows this rule with or
-/// without a block, as the renamer reads both alike.
-fn renamed_prelude(at: Option<&str>) -> bool {
-    at.is_none_or(|name| name.ends_with("keyframes") || name == "scope")
+/// True where the renamer renames a prelude: a rule's selector, a keyframes
+/// name, or an `@scope` prelude, with or without a block.
+fn renamed_prelude(statement: &Statement) -> bool {
+    match statement {
+        Statement::Rule => true,
+        Statement::AtRule(name) => name.ends_with("keyframes") || name == "scope",
+        Statement::Declaration(_) | Statement::Text(_) => false,
+    }
 }
 
 /// Pending fingerprint work, popped in authored order.
@@ -158,6 +176,7 @@ enum Work {
     Block(Range<usize>, Grammar),
     /// Tokens of a range; true where local names lose the scope prefix.
     Tokens(Range<usize>, bool),
-    /// A fixed marker, such as a block boundary.
-    Emit(&'static str),
+    /// A fixed marker, such as a block boundary, and the byte offset of the
+    /// source token it stands for.
+    Emit(&'static str, usize),
 }

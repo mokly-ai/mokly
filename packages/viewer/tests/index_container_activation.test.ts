@@ -10,8 +10,8 @@ import type { ViewerSelection } from "../src/viewer/types.js";
 
 import {
   publishedScreen,
-  publishedScreensModel,
-} from "./published_screens_fixture.js";
+  publishedModel,
+} from "./published_entries_fixture.js";
 
 /** Profile, under Account, has a variant, a member folder, and members. */
 const screens = [
@@ -54,7 +54,7 @@ function opened(
   selection: Partial<ViewerSelection> = {},
   requested = "account/profile",
 ): string {
-  const model = publishedScreensModel({
+  const model = publishedModel({
     screens: screens.map(([path, title, variantOf]) =>
       publishedScreen(
         path,

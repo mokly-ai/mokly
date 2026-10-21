@@ -85,7 +85,6 @@ export function workspaceData(
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
   const model = catalogue.publicModel;
-  if (!model) throw new Error("The catalogue has no published records.");
   return publicWorkspace(
     catalogue,
     model,

@@ -26,7 +26,7 @@ fn root() -> StylesheetRoot {
 fn compiler(files: &[(&str, &str)], assets: bool) -> Compiler {
     let files: BTreeMap<_, _> = files
         .iter()
-        .map(|(path, text)| (format!("/repo/{path}"), text.as_bytes().to_vec()))
+        .map(|(path, text)| (Path::new("/repo").join(path), text.as_bytes().to_vec()))
         .collect();
     let projection = files.clone();
     let hashes = files
@@ -36,32 +36,26 @@ fn compiler(files: &[(&str, &str)], assets: bool) -> Compiler {
     let project = SourceTreeMock::project
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, path| {
-            Ok(
-                (projection.contains_key(&path.to_string_lossy().to_string())
-                    || projection
-                        .keys()
-                        .any(|candidate| candidate.starts_with(&format!("{}/", path.display()))))
-                .then(|| Node {
-                    identity: path.into(),
-                    lexical_kind: FileKind::File,
-                    kind: FileKind::File,
-                }),
-            )
+            Ok((projection.contains_key(path)
+                || projection
+                    .keys()
+                    .any(|candidate| candidate.starts_with(path)))
+            .then(|| Node {
+                identity: path.into(),
+                lexical_kind: FileKind::File,
+                kind: FileKind::File,
+            }))
         }));
     let read = SourceTreeMock::read
         .each_call(matching!((path) if path.to_string_lossy().ends_with(".css")))
-        .answers_arc(Arc::new(move |_, path| {
-            Ok(files[&path.to_string_lossy().to_string()].clone())
-        }));
+        .answers_arc(Arc::new(move |_, path| Ok(files[path].clone())));
     let mock = Arc::new(if assets {
         Unimock::new((
             project,
             read,
             SourceTreeMock::digest_unretained
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, path| {
-                    Ok(hashes[&path.to_string_lossy().to_string()].clone())
-                })),
+                .answers_arc(Arc::new(move |_, path| Ok(hashes[path].clone()))),
         ))
     } else {
         Unimock::new((project, read))

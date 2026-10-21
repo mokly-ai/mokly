@@ -42,7 +42,7 @@ and mutually nested components use this same test.
 
 A component changes only if it keeps a match. Only matches that it keeps on a
 saved variant's own page give that variant a component reason. A page reason
-can still give a saved view its own row. A match at an invocation on a consumer
+can still give that variant its own row. A match at an invocation on a consumer
 screen alone never changes the invoked component.
 
 A screen gets its own Changes row when a rule matches outside components
@@ -50,8 +50,9 @@ changed by that rule. This page test includes all nested output inside each
 changed component's occurrence. It also gets a row when Mokly cannot resolve the rule,
 such as a global style or a custom property change. Otherwise the screen is
 under the changed components' Affected screens. Those links show usage, not
-proof that every use looks different, and each one opens that screen's
-comparison.
+proof that every use looks different. In Serve and in a static build, each one
+opens that screen's comparison in Side by side. An embedded viewer opens the
+screen in Current, where the comparison band offers the same comparison.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead
@@ -61,7 +62,7 @@ stylesheets are checked together across component and screen pages.
 
 If screen-only CSS styles the inside of a button, that screen changes. The
 button stays unchanged when the rule does not match its own saved pages.
-On a component page, a changed renderer wrapper gives the saved view its own
+On a component page, a changed renderer wrapper gives the variant its own
 row. That page change alone adds no Affected screens.
 
 For example, `.action` changes Action and leaves Toolbar, which contains it,
@@ -71,10 +72,11 @@ inside Toolbar, `.icon` changes Icon only when it matches Icon's own pages
 and the other own-page matches are inside Icon.
 
 A component can also lose a match to a nested component that is not changed.
-For example, Y's own-page matches are all inside a changed Z. On X's saved page,
-a match inside Y but outside Z is still taken from X by Y's own-page matches.
-If X keeps no other match, X is not changed as a component. Its saved view gets
-a page row because the match is outside Z. The change stays visible there.
+For example, Y's own-page matches are all inside a changed Z. On the page of a
+saved X variant, a match inside Y but outside Z is still taken from X by Y's
+own-page matches. If X keeps no other match, X is not changed as a component.
+That variant gets a page row because the match is outside Z. The change stays
+visible there.
 
 ## Moved entries
 

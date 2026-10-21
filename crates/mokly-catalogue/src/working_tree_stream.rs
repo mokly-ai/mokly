@@ -32,7 +32,7 @@ pub(crate) fn digest(path: &Path) -> Result<String> {
     }
 }
 
-fn confined(path: &Path, operation: &'static str) -> Result<Option<(File, u64)>> {
+pub(crate) fn confined(path: &Path, operation: &'static str) -> Result<Option<(File, u64)>> {
     let (directory, name) = match parent(path) {
         Ok(parent) => parent,
         Err(source) => return Err(failure(operation, path, source)),

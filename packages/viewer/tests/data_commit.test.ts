@@ -27,13 +27,13 @@ const RETIRED =
 const HOME = "product/browse/home";
 
 function screen(snapshot: ReturnType<typeof dataSnapshot>, path: string) {
-  return snapshot.catalogue.publicModel!.screens.find(
+  return snapshot.catalogue.publicModel.screens.find(
     (entry) => entry.path === path,
   ) as ShellCatalogueScreen;
 }
 
 function state(snapshot: ReturnType<typeof dataSnapshot>, path: string) {
-  const model = snapshot.catalogue.publicModel!;
+  const model = snapshot.catalogue.publicModel;
   return createInitialShellState(
     snapshot.catalogue,
     viewerContext(model, defaultSelection),
