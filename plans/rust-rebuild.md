@@ -3127,6 +3127,14 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 Release lockstep completion merge decisions: `.context/release-audit-completion/lockstep-merge.md`.
 Audit-filter completion merge decisions: `.context/release-audit-completion/audit-merge.md`.
 
+- [x] Complete user decision 94 A (2026-10-21). Cover all five severity
+      thresholds, single and multiple target filters, empty lists, malformed
+      lists, and unfiltered reports with or without the approved ignore ID.
+      Run the regression against the pre-guard implementation before the
+      guarded implementation. Preserve the exception date and locked-version
+      checks. Evidence: `.context/release-audit-completion/audit-red.log`,
+      `audit-green.log`, and the final check records in that directory.
+
 - [x] Complete user decisions 93 D and 92 ignore (2026-10-21). The root
       component's extra-files update all seven package versions and viewer
       dependency edges. This uses one existing Node updater without a
@@ -3529,7 +3537,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 93 (2026-10-21): D, "keep them on the same version".
       The CLI and the viewer release together with one version. Work:
       `rebuild/release-lockstep`, in the CI gates workspace.
-  - [ ] Resolve user item 94 (CI release checks hub review finding 3): the
+  - [x] Resolve user item 94 (CI release checks hub review finding 3): the
         Rust audit guard misses other report filters. It checks only ignored
         advisory IDs, but a severity threshold or a target list in the audit
         configuration also hides advisories. Severity Low, effort Small.
