@@ -14,6 +14,19 @@ const GENERATED: &[&str] = &[
     "<plaintext><b>literal</b>",
 ];
 
+const SCRIPT_DATA_CASES: &[&str] = &[
+    "<script><!--<script>x</script>--></script>",
+    "<script><!--\nsplit\n--></script>",
+    "<script><!--split-->after</script>",
+    "<script><!----></script>",
+    "<script><!--x-\ny--></script>",
+    "<script><!--x--\ny></script>",
+    "<script><!--x</script-y--></script>",
+    "<script><!--x</script y--></script>",
+    "<script><!--<script>x</script>tail-->after</script>",
+    "<script><!--x</script?tail--></script>",
+];
+
 #[derive(Default)]
 struct Report {
     inputs: usize,
@@ -66,6 +79,33 @@ fn compare(report: &mut Report, name: &str, source: &str) {
     report.source_identities += source_count(&new);
 }
 
+fn escaped_srcdoc(source: &str) -> String {
+    source
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+fn compare_srcdoc(report: &mut Report, name: &str, source: &str) {
+    let wrapper = format!("<iframe srcdoc=\"{}\"></iframe>", escaped_srcdoc(source));
+    compare(report, &format!("{name}-wrapper"), &wrapper);
+
+    let wrapper_tree = crate::parse::document(&wrapper);
+    let content = tree::walk(&wrapper_tree).find_map(|node| match node {
+        crate::tree::Node::Element(element) if element.name == "iframe" => {
+            element.get("srcdoc").map(str::to_owned)
+        }
+        _ => None,
+    });
+    assert_eq!(
+        content.as_deref(),
+        Some(source),
+        "srcdoc must decode exactly"
+    );
+    compare(report, &format!("{name}-content"), source);
+}
+
 #[test]
 fn repository_html_differential_report_has_no_new_tree_or_byte_defects() {
     let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -78,6 +118,10 @@ fn repository_html_differential_report_has_no_new_tree_or_byte_defects() {
     }
     for (index, source) in GENERATED.iter().enumerate() {
         compare(&mut report, &format!("generated-{index}"), source);
+    }
+    for (index, source) in SCRIPT_DATA_CASES.iter().enumerate() {
+        compare(&mut report, &format!("script-data-{index}"), source);
+        compare_srcdoc(&mut report, &format!("script-data-srcdoc-{index}"), source);
     }
     assert!(
         report.new_defects.is_empty(),
