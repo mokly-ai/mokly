@@ -1630,6 +1630,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Medium; C, a counted test at two catalogue sizes, Medium (estimate).
         Recommended: B, because it removes a memory regression that
         `rebuild/defaults-engine` adds.
+  - [ ] Resolve user item 101 (engine review auto-fix): an HTML component's
+        own plaintext page lost its root range after parser repair and
+        failed static detail validation. Severity Medium, product bug.
+        `rebuild/defaults-engine` fixes it as a review auto-fix in
+        `3387f236`, and the fix lands when that branch merges. Tick this TODO
+        at that merge.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
