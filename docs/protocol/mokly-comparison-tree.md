@@ -51,6 +51,8 @@ Plaintext on a component's own page retains its root range and ready Usage
 through repair, even though plaintext consumes the trailing root boundary.
 The parsed element must confirm the predicted HTML plaintext start. If it
 does not, composition retries with all text escaped so authored text stays inert.
+The retry re-annotates the source with plaintext prediction disabled, so end
+tags, region markers, and repair identities remain available for restoration.
 Serialization omits private markers and attributes inside plaintext mode. Other
 HTML text modes follow the parser-context namespace, including component grafts
 inside SVG and MathML. Foreign raw-text tag names keep text escaped.
