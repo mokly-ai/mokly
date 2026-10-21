@@ -57,8 +57,11 @@ export function opened(
     pending: new Set(),
     inspect,
   });
-  const identity = inspect();
-  if (identity) wholeIdentities.at(-1)?.(identity);
+  const wholeIdentity = wholeIdentities.at(-1);
+  if (wholeIdentity) {
+    const identity = inspect();
+    if (identity) wholeIdentity(identity);
+  }
 }
 
 export function closed(fd: number): void {
@@ -106,7 +109,7 @@ export function begin(fd: number, position: unknown): Ticket | undefined {
     sequential,
     valid: true,
     suppressed: suppressed > 0,
-    identity: descriptor.inspect(),
+    identity: suppressed > 0 ? undefined : descriptor.inspect(),
   };
   descriptor.pending.add(ticket);
   return ticket;
