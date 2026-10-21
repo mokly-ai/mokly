@@ -3306,7 +3306,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Recommended: B. B is a new lint, so it needs the user.
   - User decision 126 (2026-10-21): A. No check for plan words is added.
 
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Run the complete gate with both executors on the final tree: local,
+      `cargo xtask check --executor local` on Node 24.21.0, and remote,
+      `cargo xtask check --executor remote` with `MOKLY_TESTBOX_REF` on Node
+      22.15.0. Fix anything either reports until both pass.
+  - Every earlier round and batch runs one complete gate with one executor
+    (user, 2026-10-21).
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
       for the package placeholder, justify each merge decision with its paths,
