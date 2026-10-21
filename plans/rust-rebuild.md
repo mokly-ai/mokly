@@ -846,6 +846,13 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       repair without a compatible published update. The narrow exception lets
       the audit protect all other dependencies.
       Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+- [x] Keep the braces audit exception through 2026-11-03 UTC. User decision
+      72 (2026-10-20): A. Do not renew or extend the exception, and leave
+      `rebuild/audit-braces` unmerged. From 2026-11-04 UTC, the strict audit
+      and release checks fail on GHSA-vfj7-8cjw-p6xm. The current latest
+      `braces` remains 3.0.3. `metro-file-map` 0.87.1 is available, but the
+      locked dev-only path remains `metro-file-map` 0.84.6 through
+      `micromatch` 4.0.8, so no update was applied.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The
