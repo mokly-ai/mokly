@@ -3741,6 +3741,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Small (estimate); B, derive the sentences of each kind in
         `entry_wording.ts` from one noun per kind, so that a kind cannot mix
         words, Medium. Recommended: B.
+    - User decision 119 (2026-10-21): B, build each kind's sentences in
+      `entry_wording.ts` from one noun per kind. Work: W2 on
+      `rebuild/viewer-119b`, after 84 B.
   - [ ] Resolve user item 90 (F12 review finding 2): a failed step detail
         still flashes the error during a deployment reload. On a use-case
         route, the use case detail starts the page load, but a 404 for a
