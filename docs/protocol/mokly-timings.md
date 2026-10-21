@@ -214,8 +214,10 @@ CI's small correctness fixtures have
 Startup acceptance uses an optimized release native binary. The harness
 verifies that binary before timing and identifies its profile and digest in
 the results. Build preparation is outside the startup measurement.
-The React budget retains complete-catalogue readiness. Compilation redesign
-is deferred rather than changing readiness to partial navigation.
+Decision: React startup keeps complete-catalogue readiness under its own
+budget. Usable navigation before every entry is ready was rejected because it
+changes the readiness and validation order and needs pending entries and
+delayed errors.
 
 Isolated setup includes catalogue generation, package archives, dependency
 installation, and Git setup. The product build is a prerequisite outside this

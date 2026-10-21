@@ -160,9 +160,8 @@ Changes; Serve's watcher ignores the same paths.
    late baseline and the live recheck. That baseline does not detect an edit
    between an opaque read and capture. One observed read never makes a path or
    context complete. The [PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence)
-   defines this stage's coverage. Staged observation preserves compatible plugins;
-   enforced immutable inputs are not required. The full consumed-byte guarantee
-   remains open.
+   defines the coverage of PostCSS evidence. Mokly does not require enforced
+   immutable inputs, so compatible plugins keep working.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.

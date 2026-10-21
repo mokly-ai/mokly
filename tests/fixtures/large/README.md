@@ -52,8 +52,8 @@ availability. Its result omits those measurements. `all` keeps the four complete
 scenarios; `serve` includes delivered Changes and available review.
 Cold and warm runs each use a new Serve process and browser context.
 Both keep the native comparison caches. Cold means application-cold, not an
-empty disk cache. Serve prepares the pinned fixture base through M9: HTML
-reads Git sources; React acquires source and dependency leases. The harness
+empty disk cache. Serve prepares the pinned fixture base from its sources. HTML
+reads Git sources. React acquires source and dependency leases. The harness
 records the announced cache directory and never resets a baseline output.
 Serve reports delivered Changes readiness and review availability separately.
 Changes verifies the browser's own event stream, delivered index, Changes

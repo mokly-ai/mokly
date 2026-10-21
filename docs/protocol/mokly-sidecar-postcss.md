@@ -71,9 +71,10 @@ Preloaded code can replace file APIs before observation starts. Such contexts
 keep late baselines for those APIs and compiler reads, even when they return buffers.
 The late baseline detects only edits after capture for an unobserved input.
 
-Decision 56 selects staged observation to preserve plugin compatibility.
-Enforced immutable inputs need a separate isolation and input-domain contract.
-This stage does not meet the full M14 consumed-byte requirement.
+Decision: Mokly keeps native plugins compatible. It records a read witness
+only for the reads that it observes, and it reports its coverage as
+`incomplete`. Enforced immutable inputs were rejected because they need a
+separate isolation and input-domain contract.
 
 ## Related Docs
 
