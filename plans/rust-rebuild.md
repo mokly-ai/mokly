@@ -3028,6 +3028,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+- [x] Configure plain actionlint runs (2026-10-21). Declare the five exact
+      Blacksmith runner labels in the repository configuration without ignore
+      rules. Document the manual command. No tracked invocation uses a label
+      ignore pattern, and no gate changes. Evidence:
+      `.context/ci-actionlint-config/`.
+
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
@@ -3201,6 +3207,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Finding: `tests/actionlint_config.test.ts` scans only `.yml` workflows.
+    Include `.yaml` in the label coverage test. Severity Low, effort Small.
+    Recommended: A. User decision required because this is a missing-test
+    finding.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.
