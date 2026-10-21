@@ -14,7 +14,7 @@ use crate::observer::Observer;
 use crate::plan::Plan;
 
 use super::NativeObserver;
-use super::native_registration_tests::{config, paths};
+use super::native_registration_tests::{config, path, paths};
 
 fn tree() -> Arc<dyn SourceTree> {
     Arc::new(Unimock::new((
@@ -65,7 +65,7 @@ fn failed_root_attachment_keeps_the_previous_observer_and_targets() {
     );
     let failed = Unimock::new(
         DirectoryWatchMock::update
-            .next_call(matching!((add, _) if add.contains(&std::path::PathBuf::from("/repo/new"))))
+            .next_call(matching!((add, _) if add.contains(&path("/repo/new"))))
             .returns(Err(Error::Observer {
                 source: notify::Error::generic("fixture attach failure"),
             })),
