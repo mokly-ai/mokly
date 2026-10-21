@@ -2845,6 +2845,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     from fix round 2 finding 2.
   - User item 123: one typed lockfile model for pnpm/Yarn findings 3 and 4.
     Wider option B.
+  - [ ] Apply the base-install security review on `rebuild/base-env-secrets`:
+        finding 1, a base configuration can read an inherited secret such as
+        `MOKLY_TOKEN` through its manager configuration, and finding 2, a Yarn
+        Berry `injectEnvironmentFiles` reads a file outside the repository.
+        Review and evidence: `.context/review-base-pnpm-yarn/`.
+  - [x] User decision 145 (2026-10-21): B, the wider fix of finding 1. Each
+        base install starts from an allowed list of environment variables, not
+        the inherited environment, so no `MOKLY_` variable and no other
+        inherited secret reaches a manager child. The `MOKLY_` prefix rule is
+        part of the allowed list. A private registry whose token comes only
+        from the environment uses tier three with the install-failed reason.
+        Finding 2 sets `YARN_INJECT_ENVIRONMENT_FILES` so Berry reads no base
+        environment file. Tests: `tests/static_base_secrets.test.ts`.
   - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
     calls `render_all` in `compare_captured` after `build_prepare` validated
     the head. Evicted head views can compose again. Separate branch.

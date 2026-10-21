@@ -3,8 +3,9 @@
 //! Installs may download from the registry that the base and user
 //! configuration select, as npm does. Mokly still pins every cache, store,
 //! mirror, and state folder inside the private entry, keeps scripts, hooks,
-//! Git transports, and Corepack downloads off, and gives every variable it
-//! sets precedence over each inherited spelling of the same name.
+//! Git transports, and Corepack downloads off, and starts each install from
+//! an allowed list of variables, so no base configuration can read an
+//! inherited secret.
 
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
@@ -156,6 +157,10 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         let cache = request.cache.clone();
         variables.extend([
             (
+                "YARN_INJECT_ENVIRONMENT_FILES",
+                no_environment_files(request),
+            ),
+            (
                 "YARN_CACHE_FOLDER",
                 cache
                     .unwrap_or_else(|| directory.join(".yarn/cache"))
@@ -186,24 +191,88 @@ pub(crate) fn variables(request: &Command) -> Vec<(&'static str, OsString)> {
         ]);
     } else if request.args == ["--version"] {
         variables.extend(fixed(&[("YARN_RC_FILENAME", ".mokly-unused-yarnrc.yml")]));
+        variables.push((
+            "YARN_INJECT_ENVIRONMENT_FILES",
+            no_environment_files(request),
+        ));
     }
     variables
 }
 
-/// Inherited variables that the install never receives.
-pub(crate) fn removed(request: &Command) -> &'static [&'static str] {
-    if request.program == "yarn" {
-        &["YARN_PLUGINS"]
-    } else {
-        &[]
-    }
+/// The single optional environment-file path that replaces Yarn Berry's own
+/// list, so no base environment file is injected. The path sits above the
+/// private entry, where a base cannot commit a file, and the trailing `?`
+/// marks it optional, so Berry injects nothing.
+fn no_environment_files(request: &Command) -> OsString {
+    let anchor = request
+        .size_root
+        .as_deref()
+        .and_then(Path::parent)
+        .unwrap_or(&request.directory);
+    let mut value = anchor.join(".mokly-no-environment-file").into_os_string();
+    value.push("?");
+    value
 }
 
-/// Whether an inherited name spells `name`. Managers read variable names
-/// without case, and Yarn reads a dash as an underscore.
-pub(crate) fn same(inherited: &OsStr, name: &str) -> bool {
-    let spelling = |value: &str| value.to_ascii_lowercase().replace('-', "_");
-    spelling(&inherited.to_string_lossy()) == spelling(name)
+/// Whether an inherited variable is on the allowed list that every install
+/// starts from. Mokly removes every other inherited variable, so a base
+/// cannot read a secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or `NPM_TOKEN`
+/// through its configuration. Mokly adds its own fixed names separately, with
+/// the values that `variables` sets. This is the single rule for the install
+/// environment. Windows reads a variable name without case, so the names
+/// match without case there.
+pub(crate) fn allowed(inherited: &OsStr) -> bool {
+    const NAMES: &[&str] = &[
+        "PATH",
+        "HOME",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY",
+        "ALL_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+        "all_proxy",
+        "NODE_EXTRA_CA_CERTS",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "TMPDIR",
+        "LANG",
+        "LC_ALL",
+        "TZ",
+        "USER",
+        "LOGNAME",
+        "SystemRoot",
+        "windir",
+        "ComSpec",
+        "PATHEXT",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+    ];
+    let name = inherited.to_string_lossy();
+    let matches = |listed: &str| {
+        if cfg!(windows) {
+            listed.eq_ignore_ascii_case(&name)
+        } else {
+            listed == name
+        }
+    };
+    if NAMES.iter().any(|listed| matches(listed)) {
+        return true;
+    }
+    // Every locale category, for example LC_CTYPE and LC_TIME.
+    match name.get(..3) {
+        Some(prefix) if cfg!(windows) => prefix.eq_ignore_ascii_case("LC_"),
+        Some(prefix) => prefix == "LC_",
+        None => false,
+    }
 }
 
 fn fixed(values: &[(&'static str, &str)]) -> Vec<(&'static str, OsString)> {
