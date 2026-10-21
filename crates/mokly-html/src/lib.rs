@@ -47,6 +47,8 @@ mod normalization_annotate;
 mod normalized_keys;
 mod normalized_regions;
 mod normalized_usage;
+#[allow(dead_code)]
+mod pipeline;
 mod placeholders;
 mod raw_markers;
 mod regions;
@@ -109,3 +111,10 @@ mod style_metadata_tests;
 #[cfg(test)]
 #[path = "_tests_/ignore_parsing_tests.rs"]
 mod ignore_parsing_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pipeline_differential_tests.rs"]
+mod pipeline_differential_tests;
+#[cfg(test)]
+#[path = "_tests_/pipeline_tests.rs"]
+mod pipeline_tests;
