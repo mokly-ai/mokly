@@ -111,6 +111,8 @@ entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
 Opaque wrapper signatures retain source identity without exposing discarded values.
+Every consumer of authored-HTML tokens must call `html_tokens::parse`. Direct
+construction of an `html5gum::Tokenizer` is outside the catalogue boundary.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried

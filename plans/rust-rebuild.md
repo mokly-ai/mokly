@@ -3593,9 +3593,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         keys, Medium; C, split the public parser into an authored parse and a
         delivered-document parse that every caller chooses, Large.
         Recommended: C.
-    - User decision 115 (2026-10-21): A now, and C after the merge, in
-      parallel if possible, without blocking the merge. Work: W6, with the
-      HTML pipeline.
   - [ ] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
         new code can bypass the token boundary. Nothing stops new code in
         `mokly-catalogue` or `mokly-html` from calling html5gum's tokenizer
@@ -3607,9 +3604,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         the two boundary files, Medium; C, make the boundary the only
         html5gum user, with Mokly-owned token types, Large. Recommended: B.
         B is a new lint, so it needs the user.
-    - User decision 116 (2026-10-21): A now, and C after the merge, in
-      parallel if possible, without blocking the merge. Work: W6, with the
-      HTML pipeline.
+    - User decisions 115 and 116 (2026-10-21): A now, C after the merge, in
+      parallel. Decision 115 A records the current global wrapper-attribute
+      filtering rule. Decision 116 A records the current `html_tokens::parse`
+      consumer rule. Phase 2 of the HTML pipeline plans options C for both
+      boundaries after the merge.
   - [x] F21: restore empty wrapper source slots during plaintext repair,
         follow HTML parser markup contexts for noscript and foreign style or title
         content, validate saved variant slot fragments, name reserved navigation
