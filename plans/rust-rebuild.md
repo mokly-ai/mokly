@@ -2418,6 +2418,22 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
+  - [ ] Run the default full-size watch fixture three times per variant and
+        record screen, component, and stylesheet edit-to-reload values with
+        medians. HTML completed on the 16 GiB Amazon Linux host with release
+        binary, two sidecars, and the 6 GiB safety stop: screen
+        4,070.7/5,562.1/5,892.3 ms, median 5,562.1 ms; component
+        4,024.2/4,155.3/4,262.7 ms, median 4,155.3 ms; stylesheet
+        4,300.5/3,788.7/3,929.3 ms, median 3,929.3 ms. React did not reach
+        the first edit: the initial full-catalogue render exceeded the
+        required 6,291,456 KiB whole-harness RSS guard before delivery.
+        Evidence: `.context/m14-watch-run/watch-report.json` and raw
+        records under `.context/m14-watch-run/html-1/`, `html-2/`,
+        `html-3/`, and `react-1/`. The item stays open because both variants
+        were not measured. Decision needed for the missing React record:
+        A, run on a larger-memory host while retaining the 6 GiB guard;
+        B, raise the guard, which changes the safety bound; or C, leave React
+        watch unmeasured. Recommend A. No option is applied.
   - [x] Drain browser measurements and restore sources before reporting failure
         when Serve stops, including runs with a caller-owned browser.
         Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
