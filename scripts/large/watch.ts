@@ -46,12 +46,17 @@ async function measureEdit(
     ...fence,
     timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
   });
-  await changesVisible(page, ready.index);
+  await changesVisible(page, ready.index, WATCH_BROWSER_TIMEOUT_MS);
   const changesReadyMs = await page.evaluate(
     (start) => performance.now() - start,
     beginning,
   );
-  const review = await availableReview(page, fixture, ready);
+  const review = await availableReview(
+    page,
+    fixture,
+    ready,
+    WATCH_BROWSER_TIMEOUT_MS,
+  );
   const reviewAvailableMs = await page.evaluate(
     (start) => performance.now() - start,
     beginning,
@@ -131,7 +136,7 @@ export async function watch(
       previousGeneration: measured.generation,
       timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
     });
-    await changesVisible(page, restored.index);
+    await changesVisible(page, restored.index, WATCH_BROWSER_TIMEOUT_MS);
     if (changedEntries(restored.index).length)
       throw new Error(`Restoring ${edit.file} left Changes`);
   }

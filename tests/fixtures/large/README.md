@@ -86,7 +86,11 @@ Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
 `GOMAXPROCS`, and `GOMEMLIMIT`. These values can change time and memory use.
 Default build and listening waits stop after 300 seconds. Browser operations allow
-60 seconds. Shutdown escalates to SIGKILL after 10 seconds.
+60 seconds. The watch scenario uses a 30-minute browser liveness allowance for
+the full-size React catalogue. This allowance covers initial rendering,
+delivered Changes, review fetches, and restoration. It is a harness liveness
+guard, not an edit-to-reload budget or a product timeout. Shutdown escalates
+to SIGKILL after 10 seconds.
 
 `generate` accepts variant, toolchain, and size flags. `benchmark` reads those
 from the fixture record and rejects overrides. It accepts scenario, sidecar,

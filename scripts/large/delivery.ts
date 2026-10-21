@@ -139,13 +139,17 @@ export function changedEntries(index: CatalogueReadModel) {
   );
 }
 
-export async function changesVisible(page: Page, index: CatalogueReadModel) {
+export async function changesVisible(
+  page: Page,
+  index: CatalogueReadModel,
+  timeoutMs = 60_000,
+) {
   await expect(page.locator("[data-mokly-filter]")).toHaveAttribute(
     "data-changes-status",
     "ready",
-    { timeout: 60_000 },
+    { timeout: timeoutMs },
   );
   await expect(
     page.locator("[data-filter=changed] .mbk-nav-filter-count"),
-  ).toHaveText(String(changedEntries(index).length), { timeout: 60_000 });
+  ).toHaveText(String(changedEntries(index).length), { timeout: timeoutMs });
 }
