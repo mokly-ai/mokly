@@ -3,6 +3,7 @@
 use std::cell::RefCell;
 
 use html5ever::{QualName, local_name, ns};
+use mokly_model::catalogue::SourceLocation;
 
 use crate::source_locations::WrapperLocations;
 use crate::tree::Node;
@@ -24,6 +25,7 @@ pub(crate) struct Entry {
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
     pub(crate) locations: RefCell<WrapperLocations>,
+    active_source: RefCell<Option<(String, SourceLocation)>>,
 }
 
 impl Default for Arena {
@@ -31,6 +33,7 @@ impl Default for Arena {
         Self {
             entries: RefCell::new(vec![Entry::new(None)]),
             locations: RefCell::default(),
+            active_source: RefCell::default(),
         }
     }
 }
@@ -62,6 +65,28 @@ impl Arena {
             locations: RefCell::new(locations),
             ..Self::default()
         }
+    }
+
+    pub(crate) fn set_active_source(&self, name: String, source: SourceLocation) {
+        *self.active_source.borrow_mut() = Some((name, source));
+    }
+
+    pub(crate) fn clear_active_source(&self) {
+        self.active_source.borrow_mut().take();
+    }
+
+    pub(crate) fn take_active_source(&self, name: &str) -> Option<SourceLocation> {
+        let matches = self
+            .active_source
+            .borrow()
+            .as_ref()
+            .is_some_and(|(pending, _)| pending.eq_ignore_ascii_case(name));
+        matches.then(|| {
+            self.active_source
+                .borrow_mut()
+                .take()
+                .map(|(_, source)| source)
+        })?
     }
 
     pub(crate) fn create(&self, node: Option<Node>, name: Option<QualName>) -> Handle {

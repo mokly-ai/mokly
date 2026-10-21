@@ -33,17 +33,20 @@ impl TreeSink for Arena {
 
     fn create_element(&self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Handle {
         let attributes: Vec<_> = attrs.into_iter().map(attribute).collect();
-        let source = if self.locations.borrow().is_empty() {
-            None
-        } else {
-            source_locations::ignore_signature(name.local.as_ref(), &attributes).and_then(|key| {
-                self.locations
-                    .borrow_mut()
-                    .get_mut(&key)
-                    .and_then(|queue| queue.pop_front())
-                    .flatten()
-            })
-        };
+        let source = self.take_active_source(name.local.as_ref()).or_else(|| {
+            if self.locations.borrow().is_empty() {
+                None
+            } else {
+                source_locations::ignore_signature(name.local.as_ref(), &attributes).and_then(
+                    |key| {
+                        self.locations
+                            .borrow_mut()
+                            .get_mut(&key)
+                            .and_then(|queue| queue.pop_front())
+                    },
+                )
+            }
+        });
         let node = Node::Element(Element {
             style_owners: None,
             style_attribution: None,
