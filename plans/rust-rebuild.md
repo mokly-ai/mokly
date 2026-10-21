@@ -1208,8 +1208,15 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
-- [ ] Complete the M8 viewer cases assigned by the browser sweep, including
+- [x] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all five children are
+      done. Browser sweep round 14 has 743 rows: 704 ported, 0 open TODO
+      rows, and 39 recorded drops, and every ported row has title proof.
+      Specs under `tests/browser`: `shell_client_routes.spec.ts`,
+      `shell_client_history.spec.ts`, `browse_navigation.spec.ts`,
+      `shell_live_edits.spec.ts`, and `serve_usage_focus.spec.ts`. Hub
+      record: `.context/rust-rebuild/delegation/m8-browser/report-14.md`.
   - [x] Port the route, history, detail fence, mount, publication, and live
         edit cases.
   - [x] Port the cases that stay under the viewer client-shell TODO in the
