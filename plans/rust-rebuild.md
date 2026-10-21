@@ -3501,12 +3501,14 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
         `branchPointPaths` in `tests/browser/branch_point_test.ts` that item
         1 left without a reader, is fixed by option A. The full report is
         `.context/m10/f18/review_1.md`.
-  - F18 review decision for the user: extend the unused internal export
-    check to the test helper trees. Severity Low, effort Medium. Covers
-    finding 36. Previous examples: `ec52f856` and `fe3624df`. Recommended: B,
-    check `tests/browser`, `tests/helpers`, and `packages/viewer/tests` with
-    a shrinking baseline of their 47 current entries, and leave the
-    catalogue fixtures out.
+  - [ ] Resolve user item 109 (F18 decision 39): extend the unused internal
+        export check to the test helper trees. It is a stricter check, so it
+        needs the user. Covers finding 36. Previous examples: `ec52f856` and
+        `fe3624df`. Severity Low, effort Medium. Options: A, keep the current
+        scope, Small (estimate); B, check `tests/browser`, `tests/helpers`,
+        and `packages/viewer/tests`, and leave the catalogue fixtures out,
+        Medium. F20 removed all 47 unused exports, so B starts with no
+        baseline entries. Recommended: B.
   - Outside the F18 review scope:
     - `packages/viewer/src/shell/layout_breakpoint.ts`: its header and
       `packages/viewer/src/shell/README.md` say that every shell and viewer
@@ -3518,9 +3520,9 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
   - [x] F18 re-review, on 2026-10-20: finding 37, a guide sentence that
         said specs import `branchPointPaths`, is fixed by option A. The full
         report is `.context/m10/f18/review_2.md`.
-  - F18 re-review finding 38 for the user: the F18 review decision line has
-    no number. Severity Low, effort Small. Recommended: A, add the number
-    that the F18 final report gives the decision, 39.
+  - [x] F18 re-review finding 38, on 2026-10-21: settled by option A with
+        the hub's number. The F18 review decision line is now user item 109,
+        and it names F18 decision 39, the number of the F18 final report.
   - Outside the F18 re-review scope:
     - `xtask/src/check/commands.rs`: the gate runs cargo without `--locked`,
       so a stale `Cargo.lock` passes the gate and fails only the release
