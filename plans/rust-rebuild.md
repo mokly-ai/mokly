@@ -2786,7 +2786,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
     `.context/ci-release-fixes/remote-floor-final.log`.
   - `tests/browser/large_watch.spec.ts`: `large watch delivers browser evidence
-    for react` hit `Test timeout of 300000ms exceeded` during the Node 22
+for react` hit `Test timeout of 300000ms exceeded` during the Node 22
     remote gate. The unchanged isolated Node 22 rerun passed. Suspected source:
     real watcher readiness or runner contention, not proven. Separate branch.
     Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
