@@ -141,13 +141,16 @@ Changes; Serve's watcher ignores the same paths.
    those baselines before document callbacks run. Keep the baseline for the
    final live recheck. Other reached inputs keep their first captured digest.
    For inventoried PostCSS inputs, retain SHA-256 witnesses from the exact raw
-   buffers delivered by observed whole-file reads and module loading. Compare
+   buffers delivered by observed whole-file reads and module loading. Retain
+   each observed byte range with its offset, length, and end-of-file evidence. Compare
    every witnessed version before document callbacks and at final checks.
    A conflicting version uses the existing `export-invalid` input-change outcome
    and preserves owned output. Cache hits and worker replacement retain the
    original witnesses. A later scan cannot replace them.
+   Retain observed descriptor identities and verified resolved names. Equal-byte
+   replacements and symlink retargets must not replace those read-time identities.
    PostCSS evidence always carries incomplete coverage. Native addons, helper
-   processes, uninstrumented workers, descriptor and partial reads, and private
+   processes, uninstrumented workers, unknown descriptor positions, and private
    loader metadata can escape observation. Known unobserved inputs retain their
    late baseline and the live recheck. That baseline does not detect an edit
    between an opaque read and capture. One observed read never makes a path or

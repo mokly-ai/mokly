@@ -1,19 +1,18 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
+import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type { ColorScheme } from "../src/data/axes.js";
-import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
-import type { ShellContext } from "../src/shell/context.js";
 import { SHELL_PREVIEW_CSS } from "../src/shell/css_previews.js";
 import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {
   removedPreviewData,
   RemovedPreviewStage,
 } from "../src/shell/previews.js";
+import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { indexFixture } from "./catalogue_v7_fixture.js";
 
@@ -41,42 +40,64 @@ test("a current document with no dark render names its fallback above its pane",
   assert.doesNotMatch(stage(["light"], false), /mbk-scheme-fallback/u);
 });
 
-const entry = (
-  kind: "document" | "screen",
-  path: string,
-  colorSchemes: readonly ("light" | "dark")[],
-): ManifestEntry =>
-  ({
-    colorSchemes,
-    description: path,
-    kind,
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.md`,
-    title: path,
-    ...(kind === "screen" ? { useCasePaths: [] } : {}),
-  }) as unknown as ManifestEntry;
+/** A removed document under the fixture's product folder. */
+const REMOVED = "product/terms";
 
+/** A stable 64-digit hash for a test identity. */
+const hash = (seed: string) => createHash("sha256").update(seed).digest("hex");
+
+/**
+ * The previous-version stage of a removed document in a published catalogue
+ * whose current screens render `screenSchemes`.
+ */
 function removedStage(
-  screenSchemes: readonly ("light" | "dark")[],
-  documentSchemes: readonly ("light" | "dark")[],
+  screenSchemes: readonly ColorScheme[],
+  documentSchemes: readonly ColorScheme[],
 ): string {
-  const manifest: ManifestV10 = currentManifest({
-    entries: [entry("screen", "guide/screen", screenSchemes)],
-    folders: [],
-    generatedBy: "mokly",
-    schemaVersion: 10,
-    sourceFiles: [],
+  const index = indexFixture((raw) => {
+    for (const screen of raw.screens) {
+      screen.colorSchemes = [...screenSchemes];
+      // Each viewport in turn, then each scheme, as the index axes require.
+      screen.views = (["mobile", "desktop"] as const).flatMap((viewport) => {
+        const light = screen.views.find(
+          (view) => view.viewport === viewport && view.colorScheme === "light",
+        );
+        assert.ok(light);
+        return screenSchemes.map((colorScheme) => ({
+          ...light,
+          colorScheme,
+          documentKey: hash(`${screen.path}:${viewport}:${colorScheme}`),
+        }));
+      });
+    }
+    const [document] = raw.documents;
+    assert.ok(document);
+    raw.removedEntries.push({
+      entry: {
+        ...document,
+        changes: { included: true, kind: "removed", status: "ready" },
+        colorSchemes: [...documentSchemes],
+        details: { ...document.details, sourcePath: `specs/${REMOVED}.md` },
+        documentKeys: documentSchemes.map((colorScheme) => ({
+          colorScheme,
+          documentKey: hash(`${REMOVED}:${colorScheme}`),
+        })),
+        path: REMOVED,
+        title: "Terms",
+      },
+      folderTitles: ["Product overview"],
+      preview: { kind: "document" },
+      snapshotId: hash(`removed:${REMOVED}`),
+    });
   });
-  const removed = entry("document", "guide/terms", documentSchemes);
-  const catalogue = createCatalogue(manifest, [
-    { entry: removed, folderTitles: ["Guide"] },
-  ]);
-  const context: ShellContext = {
-    base: "main",
-    changesStatus: "ready",
-  };
-  const data = removedPreviewData(catalogue, context, removed);
+  const catalogue = viewerCatalogue(shellCatalogueModel(index, new Map()));
+  const removed = catalogue.byPath.get(REMOVED);
+  assert.ok(removed);
+  const data = removedPreviewData(
+    catalogue,
+    { base: "main", changesStatus: "ready" },
+    removed,
+  );
   assert.ok(data);
   return renderToStaticMarkup(<RemovedPreviewStage data={data} />);
 }

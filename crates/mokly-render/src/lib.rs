@@ -24,6 +24,7 @@ mod postcss_read_inventory;
 mod postcss_scan;
 pub mod runtime;
 pub mod side;
+mod source_evidence;
 mod source_lease;
 mod source_paths;
 mod sources;

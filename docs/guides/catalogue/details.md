@@ -53,8 +53,8 @@ each changed component, and ends its details with “Shared component changes
 affect this preview. This page has no independent entry in Changes.” On the
 component's own page the details say “Changed styles that apply to this
 component:”. A component page with only a wrapper change has its own
-saved-view row, says “Changed styles that apply to this saved view:”, and that
-rule gives it no Affected screens. The details name the stylesheet actually
+Changes row, says “Changed styles that apply to this variant:”, and that rule
+gives it no Affected screens. The details name the stylesheet actually
 loaded, including a generated stylesheet when CSS comes from JavaScript.
 Private source files do not supply comparison evidence.
 

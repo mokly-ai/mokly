@@ -20,7 +20,7 @@ import { StandaloneShellContents } from "../src/standalone/shell.js";
 import { detailPairs, indexFixture } from "./catalogue_v7_fixture.js";
 
 /** The origin the markup's shell routes resolve against. */
-export const SHELL_ORIGIN = "https://catalogue.test";
+const SHELL_ORIGIN = "https://catalogue.test";
 
 /** One standalone first render. */
 export interface StandaloneMarkupOptions {

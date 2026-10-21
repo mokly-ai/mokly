@@ -192,6 +192,13 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         tagPickerOpen: open,
       }));
     },
+    settleComparisonIntent(installation) {
+      input.setState((current) =>
+        current.comparisonIntent && current.routeInstallation === installation
+          ? { ...current, comparisonIntent: false }
+          : current,
+      );
+    },
     setView(value) {
       updateSelection({ view: value });
     },

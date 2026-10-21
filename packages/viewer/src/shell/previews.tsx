@@ -52,7 +52,7 @@ export function removedPreviewData(
   )
     return undefined;
   const model = catalogue.publicModel;
-  const removed = model?.removedEntries.find(
+  const removed = model.removedEntries.find(
     (removed) => removed.entry.path === entry.path,
   );
   const published = removed?.preview;
@@ -61,7 +61,7 @@ export function removedPreviewData(
     kind: entry.kind,
     title: entry.title,
     ...(entry.kind === "document" ? { colorSchemes: entry.colorSchemes } : {}),
-    ...(model && removed?.snapshotId
+    ...(removed?.snapshotId
       ? {
           catalogueIdentity: model.identity.id,
           snapshotId: removed.snapshotId,

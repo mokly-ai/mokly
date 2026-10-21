@@ -3,6 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { awaitRoutedDetail } from "./comparison_ui.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -84,6 +85,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   await expect(root.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(root, screen.path);
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
@@ -122,5 +124,6 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   await expect(root.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(root, variant.path);
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
 });

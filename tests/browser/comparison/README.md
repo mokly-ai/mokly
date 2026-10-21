@@ -6,10 +6,9 @@ for current-only delivery and watched Serve fixtures.
 
 ## Native comparison copy
 
-`comparison_test.ts` supplies `test`, `copiedComparisonUrl()`,
-`copiedComparisonDirectory()`, and `comparisonPaths`. Import its `test` to
-use the comparison copy as `baseURL`. Import the URL function when one test
-needs both copies. Resolve these functions in a test or hook, after setup.
+`comparison_test.ts` supplies `test`, `copiedComparisonDirectory()`, and
+`comparisonPaths`. Import its `test` to use the comparison copy as `baseURL`.
+Resolve the directory function in a test or hook, after setup.
 Tests can read the shared directories but must not change their bytes.
 
 `tests/helpers/comparison_catalogue.ts` writes an isolated repository with
@@ -139,10 +138,11 @@ anchors, echoes, and the page mirror.
 
 ## Branch-point delivery copy
 
-`branch_point_test.ts` supplies `test`, the worker fixture `branchCopy`, and
-`branchPointPaths`. Its `baseURL` serves a separate comparison copy. Use
-`branchCopy.directory` for byte assertions. The source repository is removed
-before requests start. The copy is read-only.
+`branch_point_test.ts` supplies `test` and the worker fixture `branchCopy`.
+Its `baseURL` serves a separate comparison copy. Use `branchCopy.directory`
+for byte assertions. The source repository is removed before requests start.
+The copy is read-only. Import the named case paths, `branchPointPaths`, from
+`tests/helpers/branch_point_sources.ts`.
 
 `createComparisonCatalogue(root, additions?)` calls the optional source hook
 before each of its two commits. The default catalogue has no extra entries.
@@ -183,8 +183,9 @@ widths on three hosts: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `MovedHost`. `branch_viewer_test.ts` serves the embedded viewer to both
-embedded specs.
+a `MovedHost`. The checks read its `BranchPointHost` part, which keeps the
+`EntryHost` path check and says when comparisons are captured.
+`branch_viewer_test.ts` serves the embedded viewer to both embedded specs.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.

@@ -49,7 +49,7 @@ const details: ReadonlyMap<string, EntryDetailV2> = new Map([
 ]);
 
 /** Return an isolated copy of the validated catalogue index v7 fixture. */
-export function indexModel(): CatalogueReadModel {
+function indexModel(): CatalogueReadModel {
   return structuredClone(index);
 }
 

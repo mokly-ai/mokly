@@ -5,14 +5,15 @@ use std::ops::Range;
 
 use crate::error::Result;
 use crate::rename::Renamer;
-use crate::token_sections::{self, Grammar, Section};
+use crate::token_sections::{self, Grammar, Section, Statement};
 use crate::token_tree::Tokens;
 
 impl Renamer<'_> {
     /// Rename rule preludes and declarations; nested blocks use heap frames.
-    /// In a declaration block, a statement without a block is a declaration.
-    /// Every other statement renames its prelude and opens its block, with
-    /// the grammar that the section reader gives that block.
+    /// The section reader says which statements are declarations and which
+    /// are text that stays as authored. Every other statement renames its
+    /// prelude and opens its block, with the grammar that the section reader
+    /// gives that block.
     pub(crate) fn rules(&mut self, tokens: &Tokens<'_>) -> Result<()> {
         let mut pending = vec![Frame {
             range: tokens.root(),
@@ -25,16 +26,20 @@ impl Renamer<'_> {
                 pending.pop();
                 continue;
             };
-            if frame.grammar == Grammar::Declarations && section.block.is_none() {
-                self.declaration(
-                    section.text(tokens),
-                    section.start,
-                    section.end,
-                    section.semicolon,
-                    frame.body.own.as_deref(),
-                    &frame.body.earlier,
-                )?;
-                continue;
+            match section.statement {
+                Statement::Declaration(_) => {
+                    self.declaration(
+                        section.text(tokens),
+                        section.start,
+                        section.end,
+                        section.semicolon,
+                        frame.body.own.as_deref(),
+                        &frame.body.earlier,
+                    )?;
+                    continue;
+                }
+                Statement::Text(_) => continue,
+                Statement::AtRule(_) | Statement::Rule => {}
             }
             let earlier = self.defined.clone();
             let own = self.prelude(tokens, &section)?;
@@ -55,17 +60,17 @@ impl Renamer<'_> {
     /// local class.
     fn prelude(&mut self, tokens: &Tokens<'_>, section: &Section) -> Result<Option<String>> {
         let prelude = section.prelude.clone();
-        match section.at_rule(tokens).as_deref() {
-            Some(name) if name.ends_with("keyframes") => {
+        match &section.statement {
+            Statement::AtRule(name) if name.ends_with("keyframes") => {
                 self.keyframes(tokens, prelude)?;
                 Ok(None)
             }
-            Some("scope") => {
+            Statement::AtRule(name) if name == "scope" => {
                 self.selector(tokens, prelude, true)?;
                 Ok(None)
             }
-            Some(_) => Ok(None),
-            None => self.selector(tokens, prelude, true),
+            Statement::AtRule(_) | Statement::Declaration(_) | Statement::Text(_) => Ok(None),
+            Statement::Rule => self.selector(tokens, prelude, true),
         }
     }
 }

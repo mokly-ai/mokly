@@ -3,7 +3,7 @@ import { test as base } from "./browser_test.js";
 export { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 /** The immutable native Changes copy shared by every worker in one suite. */
-export function copiedComparisonUrl(): string {
+function copiedComparisonUrl(): string {
   const url = process.env["MOKLY_PLAYWRIGHT_COMPARISON_URL"];
   if (!url) throw new Error("Copied comparison catalogue is not ready");
   return url;

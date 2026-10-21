@@ -1,6 +1,6 @@
 //! Map logical dependency graph names to the selected installation for this side.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -28,7 +28,7 @@ pub(crate) struct SideTree {
     pub(crate) repository_roots: Vec<PathBuf>,
 }
 
-enum SourceOrigin {
+pub(crate) enum SourceOrigin {
     Repository,
     Dependency,
 }
@@ -102,7 +102,7 @@ impl SideTree {
             .find_map(|root| identity.strip_prefix(root).ok())
             .map(|relative| self.root.join(relative))
     }
-    fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
+    pub(crate) fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
         if let Some(source) = source_paths::repository_input(&self.root, path) {
             return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
         }
@@ -138,20 +138,14 @@ impl SideTree {
 }
 
 impl SourceTree for SideTree {
+    fn file_object(&self, path: &Path) -> Result<Option<String>> {
+        self.read_identity(path)
+    }
     fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
-        let (tree, physical, origin) = self.selected(path)?;
-        if let Some(base) = &self._base
-            && matches!(origin, SourceOrigin::Repository)
-            && let Ok(relative) = physical.strip_prefix(&self.root)
-        {
-            let digest = tree.digest(&physical)?;
-            return self.dependencies.observe_pinned_input(
-                &base.sources.directory.join(relative),
-                baseline,
-                &digest,
-            );
-        }
-        tree.observe_input(&physical, baseline)
+        self.record_observations(path, &BTreeSet::from([baseline.clone()]))
+    }
+    fn observe_inputs(&self, path: &Path, baselines: &BTreeSet<ReadBaseline>) -> Result<()> {
+        self.record_observations(path, baselines)
     }
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         let mut sources = Vec::new();

@@ -38,7 +38,7 @@ test("a changed document shows its status and each stylesheet once in Details", 
   assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
   assert.doesNotMatch(
     markup,
-    /Changed component|Shared component changes|this screen|saved view|1{64}/,
+    /Changed component|Shared component changes|this screen|saved view|this variant|1{64}/,
   );
   assert.doesNotMatch(
     markup,

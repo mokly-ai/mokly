@@ -79,7 +79,7 @@ export function ShellStoreProvider({
       {
         ...context,
         ...viewerContext(
-          initial.catalogue.publicModel!,
+          initial.catalogue.publicModel,
           defaultSelectionOf(initialState),
         ),
       },
@@ -100,7 +100,7 @@ export function ShellStoreProvider({
     stateRef,
   });
   const activeCatalogue = data.snapshot.catalogue;
-  const model = activeCatalogue.publicModel!;
+  const model = activeCatalogue.publicModel;
   const activeContext = useMemo(
     () => ({
       ...viewerContext(model, state.selection),
@@ -196,9 +196,11 @@ function initialShellState(
     initialState,
   );
   if (!embeddedHost) return state;
+  const hosted = hostRoute(catalogue, embeddedHost.selection);
   return {
     ...withFilterSelection(state, embeddedHost.selection),
-    route: hostRoute(catalogue, embeddedHost.selection),
+    comparisonIntent: hosted.comparison === "side",
+    route: hosted,
   };
 }
 

@@ -2079,6 +2079,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "unimock",
+ "windows-sys 0.61.2",
  "yaml-rust2",
 ]
 

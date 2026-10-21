@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { awaitRoutedDetail } from "./comparison_ui.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
 
@@ -16,6 +17,7 @@ for (const width of [390, 1440]) {
     for (const reload of [false, true]) {
       if (reload) await page.reload();
       await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+      await awaitRoutedDetail(page, "example/screens/welcome");
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
       ).toHaveCount(0);

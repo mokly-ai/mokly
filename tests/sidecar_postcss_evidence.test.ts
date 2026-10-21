@@ -76,7 +76,7 @@ for(const name of ['sync','callback','promise']) result.messages.push({type:'dep
   ]);
 });
 
-test("opaque helpers and partial descriptor reads remain incomplete beside observed reads", async (context) => {
+test("opaque helpers remain incomplete beside observed whole files and ranges", async (context) => {
   const { base } = await sidecarSources(context);
   await fs.writeFile(path.join(base, "opaque.txt"), "opaque");
   await fs.writeFile(path.join(base, "partial.txt"), "partial");
@@ -107,7 +107,18 @@ for(const file of ['opaque.txt','partial.txt','both.txt']) result.messages.push(
   assert.match(result.text, /opaque-first-second/);
   assert.equal(result.readEvidence.coverage, "incomplete");
   assert.deepEqual(versions(result, path.join(base, "opaque.txt")), []);
-  assert.deepEqual(versions(result, path.join(base, "partial.txt")), []);
+  assert.deepEqual(versions(result, path.join(base, "partial.txt")), [
+    digest("ar"),
+  ]);
+  assert.ok(
+    result.readEvidence.reads.some(
+      (read) =>
+        read.kind === "byte-range" &&
+        read.path === path.join(base, "partial.txt") &&
+        read.offset === 1 &&
+        read.length === 2,
+    ),
+  );
   assert.deepEqual(versions(result, path.join(base, "both.txt")), [
     digest("first"),
   ]);
@@ -126,7 +137,9 @@ import fs from 'node:fs';
 import {readFile} from 'node:fs/promises';
 const readers={
   sync:(file,options)=>fs.readFileSync(file,options),
-  callback:(file,options)=>new Promise((resolve,reject)=>fs.readFile(file,options,(error,bytes)=>error?reject(error):resolve(bytes))),
+  callback:(file,options)=>new Promise((resolve,reject)=>fs.readFile(file,options,function(error,bytes){
+    if(error){assert.equal(arguments.length,1);reject(error);}else resolve(bytes);
+  })),
   promise:readFile,
 };
 export default {plugins:[{postcssPlugin:'options',async Once(root){
@@ -152,6 +165,10 @@ for(const prototype of [Object.prototype,null]) {
   }
 }
 root.append({prop:'options',value:'preserved'});
+try {
+  Object.defineProperty(Object.prototype,'encoding',{value:'latin1',configurable:true,writable:true});
+  assert.equal(fs.readFileSync('accepted.bin',{}),'ÿ');
+} finally { delete Object.prototype.encoding; }
 }}]};`,
   );
   const sidecar = startSidecar(context);

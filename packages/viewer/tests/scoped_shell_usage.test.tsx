@@ -105,3 +105,25 @@ test("a workspace whose detail is not held shows the mockup's inspection waiting
     "Waiting for the component preview.",
   );
 });
+
+test("a selected comparison says so and names where highlighting works", () => {
+  const { catalogue, model } = holding(COMPONENT);
+  const entry = catalogue.byPath.get("components/action");
+  assert.ok(entry?.kind === "component");
+  const data = publicWorkspace(catalogue, model, entry);
+  assert.deepEqual(
+    inspectionAvailability(
+      {
+        comparisonActive: true,
+        data,
+        invalidSelection: false,
+        views: data.views,
+      },
+      [],
+    ),
+    {
+      available: false,
+      reason: "A comparison is selected. Highlighting is available in Current.",
+    },
+  );
+});

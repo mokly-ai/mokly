@@ -42,6 +42,8 @@ export interface ShellStore {
   setNavScroll(value: number): void;
   setSearch(value: string): void;
   setTagPicker(open: boolean, index?: number): void;
+  /** Settle the comparison intent of route installation `installation`. */
+  settleComparisonIntent(installation: number): void;
   setView(value: "all" | "changes"): void;
   toggleTag(tag: string): void;
   onShellClick(event: ShellClickEvent): void;
