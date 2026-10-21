@@ -145,22 +145,22 @@ fn javascript_pages_turn_authored_ignore_elements_into_regions() {
             })),
     ));
     let entry = &catalogue.model.entries[0];
-    let document = HtmlComposer { fragments: renderer }
-        .compose(&ComposeRequest {
-            catalogue: &catalogue,
-            entry,
-            viewport: Viewport::Desktop,
-            color_scheme: ColorScheme::Light,
-            stylesheets: Vec::new(),
-        })
-        .unwrap();
-    assert!(
-        crate::tree::walk(&document.tree).any(|node| matches!(
-            node,
-            crate::tree::Node::Region { region, .. }
-                if matches!(region.kind, crate::tree::RegionKind::Ignore { .. })
-        ))
-    );
+    let document = HtmlComposer {
+        fragments: renderer,
+    }
+    .compose(&ComposeRequest {
+        catalogue: &catalogue,
+        entry,
+        viewport: Viewport::Desktop,
+        color_scheme: ColorScheme::Light,
+        stylesheets: Vec::new(),
+    })
+    .unwrap();
+    assert!(crate::tree::walk(&document.tree).any(|node| matches!(
+        node,
+        crate::tree::Node::Region { region, .. }
+            if matches!(region.kind, crate::tree::RegionKind::Ignore { .. })
+    )));
     assert!(crate::tree::walk(&document.tree).all(|node| {
         !matches!(node, crate::tree::Node::Element(element) if element.name == "mokly-ignore"
             || element.name == "mokly-ignore-scope")

@@ -33,7 +33,7 @@ pub(crate) fn validate(
             let empty = PropSchema::default();
             let (schema, slots) = match &entry.content {
                 EntryContent::Screen { visual, .. } => (&visual.prop_schema, None),
-                EntryContent::Component { slots, .. } => {
+                EntryContent::Component { visual, slots, .. } => {
                     (&visual.prop_schema, Some(slots.as_slice()))
                 }
                 _ => (&empty, None),
