@@ -1158,7 +1158,9 @@ renders again.
         example.
   - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
-- [ ] Complete browser coverage for copied static output.
+- [x] Complete browser coverage for copied static output.
+      Ticked on 2026-10-21 in plan bookkeeping pass 1: all eleven children
+      are done.
   - [x] Build and copy the example in global setup and run exact-file static
         checks in the normal four shards: navigation, inspection, no live
         endpoints, read-only props, resources, canonical links, deployment
@@ -1195,9 +1197,18 @@ renders again.
         fixture shapes, semantic edit readiness, and exact blank-frame notices.
         Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
         Merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions-2.md`.
-  - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
+  - [x] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
         user approves the new job. Include the private slot and variant file
         fixture and the design journeys checked by a manual run.
+        Ticked on 2026-10-21 in plan bookkeeping pass 1: user decision 2 A
+        (2026-10-19) approved the job. The `static-delivery` job of
+        `.github/workflows/ci.yml` runs
+        `scripts/verification/static-delivery.mjs`, which runs
+        `playwright.delivery.config.ts` over static HTTP and then with
+        `MOKLY_PLAYWRIGHT_FILE_DIR`. That spec list holds the design journeys
+        and `component_fragments.spec.ts`, which builds the private slot and
+        variant fixture. The job passed in hosted run `39455750846` at
+        `b1f3c86f`, integration batch 14, and runs in every CI run since.
 - [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
