@@ -85,12 +85,16 @@ configuration, authoring modules, generated output, or caches.
 - `build` fingerprints only what the build uses: the configuration, root
   membership, inventoried sources, and the files that rendering reaches. An
   edit to an unrelated repository file does not stop a build. Some edits made
-  while a build runs are not detected. These are edits to installed
-  dependencies under `node_modules`, to `.gitignore` or the Git index, to
-  ancestor `package.json` or `tsconfig.json` files, to missing resolution
-  candidates, to the file list of a directory that a PostCSS plugin reports,
-  and to files that render callbacks read without an import. A PostCSS plugin
-  can also read a file in a way that Mokly cannot observe, such as through a
+  while a build runs are not detected. These are edits to JavaScript modules
+  that Mokly bundles from `node_modules`, to files under `node_modules` that a
+  PostCSS plugin reports, to `.gitignore` or the Git index, to ancestor
+  `package.json` or `tsconfig.json` files, to missing resolution candidates,
+  to the file list of a directory that a PostCSS plugin reports, to files that
+  a PostCSS plugin reads without reporting them, and to files that render
+  callbacks read without an import. Edits to installed stylesheets, their
+  `url()` assets, the `package.json` files that stylesheet resolution reads,
+  and PostCSS plugin modules stop the build. A PostCSS plugin can also read a
+  file that it reports in a way that Mokly cannot observe, such as through a
   native addon. Mokly then records that file's digest after the read and does
   not detect an edit between the two. Such output is consistent but stale.
   Build again after such an edit. `publish` checks the repository status again
