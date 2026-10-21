@@ -192,8 +192,9 @@ the missing view. `parseViewHref` returns a path rather than a kind and id.
 The released manifest and review result types, such as `ManifestV7` (0.13.0),
 `ManifestV9` (0.14.0), `ReviewResultV6`, and `ScreenReviewV6`, have no public
 replacement. The
-[viewer data release note](#breaking-viewer-data-release-note) lists the
-names that this release removes from `@mokly/viewer/data`. Replace
+[viewer data release note](#breaking-viewer-data-release-note) lists their
+0.15.0 successors, such as `ManifestV10` and `ReviewResultV7`, which the first
+Rust core release removes. Replace
 `isEntryId` and `isCatalogueId` with `isPathSegment` and `isEntryPath`;
 `isWindowsDeviceName` is unchanged.
 

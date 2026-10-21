@@ -2788,6 +2788,20 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       its listed names have no public replacement, but the root
       `@mokly/viewer` entry still exports `ComponentControl` and
       `ComponentControlLabel`. Separate branch.
+  - [x] F20 re-review, on 2026-10-21: finding 44 is fixed by option A. The
+        path identity release note says that the viewer data release note
+        lists the 0.15.0 successors of the released types, such as
+        `ManifestV10` and `ReviewResultV7`. The full report is
+        `.context/m10/f20/review_2.md`.
+  - F20 re-review finding 45 for the user: the options recorded for
+    findings 42 and 43 would edit history lines. Severity Low, effort Small.
+    Recommended: A, record options for 42 and 43 that edit only live lines
+    or add new lines beside the checked records.
+  - Outside the F20 re-review scope:
+    - `docs/protocol/npm-release-notes.md`: no note tells
+      `@mokly/viewer/data` users to import `ComponentInstanceRecord` and six
+      other dropped types from the root `@mokly/viewer` entry, which still
+      exports them. Separate branch.
   - [x] Fix CI release checks hub review finding 4 with option A: name read-only
         release preparation as the npm and Rust audit owner in the three
         affected verification documents. Publication uses the checked archives.
