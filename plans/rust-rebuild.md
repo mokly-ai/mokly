@@ -3475,7 +3475,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         them. Bare paths and resolutions keep the Classic root, and lockfile
         values keep the lockfile folder. Branch
         `rebuild/base-classic-manifest-paths`.
-  - [ ] Apply the base-install security review on `rebuild/base-env-secrets`:
+  - [x] Apply the base-install security review on `rebuild/base-env-secrets`:
         finding 1, a base configuration can read an inherited secret such as
         `MOKLY_TOKEN` through its manager configuration, and finding 2, a Yarn
         Berry `injectEnvironmentFiles` reads a file outside the repository.
