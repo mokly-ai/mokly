@@ -88,8 +88,8 @@ view, affected-only consumers included. Membership reads only the records
 whose owner is the entry: a view with one gives its entry a `dependency`
 reason for that stylesheet under the
 [component comparison schema](./mokly-component-review.md#reasons-and-secondary-evidence).
-A changed component's own reason comes from the records on its own pages whose
-owner is that component, under the stylesheets those pages link, never from a
+A changed component's own reason comes from kept own-page matches under
+[style ownership](./mokly-comparison.md#style-ownership), never from a
 consumer-only path. A variant's component reason comes only from matches that
 the component keeps on that variant's own page; the variant can still have an
 entry-owned record of its own.

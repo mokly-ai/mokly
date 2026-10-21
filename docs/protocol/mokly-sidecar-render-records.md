@@ -17,10 +17,9 @@ Each style is `{ css, owners }`. Owners are registered component parent paths.
 An empty owner list uses selector attribution. Inline styles retain the
 component or slot supplier whose output produced them. Registry styles from
 a whole-screen render use the empty owner list.
-Page-wide component registry styles keep their owners. Comparison keeps a
-page-component rule only when it matches outside every nested registered
-instance, or when its matching is unresolved. A changed owned rule with no
-match on either side supplies no record.
+Page-wide component registry styles keep their owners. Comparison applies the
+shared [style ownership](./mokly-comparison.md#style-ownership) rules and
+shared evidence reduction to them.
 
 `markers` is the ordered list of authenticated API placements. Each record has
 `id`, optional `parentId`, and `payload`. The payload is one of
