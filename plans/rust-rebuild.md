@@ -4617,11 +4617,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     new open Milestone 14 line names audit finding 7 and the branches that
     it waits for.
   - [x] `docs/protocol/mokly-timings.md:137`: the scale fixture paragraph says
-    that setup always adds the unrelated rule to the first shared
-    stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
-    close-out review. Separate branch. Fixed by `661a9fe7` on
-    `rebuild/plan-bookkeeping-3`, which integration batch 21 merged
-    (`d650b856`): the paragraph now says that `--stylesheets 0` adds no rule.
+        that setup always adds the unrelated rule to the first shared
+        stylesheet, but `--stylesheets 0` adds none. Found by the gap sweep
+        close-out review. Separate branch. Fixed by `661a9fe7` on
+        `rebuild/plan-bookkeeping-3`, which integration batch 21 merged
+        (`d650b856`): the paragraph now says that `--stylesheets 0` adds no rule.
   - `plans/rust-rebuild.md`, the open Milestone 14 TODO "Report exact
     consumed-byte digests for the PostCSS module graph": it still names
     "supply immutable generation inputs" as a design path, but decision 56 A
