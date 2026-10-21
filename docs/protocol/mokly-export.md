@@ -135,6 +135,14 @@ Changes; Serve's watcher ignores the same paths.
    do not participate. Explicit inventoried inputs and reached closure files
    participate even beneath excluded directory names. Resolve each selected
    path inside the real repository before hashing its target bytes.
+   The fingerprint excludes installed dependencies under `node_modules`,
+   `.gitignore` and the Git index, ancestor `package.json` and
+   `tsconfig.json` files, missing resolution candidates, the file list of a
+   directory that a PostCSS plugin reports, and files that a render callback
+   reads without an import. An edit to one of these during a build is not
+   detected. Decision: the fingerprint covers only the build's inputs. A walk
+   of every repository file was rejected because it hashes unrelated files on
+   every build and stops a build when an unrelated file changes.
    For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
    of the exact bytes it bundled as the baseline. A missing module digest is
    an internal failure; a later source read cannot replace it. Compare captured digests with

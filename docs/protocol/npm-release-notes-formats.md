@@ -82,6 +82,19 @@ configuration, authoring modules, generated output, or caches.
   before building and keeps it after a failed upload. Publish requires a clean,
   committed checkout. Static output requires an empty directory or its valid
   ownership marker.
+- `build` fingerprints only what the build uses: the configuration, root
+  membership, inventoried sources, and the files that rendering reaches. An
+  edit to an unrelated repository file does not stop a build. Some edits made
+  while a build runs are not detected. These are edits to installed
+  dependencies under `node_modules`, to `.gitignore` or the Git index, to
+  ancestor `package.json` or `tsconfig.json` files, to missing resolution
+  candidates, to the file list of a directory that a PostCSS plugin reports,
+  and to files that render callbacks read without an import. A PostCSS plugin
+  can also read a file in a way that Mokly cannot observe, such as through a
+  native addon. Mokly then records that file's digest after the read and does
+  not detect an edit between the two. Such output is consistent but stale.
+  Build again after such an edit. `publish` checks the repository status again
+  before upload and rejects an edit to any file that Git does not ignore.
 
 ### Platforms And JavaScript
 
