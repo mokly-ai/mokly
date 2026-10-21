@@ -140,11 +140,15 @@ details arrive. On navigation inside the shell it commits the route from the
 index at once and fetches the destination's details. It accepts a current entry's
 detail only when `identity`, `deploymentId`, and `revision` equal the
 installed index. On a revision mismatch it refetches the index once; if the
-pair still disagrees, the entry shows its unavailable state with retry. A
+pair still disagrees, the entry shows its unavailable state with retry. A use
+case shows its unavailable state only after each of its details has arrived,
+failed, or been replaced; until then its stage keeps loading, and an embedded
+host still receives the `onError` of each failure at once. A
 different `deploymentId` means another deployment replaced the files: the
 standalone shell performs a full page load of the requested URL, and an
 embedded React host receives one `onError` and keeps its state. From then on
-the shell loads no detail and reports no later failure. A route that still
+the shell loads no index or detail, closes the event stream, and reports no
+later failure. A route that still
 waits for a detail has the replaced delivery status: in both hosts its stage
 keeps the loading state, never the unavailable state, until the new data
 arrives with the full page load or the `index` that the host supplies. A route
@@ -211,4 +215,4 @@ The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 | a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
 | a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                      | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
 | a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
-| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                                                |
+| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry; for a use case, once each of its details arrived, failed, or was replaced     |

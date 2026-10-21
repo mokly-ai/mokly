@@ -145,7 +145,7 @@ export const previewLoadingScreen = defineScreen({
   slug: "preview-loading",
   title: "Preview loading",
   description:
-    "The selected screen's stage while its details load; the navigation and the details panel stay usable.",
+    "The selected screen's stage while its details load; the navigation and the details panel stay usable. The same stage covers a replaced catalogue: after another deployment answers, it keeps loading until the new catalogue arrives.",
   ...artboards({
     desktop: <PreviewLoading viewport="desktop" />,
     mobile: <PreviewLoading viewport="mobile" />,

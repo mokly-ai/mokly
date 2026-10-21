@@ -84,10 +84,13 @@ test("a descriptor of another version shows the version error state", async () =
 
 test("a message from another deployment replaces the catalogue once", () => {
   const fixture = connected();
-  fixture.live.listener!.message(9, OTHER);
+  const listener = fixture.live.listener!;
+  listener.message(9, OTHER);
   assert.equal(fixture.controller.replaced, true);
   assert.equal(fixture.source.deploymentChanges, 1);
-  fixture.live.listener!.message(10, OTHER);
+  // The stream closes. A message that it had already queued changes nothing.
+  assert.equal(fixture.live.listener, undefined);
+  listener.message(10, OTHER);
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.source.indexes.length, 0);
 });
@@ -158,6 +161,24 @@ test("a refresh from another deployment replaces the catalogue", async () => {
   assert.equal(fixture.controller.replaced, true);
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.commits.length, 0);
+});
+
+test("a replacement ends the live connection, so no message or retry loads an index", async () => {
+  const fixture = connected();
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source
+    .detail(HOME)
+    .resolve({ ...detailFixture({ path: HOME }), deploymentId: OTHER });
+  await flush();
+  assert.equal(fixture.controller.replaced, true);
+  // The stream closes, so a later message of the installed deployment
+  // cannot start a refresh, and neither can a retry or a new connection.
+  assert.equal(fixture.live.closed, 1);
+  assert.equal(fixture.live.listener, undefined);
+  fixture.controller.retryRefresh();
+  fixture.controller.connect();
+  assert.equal(fixture.live.subscriptions, 1);
+  assert.equal(fixture.source.indexes.length, 0);
 });
 
 test("a new render generation keeps the installed capability until its replacement installs", async () => {
