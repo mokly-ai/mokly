@@ -29,6 +29,52 @@ async function absent(file: string) {
   await assert.rejects(fs.stat(file), { code: "ENOENT" });
 }
 
+async function findMarker(directory: string): Promise<string | undefined> {
+  for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+    const file = path.join(directory, entry.name);
+    if (entry.isFile() && entry.name === "lifecycle-ran") return file;
+    if (entry.isDirectory()) {
+      const found = await findMarker(file);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
+for (const mode of ["config", "flag"] as const) {
+  test(`scripts-on ${mode} opt-in runs the base lifecycle marker`, { timeout: 120_000 }, async (context) => {
+    const fixture = await coldBaseFixture(2, context);
+    if (mode === "config") {
+      await fs.writeFile(
+        path.join(fixture.root, "mokly.config.json"),
+        '{"review":{"baseInstallScripts":true}}',
+      );
+    }
+    const result = await command(
+      fixture.root,
+      "build",
+      [
+        "--base=HEAD",
+        "--out=.context/site",
+        "--sidecars=1",
+        ...(mode === "flag" ? ["--base-install-scripts"] : []),
+      ],
+      "plain",
+      fixture.env,
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    const cacheLine = result.stdout
+      .split("\n")
+      .find((line) => line.startsWith("Mokly cache: "));
+    assert.ok(cacheLine);
+    assert.ok(
+      await findMarker(cacheLine.slice("Mokly cache: ".length)),
+      `${result.stdout}\n${result.stderr}`,
+    );
+  });
+}
+
 const cases: ReadonlyArray<{ tier: DependencyTier; title: string }> = [
   {
     tier: 1,

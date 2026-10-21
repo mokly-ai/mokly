@@ -123,6 +123,15 @@ impl ChangesService for Changes {
         head: Arc<dyn RenderGeneration>,
         install_scripts: Option<bool>,
     ) -> Result<ComparisonResult> {
+        let install_scripts = install_scripts
+            .or_else(|| {
+                config
+                    .input
+                    .review
+                    .as_ref()
+                    .and_then(|review| review.base_install_scripts)
+            })
+            .unwrap_or(false);
         let selected = match &self.pinned {
             Some(pinned) => pinned.clone(),
             None => self
@@ -144,7 +153,7 @@ impl ChangesService for Changes {
                 repository,
                 commit: commit.clone(),
                 sources,
-                install_scripts: install_scripts.unwrap_or(false),
+                install_scripts,
             });
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {
