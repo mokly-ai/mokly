@@ -68,6 +68,7 @@ export async function installFixture(
     managerName(manager) === "pnpm"
       ? [
           "install",
+          "--no-frozen-lockfile",
           "--offline",
           "--ignore-scripts",
           "--ignore-pnpmfile",
