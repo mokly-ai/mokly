@@ -3790,6 +3790,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         version…", Large. Recommended: A.
     - User decision 139 (2026-10-21): A. Work: W1 on
       `rebuild/viewer-139a-140b`.
+  - [ ] Resolve user item 140 (90 C decision 2): when a use case shows a
+        step failure. A use-case route loads the use case detail and each
+        step detail at once. A step failure that arrives before any detail
+        shows the new deployment makes the route show the unavailable stage
+        until the next detail arrives. An embedded host also gets the step's
+        `onError` before the catalogue message. Severity Low, effort Small.
+        Options: A, keep showing a failure as soon as it arrives, Small; B,
+        show a failed route only after all its details have settled, and
+        keep sending the host's failure message at once, Small; C, as B, and
+        also hold the host's failure message until the route settles, Medium
+        (estimate). Recommended: B.
+    - User decision 140 (2026-10-21): B. Work: W1 on
+      `rebuild/viewer-139a-140b`.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
