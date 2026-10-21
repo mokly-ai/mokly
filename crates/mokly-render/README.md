@@ -67,7 +67,9 @@ maps, describe, and bindings before rendering. Metadata invalidation still recom
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
 identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
-PostCSS read evidence retains observed whole-file and byte-range digests beside late baselines.
+PostCSS read evidence retains observed whole-file and byte-range digests for
+one generation beside late baselines. Cache hits replay the validated result
+that belongs to their generation.
 Both cache layers replay the original evidence to static admission. Selected
 module inputs remain separate from plugin privacy and catalogue membership.
 Base witnesses compare with pinned Git bytes through the shared admission

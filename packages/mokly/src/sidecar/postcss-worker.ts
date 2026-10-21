@@ -6,6 +6,8 @@ import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
+  beginReadEvidenceGeneration,
+  initializeReadEvidenceGeneration,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
@@ -16,7 +18,7 @@ import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
 type WorkerData = Pick<
   ProcessCssParams,
-  "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
+  "context" | "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
 
 guardParentOutput();
@@ -24,6 +26,7 @@ const parent = parentInput();
 parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());
 process.once("message", (workerData: WorkerData) => {
+  initializeReadEvidenceGeneration(workerData.context);
   if (!preloadedObserver()) {
     observeFileReads();
     observeModuleLoads();
@@ -39,6 +42,7 @@ process.once("message", (workerData: WorkerData) => {
     "message",
     async ({ id, params }: { id: number; params: ProcessCssParams }) => {
       try {
+        beginReadEvidenceGeneration(params.context);
         const { processor, modules, paths } = await configuration;
         const result = await processor
           .process(params.text, {

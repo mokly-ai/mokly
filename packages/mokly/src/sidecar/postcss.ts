@@ -100,6 +100,7 @@ export class PostcssWorkers {
       child.stderr?.on("data", (chunk) => this.diagnostic(String(chunk)));
       this.workers.set(key, worker);
       worker.send({
+        context: params.context,
         postcss: file,
         sourceRoot: root,
         moduleResolution: params.moduleResolution,

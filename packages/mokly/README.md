@@ -11,8 +11,9 @@ tsconfig paths stay with the base files.
 Tracked base files beneath `node_modules` supply their base bytes and keep
 their dependency role in attribution.
 
-PostCSS children retain raw whole-file and byte-range witnesses beside dependency reports.
-Coverage remains incomplete for opaque readers. See the
+PostCSS children retain raw whole-file and byte-range witnesses for one
+generation beside dependency reports. A new generation drops earlier
+witnesses. Coverage remains incomplete for opaque readers. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
 Observation starts before consumer preloads. File providers retain their
 transformed output and the raw witnesses of underlying observed reads.

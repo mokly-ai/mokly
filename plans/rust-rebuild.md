@@ -2346,6 +2346,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Retain known native resolution manifests as late inputs. Public hooks
         do not expose the bytes used by private `exports` and `imports` reads.
         Preserve native resolution and its cache. Do not manufacture read receipts.
+  - [x] User decision 125 (2026-10-21): D. Keep read evidence for one
+        generation. A new generation drops earlier child witnesses while
+        static-build input checks remain unchanged. Keep cache hits and core
+        input checks valid for the generation that owns their result.
   - [ ] Closure decision M14-PC2, proposed 2026-10-20, remains pending.
         A: change the parent acceptance to the observed-read guarantee and tick
         that scope with the recorded incomplete coverage. Effort Small.
