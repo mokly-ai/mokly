@@ -4398,6 +4398,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Recommended: C. If the user declines C, apply A.
     - User decision 103 (2026-10-21): C, which includes 83 B. Work:
       `rebuild/viewer-103c`.
+  - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's
+        Details deny its comparison. For an entry that Changes lists only as
+        a move, the Details end with a terminal line that says Changes has no
+        independent entry for it, so they deny the comparison that the entry
+        offers. Severity Low, effort Large. Options: A, keep the
+        terminal line, Small (estimate); B, for an entry that Changes lists
+        only as a move, show the shared-component sentence in a wording
+        without "no independent entry", design first, Large; C, leave out the
+        terminal line when a shown view uses a changed component, design
+        first, Large (estimate). Recommended: B.
   - [ ] Resolve user item 102 (82 B delegate decision 4): the Serve heading
         of an affected-only entry comes from view usage. Severity Low.
         Option B is applied by default (user rule): see the record "Serve
