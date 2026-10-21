@@ -1,0 +1,26 @@
+name: Native diagnosis
+on:
+  push:
+    branches: [rebuild/native-ci-fixes-5]
+    paths: [.github/workflows/native-diagnosis.yml]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: blacksmith-6vcpu-macos-26
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '4'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: 'true'
+      - run: rustup toolchain install
+      - name: Verify native signal receipt
+        run: |
+          cargo test -p mokly-platform
+          for i in $(seq 1 100); do
+            cargo test -p mokly-platform --test process_tests || exit $?
+          done
