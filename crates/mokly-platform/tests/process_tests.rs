@@ -98,9 +98,10 @@ mod windows {
             let mut ready = String::new();
             reader.read_line(&mut ready).unwrap();
             assert_eq!(ready.trim(), "ready");
+            assert!(child.try_wait().unwrap().is_none());
             (child, reader)
         };
-        assert!(!child.wait().unwrap().success());
+        child.wait().unwrap();
         let mut remaining = String::new();
         reader.read_to_string(&mut remaining).unwrap();
         assert!(remaining.is_empty());
