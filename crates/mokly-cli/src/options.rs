@@ -60,7 +60,7 @@ pub fn validate(cli: &mut Cli, environment: &Environment) -> Result<(), Failure>
 /// Apply a one-run CLI override without reading the historical configuration.
 pub fn apply_base_install_scripts(config: &mut ResolvedConfig, override_value: Option<bool>) {
     if let Some(value) = override_value {
-        config.input.review.get_or_insert_with(|| ReviewConfig {
+        config.input.review.get_or_insert(ReviewConfig {
             base: None,
             base_install_scripts: None,
         });
