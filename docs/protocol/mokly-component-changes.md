@@ -57,11 +57,14 @@ A component page has Used by links for every known consumer. A changed
 component also has Affected screens, built from the union of base and head
 usage, including transitive use and removed consumers. Each canonical screen
 appears once with its affected view and instance evidence. A direct screen
-change does not remove it from the list. A link opens the actual before and
-after comparison even when the screen has no row in Changes. Affected
-describes usage evidence, not proof of a visual regression: a changed
-component can alter surrounding layout without changing any screen-owned
-markup, and no pixel or layout-safety claim is inferred.
+change does not remove it from the list. A link opens the consumer's Side by
+side comparison of that view, even when the consumer has no row in Changes; it
+then stays Unmodified and outside Changes. A consumer in Changes whose own
+views are unchanged, such as a pure move, opens Current, and a removed screen
+consumer opens its previous version. Affected describes usage evidence, not
+proof of a visual regression: a changed component can alter surrounding layout
+without changing any screen-owned markup, and no pixel or layout-safety claim
+is inferred.
 
 ## One Classification Policy
 

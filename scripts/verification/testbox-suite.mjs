@@ -9,7 +9,7 @@ import { childEnvironment } from "./child-environment.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
 import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
-const SUITES = new Set(["repository", "viewer", "browser"]);
+const SUITES = new Set(["repository", "viewer", "browser", "static-delivery"]);
 const AUDIT_MODES = new Set(["baseline", "strict"]);
 const USAGE =
   "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
@@ -132,6 +132,14 @@ export async function runTestboxSuite(args, dependencies) {
     await writeFile(stampFile, `${digest}\n`);
   }
 
+  if (request.suite === "static-delivery") {
+    const build = outcomeExitCode(await command("npm", ["run", "build"]));
+    if (build !== 0) return build;
+    return outcomeExitCode(
+      await command("npm", ["run", "test:delivery:prepared"]),
+    );
+  }
+
   const suiteArgs = [
     "xtask",
     "check",
@@ -154,16 +162,7 @@ export async function runTestboxSuite(args, dependencies) {
       MOKLY_VERIFICATION_REPORT: `.context/verification-reports/remote/${request.commandName}.json`,
     },
   });
-  const code = outcomeExitCode(outcome);
-  if (
-    code === 0 &&
-    request.suite === "browser" &&
-    (!request.shard || request.shard.index === 1)
-  )
-    return outcomeExitCode(
-      await command("npm", ["run", "test:delivery:prepared"]),
-    );
-  return code;
+  return outcomeExitCode(outcome);
 }
 
 async function requireSuccess(completion, step) {

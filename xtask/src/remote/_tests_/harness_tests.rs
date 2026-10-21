@@ -30,6 +30,7 @@ pub(super) enum Case {
     Head,
     Fingerprint,
     Suite,
+    Delivery,
     Download,
     Aggregate,
     ChangedTree,
@@ -156,7 +157,7 @@ fn build(case: Case, stuck: bool) -> Harness {
     let logs = Arc::new(
         if matches!(
             case,
-            Case::Suite | Case::LogUnavailable | Case::CleanupFailedSuite
+            Case::Suite | Case::Delivery | Case::LogUnavailable | Case::CleanupFailedSuite
         ) {
             Unimock::new((
                 prepare,

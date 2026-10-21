@@ -19,15 +19,22 @@ interface Workflow {
 }
 
 test("release scripts before dependency installation have no static package imports", async (t) => {
-  const workflow = parse(
-    await fs.readFile(
-      path.join(repositoryRoot, ".github/workflows/release.yml"),
-      "utf8",
+  const workflows = await Promise.all(
+    ["release.yml", "release-prepare.yml"].map(
+      async (name) =>
+        parse(
+          await fs.readFile(
+            path.join(repositoryRoot, ".github/workflows", name),
+            "utf8",
+          ),
+        ) as Workflow,
     ),
-  ) as Workflow;
+  );
   const roots = new Set<string>();
-  for (const job of Object.values(workflow.jobs)) {
-    for (const step of job.steps) {
+  for (const job of workflows.flatMap((workflow) =>
+    Object.values(workflow.jobs),
+  )) {
+    for (const step of job.steps ?? []) {
       const run = step.run ?? "";
       const install = /^\s*npm\s+ci\b/mu.exec(run);
       const beforeInstall = install ? run.slice(0, install.index) : run;

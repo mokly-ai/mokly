@@ -5,14 +5,25 @@ import { viewHref } from "../navigation/routes.js";
 import type { UsageDeliveryState } from "./use_workspace_data.js";
 import type { UsageLink, WorkspaceData } from "./workspace_data.js";
 
-/** Build the routed consumer URL that selects its recorded instance. */
-export function usageHref(link: UsageLink): string {
+/** The Usage sections: current uses, and the consumers a change affects. */
+export type UsageSectionName = "affected" | "used-by";
+
+/**
+ * Build the routed consumer URL that selects its recorded instance. An
+ * affected consumer, and a removed one, open its side-by-side comparison
+ * when the consumer can be compared, even when it has no Changes row.
+ */
+export function usageHref(
+  link: UsageLink,
+  section: UsageSectionName = "used-by",
+): string {
   const query = new URLSearchParams({
     viewport: link.viewport,
     scheme: link.colorScheme,
     instance: link.instanceKey,
   });
-  if (link.removed && link.comparisonEligible) query.set("comparison", "side");
+  if (link.comparisonEligible && (section === "affected" || link.removed))
+    query.set("comparison", "side");
   return `${viewHref(link.entryId)}?${query}`;
 }
 
@@ -69,7 +80,7 @@ function UsageSection({
   title,
 }: {
   links: readonly UsageLink[];
-  section: string;
+  section: UsageSectionName;
   title: string;
 }) {
   const rows = usageRows(links);
@@ -92,7 +103,7 @@ function UsageSection({
                 data-usage-link={JSON.stringify([first.entryId, first.removed])}
                 key={key}
               >
-                <a href={usageHref(first)}>
+                <a href={usageHref(first, section)}>
                   {first.title}
                   {first.removed ? " · Removed" : ""}
                 </a>

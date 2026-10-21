@@ -8,7 +8,11 @@ import type { PropsLimit } from "./limit.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
 import { ScreenDetails } from "./screen_details.js";
-import { ConsumerFrame, type ScreenPageState } from "./screen_preview.js";
+import {
+  AffectedComparison,
+  ConsumerFrame,
+  type ScreenPageState,
+} from "./screen_preview.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
@@ -40,6 +44,8 @@ export function ScreenPage({
   const identity = screenIdentity(state);
   const { title, path } = SCREENS[identity];
   const highlighting = state === "highlight" || state === "nested";
+  // Changed components affect this screen, so it compares while Unmodified.
+  const affected = comparison !== undefined && "affected" in comparison;
   return (
     <ExplorerShell
       design={limit?.design ?? INSPECTION_PAGES[state]}
@@ -52,8 +58,8 @@ export function ScreenPage({
         title={title}
         crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
         path={path}
-        comparisonMode="current"
-        comparisons={comparison?.status === "changed"}
+        comparisonMode={affected ? "side-by-side" : "current"}
+        comparisons={comparison?.status === "changed" || affected}
         status={comparison?.status ?? "unmodified"}
         action={
           <ViewControls
@@ -75,9 +81,13 @@ export function ScreenPage({
       <PreviewWorkspace
         inspector={<ScreenDetails state={state} props={limit?.panel} />}
         viewport={viewport}
-        render={(previewViewport) => (
-          <ConsumerFrame state={state} viewport={previewViewport} />
-        )}
+        render={(previewViewport) =>
+          affected ? (
+            <AffectedComparison viewport={previewViewport} />
+          ) : (
+            <ConsumerFrame state={state} viewport={previewViewport} />
+          )
+        }
       />
     </ExplorerShell>
   );

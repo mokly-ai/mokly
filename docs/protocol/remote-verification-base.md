@@ -122,7 +122,7 @@ Do not add special handling for this case.
 
 ## Sync Source And Probe
 
-Run each probe and all six suite commands with the snapshot directory as the
+Run each probe and all seven commands with the snapshot directory as the
 local working directory. The Blacksmith CLI fetches its `HEAD`, which is the
 base, then copies its non-ignored source differences to the box.
 Keep the checkout root for warmup, download, SSH disconnect, status and stop.

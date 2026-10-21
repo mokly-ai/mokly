@@ -2,16 +2,26 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { expectHostPath } from "./entry_hosts.js";
+import { expectHostPath, type EntryHost } from "./entry_hosts.js";
 import type { MovedHost } from "./moved_rows.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
 
 /**
  * How one host runs the branch-point checks. The hosts of the moved cases
- * fit: Serve and the branch copy route by address, the embedded viewer opens
- * an entry by query, and only Serve captures comparisons on demand.
+ * fit: each says how it opens an entry, which page path it shows for that
+ * entry, and whether a narrow window shows the compact search control. Only
+ * Serve captures comparisons on demand.
  */
-export type BranchPointHost = Pick<MovedHost, "comparisons" | "open" | "path">;
+export type BranchPointHost = Pick<
+  MovedHost,
+  "comparisons" | "compactSearch" | "open" | "path"
+>;
+
+/**
+ * The widest viewer that shows the compact search control in place of the
+ * field, in CSS pixels, under the viewer contract.
+ */
+const COMPACT_SEARCH_WIDTH = 560;
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -128,24 +138,45 @@ export async function activateRow(page: Page, entryId: string): Promise<void> {
 }
 
 /**
- * Search the catalogue; Changes keeps only the rows the query matches. A
- * narrow viewer shows a compact control: its button opens the field, and
- * closing it again keeps the query and shows the navigation menu.
+ * Expect the search control that `host` claims at the window width: the
+ * compact control when a narrow window shows it, otherwise the field.
+ * Return whether the control is compact.
  */
-export async function search(page: Page, query: string): Promise<void> {
-  await openChanges(page);
+async function expectSearchControl(
+  page: Page,
+  host: EntryHost,
+): Promise<boolean> {
+  const compact =
+    host.compactSearch && page.viewportSize()!.width <= COMPACT_SEARCH_WIDTH;
   const field = page.locator("[data-mokly-search]");
-  const compact = page.getByRole("button", { name: "Search catalogue" });
-  const opened = !(await field.isVisible()) && (await compact.isVisible());
-  if (opened) await compact.click();
-  await field.fill(query);
-  if (opened) await page.getByRole("button", { name: "Close search" }).click();
+  const control = page.getByRole("button", { name: "Search catalogue" });
+  await expect(compact ? control : field).toBeVisible();
+  await expect(compact ? field : control).toBeHidden();
+  return compact;
+}
+
+/**
+ * Search the catalogue; Changes keeps only the rows the query matches. The
+ * compact control opens the field, and closing it again keeps the query and
+ * shows the navigation menu.
+ */
+export async function search(
+  page: Page,
+  host: EntryHost,
+  query: string,
+): Promise<void> {
+  await openChanges(page);
+  const compact = await expectSearchControl(page, host);
+  if (compact)
+    await page.getByRole("button", { name: "Search catalogue" }).click();
+  await page.locator("[data-mokly-search]").fill(query);
+  if (compact) await page.getByRole("button", { name: "Close search" }).click();
 }
 
 /** Wait until the head and the host's page path name one entry. */
 export async function expectRouted(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await expect(
@@ -154,12 +185,16 @@ export async function expectRouted(
   await expectHostPath(page, host, entry);
 }
 
-/** Open an entry on `host` and wait for its workspace head. */
+/**
+ * Open an entry on `host`, wait for its workspace head, and expect the
+ * search control that the host claims at the window width.
+ */
 export async function openEntry(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await host.open(page, entry);
   await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
+  await expectSearchControl(page, host);
 }

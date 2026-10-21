@@ -104,8 +104,11 @@ change only `styles/actions.css`. In Component with changed styles, the changed
 rule styles only Action's own output: Action and its three saved variants have
 four Changes rows, Side by side reads "Default variant · Styles this variant uses
 changed", and Welcome and Details appear only under Affected screens. Screen
-affected by a changed component opens Welcome from that list, under All, where
-Welcome stays Unmodified with no comparison band. Its Details list the
+affected by a changed component opens Welcome from that list in Side by side,
+under All, where Welcome stays Unmodified and outside Changes. Its band offers
+the comparison, and the shown view reads "Components this screen uses
+changed" over its two versions; a component in Welcome's position reads
+"Components this variant uses changed". Its Details list the
 stylesheet with the styles that apply to Welcome, link Action, and end with
 "Shared component changes affect this preview. This page has no independent
 entry in Changes." In Styles outside a

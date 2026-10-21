@@ -50,7 +50,8 @@ changed by that rule. This page test includes all nested output inside each
 changed component's occurrence. It also gets a row when Mokly cannot resolve the rule,
 such as a global style or a custom property change. Otherwise the screen is
 under the changed components' Affected screens. Those links show usage, not
-proof that every use looks different.
+proof that every use looks different, and each one opens that screen's
+comparison.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead
@@ -125,7 +126,10 @@ labelled Removed.
 
 A shown view with Changed status offers Current, Side by side, Overlay and
 Difference beneath its heading, from All as well as from Changes, and starts in
-Current. A shown view known to be unchanged reads Unmodified with no comparison.
+Current. A shown view known to be unchanged reads Unmodified with no comparison,
+unless changed components affect the screen or component: then it reads
+Unmodified and stays out of Changes, but still offers the comparison, and each
+view that uses a changed component reads "Components this screen uses changed".
 
 Comparison snapshots are generated when you select one of those options, not
 while you browse, and they capture the selected screen and its resources

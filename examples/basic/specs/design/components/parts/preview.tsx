@@ -37,11 +37,12 @@ export function ActionExample({
   );
 }
 
-export function ToolbarExample() {
+/** The Toolbar's prompt and its Action, as the branch point or the head renders them. */
+export function ToolbarExample({ before = false }: { before?: boolean }) {
   return (
     <div className="ce-toolbar-example">
       <span>{toolbarPrompt}</span>
-      <ActionExample />
+      <ActionExample before={before} />
     </div>
   );
 }

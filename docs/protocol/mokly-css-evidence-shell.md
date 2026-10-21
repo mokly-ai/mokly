@@ -82,13 +82,14 @@ rules:
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
 - A screen or component that only changed components affect stays
-  Unmodified with no Changes row. Its Details keep the full matched styles of
-  each file, link each changed component, and end with “Shared component
-  changes affect this preview. This page has no independent entry in
-  Changes.” in place of the terminal line, as
+  Unmodified with no Changes row, and its comparison band stays available.
+  Its Details keep the full matched styles of each file, link each changed
+  component, and end with “Shared component changes affect this preview. This
+  page has no independent entry in Changes.” in place of the terminal line, as
   `design/components/states/shared-impact/affected-screen` depicts. In a
   loaded comparison, each of its affected views reads the stage heading
-  "Components this screen uses changed".
+  "Components this screen uses changed", or "Components this variant uses
+  changed" for a component.
 - A whole-document page in Changes keeps its plain document pane, with no
   comparison toolbar and no stage heading. Its Details hold the same
   comparison details and files list, led by "Changes to these files may affect

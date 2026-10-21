@@ -50,7 +50,7 @@ mobile component and desktop component; none is a user-flow page.
 
 | `design/components/states/shared-impact/style-changed` | Action changed by its own styles, with affected consumers |
 | `design/components/states/shared-impact/style-outside` | Welcome row for a style outside changed Action |
-| `design/components/states/shared-impact/affected-screen` | Unmodified Welcome that changed Action affects |
+| `design/components/states/shared-impact/affected-screen` | Unmodified Welcome that changed Action affects, in Side by side |
 
 | `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
 | `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |

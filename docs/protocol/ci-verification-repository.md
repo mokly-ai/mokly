@@ -17,7 +17,7 @@ issues print as notices. Report, input, and registry errors always fail.
 `--dependency-audit strict` selects strict mode for this suite or the complete
 gate. An explicit mode flag with any other suite returns a typed error before
 subprocesses start. Release Please and dependency update pull requests select
-strict mode; the scheduled `main` audit and release publish step also stay
+strict mode; the scheduled `main` audit and read-only release preparation also stay
 strict. The [baseline contract](./dependency-audit-baseline.md) defines the
 mode selection and comparison rules. Reviewed path and expiry
 rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).

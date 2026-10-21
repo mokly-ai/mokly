@@ -28,12 +28,15 @@ export function ControlledDiffScreen({
   entryId,
   entryKind,
   eligible = true,
+  usingChanged,
 }: {
   children: ReactNode;
   comparison: ComparisonController;
   entryId: string;
   entryKind: ViewRouteKind;
   eligible?: boolean;
+  /** The axes keys of the routed views that use a changed component. */
+  usingChanged?: ReadonlySet<string>;
 }) {
   const views = useMemo(
     () =>
@@ -43,9 +46,16 @@ export function ControlledDiffScreen({
             comparison.presentation,
             entryKind,
             entryId,
+            usingChanged,
           )
         : undefined,
-    [comparison.loaded, comparison.presentation, entryId, entryKind],
+    [
+      comparison.loaded,
+      comparison.presentation,
+      entryId,
+      entryKind,
+      usingChanged,
+    ],
   );
   const documents = useComparisonDocuments(
     comparison.presentation ? comparison.loaded : undefined,
