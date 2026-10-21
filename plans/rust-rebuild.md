@@ -4952,3 +4952,37 @@ does not ask the user before the merge.
       bug, effort Small. Options: A, turn off the recreation prompt for
       private installs, Small; B, document the CI-dependent result, effort
       not recorded. Recommended: A.
+
+- [ ] Resolve user item 159 (release-lockstep review finding 1): fixed test
+      versions block the first release PR. `tests/release_config.test.ts:64`
+      requires version `0.16.0`, and
+      `tests/public_export_ratchet_git.test.ts:214` requires the audit
+      baseline `v0.15.0`, so the required tests of the first release PR
+      fail. Severity High, test, effort Medium. Options: A, derive the
+      expected versions from generated metadata and the selected tag, effort
+      not recorded; B, fixed input fixtures for the exact-version tests, and
+      live checks relative to generated metadata, Medium. Recommended: B.
+  - Fix before the first npm release.
+
+- [ ] Resolve user item 160 (W2 finding 1): Props and Usage Try again leave
+      focus on the page. Severity Low, product bug, effort Medium
+      (estimate). Options: A, document that a detail retry keeps the
+      browser's focus, effort not recorded; B, move focus to the loading
+      status, then to the panel heading, Medium (estimate). Recommended: B.
+
+- [ ] Resolve user item 161 (W2 decision 2): a slot line calls a screen
+      "this page". `packages/viewer/src/shell/workspace_props.tsx:163`
+      differs from the design's "Supplied by Welcome." in
+      `examples/basic/specs/design/components/parts/instance_details.tsx:81`.
+      Severity Low, effort not recorded. Options: A, keep it; B, name the
+      owner by its title, as the design does; C, a noun from the shared
+      entry wording, with a design first. Recommended: B.
+
+- Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
+  "Page details or saved examples changed." shows on screens. Separate
+  branch.
+- Outside the W2 review scope: `tests/browser/react_comparison_evidence.spec.ts:70`:
+  about eight test titles call a variant a "saved view". Separate branch.
+- Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
+  the Loading and recovery designs show the preview in the stage, but the
+  product shows "Loading preview…". Separate branch.
