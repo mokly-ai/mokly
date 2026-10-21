@@ -689,6 +689,22 @@ expanded frame that leaves the page collapses, so no scrim stays. The
 rejected alternative left the contract silent on that case, which allowed the
 scrim defect that the review found.
 
+**User decision 82 (2026-10-20): B.** The user: "it should still be possible
+to view the diffs for affected screens, they just don't appear in the changes
+list". A screen or component that only changed components affect, whose entry
+detail marks it comparison-eligible, offers the comparison band. It stays out
+of Changes and keeps its Unmodified status, and an Affected screens link opens
+its comparison. The rejected option A kept the band hidden and corrected the
+spec sentence that says the link opens the comparison.
+
+**Serve pane heading, requirement applied by default (user rule),
+2026-10-20:** a view also says "Components this screen uses changed" when its
+usage holds an instance of a changed component that the entry detail's
+`relatedComponents` names. The rejected alternative read only records and
+`affected` evidence. Serve's selected comparison carries no `affected` records,
+so a component's markup change left its affected consumer's views reading "No
+changes to this screen" beside a band that offers their comparison.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -797,7 +813,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
+82;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -2046,6 +2063,42 @@ Tags: ui
       move the copy checks that reached Details through it to live inputs.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
+## Milestone 10.3: Affected-only comparisons in the designs
+
+Tags: mockup
+
+- [x] User decision 82 B: depict the comparison band and its pane heading
+      on `design/components/states/shared-impact/affected-screen`, which
+      Action's Affected screens open in Component with changed styles. Update
+      the design inventories and the matrix snapshots. The artboard opens in
+      Side by side; the inventories, link expectations, and matrix snapshots
+      needed no change, because the artboard keeps its path, its links, and
+      its library components.
+- [x] Run the mockup check and smoke-test the changed pages through Serve.
+      Evidence: `.context/defaults-viewer-82b/` (mockup check log and shots).
+
+## Milestone 10.4: Affected-only comparisons in the viewer
+
+Tags: ui
+
+- [x] User decision 82 B: show the comparison band for a screen or component
+      that only changed components affect, when its entry detail marks it
+      comparison-eligible. It stays out of Changes and keeps its Unmodified
+      status. Cover the static build and Serve.
+- [x] Open that comparison from the Affected screens list.
+- [x] Head a view that uses a changed component, which the entry detail
+      names, with "Components this screen uses changed", so Serve's selected
+      comparison heads a component's markup change too. Applied by default;
+      see the Serve pane heading record.
+- [x] Keep each browser shard within its share limit. This milestone's new
+      specs put browser shard 3 one test over its limit, because
+      `static_design_library.spec.ts` (150 tests) ended that shard. Each
+      design library spec now registers one viewport, and a `_mobile` spec
+      beside it registers the other. Evidence:
+      `.context/defaults-viewer-82b/shards/`.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Evidence: `.context/defaults-viewer-82b/gate.log`.
+
 ## Milestone 11: Watch and incremental rendering
 
 - [x] Reuse unchanged encoded details across watched generation rebuilds
@@ -2331,15 +2384,22 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Patch the newly reported RUSTSEC-2026-0382 certificate distrust defect
+      with locked `rustls-webpki` 0.103.16. Keep all other dependency edges.
+      Evidence: `.context/integration-17/security-audit.log` and
+      `.context/integration-17/security-publish-tests.log`.
+
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
-      retention order, cancellation, fallback, and every charge and bound.
+      cancellation, fallback, and every charge and bound. Trims preserve the
+      earlier kept routes; skipped or trimmed views use source fallback.
       User decision 62 (2026-10-20): B now, in parallel.
       Move this item from the post-merge follow-up into Milestone 14.
       Evidence: `.context/m14-collector/observations.json`,
       `.context/m14-collector/example-parity.json`, and
       `.context/m14-collector/final-verification.json`.
       Integration: `.context/m14-collector/merge-resolution.md`.
+      Follow-up integration: `.context/m14-collector-fix1/merge-resolution.md`.
 
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
@@ -2501,6 +2561,29 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         bounded, ordered collector, is a post-merge follow-up.
         User decision 62 (2026-10-20): B now, in parallel. This later instruction
         supersedes the deferral. The collector must not delay the final pull request.
+        Collector follow-up finding 2, option A (2026-10-20): record the
+        partial-capture rule that was applied as a default, not explicit approval.
+        Inputs arrive in route order. Trims remove the last kept routes first.
+        A skipped or trimmed view is not reconsidered and uses source fallback.
+        A later view can remain even when an earlier skipped view would fit
+        the final capacity. Exact old membership and strict route priority
+        are not preserved. Options B, stop retaining after the first skip or
+        trim, and C, restore the old rule with final-capacity rerenders, remain
+        for the user. No retention rule changes in this follow-up.
+        Collector follow-up finding 1, option B (2026-10-20): matched-span
+        release observations cover all of `changes.classify`. The React fixture
+        has 5,850 views, eight render workers, and two sidecars on one host.
+        At `324fcfbb`, family peak RSS was 2,557,532 KiB over 270.069 s.
+        With the final collector code at `5107d4ce`, it was 2,014,376 KiB over
+        188.282 s. Both use Node 24.21.0 and their matching sidecar sources.
+        The baseline peak includes a 1,006,284 KiB esbuild helper before
+        capture. The collector peak includes a 702,500 KiB helper.
+        The whole classification did not regress in this sample, so option C,
+        stopping idle esbuild services after bundling, is not selected.
+        These observations set no budget or limit. Method and raw samples:
+        `.context/m14-collector-fix1/measurement-method.md` and
+        `.context/m14-collector-fix1/observations.json`. Final-commit repeat:
+        `.context/m14-collector-fix1/final-analysis.json`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2703,6 +2786,108 @@ Evidence: `.context/defaults-engine-round5/merge-resolutions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
+      all discovered browser specs to four whole-file shards in hosted CI and
+      the remote executor. Keep the 1.25 test-count share limit. Use the
+      current inventory for membership and a median cost for new specs.
+      The assignment target is within 15 percent by duration. Tests check
+      assignments and coverage, not elapsed time. Hosted confirmation belongs
+      to the hub. Scheduling inputs come from run `39455750846` at `b1f3c86f`.
+      Evidence: `.context/ci-shard-balance/partition.json` and
+      `.context/ci-shard-balance/shard-green.log`.
+
+- [x] CI round 5, item 2 (2026-10-20): move static HTTP and file delivery
+      from browser box 1 to an independent seventh Testbox command. Build
+      the source there before delivery. Require all seven command results
+      and the same five browser/viewer reports. Keep four browser shards,
+      current runner sizes, and the 30-minute Testbox job limit. User item
+      100 owns any runner or limit change. Tests cover the new command,
+      failure propagation, the all-probes barrier, and per-box cleanup.
+      Evidence: `.context/ci-shard-balance/delivery-green-node.log` and
+      `.context/ci-shard-balance/delivery-green-rust.log`.
+
+- [x] CI round 5, item 3 (2026-10-20): record hosted and remote duration
+      observations against their current guards. These measurements do not
+      change a limit, assertion, runner, or test inventory. User item 100
+      owns the remaining guard and runner decision.
+
+      Hosted run `39455750846`, commit `b1f3c86f`, observed these job minutes:
+
+      | Job | Observed minutes | Limit minutes | Three times observation |
+      | --- | ---: | ---: | ---: |
+      | Repository | 24.15 | 30 | 72.45 |
+      | Viewer | 11.27 | 30 | 33.80 |
+      | Static delivery | 18.88 | 60 | 56.65 |
+      | Browser 1 | 18.42 | 60 | 55.25 |
+      | Browser 2 | 25.22 | 60 | 75.65 |
+      | Browser 3 | 11.50 | 60 | 34.50 |
+      | Browser 4 | 19.67 | 60 | 59.00 |
+
+      Repository, Viewer, and Browser 2 lack the required three-times margin.
+      The native jobs failed and do not establish successful typical durations.
+      The latest previous Node 22 remote run at `a3ede4bd` observed repository
+      16.20, viewer 7.16, and browser 1 to 4 at 18.55, 23.70, 9.97, and 9.63
+      minutes against 30-minute job guards. Browser 1 included both delivery
+      modes. Browser 2 failed in the unrelated React watch test. A prior
+      browser-1 command at `3d07196e` ended after 30.55 minutes when Testbox
+      reached its job limit. These command observations exclude preparation
+      and are not successful gate acceptance.
+      The new current-inventory assignments contain 339, 515, 695, and 700 tests
+      against a 703-test cap. Estimated test work is 10.258 minutes each,
+      with a 0.005-percent maximum/minimum difference. Two new specs use
+      the median cost. Hosted confirmation belongs to the hub.
+      Evidence, exact trees, source reports, and final remote observations:
+      `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
+
+- [x] CI round 5 audit follow-up (2026-10-20): update `rustls-webpki` from
+      0.103.15 to 0.103.16 for newly published RUSTSEC-2026-0382. The live
+      remote audit reproduced the certificate-verification advisory. Keep
+      every exception and unrelated lockfile edge unchanged. The live audit
+      and publication/TLS tests pass with the patch.
+      Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
+      `webpki-dependents.log`, and `webpki-green.log`.
+
+- [x] CI round 5 measurement follow-up (2026-10-20): calibrate scheduling
+      costs with both the hosted per-test observations and remote run
+      `20261020T191118Z-972099` at `300c4dae`. Include each report's measured
+      fixture overhead in its cost allocation. The first placement passed
+      all 2,249 browser tests but missed the 15-percent duration target.
+      Its browser command minutes were 20.83, 16.43, 14.04, and 17.36 against
+      30-minute Testbox guards. Playwright minutes were 15.90, 13.15, 10.24,
+      and 13.88. Viewer passed in 9.75 command minutes. Independent delivery
+      passed both 645-case modes in 17.70 command minutes. Repository stopped
+      on the new Rust advisory after 6.60 minutes. These command observations
+      exclude preparation. The five-report aggregate passed and cleanup left
+      zero boxes, but the complete gate failed the repository command.
+      Updated assignments contain 445, 649, 641, and 514 tests under the same
+      703-test cap. Replaying their test costs gives a 10.9-percent spread for
+      the hosted sample and 9.1 percent for the remote sample. These estimates
+      require the final run and the hub's hosted measurement for confirmation.
+      Evidence: `.context/ci-shard-balance/remote-summary.json`,
+      `calibration-candidates.json`, and `calibrated-partition.json`.
+
+- [x] CI round 5 review finding 1B: repair a feasible count-cap overflow
+      with deterministic whole-file capacity search. Preserve measured-cost
+      placement when it fits. Keep every test and the existing cap failure
+      when no valid placement exists. The five-file regression failed before
+      the fix and passed afterward. Finding 2A corrects the stale six-Testbox
+      responsibility to seven. Evidence: `.context/ci-shard-balance/review.md`,
+      `review-cap-red.log`, and `review-cap-green.log`.
+
+- [x] CI round 5 final measurement calibration (2026-10-20): include all
+      three successful browser report sets in the mean per-test scheduling
+      costs. The complete remote gate at `ec47233e` passed seven commands,
+      five reports, and cleanup, but command minutes 15.25, 14.48, 15.98,
+      and 21.63 still missed the 15-percent balance target. Shard 4's median
+      file duration was 1.31 times its prior sample. Its fixture overhead was
+      4.99 minutes, against 2.08 to 2.62 elsewhere. Keep fixture and job times
+      as separate observations rather than distributing one box's overhead
+      across future file costs. The refreshed assignments have 362, 573, 668,
+      and 646 tests under the same 703-test cap. Replaying per-test work gives
+      spreads of 8.4, 10.1, and 4.6 percent for the three measured samples.
+      Actual hosted acceptance stays with the hub. Evidence:
+      `.context/ci-shard-balance/final-calibration.json` and `timings.md`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
@@ -2809,6 +2994,61 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         parser context closes the surviving matching ancestor and keeps later
         escaped text inert. Evidence: `.context/defaults-engine-round1/foreign-end-red.log`
         and `.context/defaults-engine-round1/foreign-end-green.log`.
+
+  - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
+    calls `render_all` in `compare_captured` after `build_prepare` validated
+    the head. Evicted head views can compose again. Separate branch.
+  - [x] F16: repair hosted native verification startup. Use portable terminal
+        pointers, resolve Windows Node shims at both xtask process boundaries,
+        and bypass the checkout cache on non-Linux native runners. Replace
+        Linux-only liveness and hand-built file URLs in affected test fixtures.
+        Audit: `.context/f16/platform-audit.md`. The hub must rerun macOS and
+        Windows native jobs on `rebuild/native-ci-fixes`.
+  - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
+    Windows executable suffixes. Selected Native bypasses this path.
+    Separate branch before claiming Windows remote-executor support.
+  - [x] Fix CI release checks hub review finding 4 with option A: name read-only
+        release preparation as the npm and Rust audit owner in the three
+        affected verification documents. Publication uses the checked archives.
+        Split the long xtask README's remote reference into a linked page,
+        preserving its content and the existing heading anchors.
+  - [x] Fix CI release checks hub review finding 5 with option A: state that
+        the Rust audit's date and locked-version checks require a reviewed
+        script change even when the approved advisory ID is absent.
+  - [x] Fix CI release checks hub review finding 6 with option A: state the
+        Node floor and excluded Node 24 versions as current product facts.
+  - [x] Fix CI release checks hub review finding 7 with option B: run bootstrap
+        fixture Git commands with an empty global configuration and system
+        configuration disabled. Reuse the shared isolated Git environment.
+        Reproduce global commit signing, tag signing, and hooks before the fix.
+        Cover system hooks too. Evidence: `.context/ci-release-fixes/finding7-red.log`,
+        `finding7-red-repeat.log`, `finding7-red-system.log`, and `finding7-green.log` there.
+  - [x] Apply the authorized CI release checks hub hardening: disable credential
+        persistence in both native-build checkouts. Cover both checkout actions
+        in the existing native release workflow test. Preserve build behavior.
+        Evidence: `.context/ci-release-fixes/native-checkout-red.log` and
+        `.context/ci-release-fixes/native-checkout-green.log`.
+  - CI release checks hub review finding 1: a stale PR base can keep an old
+    release check green. Severity Medium, effort Small. Recommended: A, require
+    branches to be up to date before merge. The hub owns the user decision.
+  - CI release checks hub review finding 2: viewer source comparison misses
+    external build inputs and includes unpublished Markdown. Severity Medium,
+    effort Medium. Recommended: C, compare packed viewer bytes with the
+    published archive. The hub owns the user decision.
+  - CI release checks hub review finding 3: effective severity and target filters
+    can hide Rust advisories. Severity Low, effort Small. Recommended: A,
+    reject those filters. The hub owns the user decision.
+  - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
+    a healthy Node 22 file-delivery run before report download. Separate branch.
+    The hub must decide the Testbox guard before any timeout change.
+    Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
+    `.context/ci-release-fixes/remote-floor-final.log`.
+  - `tests/browser/large_watch.spec.ts`: `large watch delivers browser evidence
+for react` hit `Test timeout of 300000ms exceeded` during the Node 22
+    remote gate. The unchanged isolated Node 22 rerun passed. Suspected source:
+    real watcher readiness or runner contention, not proven. Separate branch.
+    Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
+    and `.context/ci-release-fixes/watch-react-rerun.log`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
@@ -2835,30 +3075,55 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         No complete static-delivery, daily Rust audit, or native job sample is
         available. The hub owns hosted measurements after integration.
         Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
-  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
-        update, whichever comes first. CI gates hub review finding 9A tracks
-        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
-        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
-        exposure and the available fixes before retaining the exception.
-  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
-    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
-    viewer version on the release PR when its source differs from its tag.
-    The hub owns the user decision.
-  - CI gates hub review finding 3: viewer-only releases have no publish path.
-    Severity Medium, effort Medium. Recommended: B, reject that release PR
-    before tags exist. The hub owns the user decision with finding 2B.
-  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
-    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
-    The hub owns the user decision.
-  - Follow-up: isolate the release Rust audit from the privileged publish job.
-    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
-    daily audit isolation in finding 1A. The hub owns the user decision.
-  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
-    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
-    the design evidence upload. The hub owns the user decision.
-  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
-    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
-    the npm exception expiry and dependency-path checks. The hub owns the user decision.
+  - [x] User decision 79 (2026-10-20): apply option B for CI gates hub review
+        finding 9. Enforce the RUSTSEC-2026-0235 review conditions in the shared
+        Rust audit command. Fail after 2027-01-31 UTC, when locked `lightningcss`
+        changes from 1.0.0-alpha.72, or when another advisory is ignored.
+        Replace the open manual review task with tests for the date boundary,
+        dependency versions, effective ignore settings, and command failures.
+        The alternative was reminder-only tracking. Keep every other advisory
+        failing and retain informational warnings. Evidence:
+        `.context/ci-release-checks/decision79-green.log` and
+        `.context/ci-release-checks/decision79-smoke.log`.
+  - [x] User decision 77 (2026-10-20): apply option B for CI gates hub review
+        findings 2 and 3. Reject release PRs that keep a changed viewer's version
+        or release the viewer without the CLI. Compare reused viewer source
+        with its existing tag, excluding tests. Reject before tags exist instead
+        of rejecting publication, relying on commit discipline, or adding a
+        viewer-only publish path. Tests cover stale base changes and both valid
+        release forms. Evidence: `.context/ci-release-checks/decision77-red.log`
+        and `.context/ci-release-checks/decision77-green.log`.
+  - [x] User decision 78 (2026-10-20): apply option B for CI gates hub review
+        finding 8. Exclude all Node 23 releases from both engine ranges, the
+        lockfile, and the shim. Keep the 22.15.0 floor and existing Node 24
+        exclusions. Reject the unsupported line before native lookup instead
+        of excluding only early Node 23 versions or adding a sidecar failure.
+        Align live guides and package docs. Preserve the root README's setup
+        and code reference in a linked development guide to keep files short.
+        Evidence: `.context/ci-release-checks/decision78-red.log` and
+        `.context/ci-release-checks/decision78-green.log`.
+  - [x] User decision 81 (2026-10-20): apply option B for CI gates hub review
+        finding 1. Move the release Rust audit and all verification, packing,
+        and consumer smokes into read-only preparation. Publication requires
+        that job and rechecks its exact saved archives. Disable publication
+        dependency lifecycle scripts and checkout credential persistence.
+        Keep the npm environment and OIDC token only in publication. Use the
+        same resolved Node version in both jobs. This removes privileged build
+        work instead of leaving complete-gate fallback in the publish job.
+        Retain original-run retry selection and immutable archive checks.
+        Evidence: `.context/ci-release-checks/decision81-red.log` and
+        `.context/ci-release-checks/decision81-green.log`.
+  - [x] User decision 80 (2026-10-20): add no upload policy test for CI gates
+        hub review finding 5C. Keep the existing design upload overwrite fix
+        and the specific release workflow assertions. The alternative was a
+        new general policy check for every fixed-name upload. The user chose
+        the direct fixes without that additional gate.
+  - [x] Keep decision 81's existing shell and toolchain checks on the moved
+        preparation workflow. The complete gate exposed the shell test's old
+        workflow lookup. Preserve its tagged-commit assertion and include the
+        moved steps in the existing npm and Rust pin inventories.
+        Evidence: `.context/ci-release-checks/workflow-location-red.log` and
+        `.context/ci-release-checks/workflow-location-green.log`.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
@@ -3168,15 +3433,55 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         (`0ef0e0a3`) are applied with reasons: they restore checks that this
         branch dropped, or finish item 6. Finding 28 is corrected in the
         round's sweep rows.
-  - F9b review finding 29 for the user: two test modules export
-    `branchPointCases` with different lists. Severity Low, effort Small.
-    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b review finding 29: two test modules exported
+        `branchPointCases` with different lists. Decided B by the
+        orchestrator on 2026-10-20, as follow-up F15 item 1. The delivery
+        list `branchPointDeliveryCases` reads each removed record's path and
+        parent title from the shared cases and keeps its selectors and
+        texts. It equals the old list, and its guards stop a missing case.
   - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
         `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
-  - F9b re-review finding 30 for the user: the mobile embedded runs do not
-    assert a narrow viewer, so a wide viewer would pass them again. Severity
-    Low, effort Small. Recommended: B, a host marker that makes the search
-    helper expect the compact control or the field.
+  - [x] F9b re-review finding 30: the mobile embedded runs did not assert a
+        narrow viewer. Decided B by the orchestrator on 2026-10-20, as
+        follow-up F15 item 2. Each host's `compactSearch` marker says
+        whether a narrow window shows the compact search control. Opening an
+        entry and searching expect the control or the field from it. Without
+        `responsive=1`, all ten mobile embedded runs fail and the desktop
+        runs pass.
+  - [x] F15 review, on 2026-10-20: finding 32, a Serve spec header that
+        claimed a capture on every run, is fixed by option A. The full
+        report is `.context/m10/f15/review_1.md`.
+  - [x] F15 merge of the rebuild tip `b1f3c86f`, on 2026-10-20: the tip
+        moved the branch-point section of the browser guide to
+        `tests/browser/comparison/README.md`, and F9b item 7 had moved the
+        edited viewer README passages to `packages/viewer/docs/`. The merge
+        carries each side's edits to the passage's new place. Merge
+        decisions: `.context/m10/f15/merge2-decisions.md`.
+  - F15 review finding 33 for the user: the delivery spec selects the
+    reused-parent check by its case name. Severity Low, effort Small.
+    Recommended: A, add the document path to the case's delivery facts.
+  - F15 review finding 34 for the user: the delivery pairs repeat the shared
+    moves. Severity Low, effort Small. Recommended: B, derive each moved
+    pair's previous path and flag from the case's moves.
+  - Outside the F15 review scope:
+    - `packages/viewer/src/viewer/styles.ts`: the `mokly-top-host` container
+      query of the compact search uses `35rem`, so a host page with another
+      root font size leaves the 560px compact search width that
+      `docs/protocol/mokly-viewer.md` requires. Separate branch.
+  - [x] F15 re-review, on 2026-10-20: finding 35, a live plan line that
+        cited a line of `styles.ts` that the merge shifted, is fixed by
+        option B. The line names the rule now. The full report is
+        `.context/m10/f15/review_2.md`.
+  - Outside the F15 re-review scope:
+    - `tests/browser/serve_comparison_ui.ts`: the header says that Serve
+      captures each selected comparison on demand, but Serve returns a kept
+      comparison when the same entry is selected again. Separate branch.
+    - `plans/rust-rebuild.md`: a live line cites
+      `docs/protocol/mokly-component-controls.md:69`, but the tip moved the
+      local storage rule to line 64. Separate branch.
+    - `plans/rust-rebuild.md`: Decision 21 still names entry detail v1, but
+      the tip moved the code and `docs/protocol/mokly-shell-delivery.md` to
+      v2 without an amendment note. Separate branch.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
@@ -3211,6 +3516,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
             `viewer_branch_point.spec.ts` in the embedded viewer through both
             frame adapters. Serve waits for each on-demand comparison, and
             the embedded viewer checks the selected entry without an address.
+      - [x] F15 merge of the rebuild tip `e709a7cd`, on 2026-10-20: round 4
+            of the D1 delegate and F9b item 6 ran the cases on the same three
+            hosts. The merge keeps the D1 specs and their page path checks,
+            moves the F9b checks into them, and removes the two F9b host
+            specs. Merge decisions: `.context/m10/f15/merge-decisions.md`.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
@@ -3389,15 +3699,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        allowance.
   - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
     1. A screen or component that only changed components affect offers no
-       comparison in the shell. Severity Medium, effort Medium. Its entry
-       detail marks it comparison-eligible and the static build writes both
-       snapshots, but the shell hides the band because its own views are
-       unchanged. `mokly-component-changes.md` says an Affected screens link
-       opens the comparison; `mokly-component-workspace-design.md` says
-       Unmodified omits the band. Recommended: B, offer the comparison for
-       such an entry, open it from Affected screens, and depict its pane
-       heading. Option A keeps the band hidden and corrects the first
-       sentence.
+       comparison in the shell. Severity Medium, effort Medium. Settled on
+       2026-10-20 by user decision 82 B, which Milestones 10.3 and 10.4
+       apply: the shell offers the comparison for such an entry, opens it
+       from Affected screens, and the design depicts its pane heading.
     2. Related components follow the parent, not the changed views.
        Severity Medium, effort Medium. The affected records name the parent
        as the consumer for every view of a component, so `projection_affected.rs`
@@ -3410,14 +3715,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        evidence item names, in place of the parent, and update the Status
        Lines rule. Option A documents that only the parent page explains the
        shared change.
-  - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
-    2026-10-20: no artboard shows the pane heading “Components this screen
-    uses changed”. Severity Low. The shell shows it in a loaded comparison
-    of a screen in Changes, beside a changed view, on an unchanged view that
-    keeps a component-owned record or that the affected records name. Draw
-    that comparison when follow-up 1 above settles: one changed and one
-    affected view, with the inventories and the matrix snapshots. The new
-    mockup is Large.
+  - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+        2026-10-20: no artboard shows the pane heading “Components this
+        screen uses changed”. Severity Low. Milestone 10.3 closes it: the
+        `design/components/states/shared-impact/affected-screen` artboard
+        depicts that heading in its loaded comparison.
   - [x] Hub review of `rebuild/defaults-viewer`, fixed on 2026-10-20 in
         `rebuild/defaults-viewer-fix1`: finding 2, an expanded step frame
         left a page scrim (`1ea520af`, B); finding 3, unused lookup
@@ -3427,6 +3729,24 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         component line now follows the Status Lines rule (`69ffa907`), the
         catalogue column stays at 900px (`eeaea061`), and the dead workspace
         path for a catalogue without published records is gone (`37e596df`).
+  - User decision 82 follow-ups for the user, raised on 2026-10-20:
+    1. A moved consumer of a changed component offers no comparison.
+       Severity Low, effort Small. Its Affected screens link asks for the
+       comparison, but Changes lists it as a pure move with unchanged views,
+       so it opens Current, and its Details end with "No changes to this
+       screen." Recommended: B, apply the affected rule to every entry whose
+       own views are all unchanged and whose detail names changed components,
+       with the shared-component sentence. Option A keeps the rule to entries
+       that Changes does not list.
+    2. No artboard depicts an affected-only component's comparison, which
+       reads "Components this variant uses changed". Severity Low, effort
+       Large, because it is a new artboard. Recommended: B, draw it when the
+       design's Affected screens list also shows components, as the viewer's
+       list does. Option A keeps the component case in the design copy only.
+  - Outside the scope of user decision 82:
+    `examples/basic/specs/design/components/parts/component_usage.tsx` lists
+    only screens under "Affected screens", while the viewer lists screens and
+    components under "Affected screens and components". Separate branch.
   - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
     user: `HistoricalManifest` has no user and no published export since
     `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still

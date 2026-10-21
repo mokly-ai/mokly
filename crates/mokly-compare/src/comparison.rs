@@ -13,6 +13,7 @@ use mokly_model::review_order;
 use crate::comparison_attribution::{self, ViewInput};
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonCounts, ComparisonRequest, ComparisonResult};
+use crate::comparison_views;
 use crate::error::Result;
 use crate::implementation::{self, OwnImpact};
 use crate::move_context::RenderedMoves;
@@ -24,7 +25,6 @@ use crate::use_case_impact;
 use crate::{
     affected, entry_classification, review_projection, root_impact, snapshots, source_validation,
 };
-use crate::{comparison_capture, comparison_views};
 
 /// Injected move policy and byte-bounded parse cache. It retains no parsed view set.
 pub struct Engine {
@@ -42,16 +42,6 @@ impl Comparison for Engine {
         before: Arc<dyn RenderGeneration>,
         after: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
-        self.compare_captured(request, before, after)
-    }
-    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
-    fn compare(
-        &self,
-        request: &ComparisonRequest,
-        before: Arc<dyn RenderGeneration>,
-        after: Arc<dyn RenderGeneration>,
-    ) -> Result<ComparisonResult> {
-        let before = comparison_capture::capture(before).compare()?;
         self.compare_captured(request, before, after)
     }
 }

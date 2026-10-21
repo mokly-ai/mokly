@@ -37,6 +37,7 @@ jobs:
               )
             }}
         run: |
+          echo "release-pull-request=$RELEASE_PULL_REQUEST" >> "$GITHUB_OUTPUT"
           if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
             echo 'node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
             echo 'verification-runtimes=node-22.15.0,node-24' >> "$GITHUB_OUTPUT"
@@ -54,6 +55,11 @@ jobs:
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
+      - name: Check release pull request components
+        if: steps.profile.outputs.release-pull-request == 'true'
+        env:
+          RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/release/check-pr.mjs "$RELEASE_BASE_SHA"
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -188,6 +194,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: ${{ runner.os != 'Linux' && 'true' || 'false' }}
         with:
           fetch-depth: 0
       - name: Set up Node.js

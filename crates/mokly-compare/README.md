@@ -96,9 +96,9 @@ at an old path supplies no destination.
 Its timing spans count final view states without recording source data.
 It validates and captures the base through one ordered collector. Each base
 view supplies its validated document and closure without a second render.
-Base preparation passes that result through the explicit prepared-base
-comparison entry point. An uncaptured fallback also uses that entry point,
-so a summary that exceeds the capture bound does not start another pass.
+Base preparation passes that result to `Comparison::compare_prepared`.
+An uncaptured fallback also uses that entry point, so a summary that exceeds
+the capture bound does not start another pass.
 Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and
@@ -114,8 +114,8 @@ and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
 `DEFAULT_BASE_CAPTURE_BYTES` sets a 256 MiB retention budget. It charges encoded
 payloads, Rust metadata, closures, route keys, and conservative map overhead.
-The collector accounts for growing summary storage before retaining another
-input. Later candidates yield space to summary and generated-resource charges.
+The collector accounts for each batch's growing summary storage before
+retaining its inputs. Later kept candidates yield space to summary and generated-resource charges.
 Final retention uses the original charges in route order. A partial capture
 can use fallback sooner when final summary storage removes candidate space.
 Inputs that do not fit read from the pinned source. Head reads use the original

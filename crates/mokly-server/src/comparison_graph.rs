@@ -15,7 +15,6 @@ use mokly_graph::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     TemporaryDocument,
 };
-use mokly_graph::workers::ComparisonWorker;
 use mokly_model::data::Props;
 use mokly_model::material::digest;
 use mokly_model::namespace::generated;
@@ -61,11 +60,6 @@ impl GeneratedResources for FrozenResources {
         self.inner.is_document(route)
     }
 }
-impl ComparisonWorker for FrozenResources {
-    fn input(&self, route: &str) -> Result<ComparisonDocument> {
-        self.comparison_input(route)
-    }
-}
 impl RenderGeneration for FrozenResources {
     fn check_cancelled(&self) -> Result<()> {
         self.inner.check_cancelled()
@@ -84,19 +78,6 @@ impl RenderGeneration for FrozenResources {
     }
     fn catalogue(&self) -> &PreparedCatalogue {
         self.inner.catalogue()
-    }
-    fn comparison_parallelism(&self) -> usize {
-        self.inner.comparison_parallelism()
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.inner.schedule_comparison(routes, worker)
-    }
-    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
-        self.schedule_comparison(routes, self).into_iter().collect()
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.inner.render(route)?;

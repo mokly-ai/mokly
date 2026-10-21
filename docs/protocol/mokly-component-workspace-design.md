@@ -82,7 +82,8 @@ tab, including the existing explicit empty and unavailable states.
 ## Comparison Availability
 
 Across the complete design catalogue, comparison controls require an explicit
-change state; the shared header defaults to omitting them. Their band always has
+change state, or a screen that only changed components affect; the shared
+header defaults to omitting them. Their band always has
 an opaque background. Browse/tag-picker, ignored-only, and
 empty designs keep Current without comparison controls.
 
@@ -93,10 +94,13 @@ effective displayed scheme before reading that state: a light-only preview uses
 Light status and marks while the catalogue's Dark preference stays selected.
 One view maps review states to Added, Changed, Removed, or Unmodified; Both uses
 that priority order. Changed is eligible, as is Removed only for a component
-variant. Missing or nonmatching evidence keeps status and independently
-supplied eligibility; never derive one from the other. Axis, entry, and evidence
-updates recompute the decision. Unmodified omits the band and uses control marks
-plus `Changed views` for changes elsewhere. Removed screens show their badge
+variant. An entry that Changes does not list stays eligible while it shows
+Unmodified when its entry detail marks it comparison-eligible, because changed
+components affect it. Missing or nonmatching evidence keeps status and
+independently supplied eligibility; never derive one from the other. Axis,
+entry, and evidence updates recompute the decision. Any other Unmodified entry
+omits the band and uses control marks plus `Changed views` for changes
+elsewhere. Removed screens show their badge
 without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
@@ -145,8 +149,10 @@ Its `design/components/states/shared-impact/style-changed` and `design/component
 siblings depict a changed Action and a screen styled outside it; each changed
 file lists its outcomes under that file. Its
 `design/components/states/shared-impact/affected-screen` sibling depicts
-Unmodified Welcome, which only the changed Action affects; its Details end with
-the shared-component sentence in place of the no-changes line.
+Unmodified Welcome, which only the changed Action affects, in Side by side: its
+band offers the comparison, the shown view reads "Components this screen uses
+changed", and its Details end with the shared-component sentence in place of
+the no-changes line.
 
 Use structured evidence: entry/variant state, one sentence per direct reason,
 the component-level changed-file list and style outcomes, selected-variant

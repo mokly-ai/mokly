@@ -25,8 +25,8 @@ fn terminal() -> (File, File) {
             &mut master,
             &mut slave,
             ptr::null_mut(),
-            ptr::null(),
-            ptr::null(),
+            ptr::null_mut(),
+            ptr::null_mut(),
         )
     };
     assert_eq!(result, 0);

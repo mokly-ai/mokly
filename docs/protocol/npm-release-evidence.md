@@ -13,7 +13,8 @@ sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
 `main`, whose head can be newer than the tag, and the suite runners require
 reports to name the checked-out commit.
 
-Both modes run the live workspace dependency audit after `npm ci`. Evidence mode
+Both modes run the live npm and Rust audits in read-only preparation after
+dependency installation. Evidence mode
 does not treat an earlier audit as current security evidence. Complete mode then
 runs the complete gate, whose first operation repeats that audit by design.
 
@@ -77,9 +78,9 @@ proving only the test files present in another tree.
 Evidence selection produces one of three outcomes:
 
 - `applicable`: a candidate passes the job, artifact, identity, aggregate, and
-  live Node test and Playwright inventory checks. The publish job skips Rust and `cargo xtask check --dependency-audit strict`
-  and continues with
-  exact-artifact checks. It installs Chromium for the packed viewer smoke.
+  live Node test and Playwright inventory checks. Preparation skips the complete
+  gate and continues with exact-artifact checks. It still runs the fresh Rust
+  audit and installs Chromium for the packed viewer smoke.
 - `absent`: no candidate exists, a listing or download has a transport failure,
   the required job is unavailable, artifacts are missing or expired, the
   evidence commit cannot be resolved, or its tree differs from the tag. The
@@ -119,6 +120,11 @@ workflow step result is the authority for whether publishing may continue.
 
 ## Publish Boundary And Timing
 
+Read-only preparation owns audits, verification, package builds, and consumer
+smokes. Publication requires successful preparation and rechecks its saved
+archives before it uses npm publication credentials. Publication installs no
+dependency lifecycle scripts and performs no build or smoke fallback.
+
 Verification selection does not replace release-specific checks. Both modes
 verify immutable local and remote tags, run the live audit, download the
 platform archives from the build matrix, pack and inspect the exact viewer and
@@ -127,6 +133,6 @@ existing registry versions, publish with trusted provenance in the
 [publication order](./npm-release.md#release-build-matrix-and-publication-order),
 and verify registry bytes and attestations.
 
-Evidence mode removes the complete gate from the publish job, so a release
+Evidence mode removes the complete gate from preparation, so a release
 costs the release-specific work alone. Artifact retention is 14 days, so older
 releases take the complete fallback.
