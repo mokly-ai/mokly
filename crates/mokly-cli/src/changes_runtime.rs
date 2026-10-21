@@ -33,7 +33,10 @@ use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
 use crate::changes_static::StaticBase;
 
-#[expect(clippy::too_many_arguments, reason = "the composition root passes independent runtime seams")]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the composition root passes independent runtime seams"
+)]
 pub(super) fn service(
     runtime: Arc<Runtime>,
     inputs: Arc<dyn InputTree>,
