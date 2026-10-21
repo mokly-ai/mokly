@@ -103,3 +103,58 @@ fn npm_interpreters_also_ignore_relative_path_entries() {
         String::from_utf8_lossy(&output.stdout)
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn install_environment_removes_mokly_token() {
+    let Some(_) = std::env::var_os("MOKLY_ENV_PROBE") else {
+        return;
+    };
+    let executable = std::path::PathBuf::from(std::env::var_os("MOKLY_ENV_PROBE_PATH").unwrap());
+    let temporary = executable.parent().unwrap();
+    let spawner: &dyn mokly_compare::commands::Spawner = &mokly_compare::process::SystemSpawner {
+        groups: std::sync::Arc::new(mokly_platform::processes::SystemProcessGroups),
+    };
+    let mut child = spawner
+        .spawn(&mokly_compare::commands::Command {
+            program: "npm".into(),
+            args: vec!["--version".into()],
+            directory: temporary.to_owned(),
+            timeout: std::time::Duration::from_secs(120),
+            byte_limit: None,
+            size_root: None,
+            cache: None,
+        })
+        .unwrap();
+    assert_eq!(child.finish().unwrap().stdout, b"unset");
+}
+
+#[cfg(unix)]
+#[test]
+fn environment_probe_runs_with_a_token_and_absolute_manager_path() {
+    let temporary = tempfile::tempdir().unwrap();
+    let executable = temporary.path().join("npm");
+    std::fs::write(
+        &executable,
+        b"#!/bin/sh\nprintf '%s' \"${MOKLY_TOKEN-unset}\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "install_environment_removes_mokly_token",
+            "--nocapture",
+        ])
+        .env("MOKLY_ENV_PROBE", "1")
+        .env("MOKLY_TOKEN", "secret")
+        .env("PATH", temporary.path())
+        .env("MOKLY_ENV_PROBE_PATH", temporary.path().join("npm"))
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}

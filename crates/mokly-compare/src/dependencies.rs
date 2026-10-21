@@ -78,17 +78,15 @@ impl Dependencies for DependencyTiers {
                 root.validate_version(&version)?;
             }
             let node_version = if request.install_scripts {
-                String::from_utf8_lossy(
-                    &self.commands.run(&Command {
-                        program: "node".into(),
-                        args: vec!["--version".into()],
-                        directory: request.source_root.clone(),
-                        timeout: deadline.saturating_sub(self.clock.now()),
-                        byte_limit: None,
-                        size_root: None,
-                        cache: None,
-                    })?,
-                )
+                String::from_utf8_lossy(&self.commands.run(&Command {
+                    program: "node".into(),
+                    args: vec!["--version".into()],
+                    directory: request.source_root.clone(),
+                    timeout: deadline.saturating_sub(self.clock.now()),
+                    byte_limit: None,
+                    size_root: None,
+                    cache: None,
+                })?)
                 .trim()
                 .to_owned()
             } else {
