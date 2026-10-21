@@ -4930,6 +4930,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   then CLI; verify each registry package.
 - Reset Mokly Cloud and republish its catalogue with the released CLI.
 - Decide on a WebAssembly fallback for platforms without a native package.
+- Optional hardening of base installs, which the user may choose later: 122 C,
+  a Yarn 4.14 floor; 141 C, no unscoped Yarn credentials, and a fallback when
+  a base `.yarnrc.yml` sets `npmScopes`; and 142 B, an absolute Git program
+  and no Git transport for npm base installs.
 
 ### Open user items, deferred by the user on 2026-10-21
 
