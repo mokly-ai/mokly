@@ -3172,7 +3172,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       fails on a ticked item with an open child, Medium. Recommended: B. B
       adds a gate, so it needs the user's approval.
   - User decision 68 (2026-10-21): A. No plan check is added.
-- [ ] Resolve user item 126 (audit item 5, wider fix C): a check for
+- [x] Resolve user item 126 (audit item 5, wider fix C): a check for
       milestone and history words in protocol pages. Three protocol passages
       used plan words against the end-state rule: "Compilation redesign is
       deferred" in `mokly-timings.md`, "Decision 56" and "M14" in
@@ -3183,6 +3183,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       references in `docs/protocol`, such as M and a number, "Milestone",
       and plan decision numbers, with an allowlist for real terms, Medium.
       Recommended: B. B is a new lint, so it needs the user.
+  - User decision 126 (2026-10-21): A. No check for plan words is added.
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
