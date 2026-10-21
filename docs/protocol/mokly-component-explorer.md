@@ -80,7 +80,8 @@ Used by links are shell-owned `/view/<path>/` URLs; do not overload the
 logical fragment grammar with component prop JSON or variant suffixes.
 Affected-consumer destinations use the
 [branch-point lookup](./mokly-branch-point-lookup.md#reference-sides) and carry
-explicit comparison eligibility. A removed screen link opens its Removed
+explicit comparison eligibility. An Added consumer link opens Current without
+a comparison query because its view has no base side. A removed screen link opens its Removed
 state, showing its [previous version](./mokly-removed-previews.md) without a
 comparison query; an eligible removed component variant may request its
 comparison with the missing current side. The destination validates its view

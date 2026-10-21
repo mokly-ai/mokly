@@ -152,8 +152,10 @@ transferred variant, case-only renames, a document that reuses a removed
 component's path, and the affected destinations of user decision 103 C under
 `branch/impact/`. There the changed Tally is used by Meter and its variant,
 which stay out of Changes, by Slip, a pure move, and by Ledger, which Changes
-lists because a desktop-only paragraph changes. Each consumer's views that use
-Tally stay unchanged. The moved consumers also retain distinct base and head SVG
+lists because a desktop-only paragraph changes. These consumers' views that use
+Tally stay unchanged. New consumer exists only in the current commit and has
+Added views. Its Affected link opens Current without a comparison request.
+The moved consumers also retain distinct base and head SVG
 bytes. The case-only entries use no changed styles. The moved parent's folder
 has its own page, an unchanged component index. Both hosts below use the
 same authored sources. The cases come from `tests/fixtures/branch_point_cases.json`,
@@ -222,6 +224,7 @@ A pure move is included even when its kind is `unmodified`.
 | `impact/meter/default`             | —                                | unmodified   | no       | Affected-only variant consumer                   |
 | `impact/archive/slip`              | `impact/slip`                    | unmodified   | yes      | Pure-moved screen consumer                       |
 | `impact/ledger`                    | —                                | changed      | yes      | Consumer whose desktop view alone changed        |
+| `impact/new`                       | —                                | added        | yes      | Added consumer opens Current without comparison  |
 | `moves/current/receipt`            | `moves/previous/receipt`         | unmodified   | yes      | Pure-moved screen                                |
 | `moves/current/action`             | `moves/previous/action`          | unmodified   | yes      | Moved component parent                           |
 | `moves/current/action/primary`     | `moves/previous/action/primary`  | unmodified   | yes      | Unmodified moved variant                         |

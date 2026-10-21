@@ -19,7 +19,12 @@ use super::support::{
     classified, entry, paired_result, result, transferred_variant_result, with_lookup,
 };
 
-fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
+/// One recorded component use in the selected viewport.
+pub(super) fn evidence_at(
+    side: ReviewSide,
+    path: &str,
+    viewport: Viewport,
+) -> AffectedUsageEvidence {
     AffectedUsageEvidence {
         side,
         context: ComponentUsageContext {
@@ -30,7 +35,7 @@ fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
                 props: None,
                 supplied_slots: None,
             },
-            viewport: Viewport::Desktop,
+            viewport,
             color_scheme: ColorScheme::Light,
         },
         via: vec![AffectedInstance {
@@ -40,7 +45,13 @@ fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
     }
 }
 
-fn links(
+/// One recorded component use in the Desktop Light view.
+pub(super) fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
+    evidence_at(side, path, Viewport::Desktop)
+}
+
+/// Project affected links and verify their own consumer identities.
+pub(super) fn links(
     result: &mut ComparisonResult,
     consumer: &str,
     evidence: Vec<AffectedUsageEvidence>,

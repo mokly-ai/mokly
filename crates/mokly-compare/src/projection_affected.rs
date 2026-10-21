@@ -102,7 +102,12 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                 instance_key: instance.instance_key.clone(),
                 direct: evidence.via.len() == 1,
                 removed: target.removed,
-                comparison_eligible: context.can_compare(&target.metadata.path, kind),
+                comparison_eligible: context.view_can_compare(
+                    &target.metadata.path,
+                    kind,
+                    evidence.context.viewport,
+                    evidence.context.color_scheme,
+                ),
             };
             let key = canonical::to_string(&link).compare()?;
             if links_seen.insert((effect.changed_component_id.as_str(), key)) {
