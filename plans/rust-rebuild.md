@@ -3541,6 +3541,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         fallback and state it in the controls contract, Small (estimate); C,
         carry `controlOrder` in the catalogue index, which makes index v8,
         Large. Recommended: A.
+    - User decision 88 (2026-10-21): A. The Props fields wait for the routed
+      detail. Work: W2 on `rebuild/viewer-88a`.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
     Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
   - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
