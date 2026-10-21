@@ -110,6 +110,6 @@ test("each entry kind's copy matches the shared design copy", () => {
       PAGE_STYLE_COPY.unresolved,
     ],
   );
-  // A page uses no components, so neither copy gives it that sentence.
+  // A page has no usage records, so neither copy gives it that sentence.
   assert.ok(!("sharedImpact" in page) && !("sharedImpact" in PAGE_STYLE_COPY));
 });

@@ -282,7 +282,8 @@ sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
 design places, and the no-changes line follow, in that order.
-`workspace_evidence_data.ts` shows the shared-component sentence in place of
+`workspace_evidence_data.ts` shows the shared-component sentence, which
+`entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
 detail's related components, a component-owned record on a shown view, or the

@@ -1974,10 +1974,11 @@ Tags: mockup
 
 Tags: ui
 
-- [ ] User decision 84 B: end the Details of a screen or a component that
+- [x] User decision 84 B: end the Details of a screen or a component that
       only changed components affect with the sentence of its kind, from the
       shared entry wording. Update the CSS evidence contracts, the Details
-      guide, and the tests.
+      guide, and the tests. The copy test failed first. Evidence:
+      `.context/viewer-84b/` (red and green logs).
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering

@@ -23,8 +23,9 @@ export const VARIANT_EXCLUDED_LEAD =
   "This stylesheet changed, but none of the changed styles apply to this variant.";
 export const EXAMINED_LEAD = "Examined and excluded:";
 export const SCREEN_TERMINAL = "No changes to this screen.";
+/** The sentence that ends a screen's Details when only changed components affect it. */
 export const SHARED_IMPACT =
-  "Shared component changes affect this preview. This page has no independent entry in Changes.";
+  "Changed components that this screen uses affect its preview.";
 export const COMPONENT_FILES_LEAD =
   "Changes to these files may affect this component:";
 export const COMPONENT_LEAD = "Changed styles that apply to this component:";
@@ -32,7 +33,12 @@ export const VARIANT_LEAD = "Changed styles that apply to this variant:";
 export const VARIANT_UNRESOLVED_LEAD =
   "This change can apply anywhere on the variant, so the variant stays in Changes:";
 export const VARIANT_TERMINAL = "No changes to this variant.";
-export const SHARED = "Shared component changes affect this preview.";
+/** The same sentence for a component and its variants. */
+export const VARIANT_SHARED_IMPACT =
+  "Changed components that this variant uses affect its preview.";
+/** Any kind's shared-component sentence, for checks that none shows. */
+export const SHARED =
+  /Changed components that this \w+ uses affect its preview\./u;
 export const PAGE_FILES_LEAD = "Changes to these files may affect this page:";
 export const PAGE_MATCHED_LEAD = "Changed styles that apply to this page:";
 export const PAGE_OUTSIDE_LEAD =

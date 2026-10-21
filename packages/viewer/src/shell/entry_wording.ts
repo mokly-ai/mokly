@@ -27,7 +27,21 @@ export interface EntryWording {
   readonly unresolvedStylesWithoutSelectors: string;
 }
 
-const WORDING: Record<EntryKind, EntryWording> = {
+/**
+ * Wording of a screen or a component. A whole-document page has no usage
+ * records, so changed components never affect it and its wording has no
+ * shared-component sentence.
+ */
+interface ConsumerWording extends EntryWording {
+  /** Details of an entry that only changed components affect end with it. */
+  readonly sharedImpact: string;
+}
+
+const WORDING: {
+  readonly screen: ConsumerWording;
+  readonly component: ConsumerWording;
+  readonly page: EntryWording;
+} = {
   screen: {
     excludedStylesheet:
       "This stylesheet changed, but none of the changed styles apply to this screen.",
@@ -47,6 +61,8 @@ const WORDING: Record<EntryKind, EntryWording> = {
       "This change can apply anywhere on the screen, so the screen stays in Changes.",
     stylesChanged: "Styles this screen uses changed",
     componentsChanged: "Components this screen uses changed",
+    sharedImpact:
+      "Changed components that this screen uses affect its preview.",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the screen, so the screen stays in Changes:",
     unresolvedStylesWithoutSelectors:
@@ -73,6 +89,8 @@ const WORDING: Record<EntryKind, EntryWording> = {
       "This change can apply anywhere on the variant, so the variant stays in Changes.",
     stylesChanged: "Styles this variant uses changed",
     componentsChanged: "Components this variant uses changed",
+    sharedImpact:
+      "Changed components that this variant uses affect its preview.",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the component, so the component stays in Changes:",
     unresolvedStylesWithoutSelectors:
@@ -105,6 +123,8 @@ const WORDING: Record<EntryKind, EntryWording> = {
 };
 
 /** Resolve the vocabulary used consistently across one entry's Details. */
-export function entryWording(kind: EntryKind): EntryWording {
+export function entryWording<Kind extends EntryKind>(
+  kind: Kind,
+): (typeof WORDING)[Kind] {
   return WORDING[kind];
 }
