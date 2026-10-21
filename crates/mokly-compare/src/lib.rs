@@ -32,6 +32,7 @@ mod manager_lockfiles;
 mod manager_plan;
 mod manager_yaml;
 mod manifest;
+mod npm_lockfiles;
 mod programs;
 
 #[cfg(windows)]

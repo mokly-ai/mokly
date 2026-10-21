@@ -163,3 +163,26 @@ fn workspace_brace_alternatives_are_confined_individually() {
         );
     }
 }
+
+#[test]
+fn npm_lockfile_paths_cannot_escape_the_repository() {
+    for value in [
+        r#"{"packages":{"node_modules/ui":{"resolved":"file:../outside.tgz"}}}"#,
+        r#"{"packages":{"node_modules/ui":{"link":"../../outside"}}}"#,
+    ] {
+        let files = BTreeMap::from([
+            (
+                RepoPath::parse("package.json").unwrap(),
+                br#"{"dependencies":{"ui":"1.0.0"}}"#.to_vec(),
+            ),
+            (
+                RepoPath::parse("package-lock.json").unwrap(),
+                value.as_bytes().to_vec(),
+            ),
+        ]);
+        assert!(
+            matches!(validate(&files), Err(Error::LocalOutside { .. })),
+            "{value}"
+        );
+    }
+}

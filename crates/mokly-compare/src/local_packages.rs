@@ -10,6 +10,7 @@ use crate::local_specifications;
 use crate::manager_local;
 use crate::manager_lockfiles;
 use crate::manifest::{self, Manifest};
+use crate::npm_lockfiles;
 
 pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<String, Manifest>> {
     files
@@ -69,6 +70,9 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
             Some("pnpm-workspace.yaml") => manager_local::validate(bytes, path.as_str())?,
             Some("pnpm-lock.yaml" | "yarn.lock") => {
                 manager_lockfiles::validate_with_context(bytes, path.as_str(), &contexts)?
+            }
+            Some("package-lock.json" | "npm-shrinkwrap.json") => {
+                npm_lockfiles::validate(bytes, path.as_str())?
             }
             _ => {}
         }
