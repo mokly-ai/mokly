@@ -4266,6 +4266,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         usage holds an instance of a changed component that the entry
         detail's `relatedComponents` names. Recommended: B. Close the item as
         B unless the user objects.
+    - Option B is in the code on the rebuild branch from an earlier default,
+      and it stays until the user decides.
   - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
         `HistoricalManifest` had no user and no published export since
         `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
