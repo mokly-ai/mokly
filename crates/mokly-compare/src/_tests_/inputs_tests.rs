@@ -22,7 +22,6 @@ fn inputs(lock: &[u8], manifest: &[u8]) -> Inputs {
 #[test]
 fn keys_cover_lock_manifest_manager_version_and_local_sources() {
     let a = inputs(b"lock", b"{}");
-    assert!(a.supports_npm());
     assert_eq!(a.key("1", "a"), a.key("1", "b"));
     assert_ne!(a.key("1", "a"), a.key("2", "a"));
     assert_ne!(a.key("1", "a"), inputs(b"edit", b"{}").key("1", "a"));
@@ -41,7 +40,6 @@ fn keys_cover_lock_manifest_manager_version_and_local_sources() {
             .as_str(),
         "package-lock.json"
     );
-    assert!(!inputs(b"lock", br#"{"packageManager":"pnpm@10"}"#).supports_npm());
 }
 
 #[test]
@@ -51,6 +49,10 @@ fn inventory_reads_every_workspace_manifest_but_no_dependency_or_source_file() {
         "package.json",
         "packages/ui/package.json",
         "package-lock.json",
+        "pnpm-workspace.yaml",
+        ".yarnrc.yml",
+        ".yarnrc",
+        ".npmrc",
         "specs/file.ts",
         "node_modules/pkg/package.json",
     ]
@@ -66,7 +68,7 @@ fn inventory_reads_every_workspace_manifest_but_no_dependency_or_source_file() {
             .returns(Ok(entries.to_vec())),
         SourcesMock::read_many
             .next_call(matching!((paths, _) if paths.len() == 3))
-            .returns(Ok(vec![b"{}".to_vec(), b"{}".to_vec(), b"{}".to_vec()])),
+            .returns(Ok(vec![b"{}".to_vec(); 3])),
     ));
     let reader: &dyn InputReader = &SourceInputs;
     assert_eq!(
@@ -133,11 +135,29 @@ fn manifest_only_warning_names_the_first_selected_install_roots_lockfile() {
         base.differing_lockfile(&head, &["frontend".into()])
             .unwrap()
             .as_str(),
-        "frontend/package-lock.json"
+        "pnpm-lock.yaml"
     );
     base.files
         .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
     head.files
         .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
     assert!(base.differing_lockfile(&head, &[]).is_none());
+}
+
+#[test]
+fn manifest_only_warning_uses_the_declared_manager_in_a_mixed_lockfile_root() {
+    let mut base = inputs(b"stale npm lock", br#"{"packageManager":"pnpm@10.34.7"}"#);
+    base.files.insert(
+        RepoPath::parse("pnpm-lock.yaml").unwrap(),
+        b"pnpm lock".to_vec(),
+    );
+    let mut head = base.clone();
+    head.files.insert(
+        RepoPath::parse("package.json").unwrap(),
+        b"changed manifest".to_vec(),
+    );
+    assert_eq!(
+        base.differing_lockfile(&head, &[]).unwrap().as_str(),
+        "pnpm-lock.yaml"
+    );
 }

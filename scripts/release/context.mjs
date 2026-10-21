@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 const VERSION = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
 
-/** A CLI release can publish a new viewer or reuse its exact published pin. */
+/** A root release publishes the CLI and viewer with matching version tags. */
 export function resolvePublishRefs(input) {
   let cli;
   let viewer;

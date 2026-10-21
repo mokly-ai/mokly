@@ -18,13 +18,26 @@ pub mod storage;
 mod storage_tree;
 pub mod working_inputs;
 
+mod berry_sources;
 mod cache_maintenance;
 pub mod dependency_types;
 mod durability;
 mod install;
 mod local_packages;
+mod local_specifications;
+mod manager;
+mod manager_classic;
+mod manager_command;
+mod manager_local;
+mod manager_lockfiles;
+mod manager_plan;
+mod manager_yaml;
+mod manager_yarnrc;
 mod manifest;
+mod npm_lockfiles;
+mod pnpm_lockfile;
 mod programs;
+mod workspace_patterns;
 
 #[cfg(windows)]
 mod windows_durability;
@@ -126,6 +139,46 @@ pub mod projection_detail;
 pub mod projection_removed;
 
 mod git_asset_io;
+
+#[cfg(test)]
+#[path = "_tests_/manager_tests.rs"]
+mod manager_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_plan_tests.rs"]
+mod manager_plan_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_lockfiles_tests.rs"]
+mod manager_lockfiles_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_classic_tests.rs"]
+mod manager_classic_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pnpm_lockfile_tests.rs"]
+mod pnpm_lockfile_tests;
+
+#[cfg(test)]
+#[path = "_tests_/workspace_patterns_tests.rs"]
+mod workspace_patterns_tests;
+
+#[cfg(test)]
+#[path = "_tests_/berry_sources_tests.rs"]
+mod berry_sources_tests;
+
+#[cfg(test)]
+#[path = "_tests_/classic_manifest_paths_tests.rs"]
+mod classic_manifest_paths_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_command_tests.rs"]
+mod manager_command_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_confinement_tests.rs"]
+mod manager_confinement_tests;
 
 mod capture_annotations;
 mod capture_usage;

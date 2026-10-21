@@ -17,7 +17,7 @@ dispatch authorizes a retry of those already-created immutable tags.
   a second approval after the reviewed release PR.
 - Active tag ruleset `Immutable release tags`: match `refs/tags/v*` and
   `refs/tags/viewer-v*`, prohibit
-  updates and deletion, and grant no bypass. Allow creation so release-please
+  updates and deletion, and grant no bypass. Allow creation so release automation
   can create new tags without a special bypass credential.
 - Preserve the existing protected `main` branch and verify it requires the
   exact `Required CI` check. Do not replace branch rules as part of this setup.

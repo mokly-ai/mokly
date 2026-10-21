@@ -59,8 +59,6 @@ export class FakeDataSource implements ShellDataSource {
   readonly indexes: Pending<CatalogueReadModel, undefined>[] = [];
   readonly details: Pending<EntryDetailV2, DetailRequest>[] = [];
   deploymentChanges = 0;
-  /** A standalone shell reloads; an embedded host keeps its state. */
-  reloadsOnDeployment = false;
   readonly detailFailures: DetailRequest[] = [];
   live?: FakeLiveSource;
 

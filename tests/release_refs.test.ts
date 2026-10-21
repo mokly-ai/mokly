@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -9,6 +10,7 @@ import { resolvePublishRefs } from "../scripts/release/context.mjs";
 import { verifyReleaseRefs } from "../scripts/release/refs.mjs";
 
 import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
+import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
@@ -75,6 +77,10 @@ test("shared tags must match both package versions, origin, and clean checkout",
     await verifyReleaseRefs(fixture.root, "v0.8.0"),
     fixture.expectedCommit,
   );
+  await assert.rejects(
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.9.0"),
+    /does not match package version/,
+  );
   await fs.writeFile(path.join(fixture.root, "untracked.txt"), "unreviewed");
   await assert.rejects(
     verifyReleaseRefs(fixture.root, "v0.8.0"),
@@ -87,5 +93,71 @@ test("shared tags must match both package versions, origin, and clean checkout",
   await assert.rejects(
     verifyReleaseRefs(fixture.root, "v0.8.0"),
     /origin does not contain/,
+  );
+});
+
+test("staged files and a different checkout cannot pass shared tag verification", async (t) => {
+  const fixture = await taggedFixture(t);
+  await fs.writeFile(path.join(fixture.root, "changed.txt"), "unreviewed");
+  await fixture.git("add", "changed.txt");
+  await assert.rejects(
+    verifyReleaseRefs(fixture.root, "v0.8.0"),
+    /clean source/,
+  );
+  await fixture.git("commit", "-m", "test: different checkout");
+  await assert.rejects(verifyReleaseRefs(fixture.root, "v0.8.0"), /one commit/);
+});
+
+test("release selection preserves verification mode and no-release output", async (t) => {
+  const fixture = await bootstrapFixture(t);
+  const outputs = async (env: Record<string, string>) => {
+    const output = path.join(fixture.destination, `output-${randomUUID()}`);
+    await fs.mkdir(fixture.destination, { recursive: true });
+    await execute(process.execPath, ["scripts/release/resolve-ref.mjs"], {
+      cwd: repositoryRoot,
+      env: { ...process.env, ...env, GITHUB_OUTPUT: output },
+    });
+    return Object.fromEntries(
+      (await fs.readFile(output, "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => line.split("=", 2)),
+    );
+  };
+  const shared = {
+    MANUAL_REF: "v0.16.0",
+    RELEASE_TAG: "v0.16.0",
+    RELEASE_CREATED: "true",
+    MANUAL_VERIFICATION: "complete",
+  };
+  assert.deepEqual(await outputs({ ...shared, RELEASE_EVENT: "push" }), {
+    publish_ref: "v0.16.0",
+    verification: "evidence",
+  });
+  assert.deepEqual(
+    await outputs({ ...shared, RELEASE_EVENT: "workflow_dispatch" }),
+    {
+      publish_ref: "v0.16.0",
+      verification: "complete",
+    },
+  );
+  assert.deepEqual(
+    await outputs({
+      ...shared,
+      RELEASE_EVENT: "push",
+      RELEASE_CREATED: "false",
+    }),
+    {
+      publish_ref: "",
+      verification: "evidence",
+    },
+  );
+  await assert.rejects(
+    outputs({
+      ...shared,
+      RELEASE_EVENT: "workflow_dispatch",
+      MANUAL_VERIFICATION: "skip",
+    }),
+    /unsupported release verification mode/,
   );
 });

@@ -21,9 +21,20 @@ export function auditPublicPackageExports(repositoryRoot, git) {
   const findings = [];
   const baselines = [];
   let notedRemovals = 0;
-  for (const [componentRoot, packageConfig] of Object.entries(
-    releaseConfig.packages ?? {},
-  )) {
+  const components = { ...releaseConfig.packages };
+  if (
+    components["."]?.["package-name"] === "@mokly/mokly" &&
+    !components["packages/viewer"]
+  ) {
+    // The root release owns two JavaScript packages with separate tag histories.
+    components["packages/viewer"] = {
+      component: "viewer",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+    };
+    releaseManifest["packages/viewer"] ??= releaseManifest["."];
+  }
+  for (const [componentRoot, packageConfig] of Object.entries(components)) {
     const releasedVersion = releaseManifest[componentRoot];
     if (releasedVersion === undefined || releasedVersion === "0.0.0") continue;
     const packageRoot = publicPackageRoot(

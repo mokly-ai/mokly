@@ -79,9 +79,48 @@ jobs:
           ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
           PUBLISH_REF: ${{ steps.select.outputs.publish_ref }}
         run: node scripts/release/select-artifacts.mjs
-  build-native:
-    if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.artifact_run_id == ''
+  release-tags:
+    if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != ''
     needs: [select-release]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Complete shared release tags
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          PUBLISH_REF: ${{ needs.select-release.outputs.publish_ref }}
+        with:
+          script: |
+            const cli = process.env.PUBLISH_REF;
+            if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(cli)) {
+              throw new Error('An immutable vX.Y.Z CLI tag is required');
+            }
+            const viewer = `viewer-${cli}`;
+            const { data: source } = await github.rest.repos.getCommit({
+              ...context.repo, ref: `tags/${cli}`,
+            });
+            try {
+              await github.rest.git.getRef({
+                ...context.repo, ref: `tags/${viewer}`,
+              });
+            } catch (error) {
+              if (error.status !== 404 || context.eventName !== 'push') throw error;
+              await github.rest.git.createRef({
+                ...context.repo, ref: `refs/tags/${viewer}`, sha: source.sha,
+              });
+              return;
+            }
+            const { data: existing } = await github.rest.repos.getCommit({
+              ...context.repo, ref: `tags/${viewer}`,
+            });
+            if (existing.sha !== source.sha) {
+              throw new Error('CLI and viewer tags must identify the same commit');
+            }
+  build-native:
+    if: always() && needs.select-release.result == 'success' && needs.release-tags.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.artifact_run_id == ''
+    needs: [select-release, release-tags]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
@@ -161,8 +200,8 @@ jobs:
           retention-days: 90
           overwrite: true
   prepare-release:
-    if: always() && needs.select-release.result == 'success' && (needs.build-native.result == 'success' || (needs.build-native.result == 'skipped' && needs.select-release.outputs.artifact_run_id != '')) && needs.select-release.outputs.publish_ref != ''
-    needs: [select-release, build-native]
+    if: always() && needs.select-release.result == 'success' && needs.release-tags.result == 'success' && (needs.build-native.result == 'success' || (needs.build-native.result == 'skipped' && needs.select-release.outputs.artifact_run_id != '')) && needs.select-release.outputs.publish_ref != ''
+    needs: [select-release, release-tags, build-native]
     permissions:
       actions: read
       contents: read

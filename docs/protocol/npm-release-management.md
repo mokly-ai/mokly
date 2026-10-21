@@ -36,10 +36,9 @@ Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
 those literals with the `@mokly/mokly` package version; root tests reject drift.
 
-The release manifest records each package's latest released version. The viewer
-uses `initial-version: 0.1.0` only before its first release; the setting has no
-effect once a release exists. Runtime and packaging gates derive versions from
-package metadata and never hardcode that initial value. `bump-minor-pre-major`
+The root release manifest entry owns the shared release version. The historical
+viewer entry retains its independent release baseline. Runtime and packaging
+gates derive versions from package metadata. `bump-minor-pre-major`
 keeps breaking pre-1.0 changes on the minor stream. Published tags are immutable;
 versions advance only through the release PR.
 
@@ -54,7 +53,8 @@ agreement gate. The CLI keeps the root changelog and its full release history.
 Before merge and tag creation, the release PR updates one shared version for
 the CLI, native packages, and viewer. The release workflow then:
 
-1. Selects the root CLI action output and derives the matching viewer tag.
+1. Selects the root CLI action output and creates the matching viewer tag at
+   the same commit. An existing tag must already identify that commit.
    Manual retries supply the CLI tag. Ordinary pushes without a release do nothing.
 2. Starts read-only preparation after native builds succeed, or after validated
    retry archives replace those builds. Preparation checks out the immutable
@@ -63,8 +63,7 @@ the CLI, native packages, and viewer. The release workflow then:
    without a package cache. Publication uses that same exact Node version.
    Preparation installs the pinned Rust toolchain and Chromium. A tag that
    predates the Rust toolchain pin uses the runner's default toolchain.
-4. Verifies the CLI tag identifies clean `HEAD` locally and on origin. A new
-   viewer tag must identify the same commit. The viewer tag must identify the same commit as the CLI tag.
+4. Verifies that both tags identify clean `HEAD` locally and on origin.
 5. Runs dependency installation, the live npm and Rust audits, and verification
    in the read-only preparation job. It reuses applicable complete CI evidence
    for the exact tagged tree or runs the complete strict gate. The
@@ -85,8 +84,7 @@ the CLI, native packages, and viewer. The release workflow then:
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
    workflow fails.
-8. Publishes the platform packages, then a newly released viewer, then the CLI.
-   It verifies and publishes the shared-version viewer before the CLI.
+8. Publishes the platform packages, then the shared-version viewer, then the CLI.
    Each registry verification completes before the next publication starts.
 9. Downloads the registry artifact and rechecks integrity, shasum, file
    inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
@@ -123,7 +121,9 @@ contents access, and runs in the protected GitHub environment named `npm`.
 Preparation receives only read-only Actions and contents access. It receives
 no inherited secrets. Both checkouts disable credential persistence.
 Release-please receives only contents, pull-request, and issue write
-permissions. Prefer a repository-owned fine-grained token or GitHub App
+permissions. Tag completion receives only contents write permission and runs
+no checkout or build. Manual retries verify existing tags and create no tags.
+Prefer a repository-owned fine-grained token or GitHub App
 credential in the `RELEASE_PLEASE_TOKEN` secret so release PR events trigger
 normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
 follow-on workflow events created with that token, so maintainers must verify

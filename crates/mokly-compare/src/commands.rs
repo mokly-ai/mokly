@@ -26,6 +26,9 @@ pub struct Command {
     pub byte_limit: Option<u64>,
     /// Whole private install root when the command runs in a configured package.
     pub size_root: Option<PathBuf>,
+    /// Private cache or mirror path for the manager: the confined Yarn Berry
+    /// cache folder, or the Yarn Classic offline mirror.
+    pub cache: Option<PathBuf>,
 }
 
 /// Reaped process result after pipe workers close.

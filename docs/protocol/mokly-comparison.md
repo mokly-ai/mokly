@@ -158,7 +158,7 @@ Third-party dependencies follow three tiers:
    through the module resolution settings.
 2. They differ: the base's dependencies are installed, with lifecycle scripts
    disabled and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
-   the package manager version, selected install roots, and the immutable source
+   the package manager and its version, manager configuration, selected install roots, and the immutable source
    identity when local packages or workspaces participate, and the bundle resolves
    third-party dependencies from there.
 3. The install cannot run, because the machine is offline, the package
@@ -168,9 +168,11 @@ Third-party dependencies follow three tiers:
    `base-dependencies` warning names the selected lockfile when one exists and
    gives the fallback reason.
 
-Base dependency installation supports npm only. When installation is needed,
-pnpm, Yarn, and Bun repositories use tier three with the `base-dependencies`
-warning. Equal dependency identities still use tier one without an install or
+Base dependency installation supports npm, pnpm 10 through 12, Yarn Classic 1, and Yarn
+Berry 4 with `nodeLinker: node-modules`. pnpm and Yarn install offline with
+lifecycle scripts disabled. Missing managers, unsupported versions, Bun,
+and Yarn Plug'n'Play use tier three with the `base-dependencies` warning.
+Plug'n'Play has its own fallback reason because the sidecar lacks its resolver. Equal dependency identities still use tier one without an install or
 an unsupported-manager warning. Repository-owned workspace sources retain
 their side-local mapping for every package manager.
 

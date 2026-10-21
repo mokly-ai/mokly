@@ -20,7 +20,7 @@ export function StageDelivery({
   delivery: Exclude<DetailDelivery, { status: "ready" }>;
   kind: CatalogueRecord["kind"];
 }) {
-  if (delivery.status === "loading")
+  if (delivery.status === "loading" || delivery.status === "replaced")
     return (
       <div
         aria-busy="true"

@@ -38,6 +38,7 @@ export function startSidecar(
       operations.push(value.params);
       return;
     }
+    if (value.event === "diagnostic") return;
     const waiter = pending.get(value.id);
     assert.ok(waiter, `unexpected frame ${line}`);
     pending.delete(value.id);
