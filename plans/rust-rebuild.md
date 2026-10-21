@@ -2849,16 +2849,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Retain known native resolution manifests as late inputs. Public hooks
         do not expose the bytes used by private `exports` and `imports` reads.
         Preserve native resolution and its cache. Do not manufacture read receipts.
-  - [x] User decision 118 (2026-10-21): A. Probe file identity only where a
-        read needs it, and add operation-count coverage for one probe per
-        tracked read.
-  - [x] User decision 117 (2026-10-21): A now, C after the merge, in parallel
-        if possible, but do not block the merge. State the asynchronous-loader
-        module-path gap now, and continue the loader-path fix after the merge.
-  - [x] User decision 125 (2026-10-21): D. Keep read evidence for one
-        generation. A new generation drops earlier child witnesses while
-        static-build input checks remain unchanged. Keep cache hits and core
-        input checks valid for the generation that owns their result.
   - [x] Resolve user item 114 (W6 decision 1, closure decision M14-PC2,
         proposed 2026-10-20): close this PostCSS evidence item? Observed-read
         evidence now covers every read that JavaScript hooks can see. Reads
@@ -2895,9 +2885,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       document the projected session bound, Small. Recommended: B, because
       it preserves exact evidence for long Serve sessions without changing
       the frame limit. No option is applied.
-  - User decision 125 (2026-10-21): D, a new option: the PostCSS child
-    keeps read evidence for one generation only. Work: the PostCSS
-    follow-ups workspace.
+  - [x] User decision 125 (2026-10-21): D. Keep read evidence for one
+        generation. A new generation drops earlier child witnesses while
+        static-build input checks remain unchanged. Keep cache hits and core
+        input checks valid for the generation that owns their result.
 - [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
       loader-supplied modules. The preload now registers Mokly's hooks
       first, so a consumer load hook that returns source without
@@ -2910,9 +2901,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       consumer preloads, as the base did, and state the remaining
       asynchronous-loader gap, Medium; C, record module paths through an
       asynchronous resolve hook and a message port, Large. Recommended: B.
-  - User decision 117 (2026-10-21): A now, and C after the merge, in
-    parallel if possible, without blocking the merge. Work: the new
-    PostCSS follow-ups workspace.
+  - [x] User decision 117 (2026-10-21): A now, C after the merge, in parallel
+        if possible, but do not block the merge. State the asynchronous-loader
+        module-path gap now, and continue the loader-path fix after the merge.
 - [x] Resolve user item 118 (W6 review finding 3): each file open probes
       identity twice. Every tracked open runs one wasted `fstat`,
       `realpath`, and `stat` probe. Severity Low, effort Small. Performance
@@ -2921,8 +2912,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       tickets, Small; B, A and also keep the descriptor's object until the
       descriptor closes, Small (estimate); C, an operation-count test for
       the probes of each read at two sizes, Medium. Recommended: A.
-  - User decision 118 (2026-10-21): A. Work: the new PostCSS follow-ups
-    workspace.
+  - [x] User decision 118 (2026-10-21): A. Probe file identity only where a
+        read needs it, and add operation-count coverage for one probe per
+        tracked read.
   - Completed by `4739f11a`: retain one identity probe per tracked read.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
