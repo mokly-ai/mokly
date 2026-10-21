@@ -2,12 +2,13 @@
 
 use serde_json::Value;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::local_specifications;
 
 pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
-    let value: Value =
-        serde_json::from_slice(bytes).map_err(|_| Error::InvalidInput { path: path.into() })?;
+    let Ok(value) = serde_json::from_slice::<Value>(bytes) else {
+        return Ok(());
+    };
     let parent = path
         .rsplit_once('/')
         .map(|(parent, _)| parent)
