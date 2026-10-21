@@ -92,6 +92,8 @@ whose views its evidence names, and that entry's own detail names the changed
 component and can compare, so a variant does not borrow its parent's. A link
 to an Added view is marked ineligible and opens Current without a comparison
 request because that view has no base side.
+Eligibility follows the displayed scheme, including Light fallback when the
+destination has no Dark view.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states and measure changed-path collection,

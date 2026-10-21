@@ -88,7 +88,7 @@ export const branchPointPaths = {
   caseRemoved: "branch/case/Action/secondary",
   reusedParent: "branch/reused/action",
   reusedRemoved: "branch/reused/action/default",
-  /** Tally changes, and its consumers' views that use it stay unchanged. */
+  /** Tally changes, with Unmodified consumers and an Added consumer. */
   impactComponent: "branch/impact/tally",
   /** Out of Changes: Meter and its variant. */
   impactParent: "branch/impact/meter",

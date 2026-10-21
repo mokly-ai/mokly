@@ -316,7 +316,7 @@ loaded usage and local editor state. `workspace_usage.tsx` keys each Usage row
 by its entry and removal state only, so a publication that changes a row's
 comparison eligibility keeps its link element and the focus on it. Its
 `usageHref` opens an Affected screens consumer, or a removed one, in Side by
-side when the linked view has a base side. An Added consumer opens Current
+side when the linked view is eligible. An Added consumer opens Current
 because it has no base side. A Used by link opens Current.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index

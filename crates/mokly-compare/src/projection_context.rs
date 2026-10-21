@@ -103,7 +103,7 @@ impl<'a> Context<'a> {
         kind == EntryKind::Component || (kind == EntryKind::Screen && !self.removed.contains(path))
     }
 
-    /// Affected links can compare only when their linked view has a base side.
+    /// Affected links use the displayed scheme, including the viewer's Light fallback.
     pub(crate) fn view_can_compare(
         &self,
         path: &str,
@@ -117,10 +117,13 @@ impl<'a> Context<'a> {
         self.classifications
             .get(path)
             .and_then(|entry| {
-                entry.documents.iter().find(|document| {
-                    document.key.viewport == Some(viewport)
-                        && document.key.color_scheme == color_scheme
-                })
+                let find = |scheme| {
+                    entry.documents.iter().find(|document| {
+                        document.key.viewport == Some(viewport)
+                            && document.key.color_scheme == scheme
+                    })
+                };
+                find(color_scheme).or_else(|| find(ColorScheme::Light))
             })
             .is_none_or(|document| document.state != ReviewState::Added)
     }

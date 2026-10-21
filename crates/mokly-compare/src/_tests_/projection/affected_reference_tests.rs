@@ -19,6 +19,7 @@ use super::support::{
     classified, entry, paired_result, result, transferred_variant_result, with_lookup,
 };
 
+/// One recorded component use in the selected viewport.
 pub(super) fn evidence_at(
     side: ReviewSide,
     path: &str,
@@ -44,10 +45,12 @@ pub(super) fn evidence_at(
     }
 }
 
+/// One recorded component use in the Desktop Light view.
 pub(super) fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
     evidence_at(side, path, Viewport::Desktop)
 }
 
+/// Project affected links and verify their own consumer identities.
 pub(super) fn links(
     result: &mut ComparisonResult,
     consumer: &str,

@@ -1,9 +1,9 @@
 /**
  * Affected destinations on each host. Badge's moved consumers keep their
- * links, and under user decision 103 C each of Tally's Affected links opens a
- * destination that offers the band for the linked view while that view shows
+ * links. Tally's existing Affected consumers offer the band while their views show
  * Unmodified: Meter and its variant out of Changes, Slip as a pure move, and
- * Ledger, which Changes lists for its desktop view.
+ * Ledger, which Changes lists for its desktop view. Its Added consumer opens
+ * Current without a comparison request because it has no base view.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -20,7 +20,11 @@ import {
   openEntry,
   variantBar,
 } from "./branch_point_ui.js";
-import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+import { awaitRoutedDetail } from "./comparison_ui.js";
+import {
+  awaitSelectedComparison,
+  selectedRequests,
+} from "./serve_comparison_ui.js";
 
 /** Badge keeps each current destination, including the consumer's own variant. */
 export function expectBadgeAffected(affected: UsageLink[]) {
@@ -152,9 +156,9 @@ async function follow(
 }
 
 /**
- * The destination shows Unmodified and offers the band for the linked view.
- * Serve and the copy open its Side by side comparison, whose stage says that
- * the components the view uses changed; a React host opens Current.
+ * Unmodified destinations offer the band for the linked view. Serve and the
+ * copy open Side by side; a React host opens Current. Added destinations keep
+ * Current without the band.
  */
 async function expectAffectedBand(
   page: Page,
@@ -184,6 +188,7 @@ export async function affectedDestinations(
   page: Page,
   host: BranchPointHost,
 ): Promise<void> {
+  const requests = selectedRequests(page);
   const open = () =>
     affectedLinks(page, host, paths.impactComponent, "Tally", "Impact");
   const affected = await open();
@@ -203,6 +208,7 @@ export async function affectedDestinations(
     [, path, noun, listed, status, comparison],
   ] of TALLY_AFFECTED.entries()) {
     if (index > 0) await open();
+    const count = requests.length;
     await follow(page, host, affected.nth(index), comparison);
     await expectRouted(page, host, path);
     await expectAffectedBand(
@@ -213,6 +219,19 @@ export async function affectedDestinations(
       status,
       comparison !== null,
     );
+    if (comparison === null) {
+      await awaitRoutedDetail(page, path);
+      await expect(page.locator("[data-current-screen]")).toBeVisible();
+      await expect(page.locator("[data-diff-stage]")).toBeHidden();
+      await expect(
+        page
+          .frameLocator(
+            `iframe[data-workspace-frame="${facts[index]!.viewport}"]`,
+          )
+          .locator("h1"),
+      ).toHaveText("New consumer");
+      expect(requests).toHaveLength(count);
+    }
     const row = (await openChanges(page)).locator(
       `a[data-nav-row][data-entry-id="${path}"]`,
     );
