@@ -2455,6 +2455,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         under 120 C, so npm repositories with Git dependencies get tier
         three, Small; C, fall back when the base npm configuration sets
         `git`, Small (estimate). Recommended: B.
+  - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
+    `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
+    only `percent-encoding` and `yaml-rust2`.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
