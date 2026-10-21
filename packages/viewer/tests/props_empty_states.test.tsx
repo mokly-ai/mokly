@@ -123,6 +123,7 @@ test("a screen whose props have no controls shows them, with or without instance
       <WorkspacePropsTab
         controls={<p>Own props</p>}
         data={data("screen")}
+        delivery={{ status: "ready" }}
         instance={undefined}
         target={target}
         usage={view}
@@ -156,4 +157,52 @@ test("a screen whose props have no controls shows them, with or without instance
     panel,
     /<h3 tabindex="-1">Saved props<\/h3><p>Home<\/p><\/div><\/div><p class="mbk-controls-notice">These props are read-only\.<\/p><dl aria-label="Supplied props" class="mbk-props"><div><dt>badge<\/dt><dd><code>\{&quot;text&quot;: &quot;Ready&quot;\}<\/code><\/dd><\/div><\/dl>/,
   );
+});
+
+test("own props wait for the routed detail, which alone carries their order", () => {
+  const component = {
+    path: "action",
+    title: "Action",
+    kind: "component",
+    propSchema: { type: "object", properties: {} } as unknown as PropSchema,
+    props: encodeProps({ label: "Continue" }),
+    controls: {},
+    suppliedSlots: [],
+    removed: false,
+  } satisfies ControlTarget;
+  let retries = 0;
+  const tab = (
+    delivery: Parameters<typeof WorkspacePropsTab>[0]["delivery"],
+    target: ControlTarget = component,
+  ) =>
+    renderToStaticMarkup(
+      <WorkspacePropsTab
+        controls={<p>Own props</p>}
+        data={data(target.kind)}
+        delivery={delivery}
+        instance={undefined}
+        target={target}
+        usage={undefined}
+      />,
+    );
+  assert.equal(
+    tab({ status: "loading" }),
+    '<section aria-label="Props status" data-props-section="status"><p role="status">Loading props…</p></section>',
+  );
+  assert.equal(
+    tab({ status: "failed", retry: () => (retries += 1) }),
+    '<section aria-label="Props status" data-props-section="status"><p role="alert">Props couldn’t be loaded.</p><button class="mbk-text-button" type="button">Try again</button></section>',
+  );
+  assert.equal(tab({ status: "ready" }), "<p>Own props</p>");
+  // A screen without own props never waits: the detail orders no fields.
+  const bare: ControlTarget = {
+    ...component,
+    kind: "screen",
+    props: encodeProps({}),
+  };
+  assert.equal(
+    tab({ status: "loading" }, bare),
+    '<p class="mbk-empty-copy">Props are unavailable for this screen.</p>',
+  );
+  assert.equal(retries, 0);
 });

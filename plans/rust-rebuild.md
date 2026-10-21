@@ -2122,19 +2122,22 @@ Tags: mockup
 The numbers follow Milestones 10.5 to 10.7 of decisions 84 B and 119 B, which
 other branches add.
 
-- [ ] User decision 88 A: draw the Props tab while the entry's detail loads,
+- [x] User decision 88 A: draw the Props tab while the entry's detail loads,
       "Loading props…" with no fields, and after its load failed, "Props
       couldn’t be loaded." with Try again, in the Loading and recovery gallery.
       Add both strings to the settled controls copy.
-- [ ] Run the mockup check and smoke-test the new pages through Serve.
+- [x] Run the mockup check and smoke-test the new pages through Serve.
+      Evidence: `.context/viewer-88a/` (mockup check, design specs, smoke log,
+      and shots).
 
 ## Milestone 10.9: Props pending state in the viewer
 
 Tags: ui
 
-- [ ] User decision 88 A: show the Props fields only after the routed entry's
+- [x] User decision 88 A: show the Props fields only after the routed entry's
       detail arrives, with the drawn pending and failed states. The browser
-      test fails first.
+      test fails first. Evidence: `.context/viewer-88a/` (red and green
+      logs).
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
@@ -3428,7 +3431,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         component and instance. Severity Low, effort Medium for B. Options:
         B, identify the component and instance, then define exact messages,
         Medium. The hub decision log holds option A. Recommended: B.
-  - [ ] Resolve user item 88 (CLI defaults hub finding 6): Props fields
+  - [x] Resolve user item 88 (CLI defaults hub finding 6): Props fields
         reorder after the detail loads. Entry detail v2 carries the declared
         control order, but until the detail arrives the Props tab shows the
         index's alphabetical order, and then the fields jump. Severity Low,

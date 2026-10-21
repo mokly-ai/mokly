@@ -9,14 +9,14 @@ import type { DetailDelivery } from "./data_requests.js";
 import { workspaceData, type WorkspaceData } from "./workspace_data.js";
 import { mergeWorkspaceEvidence } from "./workspace_evidence_merge.js";
 
-/** The workspace values and the delivery of the detail they come from. */
+/**
+ * The workspace values and the delivery of the routed entry's detail, which
+ * alone carries the usage lists and the declared order of the Props fields.
+ */
 export interface WorkspaceDataState {
   data: WorkspaceData;
-  usageDelivery: UsageDeliveryState;
+  detailDelivery: DetailDelivery;
 }
-
-/** The delivery of the lists that only the entry detail carries. */
-export type UsageDeliveryState = DetailDelivery;
 
 /**
  * Keep one entry-owned workspace object across detail and publication
@@ -42,7 +42,7 @@ export function useWorkspaceData(
     adoptedRef.current = selected;
   }
   return dataRef.current
-    ? { data: dataRef.current, usageDelivery: delivery ?? { status: "ready" } }
+    ? { data: dataRef.current, detailDelivery: delivery ?? { status: "ready" } }
     : undefined;
 }
 

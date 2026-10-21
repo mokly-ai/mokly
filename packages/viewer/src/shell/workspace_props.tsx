@@ -15,6 +15,7 @@ import { viewHref } from "../navigation/routes.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
 import type { ControlTarget } from "./control_values.js";
+import type { DetailDelivery } from "./data_requests.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
@@ -94,17 +95,21 @@ export function PropSlots({ slots }: { slots: readonly string[] | undefined }) {
 
 /**
  * The Props tab: a selected instance's props; else the shown entry's own
- * fields or saved props; else why the tab has none to show.
+ * fields or saved props, once the routed entry's detail arrives; else why the
+ * tab has none to show.
  */
 export function WorkspacePropsTab({
   controls,
   data,
+  delivery,
   instance,
   target,
   usage,
 }: {
   controls: ReactNode;
   data: WorkspaceData;
+  /** The routed entry's detail, which alone carries the fields' order. */
+  delivery: DetailDelivery;
   instance: ComponentInstanceRecord | undefined;
   target: ControlTarget | undefined;
   usage: ComponentViewRecord | undefined;
@@ -116,9 +121,40 @@ export function WorkspacePropsTab({
         selection={{ instance, ...(usage ? { usage } : {}) }}
       />
     );
+  // The fields wait for the detail, so they never move from name order.
   if (target && (target.kind === "component" || ownProps(target)))
-    return controls;
+    return delivery.status === "ready" ? (
+      controls
+    ) : (
+      <PropsDelivery delivery={delivery} />
+    );
   return <WorkspaceProps data={data} selection={usage ? { usage } : {}} />;
+}
+
+/** Props while the routed entry's detail loads, or after its load failed. */
+function PropsDelivery({
+  delivery,
+}: {
+  delivery: Exclude<DetailDelivery, { status: "ready" }>;
+}) {
+  return (
+    <section aria-label="Props status" data-props-section="status">
+      {delivery.status === "loading" ? (
+        <p role="status">{CONTROLS_COPY.loading}</p>
+      ) : (
+        <>
+          <p role="alert">{CONTROLS_COPY.loadFailed}</p>
+          <button
+            className="mbk-text-button"
+            onClick={delivery.retry}
+            type="button"
+          >
+            {CONTROLS_COPY.retry}
+          </button>
+        </>
+      )}
+    </section>
+  );
 }
 
 /** A screen shows its own props when it has controls, saved props, or slots. */
