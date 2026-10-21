@@ -2761,6 +2761,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         discovery line stays, and user decision 105 settles the tip's React
         watch timeout line. Merge decisions:
         `.context/m10/f20/merge-decisions.md`.
+  - [x] F20 review, on 2026-10-21: finding 40 is fixed by option A. The
+        timing contract keeps the exception of user decision 105 and its
+        reason, without measurements. The measured limit behind the
+        decision: on two CPUs the combined React journey takes 185 to 218
+        seconds, about 155 of them in twelve JavaScript compilations, and one
+        busy process per CPU pushed it past 300 seconds. Evidence:
+        `.context/f17/investigation.md`. The full report is
+        `.context/m10/f20/review_1.md`.
   - [x] Fix CI release checks hub review finding 4 with option A: name read-only
         release preparation as the npm and Rust audit owner in the three
         affected verification documents. Publication uses the checked archives.
