@@ -33,8 +33,8 @@ for (const flag of ["--loader", "--experimental-loader", "--import"])
       loader,
       `export async function load(url,context,nextLoad){
 const result=await nextLoad(url,context);
-if(url===${JSON.stringify(pathToFileURL(module).href)})
-return {...result,source:Buffer.from(${JSON.stringify(original.replace("'raw'", "'transformed'"))})};
+    if(url===${JSON.stringify(pathToFileURL(module).href)})
+    return {...result,source:Buffer.from(${JSON.stringify(original.replace("'raw'", "'transformed'"))})};
 return result;
 }`,
     );
@@ -73,6 +73,10 @@ return result;
             read.digest === createHash("sha256").update(original).digest("hex"),
         ),
       "loader output cannot certify raw bytes",
+    );
+    assert.ok(
+      result.readEvidence.modules.includes(module),
+      "asynchronous loaders must report supplied module paths",
     );
     assert.ok(
       result.readEvidence.reads.some(

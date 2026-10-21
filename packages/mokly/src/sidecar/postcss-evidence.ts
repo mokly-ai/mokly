@@ -3,7 +3,9 @@ import fs from "node:fs";
 import promises from "node:fs/promises";
 import nodeModule from "node:module";
 import path from "node:path";
+import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { MessageChannel } from "node:worker_threads";
 
 import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
@@ -25,6 +27,8 @@ let earlyReaders = false;
 let moduleHooksInstalled = false;
 const observerKey = Symbol.for("mokly.postcss.readEvidence");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
+let asyncHookInstalled = false;
+let asyncHookRegistering = false;
 
 function isObserver(value: unknown): value is Observer {
   return typeof value === "function";
@@ -40,11 +44,70 @@ export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, observerKey, { value: readEvidence });
 }
 
+/** Record file URLs resolved by an asynchronous consumer loader. */
+export function observeAsyncModuleLoads(): void {
+  if (
+    (!asynchronousLoader && !consumerImport) ||
+    asyncHookInstalled ||
+    typeof nodeModule.register !== "function"
+  )
+    return;
+  asyncHookInstalled = true;
+  const original = nodeModule.register;
+  Object.defineProperty(nodeModule, "register", {
+    value: function (...args: unknown[]): unknown {
+      const result = Reflect.apply(original, nodeModule, args as never);
+      if (!asyncHookRegistering) registerAsyncHook();
+      return result;
+    },
+  });
+  if (asynchronousLoader) registerAsyncHook();
+}
+
+/** Let loader-thread messages arrive before the result frame is sent. */
+export async function flushAsyncModulePaths(): Promise<void> {
+  if (asynchronousLoader) await setImmediate();
+}
+
+function registerAsyncHook(): void {
+  if (asyncHookRegistering) return;
+  asyncHookRegistering = true;
+  const { port1, port2 } = new MessageChannel();
+  port1.on("message", (url: unknown) => {
+    if (typeof url === "string") recordModulePath(url);
+  });
+  port1.unref();
+  try {
+    nodeModule.register("./postcss-async-loader.mjs", {
+      parentURL: import.meta.url,
+      data: { paths: port2 },
+      transferList: [port2],
+    });
+  } finally {
+    asyncHookRegistering = false;
+  }
+}
+
+/** Add a resolved file URL to the current module inventory. */
+export function recordModulePath(url: string): void {
+  if (!url.startsWith("file:")) return;
+  try {
+    modules.add(fileURLToPath(url));
+  } catch {
+    /* A malformed loader URL cannot be a module input. */
+  }
+}
+
 /** Async loaders cannot certify raw source or synchronously load an ESM preload. */
 export const asynchronousLoader = [
   ...process.execArgv,
   process.env.NODE_OPTIONS ?? "",
 ].some((value) => /--(?:experimental-)?loader(?:=|\s|$)/.test(value));
+
+const consumerImport = [
+  ...process.execArgv,
+  process.env.NODE_OPTIONS ?? "",
+].some((value) => /--import(?:=|\s|$)/.test(value));
 
 /** The first child preload obtains native readers before consumer replacement. */
 export function trustEarlyReaders(): void {

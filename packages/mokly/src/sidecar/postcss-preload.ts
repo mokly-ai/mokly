@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 
 import {
+  observeAsyncModuleLoads,
   observeModuleLoads,
   shareReadEvidence,
   trustEarlyReaders,
@@ -23,6 +24,7 @@ if (isMainThread) {
   observeFileReads();
   observeDescriptors();
   observeDescriptorSharing();
+  observeAsyncModuleLoads();
   observeModuleLoads();
   shareReadEvidence();
 }

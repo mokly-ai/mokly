@@ -6,6 +6,7 @@ import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
+  flushAsyncModulePaths,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
@@ -86,6 +87,7 @@ process.once("message", (workerData: WorkerData) => {
             ...(typeof message.glob === "string" ? { glob: message.glob } : {}),
           });
         }
+        await flushAsyncModulePaths();
         process.send?.({
           id,
           result: {

@@ -186,7 +186,8 @@ terminal child state.
 The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
 before consumer preloads in each owned child.
 Its CommonJS build supports asynchronous loaders on Node 22 and shares one
-observation ledger with the worker. Loader-transformed source stays opaque.
+observation ledger with the worker. The async resolve hook reports supplied
+module paths through a message port. Loader-transformed source stays opaque.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
 file positions and reuse. FileHandle and Node stream reads share range evidence.
 The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds
