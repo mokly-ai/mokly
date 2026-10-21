@@ -222,8 +222,9 @@ shows the unavailable state only after each of its details has arrived,
 failed, or been replaced, because a detail that still loads can show another
 deployment. Until then the stage keeps loading, while an embedded host still
 hears of each failure at once. A detail of
-another deployment is not a failed load: the controller stops every load and
-ignores later failures, the source reports the change once, and a route that
+another deployment is not a failed load: the controller stops every load,
+ends the live connection as a disconnect does, and ignores later failures,
+the source reports the change once, and a route that
 still waits has the `replaced` delivery. Its stage keeps the loading state
 until the new data arrives, from the standalone shell's full page load or from
 the `index` that an embedded host supplies. The element generation of `frame_source_hook.ts` advances
