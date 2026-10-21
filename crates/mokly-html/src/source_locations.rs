@@ -13,11 +13,13 @@ use crate::{parse, source_checks};
 
 /// Authored positions grouped by diagnostic identity, in source order.
 pub(crate) type Locations = BTreeMap<String, VecDeque<SourceLocation>>;
+/// Wrapper positions grouped by kept-attribute identity, preserving empty slots.
+pub(crate) type WrapperLocations = BTreeMap<String, VecDeque<Option<SourceLocation>>>;
 
 pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
     source_checks::validate(&template.body, false)?;
     let mut locations = Locations::new();
-    let mut wrappers = Locations::new();
+    let mut wrappers = WrapperLocations::new();
     let mut cursor = template.source.char_indices().peekable();
     let (mut line, mut column) = (1, 1);
     for parsed in html_tokens::parse(&template.body) {
@@ -45,16 +47,20 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
                     }
                 }
             }
-            let (locations, key) = match parsed.source_signature {
-                Some(signature) => (&mut wrappers, signature),
-                None => (&mut locations, key),
-            };
-            locations.entry(key).or_default().push_back(SourceLocation {
+            let location = SourceLocation {
                 path: template.source_path.clone(),
                 line,
                 column,
                 export: None,
-            });
+            };
+            if let Some(signature) = parsed.source_signature {
+                wrappers
+                    .entry(signature)
+                    .or_default()
+                    .push_back(Some(location));
+            } else {
+                locations.entry(key).or_default().push_back(location);
+            }
         }
     }
     let mut nodes = parse::located(&template.body, template.page, wrappers);
@@ -89,14 +95,16 @@ pub(crate) fn ignore_signature(name: &str, attributes: &[Attribute]) -> Option<S
 }
 
 /// Re-key surviving wrappers in serialized order for the plaintext repair pass.
-pub(crate) fn wrapper_locations(nodes: &[Node]) -> Locations {
-    let mut locations = Locations::new();
+pub(crate) fn wrapper_locations(nodes: &[Node]) -> WrapperLocations {
+    let mut locations = WrapperLocations::new();
     for node in tree::walk(nodes) {
         if let Node::Element(element) = node
-            && let Some(source) = &element.source
             && let Some(key) = ignore_signature(&element.name, &element.attributes)
         {
-            locations.entry(key).or_default().push_back(source.clone());
+            locations
+                .entry(key)
+                .or_default()
+                .push_back(element.source.clone());
         }
     }
     locations

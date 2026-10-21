@@ -37,7 +37,7 @@ pub struct PreparedCatalogue {
     /// Markdown bodies, with BOM and front matter removed.
     pub documents: BTreeMap<String, String>,
     /// Saved variant slot fragments, kept private.
-    pub slot_fragments: BTreeMap<String, BTreeMap<String, String>>,
+    pub slot_fragments: BTreeMap<String, BTreeMap<String, crate::template_types::SavedSlot>>,
     /// One shared HTML and JavaScript component namespace.
     pub elements: ElementRegistry,
     /// JavaScript sources awaiting the Milestone 8 sidecar implementation.

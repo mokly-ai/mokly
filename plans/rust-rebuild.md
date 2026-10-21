@@ -3550,6 +3550,27 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 116 (2026-10-21): A now, and C after the merge, in
       parallel if possible, without blocking the merge. Work: W6, with the
       HTML pipeline.
+  - [x] F21: restore empty wrapper source slots during plaintext repair,
+        follow HTML parser markup contexts for noscript and foreign style or title
+        content, validate saved variant slot fragments, name reserved navigation
+        warnings as rejections, and preserve authored page ignore wrappers for
+        Rust region composition.
+        Evidence: `.context/f21-item2-slot-red.log`,
+        `.context/f21-item3-warning-red.log`, and
+        `.context/f21-item4-sidecar-green-final.log`.
+  - Item 128: saved variant slot element checks. Option A keeps the
+    checks and states the rule in `mokly-html-components.md`; option B keeps
+    only the required `html-ignore-attribute` and `html-foster-parented`
+    warnings. Recommended: A. Apply B until the user answers.
+  - Item 131: unknown attributes on ignore wrappers returned by a
+    JavaScript `renderPage` callback. The HTML screens protocol requires
+    this warning for authored bodies, but the sidecar render-record
+    contract does not define warning transport for callback HTML.
+    Option A adds one `html-ignore-attribute` warning per page callback
+    body and attribute. Option B keeps callback HTML warning-free and
+    limits the warning to authored catalogue bodies. Recommended: A,
+    because page output follows the page HTML rules. No option is applied
+    until the user answers.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
