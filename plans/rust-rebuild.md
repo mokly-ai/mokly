@@ -2423,8 +2423,9 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
   - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
-        resolutions, fall back for every other protocol, and force off a
-        fixed list of Berry settings that load project code. Cached git
+        resolutions, fall back for every other protocol, such as the `exec:`
+        generators, and force off a fixed list of Berry settings that load
+        project code. Cached git
         dependencies then stop installing. Effort Medium. It is a wider fix,
         so the hub grades no severity, and it is stricter validation, so it
         needs the user. Options: A, keep only the targeted fixes of findings
