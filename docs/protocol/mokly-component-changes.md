@@ -59,8 +59,9 @@ usage, including transitive use and removed consumers. Each canonical screen
 appears once with its affected view and instance evidence. A direct screen
 change does not remove it from the list. Each link names the entry whose views
 its evidence names, so a variant's own views link the variant. In Serve and in
-a static build, a link opens the consumer's Side by side comparison of that
-view, in or out of Changes. A consumer without a row stays Unmodified and
+a static build, a link opens the consumer's Side by side comparison when that
+view has a base side, in or out of Changes. An Added consumer opens Current
+because its view has no base side. A consumer without a row stays Unmodified and
 outside Changes. A pure move, a consumer whose other views changed, and a
 component variant compare the linked view the same way. A React host opens the
 consumer in Current, where the band offers the same comparison. A removed

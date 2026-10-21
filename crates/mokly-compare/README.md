@@ -89,7 +89,9 @@ current variants through accepted moves and retain selected historical variants.
 Canonical impact groups stay at the consumer level. A different entry kind
 at an old path supplies no destination. Each link's destination is the entry
 whose views its evidence names, and that entry's own detail names the changed
-component and can compare, so a variant does not borrow its parent's.
+component and can compare, so a variant does not borrow its parent's. A link
+to an Added view is marked ineligible and opens Current without a comparison
+request because that view has no base side.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states and measure changed-path collection,

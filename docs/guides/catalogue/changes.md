@@ -51,10 +51,12 @@ changed component's occurrence. It also gets a row when Mokly cannot resolve the
 such as a global style or a custom property change. Otherwise the screen is
 under the changed components' Affected screens. Those links show usage, not
 proof that every use looks different. In Serve and in a static build, each one
-opens that screen's comparison in Side by side, also when Changes lists the
-screen for another reason, such as a move. A saved variant that uses the
-changed component has its own link. An embedded viewer opens the screen in
-Current, where the comparison band offers the same comparison.
+opens that screen's comparison in Side by side when the linked view has a base
+side, also when Changes lists the screen for another reason, such as a move.
+An Added consumer opens Current because its view has no base side. A saved
+variant that uses the changed component has its own link. An embedded viewer
+opens the screen in Current, where the comparison band offers the same
+comparison when the destination view is eligible.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead

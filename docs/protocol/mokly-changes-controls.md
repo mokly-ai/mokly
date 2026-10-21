@@ -56,6 +56,8 @@ Navigation must never let a late comparison response replace another screen.
 Shell-owned links carry comparison intent only when the destination view
 is eligible. An Affected link names a view that its destination can compare:
 a Changed view, or an Unmodified view whose usage holds the changed component.
+An Added view is never eligible, so its Affected link opens Current without a
+comparison query.
 The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request. It honors the query
