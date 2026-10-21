@@ -3599,6 +3599,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - User decision 116 (2026-10-21): A now, and C after the merge, in
       parallel if possible, without blocking the merge. Work: W6, with the
       HTML pipeline.
+  - [ ] Resolve user item 138 (F22 decision): JavaScript page wrappers get
+        no attribute warning. Unknown attributes on ignore wrappers that a
+        `renderPage` callback returns are removed without the
+        `html-ignore-attribute` warning, because the sidecar contract has no
+        warning transport for callback HTML. Severity Low (estimate), effort
+        Large (estimate). Options: A, add one warning per page callback body
+        and attribute, Large (estimate); B, keep callback HTML warning-free
+        and limit the warning to authored bodies, Small (estimate).
+        Recommended: A. The F22 branch records this item as "Item 131", and
+        integration batch 20 renumbers that line to 138. Keep one line when
+        both reach the plan.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.
