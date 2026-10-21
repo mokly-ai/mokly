@@ -2521,7 +2521,7 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
           configuration, with fixed private folders, mirror, and lock file.
           Fix round 2 implements it; the local registry tests are in
           `tests/static_base_registry.test.ts`.
-  - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
+  - [x] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
         resolutions, fall back for every other protocol, such as the `exec:`
@@ -2532,6 +2532,11 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         needs the user. Options: A, keep only the targeted fixes of findings
         1 and 2, Small (estimate); B, the allowlist and the forced-off
         settings, Medium. Recommended: B.
+    - User decision 122 (2026-10-21): A. Keep the targeted fixes of findings
+      1 and 2, and add no protocol allowlist: the base commit is an ancestor
+      of the current commit, so a base install trusts it as the project's own
+      install did. `mokly-base-dependencies.md` states the trust rule and
+      which `exec:` generators can still run (`b1604f5b`).
     - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
       2 finding 2.
   - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
