@@ -9,6 +9,8 @@ use std::process::{Child, Command};
 
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::processes::ProcessGroup;
+#[cfg(target_os = "macos")]
+use crate::unix_group_members::{self, SystemMembers};
 
 pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::Result<()>> {
     let source = path_string(source)?;
@@ -96,7 +98,7 @@ fn group_is_gone(source: &io::Error, pid: i32) -> bool {
     }
     #[cfg(target_os = "macos")]
     if source.raw_os_error() == Some(libc::EPERM) {
-        return crate::unix_group_members::stopped(&crate::unix_group_members::SystemMembers, pid);
+        return unix_group_members::stopped(&SystemMembers, pid);
     }
     false
 }

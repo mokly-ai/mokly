@@ -3372,6 +3372,27 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         hang remains open for hosted diagnosis. Evidence:
         `.context/native-ci-fixes-5/`. The hub must dispatch hosted macOS and
         Windows CI on `rebuild/native-ci-fixes-5`.
+  - [x] Native CI round 5 follow-up: use the libproc PID count and preserve
+        unknown member status as an error. Synchronize the process fixture
+        with the deepest child's signal handler. Share the watchdog input
+        stream with `node:process` imports to fix the Windows PostCSS hang.
+        Keep the 60-second request budget. Remove the temporary diagnostic
+        workflow after hosted import and process checks. Updated evidence,
+        the correction to the initial ineffective WASI flag probe, and merge
+        audits: `.context/native-ci-fixes-5/resume/`.
+  - Outside round 5: `mokly-compare/tests/dependencies_tests.rs` and
+    `package_roots_tests.rs` returned Fallback instead of Installed on Windows
+    before the package-manager merge. Confirm on the merged tree. Separate branch.
+  - Outside round 5: `mokly-platform/tests/process_tests.rs` expects a nonzero
+    Windows job-close exit, but the hosted child exited zero. Separate branch.
+  - Outside round 5: `mokly-render/tests/integration_tests.rs` reported 14
+    Windows failures after the design binary. Inspect their native logs. Separate branch.
+  - Outside round 5: `mokly-watch/src/_tests_/native_registration_tests.rs`
+    expects slash paths. `mokly-watch/tests/native_tests.rs` cannot rename a
+    watched ancestor on Windows. Separate branch.
+  - Outside round 5: `xtask/src/remote/_tests_/snapshot_runner_tests.rs` unwraps
+    a missing Windows command. Three snapshot adapter cases compare CRLF
+    checkout bytes with LF fixtures. Separate branch.
   - [x] F17: align remote executable discovery with the shared Node shim
         resolver and Windows native `.exe` names. Keep explicit extensions
         and Unix names. Evidence: `.context/f17/windows-red.log` and

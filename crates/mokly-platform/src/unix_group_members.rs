@@ -8,6 +8,7 @@ mod system;
 pub(super) use system::SystemMembers;
 
 #[cfg_attr(test, unimock::unimock(api = MembersMock))]
+/// Process membership boundary used only after a refused group signal.
 pub(super) trait Members {
     /// Return the number of PIDs written, not a byte count.
     fn list(&self, pgid: i32, pids: &mut [i32]) -> io::Result<usize>;
@@ -15,6 +16,7 @@ pub(super) trait Members {
     fn live(&self, pgid: i32, pid: i32) -> io::Result<bool>;
 }
 
+/// Accept a stopped group only after a complete, readable enumeration.
 pub(super) fn stopped(members: &dyn Members, pgid: i32) -> bool {
     let mut pids = vec![0; 256];
     loop {

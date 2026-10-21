@@ -5,6 +5,7 @@ use std::mem::{MaybeUninit, size_of, size_of_val};
 
 use super::Members;
 
+/// Darwin process table queries, including members reaped during inspection.
 pub(crate) struct SystemMembers;
 
 impl Members for SystemMembers {
