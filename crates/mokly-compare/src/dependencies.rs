@@ -77,7 +77,30 @@ impl Dependencies for DependencyTiers {
                 })?;
                 root.validate_version(&version)?;
             }
-            let key = install::key(&request.base, &request.source_identity, &roots);
+            let node_version = if request.install_scripts {
+                String::from_utf8_lossy(
+                    &self.commands.run(&Command {
+                        program: "node".into(),
+                        args: vec!["--version".into()],
+                        directory: request.source_root.clone(),
+                        timeout: deadline.saturating_sub(self.clock.now()),
+                        byte_limit: None,
+                        size_root: None,
+                        cache: None,
+                    })?,
+                )
+                .trim()
+                .to_owned()
+            } else {
+                String::new()
+            };
+            let key = install::key(
+                &request.base,
+                &request.source_identity,
+                &roots,
+                request.install_scripts,
+                &node_version,
+            );
             self.cache.get(
                 Kind::Dependencies,
                 &key,
