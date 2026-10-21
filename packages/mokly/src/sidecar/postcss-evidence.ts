@@ -80,12 +80,20 @@ function compilerBytes(
 }
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
-export function observeModuleLoads(): void {
+export function observeModuleLoads(
+  onModuleUrl: (url: string) => void = () => {},
+): void {
   if (typeof nodeModule.registerHooks !== "function") return;
   let customized = preloadedCode;
   nodeModule.registerHooks({
+    resolve(specifier, context, nextResolve) {
+      const result = nextResolve(specifier, context);
+      if (typeof result.url === "string") onModuleUrl(result.url);
+      return result;
+    },
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
+      onModuleUrl(url);
       if (!url.startsWith("file:")) return result;
       const file = fileURLToPath(url);
       modules.add(file);

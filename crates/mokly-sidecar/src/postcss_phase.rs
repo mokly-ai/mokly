@@ -18,6 +18,7 @@ pub(super) struct PhaseState(Arc<Mutex<State>>);
 #[derive(Default)]
 struct State {
     records: [Option<Record>; 4],
+    last_module_url: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -28,6 +29,8 @@ struct Record {
     elapsed_ms: f64,
     #[serde(rename = "durationMs")]
     duration_ms: Option<f64>,
+    #[serde(rename = "moduleUrl")]
+    module_url: Option<String>,
 }
 
 impl PhaseState {
@@ -45,6 +48,13 @@ impl PhaseState {
         let Ok(record) = serde_json::from_str::<Record>(payload) else {
             return false;
         };
+        if record.event == "module" && record.phase == "module" {
+            self.0
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .last_module_url = record.module_url;
+            return true;
+        }
         let Some(index) = PHASES.iter().position(|phase| *phase == record.phase) else {
             return false;
         };
@@ -58,7 +68,7 @@ impl PhaseState {
 
     pub(super) fn summary(&self) -> Option<String> {
         let state = self.0.lock().unwrap_or_else(|error| error.into_inner());
-        if state.records.iter().all(Option::is_none) {
+        if state.records.iter().all(Option::is_none) && state.last_module_url.is_none() {
             return None;
         }
         let phases = PHASES
@@ -74,7 +84,11 @@ impl PhaseState {
             })
             .collect::<Vec<_>>()
             .join(", ");
-        Some(format!("PostCSS phases: {phases}"))
+        let module = state
+            .last_module_url
+            .as_deref()
+            .map_or_else(String::new, |url| format!("; last module URL: {url}"));
+        Some(format!("PostCSS phases: {phases}{module}"))
     }
 }
 

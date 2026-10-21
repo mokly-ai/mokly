@@ -32,7 +32,7 @@ const spawned = phases.start("spawn");
 process.once("message", (workerData: WorkerData) => {
   spawned("ok");
   observeFileReads();
-  observeModuleLoads();
+  observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,

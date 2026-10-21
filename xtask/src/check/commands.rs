@@ -24,7 +24,7 @@ pub(super) fn commands_for(
             rust_clippy(),
             npm(&["run", "build", "--workspace", "@mokly/viewer"]),
             npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-            cargo(&["test", "--workspace"]),
+            cargo(&["test", "--workspace", "--no-fail-fast"]),
         ],
     }
 }
