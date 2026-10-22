@@ -3,9 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_html::tree::Node;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_model::namespace;
+use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::asset_delivery::AssetRead;
@@ -39,6 +41,8 @@ pub trait GeneratedResources: Send + Sync {
 /// Sorted authored closure with traversal and ownership evidence.
 #[derive(Clone, Debug, Default)]
 pub struct Closure {
+    /// Historical resources excluded after checkout conversion failed.
+    pub warnings: Vec<Warning>,
     /// Repository-relative authored files, never generated route names.
     pub files: BTreeSet<String>,
     /// Per-file reference lists reused by watch.
@@ -212,8 +216,18 @@ impl ClosureBuilder for Walker {
                         && !target.ends_with(".html")
                         && !target.ends_with(".htm")
                     {
-                        if self.tree.digest(&file.absolute).is_err() {
-                            return Err(missing(route, &reference.url));
+                        match self.tree.digest(&file.absolute) {
+                            Ok(_) => {}
+                            Err(SourceError::Unavailable { message, .. }) => {
+                                result.files.remove(path);
+                                result.warnings.push(Warning {
+                                    code: "base-conversion",
+                                    subject: WarningSubject::Route(target.clone()),
+                                    message,
+                                });
+                                continue;
+                            }
+                            Err(_) => return Err(missing(route, &reference.url)),
                         }
                         let urls = self.index.parse(&target, &[])?;
                         edges.insert(target.clone(), urls);
@@ -221,6 +235,15 @@ impl ClosureBuilder for Walker {
                     }
                     match self.tree.read_public(&file.absolute) {
                         Ok(bytes) => bytes.into(),
+                        Err(SourceError::Unavailable { message, .. }) => {
+                            result.files.remove(path);
+                            result.warnings.push(Warning {
+                                code: "base-conversion",
+                                subject: WarningSubject::Route(target.clone()),
+                                message,
+                            });
+                            continue;
+                        }
                         Err(_) => return Err(missing(route, &reference.url)),
                     }
                 };

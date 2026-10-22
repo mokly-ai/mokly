@@ -16,12 +16,13 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
 - Produce strict review v8, private snapshot v4, and affected-consumer chains.
 - Share public index state, eligibility, workspace lists, and input-change projection.
-- Read regular base files from Git blobs with preserved POSIX paths.
+- Read checkout-converted base files with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
 - Store source and dependency caches outside the repository.
 - Bound cache bytes, retain active leases, and evict the least used entries.
 - Compare all package manifests and lockfiles before dependency selection.
-- Install base dependencies with scripts disabled, a deadline, and a size bound.
+- Install base dependencies with scripts disabled by default, a deadline, and a
+  size bound. The working-tree configuration or CLI can opt into scripts.
 - Return bundle settings and a configuration warning when an install fails.
 
 ## What This Crate Does
@@ -36,7 +37,21 @@ Git IO holds no cache lock. Unrelated adjacent blobs are not prefetched.
 Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
-these files. HTML reads require no extraction or package manager.
+these files. HTML reads require no extraction or package manager. Conversion failures become
+`SourceError::Unavailable` and `base-conversion` warnings. The resource memo
+keeps unavailable bytes distinct from missing paths. Independent resources can
+still prove changes. Partial source extraction leases have no durable receipt.
+Their staging data is removed when the lease ends. Source keys include effective
+checkout settings. External filters get a new source key for each preparation.
+HTML-only comparison uses working dependencies for package stylesheets on both
+sides. The CLI compares dependency identities through Git and emits
+`base-dependencies` when governing inputs differ, including a package-only upgrade.
+`dependency_paths::governing` selects manifests and lockfiles beside the
+head's used dependency directories and their repository ancestors. The
+`read_paths` methods on `InputReader` and `WorkingInputs` read only those
+paths. They preserve Git clean identities without repository inventories.
+An HTML comparison uses its head generation's completed dependency inventory.
+With no used dependency directory, it reads no dependency inputs.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency
@@ -52,7 +67,7 @@ complete while an install is pending. Deleting the cache permits a rebuild.
 The CLI shares one `OnceReporter` across both namespaces and uses
 `plain_line` for the exact cache announcement.
 
-`SourceInputs` reads dependency inputs from base blobs.
+`SourceInputs` reads dependency inputs from converted base blobs.
 `SystemWorkingInputs` gets tracked and nonignored candidates through Git and
 compares clean object identities. It reuses base bytes for equal inputs. `DependencyTiers`
 uses working third-party dependencies when both sets are equal. In every tier,
@@ -77,8 +92,12 @@ It checks catalog and package-extension ranges like manifest specifications,
 and it requires the `npm:` default protocol.
 Classic reads its project and user configuration. Command-line flags and
 environment settings fix its folders, mirror, and lock file inside the private
-entry, and a confined committed mirror stays in use. Each fixed environment
-setting replaces every inherited spelling of its name.
+entry, and a confined committed mirror stays in use. Each install starts from
+an allowed list of environment variables — paths, proxies, certificates,
+process-start names, and the names that Mokly fixes — and Mokly removes every
+other inherited variable, so no base configuration can read an inherited
+secret such as `MOKLY_TOKEN` or `GITHUB_TOKEN`. Yarn Berry also reads no
+project environment file.
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
@@ -103,17 +122,19 @@ current variants through accepted moves and retain selected historical variants.
 Canonical impact groups stay at the consumer level. A different entry kind
 at an old path supplies no destination. Each link's destination is the entry
 whose views its evidence names, and that entry's own detail names the changed
-component and can compare, so a variant does not borrow its parent's.
+component and can compare, so a variant does not borrow its parent's. A link
+to an Added view is marked ineligible and opens Current without a comparison
+request because that view has no base side.
+Eligibility follows the displayed scheme, including Light fallback when the
+destination has no Dark view.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Its timing spans count final view states and measure changed-path collection,
-deduplication, and sorting without recording source data.
-`Comparison::capture_base` validates and captures the base through one ordered
-collector. Each base
+Its timing spans count final view states without recording source data.
+It validates and captures the base through one ordered collector. Each base
 view supplies its validated document and closure without a second render.
 Base preparation passes that result to `Comparison::compare_prepared`.
-An uncaptured fallback also uses that entry point,
-so a summary that exceeds the capture bound does not start another pass.
+An uncaptured fallback also uses that entry point, so a summary that exceeds
+the capture bound does not start another pass.
 Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and
@@ -150,6 +171,24 @@ matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
+Owned rules enter the same catalogue-wide evidence reducer as linked and
+ownerless head CSS. Equal rule identities join across document routes and
+owner sets. Physical containment claims matches for every CSS source. Owned
+rules use supplier ancestry only for nested filtering, preserving a supplier's
+own rule without preventing a receiver from styling supplied content.
+Self-nested copies keep their matches. Each source uses matched, unresolved,
+or excluded records.
+Physical and supplier ancestry use separate shared paths. Each instance key
+retains one supplier path. Linked and ownerless proof retain only physical
+ancestry; owned proof also retains a shared supplier path.
+The engine transfers observations into catalogue attribution without cloning them.
+Exact owned-instance proof uses the same unfiltered own-page sets after the
+catalogue pass, and retains only paired instances with unchanged caller inputs.
+Own render, resource, and rule impact share one unchanged-input check. Saved
+prop edits retain their view records without marking unchanged consumers affected.
+Own CSS states and dependency reasons use kept own-page source proof.
+Details can retain a nested component record without promoting its source to
+an own-page dependency reason.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership
@@ -169,10 +208,10 @@ group links to a different-kind replacement at the parent's path.
 Metadata comparison keeps schema, controls, and declared slots on the parent.
 Variants compare their own metadata, props, and supplied slots independently.
 
-Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
-copies it to the destination. Digest cache misses each start one
-`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
-command. Hash-only preparation does not fill the source-byte LRU.
+Opaque Git asset delivery buffers one converted blob under the 64 MiB Git
+limit and copies it to the destination. Digest cache misses stream checkout-
+converted bytes into SHA-256. Delivery uses the same commit-pinned conversion
+context and byte bounds. Hash-only preparation does not fill the source-byte LRU.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.
@@ -226,11 +265,19 @@ cold build per manager from a local registry that requires the user token.
 Pinned test CLIs come from development dependencies, and no test uses the
 internet. Tests cover script suppression, timing tiers, registry access,
 comparison output, cache reuse, executable selection, and fallback reasons.
+Fixture setup updates pnpm lockfiles explicitly, including after a manifest
+change. `tests/static_base_manager_ci.test.ts` runs the four base-manager
+files and `tests/static_cold_base_tiers.test.ts` with `CI=true` and
+`GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
+
+Registry rule ownership stays separate from delivery style groups. Both the
+private capture codec and the head comparison retain these rule records.
 
 ### Key Code
 
 - [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).
 - [Removed projection](./src/projection_removed.rs).
+- [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
 - [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).
@@ -241,6 +288,7 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [command supervision](./src/commands.rs).
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
+  [the install environment allowlist](./src/manager_environment.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
   [Berry configuration ranges](./src/manager_yarnrc.rs) check the catalog and

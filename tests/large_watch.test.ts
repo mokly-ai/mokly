@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { WATCH_BROWSER_TIMEOUT_MS } from "../scripts/large/watch.js";
 import { withFixtureEdit } from "../scripts/large/watch_edits.js";
+
+test("full-size watch allows slow React publication before timing an edit", () => {
+  assert.ok(WATCH_BROWSER_TIMEOUT_MS >= 1_800_000);
+});
 
 test("an edit restores its source after a failed measurement", async (t) => {
   const writes: unknown[][] = [];

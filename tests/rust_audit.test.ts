@@ -25,6 +25,7 @@ function harness(
     date?: string;
     packages?: unknown;
     ignore?: unknown;
+    settings?: Record<string, unknown>;
     metadataText?: string;
     auditText?: string;
     failure?: "metadata" | "install" | "audit";
@@ -33,7 +34,13 @@ function harness(
   const calls: { file: string; args: string[]; cwd: string }[] = [];
   const output: string[] = [];
   const report = {
-    settings: { ignore: options.ignore ?? [approved] },
+    settings: {
+      ignore: options.ignore ?? [approved],
+      severity: null,
+      target_arch: [],
+      target_os: [],
+      ...options.settings,
+    },
     vulnerabilities: { found: false, count: 0, list: [] },
     warnings: { unmaintained: [{ advisory: { id: "RUSTSEC-2024-0436" } }] },
   };
@@ -128,6 +135,47 @@ test("effective cargo-audit settings cannot ignore another advisory", async () =
     assert.equal(fixture.calls.at(-1)?.file, tool);
   }
   await harness({ ignore: [] }).run();
+});
+
+test("effective cargo-audit settings cannot filter by severity or target", async () => {
+  for (const settings of [
+    { severity: "none" },
+    { severity: "low" },
+    { severity: "medium" },
+    { severity: "high" },
+    { severity: "critical" },
+    { target_arch: ["x86_64"] },
+    { target_arch: ["x86_64", "aarch64"] },
+    { target_os: ["linux"] },
+    { target_os: ["linux", "windows"] },
+  ]) {
+    const fixture = harness({ settings });
+    await assert.rejects(
+      fixture.run(),
+      /Rust audit settings cannot filter advisories/,
+    );
+    assert.equal(fixture.calls.at(-1)?.file, tool);
+  }
+});
+
+test("unfiltered effective settings pass with either the approved ignore or no ignore", async () => {
+  for (const ignore of [[approved], []]) {
+    await harness({
+      ignore,
+      settings: { severity: null, target_arch: [], target_os: [] },
+    }).run();
+  }
+});
+
+test("malformed target lists cannot establish an unfiltered audit", async () => {
+  for (const field of ["target_arch", "target_os"]) {
+    for (const value of [null, "linux", {}]) {
+      await assert.rejects(
+        harness({ settings: { [field]: value } }).run(),
+        /Cannot validate the Rust audit/,
+      );
+    }
+  }
 });
 
 test("missing or malformed native tool reports cannot bypass review", async () => {

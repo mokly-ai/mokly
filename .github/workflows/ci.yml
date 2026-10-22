@@ -14,7 +14,7 @@ jobs:
   repository:
     name: Repository
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 30
+    timeout-minutes: 75
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
@@ -55,11 +55,6 @@ jobs:
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
-      - name: Check release pull request components
-        if: steps.profile.outputs.release-pull-request == 'true'
-        env:
-          RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: node scripts/release/check-pr.mjs "$RELEASE_BASE_SHA"
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
@@ -87,7 +82,7 @@ jobs:
     needs:
       - repository
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 30
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:

@@ -8,6 +8,8 @@ import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
+  beginReadEvidenceGeneration,
+  initializeReadEvidenceGeneration,
   observeModuleLoads,
   preloadedObserver,
   readEvidence,
@@ -19,7 +21,7 @@ import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
 type WorkerData = Pick<
   ProcessCssParams,
-  "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
+  "context" | "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
 
 guardParentOutput();
@@ -35,6 +37,7 @@ process.on("disconnect", () => process.exit());
 const spawned = phases.start("spawn");
 process.once("message", (workerData: WorkerData) => {
   spawned("ok");
+  initializeReadEvidenceGeneration(workerData.context);
   if (!preloadedObserver()) {
     observeFileReads();
   }
@@ -50,6 +53,7 @@ process.once("message", (workerData: WorkerData) => {
     "message",
     async ({ id, params }: { id: number; params: ProcessCssParams }) => {
       try {
+        beginReadEvidenceGeneration(params.context);
         const { processor, modules, paths } = await configuration;
         const result = await phases.run("stylesheet-run", () =>
           processor

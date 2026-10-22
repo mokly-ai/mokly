@@ -21,11 +21,13 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
             children: Vec::new(),
             text: true,
             regions: vec![Containment {
+                instance: None,
                 path: "card".into(),
                 root: false,
             }]
             .into_iter()
             .collect(),
+            input_regions: Default::default(),
             owner: EvidenceOwner::Entry,
         }],
     };
@@ -47,7 +49,7 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
             Some(&tree),
             Some(&tree),
         );
-        let result = attribution::attribute(&[PageObservation {
+        let result = attribution::attribute(vec![PageObservation {
             component: None,
             rules: observations,
         }]);
@@ -73,11 +75,23 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
             children: Vec::new(),
             text: true,
             regions: vec![Containment {
+                instance: None,
                 path: "card".into(),
                 root,
             }]
             .into_iter()
             .collect(),
+            input_regions: if owner == EvidenceOwner::Entry {
+                Default::default()
+            } else {
+                vec![Containment {
+                    instance: None,
+                    path: "card".into(),
+                    root,
+                }]
+                .into_iter()
+                .collect()
+            },
             owner,
         }],
     };
@@ -107,12 +121,12 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
         ),
     })
     .collect();
-    let result = attribution::attribute(&pages);
+    let result = attribution::attribute(pages);
     assert_eq!(
         result.changed_components.into_iter().collect::<Vec<_>>(),
         ["card"]
     );
     assert_eq!(result.pages[1][0].owner, component);
     assert_eq!(result.pages[1][0].stylesheet, "consumer");
-    assert_eq!(result.pages[2][0].owner, EvidenceOwner::Entry);
+    assert_eq!(result.pages[2][0].owner, component);
 }

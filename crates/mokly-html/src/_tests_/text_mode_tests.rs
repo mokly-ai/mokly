@@ -62,6 +62,22 @@ fn plaintext_after_active_formatting_is_stable() {
 }
 
 #[test]
+fn plaintext_formatting_clones_keep_authored_characters_and_entity_spellings() {
+    let payload = "text & <i>literal</i> \"quotes\" &amp; &#60;";
+    for prefix in ["<p><b>", "<b>", "<table><b>"] {
+        let source = format!("<p>Before &amp;</p>{prefix}<plaintext>{payload}");
+        for nodes in [parse::document(&source), parse::fragment(&source)] {
+            let bytes = serialize::html(&nodes);
+            assert!(bytes.contains(payload), "{bytes}");
+            assert!(bytes.contains("Before &amp;"), "{bytes}");
+            let repaired = parse::document(&bytes);
+            assert_eq!(repaired, parse::document(&serialize::html(&repaired)));
+            assert!(serialize::html(&repaired).contains(payload));
+        }
+    }
+}
+
+#[test]
 fn plaintext_serialization_does_not_expose_private_repair_markers() {
     let nodes = vec![Node::Region {
         region: Region {

@@ -172,3 +172,59 @@ fn embedded_documents_share_and_retain_the_enclosing_component_path() {
         }
     );
 }
+
+#[test]
+fn repeated_component_paths_use_the_exact_slot_supplier_instance() {
+    let instance = |key: &str, path: &str, children| {
+        region(
+            RegionKind::Instance {
+                key: key.into(),
+                path: path.into(),
+                local_id: key.into(),
+                props_key: "props".into(),
+            },
+            children,
+        )
+    };
+    let slot = region(
+        RegionKind::Slot {
+            key: "slot".into(),
+            instance_key: "inner".into(),
+            name: "children".into(),
+            owner: ComponentInputOwner::Instance {
+                instance_key: "outer".into(),
+            },
+        },
+        vec![tree::element("b", &[], vec![])],
+    );
+    let nodes = vec![instance(
+        "outer",
+        "parent",
+        vec![instance(
+            "child",
+            "child",
+            vec![instance(
+                "inner",
+                "parent",
+                vec![slot, tree::element("i", &[], vec![])],
+            )],
+        )],
+    )];
+    let tree = document(&nodes, &BTreeMap::new());
+    let paths = |index: usize| {
+        tree.elements[index]
+            .input_regions
+            .iter()
+            .map(|region| region.path.as_str())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(paths(0), ["parent"]);
+    assert_eq!(paths(1), ["parent", "child", "parent"]);
+    assert_eq!(tree.elements[0].regions.len(), 3);
+    assert_eq!(
+        tree.elements[0].owner,
+        EvidenceOwner::Component {
+            path: "parent".into()
+        }
+    );
+}

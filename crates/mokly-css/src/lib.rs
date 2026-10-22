@@ -57,10 +57,16 @@ mod selector_impl;
 mod selector_scope;
 
 pub mod attribution;
+mod attribution_membership;
+mod attribution_records;
 
 #[cfg(test)]
 #[path = "_tests_/rule_tests.rs"]
 mod rule_tests;
+
+#[cfg(test)]
+#[path = "_tests_/has_depth_tests.rs"]
+mod has_depth_tests;
 
 pub mod inline_attribution;
 
@@ -69,6 +75,14 @@ pub mod observation;
 #[cfg(test)]
 #[path = "_tests_/attribution_tests.rs"]
 mod attribution_tests;
+
+#[cfg(test)]
+#[path = "_tests_/physical_ownership_tests.rs"]
+mod physical_ownership_tests;
+
+#[cfg(test)]
+#[path = "_tests_/scoped_universal_tests.rs"]
+mod scoped_universal_tests;
 
 mod compiler_assets;
 mod css_boundaries;

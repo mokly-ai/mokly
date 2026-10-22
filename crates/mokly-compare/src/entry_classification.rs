@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::catalogue::{CatalogueModel, EntryContent};
-use mokly_model::evidence::{EvidenceOwner, RuleStatus};
+use mokly_model::evidence::EvidenceOwner;
 use mokly_model::review::{EntryChangeReason, ReviewState};
 
 use crate::comparison_types::EntryClassification;
@@ -53,11 +53,7 @@ pub(crate) fn classify(
                 });
             let mut dependencies = BTreeSet::new();
             for view in &views.views {
-                for rule in &view.document.evidence.rules {
-                    if rule.status != RuleStatus::Excluded && owned(&rule.owner, own_component) {
-                        dependencies.insert(rule.stylesheet.clone());
-                    }
-                }
+                dependencies.extend(view.rule_sources.iter().cloned());
                 for resource in &view.document.evidence.resources {
                     if owned(&resource.owner, own_component) {
                         dependencies.insert(resource.path.clone());

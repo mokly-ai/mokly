@@ -46,9 +46,11 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
         };
         let config = config();
         let result = provider.prepare(&BaseRequest {
+            head: &Unimock::new(()),
             working_config: &config,
             repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
+            install_scripts: false,
             sources: HistoricalSources {
                 failures: Arc::new(Unimock::new(())),
                 tree: Arc::new(Unimock::new(())),
@@ -87,9 +89,11 @@ fn failed_graph_preparation_retains_only_its_dependency_warning() {
     };
     let config = config();
     let result = provider.prepare(&BaseRequest {
+        head: &Unimock::new(()),
         working_config: &config,
         repository: Arc::new(Unimock::new(())),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
+        install_scripts: false,
         sources: HistoricalSources {
             failures: Arc::new(Unimock::new(())),
             tree: Arc::new(Unimock::new(())),

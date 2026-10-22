@@ -49,9 +49,32 @@ browser repair to documents with `plaintext`, including composed content that
 already carries private metadata. Formatting clones and later foster-parented
 nodes become stable literal text. While plaintext mode is active, serialization
 omits private normalization attributes from cloned tags and private markers.
+It writes all text raw, including text inside formatting clones and later
+nodes, so authored ampersands, markup, and entity spellings stay literal.
+Inside HTML `noscript`, raw text instead writes `</noscript` as `&lt;/noscript`,
+with case preserved, so scripting-enabled browsers cannot expose its payload.
+The shared writer checks adjacent text writes and keeps foreign `noscript`
+elements under their ordinary escaping rules.
+Serialization and metadata repair share the parser-context state. Foreign
+`plaintext` elements keep escaped text unless an HTML integration point or
+foreign-content repair puts the element in HTML parsing mode.
+End tags close the surviving matching parser ancestor after foreign-content
+repair. This keeps later text in the correct mode when a nested tag was popped.
+Normalization checks the predicted plaintext start against its reparsed repair
+identity in both the full document and the prefix through that start tag.
+Later literal text cannot provide a replacement identity. If the parser did
+not create an HTML `plaintext` element at the predicted point, normalization
+retries with every text node escaped before restoring metadata.
+Confirmed plaintext keeps the component's own-page root when it consumes the
+trailing repair marker. Root recovery changes no served bytes and keeps Usage
+ready. Split instance, slot, and ignore regions retain their existing policy.
+Every raw-text tag uses the namespace returned by the parser-context helper.
+An HTML tag grafted into foreign content therefore keeps its text escaped.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
-Sidecar style elements carry typed owner annotations through HTML reparsing.
+Sidecar style elements carry typed per-rule owner annotations through HTML
+reparsing. Assembly retains the original style text and delivery grouping;
+comparison reads the separate metadata.
 Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
@@ -103,6 +126,9 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 ### Key Code
 
 - [Annotated tree](./src/tree.rs), [HTML5 parser](./src/parse.rs), and [tree sink](./src/html_sink.rs).
+- [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
+  share plaintext activation. The [noscript guard](./src/noscript_text.rs)
+  escapes raw HTML `noscript` closing text.
 - [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
 - [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
 - [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).

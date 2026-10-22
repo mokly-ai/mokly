@@ -52,9 +52,13 @@ retain their values. An independent token check rejects scoping that changes
 anything beyond local names and the module scope/composition syntax.
 
 The renamer, the module check, and the token check share one statement
-grammar. The section reader classifies each statement once for all three, as
-`lightningcss` reads the block that holds it. The grammar of a block depends
-on its statement and on the block around it:
+grammar. The section reader classifies each statement once for all three,
+matching `lightningcss` for the supported statement starts and block grammar.
+There is a known parity gap for an HTML comment token (`<!--` or `-->`) before
+a stylesheet statement: cssparser skips the token, but the section reader
+keeps it. Such a statement can receive a different kind in the scanners and
+in `lightningcss`; post-merge work will align the scanners. The grammar of a
+block depends on its statement and on the block around it:
 
 - The stylesheet is a rule list. The block of a conditional, layer, scope, or
   starting-style rule in a rule list is a rule list too. Every statement in a
@@ -77,10 +81,10 @@ on its statement and on the block around it:
 - Every other block is a declarations block, for example `@font-face`, a
   keyframe, an unknown at-rule, or a rule's block in a keyframes or
   `@document` block. A rule that starts with an HTML comment token also opens
-  one, because cssparser skips that token in the stylesheet. `lightningcss`
-  keeps, drops, or rejects the text of a declarations block. A statement
-  without a block there is a declaration or text that stays as authored,
-  except that `@value` fails.
+  one in the section reader. `lightningcss` skips that token before reading
+  the statement. It keeps, drops, or rejects the text of a declarations block.
+  A statement without a block there is a declaration or text that stays as
+  authored, except that `@value` fails.
 
 Declaration-only at-rules such as `@font-face` end a non-custom statement at
 its first `{}` block, as postcss does. A nested at-rule keeps its prelude as
@@ -90,25 +94,36 @@ authored, except the keyframes name and an `@scope` selector.
 failure. `rules::diff` cancels equal occurrences before pairing declaration
 edits. `rule_matching::match_document` uses Servo `selectors` against both
 available document arenas. It keeps every matching element until attribution.
+The matcher checks element depth once with an explicit stack. When either
+tree exceeds 512 levels, changed `:has()` selectors produce unresolved evidence.
+Other selectors retain their normal matching. The limit rounds down from a
+2 MiB worker stack divided by a measured 288-byte recursive frame and an
+eightfold safety factor. It leaves room for caller and selector frames.
 `MatchTree` preserves parsed element relationships and component containment;
 the HTML adapter omits ignored regions and inert template contents.
 `ContainmentPath` shares immutable parent links between elements, copied
 matching trees, embedded documents, and detached match proof. It visits
-regions innermost first and releases deep paths iteratively. Inline proof
-filters by input owner without copying the physical ancestry. Callers read
-`MatchProof::regions()` for this filtered view. The physical ancestry and
-input-owner filter flag stay private to the crate.
+regions innermost first and releases deep paths iteratively. Every source
+keeps physical containment. Owned proof also keeps the shared supplier path
+for its nested filter. Linked and ownerless proof retain no supplier path.
+Callers read `MatchProof::regions()` for physical ancestry; storage stays private.
+Physical and supplier links share exact instance identities, so repeated
+component paths cannot make a receiving copy look like the supplying instance.
 
-`attribution::attribute` first collects unfiltered own-page matches. It then
-filters nested component matches and produces per-view owner records. A sheet
-with no kept rule has one empty-selector `excluded` record. `MemoryParsedCss`
-shares equal bytes across paths and sides. Eviction changes work only.
-`inline_attribution` retains input-owner proof for ownerless head rules.
-The comparison engine joins their rule identities with catalogue-wide own-page
-matches. Slot matches follow their supplier. Body styles and owned head styles
-are excluded from this collector. Evidence uses the containing public document
-route. Linked selectors emit one
-record per innermost changed component owner, plus outside entry evidence.
+`attribution::attribute` joins equal rule observations, collects unfiltered
+own-page matches, and filters nested components before one record reduction.
+It consumes the observation vector and moves retained paths into the reducer.
+Owned head styles, ownerless head styles, and linked CSS share that reducer.
+Kept own-page source paths remain separate from published ownership records.
+Callers use those paths for direct preview states and dependency reasons.
+A source with no kept rule has one empty-selector `excluded` record.
+Unresolved proof takes precedence for the same selector and source.
+`inline_attribution` uses the linked observation boundary for ownerless head
+rules. `observe_owned` retains the declared owner and supplier filter.
+Declared owners claim physical instances even when their own pages have no
+match. Ownerless rules require catalogue-wide own-page proof, as linked CSS does.
+`MemoryParsedCss` shares equal bytes across paths and sides; eviction changes
+work only. Evidence retains each source's public route.
 
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
@@ -163,6 +178,7 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 - [Rule collection](./src/rule_collection.rs), [diff](./src/rules.rs), and [matching](./src/rule_matching.rs).
 - [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs),
   [shared containment](./src/containment.rs), and [parsed cache](./src/parsed_cache.rs).
+- [Record reduction](./src/attribution_records.rs) publishes evidence for every CSS source.
 - [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
 - [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
 - [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).

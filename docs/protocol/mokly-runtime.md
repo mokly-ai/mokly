@@ -75,7 +75,7 @@ watches the sources by default under the [watch contract](./mokly-watch.md);
 Serve binds `127.0.0.1` only, starting at the port the
 [package contract](./mokly-package.md#cli) names, and keeps the resolved port
 for the life of the process. Git never runs on the request path: ref
-resolution, changed paths, and base reads run in background work with their
+resolution and base reads run in background work with their
 own cancellation. `--base <ref>` overrides `review.base` for the life of the
 process.
 

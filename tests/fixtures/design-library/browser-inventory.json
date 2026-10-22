@@ -599,6 +599,16 @@
   },
   {
     "kind": "screen",
+    "path": "design/components/states/loading/props-failed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/props-loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
     "path": "design/components/states/loading/usage-failed",
     "colorSchemes": ["light"]
   },

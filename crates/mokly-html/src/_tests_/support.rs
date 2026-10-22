@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::definition_provider::{
-    DefinitionProviderMock, Definitions, ProvidedDefinition,
+    DefinitionProvider, DefinitionProviderMock, Definitions, ProvidedDefinition,
 };
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::input::EntryInput;
@@ -19,7 +19,7 @@ use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 pub(super) fn prepared(body: &str) -> PreparedCatalogue {
-    let files = Arc::new(BTreeMap::from([
+    let files = BTreeMap::from([
         (
             PathBuf::from("/repo/specs/home.screen.html"),
             format!("---\ntitle: Home\nprops: {{label: Supplier}}\n---\n{body}"),
@@ -28,10 +28,7 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
             PathBuf::from("/repo/specs/shared.mockup.tsx"),
             "export default component;".into(),
         ),
-    ]));
-    let projection = files.clone();
-    let children = files.clone();
-    let reads = files;
+    ]);
     let definition = ProvidedDefinition {
         rendering: Default::default(),
         exporting_file: "specs/shared.mockup.tsx".into(),
@@ -54,6 +51,43 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
             ..Default::default()
         },
     };
+    let definitions = Arc::new(Unimock::new(
+        DefinitionProviderMock::describe
+            .next_call(matching!(_, _))
+            .returns(Ok(Definitions {
+                entries: vec![definition],
+                ..Default::default()
+            })),
+    ));
+    prepare(files, definitions)
+}
+
+pub(super) fn prepared_html(body: &str, component: &str) -> PreparedCatalogue {
+    prepare(
+        BTreeMap::from([
+            (
+                PathBuf::from("/repo/specs/home.screen.html"),
+                format!("---\ntitle: Home\n---\n{body}"),
+            ),
+            (
+                PathBuf::from("/repo/specs/note.component.html"),
+                format!(
+                    "---\ntitle: Note\nelement: ui-note\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\n---\n{component}"
+                ),
+            ),
+        ]),
+        Arc::new(Unimock::new(())),
+    )
+}
+
+fn prepare(
+    files: BTreeMap<PathBuf, String>,
+    definitions: Arc<dyn DefinitionProvider>,
+) -> PreparedCatalogue {
+    let files = Arc::new(files);
+    let projection = files.clone();
+    let children = files.clone();
+    let reads = files;
     let mock = Arc::new(Unimock::new((
         SourceTreeMock::project
             .each_call(matching!(_))
@@ -96,12 +130,6 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
         SourceTreeMock::read
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| Ok(reads[path].as_bytes().to_vec()))),
-        DefinitionProviderMock::describe
-            .next_call(matching!(_, _))
-            .returns(Ok(Definitions {
-                entries: vec![definition],
-                ..Default::default()
-            })),
     )));
     let config = ResolvedConfig {
         input: Config::default(),
@@ -122,7 +150,7 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
     Builder {
         tree: mock.clone(),
         discovery: Arc::new(Discoverer { tree: mock.clone() }),
-        definitions: mock,
+        definitions,
     }
     .prepare(&config, None)
     .unwrap()

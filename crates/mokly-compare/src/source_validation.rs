@@ -11,9 +11,10 @@ use mokly_model::review::{ReviewEntry, ReviewKind, ReviewResultV8};
 use mokly_model::{review_order, review_validation};
 
 use crate::affected;
+use crate::comparison_address::address;
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::EntryClassification;
-use crate::comparison_views::{UsageView, address};
+use crate::comparison_views::UsageView;
 use crate::error::{Error, Result};
 use crate::impact_validation;
 use crate::instance_proof::InstanceProof;

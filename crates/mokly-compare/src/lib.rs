@@ -6,6 +6,7 @@ pub mod cache;
 pub mod cache_types;
 pub mod commands;
 pub mod dependencies;
+pub mod dependency_paths;
 pub mod error;
 pub mod extraction;
 pub mod git_tree;
@@ -20,6 +21,7 @@ pub mod working_inputs;
 
 mod berry_sources;
 mod cache_maintenance;
+mod cache_transient;
 pub mod dependency_types;
 mod durability;
 mod install;
@@ -28,6 +30,7 @@ mod local_specifications;
 mod manager;
 mod manager_classic;
 mod manager_command;
+mod manager_environment;
 mod manager_local;
 mod manager_lockfiles;
 mod manager_plan;
@@ -67,6 +70,8 @@ mod rendered_moves;
 mod view_material;
 
 mod affected;
+mod comparison_address;
+mod comparison_attribution;
 mod comparison_views;
 mod entry_classification;
 mod review_projection;
@@ -118,6 +123,7 @@ mod use_case_impact;
 
 pub mod source_failures;
 
+mod git_failures;
 mod git_prefetch;
 
 mod owned_style_instances;

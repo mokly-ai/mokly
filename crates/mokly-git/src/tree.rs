@@ -51,6 +51,11 @@ impl Mode {
     pub fn regular(self) -> bool {
         matches!(self, Self::File | Self::Executable)
     }
+
+    /// Whether checkout should preserve executable permissions.
+    pub fn executable(self) -> bool {
+        self == Self::Executable
+    }
 }
 
 /// One leaf of a Git tree, retaining source spelling and file mode.
@@ -104,9 +109,13 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
         let size = if matches!(mode, Mode::Submodule | Mode::Directory) {
             0
         } else {
-            match size.parse() {
-                Ok(size) => size,
-                Err(_) => return Err(Error::MalformedOutput),
+            if matches!(*size, "-" | "BAD") {
+                0
+            } else {
+                match size.parse() {
+                    Ok(size) => size,
+                    Err(_) => return Err(Error::MalformedOutput),
+                }
             }
         };
         let Some(value) = candidate(&record[tab + 1..]) else {
@@ -134,30 +143,6 @@ pub(crate) fn text(bytes: &[u8]) -> Result<&str> {
         Ok(text) => Ok(text),
         Err(_) => Err(Error::PathEncoding),
     }
-}
-
-pub(crate) fn blobs(bytes: &[u8], entries: &[Entry]) -> Result<Vec<Vec<u8>>> {
-    let mut remaining = bytes;
-    let mut result = Vec::with_capacity(entries.len());
-    for entry in entries {
-        let Some(end) = remaining.iter().position(|byte| *byte == b'\n') else {
-            return Err(Error::MalformedOutput);
-        };
-        let expected = format!("{} blob {}", entry.object, entry.size);
-        if remaining[..end] != *expected.as_bytes() {
-            return Err(Error::MalformedOutput);
-        }
-        remaining = &remaining[end + 1..];
-        if remaining.len() <= entry.size || remaining[entry.size] != b'\n' {
-            return Err(Error::MalformedOutput);
-        }
-        result.push(remaining[..entry.size].to_vec());
-        remaining = &remaining[entry.size + 1..];
-    }
-    if !remaining.is_empty() {
-        return Err(Error::MalformedOutput);
-    }
-    Ok(result)
 }
 
 pub(crate) fn candidate(bytes: &[u8]) -> Option<&str> {

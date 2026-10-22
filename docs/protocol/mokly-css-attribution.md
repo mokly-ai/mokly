@@ -47,7 +47,7 @@ file grants no ownership. No owner record controls eligibility or attribution.
 
 Head `<style>` elements are not stylesheets of this analysis. Styles a
 [sidecar](./mokly-sidecar.md#style-collection) render returned carry their
-owners, and unowned head styles follow the inline rule of
+owners, and unowned head styles follow the physical-containment rule of
 [style ownership](./mokly-comparison.md#style-ownership); both use the rule
 diff of this page and the per-rule records of the
 [membership contract](./mokly-css-attribution-membership.md). Resources that
@@ -77,8 +77,8 @@ excluded stylesheet. A view without either carries no record.
    that moves without changing its selectors, declarations, or conditions
    produces no rule.
 2. **Matchability.** Test each diffed rule's selectors against both sides'
-   composed documents, after ignored regions are removed, with the `selectors`
-   crate; ignored content supplies no match. A match on either side keeps the
+   composed documents after ignored regions are removed. Ignored content supplies
+   no match. A match on either side keeps the
    rule and keeps every matched element with its side, its selector, and the
    regions that contain it. Enclosing conditions are not evaluated: a
    rule inside `@media` or `@container` is tested exactly like a rule outside
@@ -97,10 +97,11 @@ excluded stylesheet. A view without either carries no record.
    predicates stay in force. An unsupported selector or a matcher compilation
    failure stays unresolved; stripping state never strips a shadow or global
    keep construct.
-3. **Reduce.** A rule with at least one match is kept with status `matched`.
+3. **Reduce.** Owned head styles, ownerless head styles, and linked CSS use
+   one evidence reducer. A rule with a kept match has status `matched`.
    A rule with no match on either side produces no record. Any unresolved
    rule is kept with status `unresolved`, even when another rule matched. When
-   no changed rule of the stylesheet is kept on this view, the stylesheet is
+   no changed rule of a source is kept on this view, that source is
    examined and excluded: one record with status `excluded` marks it, and it
    supplies no reason for the view. A failed stylesheet parse yields no
    partial selector evidence.
@@ -165,7 +166,14 @@ exclusions beyond it.
 - A selector the matcher cannot parse.
 - Shadow-scoped selectors: `:host`, `:host()`, `:host-context()`, `::part()`,
   and `::slotted()`.
-- Universal, `:root`, `html`, and `body` selectors.
+- Universal selectors without a positive type, class, ID, or attribute
+  condition outside pseudo-class arguments in the same selector branch.
+  A scoped universal selector uses ordinary matching. `:root`, `html`, and
+  `body` selectors remain unresolved, including scoped combinations.
+- Native nesting may substitute a parent selector list into `:is()`. That
+  substituted parent counts as an outer anchor only when every parent branch
+  has a positive type, class, ID, or attribute anchor. Authored `:is()`
+  arguments remain conservative.
 - A rule inside a nesting parent whose combined selector cannot be resolved.
 - Any changed custom property declaration (`--*`), because inheritance can
   reach any descendant.

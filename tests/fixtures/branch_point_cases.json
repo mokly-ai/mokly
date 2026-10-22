@@ -107,7 +107,8 @@
       "specs/branch/impact/slip.screen.html": null,
       "specs/branch/impact/tally.component.html": "---\ntitle: Tally\nelement: bp-tally\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Tally}\n---\n<span class=\"branch-tally\">After {{label}}</span>",
       "specs/branch/impact/archive/slip.screen.html": "---\ntitle: Slip\nmovedFrom: branch/impact/slip\n---\n<h1>Slip</h1><bp-tally label=\"Paid\"></bp-tally>",
-      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total after</p>"
+      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total after</p>",
+      "specs/branch/impact/new.screen.html": "---\ntitle: New consumer\n---\n<h1>New consumer</h1><bp-tally label=\"New\"></bp-tally>"
     },
     "moves": {
       "branch/impact/archive/slip": "branch/impact/slip"
@@ -116,7 +117,8 @@
     "affected": [
       "branch/impact/meter",
       "branch/impact/archive/slip",
-      "branch/impact/ledger"
+      "branch/impact/ledger",
+      "branch/impact/new"
     ]
   }
 ]

@@ -19,9 +19,8 @@ export const SCREEN_STYLE_COPY = {
    * affect, as Screen affected by a changed component draws it.
    */
   componentsChanged: "Components this screen uses changed",
-  /** Details of an entry that only changed components affect end with it. */
-  sharedImpact:
-    "Shared component changes affect this preview. This page has no independent entry in Changes.",
+  /** Details of a screen that only changed components affect end with it. */
+  sharedImpact: "Changed components that this screen uses affect its preview.",
 } as const;
 
 /** The same evidence recast for a component and its saved variants. */
@@ -33,11 +32,14 @@ export const COMPONENT_STYLE_COPY = {
   noChanges: "No changes to this variant.",
   stylesChanged: "Styles this variant uses changed",
   componentsChanged: "Components this variant uses changed",
+  /** Details of a component that only changed components affect end with it. */
+  sharedImpact: "Changed components that this variant uses affect its preview.",
 } as const;
 
 /**
  * The same evidence for a whole-document page. Mokly records no component
- * output on a page, so every match on it is outside the changed components.
+ * output on a page, so every match on it is outside the changed components,
+ * and changed components never give it a sentence of their own.
  */
 export const PAGE_STYLE_COPY = {
   files: "Changes to these files may affect this page:",

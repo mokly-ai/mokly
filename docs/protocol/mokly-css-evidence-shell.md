@@ -84,9 +84,12 @@ rules:
 - A screen or component that only changed components affect stays
   Unmodified with no Changes row, and its comparison band stays available.
   Its Details keep the full matched styles of each file, link each changed
-  component, and end with “Shared component changes affect this preview. This
-  page has no independent entry in Changes.” in place of the terminal line, as
-  `design/components/states/shared-impact/affected-screen` depicts. In a
+  component, and end with the shared-component sentence in place of the
+  terminal line: “Changed components that this screen uses affect its
+  preview.” for a screen, as
+  `design/components/states/shared-impact/affected-screen` depicts, and
+  “Changed components that this variant uses affect its preview.” for a
+  component. In a
   loaded comparison, each of its affected views reads the stage heading
   "Components this screen uses changed", or "Components this variant uses
   changed" for a component.

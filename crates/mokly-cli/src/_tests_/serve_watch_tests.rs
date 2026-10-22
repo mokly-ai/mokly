@@ -58,6 +58,7 @@ fn catalogue() -> PreparedCatalogue {
         elements: Default::default(),
         deferred_modules: vec![],
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         warnings: vec![],
     }
 }

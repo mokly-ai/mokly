@@ -63,6 +63,22 @@ export async function runRustAudit({
     throw new Error(
       `Only ${ADVISORY} may be ignored. Remove other ignored advisory IDs and retry.`,
     );
+  if (
+    ("severity" in settings && settings.severity !== null) ||
+    hasTargetFilter(settings, "target_arch") ||
+    hasTargetFilter(settings, "target_os")
+  )
+    throw new Error(
+      "Rust audit settings cannot filter advisories by severity or target.",
+    );
+}
+
+/** @param {Record<string, unknown>} settings @param {string} key */
+function hasTargetFilter(settings, key) {
+  if (!(key in settings)) return false;
+  const targets = settings[key];
+  if (!Array.isArray(targets)) throw invalidReport();
+  return targets.length > 0;
 }
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */

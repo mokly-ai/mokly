@@ -77,6 +77,7 @@ impl JavaScriptGraph {
         let mut side = self.runtime.side(config)?;
         let mut inputs = DeliveryInputs {
             resources: self.runtime.resources.clone(),
+            dependency_aliases: side.dependency_aliases.clone(),
             ..Default::default()
         };
         let mut compiler = None;
@@ -167,6 +168,7 @@ impl JavaScriptGraph {
             });
             inputs = DeliveryInputs {
                 resources: self.runtime.resources.clone(),
+                dependency_aliases: side.dependency_aliases.clone(),
                 fragment_generation: Some(fingerprint),
                 stylesheet_roots: stylesheets::roots(
                     &generation.modules,

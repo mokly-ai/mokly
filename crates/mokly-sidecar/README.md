@@ -145,6 +145,9 @@ Other real integration tests spawn the built sidecar and render a component,
 screen, story, and page.
 The `mock` feature exposes the public trait mocks to other crates.
 
+Collected styles retain their original CSS bytes. Optional typed rule records
+carry comparison owners independently of the delivery owner grouping.
+
 ### Key Code
 
 - [Wire methods](./src/methods.rs), [results](./src/results.rs), and

@@ -127,9 +127,11 @@ bindings fails closed under the [render records](./mokly-sidecar-render-records.
 
 ## Style Collection
 
-A render returns styles owned by the rendered component or screen. Emotion
-and styled-components use render-local server extraction. The sidecar also
-collects `<style>` elements in the fragment. For a persistent registry such
+A render keeps style delivery separate from comparison ownership under the
+[render records contract](./mokly-sidecar-render-records.md#results). Emotion
+and styled-components retain one render-local server extraction. Their rules
+name the registered component that used them, in component and screen renders.
+Slot content keeps its supplier. The sidecar also collects `<style>` elements in the fragment. For a persistent registry such
 as the React Native Web sheet from `AppRegistry.getApplication`, it returns
 only rules whose class selectors match the fragment's class tokens, their
 required at-rules and keyframes, and the registry's element-level resets.
@@ -138,6 +140,10 @@ are independent of render order. Rules keep first-appearance order.
 The binary deduplicates rules by identity across fragments and places them in
 the document head before configured stylesheets. Unknown styling libraries
 contribute only the `<style>` elements in the fragment.
+Comparison applies the shared [style
+ownership](./mokly-comparison.md#style-ownership) rules to those owners and
+emits the shared per-rule evidence, including one excluded record when no
+changed rule is kept.
 
 ## Markers In Fragments
 
@@ -228,7 +234,7 @@ JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 
 The sidecar runs consumer code with the consumer build's trust and inherits its environment.
 Each PostCSS child puts selected dependency directories before inherited `NODE_PATH` entries. Base dependency installation
-disables lifecycle scripts and has a time limit, so no consumer script runs at install time.
+disables lifecycle scripts by default and has a time limit. An explicit working-tree opt-in can run them inside the owned process tree.
 
 ## Related Docs
 

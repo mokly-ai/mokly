@@ -55,4 +55,18 @@ pub struct CollectedStyle {
     pub css: String,
     /// Component parent paths, or empty for selector-based attribution.
     pub owners: Vec<String>,
+    /// Rule ownership for comparison, separate from the delivered sheet grouping.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub attribution: Option<Vec<StyleAttribution>>,
+}
+
+/// Rendered rule bytes and the components whose renders used them.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(deny_unknown_fields)]
+pub struct StyleAttribution {
+    /// CSS emitted by the adapter for this rule identity.
+    pub css: String,
+    /// Registered component paths; empty for selector attribution.
+    pub owners: Vec<String>,
 }

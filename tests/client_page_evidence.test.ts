@@ -85,9 +85,15 @@ test("the page wording replaces screen with page in every evidence sentence", ()
     "These stylesheets changed, but none of the changed styles apply to this page.",
   );
   assert.equal(page.noChanges, "No changes to this page.");
-  for (const key of Object.keys(screen) as (keyof typeof screen)[]) {
+  // A page has no usage records, so it has every sentence of a screen except
+  // the shared-component sentence.
+  for (const key of Object.keys(page) as (keyof typeof page)[]) {
     const value = screen[key];
     if (typeof value === "string")
       assert.equal(page[key], value.replaceAll("screen", "page"), key);
   }
+  assert.deepEqual(
+    Object.keys(screen).filter((key) => !(key in page)),
+    ["sharedImpact"],
+  );
 });

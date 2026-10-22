@@ -21,13 +21,29 @@ const token = "user-registry-token";
 const script = `node -e "require('node:fs').writeFileSync('lifecycle-ran', 'unexpected')"`;
 
 /**
+ * One attempt by a base configuration to read a secret during the install.
+ * `authPlaceholder` goes into the base auth key, `env` is set in the build
+ * environment, and `inject` uses a Yarn Berry environment file outside the
+ * repository. The test asserts whether `secret` reaches the registry.
+ */
+export type RegistryAttack = {
+  env?: Record<string, string>;
+  authPlaceholder?: string;
+  secret: string;
+  mustLeak: boolean;
+  inject?: boolean;
+};
+
+/**
  * A cold base whose locked dependency comes from a local registry. The
  * project configuration selects the registry and the user configuration
  * holds its token, so a tier-two install proves that the manager reads both.
+ * With `attack`, the committed base also tries to read a secret.
  */
 export async function baseRegistryFixture(
   manager: Manager,
   context: TestContext,
+  attack?: RegistryAttack,
 ) {
   const fixture = await coldBaseFixture(2, context);
   const { root, cache } = fixture;
@@ -66,15 +82,12 @@ export async function baseRegistryFixture(
       `npmRegistries:\n  "${host}":\n    npmAuthToken: ${token}\n    npmAlwaysAuth: true\n`,
     );
   }
-  if (manager.name === "Yarn Berry") {
-    await write(
-      root,
-      ".yarnrc.yml",
-      `nodeLinker: node-modules\nnpmRegistryServer: "${registry.url}"\nunsafeHttpWhitelist:\n  - "127.0.0.1"\nenableGlobalCache: false\nenableTelemetry: false\n`,
-    );
-  } else {
-    await write(root, ".npmrc", `registry=${registry.url}/\n`);
-  }
+  const berry = manager.name === "Yarn Berry";
+  const projectFile = berry ? ".yarnrc.yml" : ".npmrc";
+  const projectBody = berry
+    ? `nodeLinker: node-modules\nnpmRegistryServer: "${registry.url}"\nunsafeHttpWhitelist:\n  - "127.0.0.1"\nenableGlobalCache: false\nenableTelemetry: false\n`
+    : `registry=${registry.url}/\n`;
+  await write(root, projectFile, projectBody);
   // The npm test runner exports its own registry and user configuration.
   const env: NodeJS.ProcessEnv = {
     ...Object.fromEntries(
@@ -102,9 +115,18 @@ export async function baseRegistryFixture(
     npm_config_userconfig: path.join(home, ".npmrc"),
   };
   await install(root, manager, owner);
+  // Plant the attack into the committed base only. The fixture's own installs
+  // run with the user token and no secret, so they keep making the lockfile.
+  if (attack)
+    await write(
+      root,
+      projectFile,
+      projectBody + (await attackBody(attack, host, berry, root, context)),
+    );
   await git(root, "add", "-A");
   await git(root, "commit", "-qm", "registry base fixture");
   const base = await git(root, "rev-parse", "HEAD");
+  if (attack) await write(root, projectFile, projectBody);
   await write(root, "package.json", manifest("2.0.0"));
   await install(root, manager, owner);
   await write(
@@ -134,8 +156,29 @@ export async function baseRegistryFixture(
       HTTP_PROXY: "http://127.0.0.1:9",
       HTTPS_PROXY: "http://127.0.0.1:9",
       NO_PROXY: "127.0.0.1,localhost",
+      ...(attack?.env ?? {}),
     },
   };
+}
+
+/** The exfiltration block for the committed base project configuration. */
+async function attackBody(
+  attack: RegistryAttack,
+  host: string,
+  berry: boolean,
+  root: string,
+  context: TestContext,
+): Promise<string> {
+  if (attack.inject) {
+    const outside = path.join(path.dirname(root), "outside-secret.env");
+    await fs.writeFile(outside, `INJECTED_SECRET=${attack.secret}\n`);
+    context.after(() => fs.rm(outside, { force: true }));
+    return `injectEnvironmentFiles:\n  - ${JSON.stringify(outside)}\nnpmRegistries:\n  "${host}":\n    npmAuthToken: "\${INJECTED_SECRET}"\n    npmAlwaysAuth: true\n`;
+  }
+  const placeholder = attack.authPlaceholder ?? "";
+  return berry
+    ? `npmRegistries:\n  "${host}":\n    npmAuthToken: "${placeholder}"\n    npmAlwaysAuth: true\n`
+    : `${host}/:_authToken=${placeholder}\n${host}/:always-auth=true\n`;
 }
 
 async function install(root: string, manager: Manager, env: NodeJS.ProcessEnv) {
@@ -143,6 +186,7 @@ async function install(root: string, manager: Manager, env: NodeJS.ProcessEnv) {
     managerName(manager) === "pnpm"
       ? [
           "install",
+          "--no-frozen-lockfile",
           "--ignore-scripts",
           "--ignore-pnpmfile",
           "--config.pm-on-fail=ignore",

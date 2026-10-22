@@ -211,8 +211,11 @@ path alone. No outcome shows owner records.
 ## Status Lines
 
 Each changed component that the entry consumes is linked as “Changed
-component: Title”. The shared-component sentence, “Shared component changes
-affect this preview. This page has no independent entry in Changes.”, appears
+component: Title”. The shared-component sentence names the routed entry's
+kind: “Changed components that this screen uses affect its preview.” for a
+screen, and “Changed components that this variant uses affect its preview.”
+in a component workspace. It names the kind as the terminal line does, so it
+never calls a screen or a variant a page. It appears
 when the routed entry's index record is ready and not `included` and changed
 components affect it: its detail's `relatedComponents` names a changed
 component, which the review's `affected` records give for the entry whose views

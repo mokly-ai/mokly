@@ -82,6 +82,7 @@ async fn an_active_rebuild_and_a_burst_produce_exactly_two_actions() {
                     elements: Default::default(),
                     deferred_modules: vec![],
                     javascript: Default::default(),
+                    dependency_directories: Default::default(),
                     warnings: vec![],
                 })
             })

@@ -19,7 +19,10 @@ stylesheet delivery. It writes no files.
 `Graph` implements `dyn RenderGraph`. `DeliveryInputs` supplies module CSS
 roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet
-inputs and computes document plans. It checks worker cancellation before each
+inputs and computes document plans. Completed JavaScript, stylesheet, PostCSS,
+and asset inputs populate the prepared catalogue's dependency-directory set.
+Cached bundles supply the same set. Old cache-validation reads and filename
+suffixes cannot add or hide dependency usage. It checks worker cancellation before each
 entry and stylesheet root. Config-relative stylesheet paths normalize dot
 segments inside `repoRoot`. A prepared generation exposes the same worker
 cancellation through `check_cancelled` for callers that process views in a loop.
@@ -52,7 +55,8 @@ its complete key. Explicit case spellings, moved aliases, and missing targets
 keep their requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
-trees, and evidence. It evicts by access order. Oversized artifacts return
+trees, and evidence, including registry ownership in documents and fragments.
+It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
 Cross-view anchor checks retain successful destination renders in this same
@@ -76,7 +80,10 @@ reporting its summary charge and forwarding inputs in route order.
 Each batch contains at most one transient input per render worker.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
-validation. Both sides require complete, valid closures. A missing referenced
+validation. Both sides validate reached resources. Historical checkout failures keep a
+`base-conversion` warning in the closure and omit that file from delivery.
+`ResourceUnavailable` preserves this state through resource byte and digest
+access. Other closure work continues. A missing referenced
 head resource is `build-invalid`. `resource_bytes` reads confined public routes
 without granting access to private sources or retaining assets in the private
 source snapshot. `resource_digest` hashes opaque resources through a bounded

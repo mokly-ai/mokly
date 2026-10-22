@@ -2,7 +2,7 @@
 
 import { viewHref } from "../navigation/routes.js";
 
-import type { UsageDeliveryState } from "./use_workspace_data.js";
+import type { DetailDelivery } from "./data_requests.js";
 import type { UsageLink, WorkspaceData } from "./workspace_data.js";
 
 /** The Usage sections: current uses, and the consumers a change affects. */
@@ -33,7 +33,7 @@ export function WorkspaceUsage({
   delivery,
 }: {
   data: WorkspaceData;
-  delivery: UsageDeliveryState;
+  delivery: DetailDelivery;
 }) {
   if (delivery.status !== "ready")
     return (

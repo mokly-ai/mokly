@@ -38,11 +38,24 @@ Remaining logical inputs and placements use that repaired ownership and their
 corresponding identity keys. If a re-owned instance key collides, that instance
 also loses its region; the repair remains a warning.
 
-`plaintext` consumes the rest of a document. Serialization omits its end tag
+An HTML `plaintext` start tag consumes the rest of a document. Foreign-content
+`plaintext` elements do not activate this mode. HTML integration points retain
+their HTML parsing rules. Serialization omits the HTML `plaintext` end tag
 and the end tags of ancestors entered before it. A parser repair pass turns
 formatting clones inside it and nodes moved after it into the literal payload
 that the browser receives. The repaired tree and its bytes stay stable on
 further parse/serialize passes, including repair of annotated composed content.
+Serialization writes text raw throughout plaintext mode, including formatting
+clones and later nodes. Authored characters and entity spellings stay literal.
+Plaintext on a component's own page retains its root range and ready Usage
+through repair, even though plaintext consumes the trailing root boundary.
+The parsed element must confirm the predicted HTML plaintext start. If it
+does not, composition retries with all text escaped so authored text stays inert.
+The retry re-annotates the source with plaintext prediction disabled, so end
+tags, region markers, and repair identities remain available for restoration.
+Inside HTML `noscript`, raw text escapes every case-insensitive `</noscript` to `&lt;/noscript`, preserving case but changing authored characters to prevent browser markup activation.
 Serialization omits private markers and attributes inside plaintext mode. Other
-HTML text modes keep their escaping rules. `pre`, `textarea`, and `listing`
+HTML text modes follow the parser-context namespace, including component grafts
+inside SVG and MathML. Foreign raw-text tag names keep text escaped.
+`pre`, `textarea`, and `listing`
 preserve the leading line feed that the HTML parser would otherwise remove.

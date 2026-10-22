@@ -140,3 +140,51 @@ test("runtime style adapters follow consumer package aliases", async (context) =
     /rgba\(4,5,6,1.00\)/,
   );
 });
+
+test("registry rules are attributed to the component that rendered them", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["registry-ownership.mockup.tsx"],
+      renderer: null,
+      storiesFiles: [],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await installBindings(sidecar, generation, {
+    "registry-ownership.mockup.tsx#card": { path: "card", title: "Card" },
+    "registry-ownership.mockup.tsx#stack": { path: "stack", title: "Stack" },
+    "registry-ownership.mockup.tsx#layout": {
+      path: "layout",
+      title: "Layout",
+    },
+    "registry-ownership.mockup.tsx#default": { path: "home", title: "Home" },
+  });
+  const result = await sidecar.call<RenderResult>("renderScreen", {
+    generation,
+    handle: "registry-ownership.mockup.tsx#default",
+    entry: { path: "home", title: "Home" },
+    props: {},
+    viewport: "desktop",
+    colorScheme: "light",
+  });
+  const style = (needle: string) =>
+    result.styles
+      .flatMap((sheet) => sheet.attribution ?? [sheet])
+      .find((item) => item.css.includes(needle));
+  assert.deepEqual(style(".stack>*+*")?.owners, ["stack"]);
+  assert.deepEqual(style(".stack-emotion>*+*")?.owners, ["stack"]);
+  assert.deepEqual(style(".layout{")?.owners, ["layout"]);
+  assert.deepEqual(
+    result.styles.map((item) => item.css),
+    [
+      ".stack-emotion>*+*{margin-top:9px;}",
+      ".stack>*+*{margin-top:8px;}/*!sc*/\n" +
+        'data-styled.g1[id="sc-global-AwISP"]{content:"sc-global-AwISP1,"}/*!sc*/\n' +
+        ".layout{border:1px solid red;}/*!sc*/\n" +
+        'data-styled.g2[id="sc-global-axthp"]{content:"sc-global-axthp1,"}/*!sc*/\n',
+    ],
+  );
+});

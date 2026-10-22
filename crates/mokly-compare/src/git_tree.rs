@@ -13,7 +13,6 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::error::Error;
 use crate::source_cache::SourceCache;
-use crate::source_failures::SourceFailures;
 use crate::sources::{Sources, TreeIndex};
 
 /// Git files share the working tree's private absolute namespace without reading it.
@@ -22,7 +21,8 @@ pub struct GitTree {
     pub(crate) sources: Arc<dyn Sources>,
     pub(crate) bound: usize,
     pub(crate) cache: Mutex<SourceCache>,
-    failure: Mutex<Option<Arc<Error>>>,
+    pub(crate) failure: Mutex<Option<Arc<Error>>>,
+    pub(crate) unavailable: Mutex<BTreeMap<RepoPath, String>>,
     children: Mutex<DirectoryIndex>,
     pub(crate) digests: Mutex<BTreeMap<RepoPath, String>>,
 }
@@ -43,6 +43,7 @@ impl GitTree {
             bound: bytes,
             cache: Mutex::new(SourceCache::new(bytes)),
             failure: Mutex::new(None),
+            unavailable: Mutex::new(BTreeMap::new()),
             children: Mutex::new(DirectoryIndex::default()),
             digests: Mutex::new(BTreeMap::new()),
         }
@@ -75,25 +76,6 @@ impl GitTree {
             Ok(index) => Ok(index),
             Err(source) => Err(self.failed("index", path, source)),
         }
-    }
-    pub(crate) fn failed(
-        &self,
-        operation: &'static str,
-        path: &Path,
-        source: Error,
-    ) -> SourceError {
-        let source = Arc::new(source);
-        let mut failure = self
-            .failure
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if failure.as_deref().is_none_or(|previous| {
-            matches!(previous, Error::Limit { .. })
-                && !matches!(source.as_ref(), Error::Limit { .. })
-        }) {
-            *failure = Some(source.clone());
-        }
-        adapter(operation, path, source)
     }
 }
 
@@ -183,6 +165,18 @@ impl SourceTree for GitTree {
         {
             return Ok(bytes);
         }
+        if let Some(message) = self
+            .unavailable
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(&relative)
+            .cloned()
+        {
+            return Err(SourceError::Unavailable {
+                path: path.into(),
+                message,
+            });
+        }
         let mut contents = match self
             .sources
             .read_many(std::slice::from_ref(&relative), Limits::default())
@@ -205,11 +199,11 @@ impl SourceTree for GitTree {
     }
 
     fn digest_unretained(&self, path: &Path) -> Result<String> {
-        self.digest_file(path, true)
+        self.digest_file(path)
     }
 
     fn digest(&self, path: &Path) -> Result<String> {
-        self.digest_file(path, false)
+        self.digest_file(path)
     }
 
     fn prefetch(&self, requested: &[PathBuf]) -> Result<()> {
@@ -234,7 +228,7 @@ fn failure(operation: &'static str, path: &Path, kind: io::ErrorKind) -> SourceE
     }
 }
 
-fn adapter(
+pub(crate) fn adapter(
     operation: &'static str,
     path: &Path,
     source: impl std::error::Error + Send + Sync + 'static,
@@ -254,12 +248,3 @@ mod git_tree_tests;
 #[cfg(test)]
 #[path = "_tests_/git_tree_scale_tests.rs"]
 mod git_tree_scale_tests;
-
-impl SourceFailures for GitTree {
-    fn failure(&self) -> Option<Arc<Error>> {
-        self.failure
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone()
-    }
-}

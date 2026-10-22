@@ -7,25 +7,24 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 Comparison decides, for every entry and view, whether the base and the head
 differ in a way a reviewer should see, and who owns each difference. Its
 inputs are the head side rendered from the working tree, the base side
-rendered from the base commit under [Sides](#sides), the Git changed paths,
-and the configured review settings. It works on parsed trees. It never reads recorded text offsets, and
+rendered from the base commit under [Sides](#sides), and the configured review
+settings. It works on parsed trees. It never reads recorded text offsets, and
 it never splices document text.
 
 ## Markers
 
-The core attaches ownership and ignore regions to tree nodes while it
-composes a document. A fragment a sidecar returns carries its regions as the
-comment markers below, and the core reads them into node annotations when it
-grafts the fragment. Served and built documents keep the `mokly-instance` and
-`mokly-slot` markers of every region the core composed, whatever rendered the
-instance, so the [published inspector](./mokly-published-inspector.md)
-resolves each `r-n` region in the live page. Ignore regions resolve at
-composition. Private `mokly-output` pairs mark adapter output inside renderer
-wrappers; the core consumes them when it attaches a component root.
-`mokly-link` pairs are consumed by
-[link adaptation](./mokly-link-controls.md); these private pairs are not written. The canonical
-form below removes every marker before comparison. Every comment name with
-the `mokly-` prefix is reserved for markers.
+The core attaches ownership and ignore regions to tree nodes while it composes a
+document. A fragment a sidecar returns carries its regions as the comment
+markers below, and the core reads them into node annotations when it grafts the
+fragment. Served and built documents keep the `mokly-instance` and `mokly-slot`
+markers of every region the core composed, whatever rendered the instance, so
+the [published inspector](./mokly-published-inspector.md) resolves each `r-n`
+region in the live page. Ignore regions resolve at composition. Private
+`mokly-output` pairs mark adapter output inside renderer wrappers; the core
+consumes them when it attaches a component root. `mokly-link` pairs are consumed
+by [link adaptation](./mokly-link-controls.md); these private pairs are not
+written. The canonical form below removes every marker before comparison. Every
+comment name with the `mokly-` prefix is reserved for markers.
 
 | Marker                                                                 | Meaning                                                                         |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -67,54 +66,64 @@ component keeps the view affected, and an excluded rule changes nothing.
 Ignored regions pair by id across sides. A region whose id exists on one side
 only is ordinary content. A changed material key on a paired region is a
 material change even when the region's content is ignored. A view whose only
-differences lie inside paired ignored regions is `ignored-only`.
-
-View states are `unchanged`, `changed`, `added`, `removed`, and
-`ignored-only`. Snapshots served to the viewer keep the real bytes of both
-sides; the canonical form exists only to decide equality.
+differences lie inside paired ignored regions is `ignored-only`. View states are
+`unchanged`, `changed`, `added`, `removed`, and `ignored-only`. Snapshots served
+to the viewer keep the real bytes of both sides; the canonical form exists only
+to decide equality.
 
 ## Style Ownership
 
-Styles a [sidecar](./mokly-sidecar.md) render returned are written into the
-head as `<style data-mokly-owners="<component paths>">` elements, one rule
-list per owner set, deduplicated by rule identity. Every rule inside such an
-element belongs to those components. Composition retains trusted owner
-annotations through HTML normalization and graph caching on both sides. An
-authored `data-mokly-owners` attribute does not create that annotation.
-Compare normalized rule sets per owner; formatting and duplicate copies do
-not change material. Collected rules use the per-rule records of the
-[membership contract](./mokly-css-attribution-membership.md). Rule evidence
-supplies their material and affected-consumer effects under the
-[component change rules](./mokly-component-changes.md). Linked stylesheets
-use the same [CSS attribution](./mokly-css-attribution.md) rules.
+Registry ownership follows the [sidecar rule records](./mokly-sidecar-render-records.md#results).
+Trusted annotations survive normalization and caching on both sides.
+Authored owner attributes grant no ownership. Compare normalized rules per
+owner; formatting and duplicate copies do not change material.
+Owned, ownerless head, and linked CSS use one
+[catalogue-wide proof and evidence reduction](./mokly-css-attribution.md).
+Equal rule identities join across documents, even with different owner sets.
+Physical instance containment decides who claims a match for all three sources.
+For component X, drop a match inside a different nested component Y only when
+the same rule matches on Y's own pages before nested filtering. A self-nested
+copy of X never takes X's match. For a declared owner's rule, use supplier
+input ancestry only for that nested test. A receiving component cannot take
+the supplier's own rule for content the supplier passed into it.
 
-Head `<style>` elements without owners use the same rule identities and
-catalogue-wide own-page proof as linked CSS. Diff their rules between the
-sides and match changed selectors against both trees. A component owns a
-match only when its own pages keep a match for that rule after nested
-filtering. Inline matches follow input ownership: caller-supplied slot
-content cannot prove the receiving component. Other matches belong to the
-entry. Unresolved rules belong to the entry.
+Owned rules retain their declared owner as exact-instance evidence when no
+own-page proof applies, including matches on supplied content inside that
+owner's physical region. That proof requires a paired instance with unchanged
+caller inputs and a kept match under the nested test. It can change the
+component's implementation without changing its own views.
+Unresolved rules use the conservative entry record and supply no instance proof.
 
-Collect only ownerless head styles. Body styles and styles with
-nonempty trusted owner records do not enter this analysis. A rule with no match on either
-side produces no record. A document whose changed inline rules all match
-nothing has one `excluded` record with an empty selector and the entry owner.
-An excluded record never makes a view material. The `stylesheet` address is
-the containing public document route. Equal rule identities join own-page
-proof across document routes; consumer routes add no reasons to a component.
+Head styles without trusted owners and linked styles use physical containment
+and catalogue-wide own-page proof to assign component records. A receiving
+component claims supplied content only when its own pages prove that rule.
+Without that proof, a match outside every changed component belongs to the entry.
+Authored body styles do not enter this analysis. Linked styles keep their reachability.
+The [membership contract](./mokly-css-attribution-membership.md) defines the records and their effects.
+
+When a source has no kept changed rule on a view, emit one `excluded` record
+with an empty selector and the entry owner. Owned and ownerless head styles use the containing
+public document route. Omit its excluded record when that route has any kept
+rule. Excluded evidence changes no view. Consumer document routes add no
+own-page reason to a component.
 
 ## Resources
 
 References are read from the tree with the owner of the referencing element:
-`src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
-`url()` and `@import` chains. The closure follows them through the
-[public closure policy](./mokly-public-closure.md) and embedded documents; the
-head side reads files from the working tree, the base side from Git blobs, and
-bytes are compared.
-A changed referenced resource is conservative evidence of a rendering change
-for every view that reaches it, attributed to the owner of the reference. A
-resource is never discovered by joining text across a removed region.
+`src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet `url()`
+and `@import` chains. The closure follows them through the [public closure
+policy](./mokly-public-closure.md) and embedded documents; the head side reads
+files from the working tree, the base side from checkout-converted Git blobs,
+and bytes are compared. A changed referenced resource is conservative evidence
+of a rendering change for every view that reaches it, attributed to the owner of
+the reference. A resource is never discovered by joining text across a removed
+region.
+
+A base resource that cannot complete checkout conversion is unavailable with
+one `base-conversion` warning. Failed filters, timeouts, and converted-byte
+limits have this outcome. Its unknown bytes prove neither equality nor a
+change. Other resource and document comparisons continue. Working-side
+resource validation keeps its existing failure behavior.
 
 ## Changes Membership
 
@@ -129,9 +138,16 @@ owns the removed-entry presentation.
 
 ## Sides
 
+Base conversion applies the base commit's attributes and the user's Git
+configuration. It includes line endings, custom filters, and Git LFS downloads.
+Network access is allowed within the existing preparation bounds. Missing
+promisor blobs are fetched in one batch before parallel reads. A failed fetch
+names a recovery command. The [base preparation contract](./mokly-base-preparation.md)
+also defines the matching Git clean rule for dependency identities.
+
 The base is the merge base of the configured `review.base` and `HEAD`. The
 head side renders from the working tree. The base side renders from the base
-commit's Git tree through the same render graph, with sources read from blobs;
+commit's Git tree through the same render graph, with checkout-converted sources;
 HTML screens, components, and documents need no checkout. Both sides render
 with the current Mokly version, so a Mokly upgrade alone lists no change, and
 the render cache keeps a side's views until their inputs change.
@@ -142,39 +158,27 @@ commit's sources are extracted on demand into the bounded cache outside the
 repository that the [architecture page](../architecture/rust-core.md#render-graph)
 names, keyed by the commit, and the sidecar bundles from that directory.
 
-Repository-owned packages, including workspaces and local directory packages,
-always come from the side's own sources. During module resolution, a real
-path inside a repository root and outside every `node_modules` directory maps
-to the same relative path under the side's source root. A missing mapped file
-fails closed with `bundle-failed`. Repository roots name the working tree and,
-for an install that copies base sources, that copied base repository root.
-This covers npm, pnpm, Yarn and Bun workspaces and local `file:` packages,
-while nested `node_modules` keep the selected third-party dependencies.
-Third-party dependencies follow three tiers:
+### HTML Package Styles
 
-1. The base's lockfile and package manifest identities equal the working tree's
-   under Git's clean conversion: the
-   bundle resolves third-party dependencies from the working tree's `node_modules`
-   through the module resolution settings.
-2. They differ: the base's dependencies are installed, with lifecycle scripts
-   disabled and under a time limit, into a bounded cache keyed by all manifest and lockfile paths and bytes,
-   the package manager and its version, manager configuration, selected install roots, and the immutable source
-   identity when local packages or workspaces participate, and the bundle resolves
-   third-party dependencies from there.
-3. The install cannot run, because the machine is offline, the package
-   manager is unsupported, or the time limit passes; the install lacks a used
-   dependency directory; or an importer's directory lookup is not mapped:
-   working dependencies apply and the
-   `base-dependencies` warning names the selected lockfile when one exists and
-   gives the fallback reason.
+An HTML-only catalogue without a renderer or PostCSS uses working-tree
+dependencies for package stylesheets on both sides. It needs no extraction,
+Node process, or package installation. Compare Git clean identities only for
+manifests and lockfiles beside each `node_modules` directory used by the head,
+and its repository ancestors. Read exact paths on both sides without tree listing.
+Without a used dependency directory, read no dependency inputs and emit no warning.
+When these identities differ, emit a configuration-subject `base-dependencies`
+warning, including when both sides render the same installed CSS. Equal
+identities stay silent. Under `--strict`, the warning fails the build:
 
-Base dependency installation supports npm, pnpm 10 through 12, Yarn Classic 1, and Yarn
-Berry 4 with `nodeLinker: node-modules`. pnpm and Yarn install offline with
-lifecycle scripts disabled. Missing managers, unsupported versions, Bun,
-and Yarn Plug'n'Play use tier three with the `base-dependencies` warning.
-Plug'n'Play has its own fallback reason because the sidecar lacks its resolver. Equal dependency identities still use tier one without an install or
-an unsupported-manager warning. Repository-owned workspace sources retain
-their side-local mapping for every package manager.
+```text
+Base dependencies differ. HTML comparison uses working-tree dependencies.
+```
+
+### JavaScript Package Selection
+
+The [package selection contract](./mokly-comparison-packages.md) defines how
+each side resolves repository-owned packages and selects third-party
+dependencies in three tiers, including the supported base installs.
 
 A base whose sources fail the current validation makes Changes unavailable
 with those diagnostics.
@@ -219,11 +223,10 @@ evidence record names its owner. The catalogue change snapshot v4 pairs
 review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 
-`ignoredIds` lists the sorted unique ids of paired ignore regions removed
-for canonical equality, including equal regions in an `unchanged` view.
-
-Git subprocess environment, bounds, and cancellation follow the
-[Git command runtime](./mokly-git.md).
+`ignoredIds` lists the sorted unique ids of paired ignore regions removed for
+canonical equality, including equal regions in an `unchanged` view. Git
+subprocess environment, bounds, and cancellation follow the [Git command
+runtime](./mokly-git.md).
 
 ## Related Docs
 

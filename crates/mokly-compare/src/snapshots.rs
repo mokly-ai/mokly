@@ -26,8 +26,6 @@ pub(crate) fn create(
     entries: &[EntryClassification],
 ) -> Result<CatalogueChangeSnapshotV4> {
     let changed = {
-        let span = tracing::info_span!("review.changed-paths", status = "error");
-        let _scope = span.enter();
         let mut changed: Vec<_> = entries
             .iter()
             .filter(|entry| {
@@ -44,7 +42,6 @@ pub(crate) fn create(
             .collect();
         changed.sort_by(|left, right| canonical::compare_utf16(left, right));
         changed.dedup();
-        span.record("status", "ok");
         changed
     };
     let selected: BTreeSet<_> = pairing

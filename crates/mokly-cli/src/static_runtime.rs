@@ -33,6 +33,7 @@ use mokly_static::transaction::{OutputTransactions, Transaction, Transactions};
 #[cfg(debug_assertions)]
 use crate::test_faults;
 use crate::{changes_runtime, static_setup, viewer_assets};
+use mokly_cli::options;
 
 pub(super) struct Context {
     pub(super) style: Style,
@@ -84,7 +85,11 @@ pub(super) fn run(
         runtime_roots,
     };
     let admitted = admission.open(cwd, options, publication.is_some())?;
-    let config = admitted.config;
+    let mut config = admitted.config;
+    options::apply_base_install_scripts(
+        &mut config,
+        options.common.base_install_scripts_override(),
+    );
     let mut transaction = admitted.transaction;
     let result = prepare(
         cwd,
@@ -152,6 +157,7 @@ fn prepare(
             context.style.clone(),
             context.redactor.clone(),
             context.phases.clone(),
+            options.common.base_install_scripts_override(),
         ),
         cancellation: context.cancellation.clone(),
         graphs: services.runtime.clone(),

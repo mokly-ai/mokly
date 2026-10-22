@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all fifty-one component design entries (forty-nine screens and two variants), their
+all fifty-three component design entries (fifty-one screens and two variants), their
 owning folders, and stylesheet scopes.
 
 ## Component Pages
@@ -97,7 +97,9 @@ entry, preserving the five-screen limit in its parent and the existing unused st
 It also links the Loading and recovery child gallery. That gallery shows
 `Loading usage…` without counts or lists, screen inspection with
 `Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
-`Try again` button. Loading and failed states never reuse validated-empty or
+`Try again` button. Its Props loading and Props failed states show the Props
+tab with `Loading props…` and no fields, and with `Props couldn’t be loaded.`
+and `Try again`. Loading and failed states never reuse validated-empty or
 unavailable-metadata copy.
 Its Stylesheet evidence child gallery holds four screens of three stories that
 change only `styles/actions.css`. In Component with changed styles, the changed
@@ -110,8 +112,9 @@ the comparison, and the shown view reads "Components this screen uses
 changed" over its two versions; a component in Welcome's position reads
 "Components this variant uses changed". Its Details list the
 stylesheet with the styles that apply to Welcome, link Action, and end with
-"Shared component changes affect this preview. This page has no independent
-entry in Changes." In Styles outside a
+"Changed components that this screen uses affect its preview."; a component
+in Welcome's position ends with "Changed components that this variant uses
+affect its preview." In Styles outside a
 changed component, the rule also styles Welcome's own Not now link, so Welcome
 has its own row beside Action, five in all, and Details links Action to the
 first story. Variants own no artboard there, so their rows and options stay
@@ -156,7 +159,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
 shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the fifty-one
+Route-scoped rules link the required mixed/global sheets from the fifty-three
 component design routes. Registered components declare exclusive CSS through
 `stylesheets`; the `$componentStylesheets` marker keeps those links between base
 and layout sheets. Shared metadata supplies related docs, while folder records

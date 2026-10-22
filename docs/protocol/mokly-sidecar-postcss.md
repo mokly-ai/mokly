@@ -53,12 +53,13 @@ Observe descriptor and `FileHandle` reads through supported whole-file, scalar,
 and vector APIs. Keep offsets through sequential reads and descriptor reuse.
 Node read streams retain their raw chunk witnesses before decoding or delivery.
 
-Keep all distinct witnessed versions for the child's context lifetime.
-Keep configuration observations for later stylesheet requests. Return the
-observations with the transformed CSS in the same result. Cache hits retain
-that result's witnesses. Replacing or disposing a worker must not erase
-witnesses attached to earlier results. Equal observations may coalesce only
-after comparing their digests. Conflicting versions use the static build's
+Keep all distinct witnessed versions for the current generation only.
+When a new generation starts, drop witnesses from earlier generations.
+Keep configuration observations for later stylesheet requests in the current
+generation. Return the observations with the transformed CSS in the same
+result. Cache hits retain that result's witnesses. Replacing or disposing a
+worker must not erase witnesses attached to earlier results. Equal observations
+may coalesce only after comparing their digests. Conflicting versions use the static build's
 [input-change outcome](./mokly-export.md).
 
 The core maps module evidence through the selected source and dependency roots
@@ -76,7 +77,10 @@ the existing 64 MiB PostCSS and stylesheet cache bounds and the frame bound.
 Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
 This includes native scanners, memory maps, inherited or transferred handles,
-and asynchronous loader workers. Such reads retain their late opaque baseline.
+and asynchronous loader workers. Known inputs retain their late opaque baseline.
+Asynchronous loaders and consumer hooks that bypass later providers can supply
+modules without exposing their paths or raw read witnesses. These modules have
+no late baseline unless another input report identifies their paths.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 

@@ -75,6 +75,26 @@ test("a use case shows a failed step only after every detail settles", () => {
   });
 });
 
+test("a failed refresh fails a use case only after every detail settles", () => {
+  // The refresh failed while the use case details still load.
+  assert.deepEqual(delivery({ refreshFailed: true }).result, {
+    status: "loading",
+  });
+  assert.deepEqual(delivery({ held: [TOUR], refreshFailed: true }).result, {
+    status: "loading",
+  });
+  // Once every detail arrived or failed, the route offers the refresh again.
+  for (const state of [
+    { held: [TOUR, STEP], refreshFailed: true },
+    { held: [TOUR], failed: [STEP], refreshFailed: true },
+  ]) {
+    const settled = delivery(state);
+    assert.equal(settled.result?.status, "failed");
+    if (settled.result?.status === "failed") settled.result.retry();
+    assert.deepEqual(settled.retried, [["refresh"]]);
+  }
+});
+
 test("another deployment's catalogue replaces a route that still waits for a detail", () => {
   assert.deepEqual(delivery({ replaced: true }).result, {
     status: "replaced",

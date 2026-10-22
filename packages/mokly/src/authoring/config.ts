@@ -39,7 +39,7 @@ export interface MoklyConfig {
     lightStylesheets?: readonly string[];
     darkStylesheets?: readonly string[];
   }[];
-  review?: { base?: string };
+  review?: { base?: string; baseInstallScripts?: boolean };
   watch?: {
     debounceMs?: number;
     rules?: readonly {

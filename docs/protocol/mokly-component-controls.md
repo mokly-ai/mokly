@@ -32,6 +32,10 @@ property order. Inferred schemas use first-seen prop order: own props first,
 then variant props in variant order. Uneditable properties are omitted.
 Each visual entry's detail carries that order in `controlOrder`. Saved variants
 inherit it. The viewer follows the detail's order instead of sorting prop names.
+Until the routed entry's detail arrives, the Props tab shows `Loading props…`
+and no fields, so the fields first appear in that order and never move. A
+detail that fails to load shows `Props couldn’t be loaded.` with `Try again`.
+Showing the index's fields at once was rejected: the index carries no order.
 
 Text length is a non-negative integer of Unicode code points, as the schema's
 `maxLength` counts; the shell checks it itself and never uses the input's
@@ -199,7 +203,7 @@ so a hanging consumer render cannot hang Browse or shutdown.
 Preview document bundles, with usage, props, and resource bytes, live in a
 process-local memory store behind opaque render ids; nothing is spilled to disk,
 not to the cache directory, the OS temporary directory, or any root. Temporary
-documents never enter the saved document cache, Git changed-path calculation,
+documents never enter the saved document cache, saved comparison inputs,
 the watch set, or a publication. Content-addressed fragments may use the bounded
 fragment cache. Reading public assets is allowed; generated asset bytes stay in
 the same memory bundle as their document and are served through its render id.

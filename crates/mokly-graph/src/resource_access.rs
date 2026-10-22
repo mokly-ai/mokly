@@ -1,9 +1,10 @@
 //! Confined reads of public resource routes for comparison and static capture.
 
 use mokly_model::material::digest;
+use mokly_source_interface::error::SourceError;
 
 use crate::closure::GeneratedResources;
-use crate::error::{Result, invalid};
+use crate::error::{GraphError, Result, invalid};
 use crate::public_denial::PublicDenial;
 use crate::session::Session;
 use crate::types::RenderGeneration;
@@ -36,6 +37,10 @@ impl Session {
         };
         match self.state.tree.digest(&file.absolute) {
             Ok(hash) => Ok(Some(hash)),
+            Err(SourceError::Unavailable { message, .. }) => Err(GraphError::ResourceUnavailable {
+                route: route.into(),
+                message,
+            }),
             Err(source) if source.is_vanished() => Ok(None),
             Err(source) => Err(invalid(
                 route,
@@ -66,6 +71,10 @@ impl Session {
         };
         match self.state.tree.read_public(&file.absolute) {
             Ok(bytes) => Ok(Some(bytes)),
+            Err(SourceError::Unavailable { message, .. }) => Err(GraphError::ResourceUnavailable {
+                route: route.into(),
+                message,
+            }),
             Err(source) if source.is_vanished() => Ok(None),
             Err(source) => Err(invalid(
                 route,

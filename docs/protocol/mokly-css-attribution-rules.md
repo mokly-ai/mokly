@@ -59,6 +59,10 @@ instance region of a different component Y whose own-page match set for this
 same rule is nonempty. Check every containing nested instance, at any depth,
 on the match's own side. A nested instance of X itself never takes a match
 from X; a different component nested within that instance can still take it.
+For a declared owner's rule, a nested component must also belong to the
+match's supplier input ancestry to take that match. This protects a supplier's
+own rule for content passed through a receiver. Linked and ownerless head
+rules use physical containment for both claims and own-page filtering.
 
 The test for Y uses its unfiltered own-page matches, not the matches Y keeps
 or whether Y is changed. It needs no traversal order, iteration, or fixed
@@ -111,6 +115,10 @@ changed rules is kept on the view.
 An unresolved rule always gives every eligible page an entry-owned record and
 a row. A known component match from another rule cannot suppress it. A whole
 stylesheet parse failure follows this rule with no partial selector claim.
+When either matching tree exceeds 512 element levels, changed selectors that
+contain `:has()` are unresolved on that page. Other selectors keep their normal
+matching. This bounds native stack use with a safety margin instead of risking
+a process abort on deeply nested pages.
 Every independent material, metadata, input, structure, addition, removal,
 non-CSS resource, or use case reason stays. An affected-only screen does not
 propagate a direct screen reason to its use cases.

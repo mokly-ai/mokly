@@ -25,14 +25,16 @@ The wrapper checks the UTC review deadline before starting a process. It reads
 the locked dependency graph through Cargo metadata and checks `lightningcss`.
 It gets pinned cargo-audit from the [tool installer](#rust-audit-tool) and runs
 that executable for a live JSON audit. The report gives the effective ignore
-list, including configuration changes outside the repository file. Only the
-approved advisory can be ignored. Native tools parse their own TOML inputs.
+list and severity and target filters, including configuration changes outside
+the repository file. Only the approved advisory can be ignored. The severity
+must be null, and effective target lists must be empty. Native tools parse
+their own TOML inputs.
 Every command failure propagates.
 
 The [dependency security contract](../../docs/protocol/dependency-security.md#rust-advisory-audit)
 defines the approved exception and review conditions. `tests/rust_audit.test.ts`
 injects time, the installer, and command results to cover expiry, version
-changes, extra IDs, invalid output, and failure propagation without a network or
+changes, extra IDs, filters, invalid output, and failure propagation without a network or
 elapsed-time assertion.
 
 ## Rust audit tool
@@ -77,17 +79,18 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They combine per-test observations
-from hosted run `39455750846` at `b1f3c86f` and remote runs
-`20261020T191118Z-972099` at `300c4dae` and `20261020T194406Z-997895` at
-`ec47233e`. All three browser report sets passed. The first remote complete
-gate failed its repository audit on a new advisory. The second gate passed.
+inputs in estimated milliseconds per test. They use the median per-test cost
+from hosted runs `39581933162`, `39586827857`, and `39592076732`, all on
+`cdb32803`. Each run kept the same four-shard assignment and all browser
+reports passed. Earlier remote observations remain in the plan and its
+evidence; they do not replace these hosted measurements.
 
 For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Average the available per-test sample costs for each
-file and round to three decimal places. A file absent from an older sample
-uses the available samples. Refresh from complete, successful browser report
-sets and retain the source reports and calculations under `.context/`.
+its observed test count. Take the median of the available per-test sample
+costs for each file and round to three decimal places. A file absent from an
+older sample uses the available samples. Refresh from complete, successful
+browser report sets and retain the source reports and calculations under
+`.context/`.
 Report fixture and whole-job durations separately to check the actual balance.
 
 The scheduler multiplies each weight by the current discovered test count.

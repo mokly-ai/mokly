@@ -4,10 +4,10 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::access::WorkingFile;
-use crate::changes::{self, Change, ChangedPath, Kind};
+use crate::changes::Change;
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
 use crate::disk::Disk;
 use crate::error::{Error, Result};
@@ -30,12 +30,17 @@ pub trait Repository: Send + Sync {
     ) -> Result<Vec<Entry>>;
     /// Look up exact paths without enumerating their descendants.
     fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>>;
-    /// Hash an immutable blob through a bounded streaming reader.
-    fn digest(&self, entry: &Entry) -> Result<String>;
-    /// Read an exact regular blob by path, without filters or symlink traversal.
+    /// Hash a commit file after Git checkout conversion.
+    fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String>;
+    /// Read an exact regular file after Git checkout conversion.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
-    /// Read regular entries in bounded batches using their already-proved object ids.
-    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>>;
+    /// Read regular commit files after checkout conversion.
+    fn read_many(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+    ) -> Result<Vec<Vec<u8>>>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
@@ -44,6 +49,14 @@ pub trait Repository: Send + Sync {
     fn working_bytes(&self, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
     /// Hash confined working paths in one Git-clean stdin-paths batch.
     fn working_hashes(&self, paths: &[RepoPath], limit: usize) -> Result<Vec<ObjectId>>;
+    /// Conversion failures observed during this repository session.
+    fn conversion_warnings(&self) -> Vec<(String, String)> {
+        Vec::new()
+    }
+    /// Source cache identity includes the user's current checkout settings.
+    fn source_key(&self, commit: &ObjectId) -> Result<String> {
+        Ok(commit.to_string())
+    }
     /// Extract a bounded source archive into a fresh directory.
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()>;
 }
@@ -64,6 +77,8 @@ pub struct GitRepositories {
 }
 
 pub(crate) struct GitRepository {
+    pub(crate) fetch_lock: Mutex<()>,
+    pub(crate) unavailable: Mutex<BTreeMap<String, String>>,
     pub(crate) directory: PathBuf,
     pub(crate) runner: Arc<dyn Runner>,
     pub(crate) disk: Arc<dyn Disk>,
@@ -73,6 +88,8 @@ impl Repositories for GitRepositories {
     fn open(&self, root: &Path) -> Result<Arc<dyn Repository>> {
         let configured = self.disk.canonicalize(root)?;
         let repository = GitRepository {
+            fetch_lock: Mutex::new(()),
+            unavailable: Mutex::new(BTreeMap::new()),
             directory: configured.clone(),
             runner: Arc::clone(&self.runner),
             disk: Arc::clone(&self.disk),
@@ -114,64 +131,10 @@ impl GitRepository {
 
 impl Repository for GitRepository {
     fn merge_base(&self, base: &str) -> Result<ObjectId> {
-        let reference = format!("{base}^{{commit}}");
-        let resolved = self.command(
-            &["rev-parse", "--verify", "--end-of-options", &reference],
-            vec![],
-            1024,
-        )?;
-        let resolved = ObjectId::parse(text(&resolved)?.trim())?;
-        match self.command(&["merge-base", resolved.as_str(), "HEAD"], vec![], 1024) {
-            Ok(output) => ObjectId::parse(text(&output)?.trim()),
-            Err(Error::CommandFailed {
-                status: Some(1), ..
-            }) => Err(Error::NoMergeBase),
-            Err(error) => Err(error),
-        }
+        self.merge_base_of(base)
     }
-
     fn changed_paths(&self, base: &ObjectId) -> Result<Vec<Change>> {
-        let tracked = self.command(
-            &[
-                "diff",
-                "--name-status",
-                "-z",
-                "--find-renames",
-                "--no-ext-diff",
-                "--no-textconv",
-                base.as_str(),
-                "--",
-            ],
-            vec![],
-            DEFAULT_OUTPUT_LIMIT,
-        )?;
-        let mut changes: BTreeMap<_, _> = changes::parse(&tracked)?
-            .into_iter()
-            .map(|change| (change.path.clone(), change))
-            .collect();
-        let untracked = self.command(
-            &["ls-files", "--others", "--exclude-standard", "-z"],
-            vec![],
-            DEFAULT_OUTPUT_LIMIT,
-        )?;
-        for field in changes::fields(&untracked)? {
-            let Some(value) = tree::candidate(field) else {
-                continue;
-            };
-            let path = ChangedPath::parse(value)?;
-            changes
-                .entry(path.clone())
-                .and_modify(|change| {
-                    if change.kind == Kind::Deleted {
-                        change.kind = Kind::Modified;
-                    }
-                })
-                .or_insert(Change {
-                    path,
-                    kind: Kind::Added,
-                });
-        }
-        Ok(changes.into_values().collect())
+        self.changes_from(base)
     }
 
     fn list(
@@ -193,15 +156,19 @@ impl Repository for GitRepository {
         if let Some(root) = root {
             args.push(root.as_str());
         }
-        tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits)
+        let entries = tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits)?;
+        if self.ensure_checkout_objects(commit, &entries)? {
+            return tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits);
+        }
+        Ok(entries)
     }
 
     fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>> {
         self.lookup_paths(commit, paths, limits)
     }
 
-    fn digest(&self, entry: &Entry) -> Result<String> {
-        self.digest_blob(entry)
+    fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
+        self.checkout_digest(commit, entry)
     }
 
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
@@ -219,16 +186,38 @@ impl Repository for GitRepository {
                 path: path.as_str().to_owned(),
             });
         }
-        if entry.size > limit {
-            return Err(Error::ByteLimit { limit });
-        }
-        self.load(&[entry], limit)?
-            .pop()
-            .ok_or(Error::MalformedOutput)
+        self.checkout_read(
+            commit,
+            &[entry],
+            Limits {
+                bytes: limit,
+                blob: limit,
+                ..Limits::default()
+            },
+        )?
+        .pop()
+        .ok_or(Error::MalformedOutput)
     }
 
-    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>> {
-        self.read_entries(entries, limits)
+    fn read_many(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+    ) -> Result<Vec<Vec<u8>>> {
+        if entries.len() > limits.files {
+            return Err(Error::FileCount {
+                limit: limits.files,
+            });
+        }
+        for entry in entries {
+            if !entry.mode.regular() {
+                return Err(Error::NotRegular {
+                    path: entry.path.to_string(),
+                });
+            }
+        }
+        self.checkout_read(commit, entries, limits)
     }
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {
@@ -247,6 +236,17 @@ impl Repository for GitRepository {
         self.clean_hashes(paths, limit)
     }
 
+    fn conversion_warnings(&self) -> Vec<(String, String)> {
+        self.unavailable
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .iter()
+            .map(|(path, message)| (path.clone(), message.clone()))
+            .collect()
+    }
+    fn source_key(&self, commit: &ObjectId) -> Result<String> {
+        self.checkout_key(commit)
+    }
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()> {
         self.extract_sources(commit, destination, limits)
     }

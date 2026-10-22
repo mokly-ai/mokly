@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { runCommand } from "./command.mjs";
 import { remoteTagCommit, validateTagVersion } from "./context.mjs";
 
-/** Verify the CLI tag and either a new viewer tag or its earlier pinned tag. */
+/** Verify the CLI and viewer tags identify the same release commit. */
 export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
   const viewer = JSON.parse(
     await fs.readFile(`${repositoryRoot}/packages/viewer/package.json`, "utf8"),
@@ -12,9 +12,13 @@ export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
   const cli = JSON.parse(
     await fs.readFile(`${repositoryRoot}/packages/mokly/package.json`, "utf8"),
   );
+  assert.equal(
+    viewer.version,
+    cli.version,
+    "CLI and viewer package versions must be shared",
+  );
+  viewerRef ||= `viewer-${cliRef}`;
   validateTagVersion(cliRef, cli.version);
-  const newViewer = Boolean(viewerRef);
-  viewerRef ||= `viewer-v${viewer.version}`;
   validateTagVersion(viewerRef, viewer.version, "viewer-");
   const git = async (...args) =>
     (await runCommand("git", args, { cwd: repositoryRoot })).stdout.trim();
@@ -27,15 +31,11 @@ export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
       `refs/tags/${ref}`,
       `refs/tags/${ref}^{}`,
     );
-    if (
-      local !== remoteTagCommit(remote, ref) ||
-      ((ref === cliRef || newViewer) && head !== local)
-    )
+    if (local !== remoteTagCommit(remote, ref) || head !== local)
       throw new Error(
         `${ref}, the local checkout, and origin do not identify one commit`,
       );
   }
-  if (!newViewer) await git("merge-base", "--is-ancestor", viewerRef, head);
   assert.equal(
     await git(
       "status",

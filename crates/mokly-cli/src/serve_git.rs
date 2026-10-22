@@ -124,6 +124,10 @@ impl Tracked {
     }
 }
 impl Runner for Tracked {
+    fn checkpoint(&self) -> Result<()> {
+        let _active = self.enter()?;
+        self.inner.checkpoint()
+    }
     fn run(&self, request: &Request) -> Result<Output> {
         let _active = self.enter()?;
         self.inner.run(request)
@@ -143,6 +147,65 @@ impl Runner for Tracked {
     ) -> Result<Output> {
         let _active = self.enter()?;
         self.inner.run_cancellable(request, cancellation)
+    }
+    fn digest_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<String> {
+        let _active = self.enter()?;
+        self.inner.digest_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
+    }
+    fn stream_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+        output: &mut (dyn Write + Send),
+        limit: usize,
+    ) -> Result<()> {
+        let _active = self.enter()?;
+        self.inner.stream_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+            output,
+            limit,
+        )
+    }
+    fn run_cancellable_with_environment(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+    ) -> Result<Output> {
+        let _active = self.enter()?;
+        self.inner
+            .run_cancellable_with_environment(request, cancellation, environment)
+    }
+    fn run_cancellable_with_environment_timeout(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+        environment: &[(&str, std::ffi::OsString)],
+        timeout: std::time::Duration,
+    ) -> Result<Output> {
+        let _active = self.enter()?;
+        self.inner.run_cancellable_with_environment_timeout(
+            request,
+            cancellation,
+            environment,
+            timeout,
+        )
     }
 }
 

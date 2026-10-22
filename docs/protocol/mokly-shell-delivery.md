@@ -189,7 +189,8 @@ replaces the render capability; a current entry the index no longer lists
 shows the missing state under the kept URL until an index lists it again; no
 other update reloads the page. When a fetch fails or the pair disagrees after
 one more index fetch, the shell keeps its state, shows the entry as
-unavailable with retry, and waits for the next message.
+unavailable with retry, and waits for the next message; a use case shows that
+state only after each of its details has arrived, failed, or been replaced.
 
 ## Identity
 

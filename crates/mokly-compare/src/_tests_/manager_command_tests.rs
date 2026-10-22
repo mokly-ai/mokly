@@ -7,7 +7,8 @@ use std::time::Duration;
 
 use crate::commands::Command;
 use crate::manager::{Manager, Root};
-use crate::manager_command::{arguments, removed, same, variables};
+use crate::manager_command::{arguments, variables};
+use crate::manager_environment::allowed;
 
 fn request(manager: Manager, args: Vec<OsString>) -> Command {
     let directory = Path::new("/private").join("frontend");
@@ -40,7 +41,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
             classic: None,
             berry_cache: None,
         };
-        let args = arguments(&root, Path::new("/private"));
+        let args = arguments(&root, Path::new("/private"), false);
         for flag in ["--offline", "--no-default-rc", "--use-yarnrc"] {
             assert!(!args.iter().any(|arg| arg == flag), "{manager:?} {flag}");
         }
@@ -145,29 +146,113 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
 }
 
 #[test]
-fn pinned_variables_replace_every_inherited_spelling_and_keep_user_settings() {
-    for (inherited, name) in [
-        ("yarn_yarn_offline_mirror", "YARN_YARN_OFFLINE_MIRROR"),
-        ("YARN_yarn-offline-mirror", "YARN_YARN_OFFLINE_MIRROR"),
-        ("yarn_enable_scripts", "YARN_ENABLE_SCRIPTS"),
-        ("NPM_CONFIG_IGNORE_SCRIPTS", "npm_config_ignore_scripts"),
+fn scripts_on_install_commands_omit_only_script_suppression_flags() {
+    for manager in [
+        Manager::Npm,
+        Manager::Pnpm,
+        Manager::YarnClassic,
+        Manager::YarnBerry,
     ] {
-        assert!(same(OsStr::new(inherited), name), "{inherited}");
-    }
-    for inherited in ["NPM_CONFIG_REGISTRY", "YARN_REGISTRY", "PATH", "HOME"] {
+        let root = Root {
+            directory: "frontend".into(),
+            manager,
+            requested: None,
+            version: String::new(),
+            classic: None,
+            berry_cache: None,
+        };
+        let args = arguments(&root, Path::new("/private"), true);
         assert!(
-            !variables(&request(
-                Manager::YarnClassic,
-                vec!["--frozen-lockfile".into()]
-            ))
-            .iter()
-            .any(|(name, _)| same(OsStr::new(inherited), name)),
-            "{inherited}"
+            !args.iter().any(|arg| arg == "--ignore-scripts"),
+            "{manager:?}"
         );
+        assert!(
+            !args.iter().any(|arg| arg == "--mode=skip-build"),
+            "{manager:?}"
+        );
+        let captured = variables(&request(manager, args))
+            .into_iter()
+            .collect::<BTreeMap<_, _>>();
+        assert!(
+            !captured.contains_key("npm_config_ignore_scripts"),
+            "{manager:?}"
+        );
+        assert!(!captured.contains_key("YARN_ENABLE_SCRIPTS"), "{manager:?}");
     }
+}
+
+#[test]
+fn install_environment_is_an_allowed_list_without_secrets() {
+    // Mokly's own variables, every inherited token, and each manager setting
+    // are not on the list, so a base cannot read one through its config.
+    for name in [
+        "MOKLY_TOKEN",
+        "MOKLY_BASE",
+        "GITHUB_TOKEN",
+        "NODE_AUTH_TOKEN",
+        "NPM_TOKEN",
+        "NPM_CONFIG_USERCONFIG",
+        "npm_config_registry",
+        "YARN_NPM_AUTH_TOKEN",
+        "YARN_PLUGINS",
+        "YARN_ENABLE_SCRIPTS",
+        "npm_config_ignore_scripts",
+        "PNPM_HOME",
+        "AWS_SECRET_ACCESS_KEY",
+    ] {
+        assert!(!allowed(OsStr::new(name)), "{name}");
+    }
+    // The list carries no secret: paths, proxies, certificates, and locale.
+    for name in [
+        "PATH",
+        "HOME",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY",
+        "ALL_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+        "all_proxy",
+        "NODE_EXTRA_CA_CERTS",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "TMPDIR",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "TZ",
+        "USER",
+        "LOGNAME",
+    ] {
+        assert!(allowed(OsStr::new(name)), "{name}");
+    }
+    // Mokly never sets a registry or a user path as a fixed value either.
+    let captured = variables(&request(
+        Manager::YarnClassic,
+        vec!["--frozen-lockfile".into()],
+    ));
+    for name in ["NPM_CONFIG_REGISTRY", "YARN_REGISTRY", "PATH", "HOME"] {
+        assert!(!captured.iter().any(|(set, _)| *set == name), "{name}");
+    }
+}
+
+#[test]
+fn allowed_matches_case_insensitively_on_windows_only() {
+    for name in ["systemroot", "Path", "LocalAppData", "lc_ctype"] {
+        assert_eq!(allowed(OsStr::new(name)), cfg!(windows), "{name}");
+    }
+}
+
+#[test]
+fn berry_install_disables_base_environment_files() {
+    let mut command = request(Manager::YarnBerry, vec!["--immutable".into()]);
+    command.size_root = Some("/ns/dependencies/entries/key".into());
+    let captured = variables(&command).into_iter().collect::<BTreeMap<_, _>>();
+    // The override points above the private entry, where a base cannot commit
+    // a file, and the `?` marks it optional, so Berry injects no file.
     assert_eq!(
-        removed(&request(Manager::YarnBerry, vec![])),
-        ["YARN_PLUGINS"]
+        captured["YARN_INJECT_ENVIRONMENT_FILES"],
+        OsString::from("/ns/dependencies/entries/.mokly-no-environment-file?")
     );
-    assert!(removed(&request(Manager::Pnpm, vec![])).is_empty());
 }

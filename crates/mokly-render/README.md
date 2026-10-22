@@ -67,7 +67,9 @@ maps, describe, and bindings before rendering. Metadata invalidation still recom
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
 identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
-PostCSS read evidence retains observed whole-file and byte-range digests beside late baselines.
+PostCSS read evidence retains observed whole-file and byte-range digests for
+one generation beside late baselines. Cache hits replay the validated result
+that belongs to their generation.
 Both cache layers replay the original evidence to static admission. Selected
 module inputs remain separate from plugin privacy and catalogue membership.
 Base witnesses compare with pinned Git bytes through the shared admission
@@ -86,6 +88,9 @@ against the generation's digest; assets never enter the stylesheet byte cache.
 Asset streams use the same selected dependency reader as CSS compilation,
 including configured package roots and historical installations. Authored
 public-resource reads retain their separate source confinement checks.
+Secondary package roots retain their virtual dependency parent even when the
+primary installation is absent. CSS and asset confinement can traverse these
+logical paths without requiring an unused root `node_modules` directory.
 Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
@@ -141,6 +146,9 @@ fixture consumer to an isolated directory and start the real sidecar. They
 check call order and outputs without elapsed-time assertions. The JavaScript
 rebuild test retains both generations on one pool. It renders an uncached old
 view after the edit and counts real process starts and hello calls.
+
+The fragment adapter transfers typed registry rule ownership to HTML assembly
+without splitting the delivered CSS text or changing its style-block grouping.
 
 ### Key Code
 

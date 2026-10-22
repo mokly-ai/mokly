@@ -52,6 +52,7 @@ pub(super) struct ServeChanges {
     pub(super) style: Style,
     pub(super) redactor: Arc<Redactor>,
     pub(super) base: Option<String>,
+    pub(super) install_scripts: Option<bool>,
 }
 impl ChangeSources for ServeChanges {
     fn create(
@@ -140,7 +141,9 @@ impl ChangeSource for Source {
                 result
                     .warnings
                     .iter()
-                    .filter(|warning| warning.code == "base-dependencies")
+                    .filter(|warning| {
+                        matches!(warning.code, "base-dependencies" | "base-conversion")
+                    })
                     .cloned(),
             );
         }

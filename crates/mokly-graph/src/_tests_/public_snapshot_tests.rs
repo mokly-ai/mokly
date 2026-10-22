@@ -65,6 +65,7 @@ fn planning_reuses_digests_without_pinning_resource_bytes() {
     })).unwrap()).collect();
     let catalogue = PreparedCatalogue {
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         model: CatalogueModel {
             entries,
             folders: Vec::new(),

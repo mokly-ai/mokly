@@ -220,10 +220,11 @@ rebinds the route and the disclosures to it;
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry. A use case
-shows the unavailable state only after each of its details has arrived,
-failed, or been replaced, because a detail that still loads can show another
-deployment. Until then the stage keeps loading, while an embedded host still
-hears of each failure at once. A detail of
+shows the unavailable state, also after a failed publication refresh, only
+after each of its details has arrived, failed, or been replaced, because a
+detail that still loads can show another deployment. Until then the stage
+keeps loading, while an embedded host still hears of each failure at once. A
+detail of
 another deployment is not a failed load: the controller stops every load,
 ends the live connection as a disconnect does, and ignores later failures,
 the source reports the change once, and a route that
@@ -285,6 +286,10 @@ one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
+`entry_wording.ts` declares each kind's nouns once and builds the kind's
+evidence sentences, status lines and pane labels from them. A component's
+sentences name the shown variant, while its file list and its own rules name
+the component.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup. `workspace_evidence.tsx` follows the designs' order: the reason
@@ -292,7 +297,8 @@ sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
 design places, and the no-changes line follow, in that order.
-`workspace_evidence_data.ts` shows the shared-component sentence in place of
+`workspace_evidence_data.ts` shows the shared-component sentence, which
+`entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
 detail's related components, a component-owned record on a shown view, or the
@@ -320,11 +326,16 @@ derived from it: `use_workspace_data.ts` exposes loading until the routed
 detail is accepted, and the failed state with retry after a failed or rejected
 load, rather than publishing a partial or false-empty list. It keeps one
 entry-owned workspace object, so a publication that replaces the detail keeps
-loaded usage and local editor state. `workspace_usage.tsx` keys each Usage row
+loaded usage and local editor state. Its `detailDelivery` also holds back the
+Props fields in `workspace_props.tsx`, which shows `Loading props…` or the
+failed state with retry until the detail brings their declared order, so the
+fields never appear in the index's name order and then move.
+`workspace_usage.tsx` keys each Usage row
 by its entry and removal state only, so a publication that changes a row's
 comparison eligibility keeps its link element and the focus on it. Its
 `usageHref` opens an Affected screens consumer, or a removed one, in Side by
-side when the consumer can be compared; a Used by link opens Current.
+side when the linked view is eligible. An Added consumer opens Current
+because it has no base side. A Used by link opens Current.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and

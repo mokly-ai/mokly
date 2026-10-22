@@ -69,6 +69,8 @@ impl BaseSourceFactory for GitSourceFactory {
 
 /// Base render inputs. A sidecar provider can acquire extraction and dependency leases here.
 pub struct BaseRequest<'a> {
+    /// Current generation whose completed inputs govern historical dependency warnings.
+    pub head: &'a dyn RenderGeneration,
     /// Current configuration locates the same config file in the historical tree.
     pub working_config: &'a ResolvedConfig,
     /// Validated repository, shared with source and dependency preparation.
@@ -77,6 +79,8 @@ pub struct BaseRequest<'a> {
     pub commit: ObjectId,
     /// Shared source tree and batched dependency reader.
     pub sources: HistoricalSources,
+    /// Effective lifecycle-script setting from the working configuration and CLI.
+    pub install_scripts: bool,
 }
 
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
@@ -95,6 +99,7 @@ pub trait ChangesService: Send + Sync {
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
+        install_scripts: Option<bool>,
     ) -> Result<ComparisonResult>;
 }
 
@@ -118,7 +123,17 @@ impl ChangesService for Changes {
         config: &ResolvedConfig,
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
+        install_scripts: Option<bool>,
     ) -> Result<ComparisonResult> {
+        let install_scripts = install_scripts
+            .or_else(|| {
+                config
+                    .input
+                    .review
+                    .as_ref()
+                    .and_then(|review| review.base_install_scripts)
+            })
+            .unwrap_or(false);
         let selected = match &self.pinned {
             Some(pinned) => pinned.clone(),
             None => self
@@ -136,10 +151,12 @@ impl ChangesService for Changes {
                     .create(repository.clone(), commit.clone(), &config.repo_root)?;
             let failures = sources.failures.clone();
             let prepared = self.provider.prepare(&BaseRequest {
+                head: head.as_ref(),
                 working_config: config,
                 repository,
                 commit: commit.clone(),
                 sources,
+                install_scripts,
             });
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {
@@ -190,7 +207,10 @@ impl ChangesService for Changes {
                 source: Box::new(Error::SourceFailure { source }),
             });
         }
-        result
+        let mut result = result?;
+        result.warnings.extend(failures.warnings());
+        mokly_catalogue::diagnostic::normalize_warnings(&mut result.warnings);
+        Ok(result)
     }
 }
 

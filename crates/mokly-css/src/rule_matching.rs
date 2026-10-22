@@ -1,6 +1,6 @@
 //! Pure per-rule matching against both composed documents with retained element proof.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use cssparser_next::Parser;
 use mokly_model::review_affected::ReviewSide;
@@ -15,7 +15,12 @@ use crate::rules::{ConditionKind, Rule, RuleChange, RuleDiff, RuleFailure};
 use crate::selector_element::Cursor;
 use crate::selector_impl::SelectorParser;
 use crate::selector_nesting::combine;
-use crate::selector_scope::broaden;
+use crate::selector_scope::{broaden_nested, parent_has_anchor};
+
+/// Bound recursive :has() subtree matching with margin on a 2 MiB worker stack.
+/// Measured dev frames use 288 bytes; an eightfold factor permits 910 levels.
+/// Rounding down to 512 leaves room for selector matching and caller frames.
+pub const MAX_HAS_TREE_DEPTH: usize = 512;
 
 /// Actual element match, kept only until catalogue-wide attribution ends.
 #[derive(Clone, Debug)]
@@ -74,6 +79,11 @@ pub fn match_document(
     };
     let invalid_tree =
         before.is_some_and(|tree| !tree.valid()) || after.is_some_and(|tree| !tree.valid());
+    let deep_tree = !invalid_tree
+        && before
+            .into_iter()
+            .chain(after)
+            .any(|tree| tree.exceeds_depth(MAX_HAS_TREE_DEPTH));
     DocumentMatching::Resolved(
         added
             .iter()
@@ -82,6 +92,9 @@ pub fn match_document(
             .map(|change| {
                 let mut records: BTreeMap<String, SelectorMatch> = BTreeMap::new();
                 let mut order = Vec::new();
+                let mut seen_by_selector: BTreeMap<String, BTreeSet<(ReviewSide, usize)>> =
+                    BTreeMap::new();
+                let mut operations = 0;
                 for rule in change.before.iter().chain(&change.after) {
                     let selectors = if rule.selectors.is_empty() {
                         vec![rule.at_rule.as_ref().map_or(String::new(), |at| {
@@ -107,15 +120,17 @@ pub fn match_document(
                                     unresolved: false,
                                     elements: Vec::new(),
                                 });
-                        let Some(combined) = nesting(rule, &original) else {
+                        let seen = seen_by_selector.entry(original.clone()).or_default();
+                        let Some((combined, parent_anchor)) = nesting(rule, &original) else {
                             record.unresolved = true;
                             continue;
                         };
-                        let scope = broaden(&combined);
+                        let scope = broaden_nested(&combined, parent_anchor);
                         if invalid_tree
                             || change.conservative()
                             || rule.selectors.is_empty()
                             || scope.unresolved
+                            || (deep_tree && scope.relational)
                         {
                             record.unresolved = true;
                             continue;
@@ -151,10 +166,14 @@ pub fn match_document(
                                         index: element,
                                     },
                                     &mut context,
-                                ) && !record.elements.iter().any(|matched| {
-                                    matched.side == side && matched.element == element
-                                }) {
-                                    record.elements.push(ElementMatch { side, element });
+                                ) {
+                                    push_unique(
+                                        &mut record.elements,
+                                        &mut *seen,
+                                        side,
+                                        element,
+                                        &mut operations,
+                                    );
                                 }
                             }
                         }
@@ -172,12 +191,30 @@ pub fn match_document(
     )
 }
 
-fn nesting(rule: &Rule, selector: &str) -> Option<String> {
+fn push_unique(
+    elements: &mut Vec<ElementMatch>,
+    seen: &mut BTreeSet<(ReviewSide, usize)>,
+    side: ReviewSide,
+    element: usize,
+    operations: &mut usize,
+) {
+    *operations += 1;
+    if seen.insert((side, element)) {
+        elements.push(ElementMatch { side, element });
+    }
+}
+
+fn nesting(rule: &Rule, selector: &str) -> Option<(String, bool)> {
     let mut parent = None;
     for condition in &rule.conditions {
         if condition.kind == ConditionKind::NestingParent {
             parent = Some(combine(&condition.prelude, parent.as_deref())?);
         }
     }
-    combine(selector, parent.as_deref())
+    let parent_anchor = parent.as_deref().is_some_and(parent_has_anchor);
+    Some((combine(selector, parent.as_deref())?, parent_anchor))
 }
+
+#[cfg(test)]
+#[path = "_tests_/rule_matching_tests.rs"]
+mod rule_matching_tests;

@@ -16,6 +16,14 @@ pub type Result<T> = result::Result<T, GraphError>;
 /// A failed candidate cannot be published or written.
 #[derive(Debug, Error)]
 pub enum GraphError {
+    /// One historical resource could not pass checkout conversion.
+    #[error("[mokly-graph/resource-unavailable] {message}")]
+    ResourceUnavailable {
+        /// Public resource route.
+        route: String,
+        /// Conversion diagnostic.
+        message: String,
+    },
     /// Opaque source bytes no longer match the generation that selected them.
     #[error("[mokly-graph/input-changed] input changed: {}", path.display())]
     InputsChanged {

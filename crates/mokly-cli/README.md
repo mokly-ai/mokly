@@ -57,7 +57,7 @@ against one pinned merge base. Base extraction and dependency installation
 publish `preparing`; rendering and comparison publish `pending`. Only the
 accepted generation reports `Changes ready` and its Changes, moved, and
 ignored-only counts. A failed comparison publishes `unavailable` with its
-diagnostic while All remains available. Base dependency warnings use the
+diagnostic while All remains available. Base dependency and checkout-conversion warnings use the
 captured attempt and precede the result. Base composition warnings stay private.
 
 Serve keeps the configured sidecar pool bound for both source roots. A shared
@@ -93,11 +93,11 @@ reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads. Shared Changes timings
-include the numeric dependency tier, final comparison view counts, and
-changed-path collection. A failed phase keeps error status.
+include the numeric dependency tier and final comparison view counts. A failed phase keeps error status.
 Capture spans separate validation, composition, encoding, and closure work.
 
-Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
+Common options are `--config`, `--base`, `--base-install-scripts`,
+`--no-base-install-scripts`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a
 lazy sidecar pool with the normalized `--sidecars` or environment count.
 The npm shim supplies its package root and Node executable. Direct binary
@@ -106,6 +106,9 @@ An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
+HTML-only base comparison follows the [HTML package styles policy](../../docs/protocol/mokly-comparison.md#html-package-styles).
+It reads exact governing paths from the head generation's completed dependency
+inventory. Unrelated manifest edits and retired Serve imports do not warn.
 Static builds keep the input-change outcome when historical PostCSS evidence
 disagrees with its pinned Git source. They preserve the earlier output.
 They also check selected base package inputs before base document callbacks.

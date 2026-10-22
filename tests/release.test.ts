@@ -102,8 +102,6 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /--mode guard/);
   assert.match(source, /--mode verify/);
   assert.match(source, /release-please-action@[a-f0-9]{40}/);
-  assert.match(source, /outputs\['packages\/viewer--release_created'\]/);
-  assert.match(source, /outputs\['packages\/viewer--tag_name'\]/);
   const names = [...prepare.steps, ...publish.steps].map((step) => step.name);
   const gateOrder = [
     "Verify immutable tags",
@@ -204,7 +202,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
       assert.ok(names.indexOf(ordered[index - 1]) < names.indexOf(name), name);
   }
   assert.match(source, /group: npm-release/);
-  assert.match(source, /verify-ref\.mjs "\$PUBLISH_REF" "\$VIEWER_REF"/);
+  assert.match(source, /verify-ref\.mjs "\$PUBLISH_REF"/);
   assert.match(source, /--artifacts .context\/release-artifact/);
   const setupNode = publish.steps.find((step) =>
     step.uses?.startsWith("actions/setup-node@"),

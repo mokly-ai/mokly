@@ -60,7 +60,11 @@ labels, variant disclosures and changed marks. The navigation splits one tree
 into **Specs** and **Components** by kind, so a folder holding both appears in
 each. A folder row is a span that only browses; a folder's README is its first
 row, a `document` row with the document icon. A `moved` row appends `· Moved`
-to its label and, like a Removed row, takes no changed mark.
+to its label and, like a Removed row, takes no changed mark. Each entry row
+names its kind in `data-entry-kind`, as the product's row does: a flow row is
+`use-case`, a variant row takes its parent's kind, and a folder row has none.
+`tests/browser/design_reasons.spec.ts` reads it to skip pages, documents and
+use cases.
 
 Comparison toolbar draws the **Scroll together** switch in every diff mode,
 between the mode group and Refresh: a native checkbox with switch semantics

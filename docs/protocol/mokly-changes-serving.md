@@ -32,8 +32,8 @@ reachable only from the base ref do not enter the comparison. No command
 checks the base commit out over the working tree, and nothing is written into
 the repository.
 
-The engine compares every view of every entry, with or without changed Git
-paths, because a changed component, stylesheet, or resource reaches views
+The engine compares every view of every entry, regardless of source edits,
+because a changed component, stylesheet, or resource reaches views
 whose own sources did not change. Git blob and tree reads are bounded in count
 and bytes, and a file's mode is checked before its blob is accepted, so a
 symlink or a non-regular file is rejected. A read that cannot complete makes
@@ -42,7 +42,7 @@ Changes unavailable with its diagnostic.
 Entry pairing, view pairing, and view states follow
 [Changes and screen comparisons](./mokly-changes.md#entries-and-views). The
 output directory of `build`, with its symlink-resolved in-repository target,
-is excluded before changed-path evidence is read, so a build never affects
+is excluded from source capture and resource comparison, so a build never affects
 its own Changes.
 
 A complete comparison is one generation: `review.json`, the review result v8

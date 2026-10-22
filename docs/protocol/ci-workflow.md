@@ -57,10 +57,6 @@ only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
 
-The same trusted release PR profile requires the
-[release component and viewer-source check](./npm-release-management.md#release-management)
-in Repository before downstream verification. A failure blocks Required CI before tags exist.
-
 The repository job resolves floating Node 24 once. An explicit shell step reads
 `process.versions.node` and exposes that exact version, the selected matrix,
 and the report-runtime identities as job outputs. Every viewer and browser job
@@ -133,8 +129,10 @@ A second, narrow exception permits only the release matrix's `darwin-x64`
 build on GitHub-hosted `macos-26-intel`, with `actions/checkout`. Blacksmith's
 macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
 it has no npm publishing permission. Every other native release row follows
-the Blacksmith size rule. Browser shards, static-delivery jobs, and native jobs have a 60-minute
-execution timeout. The other CI jobs keep a 30-minute timeout. These limits
+the Blacksmith size rule. Repository jobs have a 75-minute timeout, and Viewer
+jobs have a 40-minute timeout. Browser shards, static-delivery jobs, and native
+jobs have a 60-minute execution timeout. Required CI and other jobs keep a
+30-minute timeout. These limits
 are hang guards, not speed requirements. Each limit must allow at least three
 times the job's typical duration, including setup and builds. The longer
 limits preserve the four browser shards without reducing test coverage.

@@ -59,6 +59,7 @@ const branchStates = {
   "branch/case/receipt": changed,
   "branch/reused/action": state(true, "added"),
   "branch/impact/tally": changed,
+  "branch/impact/new": state(true, "added"),
   "branch/impact/meter": stable,
   "branch/impact/meter/default": stable,
   "branch/impact/archive/slip": moved,

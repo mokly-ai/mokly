@@ -1,5 +1,6 @@
 //! Flat private records preserve every trusted annotation without recursive codecs.
 
+use mokly_html::fragment::StyleAttribution;
 use mokly_html::links::Reference;
 use mokly_html::tree::{Attribute, Element, Node, Region};
 use mokly_model::catalogue::SourceLocation;
@@ -12,6 +13,7 @@ use crate::capture_error::{CaptureInternalError, Result};
 pub(crate) enum FlatNode {
     Element {
         style_owners: Option<Vec<String>>,
+        style_attribution: Option<Vec<(String, Vec<String>)>>,
         origin: Option<String>,
         navigation: Option<ReferenceRecord>,
         source: Option<SourceLocation>,
@@ -38,6 +40,12 @@ pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
                 pending.extend(element.children.iter().rev());
                 FlatNode::Element {
                     style_owners: element.style_owners.clone(),
+                    style_attribution: element.style_attribution.as_ref().map(|records| {
+                        records
+                            .iter()
+                            .map(|record| (record.css.clone(), record.owners.clone()))
+                            .collect()
+                    }),
                     origin: element.origin.clone(),
                     navigation: element.navigation.as_ref().map(ReferenceRecord::from),
                     source: element.source.clone(),
@@ -82,6 +90,7 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
         output.push(match node {
             FlatNode::Element {
                 style_owners,
+                style_attribution,
                 origin,
                 navigation,
                 source,
@@ -91,6 +100,12 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
                 ..
             } => Node::Element(Element {
                 style_owners,
+                style_attribution: style_attribution.map(|records| {
+                    records
+                        .into_iter()
+                        .map(|(css, owners)| StyleAttribution { css, owners })
+                        .collect()
+                }),
                 origin,
                 navigation: navigation.map(Reference::from),
                 source,

@@ -100,6 +100,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Tree Comparison And Changes](./mokly-comparison.md)
 - [Comparison Tree Model](./mokly-comparison-tree.md)
+- [Comparison Package Selection](./mokly-comparison-packages.md)
 - [Git Command Runtime](./mokly-git.md)
 
 ## Read Model And Delivery

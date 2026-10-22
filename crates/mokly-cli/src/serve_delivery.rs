@@ -65,6 +65,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
             style: input.style.clone(),
             redactor: input.redactor,
             base: input.common.base.clone(),
+            install_scripts: input.common.base_install_scripts_override(),
         }),
         tree: input.services.tree.clone(),
         projector: Arc::new(Projector {

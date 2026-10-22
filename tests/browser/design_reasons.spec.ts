@@ -4,12 +4,16 @@
  * Details do, under the component workspace design contract. A stylesheet
  * reason reads only through the changed files, so a design whose only reason
  * is a stylesheet shows no reason sentence, and neither does an unchanged
- * screen or a page.
+ * screen or a page. Every built Browse design whose selected row or title row
+ * marks a changed, added, or removed entry must be in the list, so a new
+ * design of a changed screen cannot leave out its reasons.
  */
 
+import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
@@ -56,6 +60,12 @@ const REASONS: Readonly<Record<string, readonly SentenceReason[]>> = {
 };
 
 const BRANCH_POINT = "Compared with the branch point on origin/main.";
+/** The Browse and Changes designs of the shell design inventory. */
+const BROWSE_DESIGN = /^design\/(?:browse|changes)\//u;
+/** Kinds whose designs show no reason sentences, by the row's entry kind. */
+const EXCEPTED_KINDS = new Set(["page", "document", "use-case"]);
+/** Title-row badges that mark a changed, added, or removed entry. */
+const CHANGE_BADGES = new Set(["added", "changed", "removed"]);
 
 test.beforeEach(({ allowBrowserError, baseURL }) => {
   documentFavicon(allowBrowserError, baseURL!);
@@ -71,6 +81,76 @@ async function openDesign(page: Page, route: string, viewport: string) {
   );
   await page.goto(designFileUrl(file).href);
 }
+
+/** One built design's desktop document, served or copied. */
+async function designSource(
+  request: APIRequestContext,
+  route: string,
+): Promise<string> {
+  const url = designFileUrl(
+    path.join(
+      repositoryRoot,
+      "examples/basic/mokly-generated",
+      route,
+      "index.desktop.html",
+    ),
+  );
+  if (url.protocol === "file:") return readFile(fileURLToPath(url), "utf8");
+  const response = await request.get(url.href);
+  expect(response.ok(), route).toBe(true);
+  return response.text();
+}
+
+test("every Browse design of a changed, added, or removed entry lists its reasons", async ({
+  baseURL,
+  page,
+  request,
+}) => {
+  const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
+  expect(response.ok()).toBe(true);
+  const index = (await response.json()) as { screens: { path: string }[] };
+  const marked: string[] = [];
+  const seen = new Set<string>();
+  for (const { path: route } of index.screens) {
+    if (!BROWSE_DESIGN.test(route)) continue;
+    const design = await page.evaluate(
+      (html) => {
+        const document = new DOMParser().parseFromString(html, "text/html");
+        const row = document.querySelector(".mbk-nav-row.active");
+        return {
+          kind: row?.getAttribute("data-entry-kind") ?? "",
+          changed: Boolean(row?.querySelector(".mbk-nav-changed-text")),
+          removed: /· Removed$/u.test(row?.textContent?.trim() ?? ""),
+          badge:
+            document
+              .querySelector(".mbk-title-row .ce-change-status")
+              ?.getAttribute("data-change-status") ?? "",
+        };
+      },
+      await designSource(request, route),
+    );
+    if (design.changed) seen.add("changed row");
+    if (design.removed) seen.add("removed row");
+    if (design.badge === "added") seen.add("added badge");
+    if (EXCEPTED_KINDS.has(design.kind)) {
+      seen.add(design.kind);
+      continue;
+    }
+    if (design.changed || design.removed || CHANGE_BADGES.has(design.badge))
+      marked.push(route);
+  }
+  // Each mark and each excepted kind occurs, so a renamed class or a lost
+  // marker cannot narrow the check unseen.
+  expect([...seen].sort()).toEqual([
+    "added badge",
+    "changed row",
+    "document",
+    "page",
+    "removed row",
+    "use-case",
+  ]);
+  expect(marked.filter((route) => !Object.hasOwn(REASONS, route))).toEqual([]);
+});
 
 for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: Browse designs read one sentence per reason in their comparison details`, async ({

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_html::composition::Composed;
+use mokly_html::fragment::{Fragment, OwnedStyle, StyleAttribution};
 use mokly_html::links::Reference;
 use mokly_html::tree::{Node, element};
 use mokly_model::usage::CatalogueUsage;
@@ -151,5 +152,29 @@ fn retained_sidecar_style_owners_count_toward_the_document_budget() {
     });
     cache.insert(node("owners"), value);
     assert!(cache.get(&node("owners")).is_none());
+    assert_eq!(cache.stats().entries, 0);
+}
+
+#[test]
+fn registry_rule_metadata_counts_toward_fragment_cache_bound() {
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let value = Arc::new(Artifact {
+        bytes: vec![],
+        document: None,
+        content_type: "text/html".into(),
+        fragment: Some(Fragment {
+            styles: vec![OwnedStyle {
+                css: ".small{color:red}".into(),
+                owners: vec![],
+                attribution: Some(vec![StyleAttribution {
+                    css: "x".repeat(1024 * 1024),
+                    owners: vec!["card".into()],
+                }]),
+            }],
+            ..Default::default()
+        }),
+    });
+    assert!(value.byte_cost() >= 1024 * 1024);
+    cache.insert(node("registry"), value);
     assert_eq!(cache.stats().entries, 0);
 }

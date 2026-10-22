@@ -18,6 +18,7 @@ use super::ContainmentPath;
 
 fn region(path: &str) -> Containment {
     Containment {
+        instance: None,
         path: path.into(),
         root: false,
     }
@@ -81,6 +82,7 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
     let (linked, inline) = {
         let regions: ContainmentPath = [
             Containment {
+                instance: None,
                 path: "parent".into(),
                 root: true,
             },
@@ -96,6 +98,7 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
                 parent: None,
                 children: vec![],
                 text: false,
+                input_regions: Default::default(),
                 regions,
                 owner: EvidenceOwner::Entry,
             }],
@@ -109,12 +112,15 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
         let linked = attribution::observe("sheet.css", &matching, Some(&tree), Some(&clone));
         let inline = inline_attribution::observe("page.html", &matching, Some(&tree), Some(&clone));
         let original = tree.elements[0].regions.iter().next().unwrap();
-        for rules in [&linked, &inline] {
-            assert_eq!(rules[0].selectors[0].matches.len(), 2);
-            for proof in &rules[0].selectors[0].matches {
-                assert!(ptr::eq(original, proof.regions.iter().next().unwrap()));
-                assert_eq!(proof.regions.len(), 2);
-            }
+        assert_eq!(linked[0].selectors[0].matches.len(), 2);
+        for proof in &linked[0].selectors[0].matches {
+            assert!(ptr::eq(original, proof.regions().next().unwrap()));
+            assert_eq!(proof.regions().count(), 2);
+        }
+        assert_eq!(inline[0].selectors[0].matches.len(), 2);
+        for proof in &inline[0].selectors[0].matches {
+            assert!(ptr::eq(original, proof.regions().next().unwrap()));
+            assert_eq!(proof.regions().count(), 2);
         }
         (linked, inline)
     };
@@ -122,8 +128,8 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
         component: Some("parent".into()),
         rules,
     };
-    let linked = attribution::attribute(&[page(linked)]);
-    let inline = attribution::attribute(&[page(inline)]);
+    let linked = attribution::attribute(vec![page(linked)]);
+    let inline = attribution::attribute(vec![page(inline)]);
     assert_eq!(
         linked.changed_components.into_iter().collect::<Vec<_>>(),
         ["parent"]
@@ -134,6 +140,14 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
             path: "parent".into()
         }
     );
-    assert!(inline.changed_components.is_empty());
-    assert_eq!(inline.pages[0][0].owner, EvidenceOwner::Entry);
+    assert_eq!(
+        inline.changed_components.into_iter().collect::<Vec<_>>(),
+        ["parent"]
+    );
+    assert_eq!(
+        inline.pages[0][0].owner,
+        EvidenceOwner::Component {
+            path: "parent".into()
+        }
+    );
 }

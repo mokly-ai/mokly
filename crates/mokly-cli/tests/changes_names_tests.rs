@@ -164,6 +164,7 @@ fn inspect(root: &Path) {
             },
             redactor,
             Arc::new(ProbeDiagnostics),
+            None,
         ),
         cancellation,
         config: loader,

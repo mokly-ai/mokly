@@ -27,8 +27,8 @@ import {
   OUTSIDE_LEAD,
   VARIANT_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
-  SHARED_IMPACT,
   UNRESOLVED_LEAD,
+  VARIANT_SHARED_IMPACT,
   VARIANT_TERMINAL,
   evidenceFiles,
   evidenceSpacing,
@@ -94,7 +94,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
       // Its own views stay unmodified, but Card changes the shared preview.
       // The shared-component sentence replaces the no-changes line.
-      await expect(evidence.locator("p").last()).toHaveText(SHARED_IMPACT);
+      await expect(evidence.locator("p").last()).toHaveText(
+        VARIANT_SHARED_IMPACT,
+      );
       await expect(evidence).not.toContainText(VARIANT_TERMINAL);
       await expect(page.locator(".mbk-diff-view")).toHaveCount(0);
     });

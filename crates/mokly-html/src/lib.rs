@@ -45,14 +45,17 @@ mod marker_syntax;
 mod markers;
 mod normalization_annotate;
 mod normalized_keys;
+mod normalized_plaintext;
 mod normalized_regions;
 mod normalized_usage;
+mod noscript_text;
 mod placeholders;
 mod raw_markers;
 mod regions;
 mod relative_links;
 mod slots;
 mod source_locations;
+mod text_mode;
 mod tree_debug;
 mod tree_equality;
 mod tree_traits;
@@ -68,6 +71,9 @@ mod control_tests;
 #[path = "_tests_/control_tier_sweep_tests.rs"]
 mod control_tier_sweep_tests;
 #[cfg(test)]
+#[path = "_tests_/foreign_plaintext_tests.rs"]
+mod foreign_plaintext_tests;
+#[cfg(test)]
 #[path = "_tests_/fragment_tests.rs"]
 mod fragment_tests;
 #[cfg(test)]
@@ -77,11 +83,17 @@ mod marker_tests;
 #[path = "_tests_/navigation_sweep_tests.rs"]
 mod navigation_sweep_tests;
 #[cfg(test)]
+#[path = "_tests_/noscript_tests.rs"]
+mod noscript_tests;
+#[cfg(test)]
 #[path = "_tests_/parser_tests.rs"]
 mod parser_tests;
 #[cfg(test)]
 #[path = "_tests_/props_tests.rs"]
 mod props_tests;
+#[cfg(test)]
+#[path = "_tests_/raw_text_context_tests.rs"]
+mod raw_text_context_tests;
 #[cfg(test)]
 #[path = "_tests_/safety_tests.rs"]
 mod safety_tests;
@@ -105,6 +117,10 @@ mod deep_context_tests;
 #[cfg(test)]
 #[path = "_tests_/style_metadata_tests.rs"]
 mod style_metadata_tests;
+
+#[cfg(test)]
+#[path = "_tests_/plaintext_root_tests.rs"]
+mod plaintext_root_tests;
 
 #[cfg(test)]
 #[path = "_tests_/ignore_parsing_tests.rs"]

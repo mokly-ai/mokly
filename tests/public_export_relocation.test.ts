@@ -8,6 +8,7 @@ import { publicPackageExportAudit } from "../scripts/verification/repository-rat
 import {
   commitFixture,
   createPublicExportFixture,
+  git,
   writeNotes,
   writeSource,
 } from "./helpers/public_export_ratchet.js";
@@ -56,6 +57,67 @@ test("a relocated package compares its published exports at the tagged source lo
   assert.doesNotMatch(missing.findings.join("\n"), /could not run|git show/);
   await writeNotes(fixture.root, "Removed `removed`.\n");
   assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
+});
+
+test("one root release keeps the viewer export history after removing its component", async (t) => {
+  const fixture = await createPublicExportFixture({ tag: null });
+  t.after(() => fs.rm(fixture.root, { recursive: true, force: true }));
+  for (const name of ["mokly", "viewer"]) {
+    await writeSource(
+      fixture.root,
+      `packages/${name}/package.json`,
+      JSON.stringify({
+        name: `@mokly/${name}`,
+        exports: { ".": "./dist/index.js" },
+      }),
+    );
+    await writeSource(
+      fixture.root,
+      `packages/${name}/src/index.ts`,
+      "export const kept = 1; export const removed = 2;\n",
+    );
+  }
+  await writeSource(
+    fixture.root,
+    "package.json",
+    JSON.stringify({
+      name: "private-workspace",
+      private: true,
+      workspaces: ["packages/mokly", "packages/viewer"],
+    }),
+  );
+  await writeSource(
+    fixture.root,
+    "release-please-config.json",
+    JSON.stringify({
+      packages: {
+        ".": { "package-name": "@mokly/mokly", "include-v-in-tag": true },
+      },
+    }),
+  );
+  commitFixture(fixture.root, "test: release both public packages");
+  git(fixture.root, "tag", "v1.0.0");
+  git(fixture.root, "tag", "viewer-v0.6.0");
+  await writeSource(
+    fixture.root,
+    "packages/viewer/src/index.ts",
+    "export const kept = 1;\n",
+  );
+  const missing = publicPackageExportAudit(fixture.root);
+  assert.match(
+    missing.findings.join("\n"),
+    /@mokly\/viewer removed export removed since viewer-v0\.6\.0/,
+  );
+  await writeNotes(fixture.root, "Removed `removed`.\n");
+  assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
+  commitFixture(fixture.root, "test: release shared version");
+  git(fixture.root, "tag", "viewer-v1.1.0");
+  await writeNotes(fixture.root, "# Release notes\n");
+  assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
+  assert.match(
+    publicPackageExportAudit(fixture.root).summary,
+    /viewer-v1\.1\.0/,
+  );
 });
 
 test("a root release component audits its named public workspace package", async (t) => {

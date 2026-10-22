@@ -14,6 +14,7 @@ import { checklistCompleted, checklistTitle } from "./checklist.js";
 import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import { ComponentInfo } from "./component_info.js";
+import { PropsDeliveryState } from "./component_props_delivery.js";
 import {
   AffectedScreens,
   UsageDeliveryState,
@@ -43,6 +44,8 @@ export type ComponentPageState =
   | "removed"
   | "usage-loading"
   | "usage-failed"
+  | "props-loading"
+  | "props-failed"
   | "shared-impact"
   | "style-changed"
   | "closed";
@@ -153,10 +156,16 @@ export function ComponentDetails({
       : state === "usage-failed"
         ? "failed"
         : undefined;
+  const propsDelivery =
+    state === "props-loading"
+      ? "loading"
+      : state === "props-failed"
+        ? "failed"
+        : undefined;
   const initial =
     state === "closed"
       ? "closed"
-      : props !== undefined
+      : props !== undefined || propsDelivery
         ? "props"
         : changed || state === "unused" || usageDelivery
           ? "usage"
@@ -192,7 +201,11 @@ export function ComponentDetails({
         {
           id: "props",
           label: "Props",
-          content: props ?? <ComponentProps state={state} />,
+          content: propsDelivery ? (
+            <PropsDeliveryState state={propsDelivery} />
+          ) : (
+            (props ?? <ComponentProps state={state} />)
+          ),
         },
         {
           id: "usage",

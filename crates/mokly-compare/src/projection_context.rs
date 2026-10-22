@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use mokly_model::axes::EntryKind;
+use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::catalogue::EntryMetadata;
 use mokly_model::public_metadata::ChangeKind;
 use mokly_model::review::ReviewState;
@@ -101,6 +101,31 @@ impl<'a> Context<'a> {
 
     pub(crate) fn can_compare(&self, path: &str, kind: EntryKind) -> bool {
         kind == EntryKind::Component || (kind == EntryKind::Screen && !self.removed.contains(path))
+    }
+
+    /// Affected links use the displayed scheme, including the viewer's Light fallback.
+    pub(crate) fn view_can_compare(
+        &self,
+        path: &str,
+        kind: EntryKind,
+        viewport: Viewport,
+        color_scheme: ColorScheme,
+    ) -> bool {
+        if !self.can_compare(path, kind) {
+            return false;
+        }
+        self.classifications
+            .get(path)
+            .and_then(|entry| {
+                let find = |scheme| {
+                    entry.documents.iter().find(|document| {
+                        document.key.viewport == Some(viewport)
+                            && document.key.color_scheme == scheme
+                    })
+                };
+                find(color_scheme).or_else(|| find(ColorScheme::Light))
+            })
+            .is_none_or(|document| document.state != ReviewState::Added)
     }
 
     pub(crate) fn view_kind(state: ReviewState) -> ChangeKind {

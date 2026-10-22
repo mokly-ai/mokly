@@ -111,6 +111,17 @@ pub struct OwnedStyle {
     pub owners: Vec<String>,
     /// Rendered CSS.
     pub css: String,
+    /// Comparison records; absent preserves the sheet-level owner contract.
+    pub attribution: Option<Vec<StyleAttribution>>,
+}
+
+/// Trusted comparison metadata, independent of the delivered style bytes.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct StyleAttribution {
+    /// Rendered CSS of the adapter rule identity.
+    pub css: String,
+    /// Registered component paths; empty for selector attribution.
+    pub owners: Vec<String>,
 }
 
 /// Object-safe JavaScript render boundary, with a cacheable request.

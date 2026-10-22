@@ -36,6 +36,8 @@ export const CONTROLS_COPY = {
   updating: "Updating preview…",
   preparing: "Preparing to edit props…",
   preparingFailed: "Editing could not start.",
+  loading: "Loading props…",
+  loadFailed: "Props couldn’t be loaded.",
   comparison: "Comparisons show the saved props.",
   switchToCurrent: "Switch to Current",
   published: "Open this catalogue locally to edit props.",

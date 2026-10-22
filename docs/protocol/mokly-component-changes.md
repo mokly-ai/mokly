@@ -27,14 +27,14 @@ owns the membership list. This page states how a component edit is attributed.
 | Other parent metadata changes                           | Parent and each variant whose metadata projection changes | Consumers only when their render or rendered resources change |
 | Temporary control edits in Serve                        | None                                                      | None                                                          |
 
-| CSS delivery path                   | Direct Changes entries                                                                           | Secondary impact                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| Styles a sidecar render returned    | The components named as owners, by construction                                                  | Consumers of those components         |
-| Unowned head `<style>` elements     | The owner that the inline rule of [style ownership](./mokly-comparison.md#style-ownership) names | Consumers of a component owner        |
-| Configured stylesheet               | Components with kept own-page matches; entries with outside matches or unresolved rules          | Consumers of those changed components |
-| Component `stylesheets` declaration | The same rule; declaring the file grants no ownership                                            | The same affected-consumer rule       |
-| Import from a stylesheet            | The same rule, using the changed imported stylesheet                                             | The same affected-consumer rule       |
-| JavaScript import into a bundle     | The same rule, joining equal changed rules across bundles                                        | The same affected-consumer rule       |
+| CSS delivery path                   | Direct Changes entries                                                                                      | Secondary impact                      |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Styles a sidecar render returned    | Owners with matches kept by the shared nested test; entry-owned unresolved rules                            | Consumers of those components         |
+| Unowned head `<style>` elements     | Components with kept own-page matches in physical regions; entries with outside matches or unresolved rules | Consumers of a component owner        |
+| Configured stylesheet               | Components with kept own-page matches; entries with outside matches or unresolved rules                     | Consumers of those changed components |
+| Component `stylesheets` declaration | The same rule; declaring the file grants no ownership                                                       | The same affected-consumer rule       |
+| Import from a stylesheet            | The same rule, using the changed imported stylesheet                                                        | The same affected-consumer rule       |
+| JavaScript import into a bundle     | The same rule, joining equal changed rules across bundles                                                   | The same affected-consumer rule       |
 
 The [CSS rule contract](./mokly-css-attribution-rules.md) defines containment,
 identity, and examples. A component row through a linked stylesheet requires
@@ -59,8 +59,9 @@ usage, including transitive use and removed consumers. Each canonical screen
 appears once with its affected view and instance evidence. A direct screen
 change does not remove it from the list. Each link names the entry whose views
 its evidence names, so a variant's own views link the variant. In Serve and in
-a static build, a link opens the consumer's Side by side comparison of that
-view, in or out of Changes. A consumer without a row stays Unmodified and
+a static build, a link opens the consumer's Side by side comparison when that
+view has a base side, in or out of Changes. An Added consumer opens Current
+because its view has no base side. A consumer without a row stays Unmodified and
 outside Changes. A pure move, a consumer whose other views changed, and a
 component variant compare the linked view the same way. A React host opens the
 consumer in Current, where the band offers the same comparison. A removed
@@ -75,8 +76,7 @@ Serve's background classification, the selected comparison, watched updates,
 `build`, and `publish` use one materiality policy and one classifier over the
 same composed trees, so Changes rows, counts, on-demand results, and built
 output agree. Every catalogue, with or without registered components, follows
-it. A changed Git path is candidate evidence, never a reason to classify a
-consumer as changed. The classifier reads the catalogue model and the render
+it. The classifier reads the catalogue model and the render
 cache of both sides; it generates no snapshot and copies no asset. Opening All
 or Changes, navigating, changing viewport or scheme in Current, and a watch
 notification generate no comparison. Classification is cached by the head and
@@ -123,6 +123,9 @@ region that supplied it. Nested instance regions inside the slot keep their
 own identities and input signals; the outer projection must not erase them.
 Added, removed, replaced, and reordered instances stay material, including an
 instance that renders nothing.
+CSS claims use physical containment. A receiver's declared rule can own a
+match on supplied content. Supplier ancestry only prevents that receiver from
+taking the supplier's own rule for the supplied content.
 
 Props digests use the canonical JSON of the
 [entry props contract](./mokly-entry-props.md) for every declared prop. Object
@@ -151,7 +154,7 @@ produce equal records for one view.
 ## Rendered Resources And Styles
 
 Stylesheet changes follow one rule for configured, declared, transitively
-imported, and JavaScript-bundled CSS. Match each changed rule against both
+imported, JavaScript-bundled, and ownerless head CSS. Match each changed rule against both
 sides' composed trees. A component changes through a linked stylesheet only
 through a kept match in its root region on one of its own pages. X loses a
 match inside a different nested Y when this rule has any match on Y's own
@@ -161,6 +164,9 @@ matches give X's variants component reasons; entry evidence uses inclusive
 containment. Identical changed rules across stylesheets match by their
 normalized before and after selectors and declarations, never by their path
 or owner.
+A receiving component claims supplied content through these sources only
+when its own pages prove the rule. Otherwise the match uses the entry rule
+below, just as a linked stylesheet does.
 
 An entry has its own row when a match is left outside every component changed
 by that rule, or when the rule is unresolved. Otherwise a consumer stays under
@@ -170,12 +176,20 @@ record. Per-rule facts are kept before any merging by stylesheet. See the
 [rule contract](./mokly-css-attribution-rules.md) and the
 [evidence schema](./mokly-css-attribution-membership.md).
 
-Styles a [sidecar](./mokly-sidecar.md#style-collection) render returned are
-owned by the rendered component by construction, written into the head with
-their owners, and deduplicated by rule identity; a changed owned rule is that
-component's change. Unowned head styles of a whole-screen render follow the
-inline rule of [style ownership](./mokly-comparison.md#style-ownership). Mokly
-derives no stylesheet ownership from files: a renderer `resources` record for
+Styles a [sidecar](./mokly-sidecar.md#style-collection) render returned keep
+trusted owners and normalized rule identities. Owned rules use the same
+catalogue-wide unfiltered own-page sets and nested test as linked CSS. A
+self-nested copy never takes its own component's match. Supplier input ancestry
+only filters whether a nested component takes a supplier's own rule.
+Declared owners claim kept matches inside their physical regions, including
+supplied content and instances whose own previews have no matching content.
+Equal rules join proof across documents
+with different owners. Kept own-page matches give component reasons; a kept
+exact-instance match can still prove an implementation change with unchanged
+caller inputs. Unresolved rules keep entry ownership. Owned, ownerless head,
+and linked CSS share one reducer, including one excluded source record when
+none of its changed rules applies on a view.
+Mokly derives no stylesheet ownership from files: a renderer `resources` record for
 a stylesheet is ignored with the stylesheet-owner warning after the public
 path checks, and a component's `stylesheets` declaration controls links only.
 Adding or removing a declaration changes material only when the composed

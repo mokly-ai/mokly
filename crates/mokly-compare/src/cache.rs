@@ -83,7 +83,13 @@ impl DiskCache {
         }))
     }
 
-    fn build(&self, namespace: &Path, kind: Kind, key: &str, builder: &dyn Builder) -> Result<()> {
+    fn build(
+        &self,
+        namespace: &Path,
+        kind: Kind,
+        key: &str,
+        builder: &dyn Builder,
+    ) -> Result<Option<Lease>> {
         let limit = self.capacity(kind);
         self.check()?;
         let _entry = match self
@@ -93,13 +99,13 @@ impl DiskCache {
             Ok(guard) => guard,
             Err(error::Error::Locked { .. }) => {
                 self.clock.pause(Duration::from_millis(5));
-                return Ok(());
+                return Ok(None);
             }
             Err(source) => return Err(InternalError::Platform { source }.into()),
         };
         let target = namespace.join("entries").join(key);
         if self.storage.inspect(&target, limit)?.is_some() {
-            return Ok(());
+            return Ok(None);
         }
         {
             let _namespace = self.lock(&namespace.join("state.lock"), false)?;
@@ -122,6 +128,9 @@ impl DiskCache {
             if bytes > limit {
                 return Err(Error::CacheLimit { limit });
             }
+            if !builder.reusable() {
+                return Ok(Some(self.transient(namespace, key, &stage)?));
+            }
             self.storage.synchronize(&stage.join("data"))?;
             let _namespace = self.lock(&namespace.join("state.lock"), false)?;
             let records = self.storage.records(&namespace.join("entries"))?;
@@ -137,7 +146,7 @@ impl DiskCache {
             if kind == Kind::Sources {
                 self.storage.publish(&stage, &target)?;
             }
-            Ok(())
+            Ok(None)
         })();
         if result.is_err() {
             let _ = self.storage.remove(&stage);
@@ -175,7 +184,9 @@ impl Cache for DiskCache {
             if let Some(lease) = self.hit(&namespace, key, self.capacity(kind))? {
                 return Ok(lease);
             }
-            self.build(&namespace, kind, key, builder)?;
+            if let Some(lease) = self.build(&namespace, kind, key, builder)? {
+                return Ok(lease);
+            }
         }
     }
 }

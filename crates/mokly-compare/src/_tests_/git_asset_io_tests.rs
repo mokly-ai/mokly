@@ -98,3 +98,33 @@ fn a_nonregular_git_entry_is_a_changed_input_before_blob_delivery() {
     assert!(matches!(tree.open_stream(Path::new("/repo/image.svg")),
         Err(SourceError::Changed { path }) if path == Path::new("/repo/image.svg")));
 }
+
+#[test]
+fn a_small_pointer_uses_a_streamed_converted_digest() {
+    let path = RepoPath::parse("image.lfs").unwrap();
+    let index = Arc::new(TreeIndex {
+        entries: [(
+            path.clone(),
+            Entry {
+                path,
+                mode: Mode::File,
+                size: 128,
+                object: ObjectId::parse(&"a".repeat(40)).unwrap(),
+            },
+        )]
+        .into(),
+    });
+    let sources = Unimock::new((
+        SourcesMock::index
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| Ok(index.clone()))),
+        SourcesMock::digest
+            .next_call(matching!((path) if path.as_str() == "image.lfs"))
+            .returns(Ok("converted-content-hash".into())),
+    ));
+    let tree: &dyn SourceTree = &GitTree::new("/repo".into(), Arc::new(sources), 4096);
+    assert_eq!(
+        tree.digest(Path::new("/repo/image.lfs")).unwrap(),
+        "converted-content-hash"
+    );
+}

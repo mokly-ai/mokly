@@ -118,7 +118,7 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
         );
         {
             let _scope = comparison.enter();
-            let paths = tracing::info_span!("review.changed-paths", status = "error");
+            let paths = tracing::info_span!("review.resource-graph", status = "error");
             let _scope = paths.enter();
             paths.record("status", "ok");
         }
@@ -134,7 +134,7 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     let comparison = &records[1];
     assert_eq!(comparison["parentId"], output["id"]);
     assert_eq!(records[2]["parentId"], comparison["id"]);
-    assert_eq!(records[3]["stage"], "review.changed-paths");
+    assert_eq!(records[3]["stage"], "review.resource-graph");
     assert_eq!(records[3]["status"], "ok");
     let counts = &records[4];
     assert_eq!(counts["event"], "counts");
@@ -167,7 +167,7 @@ fn unsuccessful_review_spans_remain_error_and_emit_no_complete_counts() {
             let span = tracing::info_span!("review.base-dependencies", status = "error");
             let _scope = span.enter();
         }
-        let span = tracing::info_span!("review.changed-paths", status = "error");
+        let span = tracing::info_span!("review.resource-graph", status = "error");
         let _scope = span.enter();
     });
     assert_eq!(records.len(), 6);

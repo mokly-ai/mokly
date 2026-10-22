@@ -25,8 +25,8 @@ use crate::session::{Session, SessionInput};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{
-    config_key, error, markdown_assets, markdown_sources, planning, styles, stylesheet_keys,
-    watch_rules,
+    config_key, dependency_inputs, error, markdown_assets, markdown_sources, planning, styles,
+    stylesheet_keys, watch_rules,
 };
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -89,6 +89,14 @@ impl Graph {
             self.tree.as_ref(),
         ));
         let original_sources: BTreeSet<_> = catalogue.model.sources.iter().cloned().collect();
+        catalogue.dependency_directories.clear();
+        if let Some(generation) = &catalogue.javascript.generation {
+            catalogue
+                .dependency_directories
+                .extend(generation.modules.keys().filter_map(|path| {
+                    dependency_inputs::directory(path, &self.inputs.dependency_aliases)
+                }));
+        }
         let mut names = RouteInventory::default();
         let mut module_names = ModuleNames::default();
         let mut resources: BTreeMap<String, ResourcePlan> = BTreeMap::new();
@@ -147,6 +155,17 @@ impl Graph {
                 .values()
                 .flat_map(|asset| asset.input_paths().cloned())
                 .collect();
+            catalogue.dependency_directories.extend(
+                bundle
+                    .inputs
+                    .keys()
+                    .chain(bundle.dependency_digests.keys())
+                    .chain(asset_inputs.iter())
+                    .filter(|path| !bundle.repository_aliases.contains(*path))
+                    .filter_map(|path| {
+                        dependency_inputs::directory(path, &self.inputs.dependency_aliases)
+                    }),
+            );
             for (route, asset) in bundle.assets {
                 names.insert(&route, true)?;
                 let asset_key = key(
