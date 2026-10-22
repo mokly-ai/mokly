@@ -56,7 +56,7 @@ pub fn run_configured(
     mode: &str,
 ) -> Output {
     let cache = TempDir::new().unwrap();
-    let cache_root = cache.path().canonicalize().unwrap();
+    let cache_root = dunce::canonicalize(cache.path()).unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
     command
         .current_dir(root)
