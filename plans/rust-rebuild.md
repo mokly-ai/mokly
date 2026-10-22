@@ -3970,13 +3970,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       paths, and a Windows copy of `node_modules`. A temporary Windows probe
       workflow gave fast feedback and is removed. Round 6 closes the five
       round 5 items below.
-  - [ ] Open decision for the user, from round 6: under decision 69 C, a
-        base read starts one Git process per file when `core.autocrlf` is
-        not false, and Git for Windows sets it to true by default. Options:
-        A, document the cost, Small; B, use the raw batch also for paths
-        whose attributes make checkout an identity, Small; C, convert each
-        batch in one `git checkout-index --temp` process with a private
-        index, and fall back per file on a failure, Medium. Recommended: C.
+    - User item 165 in the post-merge section holds the decision that
+      round 6 opened.
   - Outside round 5: `mokly-compare/tests/dependencies_tests.rs` and
     `package_roots_tests.rs` returned Fallback instead of Installed on Windows
     before the package-manager merge. Confirm on the merged tree. Separate branch.
@@ -5810,6 +5805,15 @@ does not ask the user before the merge.
       Severity Low, effort not recorded. Options: A, keep it; B, name the
       owner by its title, as the design does; C, a noun from the shared
       entry wording, with a design first. Recommended: B.
+
+- [ ] Resolve user item 165 (native CI round 6 decision): under decision
+      69 C, a base read starts one Git process per file when
+      `core.autocrlf` is not false, and Git for Windows sets it to true by
+      default. The round 6 record gives no severity. Options: A, document
+      the cost, Small; B, use the raw batch also for paths whose attributes
+      make checkout an identity, Small; C, convert each batch in one
+      `git checkout-index --temp` process with a private index, and fall
+      back per file on a failure, Medium. Recommended: C.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
