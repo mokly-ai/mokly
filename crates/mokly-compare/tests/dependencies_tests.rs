@@ -40,7 +40,9 @@ fn write(root: &Path, path: &str, bytes: &[u8]) {
 #[test]
 fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the_cache() {
     let temporary = tempfile::tempdir().unwrap();
-    let root = temporary.path().canonicalize().unwrap().join("repository");
+    let root = dunce::canonicalize(temporary.path())
+        .unwrap()
+        .join("repository");
     fs::create_dir(&root).unwrap();
     git(&root, &["init", "-b", "main"]);
     git(&root, &["config", "user.name", "Mokly Tests"]);
@@ -123,7 +125,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         .unwrap();
     assert_eq!(base, head);
     let cache: Arc<dyn Cache> = Arc::new(cache(
-        temporary.path().canonicalize().unwrap().join("cache"),
+        dunce::canonicalize(temporary.path()).unwrap().join("cache"),
         10 * 1024 * 1024,
     ));
     let extraction: &dyn Extraction = &CachedExtraction {
@@ -224,7 +226,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     assert_eq!(result.node_modules, first_directory);
     assert!(
         Path::new(&result.module_resolution.package_roots[0])
-            .starts_with(temporary.path().canonicalize().unwrap())
+            .starts_with(dunce::canonicalize(temporary.path()).unwrap())
     );
     request
         .base
