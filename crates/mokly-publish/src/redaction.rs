@@ -1,11 +1,19 @@
 //! Shared secret matching for literal and percent-encoded text.
 
+use std::fmt;
+
 use url::Url;
 
 /// Matches a secret in literal text and percent-encoded bytes.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SecretMatcher {
     secret: String,
+}
+
+impl fmt::Debug for SecretMatcher {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("SecretMatcher([redacted])")
+    }
 }
 
 #[cfg(test)]
