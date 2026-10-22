@@ -2,7 +2,6 @@
 
 #[cfg(windows)]
 use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -25,7 +24,7 @@ pub struct SystemLocations;
 
 impl Locations for SystemLocations {
     fn repository(&self, repository: &Path) -> Result<PathBuf> {
-        let repository = fs::canonicalize(repository).base()?;
+        let repository = dunce::canonicalize(repository).base()?;
         let Some(base) = BaseDirs::new() else {
             return Err(Error::UnsafeCache { path: repository });
         };
@@ -78,8 +77,11 @@ impl Reporter for OnceReporter {
     }
 }
 
+/// Canonical paths keep Windows' plain drive form when it can name the
+/// location. npm and Node do not treat `\\?\C:\` and `C:\` as one root, so a
+/// verbatim cache path breaks base installs and module resolution.
 fn project_cache_root(path: &Path) -> Result<PathBuf> {
-    match fs::canonicalize(path) {
+    match dunce::canonicalize(path) {
         Ok(path) => Ok(path),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {

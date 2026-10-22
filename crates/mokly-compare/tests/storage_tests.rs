@@ -116,3 +116,18 @@ fn location_probe() {
         };
     storage.prepare(&root.join("sources")).unwrap();
 }
+
+#[cfg(windows)]
+#[test]
+fn windows_cache_roots_keep_the_plain_drive_form() {
+    let repository = tempfile::tempdir().unwrap();
+    let locations: &dyn mokly_compare::locations::Locations =
+        &mokly_compare::locations::SystemLocations;
+    let root = locations.repository(repository.path()).unwrap();
+    assert!(root.is_absolute(), "{}", root.display());
+    assert!(
+        !root.as_os_str().to_string_lossy().starts_with(r"\\?\"),
+        "npm and Node need the plain drive form: {}",
+        root.display()
+    );
+}

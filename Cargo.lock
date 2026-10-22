@@ -2128,6 +2128,7 @@ name = "mokly-compare"
 version = "0.14.0"
 dependencies = [
  "directories",
+ "dunce",
  "flate2",
  "mokly-catalogue",
  "mokly-css",
@@ -2286,6 +2287,7 @@ dependencies = [
 name = "mokly-render"
 version = "0.14.0"
 dependencies = [
+ "dunce",
  "globset",
  "insta",
  "mokly-catalogue",

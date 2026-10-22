@@ -54,7 +54,8 @@ An HTML comparison uses its head generation's completed dependency inventory.
 With no used dependency directory, it reads no dependency inputs.
 
 `SystemLocations` hashes the canonical repository path under the operating
-system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency
+system's cache directory; Windows honors an absolute `LOCALAPPDATA` value and
+keeps the plain drive form, so npm and Node accept the cache paths. `DiskCache` has separate source and dependency
 byte bounds. It uses OS locks for namespace mutation and entry leases. A
 durable receipt records completion, an access sequence, and bytes. A hit
 validates the receipt and recounts data size without hashing content or

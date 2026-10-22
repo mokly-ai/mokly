@@ -9,7 +9,9 @@ conversion and dependency selection. This page defines their retained storage.
 
 Both cache kinds live in a SHA-256 namespace under the operating system's
 cache directory. Windows honors an absolute `LOCALAPPDATA` value. The key
-hashes the canonical repository path's OS encoding.
+hashes the canonical repository path's OS encoding. On Windows, canonical
+paths use the plain drive form without the `\\?\` prefix when that form can
+name the location. npm and Node do not treat the two forms as one root.
 Resolve the complete namespace path once at composition, including links at
 or above it. A cache location inside the repository is invalid. Below that
 canonical root, directory links are rejected before writes. Dependency links
