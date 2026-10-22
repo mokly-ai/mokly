@@ -1,7 +1,7 @@
 //! Package roots keep one normalized meaning in every source tree.
 
 use std::io;
-use std::path::{Component, Path};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_source_interface::error::SourceError;
@@ -115,4 +115,18 @@ fn the_authored_spelling_target_still_satisfies_the_manifest_rule() {
     let config = config(&["link/../ui"]);
     validate_inputs(&tree, &config).unwrap();
     assert_eq!(config.package_roots(), ["tools/ui"]);
+}
+
+#[test]
+fn package_root_aliases_keep_only_parent_segment_spellings() {
+    let config = config(&["../packages/ui", "./ui", "link/../ui", ".."]);
+    assert_eq!(
+        config.package_root_aliases(),
+        [
+            "/repo/tools/../packages/ui",
+            "/repo/tools/link/../ui",
+            "/repo/tools/..",
+        ]
+        .map(PathBuf::from)
+    );
 }

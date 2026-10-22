@@ -155,3 +155,49 @@ fn a_parent_segment_package_root_is_private_without_canonical_projection() {
         "packages/other.txt"
     );
 }
+
+#[test]
+fn a_parent_segment_spelling_keeps_its_physical_target_private() {
+    let tree = Arc::new(Unimock::new(
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers(&|_, path| {
+                let kind = if path.extension().is_none() {
+                    FileKind::Directory
+                } else {
+                    FileKind::File
+                };
+                let identity = if path == Path::new("/repo/tools/link/../ui") {
+                    "/repo/deep/ui".into()
+                } else {
+                    path.into()
+                };
+                Ok(Some(Node {
+                    identity,
+                    lexical_kind: kind,
+                    kind,
+                }))
+            }),
+    ));
+    let config = ResolvedConfig {
+        input: Config {
+            module_resolution: Some(ModuleResolution {
+                package_roots: Some(vec!["link/../ui".into()]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+        file: "/repo/tools/mokly.config.json".into(),
+        repo_root: "/repo".into(),
+        authored_inputs: Vec::new(),
+        roots: Vec::new(),
+    };
+    let policy = FilePolicy::new(tree, &config, &[], BTreeMap::new(), None).unwrap();
+    for path in ["tools/ui/private.txt", "deep/ui/private.txt"] {
+        assert_eq!(policy.check(path).unwrap_err(), PublicDenial::Private);
+    }
+    assert_eq!(
+        policy.check("deep/other.txt").unwrap().path,
+        "deep/other.txt"
+    );
+}

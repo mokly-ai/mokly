@@ -29,6 +29,9 @@ impl Boundary {
         for root in config.package_roots() {
             inputs.push(config.repo_root.join(root).join("package.json"));
         }
+        for alias in config.package_root_aliases() {
+            inputs.push(alias.join("package.json"));
+        }
         Self {
             allowed,
             lexical_allowed: None,

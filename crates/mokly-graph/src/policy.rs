@@ -72,8 +72,10 @@ impl FilePolicy {
                 private.push(config.repo_root.join(root));
             }
         }
+        let aliases = config.package_root_aliases();
         let identities: Vec<_> = private
             .iter()
+            .chain(&aliases)
             .filter_map(|path| tree.project(path).ok().flatten())
             .map(|node| node.identity)
             .filter(|path| path != &config.repo_root)

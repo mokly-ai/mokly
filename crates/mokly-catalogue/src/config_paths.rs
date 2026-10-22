@@ -1,6 +1,6 @@
 //! Physical confinement for configuration filesystem fields.
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
@@ -16,16 +16,39 @@ impl ResolvedConfig {
     /// Every consumer reads this form; loading confines each root inside
     /// `repo_root`.
     pub fn package_roots(&self) -> Vec<String> {
-        self.input
-            .module_resolution
-            .iter()
-            .flat_map(|module| module.package_roots.iter().flatten())
+        self.authored_package_roots()
             .map(|root| relative(&self.local_path(root), &self.repo_root))
             .collect()
     }
 
+    /// Authored package-root spellings that contain `..`, joined to the
+    /// configuration directory. A symbolic link before `..` can lead such a
+    /// spelling to another physical directory. Consumers only project these
+    /// paths, so that directory stays protected as before normalization.
+    pub fn package_root_aliases(&self) -> Vec<PathBuf> {
+        self.authored_package_roots()
+            .filter(|root| {
+                Path::new(root)
+                    .components()
+                    .any(|part| part == Component::ParentDir)
+            })
+            .map(|root| self.spelling(root))
+            .collect()
+    }
+
+    fn authored_package_roots(&self) -> impl Iterator<Item = &String> {
+        self.input
+            .module_resolution
+            .iter()
+            .flat_map(|module| module.package_roots.iter().flatten())
+    }
+
+    fn spelling(&self, value: &str) -> PathBuf {
+        self.file.parent().unwrap_or(&self.repo_root).join(value)
+    }
+
     fn local_path(&self, value: &str) -> PathBuf {
-        normalize(&self.file.parent().unwrap_or(&self.repo_root).join(value))
+        normalize(&self.spelling(value))
     }
 }
 
@@ -90,13 +113,7 @@ pub(crate) fn validate_inputs(
             }
         }
     }
-    for (index, path) in config
-        .input
-        .module_resolution
-        .iter()
-        .flat_map(|module| module.package_roots.iter().flatten())
-        .enumerate()
-    {
+    for (index, path) in config.authored_package_roots().enumerate() {
         confined(
             tree,
             config,
@@ -194,12 +211,7 @@ fn confined(
 /// also counts, so a root spelled through a symbolic link before `..` keeps
 /// the acceptance that the unnormalized check gave it.
 fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> bool {
-    let spelling = config
-        .file
-        .parent()
-        .unwrap_or(&config.repo_root)
-        .join(value);
-    [config.local_path(value), spelling]
+    [config.local_path(value), config.spelling(value)]
         .iter()
         .any(|directory| {
             matches!(
