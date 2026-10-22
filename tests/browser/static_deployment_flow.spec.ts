@@ -167,7 +167,10 @@ test("a removed step that fails after another deployment keeps the use case load
     }
   });
   site = next;
-  await page.locator('a[data-route="tour/index.html"]').click();
+  // A click waits for a navigation that starts while it finishes, and this
+  // test holds that full page load. So wait for the click only after the
+  // test releases the held load.
+  const clicked = page.locator('a[data-route="tour/index.html"]').click();
   // The tour's own detail comes from the next deployment, so the outgoing
   // document asks for a full page load. Hold that load, and only then answer
   // the removed step, which the next deployment no longer has. The outgoing
@@ -179,6 +182,7 @@ test("a removed step that fails after another deployment keeps the use case load
   const reloaded = page.waitForEvent("load");
   await pageLoad!.continue();
   await reloaded;
+  await clicked;
   await expect(page.locator("#mb-main h2")).toHaveText("Tour");
   expect(
     await page.evaluate(
