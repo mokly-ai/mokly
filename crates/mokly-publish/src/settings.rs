@@ -5,6 +5,7 @@ use std::fmt;
 use url::Url;
 
 use crate::error::{Error, Result};
+use crate::redaction::SecretMatcher;
 
 /// A validated bearer credential, deliberately opaque in diagnostics.
 #[derive(Clone)]
@@ -29,19 +30,9 @@ impl Token {
         &self.0
     }
 
-    pub(crate) fn appears_in(&self, value: &str) -> bool {
-        let encoded: String = self
-            .0
-            .bytes()
-            .map(|byte| {
-                if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
-                    (byte as char).to_string()
-                } else {
-                    format!("%{byte:02X}")
-                }
-            })
-            .collect();
-        value.contains(&self.0) || value.contains(&encoded)
+    /// Create the shared matcher used by completion and terminal consumers.
+    pub fn matcher(&self) -> SecretMatcher {
+        SecretMatcher::new(self.0.clone())
     }
 }
 

@@ -12,6 +12,7 @@ pub mod hints;
 pub mod http;
 pub mod identity;
 pub mod plan;
+pub mod redaction;
 mod retry;
 mod review;
 mod review_json;
