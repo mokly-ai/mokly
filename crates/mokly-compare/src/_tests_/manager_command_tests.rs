@@ -252,8 +252,9 @@ fn berry_install_disables_base_environment_files() {
     let captured = variables(&command).into_iter().collect::<BTreeMap<_, _>>();
     // The override points above the private entry, where a base cannot commit
     // a file, and the `?` marks it optional, so Berry injects no file.
-    assert_eq!(
-        captured["YARN_INJECT_ENVIRONMENT_FILES"],
-        OsString::from("/ns/dependencies/entries/.mokly-no-environment-file?")
-    );
+    let mut expected = Path::new("/ns/dependencies/entries")
+        .join(".mokly-no-environment-file")
+        .into_os_string();
+    expected.push("?");
+    assert_eq!(captured["YARN_INJECT_ENVIRONMENT_FILES"], expected);
 }
