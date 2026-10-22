@@ -3527,18 +3527,18 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
         batch 23.
 
-- [ ] Final review fixes:
+- [x] Final review fixes:
   - [x] Final review R1b finding 1 (High security): lowercase percent
         escapes bypass token redaction. Merged in batch 29 as `91dabae4`.
   - [x] Fix the R1b follow-up (High security, from the fix delegate's own
         review): `SecretMatcher` derives `Debug` and prints the bearer
         token. Merged in batch 30 as `035b94bb`: its `Debug` output is
         `SecretMatcher([redacted])`.
-  - [ ] Fix final review R1a finding 1 (High security): parent package
+  - [x] Fix final review R1a finding 1 (High security): parent package
         roots can become public files, because `FilePolicy::private` gets
-        the raw `../` form. In progress on `rebuild/package-root-policy`,
-        option B: normalized package roots in `ResolvedConfig` for every
-        consumer.
+        the raw `../` form. Option B: normalized package roots in
+        `ResolvedConfig` for every consumer. Merged in batch 31 as
+        `e93c80ac`.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
@@ -3748,13 +3748,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Recommended: B. B is a new lint, so it needs the user.
   - User decision 126 (2026-10-21): A. No check for plan words is added.
 
-- [ ] Run the complete gate with both executors on the final tree: local,
+- [x] Run the complete gate with both executors on the final tree: local,
       `cargo xtask check --executor local` on Node 24.21.0, and remote,
       `cargo xtask check --executor remote` with `MOKLY_TESTBOX_REF` on Node
       22.15.0. Fix anything either reports until both pass.
+  - Integration batch 31; evidence: `.context/integration-31/final-gate/`.
   - Every earlier round and batch runs one complete gate with one executor
     (user, 2026-10-21).
-- [ ] Commit and push.
+- [x] Commit and push.
+  - Integration batch 31; evidence: `.context/integration-31/final-gate/`.
 - [ ] Open the pull request. Its description and squash body write `{target}`
       for the package placeholder, justify each merge decision with its paths,
       and record every approved removal.
@@ -5870,6 +5872,78 @@ does not ask the user before the merge.
       B, use `dunce::canonicalize` there and forbid `std::fs::canonicalize`
       in product code with a Clippy `disallowed-methods` rule (a new lint,
       which needs the user's approval). Recommended: B.
+
+- [ ] Resolve user item 167 (W8 finding 1): a nested configuration with
+      `"renderer": "../renderer.tsx"` gets no renderer stylesheet, because
+      `crates/mokly-render/src/bundle_inputs.rs:26` and
+      `crates/mokly-render/src/graph.rs:159` use the raw spelling while
+      `crates/mokly-graph/src/styles.rs:180` links the normalized path. A
+      probe confirmed it. Severity Medium, product bug, effort Large for B.
+      Options: A, normalize the renderer path at the two render call sites,
+      Small; B, add one public `ResolvedConfig` method that returns the
+      normalized form of a config-relative path, and use it for the
+      renderer, the PostCSS module, and the configured stylesheets in the
+      render crate, Large, which also fixes 169 and 170. Recommended: B.
+
+- [ ] Resolve user item 168 (W8 finding 2): the manifest rule
+      (`crates/mokly-catalogue/src/config_paths.rs:210`, `has_manifest`) now
+      accepts two rare roots that the base rejected: a link before `..`
+      where only the normalized root holds `package.json`, and a file before
+      `..`, such as `file.txt/../ui`, which then fails in `mokly build` with
+      an I/O "resolve" error. Severity Low, effort Small. Options: A, the raw
+      spelling decides when the source tree can resolve it, and the
+      normalized root decides only when that lookup fails, Small, with the
+      reviewer's auto-fix tag; B, A, and the output boundary also skips an
+      alias it cannot resolve, Small; C, reject a root whose physical target
+      differs from its normalized root, a new rejection, see 171; D, resolve
+      each root once into one record that the manifest rule, the file
+      policy, and the output boundary read, Large. Recommended: A.
+
+- [ ] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
+      `sub/../first.css` fails a component build with "listed authoring
+      input" (`crates/mokly-render/src/declarations.rs:35`). Severity Low,
+      effort Large for B. Options: A, normalize the configured list there,
+      Small; B, the method of 167 B, Large. Recommended: B.
+
+- [ ] Resolve user item 170 (W8 finding 4): PostCSS load errors show
+      `tools/../postcss.mjs` instead of `postcss.mjs`
+      (`crates/mokly-render/src/stylesheets.rs:63`, `postcss.rs:131`).
+      Severity Low, UX wording, effort Large for B. Options: A, normalize
+      before the sidecar call, Small; B, the method of 167 B, Large.
+      Recommended: B.
+
+- [ ] Resolve user item 171 (W8 decision 5): in a spelling such as
+      `link/../ui`, where `link` is a symbolic link, one package root has two
+      meanings: the normalized root and the physical target. `80a8a195`
+      keeps the base behaviour through
+      `ResolvedConfig::package_root_aliases()`. Severity Low, effort not
+      recorded. Options: A, keep it and add one sentence to the
+      configuration page, which is at its cap, so it needs a split; B, use
+      only the normalized root and remove the aliases, so such a spelling
+      fails with the existing "must contain package.json" message, which
+      also closes 168; C, reject such a spelling with a new message.
+      Recommended: B.
+
+- [ ] Resolve user item 172 (W8 decision 6): a Rust test that compares
+      joined paths as `/` strings fails only on Windows. Severity Low,
+      effort Small. Options: A, keep the convention of comparing `Path`
+      values, which the hosted Windows job enforces, Small; B, a shared test
+      helper that compares path lists by components, in a new shared test
+      crate, Large. Recommended: A.
+
+- [ ] Resolve user item 173 (W8 decision 7):
+      `crates/mokly-compare/tests/large_sources_tests.rs:17` runs `git`
+      without the isolated `support::git`, so a global setting such as
+      `commit.gpgsign = true` can fail it locally. Severity Low, effort
+      Small. Options: A, use `support::git`, Small; B, A, and add a check
+      that rejects `Command::new("git")` in Rust tests outside the support
+      modules (a new gate, which needs the user's approval). Recommended: A.
+
+- [ ] Resolve user item 174 (W8, outside its scope):
+      `crates/mokly-compare/src/git_tree.rs:214` reports a symbolic-link
+      entry as `Symlink`, so a package root that is a link, or goes through
+      one, loads in the working tree but fails in the base tree. Severity
+      Low, effort not recorded. Options: to be written in the follow-up.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
