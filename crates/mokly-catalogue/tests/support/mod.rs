@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::error::Result;
@@ -28,4 +29,9 @@ pub fn prepare(directory: &Path, explicit: Option<&str>) -> Result<PreparedCatal
         definitions: Arc::new(DeferredDefinitions),
     };
     builder.prepare(&config, None)
+}
+
+pub fn load(directory: &Path, explicit: Option<&str>) -> ResolvedConfig {
+    let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+    Loader { tree }.load(directory, explicit).unwrap()
 }
