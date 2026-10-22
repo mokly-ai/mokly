@@ -111,6 +111,7 @@ async fn required_inputs_stay_observable_when_an_ancestor_is_replaced() {
 #[tokio::test]
 async fn required_inputs_stay_observable_when_the_file_is_replaced() {
     let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join("specs")).unwrap();
     fs::create_dir(root.path().join("assets")).unwrap();
     fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
     let source = root.path().join("assets/logo.svg");
