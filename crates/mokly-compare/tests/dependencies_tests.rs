@@ -45,6 +45,10 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         .join("repository");
     fs::create_dir(&root).unwrap();
     git(&root, &["init", "-b", "main"]);
+    // Git for Windows sets `core.autocrlf=true` for the whole system, and base
+    // extraction applies checkout conversion. Pin identity conversion, so the
+    // installed bytes below are the committed bytes on every host.
+    git(&root, &["config", "core.autocrlf", "false"]);
     git(&root, &["config", "user.name", "Mokly Tests"]);
     git(&root, &["config", "user.email", "tests@mokly.invalid"]);
     write(&root, ".npmrc", b"offline=true\nupdate-notifier=false\n");
