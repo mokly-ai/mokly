@@ -3940,11 +3940,28 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         workflow after hosted import and process checks. Updated evidence,
         the correction to the initial ineffective WASI flag probe, and merge
         audits: `.context/native-ci-fixes-5/resume/`.
-  - [ ] Native CI round 6: merge the batch-25 rebuild tip once, then prove
+  - [x] Native CI round 6: merge the batch-25 rebuild tip once, then prove
         hosted macOS and Windows CI on the task branch. Classify and fix the
         remaining Windows dependency, process, render, watch, and snapshot
         failures without weakening their contracts. Evidence:
         `.context/native-ci-fixes-6/`.
+    - Continued on 2026-10-22 after the Codex workspace stopped. Merge
+      batch 26 (`11979328`) once. Product defect: the Windows cache root
+      used the `\\?\` form, and npm failed on it with "Maximum call stack
+      size exceeded", so every Windows npm base install fell back. The cache
+      root now keeps the plain drive form (`6623df1d`). Test assumptions:
+      the Berry path separator, a newline file name, the runner's system
+      `core.autocrlf=true`, `\\?\` workspace roots, PostCSS `URL.pathname`
+      paths, and a Windows copy of `node_modules`. A temporary Windows probe
+      workflow gave fast feedback and is removed. Round 6 closes the five
+      round 5 items below.
+  - [ ] Open decision for the user, from round 6: under decision 69 C, a
+        base read starts one Git process per file when `core.autocrlf` is
+        not false, and Git for Windows sets it to true by default. Options:
+        A, document the cost, Small; B, use the raw batch also for paths
+        whose attributes make checkout an identity, Small; C, convert each
+        batch in one `git checkout-index --temp` process with a private
+        index, and fall back per file on a failure, Medium. Recommended: C.
   - Outside round 5: `mokly-compare/tests/dependencies_tests.rs` and
     `package_roots_tests.rs` returned Fallback instead of Installed on Windows
     before the package-manager merge. Confirm on the merged tree. Separate branch.
