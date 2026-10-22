@@ -115,11 +115,10 @@ impl Consumer {
         )
         .unwrap();
         #[cfg(windows)]
-        std::os::windows::fs::symlink_dir(
-            workspace.join("node_modules"),
-            directory.path().join("node_modules"),
-        )
-        .unwrap();
+        copy(
+            &workspace.join("node_modules"),
+            &directory.path().join("node_modules"),
+        );
         let clock = Arc::new(SystemClock::new());
         let processes = Arc::new(ProcessCounts::default());
         let pool = Arc::new(CapturedPool {
@@ -215,7 +214,7 @@ impl Drop for Consumer {
     }
 }
 
-fn copy(source: &Path, destination: &Path) {
+pub(super) fn copy(source: &Path, destination: &Path) {
     fs::create_dir_all(destination).unwrap();
     for entry in fs::read_dir(source).unwrap() {
         let entry = entry.unwrap();

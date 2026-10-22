@@ -90,7 +90,9 @@ Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Every job that runs
 the binary builds it for its host from `rust-toolchain.toml`; Rust formatting,
 Clippy, and the complete Rust tests run in the repository job and in the native
-jobs. Every cargo-running CI and release job runs `rustup toolchain install`
+jobs. Native jobs build the checked-out `@mokly/mokly` sidecar package after
+`npm ci`, so Rust integration tests use matching sidecar sources. Every
+cargo-running CI and release job runs `rustup toolchain install`
 before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.95.0 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout.
