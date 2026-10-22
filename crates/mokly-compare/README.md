@@ -81,10 +81,18 @@ npm does, with that configuration's credentials. Scripts, pnpmfile hooks, Git
 transports, and Corepack downloads stay off, and Yarn Berry Git and GitHub
 sources fall back. Managers use installed executables or cached Corepack shims and check
 exact `packageManager` pins. Yarn Plug'n'Play retains a specific fallback reason. The key includes the exact
-lockfiles, manifests, manager configurations, manager families, and actual versions. Local file dependencies and workspaces also
+lockfiles, manifests, manager configurations, manager families, actual versions,
+and scripts mode. Scripts-on keys also include the install Node's version,
+operating system, and processor architecture. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.
+
+`NodeExecutable` resolves the shim-supplied Node or searches absolute PATH
+entries. The CLI uses the same resolver for rendering. Scripts-on probes run
+from the working repository and read Node's version, operating system,
+architecture, and actual executable. Installs put that executable's folder
+first on their filtered PATH without changing the selected package manager.
 
 Yarn planning collects repository ancestor settings. Berry uses the nearest
 linker setting and rejects the existing restricted keys anywhere in that chain.
@@ -273,6 +281,11 @@ files and `tests/static_cold_base_tiers.test.ts` with `CI=true` and
 Registry rule ownership stays separate from delivery style groups. Both the
 private capture codec and the head comparison retain these rule records.
 
+Command tests pin every manager's complete scripts-off argument list. Enabling
+scripts removes only its script-suppression argument from that list.
+The script-tree cancellation test waits for a child PID through a named pipe,
+so process startup speed cannot exhaust its readiness wait.
+
 ### Key Code
 
 - [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).
@@ -286,6 +299,8 @@ private capture codec and the head comparison retain these rule records.
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and
   [command supervision](./src/commands.rs).
+- [Node executable selection](./src/node_executable.rs) shares the host choice
+  between rendering and the scripts-on runtime probe.
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
   [the install environment allowlist](./src/manager_environment.rs), and

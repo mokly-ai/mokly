@@ -105,7 +105,8 @@ execution checks the adjacent installed package and development ancestors.
 An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
-supplied `MOKLY_NODE_EXECUTABLE`.
+supplied `MOKLY_NODE_EXECUTABLE`. The render pool shares parent-side Node
+resolution with the base-install probe, which runs from the working repository.
 HTML-only base comparison follows the [HTML package styles policy](../../docs/protocol/mokly-comparison.md#html-package-styles).
 It reads exact governing paths from the head generation's completed dependency
 inventory. Unrelated manifest edits and retired Serve imports do not warn.
@@ -185,7 +186,10 @@ planning, comparison, and document workers. `--base`
 overrides `review.base`; the default ref is `origin/main`. It retains review v8,
 snapshot v4, and the two graph generations in memory for static output.
 A base source validation failure reports the historical commit and makes
-Changes unavailable while the current catalogue remains valid. A missing base configuration means an empty base catalogue, so every current
+Changes unavailable while the current catalogue remains valid. After a
+scripts-off base install, wrapped preparation failures retain their diagnostics
+and add the same scripts opt-in hint in build, publish, and fatal-error output.
+A missing base configuration means an empty base catalogue, so every current
 entry is added. A remaining comparison budget makes Changes unavailable with
 the path and limit. A Git failure
 aborts the build with `git-failed` and the selected ref. Historical runtime

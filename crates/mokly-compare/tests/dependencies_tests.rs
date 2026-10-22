@@ -86,6 +86,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
             byte_limit: None,
             size_root: None,
             cache: None,
+            node: None,
         })
         .unwrap();
     let outside_logs = temporary.path().join("outside-npm-logs");

@@ -90,6 +90,45 @@ fn failed_base_install_diagnostic_names_the_scripts_opt_in() {
 }
 
 #[test]
+fn scripts_off_base_validation_adds_a_separate_opt_in_diagnostic() {
+    for scripts_off in [false, true] {
+        let source = Error::Graph {
+            source: mokly_graph::error::GraphError::Invalid {
+                route: "base/index.html".into(),
+                message: "render failed".into(),
+                code: mokly_html::diagnostic_code::Code::BuildInvalid,
+            },
+        };
+        let source = if scripts_off {
+            Error::BaseInstallScripts {
+                source: Box::new(source),
+            }
+        } else {
+            source
+        };
+        let error = Error::Base {
+            commit: "a".repeat(40),
+            source: Box::new(source),
+        };
+        let Some(BuildChanges::Unavailable { diagnostics, .. }) =
+            changes_diagnostics::unavailable(&error, "fixture-base")
+        else {
+            panic!("invalid base must make Changes unavailable");
+        };
+        assert_eq!(diagnostics.len(), if scripts_off { 2 } else { 1 });
+        assert!(matches!(diagnostics[0].code, Code::BuildInvalid));
+        assert_eq!(diagnostics[0].message, "render failed");
+        if scripts_off {
+            assert!(matches!(diagnostics[1].code, Code::BuildInvalid));
+            assert_eq!(
+                diagnostics[1].message,
+                "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`"
+            );
+        }
+    }
+}
+
+#[test]
 fn an_invalid_internal_review_is_a_fatal_build_error() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
@@ -166,4 +205,26 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
                 || diagnostics[0].message.contains("128")
         );
     }
+}
+
+#[test]
+fn scripts_off_limit_diagnostic_keeps_the_opt_in_hint() {
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        source: Box::new(Error::BaseInstallScripts {
+            source: Box::new(Error::Limit {
+                path: "specs/large.html".into(),
+                source: mokly_git::error::Error::ByteLimit { limit: 64 },
+            }),
+        }),
+    };
+    let Some(BuildChanges::Unavailable { diagnostics, .. }) =
+        changes_diagnostics::unavailable(&error, "fixture-base")
+    else {
+        panic!("limit must be unavailable");
+    };
+    assert_eq!(diagnostics.len(), 2);
+    assert!(diagnostics[0].message.contains("specs/large.html"));
+    assert!(diagnostics[1].message.contains("review.baseInstallScripts"));
+    assert!(diagnostics[1].message.contains("--base-install-scripts"));
 }

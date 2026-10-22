@@ -4204,6 +4204,26 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Node version and platform, `MOKLY_TOKEN` stays out of installs, and the
         existing process-tree owner stops script children. Evidence is recorded
         under `.context/base-install-scripts/`.
+  - [x] User item 135 B review finding 44 A: retain the scripts opt-in hint as
+        a separate base diagnostic when build or publish makes Changes
+        unavailable, including the comparison-limit path. Capture failures and
+        a typed hint field remain outside this fix. Evidence:
+        `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 50 B: keep script-suppression flags in
+        the fixed install lists and remove them only for scripts-on installs.
+        Pin every manager's complete scripts-off arguments in tests.
+        Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 48 A: wait for the cancellation
+        fixture's child PID through a named pipe. Keep its cancellation and
+        child-exit assertions. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 46 B: share parent-side Node selection
+        with rendering, probe outside the base extraction, and key scripts-on
+        installs on Node's version, operating system, and architecture. Put
+        the probed executable's folder first on the install PATH while keeping
+        the selected manager. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 49 A: state the scripts mode in both
+        protocol cache-key descriptions. Scripts-on keys also include the
+        install Node's version, operating system, and processor architecture.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The

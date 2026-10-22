@@ -14,7 +14,7 @@ use crate::storage_tree::vanished;
 /// A shell-free package-manager invocation.
 #[derive(Clone, Debug)]
 pub struct Command {
-    /// Package manager executable.
+    /// Package manager or Node executable.
     pub program: OsString,
     /// Exact arguments.
     pub args: Vec<OsString>,
@@ -29,6 +29,8 @@ pub struct Command {
     /// Private cache or mirror path for the manager: the confined Yarn Berry
     /// cache folder, or the Yarn Classic offline mirror.
     pub cache: Option<PathBuf>,
+    /// Probed Node for scripts-on installs; its folder leads the child PATH.
+    pub node: Option<PathBuf>,
 }
 
 /// Reaped process result after pipe workers close.

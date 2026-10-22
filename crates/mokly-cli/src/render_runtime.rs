@@ -9,6 +9,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
 use mokly_cli::version::VERSION;
+use mokly_compare::node_executable::{NodeExecutable, SystemNodeExecutable};
 use mokly_graph::cache::MemoryCache;
 use mokly_graph::error::Result;
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
@@ -53,8 +54,10 @@ impl Services {
             ),
             clock,
             Launch {
-                node: env::var_os("MOKLY_NODE_EXECUTABLE")
-                    .map_or_else(|| PathBuf::from("node"), PathBuf::from),
+                node: SystemNodeExecutable.resolve().unwrap_or_else(|_| {
+                    env::var_os("MOKLY_NODE_EXECUTABLE")
+                        .map_or_else(|| PathBuf::from("node"), PathBuf::from)
+                }),
                 entry: sidecar_entry(cwd),
                 repository: repository.to_owned(),
                 version: VERSION.into(),
