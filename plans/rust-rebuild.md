@@ -3760,10 +3760,29 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Open the pull request. Its description and squash body write `{target}`
       for the package placeholder, justify each merge decision with its paths,
       and record every approved removal.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Ticked on 2026-10-22 in integration batch 32. The final review R1a,
+    R1b, R2, and R3 covered `origin/main..11979328`, and batches 29 to 31
+    fixed its High findings. A delta review covered `11979328..98fe3b4d`
+    without `plans/` and found no High finding. Its probes ran 752 tests of
+    the publish, catalogue, graph, static, and compare crates, and mutation
+    probes made the new policy, alias, and redaction tests fail. No finding
+    has "Auto-fix: yes", so the review-fix rule applies no fix and needs no
+    re-review. Evidence: the hub's
+    `.context/rust-rebuild/delegation/m15-review/`.
+  - Outside the scope:
+    `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs`, test
+    `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`,
+    failed once in the integration batch 32 repository suite at line 90,
+    `left: 0` and `right: 1`, so the trace caught no "stopped" event. It
+    passed 300 of 300 runs alone and 100 of 100 runs of the whole
+    `mokly-sidecar` library tests. Suspected source: shared global state.
+    `tracing` caches callsite interest for the whole process, so a test
+    that sets a thread-local subscriber can lose an event while parallel
+    tests register theirs. Separate branch.
   - [x] Make the static deployment flow test "a removed step that fails
         after another deployment keeps the use case loading" deterministic.
         It failed both integration batch 30 remote gates with a test
@@ -5944,6 +5963,81 @@ does not ask the user before the merge.
       entry as `Symlink`, so a package root that is a link, or goes through
       one, loads in the working tree but fails in the base tree. Severity
       Low, effort not recorded. Options: to be written in the follow-up.
+
+- [ ] Resolve user item 175 (W1 example smoke): the documented mockup check
+      (`npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`)
+      fails under `--strict` whenever a branch's root dependency files differ
+      from `origin/main`: "Base dependencies differ. HTML comparison uses
+      working-tree dependencies." The comparison spec makes that warning fail
+      a `--strict` build. Severity Low, process, effort not recorded. Options
+      (estimate): A, add `--no-changes` to the documented check; B, document
+      that the check needs `--no-changes` when the root dependency files
+      differ; C, stop that warning from failing `--strict`, a spec change.
+      Recommended: B.
+
+- [ ] Resolve user item 176 (delta review 1):
+      `crates/mokly-platform/tests/process_tests.rs:104`: the Windows
+      job-close test cannot fail when the job does not kill the child,
+      because `Child::wait` closes stdin, so `set /p` ends cmd by itself.
+      Severity Medium, test, effort not recorded. Options (estimate): A,
+      append `&echo leaked` to the command and assert that it never prints;
+      B, a shared test helper that proves the job killed the child, used by
+      every job-close test. Recommended: A.
+
+- [ ] Resolve user item 177 (delta review 2):
+      `crates/mokly-publish/src/redaction.rs:85`: `SecretMatcher` reads every
+      `%` as an escape, so it does not redact the literal form of a secret
+      that contains `%`. The old redactor did. A valid token cannot contain
+      `%`. Severity Low, security, effort not recorded. Options (estimate):
+      A, also match a literal `%` byte; B, keep it and document that a token
+      cannot contain `%`. Recommended: A.
+
+- [ ] Resolve user item 178 (delta review 3):
+      `crates/mokly-publish/src/completion.rs:69`: the check reads the parsed
+      URL, and URL parsing lowercases the host, so a token in the viewer URL
+      host prints in lower case. The old check had the same gap, and no test
+      covers a token in the host. Severity Low, security, effort not
+      recorded. Options (estimate): A, match the token in the host without
+      regard to letter case, with a test; B, reject a viewer URL whose host
+      contains the token (a new rejection, which needs the user's approval).
+      Recommended: A.
+
+- [ ] Resolve user item 179 (delta review 4):
+      `crates/mokly-compare/src/locations.rs:40`: `dunce` keeps the verbatim
+      `\\?\` form for a path over 260 characters or with a reserved name, so
+      the "cache inside the repository" check can compare a verbatim path
+      with a plain path. It misses only when `LOCALAPPDATA` points into the
+      repository through such a path. Severity Low, product bug, effort not
+      recorded. Options (estimate): A, normalize both paths the same way
+      before the comparison; B, document the limit. Recommended: A.
+
+- [ ] Resolve user item 180 (delta review 5, older than the delta):
+      `crates/mokly-sidecar/src/process_factory.rs:82`: the sidecar inherits
+      `MOKLY_TOKEN`, so PostCSS, renderer, and component code from the
+      repository and from the base commit can read it. `main` ran that code
+      with the same environment. Related to user item 151. Severity Low,
+      security, effort not recorded. Options (estimate): A, remove
+      `MOKLY_TOKEN` from the sidecar environment; B, an allowlisted sidecar
+      environment, as 145 B gives base installs. Recommended: A, because an
+      allowlist can break consumer PostCSS settings that read other
+      variables.
+
+- [ ] Resolve user item 181 (delta review 6, older than the delta):
+      `crates/mokly-cli/src/grammar.rs:116`: `Publish` derives `Debug` and
+      holds the raw `--token` value. No code formats it now. Severity Low,
+      security, effort not recorded. Options (estimate): A, a redacting
+      `Debug` for `Publish`; B, one secret type with a redacting `Debug` for
+      every token field. Recommended: B.
+
+- [ ] Resolve user item 182 (delta review 7, older than the delta):
+      `crates/mokly-render/src/side.rs:62` keeps duplicate package roots, but
+      `crates/mokly-compare/src/dependencies.rs:191` removes them on the base
+      side. With `packageRoots: [".", "packages/ui"]` in a root
+      configuration, `packages/ui` gets root index 2 on the head and 1 on the
+      base. No visible effect was checked. Severity Low, product bug, effort
+      not recorded. Options (estimate): A, remove duplicates on the head side
+      too; B, make `ResolvedConfig::package_roots()` return the list without
+      duplicates for both sides. Recommended: B.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
