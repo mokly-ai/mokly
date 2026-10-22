@@ -66,7 +66,7 @@ fn viewer(response: &Response, token: &Token) -> Option<String> {
     let url = Url::parse(&document.viewer_url?).ok()?;
     if !matches!(url.scheme(), "http" | "https")
         || url.host_str().is_none()
-        || token.appears_in(url.as_str())
+        || token.matcher().contains_url(&url)
     {
         return None;
     }

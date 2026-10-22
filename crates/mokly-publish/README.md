@@ -36,7 +36,9 @@ Redirects and implicit retries are disabled. The exchange owns five attempts
 and one re-plan. A failed Blob drops the other active requests. The reporter resets the phase label at every Plan, including an empty re-plan.
 Progress counts a digest once even when `missing` overlaps a Plan-archive digest.
 Credentials have a redacted debug representation. Transport failures and
-receiver rejections use fixed safe messages.
+receiver rejections use fixed safe messages. Completion URLs and CLI output
+redaction match literal and percent-encoded credentials without depending on
+the case of percent digits.
 
 `mokly-git` supplies bounded process execution and cancellation. `GitCheckout`
 checks committed HEAD and complete fixed-argv status. It excludes only pinned
@@ -82,6 +84,8 @@ trait mocks to downstream tests.
   [prepared output](./src/snapshot.rs).
 - [Exchange](./src/exchange.rs), [retry policy](./src/retry.rs), and
   [HTTP adapter](./src/http.rs).
+- [Secret redaction](./src/redaction.rs) matches literal and percent-encoded
+  credentials.
 - [CLI adapter](../mokly-cli/src/publication/mod.rs) and [Git checks](./src/checkout.rs).
 
 ### Related Docs

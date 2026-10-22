@@ -1,9 +1,11 @@
 //! Token redaction and terminal control escaping before presentation.
 
+use mokly_publish::redaction::SecretMatcher;
+
 /// Secrets collected before parsing, so rejected arguments are also protected.
 #[derive(Default)]
 pub struct Redactor {
-    secrets: Vec<String>,
+    secrets: Vec<SecretMatcher>,
 }
 
 impl Redactor {
@@ -11,27 +13,21 @@ impl Redactor {
     pub fn collect(args: &[String], token: Option<&str>) -> Self {
         let mut secrets = Vec::new();
         if let Some(token) = token.filter(|token| !token.is_empty()) {
-            secrets.push(token.to_owned());
+            secrets.push(SecretMatcher::new(token));
         }
         for (index, argument) in args.iter().enumerate() {
             if let Some(value) = argument.strip_prefix("--token=") {
                 if !value.is_empty() {
-                    secrets.push(value.to_owned());
+                    secrets.push(SecretMatcher::new(value));
                 }
             } else if argument == "--token"
                 && let Some(value) = args.get(index + 1)
                 && !value.is_empty()
             {
-                secrets.push(value.clone());
+                secrets.push(SecretMatcher::new(value));
             }
         }
-        let encoded: Vec<_> = secrets
-            .iter()
-            .map(|secret| encode_component(secret))
-            .collect();
-        secrets.extend(encoded);
         secrets.sort_by_key(|secret| std::cmp::Reverse(secret.len()));
-        secrets.dedup();
         Self { secrets }
     }
 
@@ -48,7 +44,7 @@ impl Redactor {
     fn clean(&self, text: &str, lines: bool) -> String {
         let mut safe = text.to_owned();
         for secret in &self.secrets {
-            safe = safe.replace(secret, "[redacted]");
+            safe = secret.redact(&safe);
         }
         if !safe
             .chars()
@@ -66,19 +62,6 @@ impl Redactor {
         }
         output
     }
-}
-
-fn encode_component(value: &str) -> String {
-    value
-        .bytes()
-        .map(|byte| {
-            if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
-                (byte as char).to_string()
-            } else {
-                format!("%{byte:02X}")
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
