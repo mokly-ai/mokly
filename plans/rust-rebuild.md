@@ -2749,7 +2749,7 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
           configuration, with fixed private folders, mirror, and lock file.
           Fix round 2 implements it; the local registry tests are in
           `tests/static_base_registry.test.ts`.
-  - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
+  - [x] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
         resolutions, fall back for every other protocol, such as the `exec:`
@@ -2760,16 +2760,25 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         needs the user. Options: A, keep only the targeted fixes of findings
         1 and 2, Small (estimate); B, the allowlist and the forced-off
         settings, Medium. Recommended: B.
+    - User decision 122 (2026-10-21): A. Keep the targeted fixes of findings
+      1 and 2, and add no protocol allowlist: the base commit is an ancestor
+      of the current commit, so a base install trusts it as the project's own
+      install did. `mokly-base-dependencies.md` states the trust rule and
+      which `exec:` generators can still run (`b1604f5b`).
     - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
       2 finding 2.
-  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+  - [x] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
         send unscoped tokens elsewhere. Severity High, security, effort
         Small. Options: A, document it only, Small (estimate); B, clear
         unscoped Yarn credentials for base installs, Small (estimate); C, B,
         and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
         D, fall back whenever the base configuration selects a registry or a
         scope, Medium. Recommended: C.
-  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+    - User decision 141 (2026-10-21): A. Document it: Yarn sends an unscoped
+      user token to the registry that the base configuration selects, as the
+      project's own install of the base commit does. `mokly-base-dependencies.md`
+      states how each manager sends tokens (`b1604f5b`).
+  - [x] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
         scope): a base `.npmrc` can choose npm's git program. npm gets the
         base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
         Git dependency can run a committed program. Severity High
@@ -2779,6 +2788,12 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         under 120 C, so npm repositories with Git dependencies get tier
         three, Small; C, fall back when the base npm configuration sets
         `git`, Small (estimate). Recommended: B.
+    - User decision 142 (2026-10-21): D, an option that this TODO did not
+      list: the base commit's `.npmrc` applies as in the project's own
+      install, including its `git` setting, because a base install trusts
+      the base commit as that install did. `mokly-base-dependencies.md`
+      states it, and it no longer says that npm installs clone no Git
+      repository (`b1604f5b`).
   - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
     `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
     only `percent-encoding` and `yaml-rust2`.
@@ -3490,8 +3505,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
         refresh fix of 140 B.
-  - [ ] The security items 122, 141, and 142, each of which needs the
-        user's answer, and 145 B, which merged in batch 23.
+  - [x] The security items 122, 141, and 142, which the user answered on
+        2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
+        batch 23.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
@@ -5346,6 +5362,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   then CLI; verify each registry package.
 - Reset Mokly Cloud and republish its catalogue with the released CLI.
 - Decide on a WebAssembly fallback for platforms without a native package.
+- Optional hardening of base installs, which the user may choose later: 122 C,
+  a Yarn 4.14 floor; 141 C, no unscoped Yarn credentials, and a fallback when
+  a base `.yarnrc.yml` sets `npmScopes`; and 142 B, an absolute Git program
+  and no Git transport for npm base installs.
 
 ### Open user items, deferred by the user on 2026-10-21
 
