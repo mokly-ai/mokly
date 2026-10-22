@@ -78,6 +78,15 @@ fn failures_are_plain_or_rich_with_redaction_before_width_bounds() {
 }
 
 #[test]
+fn redaction_matches_mixed_case_percent_escapes_without_matching_similar_text() {
+    let redactor = Redactor::collect(&[], Some("a/b=="));
+    for value in ["a%2fb%3d%3d", "a%2Fb%3D%3d", "a%2fb=="] {
+        assert_eq!(redactor.safe(value), "[redacted]", "{value}");
+    }
+    assert_eq!(redactor.safe("a%2fb%3d%3e"), "a%2fb%3d%3e");
+}
+
+#[test]
 fn truncation_preserves_complete_sequences_and_unicode_columns() {
     assert_eq!(bounded("abcdef", 4), "abc…");
     assert_eq!(bounded("界界界", 5), "界界…");

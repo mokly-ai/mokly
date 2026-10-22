@@ -22,6 +22,13 @@ fn optional_url_is_normalized_and_omitted_when_unusable_or_secret_bearing() {
         ),
         ("https://example.com/catalogue?secret/a==", None),
         ("https://example.com/catalogue?secret%2Fa%3D%3D", None),
+        ("https://example.com/secret%2fa%3d%3d/catalogue", None),
+        ("https://example.com/catalogue?token=secret%2Fa%3d%3D", None),
+        ("https://example.com/catalogue#secret%2fa%3D%3d", None),
+        (
+            "https://example.com/catalogue?token=secret%2Fa%3d%3e",
+            Some("https://example.com/catalogue?token=secret%2Fa%3d%3e"),
+        ),
         ("javascript:alert(1)", None),
         ("/relative", None),
         ("file:///catalogue", None),
