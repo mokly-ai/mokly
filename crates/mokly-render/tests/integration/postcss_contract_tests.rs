@@ -20,7 +20,8 @@ fn directory_reports_keep_empty_watches_and_public_denials_name_the_plugin() {
         r#"{"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["main.css"]}]}"#,
     )
     .unwrap();
-    fs::write(consumer.root().join("postcss.mjs"), r#"export default {plugins:[{postcssPlugin:'fixture-inputs',Once(root,{result}){for(const dir of ['inputs','empty']) result.messages.push({type:'dir-dependency',plugin:'fixture-inputs',dir:new URL('./'+dir,import.meta.url).pathname,glob:'**/*.txt'});}}]};"#).unwrap();
+    fs::write(consumer.root().join("postcss.mjs"), r#"import {fileURLToPath} from 'node:url';
+export default {plugins:[{postcssPlugin:'fixture-inputs',Once(root,{result}){for(const dir of ['inputs','empty']) result.messages.push({type:'dir-dependency',plugin:'fixture-inputs',dir:fileURLToPath(new URL('./'+dir,import.meta.url)),glob:'**/*.txt'});}}]};"#).unwrap();
     fs::write(
         consumer.root().join("specs/home.screen.html"),
         "---\ntitle: Home\n---\n<a href=\"../../inputs/plain.txt\">Private</a>",

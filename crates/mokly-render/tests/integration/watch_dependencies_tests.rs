@@ -65,8 +65,9 @@ fn postcss_directory_add_remove_and_config_edits_recompute_the_expected_nodes() 
     fs::create_dir(consumer.root().join("candidates")).unwrap();
     fs::write(consumer.root().join("theme.css"), "p { color: red }").unwrap();
     fs::write(consumer.root().join("postcss.mjs"), r#"import fs from 'node:fs';
+import {fileURLToPath} from 'node:url';
 export default {plugins:[{postcssPlugin:'candidates',Once(root,{result}) {
- const dir = new URL('./candidates',import.meta.url).pathname;
+ const dir = fileURLToPath(new URL('./candidates',import.meta.url));
  result.messages.push({type:'dir-dependency',plugin:'candidates',dir,glob:'**/*.txt'});
  root.append({selector:'.candidate-count',nodes:[{prop:'--count',value:String(fs.readdirSync(dir).filter(name=>name.endsWith('.txt')).length)}]});
 }}]};"#).unwrap();
@@ -152,7 +153,8 @@ fn temporary_resources_do_not_join_the_catalogue_watch_set() {
 fn unchanged_postcss_output_keeps_unrelated_document_keys() {
     let consumer = html();
     fs::write(consumer.root().join("theme.css"), "strong {color: red}").unwrap();
-    fs::write(consumer.root().join("postcss.mjs"), r#"export default {plugins:[{postcssPlugin:'scan',Once(root,{result}){result.messages.push({type:'dependency',plugin:'scan',file:new URL('./specs/home.screen.html',import.meta.url).pathname});}}]};"#).unwrap();
+    fs::write(consumer.root().join("postcss.mjs"), r#"import {fileURLToPath} from 'node:url';
+export default {plugins:[{postcssPlugin:'scan',Once(root,{result}){result.messages.push({type:'dependency',plugin:'scan',file:fileURLToPath(new URL('./specs/home.screen.html',import.meta.url))});}}]};"#).unwrap();
     fs::write(
         consumer.root().join("mokly.config.json"),
         r#"{"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["theme.css"]}]}"#,

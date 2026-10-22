@@ -49,7 +49,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         );
         consumer.replace(
             "postcss.mjs",
-            "new URL(\"./tokens.json\", import.meta.url)",
+            "fileURLToPath(new URL(\"./tokens.json\", import.meta.url))",
             "process.cwd() + '/tokens.json'",
         );
         consumer.replace("postcss.mjs", "export default {", "if (process.env.INIT_CWD !== undefined || process.env.npm_package_json !== undefined || process.env.npm_config_local_prefix !== undefined || JSON.parse(readFileSync(process.env.PWD + '/tokens.json','utf8')).color !== tokens.color) throw new Error('PostCSS inherited another source environment');\nexport default {");
