@@ -209,6 +209,7 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Packed Consumer Smoke](./packed-consumer-smoke.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
 - [Historical npm Upgrade Notes](./npm-release-history.md)
+- [npm 0.15.0 Upgrade Notes](./npm-release-history-0-15.md)
 - [Mokly CI And Npm Release Contract](./npm-release.md)
 - [npm Format And Tooling Release Notes](./npm-release-notes-formats.md)
 - [npm Release Management](./npm-release-management.md)

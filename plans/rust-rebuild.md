@@ -1677,13 +1677,20 @@ Review 11 fixes, the negative zero fix of live edit renders, and the merge of
 the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
 decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 8 TODO is done, and its work is merged on the rebuild
+    branch. Its last review record, browser review 3 finding 1, closed with
+    `cffb0713`.
 
 ## Milestone 9: Changes
 
-- [ ] Settle further decision 11.1 for default 11 A. Severity Medium, effort
+- [x] Settle further decision 11.1 for default 11 A. Severity Medium, effort
       Large. Recommended A: built-in checkout conversion and local LFS only,
       with unavailable resources for unsupported external filters.
+  - Settled by user decision 69 (2026-10-21): C, Git checkout conversion for
+    every base source read, which replaces default 11 A. User item 69 is
+    engine defaults decision 11.1. `rebuild/git-base-reads` merged as
+    `8490e636` in integration batch 25.
 
 - [x] Settle the Git changed-path input with decision default 45 B. Remove
       the misleading timing stage and Git-input wording. Keep output exclusions
@@ -1765,7 +1772,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         readers, metadata, move pairing, and historical records.
   - [x] Resolve variant-only affected identity and actual-instance resource
         proof contracts before closing the engine.
-- [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
+- [x] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
       rule for whole-screen React entries, and a content-addressed parsed-CSS
       cache.
@@ -1854,6 +1861,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         at that merge.
     - Ticked on 2026-10-21 in integration batch 25: the engine merge
       `6a4dcd30` brings the fix.
+  - Every sub-TODO is done. The last ones closed when `rebuild/defaults-engine`
+    merged as `6a4dcd30`. Items 97 and 108 moved to the post-merge section.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -2170,7 +2179,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         request. A failed fetch reports the remote and the recovery command.
   - Ticked on 2026-10-21 in integration batch 25: `rebuild/git-base-reads`
     merged as `8490e636`.
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 9 TODO is done, and its work is merged on the rebuild
+    branch. The last, further decision 11.1, closed with `8490e636`.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
 
@@ -2356,7 +2367,9 @@ fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
       catches the class of gap that round 3 review 1 found. B is a new
       catalogue-wide check, so it needs the user.
   - User decision 71 (2026-10-21): B. Work: W2.
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 10 TODO is done, and its work is merged on the rebuild
+    branch.
 
 ## Milestone 10.1: Decision defaults in the designs
 
@@ -2473,7 +2486,8 @@ milestone.
       The visible copy stays the same. The noun test fails first. Evidence:
       `.context/viewer-119b/` (red and green logs, the copy before and after,
       and the mutation check).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `4fe8c160`, with 84 B, after its gate.
 
 ## Milestone 10.8: Props pending state in the designs
 
@@ -2498,7 +2512,8 @@ Tags: ui
       detail arrives, with the drawn pending and failed states. The browser
       test fails first. Evidence: `.context/viewer-88a/` (red and green
       logs).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `3a3355e3` after its gate.
 
 ## Milestone 10.10: Changed designs list their reasons
 
@@ -2512,7 +2527,8 @@ which other branches add.
       reasons entry for every built Browse design of a changed, added, or
       removed entry. A temporary unlisted design fails the check first.
       Evidence: `.context/design-reasons-auto/` (red and green logs).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `05af6784` after its gate.
 
 ## Milestone 11: Watch and incremental rendering
 
@@ -3053,7 +3069,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         generation. A new generation drops earlier child witnesses while
         static-build input checks remain unchanged. Keep cache hits and core
         input checks valid for the generation that owns their result.
-- [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
+- [x] Resolve user item 117 (W6 review finding 2): module hooks miss
       loader-supplied modules. The preload now registers Mokly's hooks
       first, so a consumer load hook that returns source without
       `nextLoad` hides that module. Contexts with an asynchronous loader
@@ -3068,6 +3084,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] User decision 117 (2026-10-21): A now, C after the merge, in parallel
         if possible, but do not block the merge. State the asynchronous-loader
         module-path gap now, and continue the loader-path fix after the merge.
+  - Option A merged as `951c666e`, with 118 A. Option C is post-merge work in
+    the post-merge section.
 - [x] Resolve user item 118 (W6 review finding 3): each file open probes
       identity twice. Every tracked open runs one wasted `fstat`,
       `realpath`, and `stat` probe. Severity Low, effort Small. Performance
@@ -3081,7 +3099,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tracked read.
   - Completed by `4739f11a`: retain one identity probe per tracked read.
 
-- [ ] Port the large fixture generator with HTML and React variants and the
+- [x] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
@@ -3259,7 +3277,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           472 samples at 50 ms intervals. Both budgets passed. Product release
           preparation preceded measurement; installed binary verification passed.
           Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
-- [ ] Run the fixture and the Mokly Cloud catalogue through build, serve,
+  - Every sub-TODO is done. The last, the `:has()` depth recursion, was
+    ticked in `1b459b51` after `rebuild/defaults-engine` merged as
+    `6a4dcd30`.
+- [x] Run the fixture and the Mokly Cloud catalogue through build, serve,
       Changes, and watch; save the evidence under `.context/rust-rebuild/`.
       The bookfolio run is a post-merge follow-up (user, 2026-10-20).
   - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
@@ -3276,6 +3297,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
+  - Every sub-TODO is done, with its evidence. The large fixture runs are
+    sub-TODOs of the fixture generator TODO above. The last sub-TODO here,
+    F8 decision 59 A, was recorded in `834a4024`. The bookfolio run stays
+    post-merge.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -3292,24 +3317,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
     branches merge.
   - Ticked on 2026-10-21 in integration batch 25: `rebuild/defaults-engine`
     merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
-- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
-      decision): let the parser choose the plaintext point. Four cases of
-      serializer-versus-parser divergence so far: hub review 1 finding 2,
-      `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
-      for B. Options: A, keep the fail-safe check that retries with all text
-      escaped when the parser disagrees, which engine fix round 3 applied on
-      `rebuild/defaults-engine` as its option B, Small (estimate); B,
-      serialize first with all text escaped, find the first HTML `plaintext`
-      element by its repair id, and write raw text only after it, Large.
-      Recommended: A now, and B as a post-merge follow-up.
-  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
-    now also covers the source-identity redesign: the M15 follow-up "carry
-    source identities through HTML5 token processing for all elements", F19
-    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
-    in which html5ever's tree builder reads the tokens of the token pass,
-    chooses every text mode, and gives each element its source position.
-    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
-    request.
 - [x] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
@@ -3393,20 +3400,24 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       User decision 61 (2026-10-20): A, keep one private capture for each
       request. `mokly-imported-styles-assets.md` documents its bound. A
       shared spool is a post-merge follow-up.
-- [ ] Measure Git opaque-asset digest commands and buffered delivery under
-      the M14 comparison workloads. Use the cost to decide on streamed blob
-      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
-      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
 - [x] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note. Done on 2026-10-21.
       Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
-- [ ] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
+- [x] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
       recursion of `:has()` and for the raw characters of reconstructed
       `plaintext` text wait for `rebuild/defaults-engine` to merge. The
       `noscript` case also waits for `rebuild/followups-f14`. User decision
       131 (2026-10-21) keeps their options, so both TODOs wait only for those
       merges. Tick this line when both TODOs are ticked.
-- [ ] Commit.
+  - Both TODOs are ticked in `1b459b51`, after `rebuild/defaults-engine`
+    merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
+- [x] Commit.
+  - Every other Milestone 14 TODO is done, and its work is merged on the
+    rebuild branch. The last closed with the integration batch 25 merges
+    `6a4dcd30`, from `rebuild/defaults-engine`, and `7a14845e`, from
+    `rebuild/followups-f14`, ticked in `1b459b51`. Item 98 B and the Git
+    opaque-asset measurement moved to the post-merge section on 2026-10-22
+    under user decision 147 B.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
@@ -3632,10 +3643,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Actual hosted acceptance stays with the hub. Evidence:
       `.context/ci-shard-balance/final-calibration.json` and `timings.md`.
 
-- [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
+- [x] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
+  - Done in `ab965a6d`: the four notes that shipped with npm 0.15.0, two from
+    each release-notes page, moved word for word to the linked page
+    `npm-release-history-0-15.md`, because the history page would pass the
+    250-line cap. Stubs and links point to them.
 
 - [x] Resolve user item 100: CI jobs exceed the three-times rule of the CI
       timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
@@ -4267,7 +4282,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       token pass, chooses every text mode, and gives each element its source
       position. Work: W6 on `rebuild/html-pipeline`. It must not delay the
       final pull request.
-  - [ ] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
+  - [x] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
         delivered documents lose wrapper-named attributes. The tree sink
         filters every HTML5 parse. So a raw delivered `.html` file, a
         `srcdoc` value, or `definePage` HTML with an element named
@@ -4283,7 +4298,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         keys, Medium; C, split the public parser into an authored parse and a
         delivered-document parse that every caller chooses, Large.
         Recommended: C.
-  - [ ] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
+  - [x] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
         new code can bypass the token boundary. Nothing stops new code in
         `mokly-catalogue` or `mokly-html` from calling html5gum's tokenizer
         directly and reading ordinary unknown wrapper attributes again. That
@@ -4299,6 +4314,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       filtering rule. Decision 116 A records the current `html_tokens::parse`
       consumer rule. Phase 2 of the HTML pipeline plans options C for both
       boundaries after the merge.
+    - Option A of both merged in integration batch 21 as `033e5059`, from
+      `rebuild/html-docs-115a-116a`. Options C are post-merge work in the
+      post-merge section.
   - [x] F21: restore empty wrapper source slots during plaintext repair,
         follow HTML parser markup contexts for noscript and foreign style or title
         content, validate saved variant slot fragments, name reserved navigation
@@ -4569,7 +4587,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         The M14 isolated rerun passed; its missing epoch let idle cleanup take
         the asserted slot. Evidence: M14 `report-3.md` and
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
-  - [ ] M8 browser review 3 finding 1, High severity, Medium effort: approve
+  - [x] M8 browser review 3 finding 1, High severity, Medium effort: approve
         two hosted PR measurements with fresh and restored caches before
         Required CI. Keep four shards, the job timeout, and the 60-second test
         timeout until the user decides from measured setup, shard, and
@@ -4577,6 +4595,8 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     - Covered by user decision 124 (2026-10-21): A, three controlled hosted
       repeats of one commit and assignment, which the CI gates workspace
       runs. Tick this line when 124 A lands.
+    - 124 A landed in integration batch 23 as `cffb0713`, from
+      `rebuild/ci-timing`.
   - [x] M10 shard follow-up: both cases of `design_modern_controls.spec.ts`
         "every selected screen uses one icon footer and one view toolbar"
         timed out once under load in shard 2. Fixed by `f81b7744`, which
@@ -5335,6 +5355,39 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
 
+- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
+      decision): let the parser choose the plaintext point. Four cases of
+      serializer-versus-parser divergence so far: hub review 1 finding 2,
+      `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
+      for B. Options: A, keep the fail-safe check that retries with all text
+      escaped when the parser disagrees, which engine fix round 3 applied on
+      `rebuild/defaults-engine` as its option B, Small (estimate); B,
+      serialize first with all text escaped, find the first HTML `plaintext`
+      element by its repair id, and write raw text only after it, Large.
+      Recommended: A now, and B as a post-merge follow-up.
+  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
+    now also covers the source-identity redesign: the M15 follow-up "carry
+    source identities through HTML5 token processing for all elements", F19
+    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
+    in which html5ever's tree builder reads the tokens of the token pass,
+    chooses every text mode, and gives each element its source position.
+    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
+    request.
+  - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
+    98 B post-merge.
+
+- [ ] Split the public HTML parser into an authored parse and a
+      delivered-document parse that every caller chooses, in phase 2 of the
+      HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
+
+- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
+      token types, in phase 2 of the HTML pipeline. User decision 116 C, after
+      option A merged as `033e5059`.
+
+- [ ] Record PostCSS module paths through an asynchronous resolve hook and a
+      message port, so that loader-supplied modules get a witness and a late
+      baseline. User decision 117 C, after option A merged as `951c666e`.
+
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
       the Details end with the terminal line "No changes to this screen.",
@@ -5393,6 +5446,13 @@ does not ask the user before the merge.
       startup and the extra full-blob buffer, and preserve all existing
       bounds, Large; B, retain the measured adapter, Small (estimate).
       Recommended: A. No option is applied.
+
+- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+      the M14 comparison workloads. Use the cost to decide on streamed blob
+      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
+  - Moved here from Milestone 14 on 2026-10-22, under user decision 147 B.
+    The measurement informs user item 64 above.
 
 - [ ] Resolve user item 87 (CLI defaults hub finding 5): define the new
       warning messages. `html-ignore-attribute`, `props-control-bounds`,

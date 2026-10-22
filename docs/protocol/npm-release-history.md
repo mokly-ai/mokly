@@ -2,6 +2,7 @@
 
 These notes describe earlier releases and retain their original format numbers.
 Current changes are in [npm release notes](./npm-release-notes.md).
+The npm 0.15.0 notes are in [npm 0.15.0 upgrade notes](./npm-release-history-0-15.md).
 
 ## Historical Navigation Path Upgrade Release Note
 
