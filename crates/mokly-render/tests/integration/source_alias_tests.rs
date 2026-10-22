@@ -17,8 +17,6 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 use unimock::Unimock;
 
-#[cfg(windows)]
-use super::support::copy;
 use super::support::{Consumer, package_version};
 
 #[test]
@@ -41,10 +39,11 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
     )
     .unwrap();
     #[cfg(windows)]
-    copy(
+    std::os::windows::fs::symlink_dir(
         &package,
-        &installation.path().join("node_modules/linked-theme"),
-    );
+        installation.path().join("node_modules/linked-theme"),
+    )
+    .unwrap();
     consumer.replace(
         "library/chip.module.css",
         ".chip",

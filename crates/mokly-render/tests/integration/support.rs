@@ -115,10 +115,11 @@ impl Consumer {
         )
         .unwrap();
         #[cfg(windows)]
-        copy(
-            &workspace.join("node_modules"),
-            &directory.path().join("node_modules"),
-        );
+        std::os::windows::fs::symlink_dir(
+            workspace.join("node_modules"),
+            directory.path().join("node_modules"),
+        )
+        .unwrap();
         let clock = Arc::new(SystemClock::new());
         let processes = Arc::new(ProcessCounts::default());
         let pool = Arc::new(CapturedPool {
@@ -210,11 +211,18 @@ impl Consumer {
 
 impl Drop for Consumer {
     fn drop(&mut self) {
-        self.pool.shutdown().unwrap();
+        let result = self.pool.shutdown();
+        if std::thread::panicking() {
+            if let Err(error) = result {
+                eprintln!("consumer sidecar shutdown failed during panic: {error}");
+            }
+        } else {
+            result.unwrap();
+        }
     }
 }
 
-pub(super) fn copy(source: &Path, destination: &Path) {
+fn copy(source: &Path, destination: &Path) {
     fs::create_dir_all(destination).unwrap();
     for entry in fs::read_dir(source).unwrap() {
         let entry = entry.unwrap();
