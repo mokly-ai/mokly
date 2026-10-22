@@ -1,8 +1,6 @@
 //! Package roots stay private in working and historical source trees.
 
 use std::fs;
-use std::path::Path;
-use std::process::Command;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
@@ -18,6 +16,14 @@ use mokly_graph::public_denial::PublicDenial;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
+
+use support::git;
+
+#[expect(
+    dead_code,
+    reason = "The shared host fixtures also support cache and install tests."
+)]
+mod support;
 
 fn fixture() -> TempDir {
     let directory = TempDir::new().unwrap();
@@ -38,15 +44,6 @@ fn fixture() -> TempDir {
         fs::write(path, body).unwrap();
     }
     directory
-}
-
-fn git(directory: &Path, args: &[&str]) {
-    let status = Command::new("git")
-        .args(args)
-        .current_dir(directory)
-        .status()
-        .unwrap();
-    assert!(status.success(), "git {:?} failed", args);
 }
 
 fn runner() -> Arc<SystemRunner> {
