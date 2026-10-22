@@ -1,7 +1,16 @@
 //! Relative PATH entries cannot run npm from historical source directories.
 
 #[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{FileTypeExt, PermissionsExt};
+#[cfg(unix)]
+use std::sync::Arc;
+
+#[cfg(unix)]
+use mokly_compare::commands::Commands;
+#[cfg(unix)]
+use mokly_git::control::{SystemClock, Token};
+#[cfg(unix)]
+use mokly_platform::flush::SystemFlush;
 
 #[cfg(unix)]
 #[test]
@@ -28,6 +37,7 @@ fn relative_path_probe() {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     });
     assert!(matches!(
         result,
@@ -73,6 +83,7 @@ fn interpreter_probe() {
             byte_limit: None,
             size_root: None,
             cache: None,
+            node: None,
         })
         .unwrap();
     assert_eq!(child.finish().unwrap().stdout, b"trusted-node");
@@ -124,6 +135,7 @@ fn install_environment_removes_mokly_token() {
             byte_limit: None,
             size_root: None,
             cache: None,
+            node: None,
         })
         .unwrap();
     assert_eq!(child.finish().unwrap().stdout, b"unset");
@@ -162,13 +174,16 @@ fn environment_probe_runs_with_a_token_and_absolute_manager_path() {
 #[cfg(unix)]
 #[test]
 fn cancellation_kills_a_script_child_tree() {
-    use std::sync::Arc;
-
-    use mokly_git::control::{SystemClock, Token};
-    use mokly_platform::flush::SystemFlush;
-
     let temporary = tempfile::tempdir().unwrap();
     let marker = temporary.path().join("child.pid");
+    assert!(
+        std::process::Command::new("mkfifo")
+            .arg(&marker)
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(std::fs::metadata(&marker).unwrap().file_type().is_fifo());
     let script = temporary.path().join("manager");
     std::fs::write(
         &script,
@@ -200,22 +215,15 @@ fn cancellation_kills_a_script_child_tree() {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     };
-    let worker = std::thread::spawn(move || {
-        use mokly_compare::commands::Commands;
-        commands.run(&command)
-    });
-    for _ in 0..1_000_000 {
-        if std::fs::read_to_string(&marker).is_ok_and(|value| !value.trim().is_empty()) {
-            break;
-        }
-        std::thread::yield_now();
-    }
+    let worker = std::thread::spawn(move || commands.run(&command));
+    let reported = std::fs::read_to_string(&marker).expect("script did not report its child");
     assert!(
-        std::fs::read_to_string(&marker).is_ok_and(|value| !value.trim().is_empty()),
+        !reported.trim().is_empty(),
         "script did not report its child"
     );
-    let pid = std::fs::read_to_string(&marker).unwrap().trim().to_owned();
+    let pid = reported.trim().to_owned();
     assert!(!pid.is_empty(), "script child pid was not recorded");
     cancellation.cancel();
     assert!(matches!(

@@ -17,10 +17,11 @@ use crate::manager::{Manager, Root};
 pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<OsString> {
     let directory = destination.join(&root.directory);
     let flags: &[&str] = match root.manager {
-        Manager::Npm => &["ci", "--no-audit", "--no-fund"],
+        Manager::Npm => &["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
         Manager::Pnpm => &[
             "install",
             "--frozen-lockfile",
+            "--ignore-scripts",
             "--ignore-pnpmfile",
             "--config.pm-on-fail=ignore",
             "--config.global=false",
@@ -37,21 +38,15 @@ pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<O
         Manager::YarnClassic => &[
             "install",
             "--frozen-lockfile",
+            "--ignore-scripts",
             "--non-interactive",
             "--no-progress",
         ],
-        Manager::YarnBerry => &["install", "--immutable"],
+        Manager::YarnBerry => &["install", "--immutable", "--mode=skip-build"],
     };
     let mut args = flags.iter().map(OsString::from).collect::<Vec<_>>();
-    if !scripts {
-        match root.manager {
-            Manager::Npm => args.insert(1, "--ignore-scripts".into()),
-            Manager::Pnpm | Manager::YarnClassic => {
-                let index = args.iter().position(|arg| arg == "install").unwrap_or(1);
-                args.insert(index + 1, "--ignore-scripts".into());
-            }
-            Manager::YarnBerry => args.push("--mode=skip-build".into()),
-        }
+    if scripts {
+        args.retain(|arg| arg != "--ignore-scripts" && arg != "--mode=skip-build");
     }
     let paths: &[(&str, &str)] = match root.manager {
         Manager::Npm => &[

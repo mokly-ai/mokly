@@ -101,6 +101,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                     byte_limit: None,
                     size_root: None,
                     cache: None,
+                    node: None,
                 })
                 .unwrap();
         }

@@ -25,6 +25,7 @@ mod cache_transient;
 pub mod dependency_types;
 mod durability;
 mod install;
+mod install_node;
 mod local_packages;
 mod local_specifications;
 mod manager;
@@ -37,6 +38,7 @@ mod manager_plan;
 mod manager_yaml;
 mod manager_yarnrc;
 mod manifest;
+pub mod node_executable;
 mod npm_lockfiles;
 mod pnpm_lockfile;
 mod programs;
@@ -181,6 +183,10 @@ mod classic_manifest_paths_tests;
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]
 mod manager_command_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_arguments_tests.rs"]
+mod manager_arguments_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_confinement_tests.rs"]

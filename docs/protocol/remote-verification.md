@@ -125,7 +125,8 @@ Run probes and suite commands from the snapshot under the
    checkout fingerprint and selected base commit on every box.
 4. Start the [seven commands](./remote-verification-testbox.md#remote-commands)
    in parallel. Assign one command to each box. No suite may start until
-   all probes pass.
+   all probes pass. Each command refreshes every regular copied path that
+   differs from the warmup `HEAD` before its first build.
 5. When a command ends, download its report if it produces one.
    Collect available failure reports as well as success reports.
    Clean up that box at once under the

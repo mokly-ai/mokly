@@ -42,6 +42,7 @@ fn manager_path_probe() {
         byte_limit: None,
         size_root: None,
         cache: None,
+        node: None,
     };
     if env::var_os("MOKLY_MANAGER_INTERPRETER_PROBE").is_some() {
         assert_eq!(

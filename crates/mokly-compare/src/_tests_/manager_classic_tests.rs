@@ -79,6 +79,7 @@ fn classic_pins_its_mirror_and_folders_against_every_inherited_spelling() {
         byte_limit: Some(1000),
         size_root: Some("/private".into()),
         cache: Some("/private/offline".into()),
+        node: None,
     };
     let pinned = variables(&request);
     let pins = |name: &str| pinned.iter().any(|(set, _)| *set == name);

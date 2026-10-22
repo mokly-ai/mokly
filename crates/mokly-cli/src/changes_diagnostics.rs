@@ -11,9 +11,18 @@ use crate::changes_output::ChangeDiagnostic;
 use crate::codes::Code;
 use crate::{changes_policy, render_errors};
 
+const SCRIPTS_HINT: &str = "If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`";
+
 pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
     match error {
-        Error::BaseInstallScripts { source } => details(source),
+        Error::BaseInstallScripts { source } => {
+            let mut diagnostics = details(source);
+            diagnostics.push(ChangeDiagnostic {
+                code: Code::BuildInvalid,
+                message: SCRIPTS_HINT.into(),
+            });
+            diagnostics
+        }
         Error::Catalogue {
             source: CatalogueError::Invalid { issues, .. },
         } => issues
@@ -73,14 +82,21 @@ pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges>
         return None;
     };
     if let Some(detail) = limit_detail(source) {
+        let mut diagnostics = vec![ChangeDiagnostic {
+            code: Code::BuildInvalid,
+            message: detail,
+        }];
+        if matches!(&**source, Error::BaseInstallScripts { .. }) {
+            diagnostics.push(ChangeDiagnostic {
+                code: Code::BuildInvalid,
+                message: SCRIPTS_HINT.into(),
+            });
+        }
         return Some(BuildChanges::Unavailable {
             base_ref: base_ref.into(),
             base_commit: commit.clone(),
             reason: "comparison limit reached".into(),
-            diagnostics: vec![ChangeDiagnostic {
-                code: Code::BuildInvalid,
-                message: detail,
-            }],
+            diagnostics,
         });
     }
     let reason = changes_policy::unavailable(source)?;
@@ -155,9 +171,7 @@ pub(crate) fn failure_detail(error: &Error) -> String {
         _ => error.to_string(),
     };
     if matches!(error, Error::BaseInstallScripts { .. }) {
-        format!(
-            "{detail}. If this base needs lifecycle scripts, enable `review.baseInstallScripts` or use `--base-install-scripts`"
-        )
+        format!("{detail}. {SCRIPTS_HINT}")
     } else {
         detail
     }

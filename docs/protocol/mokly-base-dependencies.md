@@ -60,9 +60,11 @@ manager or Corepack shim must already supply the selected version. Corepack
 network access, remote version refresh, automatic pinning, and project
 environment files are disabled.
 
-The install key length-frames all manifest and lockfile paths and bytes, the
+The install key includes all manifest and lockfile paths and bytes, the
 manager families and actual versions, manager configuration inputs, and the
-selected install roots. Local package paths, archives, overrides and
+selected install roots, plus the scripts mode. When scripts run, the key also
+includes the Node version, operating system, and processor architecture used
+for the install. Local package paths, archives, overrides and
 workspaces also add the immutable source identity. pnpm and Yarn installs
 always include it because their lockfiles and configurations can select local
 archives, patches, and workspace sources.
@@ -111,6 +113,16 @@ before configuration and explicit package-root fallback. Source aliases and
 tsconfig paths use base files. Working tsconfig paths cannot remap base package imports.
 An unmappable lookup selects tier three with a `base-dependencies` warning. Each fallback emits its typed trace reason.
 
+The comparison base is the merge base of `HEAD` and `review.base`, so it is
+an ancestor of the current commit, and its dependency files are ones that the
+project merged and installed before. A base install therefore trusts the base
+commit as the project's own install of that commit does. Mokly adds no
+hardening beyond that install, such as a minimum Yarn version, removed
+unscoped Yarn credentials, or a Git block for npm, because the remaining risks
+are small: a package version that was later found harmful and that the branch
+removed, old configuration that is no longer safe, and a machine that never
+ran that install.
+
 Copy the base sources into the private dependency entry. Install without a
 shell. Lifecycle scripts do not run by default, including workspace scripts and
 scripts that dependency metadata would otherwise enable. The working-tree
@@ -122,9 +134,11 @@ working installation or a shared package store.
 Every manager may download packages from the registry that the base and user
 configuration select, as npm does. Installs use registry access rather than
 offline mode, because offline installs reached tier two only when a repository
-committed its archives or offline data. Git transports stay off, so no install
-clones a Git repository. Yarn Berry Git and GitHub sources use the fallback
-tier, because Berry packs them with their own scripts. Corepack network access
+committed its archives or offline data. pnpm and Yarn installs turn Git
+transports off, so they clone no Git repository, and Yarn Berry Git and GitHub
+sources use the fallback tier, because Berry packs them with their own scripts.
+An npm install applies the base commit's `.npmrc` as the project's own install
+does, including its `git` setting, so it can fetch a Git dependency. Corepack network access
 stays off, and Mokly never downloads or updates a package-manager executable.
 The time, byte, and cache bounds also bound downloads. A failed download uses
 tier three.
@@ -132,7 +146,12 @@ tier three.
 Each manager reads the base project configuration and the user configuration,
 with its credentials, as npm reads `.npmrc`: pnpm reads `.npmrc` and
 `pnpm-workspace.yaml`, Yarn Classic reads `.yarnrc` and `.npmrc`, and Yarn
-Berry reads `.yarnrc.yml`. Each install starts from an allowed list of
+Berry reads `.yarnrc.yml`. Yarn sends an unscoped token from the user
+configuration, Berry `npmAuthToken` or Classic `_authToken`, to the registry
+that the base configuration selects, and Berry sends a scope's token to the
+registry that the base configuration sets for that scope. npm 9 and later and
+pnpm send only tokens that the configuration scopes to a registry address.
+Each install starts from an allowed list of
 environment variables, not the inherited environment, so no base configuration
 can read an inherited secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or
 `NPM_TOKEN`. The allowed list holds no secret:
@@ -177,9 +196,12 @@ environment-file list with one optional path above the private entry, so an
 `injectEnvironmentFiles` setting in a base `.yarnrc.yml` reads nothing and
 sends nothing. Berry configurations with executable plugins, per-host network
 overrides, or a `defaultProtocol` other than `npm:` use the fallback tier. A Yarn `exec:`
-source uses the fallback tier wherever it appears, also inside a patch
-source, a catalog, or a package extension, because Berry runs its generator
-during resolution. Berry `catalog`, `catalogs`, and `packageExtensions`
+source that Mokly can read before the install uses the fallback tier: in a
+manifest, a `patch:` source, or a `.yarnrc.yml` catalog or package extension,
+because Berry runs its generator during resolution. A generator inside a
+committed archive or a downloaded package can still run on Yarn Berry 4.0 to
+4.13. Yarn 4.14 and later refuse generators while scripts are off, unless the
+root manifest allows one with `dependenciesMeta.{name}.built`. Berry `catalog`, `catalogs`, and `packageExtensions`
 ranges get the manifest path checks from their configuration folder.
 
 Resolve managers in the parent through absolute PATH entries only. The child

@@ -2749,7 +2749,7 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
           configuration, with fixed private folders, mirror, and lock file.
           Fix round 2 implements it; the local registry tests are in
           `tests/static_base_registry.test.ts`.
-  - [ ] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
+  - [x] Resolve user item 122 (wider fix of pnpm and Yarn review findings 1
         and 2): allowlist Berry dependency protocols. Accept only `npm:`,
         `workspace:`, `file:`, `link:`, `portal:`, `patch:`, and `virtual:`
         resolutions, fall back for every other protocol, such as the `exec:`
@@ -2760,16 +2760,25 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         needs the user. Options: A, keep only the targeted fixes of findings
         1 and 2, Small (estimate); B, the allowlist and the forced-off
         settings, Medium. Recommended: B.
+    - User decision 122 (2026-10-21): A. Keep the targeted fixes of findings
+      1 and 2, and add no protocol allowlist: the base commit is an ancestor
+      of the current commit, so a base install trusts it as the project's own
+      install did. `mokly-base-dependencies.md` states the trust rule and
+      which `exec:` generators can still run (`b1604f5b`).
     - Option C: the Yarn 4.14 floor and the `built` fallback from fix round
       2 finding 2.
-  - [ ] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
+  - [x] Resolve user item 141 (pnpm and Yarn fix round 2 decision): Yarn can
         send unscoped tokens elsewhere. Severity High, security, effort
         Small. Options: A, document it only, Small (estimate); B, clear
         unscoped Yarn credentials for base installs, Small (estimate); C, B,
         and also fall back when a base `.yarnrc.yml` sets `npmScopes`, Small;
         D, fall back whenever the base configuration selects a registry or a
         scope, Medium. Recommended: C.
-  - [ ] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
+    - User decision 141 (2026-10-21): A. Document it: Yarn sends an unscoped
+      user token to the registry that the base configuration selects, as the
+      project's own install of the base commit does. `mokly-base-dependencies.md`
+      states how each manager sends tokens (`b1604f5b`).
+  - [x] Resolve user item 142 (pnpm and Yarn fix round 2, outside the
         scope): a base `.npmrc` can choose npm's git program. npm gets the
         base's `git=` setting and no `GIT_ALLOW_PROTOCOL`, so a base with a
         Git dependency can run a committed program. Severity High
@@ -2779,6 +2788,12 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         under 120 C, so npm repositories with Git dependencies get tier
         three, Small; C, fall back when the base npm configuration sets
         `git`, Small (estimate). Recommended: B.
+    - User decision 142 (2026-10-21): D, an option that this TODO did not
+      list: the base commit's `.npmrc` applies as in the project's own
+      install, including its `git` setting, because a base install trusts
+      the base commit as that install did. `mokly-base-dependencies.md`
+      states it, and it no longer says that npm installs clone no Git
+      repository (`b1604f5b`).
   - First pnpm and Yarn review, finding 8 (Low): the branch re-resolved
     `Cargo.lock`. The batch 21 merge keeps the tip's resolutions and adds
     only `percent-encoding` and `yaml-rust2`.
@@ -3487,11 +3502,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Integration batch 25 merged them as `6a4dcd30`, `bb6928db`, and
         `7a14845e`.
   - [ ] Passing hosted macOS and Windows CI, in native CI round 5.
-  - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
+  - [x] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
         refresh fix of 140 B.
-  - [ ] The security items 122, 141, and 142, each of which needs the
-        user's answer, and 145 B, which merged in batch 23.
+        Integration batch 24 merged 140 B (`cc887869`), 137 B (`3e33bcb0`),
+        84 B and 119 B (`4fe8c160`), 88 A (`3a3355e3`), 71 B (`05af6784`),
+        and 93 D and 94 A (`3a391c3c`). Batch 25 merged 69 C and 127 A
+        (`8490e636`). Batch 26 merged the 135 B review auto-fixes
+        (`f291b10e`).
+  - [x] The security items 122, 141, and 142, which the user answered on
+        2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
+        batch 23.
 
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
@@ -3660,6 +3681,21 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `.context/ci-timing/hosted-timing.md`. These medians are the target from
         the fixed assignment. The new weighted assignment needs hosted
         confirmation after integration.
+
+- [x] Fix the remote stale-native defect found in integration batch 23
+      (2026-10-21). The remote command now refreshes every regular copied path
+      that differs from its warmup `HEAD` before the first build. Cargo keeps
+      warmup artifacts for unchanged paths and rebuilds changed crates. The
+      failing temporary-directory test proves a changed Rust source is newer
+      than the warmup output without checking elapsed time. Commit `aa950467`.
+      The warmup workflow is unchanged. Scratch proof run
+      `20261021T201812Z-410273` passed seven commands and five reports at
+      scratch commit `6f92b78a`; its viewer report passed the fresh-native
+      probe. Final-tree run `20261021T204951Z-417056` hit the accepted 300-second
+      React watch guard on browser shard 1. Rerun
+      `20261021T212859Z-422364` passed seven commands and five reports.
+      Evidence: `.context/remote-fresh-native/`.
+
 - [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
@@ -4194,6 +4230,26 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Node version and platform, `MOKLY_TOKEN` stays out of installs, and the
         existing process-tree owner stops script children. Evidence is recorded
         under `.context/base-install-scripts/`.
+  - [x] User item 135 B review finding 44 A: retain the scripts opt-in hint as
+        a separate base diagnostic when build or publish makes Changes
+        unavailable, including the comparison-limit path. Capture failures and
+        a typed hint field remain outside this fix. Evidence:
+        `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 50 B: keep script-suppression flags in
+        the fixed install lists and remove them only for scripts-on installs.
+        Pin every manager's complete scripts-off arguments in tests.
+        Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 48 A: wait for the cancellation
+        fixture's child PID through a named pipe. Keep its cancellation and
+        child-exit assertions. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 46 B: share parent-side Node selection
+        with rendering, probe outside the base extraction, and key scripts-on
+        installs on Node's version, operating system, and architecture. Put
+        the probed executable's folder first on the install PATH while keeping
+        the selected manager. Evidence: `.context/base-install-scripts-review/`.
+  - [x] User item 135 B review finding 49 A: state the scripts mode in both
+        protocol cache-key descriptions. Scripts-on keys also include the
+        install Node's version, operating system, and processor architecture.
   - [x] F19: filter ordinary ignore-wrapper attributes at both HTML parsing
         boundaries under decision 16 B. The token boundary keeps warning names,
         reserved-navigation evidence, and duplicate-attribute errors. The
@@ -5316,6 +5372,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   then CLI; verify each registry package.
 - Reset Mokly Cloud and republish its catalogue with the released CLI.
 - Decide on a WebAssembly fallback for platforms without a native package.
+- Optional hardening of base installs, which the user may choose later: 122 C,
+  a Yarn 4.14 floor; 141 C, no unscoped Yarn credentials, and a fallback when
+  a base `.yarnrc.yml` sets `npmScopes`; and 142 B, an absolute Git program
+  and no Git transport for npm base installs.
 
 ### Open user items, deferred by the user on 2026-10-21
 

@@ -2,18 +2,16 @@
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-#[cfg(windows)]
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{env, fs, process};
 
 use crate::commands::Command;
 use crate::error::{Error, Result};
+use crate::node_executable::{NodeExecutable, SystemNodeExecutable};
 
 pub(crate) fn command(request: &Command) -> Result<process::Command> {
     if request.program == "node" {
-        return Ok(process::Command::new(
-            env::var_os("MOKLY_NODE_EXECUTABLE").unwrap_or_else(|| "node".into()),
-        ));
+        return Ok(process::Command::new(SystemNodeExecutable.resolve()?));
     }
     if !["npm", "pnpm", "yarn"]
         .iter()
@@ -25,7 +23,14 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
     let directories = env::split_paths(&paths)
         .filter(|path| path.is_absolute())
         .collect::<Vec<_>>();
-    let path = match env::join_paths(&directories) {
+    let prefix = request.node.as_deref().and_then(Path::parent);
+    let child_paths = prefix.into_iter().chain(
+        directories
+            .iter()
+            .map(PathBuf::as_path)
+            .filter(|directory| Some(*directory) != prefix),
+    );
+    let path = match env::join_paths(child_paths) {
         Ok(path) => path,
         Err(_) => return Err(Error::CommandUnavailable),
     };
@@ -42,7 +47,11 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
     }
     #[cfg(windows)]
     {
-        let mut command = windows_manager(&directories, &request.program.to_string_lossy())?;
+        let mut command = windows_manager(
+            &directories,
+            &request.program.to_string_lossy(),
+            request.node.as_deref(),
+        )?;
         command.env("PATH", path);
         Ok(command)
     }
@@ -51,7 +60,11 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
 }
 
 #[cfg(windows)]
-fn windows_manager(directories: &[PathBuf], manager: &str) -> Result<process::Command> {
+fn windows_manager(
+    directories: &[PathBuf],
+    manager: &str,
+    pinned_node: Option<&Path>,
+) -> Result<process::Command> {
     let extensions = env::var_os("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".into());
     for directory in directories {
         for extension in extensions
@@ -93,9 +106,11 @@ fn windows_manager(directories: &[PathBuf], manager: &str) -> Result<process::Co
             else {
                 return Err(Error::UnsupportedManager);
             };
-            let node = std::iter::once(directory.join("node.exe"))
-                .chain(directories.iter().map(|path| path.join("node.exe")))
-                .find(|path| path.is_file());
+            let node = pinned_node.map(Path::to_owned).or_else(|| {
+                std::iter::once(directory.join("node.exe"))
+                    .chain(directories.iter().map(|path| path.join("node.exe")))
+                    .find(|path| path.is_file())
+            });
             let Some(node) = node else {
                 return Err(Error::CommandUnavailable);
             };

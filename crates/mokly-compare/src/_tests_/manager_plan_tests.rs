@@ -7,6 +7,7 @@ use mokly_git::identity::RepoPath;
 use crate::error::Error;
 use crate::inputs::Inputs;
 use crate::install;
+use crate::install_node::InstallNode;
 use crate::manager::{Manager, RepositoryPath, Root};
 use crate::manager_plan::roots;
 use crate::manager_yaml;
@@ -55,13 +56,42 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
     ]);
     let mut plans = roots(&base, &[]).unwrap();
     plans[0].validate_version(b"10.34.7\n").unwrap();
-    let key = install::key(&base, "commit", &plans, false, "");
-    assert_ne!(key, install::key(&base, "other-commit", &plans, false, ""));
-    assert_ne!(key, install::key(&base, "commit", &plans, true, "v24.21.0"));
+    let node = InstallNode {
+        version: "v24.21.0".into(),
+        platform: "linux".into(),
+        architecture: "x64".into(),
+        executable: "/node/bin/node".into(),
+    };
+    let key = install::key(&base, "commit", &plans, None);
+    assert_ne!(key, install::key(&base, "other-commit", &plans, None));
+    assert_ne!(key, install::key(&base, "commit", &plans, Some(&node)));
     assert_ne!(
-        install::key(&base, "commit", &plans, true, "v24.21.0"),
-        install::key(&base, "commit", &plans, true, "v22.15.0")
+        install::key(&base, "commit", &plans, Some(&node)),
+        install::key(
+            &base,
+            "commit",
+            &plans,
+            Some(&InstallNode {
+                version: "v22.15.0".into(),
+                ..node.clone()
+            })
+        )
     );
+    for changed in [
+        InstallNode {
+            platform: "darwin".into(),
+            ..node.clone()
+        },
+        InstallNode {
+            architecture: "arm64".into(),
+            ..node.clone()
+        },
+    ] {
+        assert_ne!(
+            install::key(&base, "commit", &plans, Some(&node)),
+            install::key(&base, "commit", &plans, Some(&changed)),
+        );
+    }
     for changed in [
         Root {
             version: "10.0.0".into(),
@@ -76,7 +106,7 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
             ..plans[0].clone()
         },
     ] {
-        assert_ne!(key, install::key(&base, "commit", &[changed], false, ""));
+        assert_ne!(key, install::key(&base, "commit", &[changed], None));
     }
     for path in [
         "package.json",
@@ -88,7 +118,7 @@ fn keys_cover_manager_version_root_configuration_and_repository_sources() {
         changed
             .files
             .insert(RepoPath::parse(path).unwrap(), b"changed".to_vec());
-        assert_ne!(key, install::key(&changed, "commit", &plans, false, ""));
+        assert_ne!(key, install::key(&changed, "commit", &plans, None));
     }
 }
 

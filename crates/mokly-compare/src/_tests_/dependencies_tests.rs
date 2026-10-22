@@ -19,7 +19,7 @@ use crate::error::Error;
 use crate::inputs::Inputs;
 use mokly_git::control::ClockMock;
 
-fn request() -> Request {
+pub(super) fn request() -> Request {
     let inputs = Inputs {
         objects: BTreeMap::new(),
         files: BTreeMap::from([
@@ -59,7 +59,7 @@ fn working_tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
     }
 }
 
-fn tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
+pub(super) fn tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
     DependencyTiers {
         clock: Arc::new(Unimock::new(
             ClockMock::now
@@ -253,4 +253,37 @@ fn equal_inputs_with_an_outside_local_package_need_no_install_or_warning() {
     assert_eq!(result.tier, Tier::Working);
     assert!(result.warning.is_none());
     assert_eq!(result.repository_roots, [request.head_root]);
+}
+
+#[test]
+fn scripts_probe_uses_the_working_root_and_process_identity() {
+    let mut request = request();
+    request.head.files.clear();
+    request.install_scripts = true;
+    let commands = Unimock::new((
+        CommandsMock::run.next_call(matching!((command) if command.program == "npm"))
+            .returns(Ok(b"11.0.0\n".to_vec())),
+        CommandsMock::run.next_call(matching!(_)).answers(&|_, command| {
+            assert_eq!(command.program, "node");
+            assert_eq!(command.directory, Path::new("/repo"));
+            assert_eq!(command.args, [
+                OsString::from("--print"),
+                OsString::from("JSON.stringify({version:process.version,platform:process.platform,architecture:process.arch,executable:process.execPath})"),
+            ]);
+            Ok(format!(r#"{{"version":"v24.21.0","platform":"linux","architecture":"arm64","executable":"{}"}}"#,
+                if cfg!(windows) { "C:/node/node.exe" } else { "/node/bin/node" }).into_bytes())
+        }),
+    ));
+    let cache = Unimock::new(
+        CacheMock::get
+            .next_call(matching!(_, _, _))
+            .returns(Ok(Lease {
+                directory: "/cache/deps".into(),
+                guard: Box::new(Unimock::new(())),
+            })),
+    );
+    assert_eq!(
+        tiers(cache, commands).resolve(&request).unwrap().tier,
+        Tier::Installed
+    );
 }
