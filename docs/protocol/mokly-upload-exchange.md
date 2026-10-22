@@ -135,8 +135,7 @@ Success does not depend on its optional
 `{ "id", "projectId", "state", "catalogueUrl", "viewerUrl" }` body. Use
 `viewerUrl` only from a JSON object no larger than 16 MiB when it parses as an
 absolute HTTP(S) URL; print normalized `href`, never raw input. An unusable body
-does not fail or retry. Omit a URL containing the token or any case variant of
-its percent encoding. Terminal redaction uses the same rule.
+does not fail or retry. Omit a URL containing the token or any case variant of its percent encoding. Terminal redaction uses the same rule.
 
 `409` means the receiver still lacks a listed digest and `410` means the upload
 expired. Either begins one fresh Plan for the whole command. A second `409`,
