@@ -3317,24 +3317,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
     branches merge.
   - Ticked on 2026-10-21 in integration batch 25: `rebuild/defaults-engine`
     merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
-- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
-      decision): let the parser choose the plaintext point. Four cases of
-      serializer-versus-parser divergence so far: hub review 1 finding 2,
-      `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
-      for B. Options: A, keep the fail-safe check that retries with all text
-      escaped when the parser disagrees, which engine fix round 3 applied on
-      `rebuild/defaults-engine` as its option B, Small (estimate); B,
-      serialize first with all text escaped, find the first HTML `plaintext`
-      element by its repair id, and write raw text only after it, Large.
-      Recommended: A now, and B as a post-merge follow-up.
-  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
-    now also covers the source-identity redesign: the M15 follow-up "carry
-    source identities through HTML5 token processing for all elements", F19
-    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
-    in which html5ever's tree builder reads the tokens of the token pass,
-    chooses every text mode, and gives each element its source position.
-    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
-    request.
 - [x] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
@@ -3418,10 +3400,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       User decision 61 (2026-10-20): A, keep one private capture for each
       request. `mokly-imported-styles-assets.md` documents its bound. A
       shared spool is a post-merge follow-up.
-- [ ] Measure Git opaque-asset digest commands and buffered delivery under
-      the M14 comparison workloads. Use the cost to decide on streamed blob
-      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
-      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
 - [x] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note. Done on 2026-10-21.
       Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
@@ -3433,7 +3411,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       merges. Tick this line when both TODOs are ticked.
   - Both TODOs are ticked in `1b459b51`, after `rebuild/defaults-engine`
     merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
-- [ ] Commit.
+- [x] Commit.
+  - Every other Milestone 14 TODO is done, and its work is merged on the
+    rebuild branch. The last closed with the integration batch 25 merges
+    `6a4dcd30`, from `rebuild/defaults-engine`, and `7a14845e`, from
+    `rebuild/followups-f14`, ticked in `1b459b51`. Item 98 B and the Git
+    opaque-asset measurement moved to the post-merge section on 2026-10-22
+    under user decision 147 B.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
@@ -5371,6 +5355,27 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
 
+- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
+      decision): let the parser choose the plaintext point. Four cases of
+      serializer-versus-parser divergence so far: hub review 1 finding 2,
+      `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
+      for B. Options: A, keep the fail-safe check that retries with all text
+      escaped when the parser disagrees, which engine fix round 3 applied on
+      `rebuild/defaults-engine` as its option B, Small (estimate); B,
+      serialize first with all text escaped, find the first HTML `plaintext`
+      element by its repair id, and write raw text only after it, Large.
+      Recommended: A now, and B as a post-merge follow-up.
+  - User decision 98 (2026-10-21): B, in parallel and non-blocking. Item 98
+    now also covers the source-identity redesign: the M15 follow-up "carry
+    source identities through HTML5 token processing for all elements", F19
+    review finding 2 B, and F21 review finding 5. B builds one HTML pipeline
+    in which html5ever's tree builder reads the tokens of the token pass,
+    chooses every text mode, and gives each element its source position.
+    Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
+    request.
+  - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
+    98 B post-merge.
+
 - [ ] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
@@ -5441,6 +5446,13 @@ does not ask the user before the merge.
       startup and the extra full-blob buffer, and preserve all existing
       bounds, Large; B, retain the measured adapter, Small (estimate).
       Recommended: A. No option is applied.
+
+- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+      the M14 comparison workloads. Use the cost to decide on streamed blob
+      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
+  - Moved here from Milestone 14 on 2026-10-22, under user decision 147 B.
+    The measurement informs user item 64 above.
 
 - [ ] Resolve user item 87 (CLI defaults hub finding 5): define the new
       warning messages. `html-ignore-attribute`, `props-control-bounds`,
