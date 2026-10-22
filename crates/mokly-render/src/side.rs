@@ -50,6 +50,7 @@ pub(crate) fn inputs(
     let directory = config.file.parent().unwrap_or(&config.repo_root);
     let configuration_directory = relative(directory, &config.repo_root);
     let authored = config.input.module_resolution.clone().unwrap_or_default();
+    let package_roots = config.package_roots();
     let mut resolution = ModuleResolution {
         dependency_root: Some(config.repo_root.to_string_lossy().into_owned()),
         aliases: authored.aliases.clone().unwrap_or_default(),
@@ -71,11 +72,9 @@ pub(crate) fn inputs(
             .into_owned()
         })
         .chain(
-            authored
-                .package_roots
-                .unwrap_or_default()
+            package_roots
                 .iter()
-                .map(|root| directory.join(root).to_string_lossy().into_owned()),
+                .map(|root| config.repo_root.join(root).to_string_lossy().into_owned()),
         )
         .collect();
     let (source_root, repository_roots, module_resolution, identity) = match base {

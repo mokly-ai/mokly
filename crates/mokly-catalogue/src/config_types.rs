@@ -6,6 +6,8 @@ use std::path::PathBuf;
 use mokly_model::axes::ColorScheme;
 use serde::{Deserialize, Serialize};
 
+
+
 /// Data-only JSON configuration, validated before resolution.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -163,6 +165,20 @@ pub struct ResolvedConfig {
     pub authored_inputs: Vec<PathBuf>,
     /// Root definitions with their lexical and physical directories.
     pub roots: Vec<ResolvedRoot>,
+}
+
+impl ResolvedConfig {
+    /// Return configured package roots as repository-relative POSIX paths.
+    pub fn package_roots(&self) -> Vec<String> {
+        self.input
+            .module_resolution
+            .as_ref()
+            .and_then(|resolution| resolution.package_roots.as_ref())
+            .into_iter()
+            .flatten()
+            .cloned()
+            .collect()
+    }
 }
 
 /// One root with its projected physical identity.

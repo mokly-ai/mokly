@@ -67,17 +67,10 @@ impl FilePolicy {
         if let Some(output) = output {
             private.push(output.into());
         }
-        if let Some(roots) = config
-            .input
-            .module_resolution
-            .as_ref()
-            .and_then(|resolution| resolution.package_roots.as_ref())
-        {
-            for root in roots {
-                let path = config.file.parent().unwrap_or(&config.repo_root).join(root);
-                if path != config.repo_root {
-                    private.push(path);
-                }
+        for root in config.package_roots() {
+            let path = config.repo_root.join(root);
+            if path != config.repo_root {
+                private.push(path);
             }
         }
         let identities: Vec<_> = private

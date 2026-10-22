@@ -71,26 +71,22 @@ pub(crate) fn validate_inputs(
             }
         }
     }
-    for (index, path) in config
-        .input
-        .module_resolution
-        .iter()
-        .flat_map(|module| module.package_roots.iter().flatten())
-        .enumerate()
-    {
-        confined(
+    for (index, path) in config.package_roots().iter().enumerate() {
+        let path = config.repo_root.join(path);
+        confined_at(
             tree,
             config,
             &format!("moduleResolution.packageRoots[{index}]"),
-            path,
+            &path.to_string_lossy(),
+            &path,
             true,
         )?;
-        let directory = config.file.parent().unwrap_or(&config.repo_root).join(path);
-        match tree.project(&directory.join("package.json")) {
+        match tree.project(&path.join("package.json")) {
             Ok(Some(node)) if node.kind == FileKind::File => {}
             _ => {
                 return Err(invalid(format!(
-                    "moduleResolution.packageRoots[{index}]: {path} must contain package.json"
+                    "moduleResolution.packageRoots[{index}]: {} must contain package.json",
+                    path.display()
                 )));
             }
         }
@@ -147,8 +143,18 @@ fn confined(
         )));
     }
     let base = config.file.parent().unwrap_or(&config.repo_root);
-    let path = normalize(&base.join(value));
-    let node = match tree.project(&path) {
+    confined_at(tree, config, setting, value, &normalize(&base.join(value)), directory)
+}
+
+fn confined_at(
+    tree: &dyn SourceTree,
+    config: &ResolvedConfig,
+    setting: &str,
+    value: &str,
+    path: &Path,
+    directory: bool,
+) -> Result<Vec<PathBuf>> {
+    let node = match tree.project(path) {
         Ok(node) => node,
         Err(error) => return Err(invalid(format!("{setting}: {value}: {}", error.code()))),
     };
@@ -173,5 +179,5 @@ fn confined(
             }
         )));
     }
-    Ok(vec![path, node.identity])
+    Ok(vec![path.to_owned(), node.identity])
 }

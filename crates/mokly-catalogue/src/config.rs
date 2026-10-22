@@ -160,12 +160,34 @@ impl ConfigLoader for Loader {
             repo_root: repo_node.identity,
             roots,
         };
+        normalize_package_roots(&mut config)?;
         config.authored_inputs = validate_inputs(self.tree.as_ref(), &config)?;
         if let Some(alias) = configuration_alias(self.tree.as_ref(), &lexical_file, &config)? {
             config.authored_inputs.push(alias);
         }
         Ok(config)
     }
+}
+
+fn normalize_package_roots(config: &mut ResolvedConfig) -> Result<()> {
+    let Some(module) = config.input.module_resolution.as_mut() else {
+        return Ok(());
+    };
+    let Some(roots) = module.package_roots.as_mut() else {
+        return Ok(());
+    };
+    let directory = config.file.parent().unwrap_or(&config.repo_root).to_owned();
+    let repository = config.repo_root.clone();
+    for (index, root) in roots.iter_mut().enumerate() {
+        let path = normalize(&directory.join(&*root));
+        if !path.starts_with(&repository) {
+            return Err(invalid(format!(
+                "moduleResolution.packageRoots[{index}]: {root} is outside repoRoot"
+            )));
+        }
+        *root = relative(&path, &repository);
+    }
+    Ok(())
 }
 
 fn find(tree: &dyn SourceTree, cwd: &Path) -> Result<PathBuf> {
