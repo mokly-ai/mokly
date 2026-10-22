@@ -1677,13 +1677,20 @@ Review 11 fixes, the negative zero fix of live edit renders, and the merge of
 the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
 decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 8 TODO is done, and its work is merged on the rebuild
+    branch. Its last review record, browser review 3 finding 1, closed with
+    `cffb0713`.
 
 ## Milestone 9: Changes
 
-- [ ] Settle further decision 11.1 for default 11 A. Severity Medium, effort
+- [x] Settle further decision 11.1 for default 11 A. Severity Medium, effort
       Large. Recommended A: built-in checkout conversion and local LFS only,
       with unavailable resources for unsupported external filters.
+  - Settled by user decision 69 (2026-10-21): C, Git checkout conversion for
+    every base source read, which replaces default 11 A. User item 69 is
+    engine defaults decision 11.1. `rebuild/git-base-reads` merged as
+    `8490e636` in integration batch 25.
 
 - [x] Settle the Git changed-path input with decision default 45 B. Remove
       the misleading timing stage and Git-input wording. Keep output exclusions
@@ -1765,7 +1772,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         readers, metadata, move pairing, and historical records.
   - [x] Resolve variant-only affected identity and actual-instance resource
         proof contracts before closing the engine.
-- [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
+- [x] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
       rule for whole-screen React entries, and a content-addressed parsed-CSS
       cache.
@@ -1854,6 +1861,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         at that merge.
     - Ticked on 2026-10-21 in integration batch 25: the engine merge
       `6a4dcd30` brings the fix.
+  - Every sub-TODO is done. The last ones closed when `rebuild/defaults-engine`
+    merged as `6a4dcd30`. Items 97 and 108 moved to the post-merge section.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -2170,7 +2179,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         request. A failed fetch reports the remote and the recovery command.
   - Ticked on 2026-10-21 in integration batch 25: `rebuild/git-base-reads`
     merged as `8490e636`.
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 9 TODO is done, and its work is merged on the rebuild
+    branch. The last, further decision 11.1, closed with `8490e636`.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
 
@@ -2356,7 +2367,9 @@ fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
       catches the class of gap that round 3 review 1 found. B is a new
       catalogue-wide check, so it needs the user.
   - User decision 71 (2026-10-21): B. Work: W2.
-- [ ] Commit.
+- [x] Commit.
+  - Every Milestone 10 TODO is done, and its work is merged on the rebuild
+    branch.
 
 ## Milestone 10.1: Decision defaults in the designs
 
@@ -2473,7 +2486,8 @@ milestone.
       The visible copy stays the same. The noun test fails first. Evidence:
       `.context/viewer-119b/` (red and green logs, the copy before and after,
       and the mutation check).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `4fe8c160`, with 84 B, after its gate.
 
 ## Milestone 10.8: Props pending state in the designs
 
@@ -2498,7 +2512,8 @@ Tags: ui
       detail arrives, with the drawn pending and failed states. The browser
       test fails first. Evidence: `.context/viewer-88a/` (red and green
       logs).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `3a3355e3` after its gate.
 
 ## Milestone 10.10: Changed designs list their reasons
 
@@ -2512,7 +2527,8 @@ which other branches add.
       reasons entry for every built Browse design of a changed, added, or
       removed entry. A temporary unlisted design fails the check first.
       Evidence: `.context/design-reasons-auto/` (red and green logs).
-- [ ] Pass the complete gate on the final commit, push the branch, and report.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+  - The branch merged as `05af6784` after its gate.
 
 ## Milestone 11: Watch and incremental rendering
 
@@ -3083,7 +3099,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tracked read.
   - Completed by `4739f11a`: retain one identity probe per tracked read.
 
-- [ ] Port the large fixture generator with HTML and React variants and the
+- [x] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
@@ -3261,7 +3277,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           472 samples at 50 ms intervals. Both budgets passed. Product release
           preparation preceded measurement; installed binary verification passed.
           Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
-- [ ] Run the fixture and the Mokly Cloud catalogue through build, serve,
+  - Every sub-TODO is done. The last, the `:has()` depth recursion, was
+    ticked in `1b459b51` after `rebuild/defaults-engine` merged as
+    `6a4dcd30`.
+- [x] Run the fixture and the Mokly Cloud catalogue through build, serve,
       Changes, and watch; save the evidence under `.context/rust-rebuild/`.
       The bookfolio run is a post-merge follow-up (user, 2026-10-20).
   - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
@@ -3278,6 +3297,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
+  - Every sub-TODO is done, with its evidence. The large fixture runs are
+    sub-TODOs of the fixture generator TODO above. The last sub-TODO here,
+    F8 decision 59 A, was recorded in `834a4024`. The bookfolio run stays
+    post-merge.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -3402,12 +3425,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [x] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note. Done on 2026-10-21.
       Close-out: `.context/rust-rebuild/sweeps/m14-part1.md`, section "Close-out".
-- [ ] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
+- [x] Hub gap sweep audit finding 7: the M14 TODOs for the rendered-depth
       recursion of `:has()` and for the raw characters of reconstructed
       `plaintext` text wait for `rebuild/defaults-engine` to merge. The
       `noscript` case also waits for `rebuild/followups-f14`. User decision
       131 (2026-10-21) keeps their options, so both TODOs wait only for those
       merges. Tick this line when both TODOs are ticked.
+  - Both TODOs are ticked in `1b459b51`, after `rebuild/defaults-engine`
+    merged as `6a4dcd30` and `rebuild/followups-f14` as `7a14845e`.
 - [ ] Commit.
 
 - [x] Verify that a sidecar emitting a large stderr stream drains safely at
