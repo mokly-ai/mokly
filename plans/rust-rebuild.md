@@ -3053,7 +3053,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         generation. A new generation drops earlier child witnesses while
         static-build input checks remain unchanged. Keep cache hits and core
         input checks valid for the generation that owns their result.
-- [ ] Resolve user item 117 (W6 review finding 2): module hooks miss
+- [x] Resolve user item 117 (W6 review finding 2): module hooks miss
       loader-supplied modules. The preload now registers Mokly's hooks
       first, so a consumer load hook that returns source without
       `nextLoad` hides that module. Contexts with an asynchronous loader
@@ -3068,6 +3068,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] User decision 117 (2026-10-21): A now, C after the merge, in parallel
         if possible, but do not block the merge. State the asynchronous-loader
         module-path gap now, and continue the loader-path fix after the merge.
+  - Option A merged as `951c666e`, with 118 A. Option C is post-merge work in
+    the post-merge section.
 - [x] Resolve user item 118 (W6 review finding 3): each file open probes
       identity twice. Every tracked open runs one wasted `fstat`,
       `realpath`, and `stat` probe. Severity Low, effort Small. Performance
@@ -4267,7 +4269,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       token pass, chooses every text mode, and gives each element its source
       position. Work: W6 on `rebuild/html-pipeline`. It must not delay the
       final pull request.
-  - [ ] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
+  - [x] Resolve user item 115 (F19 review finding 1, as the hub numbers it):
         delivered documents lose wrapper-named attributes. The tree sink
         filters every HTML5 parse. So a raw delivered `.html` file, a
         `srcdoc` value, or `definePage` HTML with an element named
@@ -4283,7 +4285,7 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         keys, Medium; C, split the public parser into an authored parse and a
         delivered-document parse that every caller chooses, Large.
         Recommended: C.
-  - [ ] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
+  - [x] Resolve user item 116 (F19 review finding 3, as the hub numbers it):
         new code can bypass the token boundary. Nothing stops new code in
         `mokly-catalogue` or `mokly-html` from calling html5gum's tokenizer
         directly and reading ordinary unknown wrapper attributes again. That
@@ -4299,6 +4301,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       filtering rule. Decision 116 A records the current `html_tokens::parse`
       consumer rule. Phase 2 of the HTML pipeline plans options C for both
       boundaries after the merge.
+    - Option A of both merged in integration batch 21 as `033e5059`, from
+      `rebuild/html-docs-115a-116a`. Options C are post-merge work in the
+      post-merge section.
   - [x] F21: restore empty wrapper source slots during plaintext repair,
         follow HTML parser markup contexts for noscript and foreign style or title
         content, validate saved variant slot fragments, name reserved navigation
@@ -5334,6 +5339,18 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
+
+- [ ] Split the public HTML parser into an authored parse and a
+      delivered-document parse that every caller chooses, in phase 2 of the
+      HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
+
+- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
+      token types, in phase 2 of the HTML pipeline. User decision 116 C, after
+      option A merged as `033e5059`.
+
+- [ ] Record PostCSS module paths through an asynchronous resolve hook and a
+      message port, so that loader-supplied modules get a witness and a late
+      baseline. User decision 117 C, after option A merged as `951c666e`.
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
