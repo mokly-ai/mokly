@@ -1,10 +1,12 @@
-//! Case aliases of private directories must not become public resources.
+//! Case and parent-segment aliases of private directories stay private.
 
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
+use mokly_catalogue::config_types::{
+    Config, ModuleResolution, ResolvedConfig, ResolvedRoot, RootConfig,
+};
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
@@ -110,4 +112,46 @@ fn case_aliases_of_private_source_files_keep_their_classification() {
         assert_eq!(policy.check(path).unwrap_err(), expected);
         assert_eq!(policy.recheck(path).unwrap_err(), expected);
     }
+}
+
+#[test]
+fn a_parent_segment_package_root_is_private_without_canonical_projection() {
+    let tree = Arc::new(Unimock::new(
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers(&|_, path| {
+                let kind = if path.extension().is_none() {
+                    FileKind::Directory
+                } else {
+                    FileKind::File
+                };
+                Ok(Some(Node {
+                    identity: path.into(),
+                    lexical_kind: kind,
+                    kind,
+                }))
+            }),
+    ));
+    let config = ResolvedConfig {
+        input: Config {
+            module_resolution: Some(ModuleResolution {
+                package_roots: Some(vec!["../packages/ui".into()]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+        file: "/repo/tools/mokly.config.json".into(),
+        repo_root: "/repo".into(),
+        authored_inputs: Vec::new(),
+        roots: Vec::new(),
+    };
+    let policy = FilePolicy::new(tree, &config, &[], BTreeMap::new(), None).unwrap();
+    for path in ["packages/ui/private.txt", "packages/ui/src/index.ts"] {
+        assert_eq!(policy.check(path).unwrap_err(), PublicDenial::Private);
+        assert_eq!(policy.recheck(path).unwrap_err(), PublicDenial::Private);
+    }
+    assert_eq!(
+        policy.check("packages/other.txt").unwrap().path,
+        "packages/other.txt"
+    );
 }

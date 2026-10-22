@@ -104,6 +104,8 @@ Tests exercise capture reuse; production callers supply fresh base generations.
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Private output and package directories keep their physical identities.
+Package directories come from the normalized `ResolvedConfig::package_roots`,
+so a root spelled with `..` stays private in every source tree.
 Repository aliases and case aliases do not make their files public.
 Private-source checks also use each file's physical identity. Watch-input
 fingerprints use repository-relative POSIX names on every platform.

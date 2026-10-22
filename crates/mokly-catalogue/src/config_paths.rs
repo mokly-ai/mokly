@@ -10,6 +10,25 @@ use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::Result;
 
+impl ResolvedConfig {
+    /// Package roots as repository-relative POSIX paths without `.` or `..`
+    /// segments, in authored order. The repository root itself is empty.
+    /// Every consumer reads this form; loading confines each root inside
+    /// `repo_root`.
+    pub fn package_roots(&self) -> Vec<String> {
+        self.input
+            .module_resolution
+            .iter()
+            .flat_map(|module| module.package_roots.iter().flatten())
+            .map(|root| relative(&self.local_path(root), &self.repo_root))
+            .collect()
+    }
+
+    fn local_path(&self, value: &str) -> PathBuf {
+        normalize(&self.file.parent().unwrap_or(&self.repo_root).join(value))
+    }
+}
+
 /// Keep the selected filename while resolving aliases above the repository.
 pub(crate) fn configuration_alias(
     tree: &dyn SourceTree,
@@ -85,14 +104,10 @@ pub(crate) fn validate_inputs(
             path,
             true,
         )?;
-        let directory = config.file.parent().unwrap_or(&config.repo_root).join(path);
-        match tree.project(&directory.join("package.json")) {
-            Ok(Some(node)) if node.kind == FileKind::File => {}
-            _ => {
-                return Err(invalid(format!(
-                    "moduleResolution.packageRoots[{index}]: {path} must contain package.json"
-                )));
-            }
+        if !has_manifest(tree, config, path) {
+            return Err(invalid(format!(
+                "moduleResolution.packageRoots[{index}]: {path} must contain package.json"
+            )));
         }
     }
     for path in config
@@ -146,8 +161,7 @@ fn confined(
             "{setting}: path traversal or invalid path {value}"
         )));
     }
-    let base = config.file.parent().unwrap_or(&config.repo_root);
-    let path = normalize(&base.join(value));
+    let path = config.local_path(value);
     let node = match tree.project(&path) {
         Ok(node) => node,
         Err(error) => return Err(invalid(format!("{setting}: {value}: {}", error.code()))),
@@ -175,3 +189,26 @@ fn confined(
     }
     Ok(vec![path, node.identity])
 }
+
+/// The normalized root needs `package.json`. The authored spelling's target
+/// also counts, so a root spelled through a symbolic link before `..` keeps
+/// the acceptance that the unnormalized check gave it.
+fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> bool {
+    let spelling = config
+        .file
+        .parent()
+        .unwrap_or(&config.repo_root)
+        .join(value);
+    [config.local_path(value), spelling]
+        .iter()
+        .any(|directory| {
+            matches!(
+                tree.project(&directory.join("package.json")),
+                Ok(Some(node)) if node.kind == FileKind::File
+            )
+        })
+}
+
+#[cfg(test)]
+#[path = "_tests_/package_roots_tests.rs"]
+mod package_roots_tests;

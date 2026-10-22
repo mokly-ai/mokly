@@ -60,7 +60,8 @@ pub(crate) fn inputs(
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
     };
     resolution.package_roots = ancestor_roots::directories(&configuration_directory)
-        .iter()
+        .into_iter()
+        .chain(config.package_roots())
         .map(|root| {
             if root.is_empty() {
                 config.repo_root.clone()
@@ -70,13 +71,6 @@ pub(crate) fn inputs(
             .to_string_lossy()
             .into_owned()
         })
-        .chain(
-            authored
-                .package_roots
-                .unwrap_or_default()
-                .iter()
-                .map(|root| directory.join(root).to_string_lossy().into_owned()),
-        )
         .collect();
     let (source_root, repository_roots, module_resolution, identity) = match base {
         Some(base) => (
