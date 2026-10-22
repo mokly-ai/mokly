@@ -3659,10 +3659,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Actual hosted acceptance stays with the hub. Evidence:
       `.context/ci-shard-balance/final-calibration.json` and `timings.md`.
 
-- [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
+- [x] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
       Options, and Portable Namespace notes there.
+  - Done in `ab965a6d`: the four notes that shipped with npm 0.15.0, two from
+    each release-notes page, moved word for word to the linked page
+    `npm-release-history-0-15.md`, because the history page would pass the
+    250-line cap. Stubs and links point to them.
 
 - [x] Resolve user item 100: CI jobs exceed the three-times rule of the CI
       timeout approval. On 2-vCPU Blacksmith runners, Repository took 24.1 of
