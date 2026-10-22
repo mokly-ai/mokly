@@ -8,6 +8,10 @@ pub struct SecretMatcher {
     secret: String,
 }
 
+#[cfg(test)]
+#[path = "_tests_/redaction_tests.rs"]
+mod redaction_tests;
+
 impl SecretMatcher {
     /// Create a matcher for one secret value.
     pub fn new(secret: impl Into<String>) -> Self {

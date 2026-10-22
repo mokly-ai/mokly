@@ -185,7 +185,8 @@ fn endpoint_and_token_validation_preserve_queries_without_echoing_secrets() {
     }
     assert!(Settings::new("https://example.com/plan", "secret".to_owned(), 0).is_err());
     assert!(Settings::new("https://example.com/plan", "secret".to_owned(), 33).is_err());
-    assert!(!format!("{:?}", settings.token).contains("secret"));
+    assert_eq!(format!("{:?}", settings.token), "Token([redacted])");
+    assert!(!format!("{settings:?}").contains("-secret/a=="));
 }
 
 #[test]
