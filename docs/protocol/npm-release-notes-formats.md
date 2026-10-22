@@ -2,46 +2,8 @@
 
 Continuation of [npm Release Notes](./npm-release-notes.md).
 
-## Boundary And Tooling Changes
-
-`parseStaticDelivery` returns `valid`, `unsupported-version` or `invalid`
-results and never throws. Callers read the descriptor from a valid result's
-`value`. Browser boundary readers throw `MoklyVersionError`; export keeps
-`export-invalid`. `ViewerError.code` includes `version`, with optional
-diagnostic `details` beside the existing product-facing `message`.
-
-`MoklyVersionError.boundary` now also accepts `"review"`. The review reader
-throws that error for numeric versions other than 7 before reading content.
-Comparison requests preserve its code, boundary, received version and supported
-version. Malformed current results keep a plain invalid-review error with one
-`[mokly/review]` prefix. Comparison failures use the existing compatible-viewer
-message, with version numbers only in diagnostic details. Embedded viewers emit
-`onError` with code `"version"`; Current remains available without comparison panes.
-
-The watch-writer change that was to move successful plain baseline notes and
-the earlier-version notice to stdout is frozen with the TypeScript backend and
-never landed; errors and requested timing JSON retain stderr. Referenced authored files are not private solely because of an extension
-or build-folder name; source inputs, protected locations, hidden segments and
-symlinks remain private.
-
-## Combined Path And Output Formats
-
-The path/output integration uses manifest v10, catalogue v6, review v7, delivery
-v5 and bootstrap v2. Live capability descriptors and the inspector wire use v2;
-the live index is `live-index-2`, catalogue change snapshots use v3 and baseline
-completion markers use v2 with `generated-v10`. Export ownership v3, upload v2
-and Plan v1 retain their shapes. See the
-[complete format inventory](./mokly-format-versions.md).
-
-File-derived paths replace `id`/`navPath`, and `roots` replaces `entries` and
-`entriesDir`. Markdown documents, folders and moves use the incoming path
-contract. Every generated file now lives under `mokly-generated/`, including
-Markdown resource copies. Manifest v9 and below are earlier baseline output;
-catalogue v5 and review v6 and below are unsupported public payloads. Rebuild
-with the matching package; no converter is provided. The preview command against
-an earlier main base still succeeds with Changes unavailable. Only the explicit
-writers take the output lock; immutable in-memory route snapshots replace disk
-capture and reject undeclared worker routes.
+The boundary, tooling, and format notes of npm 0.15.0 are in
+[npm 0.15.0 upgrade notes](./npm-release-history-0-15.md).
 
 ## First Rust Core Release
 
