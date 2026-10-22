@@ -26,22 +26,11 @@ impl Boundary {
         let mut inputs = config.authored_inputs.clone();
         inputs.push(config.file.clone());
         inputs.push(config.repo_root.join("package.json"));
-        if let Some(roots) = config
-            .input
-            .module_resolution
-            .as_ref()
-            .and_then(|settings| settings.package_roots.as_ref())
-        {
-            for root in roots {
-                inputs.push(
-                    config
-                        .file
-                        .parent()
-                        .unwrap_or(&config.repo_root)
-                        .join(root)
-                        .join("package.json"),
-                );
-            }
+        for root in config.package_roots() {
+            inputs.push(config.repo_root.join(root).join("package.json"));
+        }
+        for alias in config.package_root_aliases() {
+            inputs.push(alias.join("package.json"));
         }
         Self {
             allowed,
@@ -159,3 +148,7 @@ pub(crate) fn directories(files: &dyn Files, path: &Path) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/catalogue_boundary_tests.rs"]
+mod catalogue_boundary_tests;

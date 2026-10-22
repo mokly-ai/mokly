@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::error::Result;
@@ -19,13 +20,19 @@ pub fn write(directory: &Path, path: &str, text: &str) {
 }
 
 pub fn prepare(directory: &Path, explicit: Option<&str>) -> Result<PreparedCatalogue> {
+    let config = load(directory, explicit)?;
     let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
-    let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
-    let config = loader.load(directory, explicit)?;
     let builder: &dyn CatalogueBuilder = &Builder {
         tree: tree.clone(),
         discovery: Arc::new(Discoverer { tree }),
         definitions: Arc::new(DeferredDefinitions),
     };
     builder.prepare(&config, None)
+}
+
+pub fn load(directory: &Path, explicit: Option<&str>) -> Result<ResolvedConfig> {
+    let loader: &dyn ConfigLoader = &Loader {
+        tree: Arc::new(WorkingTree),
+    };
+    loader.load(directory, explicit)
 }

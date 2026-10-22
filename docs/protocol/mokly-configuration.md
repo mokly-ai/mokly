@@ -229,7 +229,9 @@ the loader boundary; public files use the
 `moduleResolution` has no defaults beyond esbuild's platform behaviour in the
 [sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
-supplement consumer lookup. Alias keys and targets accept bare package
+supplement consumer lookup. A package root names the directory that its path
+reaches after `.` and `..` segments are removed, in the working tree and in
+the base tree of a comparison. Alias keys and targets accept bare package
 specifiers only. JavaScript and CSS apply one longest-key alias substitution.
 Alias targets resolve from the
 configuration directory through Node's ancestor lookup, then the configured

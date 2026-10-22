@@ -40,8 +40,16 @@ PostCSS path, suffix, and regular-file checks use the catalogued
 `config-invalid` diagnostics before a sidecar starts.
 Git root validation belongs to the Git boundary. Config-relative parent
 segments are accepted when their lexical and physical targets stay inside
-`repoRoot`. Alias keys and targets must be bare specifiers. Ordered module
-resolution lists retain only the first occurrence of each value.
+`repoRoot`. `ResolvedConfig::package_roots` returns each package root as a
+repository-relative path without `.` or `..` segments; the repository root is
+empty. The file policy, the static output boundary, the sidecar settings, and
+base dependency selection read this form, so a working tree and a Git tree
+name the same package root. `ResolvedConfig::package_root_aliases` keeps each
+authored spelling with `..`. The file policy and the output boundary project
+it, so a symbolic link before `..` cannot remove the protection of the
+directory that the spelling reaches. Alias keys and targets must be bare
+specifiers. Ordered module resolution lists retain only the first occurrence
+of each value.
 
 `Discoverer` implements `Discovery` over `dyn SourceTree`. It skips denied
 subdirectories and symlinks. Excluded files remain protected source inputs.
@@ -193,6 +201,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 
 - [Opened-file identity](./src/working_tree_identity.rs) supplies portable source evidence.
 - [Configuration](./src/config.rs) and [schema validation](./src/config_validation.rs).
+- [Configuration paths](./src/config_paths.rs) confine local inputs and give `ResolvedConfig::package_roots` and `ResolvedConfig::package_root_aliases`.
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).

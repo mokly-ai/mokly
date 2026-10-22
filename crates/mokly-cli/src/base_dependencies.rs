@@ -1,6 +1,5 @@
 //! Native base extraction and dependency selection retain both leases for the runtime.
 
-use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -167,7 +166,6 @@ fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
         Ok(loaders) => loaders,
         Err(source) => return Err(InternalError::Json { source }.into()),
     };
-    let directory = config.file.parent().unwrap_or(&config.repo_root);
     Ok(ModuleResolution {
         dependency_root: None,
         aliases: authored.aliases.unwrap_or_default(),
@@ -175,27 +173,8 @@ fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
         loaders,
         main_fields: authored.main_fields.unwrap_or_default(),
         resolve_extensions: authored.resolve_extensions.unwrap_or_default(),
-        package_roots: authored
-            .package_roots
-            .unwrap_or_default()
-            .iter()
-            .map(|root| relative(&normalized(&directory.join(root)), &config.repo_root))
-            .collect(),
+        package_roots: config.package_roots(),
     })
-}
-
-fn normalized(path: &Path) -> PathBuf {
-    let mut output = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                output.pop();
-            }
-            component => output.push(component),
-        }
-    }
-    output
 }
 
 #[cfg(test)]

@@ -29,11 +29,12 @@ extension, or for a directory named `dist`, `target`, `coverage`,
 locations stay private. An unreferenced file stays private whatever its
 name.
 
-A configured package root below the repository root is a private tree; a
-package root equal to the repository root, such as `packageRoots: ["."]`,
-protects nothing by itself. The policy has no generated directory to
-skip: discovery and PostCSS scanning exclude only the trees that the
-configuration and the source protection contract name.
+A configured package root below the repository root is a private tree at its
+path after `.` and `..` segments are removed, in the working tree and in the
+base tree of a comparison. A package root equal to the repository root, such
+as `packageRoots: ["."]`, protects nothing by itself. The policy has no
+generated directory to skip: discovery and PostCSS scanning exclude only the
+trees that the configuration and the source protection contract name.
 
 ## One Closure Builder
 

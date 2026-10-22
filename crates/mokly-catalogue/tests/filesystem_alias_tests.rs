@@ -30,6 +30,23 @@ fn config_file_alias_under_a_repository_alias_keeps_both_source_names() {
 }
 
 #[test]
+fn a_package_root_spelled_through_a_link_keeps_its_acceptance_and_normalizes() {
+    let directory = TempDir::new().unwrap();
+    support::write(
+        directory.path(),
+        "tools/mokly.config.json",
+        r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"moduleResolution":{"packageRoots":["link/../ui"]}}"#,
+    );
+    support::write(directory.path(), "specs/home.md", "# Home");
+    support::write(directory.path(), "deep/ui/package.json", "{}");
+    fs::create_dir_all(directory.path().join("deep/dir")).unwrap();
+    fs::create_dir_all(directory.path().join("tools/ui")).unwrap();
+    symlink("../deep/dir", directory.path().join("tools/link")).unwrap();
+    let config = support::load(directory.path(), Some("tools/mokly.config.json")).unwrap();
+    assert_eq!(config.package_roots(), ["tools/ui"]);
+}
+
+#[test]
 fn output_pruning_compares_physical_paths_below_aliased_roots() {
     let holder = TempDir::new().unwrap();
     let root = holder.path().join("real");
