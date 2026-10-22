@@ -3502,9 +3502,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Integration batch 25 merged them as `6a4dcd30`, `bb6928db`, and
         `7a14845e`.
   - [ ] Passing hosted macOS and Windows CI, in native CI round 5.
-  - [ ] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
+  - [x] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
         refresh fix of 140 B.
+        Integration batch 24 merged 140 B (`cc887869`), 137 B (`3e33bcb0`),
+        84 B and 119 B (`4fe8c160`), 88 A (`3a3355e3`), 71 B (`05af6784`),
+        and 93 D and 94 A (`3a391c3c`). Batch 25 merged 69 C and 127 A
+        (`8490e636`). Batch 26 merged the 135 B review auto-fixes
+        (`f291b10e`).
   - [x] The security items 122, 141, and 142, which the user answered on
         2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
         batch 23.
