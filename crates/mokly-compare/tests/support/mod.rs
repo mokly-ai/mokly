@@ -87,7 +87,7 @@ pub fn git(root: &Path, args: &[&str]) -> Vec<u8> {
 pub fn storage(root: &Path) -> Arc<dyn Storage> {
     Arc::new(SystemStorage {
         flush: Arc::new(mokly_platform::flush::SystemFlush),
-        root: root.canonicalize().unwrap(),
+        root: dunce::canonicalize(root).unwrap(),
         cancellation: Arc::new(Token::default()),
     })
 }

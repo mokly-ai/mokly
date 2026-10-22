@@ -1,7 +1,6 @@
 //! Selected external dependency roots keep logical requests and physical PostCSS inputs.
 
 use std::fs;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::discovery::Discoverer;
@@ -19,7 +18,7 @@ use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_source_interface::tree::SourceTree;
 use unimock::Unimock;
 
-use super::support::Consumer;
+use super::support::{Consumer, workspace};
 
 #[test]
 fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources() {
@@ -61,10 +60,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         "className={styles.chip}",
         "className={styles.chip + ' ' + extra.external}",
     );
-    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap();
+    let workspace = workspace();
     let base = Arc::new(BaseSide {
         sources: Lease {
             directory: consumer.root().into(),

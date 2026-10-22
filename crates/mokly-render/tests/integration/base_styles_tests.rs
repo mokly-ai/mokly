@@ -1,7 +1,6 @@
 //! Historical JavaScript style records retain component ownership through comparison.
 
 use std::fs;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::discovery::Discoverer;
@@ -21,7 +20,7 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 use unimock::Unimock;
 
-use super::support::Consumer;
+use super::support::{Consumer, workspace};
 
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],element:'ui-card',propSchema:{type:'object',additionalProperties:false,required:['label'],properties:{label:{type:'string'}}},props:{label:'Own'},variants:[{slug:'other',title:'Other',props:{label:'Other'}}],render:(props)=><><style>{`.card-${props.label}{color:${COLOR}}`}</style><p className={'card-'+props.label}>Card</p></>});";
 const HOME: &str = "---\ntitle: Home\n---\n<ui-card label=\"Instance\"></ui-card>";
@@ -44,10 +43,7 @@ pub(super) fn consumer(color: &str) -> Consumer {
 }
 
 fn historical(head: &Consumer, base: &Consumer) -> Arc<dyn RenderGeneration> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap();
+    let root = workspace();
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),

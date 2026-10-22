@@ -1,7 +1,6 @@
 //! Linked workspace CSS keeps repository attribution through selected dependency roots.
 
 use std::fs;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::discovery::Discoverer;
@@ -17,7 +16,7 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 use unimock::Unimock;
 
-use super::support::{Consumer, package_version};
+use super::support::{Consumer, package_version, workspace};
 
 #[test]
 fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
@@ -49,10 +48,7 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
         ".chip",
         "@import 'linked-theme/style.css';\n.chip",
     );
-    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap();
+    let workspace = workspace();
     let base = Arc::new(BaseSide {
         sources: Lease {
             directory: consumer.root().into(),

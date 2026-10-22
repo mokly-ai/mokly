@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const tokens = JSON.parse(
-  readFileSync(new URL("./tokens.json", import.meta.url), "utf8"),
-);
+const tokensFile = fileURLToPath(new URL("./tokens.json", import.meta.url));
+const tokens = JSON.parse(readFileSync(tokensFile, "utf8"));
 
 export default {
   plugins: [
@@ -12,7 +12,7 @@ export default {
         result.messages.push({
           type: "dependency",
           plugin: "fixture-colors",
-          file: new URL("./tokens.json", import.meta.url).pathname,
+          file: tokensFile,
         });
       },
       Rule(rule) {

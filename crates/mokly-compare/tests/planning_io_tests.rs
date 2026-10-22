@@ -1,6 +1,7 @@
 //! Real base planning batches public inputs before rendering and survives cache eviction.
 
 use std::io::Write;
+use std::process::Command;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -114,12 +115,22 @@ fn fixture(size: usize) -> Fixture {
         (format!("images/{index}.svg"), "<svg/>".into()),
         (format!("styles/{index}.css"), format!("p{{background:url(../images/{index}.svg)}}")),
     ]).collect();
-    Fixture::new(
+    let fixture = Fixture::new(
         &files
             .iter()
             .map(|(path, text)| (path.as_str(), text.as_str()))
             .collect::<Vec<_>>(),
-    )
+    );
+    // Git for Windows sets `core.autocrlf=true` for the whole system, which
+    // makes every base read a converted read. Pin identity conversion in the
+    // repository, so these counts measure the batched path on every host.
+    let status = Command::new("git")
+        .args(["config", "core.autocrlf", "false"])
+        .current_dir(fixture.directory.path())
+        .status()
+        .unwrap();
+    assert!(status.success());
+    fixture
 }
 
 #[test]

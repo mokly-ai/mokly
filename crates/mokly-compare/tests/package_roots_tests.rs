@@ -36,7 +36,9 @@ fn write(root: &Path, path: &str, bytes: &[u8]) {
 fn frontend_installs_with_or_without_an_independent_root_install() {
     for with_root in [false, true] {
         let temporary = tempfile::tempdir().unwrap();
-        let root = temporary.path().canonicalize().unwrap().join("repository");
+        let root = dunce::canonicalize(temporary.path())
+            .unwrap()
+            .join("repository");
         fs::create_dir(&root).unwrap();
         git(&root, &["init", "-b", "main"]);
         git(&root, &["config", "user.name", "Mokly Tests"]);
@@ -126,7 +128,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             )
             .unwrap();
         let cache: Arc<dyn Cache> = Arc::new(cache(
-            temporary.path().canonicalize().unwrap().join("cache"),
+            dunce::canonicalize(temporary.path()).unwrap().join("cache"),
             10 * 1024 * 1024,
         ));
         let extraction = mokly_compare::extraction::CachedExtraction {

@@ -11,10 +11,11 @@ use crate::manager_command::{arguments, variables};
 use crate::manager_environment::allowed;
 
 fn request(manager: Manager, args: Vec<OsString>) -> Command {
+    let directory = Path::new("/private").join("frontend");
     Command {
         program: manager.program().into(),
         args,
-        directory: "/private/frontend".into(),
+        directory,
         timeout: Duration::from_secs(10),
         byte_limit: Some(1000),
         size_root: Some("/private".into()),
@@ -25,6 +26,8 @@ fn request(manager: Manager, args: Vec<OsString>) -> Command {
 
 #[test]
 fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private() {
+    let private = Path::new("/private");
+    let frontend = private.join("frontend");
     for manager in [
         Manager::Npm,
         Manager::Pnpm,
@@ -56,7 +59,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
                 assert!(
                     args.iter()
                         .filter(|arg| Path::new(arg).is_absolute())
-                        .all(|arg| Path::new(arg).starts_with("/private/frontend"))
+                        .all(|arg| Path::new(arg).starts_with(&frontend))
                 );
             }
         }
@@ -65,18 +68,23 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
                 args.iter()
                     .any(|arg| arg == "--config.modules-dir=node_modules")
             );
-            assert!(
-                args.iter()
-                    .any(|arg| arg == "--store-dir=/private/frontend/.pnpm-store")
-            );
+            assert!(args.iter().any(|arg| {
+                arg == &OsString::from(format!(
+                    "--store-dir={}",
+                    frontend.join(".pnpm-store").display()
+                ))
+            }));
         }
         if manager == Manager::YarnClassic {
             let after = |flag: &str| {
                 let index = args.iter().position(|arg| arg == flag).unwrap();
                 args[index + 1].clone()
             };
-            assert!(Path::new(&after("--cwd")).starts_with("/private/frontend"));
-            assert_eq!(after("--mutex"), "file:/private/frontend/.yarn-mutex");
+            assert!(Path::new(&after("--cwd")).starts_with(&frontend));
+            assert_eq!(
+                after("--mutex"),
+                OsString::from(format!("file:{}", frontend.join(".yarn-mutex").display()))
+            );
         }
         let captured = variables(&request(manager, args))
             .into_iter()
@@ -100,7 +108,7 @@ fn manager_installs_allow_registry_access_and_keep_scripts_and_storage_private()
         }
         let private = |name: &str| {
             assert!(
-                Path::new(&captured[name]).starts_with("/private/frontend"),
+                Path::new(&captured[name]).starts_with(&frontend),
                 "{manager:?} {name}"
             );
         };
@@ -244,8 +252,9 @@ fn berry_install_disables_base_environment_files() {
     let captured = variables(&command).into_iter().collect::<BTreeMap<_, _>>();
     // The override points above the private entry, where a base cannot commit
     // a file, and the `?` marks it optional, so Berry injects no file.
-    assert_eq!(
-        captured["YARN_INJECT_ENVIRONMENT_FILES"],
-        OsString::from("/ns/dependencies/entries/.mokly-no-environment-file?")
-    );
+    let mut expected = Path::new("/ns/dependencies/entries")
+        .join(".mokly-no-environment-file")
+        .into_os_string();
+    expected.push("?");
+    assert_eq!(captured["YARN_INJECT_ENVIRONMENT_FILES"], expected);
 }

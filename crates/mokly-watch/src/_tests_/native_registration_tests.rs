@@ -15,18 +15,26 @@ use crate::plan::Plan;
 use super::NativeObserver;
 
 pub(super) fn paths(values: &[&str]) -> BTreeSet<PathBuf> {
-    values.iter().map(PathBuf::from).collect()
+    values.iter().map(|value| path(value)).collect()
+}
+
+pub(super) fn path(value: &str) -> PathBuf {
+    if cfg!(windows) {
+        PathBuf::from(value.replace('/', "\\"))
+    } else {
+        PathBuf::from(value)
+    }
 }
 
 pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {
         input: Config::default(),
-        file: "/repo/mokly.config.json".into(),
-        repo_root: "/repo".into(),
+        file: path("/repo/mokly.config.json"),
+        repo_root: path("/repo"),
         authored_inputs: vec![],
         roots: vec![ResolvedRoot {
-            directory: "/repo/specs".into(),
-            identity: "/repo/specs".into(),
+            directory: path("/repo/specs"),
+            identity: path("/repo/specs"),
             input: RootConfig {
                 dir: "specs".into(),
                 files: None,
@@ -50,7 +58,7 @@ fn exact_files_extend_one_observer_without_rewatching_existing_directories() {
                 }))
             }),
         SourceTreeMock::children
-            .each_call(matching!((path) if path.to_str() == Some("/repo/specs")))
+            .each_call(matching!((candidate) if candidate == &path("/repo/specs")))
             .answers(&|_, _| {
                 Ok(vec![
                     Child {
@@ -68,7 +76,7 @@ fn exact_files_extend_one_observer_without_rewatching_existing_directories() {
                 ])
             }),
         SourceTreeMock::children
-            .each_call(matching!((path) if path.to_str() == Some("/repo/specs/src")))
+            .each_call(matching!((candidate) if candidate == &path("/repo/specs/src")))
             .answers(&|_, _| Ok(vec![])),
     )));
     let watch = Unimock::new((

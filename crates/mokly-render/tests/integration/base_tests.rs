@@ -1,6 +1,5 @@
 //! Base preparation results select the extraction and retain its dependency leases.
 
-use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
 use std::{env, fs};
@@ -16,7 +15,7 @@ use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use unimock::Unimock;
 
-use super::support::Consumer;
+use super::support::{Consumer, workspace};
 
 #[test]
 fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
@@ -50,7 +49,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         );
         consumer.replace(
             "postcss.mjs",
-            "new URL(\"./tokens.json\", import.meta.url)",
+            "fileURLToPath(new URL(\"./tokens.json\", import.meta.url))",
             "process.cwd() + '/tokens.json'",
         );
         consumer.replace("postcss.mjs", "export default {", "if (process.env.INIT_CWD !== undefined || process.env.npm_package_json !== undefined || process.env.npm_config_local_prefix !== undefined || JSON.parse(readFileSync(process.env.PWD + '/tokens.json','utf8')).color !== tokens.color) throw new Error('PostCSS inherited another source environment');\nexport default {");
@@ -67,10 +66,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         .unwrap()
         .unwrap();
     assert!(String::from_utf8_lossy(&head_css).contains("var(--head-cwd)"));
-    let dependencies = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap();
+    let dependencies = workspace();
     let leased = Arc::new(BaseSide {
         sources: Lease {
             directory: base.root().into(),

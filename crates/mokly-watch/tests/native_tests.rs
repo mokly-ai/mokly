@@ -68,6 +68,7 @@ async fn atomic_replacements_new_directories_and_shutdown_keep_one_observer() {
 }
 
 #[tokio::test]
+#[cfg(not(windows))]
 async fn required_inputs_stay_observable_when_an_ancestor_is_replaced() {
     let root = tempfile::tempdir().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();
@@ -98,6 +99,35 @@ async fn required_inputs_stay_observable_when_an_ancestor_is_replaced() {
     fs::create_dir_all(source.parent().unwrap()).unwrap();
     wait(observer, "assets/nested").await;
     observer.rescan(&plan).unwrap();
+    fs::write(&source, "repaired").unwrap();
+    assert_eq!(
+        plan.classify(&wait(observer, "logo.svg").await),
+        Some(Action::Reload)
+    );
+    observer.close();
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn required_inputs_stay_observable_when_the_file_is_replaced() {
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join("specs")).unwrap();
+    fs::create_dir(root.path().join("assets")).unwrap();
+    fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+    let source = root.path().join("assets/logo.svg");
+    fs::write(&source, "original").unwrap();
+    let loader: &dyn ConfigLoader = &Loader {
+        tree: Arc::new(WorkingTree),
+    };
+    let config = loader.load(root.path(), None).unwrap();
+    let plan = Plan::new(
+        &config,
+        &[],
+        &[],
+        &BTreeSet::from(["assets/logo.svg".into()]),
+    )
+    .unwrap();
+    let observer: &dyn Observer = &NativeObserver::new(Arc::new(WorkingTree), &plan).unwrap();
     fs::write(&source, "repaired").unwrap();
     assert_eq!(
         plan.classify(&wait(observer, "logo.svg").await),

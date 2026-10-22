@@ -34,3 +34,4 @@ mokly-sidecar = { workspace = true, features = ["mock"] }
 mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 unimock = "0.6.8"
+dunce = "1.0.5"

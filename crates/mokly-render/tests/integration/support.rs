@@ -99,10 +99,7 @@ impl Consumer {
         Self::with_sidecars(1)
     }
     fn with_sidecars(sidecars: usize) -> Self {
-        let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../..")
-            .canonicalize()
-            .unwrap();
+        let workspace = workspace();
         let directory = tempfile::tempdir().unwrap();
         copy(
             &workspace.join("tests/fixtures/javascript"),
@@ -211,8 +208,22 @@ impl Consumer {
 
 impl Drop for Consumer {
     fn drop(&mut self) {
-        self.pool.shutdown().unwrap();
+        let result = self.pool.shutdown();
+        if std::thread::panicking() {
+            if let Err(error) = result {
+                eprintln!("consumer sidecar shutdown failed during panic: {error}");
+            }
+        } else {
+            result.unwrap();
+        }
     }
+}
+
+/// The repository root in the plain canonical form that Node resolves. On
+/// Windows, `fs::canonicalize` returns a `\\?\` path, and Node does not
+/// treat it as the same root as the plain drive path.
+pub(super) fn workspace() -> PathBuf {
+    dunce::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap()
 }
 
 fn copy(source: &Path, destination: &Path) {
