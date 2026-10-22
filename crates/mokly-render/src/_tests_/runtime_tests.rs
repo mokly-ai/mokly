@@ -1,6 +1,7 @@
 //! Runtime sides get unique PostCSS contexts and normalized package roots.
 
 use std::collections::BTreeSet;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ModuleResolution, ResolvedConfig};
@@ -64,7 +65,10 @@ fn package_roots_reach_the_sidecar_in_normalized_form() {
             .side(&config)
             .unwrap()
             .module_resolution
-            .package_roots,
-        ["/repo/tools", "/repo", "/repo/packages/ui", "/repo"]
+            .package_roots
+            .iter()
+            .map(PathBuf::from)
+            .collect::<Vec<_>>(),
+        ["/repo/tools", "/repo", "/repo/packages/ui", "/repo"].map(PathBuf::from)
     );
 }
