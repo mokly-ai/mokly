@@ -15,8 +15,8 @@ use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_graph::policy::{FilePolicy, PublicPolicy};
 use mokly_graph::public_denial::PublicDenial;
-use mokly_source_interface::tree::SourceTree;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
 
 fn fixture() -> TempDir {
@@ -26,7 +26,10 @@ fn fixture() -> TempDir {
             "tools/mokly.config.json",
             r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"moduleResolution":{"packageRoots":["../packages/ui"]}}"#,
         ),
-        ("specs/home.screen.html", "---\ntitle: Home\n---\n<h1>Home</h1>"),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<h1>Home</h1>",
+        ),
         ("packages/ui/package.json", "{}"),
         ("packages/ui/private.txt", "private"),
     ] {
@@ -63,21 +66,18 @@ fn parent_package_root_is_private_in_current_and_historical_policy() {
     }
     .load(directory.path(), Some("tools/mokly.config.json"))
     .unwrap();
-    let current_policy = FilePolicy::new(
-        current,
-        &current_config,
-        &[],
-        Default::default(),
-        None,
-    )
-    .unwrap();
+    let current_policy =
+        FilePolicy::new(current, &current_config, &[], Default::default(), None).unwrap();
     assert_eq!(
         current_policy.check("packages/ui/private.txt").unwrap_err(),
         PublicDenial::Private
     );
 
     git(directory.path(), &["init", "--quiet"]);
-    git(directory.path(), &["config", "user.email", "test@example.com"]);
+    git(
+        directory.path(),
+        &["config", "user.email", "test@example.com"],
+    );
     git(directory.path(), &["config", "user.name", "Test"]);
     git(directory.path(), &["add", "."]);
     git(directory.path(), &["commit", "--quiet", "-m", "fixture"]);

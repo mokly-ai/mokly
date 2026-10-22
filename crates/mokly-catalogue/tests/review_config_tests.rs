@@ -23,7 +23,7 @@ fn parent_segments_inside_repo_root_work_for_every_local_input() {
     }
     let prepared = support::prepare(directory.path(), Some("tools/mokly.config.json")).unwrap();
     assert_eq!(prepared.model.entries[0].metadata.path, "guide");
-    let config = support::load(directory.path(), Some("tools/mokly.config.json"));
+    let config = support::load(directory.path(), Some("tools/mokly.config.json")).unwrap();
     assert_eq!(config.package_roots(), ["packages/ui"]);
 }
 
