@@ -3502,7 +3502,7 @@ and `.context/defaults-engine-round5/merge-latest.log`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
-- [ ] Merge set. User decision 147 (2026-10-21): B. Milestone 15 starts when
+- [x] Merge set. User decision 147 (2026-10-21): B. Milestone 15 starts when
       every entry below is done. Everything else is post-merge work; items
       98 B, 111 C, 115 C, 116 C, and 117 C stay post-merge, as the user
       chose earlier.
@@ -3512,7 +3512,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         They hold work that `main` already has.
         Integration batch 25 merged them as `6a4dcd30`, `bb6928db`, and
         `7a14845e`.
-  - [ ] Passing hosted macOS and Windows CI, in native CI round 5.
+  - [x] Passing hosted macOS and Windows CI, in native CI round 6.
+        Hosted run 39740477948 on `9a8b3d9f` passed every job, Native
+        macOS and Native Windows included.
   - [x] The answered items in progress: 137 B; 84 B, 119 B, 88 A, and 71 B;
         93 D and 94 A; 69 C and 127 A; the 135 B review auto-fixes; and the
         refresh fix of 140 B.
@@ -3528,9 +3530,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Final review fixes:
   - [x] Final review R1b finding 1 (High security): lowercase percent
         escapes bypass token redaction. Merged in batch 29 as `91dabae4`.
-  - [ ] Fix the R1b follow-up (High security, from the fix delegate's own
+  - [x] Fix the R1b follow-up (High security, from the fix delegate's own
         review): `SecretMatcher` derives `Debug` and prints the bearer
-        token. In progress on `rebuild/publish-redaction`.
+        token. Merged in batch 30 as `035b94bb`: its `Debug` output is
+        `SecretMatcher([redacted])`.
   - [ ] Fix final review R1a finding 1 (High security): parent package
         roots can become public files, because `FilePolicy::private` gets
         the raw `../` form. In progress on `rebuild/package-root-policy`,
@@ -3759,6 +3762,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Make the static deployment flow test "a removed step that fails
+        after another deployment keeps the use case loading" deterministic.
+        It failed both integration batch 30 remote gates with a test
+        timeout: its click waited for the full page load that the test
+        holds until after the click. The test now waits for the click after
+        it releases the held load, and keeps every assertion. Fixed in
+        `8c4baf1b`. Evidence: `.context/integration-30/flaky/`.
   - [x] Defaults-engine round 4: apply user decision 96 C for shared physical
         CSS ownership, supplier protection, and exact receiver proof. Retain
         the eight requested acceptance groups. Evidence:
