@@ -7,8 +7,9 @@ The first Rust core release is a breaking 0.x minor release. The
 covers native targets, removed commands, JSON configuration, HTML authoring,
 source comparisons, caches, formats, and the required Mokly Cloud reset.
 
-JSON configuration removes `defineConfig`, `ModuleResolutionConfig`,
-`ReviewConfig`, `StylesheetRule`, `WatchAction`, `WatchConfig`, and `WatchRule`.
+JSON configuration removes `defineConfig`, `componentStylesheets`,
+`ModuleResolutionConfig`, `ReviewConfig`, `StylesheetRule`, `WatchAction`,
+`WatchConfig`, and `WatchRule`.
 The unified authoring model removes `ComponentEntryDefinition`,
 `ComponentProps`, `ComponentRenderContext`, `ComponentVariant`,
 `ComponentVariantDefinition`, `RegisteredComponent`, and `RegistryDefinition`.
