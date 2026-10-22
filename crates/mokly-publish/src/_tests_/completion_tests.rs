@@ -71,6 +71,25 @@ fn optional_url_is_normalized_and_omitted_when_unusable_or_secret_bearing() {
 }
 
 #[test]
+fn completion_debug_does_not_expose_a_secret_bearing_viewer_url() {
+    let token = Token::new("secret/a==".to_owned()).unwrap();
+    let body = serde_json::to_vec(&json!({
+        "viewerUrl": "https://example.com/secret%2fa%3d%3d"
+    }))
+    .unwrap();
+    let completion = Completion::parse(
+        &Response {
+            body: Body::Bytes(body.into()),
+            ..response(201)
+        },
+        &token,
+    )
+    .unwrap();
+    assert!(completion.viewer_url.is_none());
+    assert!(!format!("{completion:?}").contains("secret/a=="));
+}
+
+#[test]
 fn counted_and_progress_copy_has_exact_units_singular_and_plural() {
     for (uploaded, noun) in [(0, "files"), (1, "file"), (2, "files")] {
         let receipt = Receipt {
