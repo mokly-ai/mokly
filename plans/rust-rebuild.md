@@ -3525,6 +3525,18 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         2026-10-21 with 122 A, 141 A, and 142 D, and 145 B, which merged in
         batch 23.
 
+- [ ] Final review fixes:
+  - [x] Final review R1b finding 1 (High security): lowercase percent
+        escapes bypass token redaction. Merged in batch 29 as `91dabae4`.
+  - [ ] Fix the R1b follow-up (High security, from the fix delegate's own
+        review): `SecretMatcher` derives `Debug` and prints the bearer
+        token. In progress on `rebuild/publish-redaction`.
+  - [ ] Fix final review R1a finding 1 (High security): parent package
+        roots can become public files, because `FilePolicy::private` gets
+        the raw `../` form. In progress on `rebuild/package-root-policy`,
+        option B: normalized package roots in `ResolvedConfig` for every
+        consumer.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
@@ -5806,6 +5818,31 @@ does not ask the user before the merge.
       owner by its title, as the design does; C, a noun from the shared
       entry wording, with a design first. Recommended: B.
 
+- [ ] Resolve user item 162 (batch 25 harness note):
+      `npm run benchmark:large -- --scenario build` stops at its 300-second
+      liveness deadline, but the large fixture builds with `--strict --base`
+      take 467 s (HTML) and 921 s (React). Severity Low, effort not recorded.
+      Options: A, raise the build scenario's deadline above the measured
+      build times; B, make the deadline a liveness limit that each progress
+      line resets. Recommended: B.
+
+- [ ] Resolve user item 163 (final review R2): `git diff --check` reports
+      trailing spaces in `packages/viewer/tests/serve_marker_documents.ts`,
+      an exact-bytes Serve HTML fixture in a template string. No gate runs
+      `git diff --check`. Severity Low, effort not recorded. Options: A,
+      remove the six trailing-space lines and update exact-byte assertions
+      if needed; B, add a narrow check exception for this fixture.
+      Recommended: A.
+
+- [ ] Resolve user item 164 (final review R3): six `ci.yml` checkouts keep
+      persisted credentials (the `useblacksmith/checkout` default), so pull
+      request code can read the checkout token from `.git/config`. The same
+      setting is on `main`, the repository is public, and the token has
+      `contents: read` only. Severity Medium, effort not recorded. Options:
+      A, set `persist-credentials: false` on the six checkouts; B, add a
+      policy test that rejects persisted credentials (a new gate, which needs
+      the user's approval). Recommended: A, and B later if approved.
+
 - [ ] Resolve user item 165 (native CI round 6 decision): under decision
       69 C, a base read starts one Git process per file when
       `core.autocrlf` is not false, and Git for Windows sets it to true by
@@ -5814,6 +5851,21 @@ does not ask the user before the merge.
       make checkout an identity, Small; C, convert each batch in one
       `git checkout-index --temp` process with a private index, and fall
       back per file on a failure, Medium. Recommended: C.
+
+- [ ] Resolve user item 166 (native CI round 6): product code can still call
+      `std::fs::canonicalize`, which returns the `\\?\` form on Windows that
+      npm and Node reject: `crates/mokly-git/src/disk.rs:42` and
+      `crates/mokly-sidecar/src/memory_table.rs:67`. Neither reaches Node
+      now. Severity Low, effort not recorded. Options: A, keep the two calls;
+      B, use `dunce::canonicalize` there and forbid `std::fs::canonicalize`
+      in product code with a Clippy `disallowed-methods` rule (a new lint,
+      which needs the user's approval). Recommended: B.
+
+- [ ] Follow-up (Low, not a user item): `CapturedPool` in
+      `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
+      mutex. A test that fails while it holds the lock poisons the mutex, and
+      a later unwrap then aborts the test binary and hides the failure
+      messages. Use the poisoned value.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
