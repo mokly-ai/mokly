@@ -1,0 +1,84 @@
+name: Windows probe
+on:
+  push:
+    branches:
+      - rebuild/native-ci-fixes-6
+  workflow_dispatch: null
+permissions:
+  contents: read
+concurrency:
+  group: windows-probe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  probe:
+    name: Windows probe
+    runs-on: blacksmith-2vcpu-windows-2025
+    timeout-minutes: 75
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: "true"
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22.15.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Build viewer package
+        run: npm run build --workspace @mokly/viewer
+      - name: Build sidecar package
+        run: npm run build --workspace @mokly/mokly
+      - name: Show Git line-ending settings
+        shell: bash
+        run: git config --show-origin --show-scope --get-all core.autocrlf || true
+      - name: Print manager stderr in this probe only
+        shell: bash
+        run: |
+          cat > /tmp/probe-stderr.patch <<'PATCH'
+          diff --git a/crates/mokly-compare/src/process.rs b/crates/mokly-compare/src/process.rs
+          --- a/crates/mokly-compare/src/process.rs
+          +++ b/crates/mokly-compare/src/process.rs
+          @@ -32,6 +32,7 @@ struct OwnedChild {
+           impl Spawner for SystemSpawner {
+               fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
+                   let mut command = command(request)?;
+          +        eprintln!("[windows-probe] spawn {:?} {:?} in {:?}", request.program, request.args, request.directory);
+                   let variables = manager_command::variables(request);
+                   // Start each install from an allowed list of variables, not the
+                   // inherited environment, so no base configuration can read an
+          @@ -116,7 +117,10 @@ impl Child for OwnedChild {
+                   let stderr = join(self.stderr.take());
+                   let _ = self.group.kill();
+                   let stdout = stdout?;
+          -        stderr?;
+          +        let stderr = stderr?;
+          +        if !status.success() {
+          +            eprintln!("[windows-probe] status {:?} stderr:\n{}", status.code(), String::from_utf8_lossy(&stderr));
+          +        }
+                   Ok(Output {
+                       success: status.success(),
+                       status: status.code(),
+          PATCH
+          git apply --verbose /tmp/probe-stderr.patch
+      - name: Compare install tests
+        continue-on-error: true
+        shell: bash
+        run: cargo test -p mokly-compare --test dependencies_tests --test package_roots_tests -- --nocapture
+      - name: Compare and Git unit tests
+        continue-on-error: true
+        shell: bash
+        run: cargo test -p mokly-compare --lib manager_command_tests && cargo test -p mokly-compare --test planning_io_tests && cargo test -p mokly-git --test checkout_bounds_tests
+      - name: Render integration tests
+        continue-on-error: true
+        shell: bash
+        run: cargo test -p mokly-render --test integration_tests -- --nocapture
