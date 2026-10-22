@@ -42,7 +42,7 @@ impl RunCommand {
     /// Format only validated identities and closed suite/shard values.
     pub(super) fn shell_command(&self, fingerprint: &str) -> String {
         let mut command = format!(
-            "node scripts/verification/testbox-suite.mjs --expect {fingerprint} --suite {}",
+            "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect {fingerprint} --suite {}",
             self.suite.as_str()
         );
         if let Some(shard) = self.shard {

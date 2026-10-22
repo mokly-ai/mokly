@@ -85,14 +85,14 @@ fn command_inventory_has_seven_unique_commands_and_five_reports() {
         assert_eq!(
             command.shell_command("sha256:abc"),
             format!(
-                "node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite browser --shard {}/4",
+                "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite browser --shard {}/4",
                 offset + 1
             )
         );
     }
     assert_eq!(
         commands[6].shell_command("sha256:abc"),
-        "node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite static-delivery"
+        "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite static-delivery"
     );
     assert!(!commands[6].report);
     assert!(

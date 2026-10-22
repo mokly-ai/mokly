@@ -3660,6 +3660,21 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `.context/ci-timing/hosted-timing.md`. These medians are the target from
         the fixed assignment. The new weighted assignment needs hosted
         confirmation after integration.
+
+- [x] Fix the remote stale-native defect found in integration batch 23
+      (2026-10-21). The remote command now refreshes every regular copied path
+      that differs from its warmup `HEAD` before the first build. Cargo keeps
+      warmup artifacts for unchanged paths and rebuilds changed crates. The
+      failing temporary-directory test proves a changed Rust source is newer
+      than the warmup output without checking elapsed time. Commit `aa950467`.
+      The warmup workflow is unchanged. Scratch proof run
+      `20261021T201812Z-410273` passed seven commands and five reports at
+      scratch commit `6f92b78a`; its viewer report passed the fresh-native
+      probe. Final-tree run `20261021T204951Z-417056` hit the accepted 300-second
+      React watch guard on browser shard 1. Rerun
+      `20261021T212859Z-422364` passed seven commands and five reports.
+      Evidence: `.context/remote-fresh-native/`.
+
 - [x] Resolve user item 68 (review 11 finding 1, wider fix C): a plan check
       that fails when a ticked TODO has an open child. Three cases so far:
       m7 review 3 finding 4, the deferred probe under a ticked parent at
