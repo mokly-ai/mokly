@@ -4,13 +4,14 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Canonical Bytes
 
-The catalogue index, every entry detail, and every detail inside a comparison
-generation are canonical JSON. Sort object keys recursively by UTF-16 code
-units; preserve authored `steps` and `tags` order. Entry arrays sort by kind
-and path in UTF-16 order, which yields `component`, `document`, `page`,
-`screen`, `use-case`; a parent's variants instead follow it in authored order
-before the next entry. Navigation, the details `Variants` row, and the entry
-children of the public tree use that same sibling order.
+The catalogue index, every entry detail, every detail inside a comparison
+generation, and the generation's `review.json` are canonical JSON. Sort object
+keys recursively by UTF-16 code units; preserve authored `steps` and `tags`
+order. Entry arrays sort by kind and path in UTF-16 order, which yields
+`component`, `document`, `page`, `screen`, `use-case`; a parent's variants
+instead follow it in authored order before the next entry. Navigation, the
+details `Variants` row, and the entry children of the public tree use that
+same sibling order.
 
 Build `removedEntries` from the current entries and the entries of the base
 commit. A removed parent appears at its kind and path position, immediately
@@ -24,6 +25,14 @@ keep authored order. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical
 bytes regardless of enumeration order, time, or output location, so a
 detail's bytes change exactly when its content changes.
+
+A comparison generation's `review.json` is the one compact file: the same key
+order, number spelling, and final LF, without insignificant whitespace. It
+grows with every rule record of every added or changed view, and static hosts
+limit the size of one file, for example to 25 MiB on Cloudflare Pages.
+Two-space indentation was rejected for this file because it is about 40
+percent of a large review result. Every other file keeps two-space
+indentation.
 
 Numbers retain their parsed JSON kind. Integers print as integers. Other
 numbers use `serde_json`'s shortest round-trip form, including integral floats

@@ -11,7 +11,8 @@ React viewer. It has no internal crate dependency and performs no file IO.
 - Own the independent format numbers in `versions`.
 - Own shared output shapes and one pure marker writer for build and publish.
 - Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
-  explicit empty values, omitted absent optionals, and a final LF.
+  explicit empty values, omitted absent optionals, and a final LF. A compact
+  form without whitespace encodes a comparison's review result.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
 - Own review v8, change snapshot v4, removed-preview v3, and their strict readers.
@@ -121,6 +122,8 @@ use serde_json::json;
 
 let bytes = canonical::to_string(&json!({"z": [], "a": {}}))?;
 assert_eq!(bytes, "{\n  \"a\": {},\n  \"z\": []\n}\n");
+let compact = canonical::to_compact_string(&json!({"z": [], "a": {}}))?;
+assert_eq!(compact, "{\"a\":{},\"z\":[]}\n");
 # Ok::<(), mokly_model::error::ModelError>(())
 ```
 

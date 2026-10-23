@@ -49,7 +49,8 @@ identity as required below.
 A comparison generation identifies only its own files: `review.json`, the
 removed entries' details, the snapshots, their resources, and the previews.
 Its directory name is a 64-hex SHA-256 of its inventory. Use generation-relative
-file paths and canonical JSON for metadata. Set only each removed detail's top-level
+file paths and canonical JSON for metadata, with `review.json` in its compact
+form. Set only each removed detail's top-level
 `generation` to 64 zeros for hashing. Hash each file, sort the `[path, sha256]`
 pairs in UTF-16 order, then hash the canonical JSON array. Stamp that result
 into the removed details. This removes the identity's self-reference; one

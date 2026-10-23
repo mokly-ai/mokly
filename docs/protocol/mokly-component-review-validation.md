@@ -101,9 +101,11 @@ order; `diagnostics` keep the order in which the comparison produced them.
 Path sets are sorted and unique. Readers enforce every stated order and reject
 duplicates rather than reordering input.
 
-The result is the canonical JSON of the model crate: keys in lexical order,
-optional fields omitted, required empty arrays explicit, no timestamp,
-absolute path, or transient control result. Generation routes carry
+The result is compact canonical JSON under the
+[serialization contract](./mokly-catalogue-serialization.md#canonical-bytes):
+keys in lexical order, optional fields omitted, required empty arrays
+explicit, no insignificant whitespace, and no timestamp, absolute path, or
+transient control result. Generation routes carry
 `no-store` and `nosniff`, and a generation's files never change.
 
 Every producer emits review result v8, and every reader accepts only version

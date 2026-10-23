@@ -8,6 +8,7 @@ use mokly_compare::projection_index;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::canonical;
 use mokly_model::catalogue::CatalogueModel;
+use mokly_model::error::ModelError;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication, ViewKey};
 use mokly_model::public_detail::EntryDetailV2;
@@ -15,6 +16,7 @@ use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
+use mokly_model::review::ReviewResultV8;
 use mokly_model::shell;
 
 use crate::assets::File;
@@ -226,7 +228,16 @@ impl Projector {
 }
 
 pub(crate) fn encode(value: &impl serde::Serialize) -> Result<File> {
-    match canonical::to_string(value) {
+    json_file(canonical::to_string(value))
+}
+
+/// A comparison's `review.json`: canonical JSON in its compact form.
+pub(crate) fn encode_review(review: &ReviewResultV8) -> Result<File> {
+    json_file(canonical::to_compact_string(review))
+}
+
+fn json_file(text: std::result::Result<String, ModelError>) -> Result<File> {
+    match text {
         Ok(text) => Ok(File {
             bytes: text.into_bytes().into(),
             content_type: "application/json; charset=utf-8".into(),

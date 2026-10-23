@@ -12,7 +12,7 @@ use mokly_model::{namespace, readers, routes};
 use crate::assets::{File, content_type};
 use crate::changes::{Accepted, ChangeCancellation};
 use crate::error::{InternalError, Result, ServerError};
-use crate::snapshot::encode;
+use crate::snapshot::encode_review;
 
 /// Maximum bytes in one immutable comparison generation.
 pub const MAX_BYTES: usize = 64 * 1024 * 1024;
@@ -79,7 +79,7 @@ impl Capturer for SnapshotCapture {
                 affected: Vec::new(),
                 diagnostics: Vec::new(),
             };
-            let file = encode(&review)?;
+            let file = encode_review(&review)?;
             if let Err(source) = readers::review(&String::from_utf8_lossy(&file.bytes)) {
                 return Err(InternalError::Read { source }.into());
             }

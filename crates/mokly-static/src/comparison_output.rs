@@ -36,7 +36,10 @@ pub(crate) fn append(
     ))?;
     projection_removed::workspaces(&mut details);
     let mut inventory = Inventory::default();
-    inventory.insert("review.json".into(), identity::json(&result.review)?.into())?;
+    inventory.insert(
+        "review.json".into(),
+        identity::review(&result.review)?.into(),
+    )?;
     side(
         result.before.as_ref(),
         ReviewSide::Before,

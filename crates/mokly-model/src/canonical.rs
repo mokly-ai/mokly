@@ -34,11 +34,24 @@ pub fn sorted(value: Value) -> Value {
 /// Shape owners sort entries, instances, slots and regions before encoding.
 /// Authored variant, step and tag order is retained.
 pub fn to_string(value: &impl Serialize) -> Result<String> {
+    encode(value, serde_json::to_string_pretty)
+}
+
+/// Encode like [`to_string`] without insignificant whitespace.
+/// Only a comparison's review result uses this form, because it can be the largest file.
+pub fn to_compact_string(value: &impl Serialize) -> Result<String> {
+    encode(value, serde_json::to_string)
+}
+
+fn encode(
+    value: &impl Serialize,
+    write: fn(&Value) -> serde_json::Result<String>,
+) -> Result<String> {
     let value = match serde_json::to_value(value) {
         Ok(value) => value,
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    match serde_json::to_string_pretty(&sorted(value)) {
+    match write(&sorted(value)) {
         Ok(mut text) => {
             text.push('\n');
             Ok(text)
