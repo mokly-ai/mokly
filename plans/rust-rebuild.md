@@ -3540,6 +3540,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         `ResolvedConfig` for every consumer. Merged in batch 31 as
         `e93c80ac`.
 
+- [x] Fix the failing PR preview check, user item 183 (2026-10-23): C,
+      every `base-dependencies` warning stops failing `--strict`. Fixed in
+      integration batch 33 by `421d604d`, with the failing tests first in
+      `d1dd1fd3`. Evidence: `.context/integration-33/`.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
@@ -5964,7 +5969,7 @@ does not ask the user before the merge.
       one, loads in the working tree but fails in the base tree. Severity
       Low, effort not recorded. Options: to be written in the follow-up.
 
-- [ ] Resolve user item 175 (W1 example smoke): the documented mockup check
+- [x] Resolve user item 175 (W1 example smoke): the documented mockup check
       (`npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`)
       fails under `--strict` whenever a branch's root dependency files differ
       from `origin/main`: "Base dependencies differ. HTML comparison uses
@@ -5974,6 +5979,10 @@ does not ask the user before the merge.
       that the check needs `--no-changes` when the root dependency files
       differ; C, stop that warning from failing `--strict`, a spec change.
       Recommended: B.
+  - Settled by user decision 183 (2026-10-23): C. This item is the same
+    class, and its option C is that change: every `base-dependencies`
+    warning stops failing `--strict`. Fixed in integration batch 33 by
+    `421d604d`.
 
 - [ ] Resolve user item 176 (delta review 1):
       `crates/mokly-platform/tests/process_tests.rs:104`: the Windows
@@ -6038,6 +6047,16 @@ does not ask the user before the merge.
       not recorded. Options (estimate): A, remove duplicates on the head side
       too; B, make `ResolvedConfig::package_roots()` return the list without
       duplicates for both sides. Recommended: B.
+
+- [ ] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
+      protocol pages, still start with
+      `Status: In progress under the Rust rebuild plan`, but the
+      documentation policy removes that line when the behaviour is
+      implemented, and no plan TODO removes them. Severity Medium, docs,
+      effort not recorded. Options (estimate): A, sweep every page and remove
+      the line where the behaviour is implemented; B, also add a check that
+      fails on a Status line whose behaviour the plan marks complete (a new
+      gate, which needs the user's approval). Recommended: A.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
