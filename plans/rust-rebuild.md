@@ -3552,6 +3552,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       integration batch 33 by `900be784`. Evidence:
       `.context/integration-33/advisory/`.
 
+- [x] Fix the PR preview file size, user item 187 (2026-10-23): C,
+      `review.json` is written without indentation. Fixed in integration
+      batch 35 by `860ba222`, with the failing tests first in `9b2dfa16`.
+      Evidence: `.context/integration-35/`.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
@@ -6075,10 +6080,35 @@ does not ask the user before the merge.
       `docs/guides/cli/serve.md:66`, `docs/guides/authoring/screens.md:216`,
       `docs/protocol/mokly-upload.md:58`,
       `docs/architecture/build-pipeline.md:114`, and
-      `examples/basic/specs/design/library/README.md:192`. Severity Low,
+      `examples/basic/specs/design/library/README.md:192`. The second delta
+      review found more: `docs/guides/cli/options-and-exit-status.md:51`,
+      `docs/protocol/README.md:19`, `docs/protocol/mokly-export.md:37`,
+      `:129`, and `:235`, `docs/protocol/mokly-runtime.md:91`,
+      `docs/protocol/mokly-package.md:88`,
+      `docs/protocol/mokly-terminal-help.md:90`, and the CLI help in
+      `crates/mokly-cli/src/grammar.rs:97` and `:123` (the `publish` help
+      says "Fail on every build warning before uploading."). Severity Low,
       docs, effort not recorded. Options (estimate): A, name the exception
       or link to Strict Mode in each summary that states the rule; B, keep
       one home for the exception. Recommended: A.
+
+- [ ] Resolve user item 188 (process): the local executor gate on
+      `a59b16f1` took 114 of its 120-minute detach limit (batch 31: 86
+      minutes), so a later local gate can pass the limit. Severity Low,
+      process, effort not recorded. Options (estimate): A, raise the detach
+      limit for local gates in the delegate rules to 3 hours; B, find the
+      slowest suite and reduce its cost. Recommended: B.
+
+- [ ] Resolve user item 189 (product, the wider fix of 187): a comparison
+      `review.json` grows with every rule record of every added or changed
+      view, and each record repeats the full stylesheet path. A static host
+      with a per-file limit, such as Cloudflare Pages with 25 MiB, then
+      rejects a large comparison. Severity Medium, product, effort not
+      recorded. Options (estimate): A, keep the compact file; B, a smaller
+      review format, for example one stylesheet table that rule records
+      reference (a new review format version; Large); C, split
+      `review.json` into files per entry (a new format version; Large).
+      Recommended: B.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
