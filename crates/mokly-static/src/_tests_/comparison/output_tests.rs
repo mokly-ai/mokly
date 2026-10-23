@@ -5,9 +5,12 @@ use std::sync::Arc;
 
 use mokly_compare::projection_index;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
+use mokly_model::canonical;
 use mokly_model::catalogue::EntryContent;
 use mokly_model::material::digest;
+use mokly_model::output::artifact::File;
 use mokly_model::projection;
+use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::readers;
 use mokly_model::review::EntryChangeReason;
 use unimock::{MockFn, Unimock, matching};
@@ -21,8 +24,8 @@ use super::support::{
     artifact, catalogue, generation, generation_clauses, plans, result, result_with,
 };
 
-#[test]
-fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
+/// Append one generation with a removed page and return the index and its files.
+fn small_generation() -> (CatalogueReadModel, Vec<File>) {
     let after = Unimock::new((
         generation_clauses("home", 0, true),
         RenderGenerationMock::generation_key
@@ -47,6 +50,12 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
         &cancellation,
     )
     .unwrap();
+    (index, inventory.into_files())
+}
+
+#[test]
+fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
+    let (index, files) = small_generation();
     assert_eq!(index.removed_entries.len(), 1);
     assert!(
         index
@@ -55,7 +64,6 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
             .unwrap()
             .ends_with("/review.json")
     );
-    let files = inventory.into_files();
     let historical = files
         .iter()
         .find(|file| file.path.ends_with("/entries/old.json"))
@@ -73,6 +81,31 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
         .collect::<Vec<_>>()
         .join("\n");
     insta::assert_snapshot!(snapshot);
+}
+
+#[test]
+fn the_generation_review_is_compact_and_its_removed_detail_keeps_two_space_indentation() {
+    let (_, files) = small_generation();
+    let text = |suffix: &str| {
+        let file = files
+            .iter()
+            .find(|file| file.path.ends_with(suffix))
+            .unwrap();
+        String::from_utf8(file.bytes.to_vec()).unwrap()
+    };
+    assert_eq!(
+        text("/review.json"),
+        format!(
+            "{{\"affected\":[],\"baseCommit\":\"{}\",\"diagnostics\":[],\"entries\":[],\"schemaVersion\":8}}\n",
+            "b".repeat(40)
+        )
+    );
+    let detail = text("/entries/old.json");
+    assert!(detail.starts_with("{\n  \""), "{detail}");
+    assert_eq!(
+        detail,
+        canonical::to_string(&readers::detail(&detail).unwrap()).unwrap()
+    );
 }
 
 #[test]

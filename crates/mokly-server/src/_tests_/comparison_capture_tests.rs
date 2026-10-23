@@ -12,7 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::changes::{ChangeCancellation, ChangeToken};
 use crate::comparison_capture::{Capturer, SnapshotCapture};
-use crate::comparison_support::accepted;
+use crate::comparison_support::{accepted, compact};
 use crate::error::ServerError;
 
 fn graph(bytes: &'static [u8], resource: &'static [u8]) -> Arc<dyn RenderGeneration> {
@@ -70,6 +70,21 @@ fn selection_keeps_side_bytes_and_reads_no_other_entry() {
     assert_eq!(review.entries.len(), 1);
     assert!(review.affected.is_empty());
     assert!(review.diagnostics.is_empty());
+}
+
+#[test]
+fn a_selection_writes_its_review_result_in_the_compact_form() {
+    let accepted = accepted(
+        graph(b"<p>before</p>", b"old-image"),
+        graph(b"<p>after</p>", b"new-image"),
+    );
+    let capture: &dyn Capturer = &SnapshotCapture;
+    let files = capture
+        .capture(&accepted, "sample", false, Arc::new(ChangeToken::default()))
+        .unwrap();
+    let text = std::str::from_utf8(&files["review.json"].bytes).unwrap();
+    assert_eq!(text, compact(&readers::review(text).unwrap()));
+    assert_eq!(text.matches('\n').count(), 1);
 }
 
 #[test]

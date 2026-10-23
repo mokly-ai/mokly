@@ -50,3 +50,7 @@ pub(crate) fn compared<T>(result: mokly_compare::error::Result<T>) -> Result<T> 
         }),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_metadata_tests.rs"]
+mod comparison_metadata_tests;
