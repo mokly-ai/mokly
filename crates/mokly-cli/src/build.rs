@@ -123,12 +123,20 @@ pub enum BuildError {
         /// Original typed catalogue failure.
         source: CatalogueError,
     },
-    /// Strict validation found warnings.
-    #[error("[mokly-cli/build] {} build warning(s) with --strict", .warnings.len())]
+    /// Strict validation counted at least one warning.
+    #[error("[mokly-cli/build] {} build warning(s) with --strict", strict_count(.warnings))]
     Strict {
-        /// Sorted warnings which the reporter prints before the failure.
+        /// Every sorted warning, counted or not, which the reporter prints before the failure.
         warnings: Vec<Warning>,
     },
+}
+
+/// Warnings that fail `--strict`: every producer except `base-dependencies`, which only prints.
+pub(crate) fn strict_count(warnings: &[Warning]) -> usize {
+    warnings
+        .iter()
+        .filter(|warning| warning.code != "base-dependencies")
+        .count()
 }
 
 /// Complete render retained for output assembly without reloading the catalogue.

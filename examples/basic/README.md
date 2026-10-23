@@ -233,7 +233,9 @@ npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.
 ```
 
 `build` renders every view, fails on an error and, with `--strict`, on a
-warning, and writes the site into the `--out` directory. Without `--out` it
+warning, and writes the site into the `--out` directory. A `base-dependencies`
+warning still prints when the branch's dependency files differ from the base,
+but it does not fail `--strict`. Without `--out` it
 writes `mokly-static/` at the repository root. No command writes into the
 example. Never commit an output directory. Serve and `build` compare the
 working tree with the merge base of `HEAD` and `origin/main`; `--base` names

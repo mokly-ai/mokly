@@ -197,7 +197,8 @@ unavailability and version mismatch make Changes unavailable with typed
 diagnostics. A historical runtime timeout makes Changes unavailable with
 `base runtime timed out`. Cancellation and protocol failures fail the build. An internal comparison
 failure aborts with `review-invalid`. Strict mode counts current-build and
-base preparation warnings after comparison; it omits base authoring warnings. Rich output reports
+base preparation warnings after comparison, except `base-dependencies`, which
+only prints; it omits base authoring warnings. Rich output reports
 Changes, moved, and ignored-only counts from the classifier. Plain output
 keeps its phase-free contract. The static writer consumes the retained generations for catalogue output.
 
@@ -252,7 +253,8 @@ private directory and symbolic-link boundaries.
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Structured timings](./src/serve_trace.rs) and the
   [core stage selection](./src/serve_trace_stages.rs).
-- [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
+- [Build service](./src/build.rs), with the strict warning count, and
+  [build presentation](./src/build_output.rs).
 - [Design attribution matrix](./tests/design_attribution_tests.rs).
 - [Design behaviour checks](./tests/design_behaviour_tests.rs) pin four design
   contracts and check fixture failure handling.

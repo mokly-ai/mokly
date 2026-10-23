@@ -168,7 +168,9 @@ and its repository ancestors. Read exact paths on both sides without tree listin
 Without a used dependency directory, read no dependency inputs and emit no warning.
 When these identities differ, emit a configuration-subject `base-dependencies`
 warning, including when both sides render the same installed CSS. Equal
-identities stay silent. Under `--strict`, the warning fails the build:
+identities stay silent. The warning prints in every command, but it does not
+fail a `--strict` build ([strict mode](./mokly-build-warnings.md#strict-mode)).
+Its message is:
 
 ```text
 Base dependencies differ. HTML comparison uses working-tree dependencies.

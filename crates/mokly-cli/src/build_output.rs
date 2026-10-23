@@ -7,7 +7,7 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_graph::error::GraphError;
 use mokly_model::axes::EntryKind;
 
-use crate::build::{BuildError, BuildSummary};
+use crate::build::{BuildError, BuildSummary, strict_count};
 use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::pre_installation;
@@ -161,7 +161,7 @@ pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redac
         ),
         BuildError::Rendering { source, .. } => render_diagnostics(style, source, redactor),
         BuildError::Strict { warnings: records } => {
-            let count = records.len();
+            let count = strict_count(records);
             style.error(
                 Code::BuildInvalid,
                 &format!(

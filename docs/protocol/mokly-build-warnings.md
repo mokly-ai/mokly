@@ -18,6 +18,7 @@ terminal rules are in the
 
 ```ts
 type BuildDiagnosticCode =
+  | "base-conversion"
   | "base-dependencies"
   | "duplicate-component-stylesheet"
   | "html-foster-parented"
@@ -75,6 +76,7 @@ order, the operating system, or the absolute checkout path.
 
 | Code                             | Producer                                                                                                                                                                                                                                            |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base-conversion`                | A base resource that could not complete checkout conversion ([comparison](./mokly-comparison.md#resources))                                                                                                                                         |
 | `base-dependencies`              | A base-side install that fell back to the working tree ([comparison](./mokly-comparison.md#sides)), or changed governing inputs for dependency directories used by the HTML head ([HTML package styles](./mokly-comparison.md#html-package-styles)) |
 | `duplicate-component-stylesheet` | A component that declares one real file twice ([component stylesheets](./mokly-component-stylesheets.md))                                                                                                                                           |
 | `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                               |
@@ -117,9 +119,11 @@ Each command reports the diagnostics of exactly one build or attempt:
 | `serve`   | Each attempt, once, under [Watched Serve Generations](#watched-serve-generations) |
 
 Base catalogue and composition warnings are not current-build warnings.
-Report and count only base preparation warnings such as `base-dependencies`.
-Collect current-build and base preparation warnings before applying `--strict`,
-so an earlier head warning cannot hide a preparation warning.
+Report only base preparation warnings, such as `base-conversion` and
+`base-dependencies`. [Strict mode](#strict-mode) counts `base-conversion` but
+not `base-dependencies`. Collect current-build and base preparation warnings
+before applying `--strict`, so an earlier head warning cannot hide a
+preparation warning.
 
 Publish applies the [checkout rules](./mokly-upload.md) before it builds. A
 checkout refusal can prevent the build; diagnostics already produced still
@@ -190,22 +194,30 @@ cancellation has not been requested. Cancelled attempts emit no warnings.
 
 `--strict` is accepted by `build` and `publish` and refused by `serve` with
 `cli-invalid` and the message `--strict belongs to build or publish`. With
-`--strict`, the command counts every producer, still prints every warning,
-then fails with `build-invalid` and the message
-`1 build warning with --strict` for one warning or
-`<n> build warnings with --strict` otherwise. The failure is the next action
-after reporting: `build` fails before it writes its output directory, and
-`publish` before it uploads anything, so the existing output directory and the
-published catalogue stay unchanged. Without warnings, `--strict` changes
-nothing. A validation-only run is `build --strict` into a temporary
-directory.
+`--strict`, the command counts every producer except `base-dependencies`,
+still prints every warning, and fails when it counted a warning. The failure
+has `build-invalid` and the message `1 build warning with --strict` for one
+counted warning or `<n> build warnings with --strict` otherwise. The failure
+is the next action after reporting: `build` fails before it writes its output
+directory, and `publish` before it uploads anything, so the existing output
+directory and the published catalogue stay unchanged. Without counted
+warnings, `--strict` changes nothing, so a build whose only warnings are
+`base-dependencies` exits `0`. A validation-only run is `build --strict` into
+a temporary directory.
+
+`base-dependencies` describes how the comparison prepared the base, not a
+fault in the catalogue, so `--strict` does not count it; counting it would
+make a valid catalogue fail a strict build because of its base preparation. A
+strict build therefore also passes after a failed base installation, and its
+comparison can then hide changes that packages cause.
 
 ## Verification
 
 Behaviour tests cover record validation and sorting, both reporter formats,
 option acceptance per command, a warning-tier structure that renders
 identical bytes with one sorted diagnostic, the plain stderr line with
-unchanged stdout and exit `0`, the strict failure before any write, and one
-report per attempt in Serve, including first on-demand and background
-warnings, with no repeats for an already reported view. Tests also cover
-temporary renders, failed-attempt repair, and cancelled or superseded work.
+unchanged stdout and exit `0`, the strict failure before any write, the strict
+count without `base-dependencies`, and one report per attempt in Serve,
+including first on-demand and background warnings, with no repeats for an
+already reported view. Tests also cover temporary renders, failed-attempt
+repair, and cancelled or superseded work.

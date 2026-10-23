@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::build::{BuildError, BuildSummary, CatalogueBuild, PreparedBuild};
+use crate::build::{BuildError, BuildSummary, CatalogueBuild, PreparedBuild, strict_count};
 use crate::grammar::Build;
 
 impl CatalogueBuild {
@@ -74,7 +74,7 @@ impl CatalogueBuild {
         let changes = self.classify_changes(&config, options, generation.clone(), &mut warnings)?;
         self.checkpoint()?;
         mokly_catalogue::diagnostic::normalize_warnings(&mut warnings);
-        if options.strict && !warnings.is_empty() {
+        if options.strict && strict_count(&warnings) > 0 {
             return Err(BuildError::Strict { warnings });
         }
         let mut counts = BTreeMap::new();

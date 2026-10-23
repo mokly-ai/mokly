@@ -217,8 +217,8 @@ counted one only when Complete returns `200`.
 The [build warnings contract](./mokly-build-warnings.md) owns warning order,
 the exact stderr formats, and `--strict`. `build` and `publish` print their
 warnings after rendering and before the summary; with `--strict` they fail
-with `build-invalid` after printing them and before any file is written or
-uploaded. `serve` refuses `--strict` with `cli-invalid`.
+on counted warnings with `build-invalid` after printing them and before any
+file is written or uploaded. `serve` refuses `--strict` with `cli-invalid`.
 
 ## Plain Compatibility And Errors
 

@@ -58,7 +58,9 @@ folder. A cleanup failure names the remaining reservation or backup.
 ## Warnings and exit status
 
 Warnings appear on standard error. Without `--strict`, warnings do not change
-the exit status. With it, the build fails before installation. Success exits
+the exit status. With it, the build fails before installation. A base
+dependencies warning is the exception: it says that Changes used working-tree
+dependencies for the base, and it never fails the build. Success exits
 `0` and prints the output directory, file count, and deployment instruction.
 A failure or cancellation exits `1` with its error category.
 
