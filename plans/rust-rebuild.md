@@ -3545,6 +3545,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       integration batch 33 by `421d604d`, with the failing tests first in
       `d1dd1fd3`. Evidence: `.context/integration-33/`.
 
+- [x] Patch `ctutils` for RUSTSEC-2026-0385 (2026-10-23), the hub's call
+      under user decision 146 C, because the advisory failed the Rust
+      audit: `ctutils` 0.4.3 to 0.4.4 in `Cargo.lock`, with no audit
+      exception. The pinned `cargo-audit` lock has no `ctutils`. Fixed in
+      integration batch 33 by `900be784`. Evidence:
+      `.context/integration-33/advisory/`.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
@@ -6057,6 +6064,21 @@ does not ask the user before the merge.
       the line where the behaviour is implemented; B, also add a check that
       fails on a Status line whose behaviour the plan marks complete (a new
       gate, which needs the user's approval). Recommended: A.
+
+- [ ] Resolve user item 186 (docs): short summaries still say that
+      `--strict` makes warnings fail, but `base-dependencies` no longer
+      counts (183 C). The exception is stated once, in
+      `mokly-build-warnings.md` Strict Mode. The summaries:
+      `README.md:155` and `:161`, `docs/guides/start/build.md:52`,
+      `docs/guides/cli/check.md:16`, `docs/guides/cli/build.md:26`,
+      `docs/guides/cli/publish.md:33` and `:79`,
+      `docs/guides/cli/serve.md:66`, `docs/guides/authoring/screens.md:216`,
+      `docs/protocol/mokly-upload.md:58`,
+      `docs/architecture/build-pipeline.md:114`, and
+      `examples/basic/specs/design/library/README.md:192`. Severity Low,
+      docs, effort not recorded. Options (estimate): A, name the exception
+      or link to Strict Mode in each summary that states the rule; B, keep
+      one home for the exception. Recommended: A.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
