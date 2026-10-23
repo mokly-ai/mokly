@@ -1,187 +1,164 @@
 # Package And Consumer Boundary
 
-## Delivery Status
-
-Removal of baseline compatibility below is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-CSS rule attribution and ignored stylesheet owner records are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-Other behavior below remains implemented.
-
-Public catalogue v6 and source-path-free comparison were planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 7 and 4. Current packages emit manifest v10,
-catalogue v6 and comparison v7 without source-path evidence.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Rule
 
-Mokly owns the mechanics shared by any React mockup catalogue. A consumer
-owns everything that gives a screen application meaning or appearance. The
-boundary is enforced through peer dependencies, a renderer hook, declarative
-paths, and synthetic tests.
+Mokly owns the mechanics shared by any mockup catalogue. A consumer owns
+everything that gives a screen application meaning or appearance. The boundary
+is enforced through the package layout, a renderer module, declarative paths,
+and synthetic tests.
 
-| Mokly owns                                            | Consumer owns                                 | Configured at the boundary               |
-| ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
-| Registry definitions and validation                   | Product screens and fixture data              | Source and output roots                  |
-| esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
-| Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
-| Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
-| Generated-tree replacement and check                  | Product CSS/fonts/images                      | Consumer renderer                        |
-| Safe paths and catalogue navigation                   | Product route semantics                       | Additional watch inputs                  |
-| Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
-| Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
+| Mokly owns                                                  | Consumer owns                                    | Configured at the boundary        |
+| ----------------------------------------------------------- | ------------------------------------------------ | --------------------------------- |
+| Discovery, paths, the catalogue model, and validation       | Product screens, components, and fixture data    | Roots and file globs              |
+| HTML templating: substitution, slots, `mokly-if`, viewports | Product component library                        | Module resolution for the sidecar |
+| Sidecar bundling and React, page, and Storybook renders     | Theme, tokens, providers, and the renderer       | Renderer module and stylesheets   |
+| Stylesheet bundling and PostCSS orchestration               | Imported CSS, fonts, images, and PostCSS plugins | `postcss` module                  |
+| The render cache and the static output transaction          | Product CSS, fonts, and images                   | Watch inputs                      |
+| Safe paths and catalogue navigation                         | Product route semantics                          | Declared `path` and `movedFrom`   |
+| Git comparison and Review-ignore rules                      | Comparison policy                                | The comparison base               |
+| The static build and publication                            | Hosting, credentials, and deployment             | `--out` and the receiver          |
 
 ## Dependency Direction
 
-`@mokly/mokly` has React and React DOM peer dependencies. It does not depend on
-React Native, React Native Web, `@firna/ui`, consumer applications, or their
-workspace layouts. At build time, React imports are resolved from the consumer's
-config file and every React-bearing source is bundled in one graph.
+`@mokly/mokly` holds the Node shim that resolves the `mokly` binary, the
+sidecar, and the authoring API. It lists the five `@mokly/native-<target>`
+packages as exact optional dependencies and has React and React DOM peer
+dependencies for React authoring only. It does not depend on React Native,
+React Native Web, consumer applications, or their workspace layouts. The
+sidecar resolves React from the side's configuration directory through its module resolution settings and bundles every
+JavaScript authoring input into one graph, so component trees use one React
+runtime.
 
-The renderer is synchronous and returns a complete HTML document, either as a
-string or as `RenderResult` with optional validated document-style/non-CSS
-resource ownership. Stylesheet owner records are ignored with a warning. This is the
-only place an app should install theme providers, collect React Native Web's
-`AppRegistry` styles, inject product fonts, or establish other render context.
-Those actions depend on app-owned packages and policy, so moving them into the
-library would make Mokly app-specific and risk two React runtimes.
-
-Module-resolution configuration is likewise consumer-owned: aliases,
-conditions, package fields, extensions, loaders, and package roots describe the
-consumer component tree. Mokly validates and applies them without supplying
-React Native Web or application-specific defaults.
-The [imported-CSS contract](../protocol/mokly-imported-styles.md) reserves
-`.css`/`.module.css` import handling and `mokly-generated/` ownership for
-Mokly. Consumer files, PostCSS plugins and their dependency/version choices
-remain consumer-owned; Mokly owns their private inventory and byte-safe
-delivery rather than shipping product CSS in its npm package.
+The renderer module is the only place an app installs theme providers,
+collects React Native Web styles, injects product fonts, or establishes other
+render context. Those actions depend on app-owned packages and policy, so
+moving them into Mokly would make it app-specific. Module resolution is
+likewise consumer-owned: aliases, conditions, package fields, extensions, and
+package roots describe the consumer component tree, and Mokly applies them
+without application-specific defaults. The
+[imported CSS contract](../protocol/mokly-imported-styles.md) reserves `.css`
+and `.module.css` import handling for Mokly; consumer files, PostCSS plugins,
+and their versions stay consumer-owned.
 
 ## Registered Components
 
-Consumers declare component props, saved variants, slots, controls and owned
-resources through the public registration API. Mokly records actual render
-invocations in the same React graph; import lists do not imply usage. The package
-owns validation, attribution, variant pages and inspection. During local Serve,
-a bounded worker reevaluates the retained successful consumer bundle and renders
-controlled edits through its renderer. Preview documents/resources stay immutable
-and in memory; controls do not change source, committed fragments or Changes.
-Static export carries saved variants and inspection without the local capability.
-See the [component contract](../protocol/mokly-components.md).
+HTML components and `defineComponent` definitions share one registry under the
+[entry props contract](../protocol/mokly-entry-props.md): a prop schema in the
+JSON Schema profile, the component's own props, saved variants, slots, and
+derived controls. Mokly records usage from the renders themselves; import lists
+do not imply usage. During Serve, a live control re-renders the component
+through the sidecar with edited props; preview documents stay in memory, and
+controls change neither sources nor Changes. The static output carries saved
+variants and inspection without the live capability. See the
+[component contract](../protocol/mokly-components.md).
 
 ## Viewer Package Boundary
 
-The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`;
-root `@mokly/mokly` depends on its exact coordinated release version, without
-`workspace:` or filesystem dependency specifiers. The shell component tree
-and CSS, its hydration entries, navigation, frame adapters, inspector and
-public catalogue/instance readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
-Serve/watch, export/upload and private control/evidence transports. The viewer
-never imports the CLI, Node built-ins, Git or consumer application code. Its `./server` entry
-is explicitly Node-only SSR and is excluded from the browser entry graph.
+The repository uses npm workspaces with `packages/mokly` as
+`@mokly/mokly` and `packages/viewer` as `@mokly/viewer`;
+`@mokly/mokly` depends on its exact coordinated release version. The viewer
+owns the shell component tree and CSS, the browser entry, navigation, frame
+adapters, the inspector, and the readers of the catalogue index and entry
+detail. Shared shapes come from the generated types of the Rust model crate.
+The CLI keeps configuration, rendering, comparison, Serve, the static build,
+publish, and the private control and live transports. The viewer never imports
+the CLI, Node built-ins, Git, or consumer application code, and it renders only
+in the browser under the
+[shell delivery contract](../protocol/mokly-shell-delivery.md).
 
-The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v6 projection](../protocol/mokly-catalogue.md), the
-[React/SSR viewer API](../protocol/mokly-viewer.md) and
-[FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
-documented public artifacts, without private manifest access, deep imports or
-cloud-specific flags. The viewer owns one shell component tree, rendered on the
-server and hydrated in the browser in every delivery mode; React slots are
-ordinary children the host owns. Serve and export load the viewer's standalone
-hydration bundle, which includes React; React hosts hydrate with their own
-React. Consumer code never enters the browser. First-party Serve/export use
-the same-origin adapter and no slots, preserving every existing local pixel
-and interaction. Private live integrations stay in the CLI host and reach the
-tree through a typed capability context; explicit cross-origin hosts use the
-bounded inspector protocol, whose in-frame script stays React-free.
-React slots and marker content remain host-owned. The viewer may position that
-content from authenticated instance geometry, but it owns no comment model,
-tenant, auth or persistence and exposes no raw geometry API. Multi-instance
-highlighting and marker placement compose the same public frame adapter boundary.
+The public boundary consists of
+[scoped instances](../protocol/mokly-instances.md), the
+[catalogue read model](../protocol/mokly-catalogue.md), the
+[viewer API](../protocol/mokly-viewer.md), and the
+[frame adapter](../protocol/mokly-frame-adapter.md). Hosts consume packages
+and documented public artifacts, without private access, deep imports, or
+cloud-specific flags. Consumer code never enters the browser. Serve and the
+static output load the viewer's standalone bundle, which includes React; React
+hosts render the viewer with their own React. React slots and marker content
+stay host-owned; the viewer positions that content from instance geometry but
+owns no comment model, tenant, authentication, or persistence. Pack the viewer
+first and install the CLI, its host platform package, and the viewer archives
+in clean consumers; release automation
+publishes the platform packages, then the viewer, then the CLI.
 
-Public catalogue and inspector files join existing export/upload inventories
-without schema changes. The manifest/source inventory stays private. Build,
-package and packed-consumer checks must cover both tarballs and their dependency
-direction. Pack the viewer first and install both archives in clean consumers.
-The documented root, `./server`, `./runtime`, `./data`, `./browser` and stylesheet
-exports replace source deep imports. The browser entry starts standalone
-hydration as a package side effect. Coordinated release automation publishes
-the viewer before the CLI that depends on it.
+## Rust Core Boundary
+
+The [Rust core architecture](./rust-core.md) describes the backend: a Rust
+binary owns the process, the render graph, HTML parsing and rendering,
+comparison, the server, the static build, and publish. JavaScript runs only in
+the [render sidecar](../protocol/mokly-sidecar.md): esbuild bundling, React,
+page, and Storybook renders, and consumer PostCSS. Rendered HTML, collected
+styles, definitions, and JSON frames cross that boundary. The Rust model crate
+owns every shared shape and generates the TypeScript types that the viewer and
+the sidecar consume.
 
 ## Complete-Document Boundary
 
-Consumers register complete HTML with `definePage`; a Markdown file matched by a
-configured root defines a [document](../protocol/mokly-documents.md), which
-Mokly renders while its source remains protected and watched. A page callback
-may reuse an existing render helper; consumer policy owns source allowlists and
-document-stage rules. The configured renderer supplies screen and component
-views before link validation; pages keep their own complete-document callbacks.
-Current and comparison-base manifests both require v10 under the
-[baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
-[Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
-[Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.
+A `.page.html` file or a `definePage` callback supplies a complete HTML
+document; a Markdown file matched by a root defines a
+[document](../protocol/mokly-documents.md). Mokly composes a page or document
+in Rust, or runs the page callback through `renderPage`, while the source
+stays protected and watched. The configured renderer wraps screen and
+component views; pages keep their own documents. [Paths and roots](../protocol/mokly-paths.md)
+determine identity for every kind, and [move detection](../protocol/mokly-moves.md)
+pairs entries across commits.
 
 ## Runtime Boundary
 
-Browse serves only the configured mockups root and rejects protected authoring inputs, traversal, and symlink escapes. Watch targets come from resolved config and the complete source inventory; package-owned dependency/build/test/output trees are
-pruned before broad consumer rules, while explicit source modules and
-referenced stylesheets retain their required action. Generated output under
-`mokly-generated/` is pruned by path, without parsing its plain marker; referenced
-authored closure files remain watched. A child closes
-on either an orderly message/signal or loss of its parent IPC channel, and
-supervisor shutdown waits for confirmed exit while escalating from IPC to
-SIGTERM and SIGKILL. On-demand comparisons read the base
-tree through bounded Git object batches, follows linked public resources
-transitively, rejects non-portable base resource URLs, and never checks the base
-out over the worktree. No separate comparison report pages or comparison
-navigation payload are generated. The approved public catalogue is the additive
-browsing projection described above.
-The comparison server redirects metadata requests to immutable generation URLs and retains
-superseded directories for a bounded idle window. Responses disable HTTP
-caching, while the versioned paths keep a comparison's panes and assets
-on the same generation during regeneration. In-flight invalidations coalesce
-behind the active generation, and only a marker-owned current output may enter
-the server's temporary archive lifecycle. Archive roots are explicit
-changed-path exclusions rather than consumer-owned ignore policy, and shutdown
-drains generation work before removing them.
+Serve serves rendered documents from the render cache and authored assets
+from the roots. It rejects protected authoring inputs, traversal, and symlink
+escapes. Watch targets come from the resolved configuration and the complete
+source inventory; dependency, build, and output trees are pruned before broad
+consumer rules, while explicit source modules and referenced stylesheets keep
+their required action. The sidecar pool is recycled by render count and
+resident size and drained on shutdown.
 
-Browse promotes only explicit path-addressed
-catalogue links from manifest-owned generated fragments and complete pages
-whose route and bytes match the accepted manifest and compilation into outer
-Browse routes. Other adapted authored HTML loses reserved-looking metadata and
-is never trusted. A generated document with an activatable catalogue link
-rejects `<base href>` so its relative fallback cannot resolve differently from
-the portable bytes Browse authenticates. Browse uses same-origin inspection
-for parent enhancement but no top-navigation capability, so direct and nested
-consumer contexts remain unable to replace the shell. Portable generated files
-keep relative artifact fallbacks, while ordinary product, asset, and
-external links remain consumer-owned. The
-[catalogue navigation protocol](../protocol/mokly-navigation.md) defines the
-link marker, sandbox boundary, and active-tree invariant.
+Changes renders the base commit from Git without checking it out over the
+working tree: HTML sources come from blobs, and JavaScript sources are
+extracted into the cache outside the repository with their dependencies
+resolved under the dependency tiers. Comparison generations are immutable and
+addressed by hash, JSON routes disable HTTP caching, and shutdown drains
+generation work before it removes anything.
 
-## Export Boundary
+Browse promotes only explicit path-addressed catalogue links from composed
+documents whose route matches the catalogue. Other authored HTML loses
+reserved-looking metadata and is never trusted; a document with an activatable
+catalogue link rejects `<base href>`. Browse uses same-origin inspection for
+parent enhancement and no top-navigation capability, so consumer contexts
+cannot replace the shell. The
+[navigation contract](../protocol/mokly-navigation.md) defines the link
+marker, the sandbox boundary, and the active-tree invariant.
 
-`src/export` orchestrates existing Build, Browse rendering, and comparison
-boundaries. Its only new consumer interface is the CLI: no deep imports or
-hosting SDK is required. Typed shell-owned delivery metadata supplies each
-page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
-owns file selection, input consistency, exclusive output reservation,
-replacement, and rollback; `scripts/preview` captures one already-built Browse
-snapshot with optional Changes and adds Pages URL/header metadata and
-current schema-3 export ownership. Both paths share artifact validation, deployment
-identity, and the output transaction, and reuse the same shell renderer and
-comparison engine. Watch ignores inventory-listed export files while traversing
-output directories for new authored files.
+## Static Build Boundary
 
-The viewer is a separate public rendering API; it does not expose
-the export engine as a JavaScript API or take over deployment/authentication.
+`build` writes the complete static catalogue into the directory `--out` names:
+the shell stub per route, the index, one detail per entry, every document, the
+comparison generation, the viewer bundle, styles, and fonts. It owns file
+selection, exclusive output reservation, replacement, and rollback under the
+[static build contract](../protocol/mokly-export.md), and it stamps the
+deployment identity of the
+[static delivery contract](../protocol/mokly-export-delivery.md). `publish`
+builds into its own directory outside the repository and uploads through the
+[upload exchange](../protocol/mokly-upload-exchange.md). The viewer is a
+separate rendering API; it exposes no build engine and takes over no
+deployment or authentication.
 
 ## Related Docs
 
-- [Build pipeline](./build-pipeline.md)
+- [Render pipeline](./build-pipeline.md)
+- [Rust core architecture](./rust-core.md)
 - [Package and authoring protocol](../protocol/mokly-package.md)
 - [Runtime protocol](../protocol/mokly-runtime.md)
-- [Static export contract](../protocol/mokly-export.md)
-- [Static delivery contract](../protocol/mokly-export-delivery.md)
+- [Static build contract](../protocol/mokly-export.md)
 - [Viewer API](../protocol/mokly-viewer.md)
-- [Public catalogue](../protocol/mokly-catalogue.md)
+- [Public catalogue read model](../protocol/mokly-catalogue.md)
+
+## Private Workspace Links
+
+The private root registers `packages/mokly` and `packages/viewer` as npm
+workspaces. It links the five native platform packages through optional
+`file:packages/native-{target}` dependencies. The public CLI package uses exact
+registry versions. Native package manifests retain their `os`, `cpu`, and
+Linux `libc` fields in development and publication.

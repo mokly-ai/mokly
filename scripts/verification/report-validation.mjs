@@ -1,17 +1,26 @@
+import {
+  validateUniqueStrings,
+  validateShard,
+  validateRuntime,
+  requireSameValues,
+  requireSameTestIds,
+  requireSubset,
+  requireDisjointComplete,
+} from "./report-values.mjs";
 import { validateBrowserShardBalance } from "./shard-balance.mjs";
 
 export function validateCompletedReport(report, options = {}) {
   if (report?.schemaVersion !== 1) throw new Error("invalid report schema");
-  if (!["unit", "browser", "hydration"].includes(report.suite))
+  if (!["viewer", "browser"].includes(report.suite))
     throw new Error("invalid report suite");
   for (const field of ["commit", "runtime", "nodeVersion"])
     if (typeof report[field] !== "string" || report[field].length === 0)
       throw new Error(`report is missing ${field}`);
   validateRuntime(report.runtime, report.nodeVersion);
   validateShard(report.shard);
-  const isPlaywright = ["browser", "hydration"].includes(report.suite);
-  if (report.suite === "hydration" && report.shard !== null)
-    throw new Error("hydration report must be unsharded");
+  const isPlaywright = report.suite === "browser";
+  if (report.suite === "viewer" && report.shard !== null)
+    throw new Error("viewer report must be unsharded");
   if (isPlaywright)
     validateUniqueStrings(
       report.playwrightFiles,
@@ -29,7 +38,7 @@ export function validateCompletedReport(report, options = {}) {
   );
   requireSubset(report.assignedFiles, report.fullFiles, "assigned files");
   if (isPlaywright)
-    requireSubset(
+    requireSameValues(
       report.fullFiles,
       report.playwrightFiles,
       "suite Playwright files",
@@ -50,7 +59,7 @@ export function validateCompletedReport(report, options = {}) {
     throw new Error("report has an invalid skipped count");
   if (
     report.skipped !== 0 &&
-    !(report.suite === "unit" && options.allowUnitSkips === true)
+    !(report.suite === "viewer" && options.allowUnitSkips === true)
   )
     throw new Error("report contains skipped tests");
   if (report.cancelled !== 0)
@@ -65,7 +74,7 @@ export function validateCompletedReport(report, options = {}) {
     report.outcome.signal !== null
   )
     throw new Error("report process outcome is not a successful zero exit");
-  if (report.suite === "unit") validateUnitFailures(report);
+  if (report.suite === "viewer") validateUnitFailures(report);
   if (isPlaywright) validateBrowserTests(report);
 }
 
@@ -144,32 +153,9 @@ export function validateUnshardedReport(report, expected) {
   if (report.shard !== null) throw new Error("report must be unsharded");
 }
 
-export function validatePlaywrightPartition(browserReports, hydrationReport) {
-  const first = browserReports[0];
-  if (!first) throw new Error("missing browser shard reports");
-  const reports = [...browserReports, hydrationReport];
-  for (const report of reports) {
-    validateUniqueStrings(
-      report?.playwrightFiles,
-      "complete Playwright file inventory",
-      false,
-    );
-    requireSameValues(
-      first.playwrightFiles,
-      report.playwrightFiles,
-      "complete Playwright file inventories",
-    );
-  }
-  requireDisjointComplete(
-    [first.fullFiles, hydrationReport.fullFiles],
-    first.playwrightFiles,
-    "browser and hydration file inventories",
-  );
-}
-
 function validateUnitFailures(report) {
   if (!Array.isArray(report.failures) || report.failures.length > 0)
-    throw new Error("unit report contains test failures");
+    throw new Error("viewer report contains test failures");
 }
 
 function validateBrowserTests(report) {
@@ -226,69 +212,4 @@ function validateTestEntries(entries, label, allowEmpty) {
     for (const field of ["project", "specFile", "file", "title"])
       if (typeof entry[field] !== "string" || entry[field].length === 0)
         throw new Error(`${label} has an invalid ${field}`);
-}
-
-function validateUniqueStrings(values, label, allowEmpty) {
-  if (!Array.isArray(values) || (!allowEmpty && values.length === 0))
-    throw new Error(`${label} is empty or missing`);
-  if (values.some((value) => typeof value !== "string" || value.length === 0))
-    throw new Error(`${label} has an invalid value`);
-  if (new Set(values).size !== values.length)
-    throw new Error(`${label} contains duplicate values`);
-}
-
-function validateShard(shard) {
-  if (shard === null) return;
-  if (
-    !Number.isSafeInteger(shard?.index) ||
-    !Number.isSafeInteger(shard?.total) ||
-    shard.index < 1 ||
-    shard.total < 1 ||
-    shard.index > shard.total
-  )
-    throw new Error("invalid report shard");
-}
-
-function validateRuntime(runtime, nodeVersion) {
-  const match = /^node-(\d+)(?:\.(\d+)\.(\d+))?$/.exec(runtime);
-  const version = /^(\d+)\.(\d+)\.(\d+)$/.exec(nodeVersion);
-  if (!match || !version || match[1] !== version[1])
-    throw new Error(`runtime ${runtime} does not match Node ${nodeVersion}`);
-  if (
-    match[2] !== undefined &&
-    (match[2] !== version[2] || match[3] !== version[3])
-  )
-    throw new Error(`runtime ${runtime} does not match Node ${nodeVersion}`);
-}
-
-function requireSameValues(left, right, label) {
-  if (sorted(left).join("\n") !== sorted(right).join("\n"))
-    throw new Error(`${label} do not match`);
-}
-
-function requireSameTestIds(left, right, label) {
-  requireSameValues(
-    left.map((entry) => entry.id),
-    right.map((entry) => entry.id),
-    label,
-  );
-}
-
-function requireSubset(values, complete, label) {
-  const inventory = new Set(complete);
-  if (values.some((value) => !inventory.has(value)))
-    throw new Error(`${label} contain an unexpected value`);
-}
-
-function requireDisjointComplete(groups, complete, label) {
-  for (const group of groups)
-    if (group.length === 0) throw new Error(`${label} contain an empty shard`);
-  const union = groups.flat();
-  if (new Set(union).size !== union.length)
-    throw new Error(`${label} contain duplicate values`);
-  requireSameValues(union, complete, `${label} union`);
-}
-
-function sorted(values) {
-  return [...values].sort((left, right) => left.localeCompare(right));
 }

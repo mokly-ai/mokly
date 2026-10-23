@@ -1,4 +1,7 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const CSS_VIEWS_LAYOUT = `
 .mbk-main {
   display: flex;
@@ -78,7 +81,7 @@ button.mbk-crumb-link {
   letter-spacing: -0.01em;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-title-row {
     flex-wrap: wrap;
     gap: 6px;
@@ -142,10 +145,12 @@ button.mbk-crumb-link {
   box-shadow: var(--chrome-shadow-soft);
 }
 
+/* Frames centre only while they fit: plain centring would push the start of a
+   row wider than the stage left of the scroll origin, out of reach. */
 .mbk-stage {
   flex: 1;
   display: flex;
-  justify-content: center;
+  justify-content: safe center;
   align-items: flex-start;
   gap: 40px;
   min-height: 0;

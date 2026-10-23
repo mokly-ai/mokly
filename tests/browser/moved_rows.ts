@@ -1,11 +1,59 @@
-/** Shared locators and checks for the moved-changes browser cases. */
+/** Shared locators and checks for the moved-entry viewer cases. */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
-import { expectedConsoleNotice } from "./console_notices.js";
+import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
-export const INVOICE = "account/billing/invoice";
-export const ACTION = "ui/action";
+import { embeddedHost, routedHost, type EntryHost } from "./entry_hosts.js";
+
+/** How one host runs the moved cases. */
+export interface MovedHost extends EntryHost {
+  /** Serve captures comparisons on demand; a copy publishes them. */
+  comparisons: "on demand" | "published";
+  /**
+   * Serve and a static build open an Affected link in Side by side; a React
+   * host opens it in Current, where the band offers the same comparison.
+   */
+  affectedLinks: "current" | "side by side";
+  /** The window widths of the Moved-row case. */
+  widths: readonly number[];
+}
+
+/** The private Serve fixture. */
+export const serveMovedHost: MovedHost = {
+  ...routedHost,
+  comparisons: "on demand",
+  affectedLinks: "side by side",
+  widths: [390, 1280],
+};
+
+/** The branch copy. */
+export const copyMovedHost: MovedHost = {
+  ...routedHost,
+  comparisons: "published",
+  affectedLinks: "side by side",
+  widths: [390, 1280],
+};
+
+/**
+ * An embedded viewer over the branch copy through one frame adapter. Its
+ * host page opens an entry by query, keeps its own address, and gives the
+ * viewer the window width. The Moved-row case runs this host at one width,
+ * as the old suite did.
+ */
+export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
+  return {
+    ...embeddedHost(adapter),
+    comparisons: "published",
+    affectedLinks: "current",
+    widths: [1280],
+  };
+}
+
+export const INVOICE = movedFixturePaths.movedInvoice;
+export const ACTION = movedFixturePaths.movedAction;
+/** The base-side folder of the moved shapes, which keeps only removed rows. */
+export const PREVIOUS = "branch/moves/previous";
 
 /** The catalogue row for one entry. */
 export function row(page: Page, entry: string) {
@@ -19,23 +67,6 @@ export function dot(page: Page, entry: string): Promise<string> {
   );
 }
 
-/**
- * Console errors other than the viewer's expected sandbox reports and the
- * embedded viewer's host page asking for a favicon it does not serve.
- */
-export function consoleErrors(page: Page): string[] {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (
-      message.type() === "error" &&
-      !expectedConsoleNotice(message) &&
-      !message.location().url.endsWith("/favicon.ico")
-    )
-      errors.push(message.text());
-  });
-  return errors;
-}
-
 /** Select the Details panel, which some entries open with already. */
 export async function showDetails(page: Page): Promise<void> {
   const details = page.getByRole("tab", { name: "Details", exact: true });
@@ -46,11 +77,16 @@ export async function showDetails(page: Page): Promise<void> {
 
 /** Open the narrow layout's drawer when the catalogue is behind it. */
 export async function showCatalogue(page: Page): Promise<void> {
+  // Wait for the mounted shell: either the menu or the catalogue shows.
+  await expect(
+    page.locator("[data-mokly-menu]:visible, nav.mbk-nav:visible").first(),
+  ).toBeVisible();
   const menu = page.locator("[data-mokly-menu]");
   if (await menu.isVisible()) await menu.click();
+  await expect(page.locator('button[data-filter="all"]')).toBeVisible();
 }
 
-/** Expect each visible row's label and whether All draws its changed mark. */
+/** Expect each row's label and whether All draws its changed mark. */
 export async function expectMarks(
   page: Page,
   rows: readonly (readonly [entry: string, label: string, marked: boolean])[],
@@ -62,4 +98,36 @@ export async function expectMarks(
     if (marked) expect(await dot(page, entry)).not.toBe("none");
     else expect(await dot(page, entry)).toBe("none");
   }
+}
+
+interface IndexRecord {
+  path: string;
+  title: string;
+  previousPath?: string;
+  changes?: { included?: boolean };
+}
+
+/** Every paired entry with its title, and the Changes count, from the index. */
+export async function movedIndex(
+  request: APIRequestContext,
+  baseURL: string | undefined,
+): Promise<{ count: number; moved: [path: string, title: string][] }> {
+  const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
+  expect(response.ok()).toBe(true);
+  const index = (await response.json()) as Record<string, unknown>;
+  const current = [
+    "screens",
+    "components",
+    "pages",
+    "documents",
+    "useCases",
+  ].flatMap((key) => (index[key] as IndexRecord[] | undefined) ?? []);
+  return {
+    count:
+      current.filter((entry) => entry.changes?.included).length +
+      (index["removedEntries"] as unknown[]).length,
+    moved: current
+      .filter((entry) => entry.previousPath !== undefined)
+      .map((entry) => [entry.path, entry.title]),
+  };
 }

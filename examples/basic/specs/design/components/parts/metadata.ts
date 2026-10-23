@@ -127,6 +127,8 @@ export const COMPONENT_ENTRY_BY_STATE = {
   removed: COMPONENT_ENTRIES.actionCompact,
   "usage-loading": COMPONENT_ENTRIES.action,
   "usage-failed": COMPONENT_ENTRIES.action,
+  "props-loading": COMPONENT_ENTRIES.action,
+  "props-failed": COMPONENT_ENTRIES.action,
   "shared-impact": COMPONENT_ENTRIES.action,
   "style-changed": COMPONENT_ENTRIES.action,
   closed: COMPONENT_ENTRIES.action,

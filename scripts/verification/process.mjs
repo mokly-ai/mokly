@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 
+import { childEnvironment } from "./child-environment.mjs";
 import { createVerificationProcessOwner } from "./process-owner.mjs";
 
 export async function runInherited(program, args, options = {}) {
@@ -28,7 +29,7 @@ async function startOwned(program, args, options, stdio) {
     const child = spawn(program, args, {
       detached: process.platform !== "win32",
       ...options,
-      env: owner.environment(options.env ?? process.env),
+      env: owner.environment(childEnvironment(options.env ?? process.env)),
       stdio,
     });
     return { child, owner };

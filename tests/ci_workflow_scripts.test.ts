@@ -9,7 +9,7 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
-import { TESTED_NODE_VERSIONS } from "../dist/cli/bootstrap.js";
+import { TESTED_NODE_VERSIONS } from "../packages/mokly/src/version.mjs";
 import { RELEASE_VERIFICATION_RUNTIMES } from "../scripts/release/evidence_contract.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -46,7 +46,13 @@ test("the Node profile selector adds release runtimes only for release pull requ
       `\${{ steps.${id}.outputs.${output} }}`,
       `the selector's job must expose its ${output} output`,
     );
-  const [minimumTestedNode] = TESTED_NODE_VERSIONS;
+  const minimumTestedNode = TESTED_NODE_VERSIONS[0];
+  assert.ok(minimumTestedNode);
+  assert.equal(`node-${minimumTestedNode}`, RELEASE_VERIFICATION_RUNTIMES[0]);
+  assert.equal(
+    `node-${TESTED_NODE_VERSIONS[1]!.split(".")[0]}`,
+    RELEASE_VERIFICATION_RUNTIMES[1],
+  );
   const [ordinaryRuntime] = RELEASE_VERIFICATION_RUNTIMES;
   for (const profile of [
     { release: false, nodes: [minimumTestedNode], runtimes: [ordinaryRuntime] },
@@ -86,7 +92,7 @@ test("the Testbox lockfile stamp holds only the lockfile digest and a newline", 
   );
 });
 
-test("Testbox sessions receive the job PATH and Playwright channel only", async (context) => {
+test("Testbox sessions receive the job PATH only", async (context) => {
   const original = await testboxScript(
     "Expose job environment to Testbox sessions",
   );
@@ -100,7 +106,7 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
   const file = path.join(root, "environment");
   await fs.writeFile(
     file,
-    "LANG=en_US.UTF-8\nPATH=old\nPLAYWRIGHT_CHANNEL=old\nKEEP=value\nPATH=duplicate\n",
+    "LANG=en_US.UTF-8\nPATH=old\nKEEP=value\nPATH=duplicate\n",
   );
   const script = original.replaceAll(
     "/etc/environment",
@@ -108,7 +114,7 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
   );
   const output = await runBash(`sudo() { "$@"; }\n${script}`, root, {
     PATH: process.env.PATH,
-    PLAYWRIGHT_CHANNEL: "chromium",
+    UNEXPORTED_SECRET: "must-not-leak",
     MOKLY_TESTBOX_ENVIRONMENT: file,
   });
   assert.equal(output.stdout, "");
@@ -120,7 +126,8 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
 });
 
 test("the release complete gate verifies the checked-out tag commit", async (context) => {
-  const { run } = (await workflowStep("release.yml", RELEASE_GATE)).step;
+  const { run } = (await workflowStep("release-prepare.yml", RELEASE_GATE))
+    .step;
   assert.ok(run, `"${RELEASE_GATE}" must run a shell script`);
   if (process.platform === "win32") return;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-release-gate-"));

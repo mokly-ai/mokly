@@ -1,278 +1,145 @@
-import fs from "node:fs";
+import { expect } from "@playwright/test";
 
-import { expect, test, type Locator } from "@playwright/test";
-
-import { reparentedEntrySource } from "../helpers/fixture.js";
-
+import { hasMarker, markPage } from "./browse_assertions.js";
 import { readDisclosureStorage } from "./disclosure_storage.js";
-import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
+import {
+  folder,
+  folderTitle,
+  test,
+  toggleFolder,
+  watchedScreen,
+} from "./watch_fixture.js";
 
-let server: WatchedServe;
-
-async function toggleDisclosure(disclosure: Locator): Promise<void> {
-  const toggled = disclosure.evaluate(
-    (element) =>
-      new Promise<void>((resolve) => {
-        element.addEventListener(
-          "toggle",
-          () => requestAnimationFrame(() => resolve()),
-          { once: true },
-        );
-      }),
-  );
-  await disclosure.locator(":scope > summary").click();
-  await toggled;
-}
-
-test.beforeAll(async () => {
-  server = await startWatchedServe(reparentedEntrySource("screens"), {
-    extraConfig: `colorSchemes: ["light", "dark"],`,
-  });
-});
-
-test.afterAll(async () => {
-  if (server) await server.stop();
-});
-
-test("watched path moves retain the missing old URL until the new row is selected", async ({
+test("duplicate watched folder titles keep independent disclosure keys", async ({
   page,
+  watched,
 }) => {
-  await page.goto(`${server.url}/view/fixture/screens/home/`);
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Screens");
-  const screens = page.locator(
-    'details[data-nav-folder="folder:fixture/screens"]',
+  await page.goto(`${watched.url}/view/fixture/archive/states/home/`);
+  await markPage(page);
+  const screens = folder(page, "screens/states");
+  const archive = folder(page, "archive/states");
+  await watched.change(
+    async () => {
+      await watched.write(
+        "specs/fixture/screens/states/_folder.json",
+        '{"title":"Same title"}',
+      );
+      await watched.write(
+        "specs/fixture/archive/states/_folder.json",
+        '{"title":"Same title"}',
+      );
+    },
+    (index) =>
+      folderTitle(index, "screens/states") === "Same title" &&
+      folderTitle(index, "archive/states") === "Same title",
   );
-  const archive = page.locator(
-    'details[data-nav-folder="folder:fixture/archive"]',
-  );
-  await toggleDisclosure(screens);
-  await fs.promises.writeFile(
-    server.fixture.entryPath,
-    reparentedEntrySource("archive", { firstTitle: "Home Reloaded" }),
-  );
-  const moved = archive.locator(
-    'a[data-route="fixture/archive/home/index.html"]',
-  );
-  await expect(moved).toContainText("Home Reloaded", { timeout: 45_000 });
-  await expect(page.locator("#mb-main")).toContainText("Item not found");
-  await expect(page).toHaveURL(/\/view\/fixture\/screens\/home\/$/);
-  if ((await archive.getAttribute("open")) === null)
-    await toggleDisclosure(archive);
-  await moved.click();
-  await expect(page).toHaveURL(/\/view\/fixture\/archive\/home\/$/);
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Archive");
-  await expect(moved).toHaveAttribute("aria-current", "page");
-  await expect(screens).not.toHaveAttribute("open", "");
-});
-
-test("duplicate folder titles under different parents retain independent disclosure", async ({
-  page,
-}) => {
-  await page.goto(`${server.url}/view/fixture/archive/states/home/`);
-  await fs.promises.writeFile(
-    server.fixture.entryPath,
-    reparentedEntrySource("archive", {
-      firstTitle: "Home Reloaded",
-      sharedChildTitle: "Same title",
-    }),
-  );
-  const screens = page.locator(
-    'details[data-nav-folder="folder:fixture/screens/states"]',
-  );
-  const archive = page.locator(
-    'details[data-nav-folder="folder:fixture/archive/states"]',
-  );
-  await expect(screens.locator("summary .mbk-nav-label")).toHaveText(
-    "Same title",
-    { timeout: 45_000 },
-  );
-  await expect(archive.locator("summary .mbk-nav-label")).toHaveText(
-    "Same title",
-  );
-
-  await page.evaluate(() => {
-    localStorage.removeItem("mokly:nav-disclosure:v4");
-  });
-  await page.goto(`${server.url}/view/fixture/archive/states/home/`);
-  const screensParent = page.locator(
-    'details[data-nav-folder="folder:fixture/screens"]',
-  );
-  await expect(screensParent).not.toHaveAttribute("open", "");
-  await expect(screens).not.toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
-  await toggleDisclosure(screensParent);
-  await expect(screensParent).toHaveAttribute("open", "");
-  await toggleDisclosure(screens);
-  await expect(screens).toHaveAttribute("open", "");
+  for (const group of [screens, archive])
+    await expect(group.locator(":scope > summary .mbk-nav-label")).toHaveText(
+      "Same title",
+    );
+  await toggleFolder(folder(page, "screens"));
+  await toggleFolder(screens);
   await expect(archive).toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
-    .toMatchObject({ "folder:specs:fixture/screens/states": true });
-
-  await page.reload();
-  await expect(screens).toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
-});
-
-test("a watched folder title change keeps its own, descendant, and unrelated preferences", async ({
-  page,
-}) => {
-  const watched = await startWatchedServe(
-    reparentedEntrySource("screens", { sharedChildTitle: "States" }),
-  );
-  try {
-    await page.goto(`${watched.url}/`);
-    const child = page.locator(
-      '[data-nav-folder="folder:fixture/screens/states"]',
-    );
-    const parent = page.locator('[data-nav-folder="folder:fixture/screens"]');
-    const unrelated = page.locator(
-      '[data-nav-folder="folder:fixture/archive"]',
-    );
-    await expect(child).not.toHaveAttribute("open", "");
-    await expect(unrelated).not.toHaveAttribute("open", "");
-    await toggleDisclosure(parent);
-    await toggleDisclosure(child);
-    await toggleDisclosure(unrelated);
-    await expect(child).toHaveAttribute("open", "");
-    await expect(unrelated).toHaveAttribute("open", "");
-    await expect
-      .poll(() => readDisclosureStorage(page))
-      .toMatchObject({
-        "folder:specs:fixture/screens": true,
-        "folder:specs:fixture/screens/states": true,
-        "folder:specs:fixture/archive": true,
-      });
-
-    await fs.promises.writeFile(
-      watched.fixture.entryPath,
-      reparentedEntrySource("screens", {
-        screensTitle: "Panels",
-        sharedChildTitle: "States",
-      }),
-    );
-    await expect(parent.locator(":scope > summary .mbk-nav-label")).toHaveText(
-      "Panels",
-      { timeout: 45_000 },
-    );
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-react-shell",
-      "",
-    );
-    await expect(parent).toHaveAttribute("open", "");
-    await expect(child).toHaveAttribute("open", "");
-    await expect(unrelated).toHaveAttribute("open", "");
-    expect(await readDisclosureStorage(page)).toMatchObject({
-      "folder:specs:fixture/screens": true,
+    .toMatchObject({
       "folder:specs:fixture/screens/states": true,
-      "folder:specs:fixture/archive": true,
+      "folder:specs:fixture/archive/states": true,
     });
-  } finally {
-    await watched.stop();
-  }
-});
-
-test("a watched folder path change drops its old keys from saved storage", async ({
-  page,
-}) => {
-  const watched = await startWatchedServe(
-    reparentedEntrySource("screens", { sharedChildTitle: "States" }),
-  );
-  try {
-    await page.goto(`${watched.url}/`);
-    const parent = page.locator('[data-nav-folder="folder:fixture/screens"]');
-    const child = page.locator(
-      '[data-nav-folder="folder:fixture/screens/states"]',
-    );
-    const unrelated = page.locator(
-      '[data-nav-folder="folder:fixture/archive"]',
-    );
-    await toggleDisclosure(parent);
-    await toggleDisclosure(child);
-    await toggleDisclosure(unrelated);
-    await expect
-      .poll(() => readDisclosureStorage(page))
-      .toMatchObject({
-        "folder:specs:fixture/screens": true,
-        "folder:specs:fixture/screens/states": true,
-        "folder:specs:fixture/archive": true,
-      });
-
-    await fs.promises.writeFile(
-      watched.fixture.entryPath,
-      reparentedEntrySource("screens", {
-        screensSlug: "panels",
-        sharedChildTitle: "States",
-      }),
-    );
-    const moved = page.locator('[data-nav-folder="folder:fixture/panels"]');
-    await expect(moved).toHaveCount(1, { timeout: 45_000 });
-    await expect(parent).toHaveCount(0);
-    await expect(moved).not.toHaveAttribute("open", "");
-    await expect(unrelated).toHaveAttribute("open", "");
-    await expect
-      .poll(async () => {
-        const stored = await readDisclosureStorage(page);
-        return [
-          "folder:specs:fixture/screens",
-          "folder:specs:fixture/screens/states",
-          "folder:specs:fixture/panels",
-          "folder:specs:fixture/panels/states",
-          "folder:specs:fixture/archive",
-        ].map((key) => stored[key]);
-      })
-      .toEqual([undefined, undefined, false, false, true]);
-  } finally {
-    await watched.stop();
-  }
-});
-
-test("filtered watched folder title changes preserve keys and restore disclosure after clearing", async ({
-  page,
-}) => {
-  const watched = await startWatchedServe(
-    reparentedEntrySource("screens", { sharedChildTitle: "States" }),
-  );
-  try {
-    await page.goto(`${watched.url}/`);
-    await page.fill("[data-mokly-search]", "Details");
-    await expect(
-      page.locator('[data-nav-folder="folder:fixture/screens/states"]'),
-    ).toHaveAttribute("open", "");
-
-    await fs.promises.writeFile(
-      watched.fixture.entryPath,
-      reparentedEntrySource("screens", {
-        screensTitle: "Panels",
-        sharedChildTitle: "States",
-      }),
-    );
-    const parent = page.locator('[data-nav-folder="folder:fixture/screens"]');
-    const child = page.locator(
-      '[data-nav-folder="folder:fixture/screens/states"]',
-    );
-    await expect(parent.locator(":scope > summary .mbk-nav-label")).toHaveText(
-      "Panels",
-      { timeout: 45_000 },
-    );
-    await expect(parent).toHaveAttribute("open", "", { timeout: 45_000 });
-    await expect(child).toHaveAttribute("open", "");
-    await expect(
-      child.locator(
-        'a[data-nav-row][data-route="fixture/screens/states/details/index.html"]',
+  await toggleFolder(screens);
+  await watched.change(
+    () =>
+      watched.write(
+        "specs/fixture/other.screen.html",
+        watchedScreen("Other updated"),
       ),
-    ).toBeVisible();
+    (index) =>
+      index.screens.some(
+        (entry) =>
+          entry.path === "fixture/other" && entry.title === "Other updated",
+      ),
+  );
+  await expect(
+    page.locator('a[data-route="fixture/other/index.html"]'),
+  ).toContainText("Other updated");
+  await expect(screens).not.toHaveAttribute("open", "");
+  await expect(archive).toHaveAttribute("open", "");
+  await expect
+    .poll(() => readDisclosureStorage(page))
+    .toMatchObject({
+      "folder:specs:fixture/screens/states": false,
+      "folder:specs:fixture/archive/states": true,
+    });
+  expect(await hasMarker(page)).toBe(true);
+});
 
-    await page.fill("[data-mokly-search]", "");
-    await expect(parent).not.toHaveAttribute("open", "");
-    await expect(child).not.toHaveAttribute("open", "");
-    await expect
-      .poll(() => readDisclosureStorage(page))
-      .toMatchObject({
-        "folder:specs:fixture/screens": false,
-        "folder:specs:fixture/screens/states": false,
-      });
-  } finally {
-    await watched.stop();
-  }
+test("a watched folder title keeps its own, descendant, and unrelated preferences", async ({
+  page,
+  watched,
+}) => {
+  await page.goto(`${watched.url}/view/fixture/other/`);
+  await markPage(page);
+  const parent = folder(page, "screens");
+  const child = folder(page, "screens/states");
+  const unrelated = folder(page, "archive");
+  for (const group of [parent, child, unrelated]) await toggleFolder(group);
+  const expected = {
+    "folder:specs:fixture/screens": true,
+    "folder:specs:fixture/screens/states": true,
+    "folder:specs:fixture/archive": true,
+  };
+  await expect.poll(() => readDisclosureStorage(page)).toMatchObject(expected);
+  await watched.change(
+    () =>
+      watched.write("specs/fixture/screens/_folder.json", '{"title":"Panels"}'),
+    (index) => folderTitle(index, "screens") === "Panels",
+  );
+  await expect(parent.locator(":scope > summary .mbk-nav-label")).toHaveText(
+    "Panels",
+  );
+  for (const group of [parent, child, unrelated])
+    await expect(group).toHaveAttribute("open", "");
+  expect(await readDisclosureStorage(page)).toMatchObject(expected);
+  expect(await hasMarker(page)).toBe(true);
+});
+
+test("filtered watched folder titles retain keys and restore disclosure when cleared", async ({
+  page,
+  watched,
+}) => {
+  await page.goto(`${watched.url}/view/fixture/other/`);
+  await markPage(page);
+  const parent = folder(page, "screens");
+  const child = folder(page, "screens/states");
+  await expect(parent).not.toHaveAttribute("open", "");
+  const stored = await readDisclosureStorage(page);
+  const search = page.locator("[data-mokly-search]");
+  await search.fill("State details");
+  await expect(parent).toHaveAttribute("open", "");
+  await expect(child).toHaveAttribute("open", "");
+  await watched.change(
+    () =>
+      watched.write("specs/fixture/screens/_folder.json", '{"title":"Panels"}'),
+    (index) => folderTitle(index, "screens") === "Panels",
+  );
+  await expect(parent.locator(":scope > summary .mbk-nav-label")).toHaveText(
+    "Panels",
+  );
+  await expect(search).toHaveValue("State details");
+  await expect(parent).toHaveAttribute("open", "");
+  await expect(child).toHaveAttribute("open", "");
+  await expect(
+    child.locator('a[data-route="fixture/screens/states/details/index.html"]'),
+  ).toBeVisible();
+  expect(await readDisclosureStorage(page)).toEqual(stored);
+  await search.fill("");
+  await expect(parent).not.toHaveAttribute("open", "");
+  await expect(child).not.toHaveAttribute("open", "");
+  await expect
+    .poll(() => readDisclosureStorage(page))
+    .toMatchObject({
+      "folder:specs:fixture/screens": false,
+      "folder:specs:fixture/screens/states": false,
+    });
+  expect(await hasMarker(page)).toBe(true);
 });

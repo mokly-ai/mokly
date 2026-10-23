@@ -1,24 +1,13 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { canonicalRouteUrl } from "../src/shell/store_browser_urls.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
-const model = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const catalogue = viewerCatalogue(model);
+import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+
+const model = indexFixture();
+const catalogue = catalogueFixture(model);
 
 test("every accepted shell path canonicalizes history without losing query or hash", () => {
   const path = model.screens[0]!.path;

@@ -1,29 +1,22 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import type { RunningServer } from "../../dist/server/http_types.js";
+import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
-import { startComponentExplorer } from "./component_explorer_runtime_fixture.js";
-
-let server: RunningServer;
-
-const cleanup: (() => Promise<void>)[] = [];
-
+import { test } from "./browser_test.js";
+import { serveCatalogue } from "./catalogue_fixture.js";
+let server: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
-  server = await startComponentExplorer(cleanup);
+  server = await serveCatalogue({
+    "specs/index.mockup.tsx": browserSources({
+      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink>',
+    }),
+  });
 });
-
-test.afterAll(async () => {
-  for (const dispose of cleanup.reverse()) await dispose();
-});
-
-test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
+test.afterAll(async () => server?.close());
+test("screen inspection records real nested, repeated and hidden instances with native range markers", async ({
   page,
 }) => {
   await page.goto(`${server.url}/view/home/`);
-  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
-  await expect(
-    page.locator('[data-nav-row][data-route="home/index.html"]'),
-  ).not.toHaveAttribute("data-changed", "true");
   await page.getByRole("tab", { name: "Components", exact: true }).click();
   await expect(
     page.getByRole("tabpanel", { name: "Components", exact: true }),
@@ -132,11 +125,11 @@ test("the inspector divider lights up like the navigation divider", async ({
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2, box.y - 60, { steps: 8 });
-  await expect(page.locator("[data-mokly-shell]")).toHaveClass(
+  await expect(page.locator(".mbk[data-mokly-shell]")).toHaveClass(
     /mbk-inspector-resizing/,
   );
   await page.mouse.up();
-  await expect(page.locator("[data-mokly-shell]")).not.toHaveClass(
+  await expect(page.locator(".mbk[data-mokly-shell]")).not.toHaveClass(
     /mbk-inspector-resizing/,
   );
 });

@@ -91,8 +91,7 @@ import { defineScreen } from "@mokly/mokly";
 export default defineScreen({
   title: "Empty activity",
   description: "An account with no activity yet.",
-  mobile: <main>No activity yet</main>,
-  desktop: <main>No activity yet</main>,
+  render: () => <main>No activity yet</main>,
   relatedDocs: [],
   tags: ["forms", "empty-state"],
 });

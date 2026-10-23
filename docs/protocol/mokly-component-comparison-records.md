@@ -1,18 +1,21 @@
 # Component Comparison Records
 
-## Delivery Status
-
-The expanded `DependencyAnalysis` from the [CSS evidence schema](./mokly-css-attribution-membership.md)
-is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v7.
-
-Implemented for the unified comparison v7 format. The [comparison contract](./mokly-component-review.md) owns attribution, and [validation](./mokly-component-review-validation.md) owns source coverage.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Normative Result
+
+The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
+owns the review result v8 envelope, its view record, and its rule evidence.
+This page defines the entry records, the affected-consumer records, and the
+diagnostics inside that envelope. The generated TypeScript types of the model
+crate are the normative shapes.
 
 ```ts
 interface ReviewEntryAddress {
   path: string;
   title: string;
+  props?: ComponentWireProps; // screens and components: the merged props
+  suppliedSlots?: readonly string[]; // components only
 }
 
 interface ReviewEntrySides {
@@ -21,131 +24,121 @@ interface ReviewEntrySides {
   previousPath?: string;
 }
 
-interface ScreenReviewV7 extends ScreenReview, ReviewEntrySides {}
-
-type ReviewVariantAddress = Pick<
-  ManifestComponentVariant,
-  "path" | "title" | "description" | "props" | "suppliedSlots"
->;
-
-interface ComponentVariantReview {
-  path: string;
-  previousPath?: string;
-  title: string;
-  before?: ReviewVariantAddress;
-  after?: ReviewVariantAddress;
-  state: ReviewState;
-  views: readonly ViewReview[];
-}
-
-interface ComponentReview
-  extends Omit<ScreenReview, "views">, ReviewEntrySides {
-  variants: readonly ComponentVariantReview[];
-}
+type ReviewState =
+  "unchanged" | "changed" | "added" | "removed" | "ignored-only";
 
 type EntryChangeReason =
   | {
       kind:
-        "added" | "removed" | "metadata" | "material" | "inputs" | "structure";
+        | "added"
+        | "removed"
+        | "metadata"
+        | "material"
+        | "implementation"
+        | "inputs"
+        | "structure";
     }
-  | {
-      kind: "dependency";
-      path: string;
-      analysis?: DependencyAnalysis;
-    }
+  | { kind: "dependency"; path: string }
   | { kind: "screen"; screenPath: string };
 
-interface ChangedEntry extends ReviewEntrySides {
+interface ReviewEntry extends ReviewEntrySides {
   kind: "screen" | "component" | "use-case";
+  path: string;
+  title: string;
+  state: ReviewState;
+  included: boolean;
   reasons: readonly EntryChangeReason[];
+  views: readonly ReviewView[];
+  variants?: readonly ReviewEntry[]; // component parents: their variants
 }
 
-type ComponentUsageContext =
-  | {
-      kind: "screen";
-      entry: ReviewEntryAddress;
-      viewport: Viewport;
-      colorScheme: ColorScheme;
-    }
-  | {
-      kind: "component";
-      entry: ReviewEntryAddress;
-      variantPath: string;
-      viewport: Viewport;
-      colorScheme: ColorScheme;
-    };
+interface ComponentUsageContext {
+  kind: "screen" | "component";
+  entry: ReviewEntryAddress;
+  viewport: Viewport;
+  colorScheme: ColorScheme;
+}
 
 interface AffectedUsageEvidence {
   side: "before" | "after";
   context: ComponentUsageContext;
-  via: readonly {
-    componentId: string;
-    instanceKey: string;
-  }[];
+  via: readonly { componentId: string; instanceKey: string }[];
 }
 
 interface AffectedConsumer {
   changedComponentId: string;
-  consumer:
-    { kind: "screen"; path: string } | { kind: "component"; path: string };
+  consumer: { kind: "screen" | "component"; path: string };
   evidence: readonly AffectedUsageEvidence[];
 }
 
-interface ReviewResultV7 {
-  baseCommit: string;
-  baseRef: string;
-  changedPaths: readonly string[];
-  ignoredImpact: readonly {
-    viewport: Viewport;
-    colorScheme: ColorScheme;
-    id: string;
-    count: number;
-  }[];
-  schemaVersion: 7;
-  screens: readonly ScreenReviewV7[];
-  components: readonly ComponentReview[];
-  changes: readonly ChangedEntry[];
-  affectedConsumers: readonly AffectedConsumer[];
+interface ReviewDiagnostic {
+  message: string;
 }
 ```
 
-Every side-bearing record has at least one side, copied from the corresponding
-validated branch-point/current manifest. Top-level path/title conveniences
-match `after ?? before`. Screens, components, and variants of both kinds pair
-by entry path, then the [move contract](./mokly-moves.md) pairs the remaining
-removed and added entries of one kind; `previousPath` is the paired baseline
-entry's path, present exactly on such records, which carry both sides. A
-`ComponentVariantReview` and a `ReviewVariantAddress` name the variant entry's
-path, and a component usage context's `variantPath` is that same path.
-`componentId` and `changedComponentId` keep their names and hold the parent
-component's path, the only identity a component has. Title edits remain
-metadata changes; removed components/variants retain their former names.
+`ReviewView`, `RuleEvidence`, and `ResourceEvidence` are the view shapes of
+the comparison contract. `ComponentWireProps` is the props codec of the
+[catalogue read model](./mokly-catalogue.md).
 
-Each screen result contains the union of its available before/after views.
-Component variants contain their own view unions. A view is addressed by its
-`viewport` and `colorScheme`; the result stores no artifact path. A side's
-snapshot file is `snapshotViewPath(side, path, viewport, colorScheme)` under
-the generation directory, from the
-[artifact path contract](./mokly-artifact-paths.md), where the before side of
-a paired entry uses its `previousPath`. Added/removed views
-have the existing explicit missing-side states, which are the only record of a
-missing side. Aggregate states retain the current precedence: changed, added,
-removed, ignored-only, unchanged. A metadata/dependency-only entry can have
-unchanged rendered view states.
+## Sides And Pairing
 
-View states describe the complete retained render after the existing manual-ignore
-rules, including changed component-owned resources. Component ownership controls
-direct Changes reasons separately; it never invents an `ignored-only` state for
-a component-only edit. An affected-only screen or parent component can therefore
-have changed view results without a Changes row. Caller input changes can have
-unchanged view results when the current renderer does not display that prop.
+Every side-bearing record has at least one side, copied from the catalogue
+model of that side: the head from the working tree, the base from the base
+commit under [Sides](./mokly-comparison.md#sides). Top-level `path` and
+`title` equal `after ?? before`. Screens, components, variants, and use cases
+pair by kind and case-folded path; the [move contract](./mokly-moves.md) then
+pairs the remaining removed and added entries of one kind. `previousPath` is
+the paired base entry's path, present exactly on such records, which carry
+both sides. `componentId` and `changedComponentId` hold the parent
+component's path, the only identity a component has. A title edit is a
+metadata change; a removed entry keeps its former title.
 
-All registered components appear in `components`, even if unchanged or unused.
-All current/base screens appear in `screens`, including affected-only screens.
-Neither array is the Changes filter. `changes` is its sole membership source;
-its length is the Changes count, with no duplicate entry records. A changed
-component variant is its own `ChangedEntry` of kind `component`, addressed by
-the variant entry path, exactly as a screen variant is its own screen row.
-Usages and ancestor folders do not add rows/counts.
+A component parent is one `ReviewEntry` with its own views, rendered from its
+own props, and with its variants grouped in `variants`, each a complete entry
+with its own sides, state, reasons, and views. A variant has no `variants`,
+and the field is absent on screens and use cases. A use case has no views.
 
-For page material, both comparison paths omit Mokly-inserted links for child-declared CSS, but retain a saved page's root-owned links and all renderer-authored links. Resource and CSS evidence still use the final linked document under [component attribution](./mokly-component-changes.md).
+## Views
+
+Each entry's `views` is the union of its available before and after views. A
+view is addressed by `viewport` and `colorScheme`; the result stores no
+document address. The viewer derives each side's document address from the
+entry path, `previousPath` for the before side of a paired entry, and the
+view axes, under the [comparison pane contract](./mokly-comparison-panes.md).
+An `added` view has no before side and a `removed` view no after side; those
+states are the only record of a missing side. The entry `state` takes the
+precedence changed, added, removed, ignored-only, unchanged over its views. A
+metadata-only, actual-instance implementation, or dependency-only entry can
+have unchanged views. Reasons never override the view aggregate. An entry
+with no views is unchanged when both entry sides exist; a missing entry
+side gives added or removed.
+
+A view state follows the [materiality](./mokly-comparison.md#materiality) and
+[style ownership](./mokly-comparison.md#style-ownership) rules: the canonical
+trees of both sides, the per-rule evidence with its owner, and the resource
+evidence. Component ownership controls direct reasons separately; it never
+invents an `ignored-only` state for a component-only edit. An affected-only
+screen or component therefore keeps `unchanged` views, which can carry
+component-owned records, and is not included; the `affected` records list it.
+A caller input change can have unchanged views when the render does not
+display that prop.
+
+## Membership
+
+Every current and base screen, component, variant, and use case appears in
+`entries`, including unchanged and affected-only ones; the array is not the
+Changes filter. `included` is the membership flag of a review entry under the
+[Changes membership](./mokly-comparison.md#changes-membership) rules. The
+[catalogue change contract](./mokly-catalogue-changes.md#changes-count)
+defines the Changes count over index records of every kind, because pages and
+documents have no review entry. A changed variant is included as its own entry of kind
+`component`, exactly as a screen variant is its own screen entry. A pure move
+is included with an empty `reasons` list. Usages and ancestor folders add no
+entries. The [component comparison schema](./mokly-component-review.md) owns
+the reason semantics and the affected-consumer proof; the
+[validation contract](./mokly-component-review-validation.md) owns ordering
+and admission.
+
+`diagnostics` holds the comparison diagnostics, such as the pairing
+diagnostics of the move contract, each with the exact text that the terminal
+reports.

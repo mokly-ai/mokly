@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -7,10 +8,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.goto("/view/design/browse/appearance/states/light-only/");
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-hydrated",
-      "",
-    );
+    await expect(page.locator("[data-mokly-search]")).toBeVisible();
     const frame = page.locator(`.mbk-frame-${viewport} iframe`);
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
     let release = () => {};
@@ -57,10 +55,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.goto("/view/design/browse/appearance/states/light-only/");
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-hydrated",
-      "",
-    );
+    await expect(page.locator("[data-mokly-search]")).toBeVisible();
     const frame = page.locator(`.mbk-frame-${viewport} iframe`);
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
 

@@ -6,24 +6,24 @@ import {
   currentDocumentPath,
   currentDocumentRoute,
 } from "../packages/viewer/dist/catalogue/delivery_paths.js";
-import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
+import { readCatalogueIndex } from "../packages/viewer/dist/catalogue/index_reader.js";
 import { MoklyVersionError } from "../packages/viewer/dist/catalogue/version_error.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
-    new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
+    new URL("../docs/protocol/fixtures/catalogue-v7.json", import.meta.url),
     "utf8",
   ),
 );
 
 test("current catalogues require the generated layout and reject earlier versions", () => {
-  const catalogue = readCatalogue(fixture);
+  const catalogue = readCatalogueIndex(fixture);
   assert.equal(Object.hasOwn(catalogue, "generatedPathPrefix"), false);
-  for (const schemaVersion of [1, 2, 3, 4, 5])
+  for (const schemaVersion of [1, 2, 3, 4, 5, 6])
     assert.throws(
-      () => readCatalogue({ ...fixture, schemaVersion }),
+      () => readCatalogueIndex({ ...fixture, schemaVersion }),
       (error: unknown) =>
-        error instanceof MoklyVersionError && error.supported === 6,
+        error instanceof MoklyVersionError && error.supported === 7,
     );
   const route = "home/index.mobile.html";
   assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
@@ -43,7 +43,7 @@ test("current catalogues require the generated layout and reject earlier version
 test("current frame paths require no serialized layout field", () => {
   assert.equal(Object.hasOwn(fixture, "generatedPathPrefix"), false);
   assert.equal(
-    Object.hasOwn(readCatalogue(fixture), "generatedPathPrefix"),
+    Object.hasOwn(readCatalogueIndex(fixture), "generatedPathPrefix"),
     false,
   );
 });

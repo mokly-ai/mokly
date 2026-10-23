@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
@@ -17,6 +18,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
           name="arrival"
           number={1}
           title="Welcome"
+          screenTitle="Welcome"
           description="The tour starts on the landing screen."
           screenPath={DESTINATIONS.welcome}
         >
@@ -34,6 +36,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
           name="detail"
           number={2}
           title="Details"
+          screenTitle="Details"
           description="The tour ends on the details screen."
           screenPath={DESTINATIONS.details}
         >
@@ -90,8 +93,7 @@ export const useCaseScreen = defineScreen({
   colorSchemes: ["light"],
   description:
     "A selected use case rendering ordered steps of existing screens.",
-  desktop: <UseCaseDesktop />,
+  ...artboards({ desktop: <UseCaseDesktop />, mobile: <UseCaseMobile /> }),
   slug: "use-case",
-  mobile: <UseCaseMobile />,
   title: "Selected use case",
 });

@@ -1,0 +1,33 @@
+[package]
+name = "mokly-graph"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+mock = ["unimock/mock-core"]
+
+[dependencies]
+mokly-model = { workspace = true }
+mokly-catalogue = { workspace = true }
+mokly-source-interface = { workspace = true }
+mokly-html = { workspace = true }
+mokly-css = { workspace = true }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+unimock = "0.6.8"
+rayon = "1.12.0"
+globset = "0.4.20"
+percent-encoding = "2.3.2"
+pulldown-cmark = "0.13.4"
+
+[dev-dependencies]
+unimock = { version = "0.6.8", features = ["mock-core"] }
+mokly-css = { workspace = true, features = ["mock"] }
+insta = "1.49.0"
+mokly-html = { workspace = true, features = ["mock"] }
+mokly-source-interface = { workspace = true, features = ["mock"] }
+tempfile = "3.27.0"

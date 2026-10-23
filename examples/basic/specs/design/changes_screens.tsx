@@ -3,6 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { changesDesignMetadata } from "./metadata.js";
 import { useDarkPreview } from "./parts/appearance.js";
+import { artboards } from "./parts/artboards.js";
 import { CompareGrid, ComparisonStage, Pane } from "./parts/compare.js";
 import { FramedShot } from "./parts/compare_page.js";
 import { ScrolledPage } from "./parts/compare_scroll.js";
@@ -16,6 +17,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcomeApp } from "./parts/mini_app_shell.js";
 import { MiniWelcome, MiniWelcomePage } from "./parts/mini_screens.js";
+import { ReasonSentences } from "./parts/reason_sentences.js";
 import { ReviewNav } from "./parts/review.js";
 import {
   ScreenHead,
@@ -163,7 +165,7 @@ function ChangesScreen({
         inspector={
           <DetailsPanel
             subject="welcome"
-            comparisonEvidence={comparing || undefined}
+            comparisonEvidence={<ReasonSentences reasons={["material"]} />}
             open={state === "overlay"}
           />
         }
@@ -186,58 +188,66 @@ function ChangesScreen({
 }
 
 /** On-demand comparison controls share the normal catalogue screen. */
-export const changesScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Changes opens a screen in Current; comparison starts only after selecting a diff option, in either catalogue scheme.",
+export const currentScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Changes opens a screen in Current; comparison starts only after selecting a diff option, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangesScreen state="current" viewport="desktop" />,
-    slug: "current",
     mobile: <ChangesScreen state="current" viewport="mobile" />,
-    title: "Current screen in Changes",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Overlay compares the selected screen in place, with the same controls also available from All, in either catalogue scheme.",
+  slug: "current",
+  title: "Current screen in Changes",
+});
+export const overlayScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Overlay compares the selected screen in place, with the same controls also available from All, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangesScreen state="overlay" viewport="desktop" />,
-    slug: "overlay",
     mobile: <ChangesScreen state="overlay" viewport="mobile" />,
-    rationale:
-      "Both versions share one frame, so the comparison reads as one screen: the current version sits over the previous one at half strength, and links inside it do nothing.",
-    title: "On-demand overlay",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Overlay on a screen longer than its frame scrolls both versions together, in either catalogue scheme.",
+  slug: "overlay",
+  rationale:
+    "Both versions share one frame, so the comparison reads as one screen: the current version sits over the previous one at half strength, and links inside it do nothing.",
+  title: "On-demand overlay",
+});
+export const overlayLongScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Overlay on a screen longer than its frame scrolls both versions together, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangesScreen state="overlay-long" viewport="desktop" />,
-    slug: "overlay-long",
     mobile: <ChangesScreen state="overlay-long" viewport="mobile" />,
-    rationale:
-      "A long screen scrolls inside the one frame both versions share, so they always sit at the same position: unchanged sections line up exactly and only the reworded section shows both versions, wherever the reader stops.",
-    title: "Overlay on a long screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Overlay on a screen whose main panel scrolls while its top bar and navigation stay in place, with both versions' panels at one position, in either catalogue scheme.",
+  slug: "overlay-long",
+  rationale:
+    "A long screen scrolls inside the one frame both versions share, so they always sit at the same position: unchanged sections line up exactly and only the reworded section shows both versions, wherever the reader stops.",
+  title: "Overlay on a long screen",
+});
+export const overlayPanelScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Overlay on a screen whose main panel scrolls while its top bar and navigation stay in place, with both versions' panels at one position, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangesScreen state="overlay-panel" viewport="desktop" />,
-    slug: "overlay-panel",
     mobile: <ChangesScreen state="overlay-panel" viewport="mobile" />,
-    rationale:
-      "An app-style screen keeps its page still and scrolls a panel inside it, so the frame has nothing to scroll. With Scroll together on, the panel moves in both versions at once: the top bar and navigation line up exactly and only the reworded section shows both versions.",
-    title: "Overlay on a scrolling panel",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Side by side with Scroll together turned off, each version left at its own place on the screen, in either catalogue scheme.",
+  slug: "overlay-panel",
+  rationale:
+    "An app-style screen keeps its page still and scrolls a panel inside it, so the frame has nothing to scroll. With Scroll together on, the panel moves in both versions at once: the top bar and navigation line up exactly and only the reworded section shows both versions.",
+  title: "Overlay on a scrolling panel",
+});
+export const sideBySideApartScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Side by side with Scroll together turned off, each version left at its own place on the screen, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangesScreen state="side-by-side-apart" viewport="desktop" />,
-    slug: "side-by-side-apart",
     mobile: <ChangesScreen state="side-by-side-apart" viewport="mobile" />,
-    rationale:
-      "Turning Scroll together off lets the reader move each version on its own to compare parts that moved, so the two frames can show different places. Nothing moves when it is switched off, and switching it back on brings the other version to the one scrolled last.",
-    title: "Side by side, scrolled apart",
   }),
-];
+  slug: "side-by-side-apart",
+  rationale:
+    "Turning Scroll together off lets the reader move each version on its own to compare parts that moved, so the two frames can show different places. Nothing moves when it is switched off, and switching it back on brings the other version to the one scrolled last.",
+  title: "Side by side, scrolled apart",
+});

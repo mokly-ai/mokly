@@ -39,7 +39,7 @@ test("bare removed routes announce only published snapshot identity", () => {
     const initial = createInitialShellState(
       candidateCatalogue,
       viewerContext(candidate, defaultSelection),
-      { kind: "home" },
+      { view: { kind: "home" } },
       undefined,
     );
     const state = withRoute(
@@ -51,12 +51,12 @@ test("bare removed routes announce only published snapshot identity", () => {
     const navigations: ScreenNavigateEvent[] = [];
     announceNavigation(
       {
-        model: candidate,
         events: () => ({
           onScreenNavigate: (event: ScreenNavigateEvent) =>
             navigations.push(event),
         }),
       } as never,
+      candidateCatalogue,
       state.selection,
       state.route.fragment,
       undefined,
@@ -77,7 +77,7 @@ test("bare removed routes announce only published snapshot identity", () => {
   ]);
 });
 
-test("component variant heads keep the parent heading and shown entry path", () => {
+test("component variant heads show the parent heading, its crumbs, and the shown path", () => {
   const parent = catalogue.byPath.get("components/action");
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));
   assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
@@ -95,10 +95,10 @@ test("component variant heads keep the parent heading and shown entry path", () 
   const head = targetHead(catalogue, { kind: "entry", entry: variant });
   assert.equal(head.title, "Action");
   assert.equal(head.path, "components/action/default");
-  assert.deepEqual(head.crumbs.at(-1), {
-    href: "/view/components/action/",
-    label: "Action",
-  });
+  assert.deepEqual(
+    head.crumbs,
+    targetHead(catalogue, { kind: "entry", entry: parent }).crumbs,
+  );
 });
 
 test("unknown frame routes mutate only uncontrolled host display state", () => {
@@ -111,15 +111,19 @@ test("unknown frame routes mutate only uncontrolled host display state", () => {
     catalogue,
     new URL("https://example.test/view/missing-entry"),
   );
-  const state = createInitialShellState(
-    catalogue,
-    context,
-    home.view,
-    undefined,
-  );
+  const state = createInitialShellState(catalogue, context, home, undefined);
 
-  assert.equal(frameMissState(state, missing, sections, true), state);
-  const uncontrolled = frameMissState(state, missing, sections, false);
+  assert.equal(
+    frameMissState(state, missing, sections, true, catalogue),
+    state,
+  );
+  const uncontrolled = frameMissState(
+    state,
+    missing,
+    sections,
+    false,
+    catalogue,
+  );
   assert.equal(uncontrolled.route.view.kind, "missing");
   assert.equal(
     hostSelectionRouteChanged(catalogue, uncontrolled, state.selection),
@@ -138,7 +142,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
   assert.ok(variant && "variantOf" in variant);
   const historical = {
     ...variant,
-    colorSchemes: ["light", "dark"] as const,
+    colorSchemes: ["light" as const, "dark" as const],
     changes: {
       status: "ready" as const,
       kind: "removed" as const,
@@ -168,12 +172,7 @@ test("filter transitions restore their disclosure baseline and route activation 
     catalogue,
     new URL("https://example.test/view/guide/"),
   );
-  let state = createInitialShellState(
-    catalogue,
-    context,
-    route.view,
-    undefined,
-  );
+  let state = createInitialShellState(catalogue, context, route, undefined);
   const baseline = state.disclosures;
   state = withFilterSelection(state, {
     ...state.selection,

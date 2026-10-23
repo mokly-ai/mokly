@@ -20,8 +20,12 @@
     "types": ["node"]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "scripts/large/**/*.ts",
+    "playwright.config.ts",
+    "playwright.delivery.config.ts",
+    "scripts/verification/static-delivery-reporter.ts",
+    "packages/mokly/src/**/*.ts",
+    "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "examples/**/*.ts",
@@ -31,5 +35,5 @@
     "packages/viewer/tests/**/*.ts",
     "packages/viewer/tests/**/*.tsx"
   ],
-  "exclude": ["node_modules", "tests/fixtures/consumers/**/*.tsx"]
+  "exclude": ["node_modules", "**/dist"]
 }

@@ -1,0 +1,52 @@
+[package]
+name = "mokly-compare"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+mokly-source-interface = { workspace = true }
+mokly-model = { workspace = true }
+mokly-catalogue = { workspace = true }
+mokly-html = { workspace = true }
+mokly-css = { workspace = true }
+mokly-graph = { workspace = true }
+directories = "6.0.0"
+mokly-git = { workspace = true }
+mokly-platform = { workspace = true }
+mokly-sidecar = { workspace = true }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
+flate2 = "1.1.10"
+yaml-rust2 = "0.13.0"
+percent-encoding = "2.3.2"
+dunce = "1.0.5"
+
+[features]
+mock = ["dep:unimock"]
+
+[dev-dependencies]
+mokly-source-interface = { workspace = true, features = ["mock"] }
+tempfile = "3.27.0"
+unimock = "0.6.8"
+
+[dev-dependencies.mokly-git]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-platform]
+workspace = true
+features = ["mock"]
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem"] }
+
+[dev-dependencies.mokly-graph]
+workspace = true
+features = ["mock"]

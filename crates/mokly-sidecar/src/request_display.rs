@@ -1,0 +1,66 @@
+//! Request diagnostics identify sources and axes without printing data props or CSS.
+
+use std::fmt::{self, Display, Formatter};
+
+use crate::methods::{Call, ColorScheme, Render};
+
+impl Display for Call {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Hello(_) => formatter.write_str("hello"),
+            Self::Bundle(_) => formatter.write_str("bundle"),
+            Self::RestoreGeneration(value) => {
+                write!(formatter, "restoreGeneration {}", value.generation)
+            }
+            Self::Describe(value) => write!(formatter, "describe {}", value.generation),
+            Self::RenderScreen(value) => render(formatter, value),
+            Self::RenderComponent(value) => render(formatter, &value.render),
+            Self::RenderStory(value) => write!(
+                formatter,
+                "{} ({}, {})",
+                location(&value.story_id),
+                value.viewport,
+                value.color_scheme
+            ),
+            Self::RenderPage(value) => formatter.write_str(&location(&value.handle)),
+            Self::ProcessCss(value) => {
+                write!(formatter, "{} for {}", value.postcss, value.source_path)
+            }
+            Self::Bindings(value) => write!(formatter, "bindings {}", value.generation),
+            Self::DisposeContext(value) => write!(formatter, "disposeContext {}", value.context),
+            Self::CssModules(value) => write!(formatter, "cssModules {}", value.generation),
+            Self::Dispose(value) => write!(formatter, "dispose {}", value.generation),
+            Self::Shutdown(_) => formatter.write_str("shutdown"),
+        }
+    }
+}
+
+fn render(formatter: &mut Formatter<'_>, value: &Render) -> fmt::Result {
+    write!(
+        formatter,
+        "{} ({}, {})",
+        location(&value.handle),
+        value.viewport,
+        value.color_scheme
+    )
+}
+
+impl Display for ColorScheme {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Light => "light",
+            Self::Dark => "dark",
+        })
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/request_display_tests.rs"]
+mod request_display_tests;
+
+fn location(handle: &str) -> String {
+    handle.rsplit_once('#').map_or_else(
+        || handle.into(),
+        |(module, export)| format!("{module} export {export}"),
+    )
+}

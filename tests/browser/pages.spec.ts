@@ -1,11 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`catalogue guidance includes documents at ${width}px`, async ({
     page,
+    baseURL,
+    allowBrowserError,
   }) => {
+    allowBrowserError(
+      missingResourceNotice(new URL("/view/missing-document/", baseURL).href),
+    );
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     await expect(page.locator("#mb-main")).toContainText(
@@ -14,10 +21,10 @@ for (const width of [390, 1280]) {
     await expect(
       page.getByRole("searchbox", { name: "Search catalogue" }),
     ).toHaveAttribute("placeholder", "Search catalogue…");
-    await page.goto("/view/missing-document.html");
+    await page.goto("/view/missing-document/");
     await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
     await expect(page.locator("#mb-main")).toContainText(
-      "choose another item from the navigation",
+      "Nothing in the catalogue matches view/missing-document/",
     );
     await page.getByRole("link", { name: "Go to the catalogue home" }).click();
     await expect(page.locator("#mb-main h2")).toHaveText("Mokly");

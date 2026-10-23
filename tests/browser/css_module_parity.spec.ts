@@ -1,15 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { removeFixture } from "../helpers/fixture.js";
-import {
-  entryStyle,
-  styleFixture,
-} from "../helpers/imported_styles_fixture.js";
+import { test } from "./browser_test.js";
+import { serveCatalogue } from "./catalogue_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 
-const css = `
+const parityCss = `
 .x {
+  border-inline-start-style: solid;
   position: relative;
   width: -webkit-fill-available; width: -moz-available; width: stretch;
   -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
@@ -27,35 +24,57 @@ const css = `
 @layer component { .x { border-inline-start-width: 3px; } }
 `;
 
-test("plain and module CSS compute the same browser styles", async ({
-  page,
-}) => {
-  const plain = await styleFixture(css);
-  const module = await styleFixture(css, { module: true });
-  try {
-    const plainOutput = (
-      await compileCatalogue(await loadConfig(plain.root))
-    ).outputs.get(entryStyle) as string;
-    const moduleOutput = (
-      await compileCatalogue(await loadConfig(module.root))
-    ).outputs.get(entryStyle) as string;
-    const scoped = /\.(mokly_[A-Za-z0-9_-]+_x)\b/.exec(moduleOutput)?.[1];
-    const child = /\.(mokly_[A-Za-z0-9_-]+_child)\b/.exec(moduleOutput)?.[1];
-    expect(scoped).toBeTruthy();
-    expect(child).toBeTruthy();
+let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+});
+test.beforeAll(async () => {
+  fixture = await serveCatalogue(
+    {
+      "specs/module.mockup.tsx": `import React from "react";
+import {defineScreen} from "@mokly/mokly";
+import styles from "./theme.module.css";
+export default defineScreen({title: "Module", description: "", relatedDocs: [], props: {}, render: () => <main>
+<div dir="rtl"><div id="probe" className={styles.x}><span className={styles.child}>Child</span></div></div><button className={styles.button}>Button</button><section className={styles.scope}><p className={styles.target}>Inside</p><div className={styles.limit}><p className={styles.target}>Limited</p></div></section><p className={styles.target}>Outside</p>
+<div className={styles["a+b"]}>Plus</div><div className={styles["hover:state"]}>Colon</div><div className={styles["café"]}>Unicode</div>
+</main>});`,
+      "specs/plain.screen.html": `---
+title: Plain
+---
+<main><div dir="rtl"><div id="probe" class="x"><span class="child">Child</span></div></div><button class="plain-button">Button</button><section class="plain-scope"><p class="plain-target">Inside</p><div class="plain-limit"><p class="plain-target">Limited</p></div></section><p class="plain-target">Outside</p></main>`,
+      "specs/theme.module.css":
+        parityCss +
+        `.button {color: rgb(10, 20, 30); border-radius: 9px; padding: 12px}
+@scope (.scope) to (.limit) { .target {color: rgb(60, 70, 80)} }
+.a\\+b {color: rgb(11, 22, 33)}
+.hover\\:state {color: rgb(44, 55, 66)}
+.café {color: rgb(77, 88, 99)}`,
+      "plain.css":
+        parityCss +
+        `.plain-button {color: rgb(10, 20, 30); border-radius: 9px; padding: 12px}
+@scope (.plain-scope) to (.plain-limit) { .plain-target {color: rgb(60, 70, 80)} }`,
+    },
+    {
+      colorSchemes: ["light", "dark"],
+      stylesheets: [{ match: "plain/**", stylesheets: ["plain.css"] }],
+    },
+  );
+});
+test.afterAll(async () => fixture?.close());
+
+for (const scheme of ["light", "dark"] as const)
+  test(`plain and module CSS compute the same browser styles in ${scheme} RTL`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 900, height: 700 });
-    await page.setContent(`
-      <style>${plainOutput}</style><style>${moduleOutput}</style>
-      <div dir="rtl" lang="en" style="color-scheme: light dark">
-        <div id="plain" class="x"><span class="child">Text</span></div>
-        <div id="module" class="${scoped}"><span class="${child}">Text</span></div>
-      </div>
-    `);
-    for (const colorScheme of ["light", "dark"] as const) {
-      await page.emulateMedia({ colorScheme });
-      const computed = await page.evaluate(() => {
-        const read = (id: string) => {
-          const element = document.getElementById(id)!;
+    await page.emulateMedia({ colorScheme: scheme });
+    const results = [];
+    for (const entry of ["plain", "module"]) {
+      await page.goto(
+        `${fixture.url}/static/mokly-generated/${entry}/index.mobile${scheme === "dark" ? ".dark" : ""}.html`,
+      );
+      results.push(
+        await page.locator("#probe").evaluate((element) => {
           const style = getComputedStyle(element);
           return {
             color: style.color,
@@ -66,62 +85,61 @@ test("plain and module CSS compute the same browser styles", async ({
             backdrop: style.backdropFilter,
             display: style.display,
             paddingInlineEnd: style.paddingInlineEnd,
+            borderInlineStartWidth: style.borderInlineStartWidth,
             childStyle: getComputedStyle(element.querySelector("span")!)
               .fontStyle,
           };
-        };
-        return { plain: read("plain"), module: read("module") };
-      });
-      expect(computed.module, colorScheme).toEqual(computed.plain);
+        }),
+      );
     }
-  } finally {
-    await Promise.all([removeFixture(plain), removeFixture(module)]);
-  }
-});
+    expect(results[1]).toEqual(results[0]);
+    expect(results[0]).toMatchObject({
+      color: scheme === "dark" ? "rgb(0, 0, 200)" : "rgb(200, 0, 0)",
+      height: "700px",
+      backdrop: "blur(2px)",
+      display: "grid",
+      paddingInlineEnd: "5px",
+      borderInlineStartWidth: "3px",
+      childStyle: "italic",
+    });
+  });
 
 test("@scope with to-names styles only content before the limit", async ({
   page,
 }) => {
-  const css = "@scope (.button) to (.footer){.target{color:rgb(210, 0, 0)}}";
-  const plain = await styleFixture(css);
-  const module = await styleFixture(css, { module: true });
-  try {
-    const plainOutput = (
-      await compileCatalogue(await loadConfig(plain.root))
-    ).outputs.get(entryStyle) as string;
-    const moduleOutput = (
-      await compileCatalogue(await loadConfig(module.root))
-    ).outputs.get(entryStyle) as string;
-    const name = (local: string) =>
-      new RegExp(`\\.(mokly_[a-f0-9]{12}_${local})\\b`).exec(moduleOutput)?.[1];
-    const button = name("button");
-    const footer = name("footer");
-    const target = name("target");
-    expect(button && footer && target).toBeTruthy();
-    await page.setContent(`<style>${plainOutput}</style><style>${moduleOutput}</style>
-      <div class="button"><span id="plain-inside" class="target">Inside</span><div class="footer"><span id="plain-limit" class="target">Limit</span></div></div><span id="plain-outside" class="target">Outside</span>
-      <div class="${button}"><span id="module-inside" class="${target}">Inside</span><div class="${footer}"><span id="module-limit" class="${target}">Limit</span></div></div><span id="module-outside" class="${target}">Outside</span>`);
-    const colors = await page.evaluate(() =>
-      Object.fromEntries(
-        [
-          "plain-inside",
-          "plain-limit",
-          "plain-outside",
-          "module-inside",
-          "module-limit",
-          "module-outside",
-        ].map((id) => [
-          id,
-          getComputedStyle(document.getElementById(id)!).color,
-        ]),
-      ),
+  const colors: string[][] = [];
+  for (const entry of ["plain", "module"]) {
+    await page.goto(
+      `${fixture.url}/static/mokly-generated/${entry}/index.mobile.html`,
     );
-    expect(colors["plain-inside"]).toBe("rgb(210, 0, 0)");
-    expect(colors["module-inside"]).toBe(colors["plain-inside"]);
-    expect(colors["module-limit"]).toBe(colors["plain-limit"]);
-    expect(colors["module-outside"]).toBe(colors["plain-outside"]);
-    expect(colors["plain-limit"]).not.toBe(colors["plain-inside"]);
-  } finally {
-    await Promise.all([removeFixture(plain), removeFixture(module)]);
+    const values = [];
+    for (const label of ["Inside", "Limited", "Outside"])
+      values.push(
+        await page
+          .getByText(label, { exact: true })
+          .evaluate((node) => getComputedStyle(node).color),
+      );
+    colors.push(values);
   }
+  expect(colors[0]![0]).toBe("rgb(60, 70, 80)");
+  expect(colors[1]).toEqual(colors[0]);
+  expect(colors[0]![1]).not.toBe(colors[0]![0]);
+  expect(colors[0]![2]).not.toBe(colors[0]![0]);
+});
+
+test("scoped escaped CSS names keep Chrome selector meaning", async ({
+  page,
+}) => {
+  await page.goto(
+    `${fixture.url}/static/mokly-generated/module/index.mobile.html`,
+  );
+  for (const [label, color] of [
+    ["Plus", "rgb(11, 22, 33)"],
+    ["Colon", "rgb(44, 55, 66)"],
+    ["Unicode", "rgb(77, 88, 99)"],
+  ])
+    await expect(page.getByText(label!, { exact: true })).toHaveCSS(
+      "color",
+      color!,
+    );
 });

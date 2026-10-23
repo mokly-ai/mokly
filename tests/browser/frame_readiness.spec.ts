@@ -1,10 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { CatalogueUsage } from "../../packages/viewer/src/catalogue/types.js";
 import type { MountedFrame } from "../../packages/viewer/src/client/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/src/client/post_message_adapter.js";
 import type * as LocalAdapter from "../../packages/viewer/src/client/same_origin_adapter.js";
 
+import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   type FrameTestWindow,
@@ -32,10 +33,10 @@ for (const cross of [false, true]) {
       await page.evaluate(
         async ({ cross, status, origin }) => {
           const local = (await import(
-            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof LocalAdapter;
           const remote = (await import(
-            `${location.origin}/mokly-viewer/client/post_message_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof PostAdapter;
           const adapter = cross
             ? remote.postMessageAdapter({ frameOrigin: origin })
@@ -98,15 +99,12 @@ for (const cross of [false, true]) {
           () => (window as unknown as ReadinessWindow).measurements,
         ),
       ).toBe(0);
-      await page.evaluate(
-        async (json) => {
-          const usage = JSON.parse(json) as CatalogueUsage;
-          const state = window as unknown as ReadinessWindow;
-          await state.mounted.updateUsage(usage);
-          state.frameEvents.length = 0;
-        },
-        JSON.stringify({ status: "ready", ...fixture.usage }),
-      );
+      await page.evaluate(async (json) => {
+        const usage = JSON.parse(json) as CatalogueUsage;
+        const state = window as unknown as ReadinessWindow;
+        await state.mounted.updateUsage(usage);
+        state.frameEvents.length = 0;
+      }, JSON.stringify(fixture.usage));
       await button.hover();
       await expect
         .poll(() =>

@@ -2,7 +2,6 @@ import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type { InstanceRef } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import type { markerFixture } from "./viewer_marker_fixture.js";
 
@@ -15,7 +14,7 @@ export function screenInstance(
   viewport: "mobile" | "desktop",
   id: string,
 ): InstanceRef {
-  const screen = fixture.catalogue.screens.find(({ path }) => path === "home")!;
+  const screen = fixture.details.current["home"]!;
   const view = screen.views.find(
     (view) => view.viewport === viewport && view.colorScheme === "light",
   )!;
@@ -29,14 +28,13 @@ export function screenInstance(
 }
 
 export function variantInstance(fixture: MarkerFixture): InstanceRef {
-  const component = fixture.catalogue.components.find(
+  const component = fixture.index.components.find(
     ({ path }) => path === "pane",
   )!;
-  const variant = catalogueComponentVariants(
-    fixture.catalogue,
-    component.path,
-  ).find(({ path }) => path === "pane/second")!;
-  const view = variant.views.find(
+  const variant = fixture.index.components
+    .filter((entry) => entry.variantOf === component.path)
+    .find(({ path }) => path === "pane/second")!;
+  const view = fixture.details.current[variant.path]!.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");

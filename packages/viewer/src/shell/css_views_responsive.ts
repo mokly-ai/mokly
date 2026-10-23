@@ -1,4 +1,7 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const CSS_VIEWS_RESPONSIVE = `.mbk-frame-scheme-note {
   display: none;
   font-weight: 500;
@@ -6,6 +9,9 @@ export const CSS_VIEWS_RESPONSIVE = `.mbk-frame-scheme-note {
 
 body[data-mokly-color-scheme="dark"]
   .mbk-frame-wrap[data-color-scheme-fallback]
+  .mbk-frame-scheme-note,
+body[data-mokly-color-scheme="dark"]
+  .mbk-component-canvas[data-color-scheme-fallback]
   .mbk-frame-scheme-note {
   display: inline;
 }
@@ -113,6 +119,15 @@ body[data-mokly-color-scheme="dark"]
   font-weight: 600;
 }
 
+button.mbk-empty-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .mbk-frag {
   display: block;
   width: 100%;
@@ -127,7 +142,7 @@ body[data-mokly-color-scheme="dark"]
   border-radius: 0 0 36px 36px;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-topbar > [data-mokly-schemeswitch] {
     display: none;
   }
@@ -152,11 +167,12 @@ body[data-mokly-color-scheme="dark"]
   }
 
   /* Stacked frames start at the top: centring a column taller than the
-     stage would push its first frame above the scroll origin. */
+     stage would push its first frame above the scroll origin. A frame wider
+     than the stage starts at its left edge for the same reason. */
   .mbk-stage {
     flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
+    align-items: safe center;
   }
 
   .mbk-frame-desktop {

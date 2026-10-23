@@ -1,0 +1,34 @@
+//! Integration scenarios share isolated consumers and one real process pool per test.
+
+mod alias_tests;
+mod ancestor_tests;
+mod base_styles_tests;
+mod base_tests;
+mod cache_tests;
+mod containment_tests;
+mod declaration_alias_tests;
+mod declaration_tests;
+mod definition_tests;
+mod dependency_tests;
+mod invocation_paths_tests;
+mod lazy_tests;
+mod owned_catalogue_tests;
+mod owned_rule_tests;
+mod ownership_tests;
+mod postcss_contract_tests;
+mod process_counts;
+mod rebuild_tests;
+mod registry_matrix_tests;
+mod render_tests;
+mod review_validation_tests;
+mod slot_order_tests;
+mod source_alias_tests;
+mod supplier_containment_tests;
+mod support;
+mod validation_tests;
+mod watch_dependencies_tests;
+mod watch_lifetimes_tests;
+mod watch_metadata_tests;
+mod watch_tests;
+
+mod watch_compilation_tests;

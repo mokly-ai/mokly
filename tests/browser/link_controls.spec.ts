@@ -1,13 +1,15 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
+import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
+import { test } from "./browser_test.js";
+import { documentFavicon } from "./document_error_allowance.js";
 import { startLinkControlFixture } from "./link_controls_fixture.js";
 
 let controls: Awaited<ReturnType<typeof startLinkControlFixture>>;
 
 test.beforeAll(async () => {
+  test.setTimeout(ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS);
   controls = await startLinkControlFixture();
 });
 test.afterAll(async () => {
@@ -109,18 +111,14 @@ test("adapted controls navigate from use-case frames", async ({ page }) => {
   await expect(page).toHaveURL(/\/view\/details\/$/);
 });
 
-test("generated controls remain native links in standalone and Review snapshots", async ({
+test("rendered controls remain native links in direct documents", async ({
   page,
+  allowBrowserError,
 }) => {
-  for (const root of [
-    path.join(controls.fixture.mockupsDir, "mokly-generated"),
-    path.join(controls.reviewDir, "snapshots/after/mokly-generated"),
-    path.join(controls.reviewDir, "snapshots/before/mokly-generated"),
-  ]) {
-    await page.goto(
-      pathToFileURL(path.join(root, "home/index.mobile.html")).href,
-    );
-    await page.getByTestId("continue").click();
-    await expect(page).toHaveURL(/\/details\/index\.mobile\.html$/);
-  }
+  documentFavicon(allowBrowserError, controls.url);
+  await page.goto(
+    `${controls.url}/static/mokly-generated/home/index.mobile.html`,
+  );
+  await page.getByTestId("continue").click();
+  await expect(page).toHaveURL(/\/details\/index\.mobile\.html$/);
 });

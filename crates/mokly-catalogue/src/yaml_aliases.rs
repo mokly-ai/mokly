@@ -1,0 +1,95 @@
+//! One scan of the parser events that bounds alias expansion before any copy.
+//!
+//! An alias decodes as a copy of its anchored value, so a short chain of
+//! aliases can expand to billions of nodes. The scan counts the nodes that
+//! each anchored value holds and that each alias expands to, without copying
+//! a value, and it names the anchors that the builder must keep.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use yaml_rust2::parser::{Event, Parser};
+use yaml_rust2::scanner::Marker;
+
+use crate::yaml_limits::MAX_DEPTH;
+
+/// The anchors that an alias refers to, or the location of the alias whose
+/// expansion passes `budget` nodes. The scan steps aside without a failure at
+/// a parser error, at a value or an alias copy deeper than [`MAX_DEPTH`], and
+/// at the end of the first document, so the builder reports those failures.
+/// An alias's own depth counts with its copy's height, after the scan names
+/// its anchor, so the builder finds the anchor there.
+/// Other builder failures, such as a duplicate key, do not stop the scan, so
+/// an expansion past the budget is reported before them.
+pub(crate) fn scan(text: &str, budget: usize) -> Result<BTreeSet<usize>, Marker> {
+    let mut parser = Parser::new_from_str(text);
+    let mut shapes: BTreeMap<usize, Shape> = BTreeMap::new();
+    let mut open: Vec<(usize, Shape)> = Vec::new();
+    let mut aliased = BTreeSet::new();
+    let mut expanded = 0_usize;
+    while let Ok((event, marker)) = parser.next_token() {
+        let node = matches!(
+            event,
+            Event::Scalar(..) | Event::SequenceStart(..) | Event::MappingStart(..)
+        );
+        if node && open.len() > MAX_DEPTH {
+            break;
+        }
+        let (anchor, shape) = match event {
+            Event::SequenceStart(anchor, _) | Event::MappingStart(anchor, _) => {
+                open.push((anchor, Shape::LEAF));
+                continue;
+            }
+            Event::SequenceEnd | Event::MappingEnd => match open.pop() {
+                Some(closed) => closed,
+                None => continue,
+            },
+            Event::Scalar(_, _, anchor, _) => (anchor, Shape::LEAF),
+            Event::Alias(anchor) => {
+                aliased.insert(anchor);
+                let shape = shapes.get(&anchor).copied().unwrap_or_default();
+                if open.len() + shape.height > MAX_DEPTH {
+                    break;
+                }
+                expanded = expanded.saturating_add(shape.nodes);
+                if expanded > budget {
+                    return Err(marker);
+                }
+                (0, shape)
+            }
+            Event::DocumentEnd | Event::StreamEnd => break,
+            _ => continue,
+        };
+        if anchor != 0 {
+            shapes.insert(anchor, shape);
+        }
+        if let Some((_, parent)) = open.last_mut() {
+            parent.add(shape);
+        }
+    }
+    Ok(aliased)
+}
+
+/// The nodes of a value, its own node included, and the levels below it.
+#[derive(Clone, Copy, Default)]
+struct Shape {
+    nodes: usize,
+    height: usize,
+}
+
+impl Shape {
+    /// One node with no level below it.
+    const LEAF: Self = Self {
+        nodes: 1,
+        height: 0,
+    };
+
+    /// Add a completed child, which sits one level below this value.
+    fn add(&mut self, child: Self) {
+        self.nodes = self.nodes.saturating_add(child.nodes);
+        self.height = self.height.max(child.height + 1);
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/yaml_aliases_tests.rs"]
+mod yaml_aliases_tests;

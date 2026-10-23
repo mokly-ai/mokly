@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nprops: {name: Ada, user: {name: Ada, plan: pro}}\nvariants:\n  - slug: z\n    title: Variant Z\n    props: {name: Bob, user: {name: Bob}}\n  - slug: index\n    title: Variant index\n    props: {}\n---\n<h1>{{name}} {{user.name}}</h1>\n"
+  },
+  "paths": ["home", "home/z", "home/index"]
+}

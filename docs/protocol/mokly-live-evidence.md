@@ -1,155 +1,152 @@
 # Live catalogue evidence updates
 
-## Delivery Status
-
-Live evidence updates and bounded affected-usage deduplication are implemented.
-Deduplication verification is recorded in the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
-Affected-usage links use `entryPath`, matching the implemented
-[path identity contract](./mokly-paths.md).
-Adoption of the current entry's scoped bootstrap with its complete private
-workspace when applicable, exact-scoped Serve responses, and rejection of
-complete live catalogues are implemented.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Revisions and publication
 
-Live Serve distinguishes authored content changes from background evidence.
-The existing monotonically increasing numeric `ready`/`update` event versions
-remain unchanged. Every live shell also includes a positive
-`data-mokly-content-version`, captured with its update version, catalogue,
-Changes status and workspace evidence from one request snapshot.
+Serve has one update model: one integer `revision` in the catalogue index,
+raised by one per publication, under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve). A
+publication is one completed action: a rebuild after a source change, a
+Changes completion or status move, a bundle change, or a completed on-demand
+render; the server may combine several completions into one publication.
+There is no separate content or evidence version: a source edit and a usage
+completion publish the same way, and the shell decides per frame through each
+view's `documentKey` in the index.
 
-Content version starts at the server's initial update version. A content update
-advances both versions; an evidence update advances only the update version.
-An omitted update kind means content, including parent/child messages without that optional field.
-Explicit kinds are `content` and `evidence`; invalid IPC kinds are rejected.
-Child restarts retain the supervisor's monotonically increasing version boundary.
+Evidence travels only in the index and in the entry details. The index
+carries `changesStatus`, each entry's `changes`, each view's `comparison`,
+and `removedEntries`; a detail carries one entry's per-view usage, resource
+evidence, direct reasons, and workspace lists. There is no evidence route per view or per
+navigation state, and a shell page is never fetched as evidence: the stub
+holds no data. A completed on-demand render reaches the shell as a
+publication whose refreshed detail carries that view's usage as `ready`. A
+temporary prop preview of the component controls contract uses the usage
+records of its own render response and never enters a detail.
+An included entry's detail carries direct `reasons` in the review v8 shape while Changes is ready, independently of workspace readiness.
 
-Exhaustive catalogue/Usage completion and Changes completion publish evidence
-updates, with the same generation and cancellation checks as their computation.
-Git-only reference changes also clear and replace evidence without advancing
-content version. Source/config replacement, resource edits and explicit reload
-rules remain content changes. An evidence event never claims that actual content
-edits can be ignored.
+Document responses do not wait for evidence publication. One application-owned
+publisher coalesces completed routes, skips recorded routes and routes with no
+detail views, and publishes ready or unavailable usage. Closing Serve fences
+new publications and drains that task. A page or Markdown render does not
+raise the revision only because its document completed.
+A completion that changes no detail publishes nothing, but its route still
+counts as completed. Its current revision and live render validity stay intact.
+After a rebuild, ready usage reused for an equal `documentKey` is already
+recorded as complete. Its later completion publishes no revision.
+
+The event stream at `/mokly-viewer/events` writes one message per
+publication whose `id` is the new revision and whose `data` is the server's
+`deploymentId`, and one message with the current values on every new
+connection, so a reconnecting shell catches up at once and a shell that
+reconnects to another server process performs a full page load. The stream
+exists only in Serve.
 
 ## Browser adoption
 
-For a newer update or reconnect `ready`, the browser requests its current durable
-shell URL without caching. It validates that page's
-[entry-scoped public bootstrap](./mokly-shell-bootstrap.md) and paired private
-capability descriptor; it introduces no manifest endpoint and does not transfer
-the internal catalogue or baseline inventories. It does not request comparison
-snapshots or replace the current iframe documents.
+On a message whose `data` differs from the installed `deploymentId` the
+standalone shell performs a full page load. On a message above the installed
+revision the shell cancels a refresh still in flight, fetches the index and the current route's details, and adopts them
+in one store commit under the shell delivery fences; the page never reloads.
+During and after adoption the shell keeps the navigation tree, the
+All/Changes buttons, the mounted preview frames, the filter, search text,
+section and folder disclosure, focus, the drawer, and scroll positions. It
+updates the Changes count and status, the changed-entry marks, and the
+removed rows from the same state: retained removed rows keep their identity,
+and additions and removals follow the canonical server order after the
+current tree. Removed screens and components stay in All, and removed pages
+and documents appear only in Changes.
 
-If the fetched content version matches the mounted page, atomically replace the
-installed scoped catalogue and current entry's private workspace. Its update
-version must be at least the triggering event version and the mounted page's
-version. A later response can catch up beyond its triggering event. Never merge
-retained usage from the previous entry or revision. Superseded requests are
-aborted and cannot apply data, report failure, or cause a reload. Page shutdown
-cancels pending fetches and navigation waits.
+The shell reloads only the mounted frames whose `documentKey` in the
+refreshed index changed, whether the frame shows a screen or component view,
+a page, a document, or a use-case step; a frame whose key is unchanged keeps
+its document, scroll, and selection. When the refreshed index does not list the current entry, the route shows the
+missing state and keeps the URL until an index lists the entry again. A removed entry's detail is fetched from the
+generation the refreshed index names; a record absent from the refreshed index shows the missing state. When a fetch fails or the pair disagrees after
+one more index fetch, the shell keeps its installed state and shows the entry
+as unavailable with retry, and the next message starts a fresh refresh.
 
-The browser retains the navigation tree, All/Changes buttons, current preview
-frames, user filter, search, section and folder disclosure, focus, drawer and
-scroll state.
-Update the count/status, changed-entry attributes and baseline-only rows from
-the same snapshot. Retained removed rows keep their identity; additions/removals
-follow the canonical server order after the current tree. Existing rules for
-removed screens/components in All and removed pages and documents only in
-Changes still apply.
-Changes preparing, loading and empty/unavailable states use the existing
-sidebar design; `preparing` precedes loading only in
-[a per-commit rebuild](./mokly-derived-baselines.md). A status-only evidence update
-carries no changed paths or snapshot, so entering and leaving `preparing` replaces the
-count slot and the selected-Changes sidebar without touching the tree, the
-current documents, or the focused control. The tree stays `aria-busy` while
-either working state is selected.
+Changes `preparing`, loading, and empty or unavailable states use the sidebar
+design of the [on-demand contract](./mokly-on-demand.md); `preparing`
+precedes loading only in a per-commit rebuild. A status-only publication
+replaces the count slot and the selected-Changes sidebar without touching the
+tree, the current documents, or the focused control; the tree stays
+`aria-busy` while a working state is selected. Adoption never runs
+destination-reveal recovery: a search may hide the current entry and its
+folder may be collapsed on purpose, and an update cannot clear that search,
+open the disclosure, or scroll the route into view. Explicit navigation still
+reveals its destination under the normal rules.
 
-Background adoption never runs destination-reveal recovery. A search may
-intentionally hide the currently displayed page, and its parent section or
-folder may be intentionally collapsed. Evidence completion cannot clear that
-search, open the disclosure or scroll the current route into view. Explicit
-navigation still reveals its destination using the normal constraint rules.
-
-If the response changes content version, lacks a valid live stamp, cannot be
-read, or no longer describes the same workspace, use the existing durable
-reload and one-shot recovery. Historical views carry a digest of their removed
-entry and ancestor evidence. A changed digest, or a historical view that is no
-longer available in the refreshed baseline, also requires reload so its title,
-details and previous views stay coherent. Static delivery continues to use its
-deployment descriptor and does not start the live update client.
+One effect-scoped subscription owns one `EventSource` on
+`/mokly-viewer/events`, opened when the index carries `live`; abort, page
+exit, or effect replay closes it and any refresh in flight. `EventSource` is
+an optional browser facility: when it is missing, denied, or throws, the shell
+still renders the catalogue, reports the transport failure as a browser
+warning, and leaves only live updates unavailable; a page load fetches the
+current state.
 
 ## Navigation races
 
-In-shell navigation announces its pending/settled state. Evidence refresh
-waits for pending navigation; a response captured for an old URL or replaced
-main view is discarded and retried for the current destination. Navigation
-adopts the destination's navigation evidence and update stamp with its main
-view. If that response predates already adopted evidence, fetch the destination
-again; if content changed, use durable navigation instead. A same-document
-history action or sibling-variant navigation cancels obsolete navigation and
-releases evidence waiting for it. Only the current navigation may commit.
+In-shell navigation commits the route from the installed index at once and
+fetches the destination's detail; it announces its pending and settled state.
+A refresh waits for pending navigation, and a detail response for a route other than the current one is discarded and
+repeated for the current destination. A refresh and a navigation adopt the same pair of index and
+detail, so neither can install a detail that disagrees with the index. A
+same-document history action or a sibling-variant navigation cancels obsolete
+requests and releases a refresh waiting on them. Only the current navigation
+commits.
 
 ## Workspace evidence
 
-Update entry statuses, including variant entries, comparison eligibility,
-baseline variants,
-Details evidence and complete Used by/Affected usage from the paired private
-workspace without reinstalling the workspace. An entry-scoped public fallback
-never derives those lists from omitted records: it reports loading until the
-private workspace is adopted and failed after a current read failure or
-rejection, without showing a partial or zero-consumer result. Keep temporary
-props, current instance selection, inspector
-disclosure, highlight state and authenticated preview documents intact. Usage
-updates retain matching link elements while adding, removing or changing only
-the affected sections and rows, so background completion cannot interrupt a
-keyboard interaction with an unchanged link.
-Background evidence never calls the preview-source swapping path for the
-retained current entry. Evidence changes invalidate loaded/pending comparisons
-and return an active comparison to Current; another explicit selection requests
-comparison work. Current browsing makes no comparison request.
+Screen and component details omit `workspace` until every input of their lists
+is proven. Pending or unavailable consumer usage cannot prove a complete
+Used by list. An absent workspace shows "Usage is unavailable until the
+catalogue has been checked." and never shows a zero-consumer result.
+One unavailable view keeps every Used by list unavailable until the next
+render generation.
 
-On-demand rendering remains authoritative for the usage records associated with
-its actual displayed documents, even after exhaustive Usage becomes available.
-Retain its preview generation and already loaded per-view usage. Unloaded live
-views still request their own records when displayed; exhaustive render-order
-records cannot substitute for those documents. Exhaustive catalogue records
-supply the complete private-workspace `Used by` list. Scoped-bootstrap adoption
-does not replace a newer matching per-view record or change these retention
-rules.
+The detail's `workspace` updates comparison eligibility,
+Details evidence, and the complete Used by and Affected lists in place. While
+the detail is in flight the Usage panel shows the loading copy of the
+on-demand contract without counts, an empty state, or rows; a failed or
+rejected read shows its failure copy with retry; the shell never derives a
+list from an incomplete record or shows a zero-consumer result it has not
+received. Temporary props, the current instance selection, inspector
+disclosure, highlight state, and authenticated preview documents stay intact
+across an update. Usage updates keep matching link elements and change only
+the affected sections and rows, so an update cannot interrupt a keyboard
+interaction with an unchanged link. An update invalidates loaded and pending
+comparisons and returns an active comparison to Current; the next explicit
+selection requests comparison work against the new state, and browsing
+Current makes no comparison request.
 
 ### Affected-Usage Identity And Ordering
 
-The shared served/published workspace deduplicates Affected usage links after
-projecting the selected component's affected-consumer evidence. Two links are
-duplicates exactly when `JSON.stringify` of each complete link matches. Every
-field participates: `entryPath`, `entryKind`, `title`, `viewport`,
-`colorScheme`, `instanceKey`, `direct`, `removed`, and `comparisonEligible`;
-future fields do too. A component variant uses its own `entryPath`; no route or
-saved-variant field exists. Preserve object field order and omission semantics
-rather than a path-only, instance-only, or sorted/subset key.
-
-Keep the first occurrence in evidence order: affected-consumer record order,
-then each record's evidence order. Do not sort the result or merge distinct
-entry, viewport, color scheme, instance, ownership (`direct`), removal,
-or comparison-eligibility contexts. Deduplication performs at most one
-serialization per input usage link and tracks previously seen keys in one pass;
-it must not rescan or reserialize prior links. This changes neither Changes
-membership nor comparison eligibility and does not rewrite upstream evidence.
+Serve and `build` deduplicate the `affected` links of a component's detail
+after projecting its affected-consumer evidence. Two links are duplicates
+exactly when their canonical JSON is equal: every field participates,
+`entryPath`, `entryKind`, `title`, `viewport`, `colorScheme`, `instanceKey`,
+`direct`, `removed`, and `comparisonEligible`, and so does every field added
+later. A component variant uses its own `entryPath`; no route or
+saved-variant field exists. Keep the first occurrence in evidence order:
+affected-consumer record order, then each record's evidence order. Do not
+sort the result or merge distinct entry, view, instance, ownership, removal,
+or eligibility contexts. Deduplication serializes each link once and tracks
+seen keys in one pass. It changes neither Changes membership nor comparison
+eligibility and rewrites no upstream evidence.
 
 ## Acceptance
 
-Desktop/mobile browser regressions assert retained document, navigation-row and
-iframe identity, row positions, scroll, focused search/control fields and folder
-choices through preparing, pending, ready-zero, ready-nonzero and unavailable
-evidence.
-Cover Changed selection while its current preview is unchanged, actual Usage
-completion during a temporary prop edit, later variant/scheme switches, removed
-row membership/order, superseded responses, navigation races, reconnect catch-up
-and content updates followed immediately by evidence updates. Cover loading,
-failed and retry presentation without a partial/zero list, plus scoped-catalogue
-replacement without iframe remount or loss of retained per-view usage. Genuine
-source and resource edits must still refresh the rendered content.
-Test affected-link duplicates across evidence records, first-occurrence order,
-and distinct fields/contexts; assert at most one serialization per input link,
-including duplicates, with the same projection for served and published shells.
+Desktop and mobile browser coverage asserts retained document, navigation
+row, and frame identity, row positions, scroll, the focused search or control
+field, and folder choices across `preparing`, `pending`, ready with zero,
+ready with changes, and `unavailable` states. Cover a Changed selection while
+its preview is unchanged, a usage completion during a temporary prop edit,
+later variant and scheme switches, removed row membership and order,
+superseded responses, navigation races, reconnect catch-up, and two
+publications in quick succession. Cover the loading, failed, and retry
+presentation without a partial or zero list, and a refresh that reloads only
+the frames whose key changed. A source or resource edit must still refresh
+the rendered content. Test affected-link duplicates across evidence records,
+first-occurrence order, and distinct contexts, with one serialization per
+link and the same projection in Serve and the static output.

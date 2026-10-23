@@ -1,0 +1,28 @@
+---
+source: crates/mokly-catalogue/src/_tests_/reference_tests.rs
+expression: "serde_json::to_string_pretty(&actual).unwrap()"
+---
+[
+  {
+    "kind": "document",
+    "path": "design/library",
+    "title": "Shared Design Components",
+    "tags": []
+  },
+  {
+    "kind": "document",
+    "path": "example",
+    "title": "Example",
+    "tags": [
+      "guide"
+    ]
+  },
+  {
+    "kind": "document",
+    "path": "example/workspace-guide",
+    "title": "Workspace guide",
+    "tags": [
+      "guide"
+    ]
+  }
+]

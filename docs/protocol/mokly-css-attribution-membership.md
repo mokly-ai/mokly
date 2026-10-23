@@ -1,223 +1,161 @@
 # CSS Attribution Membership
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
-
-## Delivery Status
-
-Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
-rule and page evidence, classification and strict readers. Comparison details
-for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence); the
-whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Comparison result v7, catalogue read model v6 and
-manifest v10 replace the shapes released in 0.14.0.
 
 ## Membership Rule
 
-The [rule membership contract](./mokly-css-attribution-rules.md) defines matched
-elements, components changed on their own pages, page rows, rule identity and
-all four delivery paths. Retained CSS makes a paired view `changed`; direct
-entry membership is separate. A component-only match can change the complete
-render of an affected consumer without giving that consumer its own row.
-A formatting-only edit has no changed rules and stays excluded. All independent
-Changes signals retain their existing meaning.
+The [rule membership contract](./mokly-css-attribution-rules.md) defines
+matched elements, the components a rule changes on their own pages, the
+entry's own evidence, and rule identity across stylesheets. The outcome for a
+view is the set of per-rule records below, each with an owner. A `matched` or
+`unresolved` record whose owner is the entry makes a paired view `changed` and
+gives the entry a Changes row. A record whose owner is a component is that
+component's change and keeps the view's entry affected without a row of its
+own. An `excluded` record changes nothing. A component-only match can change
+the complete render of an affected consumer without giving that consumer a
+row. A formatting-only edit has no changed rules and produces no record.
+Every independent Changes signal keeps its meaning.
 
-Read and compare every reachable resource path on each side. Keep the actual
-public-pipeline CSS rule evidence. When Git evidence is absent, the byte-only
-material-reason and changed-view fallback remains for a stylesheet linked on
-both actual sides. Use the intersection of those actual resource sets;
-projection-only CSS cannot qualify. One-sided inserted-link membership alone
-cannot grant that fallback. An added declaration of unchanged existing CSS
-therefore changes only its root-owned link material. Inserted consumer links
-stay omitted from page material. Renderer-authored links, root-owned links and
-non-CSS byte comparison retain their ordinary rules.
+Rule evidence is read from linked stylesheets and owned or ownerless head
+styles in the composed documents. The analysis compares delivered bytes. A link added or removed without a byte change is document material under the
+[materiality rule](./mokly-comparison.md#materiality) and invents no rule.
+When the bytes change, reachability on either side admits both available
+documents for rule matching, including a side without that link.
 
-Variant view states and exclusions remain unchanged by consumer-only matches;
-no synthetic variant entry is created for actual-invocation evidence. CSS
-component reasons require kept own-page matches under the nested-component
-test. Non-CSS resources and document `styles` records keep their existing actual-invocation attribution.
+A variant's view states follow the matches on its own view; no synthetic
+variant is created for a consumer's props. Non-CSS resources keep their
+file-level attribution.
 
 ## Evidence Schema
 
-Use these records on both retained view reasons and direct entry reasons in
-comparison result v7. Keep the wire reason kind `dependency`.
+The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
+owns the record: `RuleEvidence` with `stylesheet`, `selector`, `status`, and
+`owner`, in the `rules` list of a review view. This section states how the
+analysis fills it.
 
-```ts
-interface CssRuleAttribution {
-  ruleKey?: string;
-  status: "matched" | "unresolved";
-  selectors: readonly string[];
-  changedComponentPaths: readonly string[];
-  pageSelectors: readonly string[];
-}
+- One record exists per stylesheet, changed rule, selector, and owner that
+  the analysis keeps on this view. A rule with several selectors produces one
+  record per selector that matched or is unresolved; a selector that matched
+  nothing produces none. A rule that matches no element on either side
+  produces no record. A stylesheet whose changed rules all match nothing on
+  this view has one record with status `excluded`.
+- `stylesheet` is the public route of the delivered stylesheet, relative to
+  the artifact root, including a bundle under `static/mokly-generated/`. It never names
+  a private source. An inline or head style uses the containing public
+  document route; no synthetic stylesheet file is required.
+- `selector` is the serialized selector as the parser wrote it, including `&`
+  before nesting substitution. A selector-less at-rule's record carries the
+  at-rule name and its prelude. An excluded stylesheet's record and a
+  whole-stylesheet parse failure's record carry an empty `selector`.
+- `status` is `matched` when the selector matched an element on either side
+  after ignored regions are removed, `unresolved` for a kept construct, a
+  parse failure, or an analysis failure, and `excluded` on the one record of
+  a stylesheet whose changed rules all match nothing. For one selector of one
+  rule on one view, `unresolved` takes precedence over `matched`.
+- Each linked-CSS or ownerless head match belongs to the innermost physically containing component
+  changed by that rule. Emit one `{ kind: "component", path }` record for
+  each such owner. Emit `{ kind: "entry" }` only for matches outside every
+  changed component. A selector can have component and entry records on the
+  same view. Unresolved rules, parse failures, and excluded records have
+  only the entry owner. Both sources use the shared own-page proof and nested test under
+  [style ownership](./mokly-comparison.md#style-ownership).
+  A receiver can claim supplied slot content when its own pages prove the
+  rule. Without that proof, the match falls back to the entry unless another
+  physically containing changed component claims it.
+- Trusted sidecar rules join the same unfiltered own-page proof and nested
+  test as linked CSS. Equal identities join across owner sets. A nested copy
+  of the same component never takes its match. Supplier input ancestry only
+  decides whether a nested component can take a declared supplier's rule.
+  A kept match inside the declared owner's physical region belongs to that
+  owner, including supplied content. Exact-instance proof does not require
+  own-page matches under [style ownership](./mokly-comparison.md#style-ownership).
+  Owned, ownerless, and linked sources share the same excluded and unresolved
+  record rules.
+- Records of equal rules in different stylesheets stay separate records,
+  because `stylesheet` differs; the rule identity joins their proof, not their
+  records.
 
-interface CssPageEvidence {
-  selectors: readonly string[];
-  unresolved?: true;
-}
-
-interface DependencyAnalysis {
-  status: "matched" | "unresolved";
-  selectors: readonly string[];
-  rules: readonly CssRuleAttribution[];
-  pageEvidence?: CssPageEvidence;
-}
-
-interface DependencyReason {
-  kind: "dependency";
-  path: string;
-  analysis?: DependencyAnalysis;
-}
-
-interface ExcludedResource {
-  path: string;
-  reason: "no-matching-rule";
-}
-
-interface ResourceEvidence {
-  reasons?: readonly DependencyReason[];
-  excludedResources?: readonly ExcludedResource[];
-}
-
-interface ViewReview extends ResourceEvidence {
-  // Existing axes, state and ignoredIds remain.
-  material?: true;
-}
-```
-
-`path` names the reachable stylesheet in the existing repository-relative
-resource-path space, including generated public routes. It never names a
-private imported source. `ruleKey` is the cross-stylesheet key defined in the
-[identity contract](./mokly-css-attribution-rules.md#rule-identity-across-stylesheets).
-`rules` is nonempty and contains each retained identity once for this path and
-view. Excluded rules are omitted. Repeated occurrences union their evidence;
-unresolved takes precedence over matched for the same identity on this view.
-These fields are optional on each [review result v7](./mokly-changes-serving.md#comparison-engine)
-view. Empty reason and exclusion lists are omitted. Their absence records no
-retained or excluded resource evidence; it does not select an older schema.
-
-A parse failure has no diffed rule identity: emit one unkeyed unresolved record,
-with empty selector and component arrays, and no keyed records for that path
-on this view.
-An unexpected analysis failure also uses this unkeyed form if no diff survives;
-keep any selectors that could safely be serialized. If a diff survives, retain
-its keys and mark the failing outcomes unresolved. An unkeyed record never
-joins another file or establishes a component match.
-
-`selectors` lists the original serialized selectors of each retained rule,
-including `&` before query-only nesting substitution. Sort and deduplicate this
-presentation list by UTF-16 code units. It is distinct from the ordered selector
-arrays used in identity. Unresolved rules may have no selectors.
-
-`changedComponentPaths` is the sorted, unique set of parent component paths proved
-changed by this identity across the whole catalogue after the nested-component
-test. Unfiltered own-page matches decide whether Y takes a match from X; only
-kept matches decide which ids enter this array. It is independent of this
-path, view and delivery method. A local unresolved occurrence can carry ids
-proved by kept matches of resolved copies on other own pages, but still gives
-this page an unresolved reason. Unkeyed failures have no changed ids. Never include variant
-ids, an owner claim or a component inferred only from a consumer invocation.
-
-`pageSelectors` is the sorted, unique subset of this record's `selectors` with
-at least one proven match outside components changed by this rule on this view.
-It is empty for unresolved occurrences and for wholly covered matches. No
-selector from another rule may cover or explain this rule's page matches.
-
-`analysis.selectors` is the union of rule selector lists. Its `status` is
-unresolved if any rule is unresolved, otherwise matched. `pageEvidence` is
-present exactly when a rule has page selectors or is unresolved. Its selectors
-are the union of `pageSelectors`; `unresolved: true` is present exactly when
-at least one rule is unresolved. Empty selectors are required for unresolved-
-only evidence; never invent an outside match. Omit the whole `pageEvidence`
-when no rule gives the page a reason. This absence means component-only CSS
-evidence, not an excluded resource.
+Records sort by `stylesheet`, then `selector`, then `status`, then owner kind
+and path, and are unique. An empty `rules` list is omitted. A view with no
+record has no kept and no excluded stylesheet evidence.
 
 ## Projection And Merging
 
-View evidence describes the full normalized render, including affected-only
-consumers. Direct page entry reasons retain only rules with page evidence.
-A saved variant's component reasons retain only rules with matches that its
-component keeps on that variant's own page. A variant can still have a separate
-page reason without a kept match or a changed parent. A changed component
-parent's reasons retain rule records only from own pages with kept matches.
-Use those pages' stylesheet paths, never a consumer-only path. For these root-match reasons, `pageEvidence` may be absent.
+The `rules` list of a view describes the complete composed render of that
+view, affected-only consumers included. Membership reads only the records
+whose owner is the entry: a view with one gives its entry a `dependency`
+reason for that stylesheet under the
+[component comparison schema](./mokly-component-review.md#reasons-and-secondary-evidence).
+A changed component's own reason comes from kept own-page matches under
+[style ownership](./mokly-comparison.md#style-ownership), never from a
+consumer-only path. A variant's component reason comes only from matches that
+the component keeps on that variant's own page; the variant can still have an
+entry-owned record of its own.
 
-Merge entry reasons by path, then by rule key, unioning selectors, changed ids
-and page selectors, with unresolved precedence. Merge unkeyed records together
-only within that same path. Recompute the summary fields from the merged rules.
-One view's exclusion cannot cancel another view's retained reason. A direct
-page rule and a component rule from the same file can coexist without turning
-all its selectors into page evidence.
+Across the views of one entry, the shell merges records by `stylesheet` and
+`selector`, with `unresolved` taking precedence, under the
+[CSS evidence presentation](./mokly-css-evidence-presentation.md) contract.
+One view's `excluded` record never cancels another view's `matched` record.
+An entry-owned record and a component-owned record from one stylesheet
+coexist on one view without turning every selector of that stylesheet into
+entry evidence.
 
-`material` is present exactly when the paired ignore-normalized document
-material differs, including added and removed views. Keep the existing
-inserted-link comparison exclusion. It is absent otherwise and never `false`.
-It describes documents, not CSS membership or component ownership records.
-Retain actual final bytes in snapshots and keep private document coordinates
-out of public evidence.
-
-Catalogue read model v6 gains optional `resourceEvidence: ResourceEvidence` on
-`CatalogueView` and on the single-document `CataloguePage`. Screen and component
-variant views use the same records as comparison v7. Whole-document pages gain
-no v7 comparison records or comparison controls. Their catalogue evidence comes
-from the same classifier and pinned baseline. Component parents use their
-saved views and the existing component result, not invented parent views.
-These fields are allowed only with ready Changes; omit empty evidence. Pending,
-unavailable and disabled generations omit them. Removed entries can retain
-their before-side evidence in the existing removed-entry projection.
-
-Live classification and its selected shell projection retain these fields
-before snapshots exist. Static export and publication copy the same validated
-evidence. Selection never reruns CSS analysis. Selected comparisons retain the
-catalogue-wide changed-component sets computed before selection; they must not
-recompute a smaller set from the selected page alone. The shared browser reader
-can validate id syntax; the complete producer also verifies unfiltered and kept own-page proof.
+The [entry detail](./mokly-shell-delivery.md#entry-detail) of a screen or
+component carries each view's `rules` and `resources` records as the view's
+`resourceEvidence`, and a page's detail carries the records of its one
+document; the index carries none. A detail carries them only while Changes is
+`ready`; pending, unavailable, and disabled states omit them. A removed
+entry's detail inside a comparison generation keeps its before-side records.
+The static build copies the same validated records. The selected comparison
+of Serve never reruns the analysis and never recomputes a smaller
+changed-component set from the selected entry alone.
 
 ## Validation
 
-- An analysed or excluded path must be a changed public stylesheet reachable
-  from that view on at least one side. Both before and after discovery obey
-  paired Review-ignore. Embedded documents use their own normalized trees.
-- No path is both retained and excluded on one view. Reasons and exclusions
-  sort uniquely by path. Omit empty optional lists; required empty arrays stay.
-- Every analysed v7 reason has nonempty `rules`. A `ruleKey` has 64 lowercase
-  hex digits. Keyed records sort by key; an unkeyed record sorts last. A whole-file parse
-  failure has no keyed siblings on that view. Entry aggregates can retain keyed
-  evidence from other views beside an unkeyed failure.
-  Missing `analysis` is valid for non-CSS reasons, never a CSS ownership bypass.
-- Every selector/id array is sorted and unique. A matched rule has at least
-  one selector. Page selectors must be a subset of its selectors. Verify
-  summary unions and unresolved precedence, including `pageEvidence` presence.
-- Producers validate each changed component id against its frozen kept own-page
-  matches for that identity. Validate nested filtering against unfiltered own-page
-  sets, never against `changedComponentPaths`. Page-only reasons never create affected consumers.
-  Keep existing usage validation for the resulting implementation-impact set.
-- Entry reasons must come from recorded eligible rules, not merely a retained
-  path. Source validation must reject a component-only rule forged as a page
-  reason and a consumer-only match forged as a component reason.
-- `analysis` appears only on stylesheet paths in public analysis scope. Use
-  the shared `analysisOwnsStylesheet` predicate; violations fail `review-invalid`.
-  Browser decoding checks structure and stylesheet identity without fetching
-  panes or receiving private range coordinates.
-- `material` is absent or true; when present the view is changed, added or
-  removed. Independent input reasons may still have unchanged view states.
-- Complete, fast, Browse, watched, selected, export and publication paths must
-  agree on membership and evidence. Cache keys include the accepted generation,
-  baseline and complete rule-to-component facts, not just a view's local bytes.
+- Every `stylesheet` names a changed public stylesheet reached on either
+  side, or the containing public document of changed inline style rules. An embedded document uses its own
+  tree.
+- Records are sorted and unique as stated above. A stylesheet with a
+  `matched` or `unresolved` record on a view has no `excluded` record on that
+  view.
+- A component owner names a registered component with a kept own-page match
+  for that rule identity, or a kept trusted exact-instance match. Physical
+  containment supplies the claim for owned, ownerless, and linked rules.
+  Supplier ancestry only prevents a nested component from taking a supplier's
+  own rule for content that the supplier passed into it.
+  The producer checks
+  each owner against that proof, never against the result's own rows.
+- An `unresolved` record is owned by the entry.
+- A record never carries a private source path or a match node.
+- Serve's background classification, the selected comparison, `build`, and
+  `publish` produce the same records for one view. The cache key of a record
+  set includes both sides' document keys, both sides' stylesheet bytes, and
+  the catalogue-wide own-page match sets, not a view's bytes alone.
+- A violation fails the result with `review-invalid`.
 
 ## Read And Analysis Reuse
 
-Baseline CSS uses the bounded Git batch reader, including optional counterpart
-reads for added/removed files. Head reads use compilation outputs or the confined
-public reader. Resource bytes are cached per side/path; parser results share
-identical source text across paths and sides. Parsing shared CSS does not repeat
-per view. Collect and filter own-page matches before reducing page reasons, without
-rerendering consumer modules, rerunning PostCSS or generating snapshots.
+Head documents use the bounded render cache; evicted views render again on the
+head root. Base documents use the 256 MiB capture or pinned-source fallback.
+A comparison-scoped route map reuses resource digests, byte proofs, and changed-byte state. Public
+asset reads and planning digests do not enter the private source snapshot.
+Planning batches the generation's known read set before digest reads. Opaque
+resources use streamed digests when they exceed the blob read budget. Resource bytes
+and content-keyed stylesheet diffs have byte-bounded caches; eviction changes
+work only. The analysis renders no document. Parsed stylesheets are cached by content hash with a byte bound, so a
+stylesheet shared across paths and sides parses once, and eviction changes
+time only. Own-page matches are collected and filtered catalogue-wide before
+any entry's evidence is decided, without rendering a consumer again or
+generating snapshots.
 
 The shell's exact text and grouping are in
 [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 ## Non-goals
 
-Do not evaluate media/container/supports conditions, specificity, cascade order,
-overrides, pixels or screenshots. Do not infer owners from CSS Modules,
-CSS-in-JS, bundle paths or source imports. The existing custom-property keep
-rule remains the only inheritance analysis.
+Do not evaluate media, container, or supports conditions, specificity,
+cascade order, overrides, pixels, or screenshots. Do not infer owners from
+CSS Modules, CSS-in-JS, bundle paths, or source imports. The custom-property
+keep rule is the only inheritance analysis.

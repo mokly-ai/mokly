@@ -1,13 +1,5 @@
 # Viewer Markers And Multi-Instance Highlights
 
-## Delivery Status
-
-Implemented. Delivery and verification are tracked by the active
-[viewer comment anchoring plan](../../plans/viewer-comment-anchoring.md). The
-viewer composes the existing instance identity and frame adapter without adding
-a comment model or changing the adapter wire protocol. References name entries
-by path under the [instance contract](./mokly-instances.md).
-
 ## Purpose And Boundary
 
 `@mokly/viewer` positions host-owned React content on component instances and
@@ -18,8 +10,7 @@ The host owns marker content, accessibility, interaction and persistence.
 Markers address only component instances represented by an
 [`InstanceRef`](./mokly-instances.md). Point and region annotations are outside
 this contract. The viewer exposes no raw geometry, selectors or portal target.
-`renderViewer` does not accept markers, and standalone Serve/export render no
-marker layer.
+The standalone shell of Serve and the static build renders no marker layer.
 
 ## Public Contract
 
@@ -118,7 +109,7 @@ This prevents an asynchronous stale snapshot from losing a geometry wake-up.
 Replacement or disposal invalidates the generation, cancels scheduled work and
 prevents late results, errors or callbacks from reaching the host.
 
-The hydrated shell owns one frame registry per shell root. Workspace inspection
+The mounted shell owns one frame registry per shell root. Workspace inspection
 labels and host markers acquire that registry's single geometry scheduler and
 contribute their demanded sessions to one deduplicated set. They therefore
 share a boundary read when both target the same session. Validated usage
@@ -161,7 +152,6 @@ before mounting the new runtime. Unmount removes observers, scroll listeners,
 scheduled animation frames, marker containers and adapter subscriptions, and no
 late marker state or error callback may fire.
 
-The adapter wire schema and embedded inspector bundle are unchanged. Markers and
-multi-highlight compose existing `list`, `highlight`, `geometry` and host-side
+Markers and multi-highlight compose the adapter's `list`, `highlight`, `geometry` and host-side
 frame identity primitives described by the
 [frame adapter protocol](./mokly-frame-adapter.md).

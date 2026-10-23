@@ -1,6 +1,13 @@
 /** Embedding extensions are scoped away from the standalone shell. */
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import { NARROW_SHELL } from "../shell/layout_breakpoint.js";
+
+/**
+ * The embedded viewer's own rules. The compact top bar switches at the
+ * viewer contract's container width of 560px. The query uses pixels, so the
+ * host page's root font size cannot move it.
+ */
 export const VIEWER_CSS = `
 .${VIEWER_DIRECTORY} { position:relative; isolation:isolate; height:100%; min-height:0; color:var(--chrome-ink); font-family:var(--sans); line-height:1.5; }
 @scope (.${VIEWER_DIRECTORY}) to ([data-mokly-slot]) {
@@ -22,8 +29,8 @@ export const VIEWER_CSS = `
 .${VIEWER_DIRECTORY} [data-mokly-slot="emptyState"] { position:absolute; inset:0; background:var(--chrome-bg); overflow:auto; }
 .${VIEWER_DIRECTORY} [data-mokly-slot][hidden] { display:none; }
 .${VIEWER_DIRECTORY} [data-mokly-slot="topBarStart"], .${VIEWER_DIRECTORY} [data-mokly-slot="topBarEnd"] { display:flex; flex:none; align-items:center; }
-@media(max-width:56.249rem) { .${VIEWER_DIRECTORY} .mokly-rail-host { width:0; } }
-@container mokly-top-host (max-width:35rem) {
+@media ${NARROW_SHELL} { .${VIEWER_DIRECTORY} .mokly-rail-host { width:0; } }
+@container mokly-top-host (max-width:560px) {
   .mokly-top-host > .mbk-topbar { gap:8px; padding:0 8px; }
   .mokly-top-host > .mbk-topbar .mbk-brand,
   .mokly-top-host > .mbk-topbar .mbk-search,

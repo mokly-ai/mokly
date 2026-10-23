@@ -1,88 +1,114 @@
 /** Shell-scoped React state for standalone and application-owned roots. */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { DetailRequest } from "../catalogue/detail_fences.js";
+import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
+import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
 import { DisplaySelection } from "../viewer/display_context.js";
+import { viewerContext } from "../viewer/projection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import { ViewerLiveBoundary } from "./capability_context.js";
-import { useViewerCapabilityStore } from "./capability_store.js";
 import type { Catalogue } from "./catalogue.js";
 import {
   ComparisonEnvironmentProvider,
   type ComparisonEnvironment,
 } from "./comparison_context.js";
 import type { ShellContext } from "./context.js";
+import { initialSnapshot } from "./data_commit.js";
+import { ShellDataBoundary } from "./data_context.js";
+import type { ShellDataSource } from "./data_source.js";
+import { useShellDataStore } from "./data_store.js";
 import { ShellFrameEventRouter } from "./frame_event_router.js";
 import { ShellFrameRegistryProvider } from "./frame_registry.js";
 import { catalogueNavSections } from "./nav_model.js";
-import { routeScreenId, type ShellRoute } from "./routes.js";
-import { shellRecoverySnapshot, shellStore } from "./store_actions.js";
+import type { ShellRoute } from "./routes.js";
+import { shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
 import { ShellStoreBoundary, type ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
 import { type EmbeddedShellEnvironment, useShellHost } from "./store_host.js";
 import { hostRoute } from "./store_host_routes.js";
 import { createInitialShellState } from "./store_initial.js";
-import type {
-  ShellInitialState,
-  ShellRecoverySnapshot,
-  ShellState,
-} from "./store_state.js";
-import type { ShellView } from "./views.js";
+import type { ShellInitialState, ShellState } from "./store_state.js";
 import { WorkspaceProvider } from "./workspace_context.js";
 
 interface ShellStoreProviderProps {
-  catalogue: Catalogue;
   children: ReactNode;
   comparisonEnvironment?: ComparisonEnvironment;
-  context: ShellContext;
+  /** Route-independent values: the embedded flag and the starting theme. */
+  context: Pick<ShellContext, "embedded" | "theme">;
   embeddedHost?: EmbeddedShellEnvironment;
   frameAdapter?: FrameAdapter;
   frameBaseUrl?: string | URL;
+  /** The validated index the shell starts from. */
+  index: CatalogueReadModel;
+  /** Details already held, adopted under their fences before the first render. */
+  initialDetails?: readonly (readonly [DetailRequest, EntryDetailV2])[];
   initialState?: ShellInitialState;
   interactive: boolean;
-  recovery?: ShellRecoverySnapshot;
-  view: ShellView;
+  onVersionError?: (error: MoklyVersionError) => void;
+  /** The detail and live transports; absent, the shell renders the index only. */
+  source?: ShellDataSource;
+  /** The route the shell starts on, resolved in the starting catalogue. */
+  route: (catalogue: Catalogue) => ShellRoute;
 }
 
 /** Provide one state owner to a complete shell tree. */
 export function ShellStoreProvider({
-  catalogue,
   children,
   comparisonEnvironment,
   context,
   embeddedHost,
   frameAdapter,
   frameBaseUrl,
+  index,
+  initialDetails,
   initialState,
   interactive,
-  recovery,
-  view,
+  onVersionError,
+  route,
+  source,
 }: ShellStoreProviderProps) {
+  const [initial] = useState(() => initialSnapshot(index, initialDetails));
   const [state, setState] = useState(() =>
-    initialShellState(catalogue, context, view, initialState, embeddedHost),
+    initialShellState(
+      initial.catalogue,
+      {
+        ...context,
+        ...viewerContext(
+          initial.catalogue.publicModel,
+          defaultSelectionOf(initialState),
+        ),
+      },
+      route(initial.catalogue),
+      initialState,
+      embeddedHost,
+    ),
   );
   const stateRef = useRef(state);
-  const recoveryApplied = useRef(false);
   stateRef.current = state;
-  const capabilityStore = useViewerCapabilityStore({
-    captureRecovery: () =>
-      shellRecoverySnapshot(
-        stateRef.current,
-        interactive && embeddedHost === undefined,
-      ),
-    catalogue,
-    context,
+  const data = useShellDataStore({
+    initial,
     interactive,
+    onVersionError,
     setState,
+    source,
     state,
     stateRef,
   });
-  const activeCatalogue = capabilityStore.catalogue;
-  const activeContext = capabilityStore.context;
+  const activeCatalogue = data.snapshot.catalogue;
+  const model = activeCatalogue.publicModel;
+  const activeContext = useMemo(
+    () => ({
+      ...viewerContext(model, state.selection),
+      embedded: context.embedded === true,
+      ...(context.theme ? { theme: context.theme } : {}),
+    }),
+    [context.embedded, context.theme, model, state.selection],
+  );
   const sections = useMemo(
     () => catalogueNavSections(activeCatalogue),
     [activeCatalogue],
@@ -108,29 +134,6 @@ export function ShellStoreProvider({
     () => currentContext(activeContext, state),
     [activeContext, state.changesStatus, state.route],
   );
-
-  useEffect(() => {
-    if (embeddedHost || !interactive || !recovery || recoveryApplied.current)
-      return;
-    recoveryApplied.current = true;
-    setState((current) => {
-      const restored = createInitialShellState(catalogue, context, view, {
-        ...initialState,
-        recovery,
-      });
-      const selection = selectionForRoute(restored.selection, current.route);
-      return { ...restored, route: current.route, selection };
-    });
-  }, [
-    catalogue,
-    context,
-    embeddedHost,
-    initialState,
-    interactive,
-    recovery,
-    view,
-  ]);
-
   const store = shellStore({
     catalogue: activeCatalogue,
     context: runtimeContext,
@@ -145,10 +148,8 @@ export function ShellStoreProvider({
   });
   return (
     <ShellStoreBoundary value={store}>
-      <ViewerLiveBoundary value={capabilityStore.liveState}>
+      <ShellDataBoundary store={data}>
         <ComparisonEnvironmentProvider
-          context={runtimeContext}
-          interactive={interactive}
           {...(comparisonEnvironment
             ? { environment: comparisonEnvironment }
             : {})}
@@ -159,41 +160,48 @@ export function ShellStoreProvider({
           >
             <DisplaySelection.Provider value={state.selection}>
               <ShellFrameEventRouter />
-              <WorkspaceProvider initial={initialState?.workspace}>
-                {children}
-              </WorkspaceProvider>
+              <WorkspaceProvider>{children}</WorkspaceProvider>
             </DisplaySelection.Provider>
           </ShellFrameRegistryProvider>
         </ComparisonEnvironmentProvider>
-      </ViewerLiveBoundary>
+      </ShellDataBoundary>
     </ShellStoreBoundary>
   );
+}
+
+function defaultSelectionOf(
+  initialState: ShellInitialState | undefined,
+): ViewerSelection {
+  return {
+    screenPath: null,
+    view: "all",
+    viewport: "both",
+    colorScheme: initialState?.colorScheme ?? "light",
+    search: "",
+    tags: [],
+  };
 }
 
 function initialShellState(
   catalogue: Catalogue,
   context: ShellContext,
-  view: ShellView,
+  route: ShellRoute,
   initialState: ShellInitialState | undefined,
   embeddedHost: EmbeddedShellEnvironment | undefined,
 ): ShellState {
-  const state = createInitialShellState(catalogue, context, view, initialState);
+  const state = createInitialShellState(
+    catalogue,
+    context,
+    route,
+    initialState,
+  );
   if (!embeddedHost) return state;
+  const hosted = hostRoute(catalogue, embeddedHost.selection);
   return {
     ...withFilterSelection(state, embeddedHost.selection),
-    route: hostRoute(catalogue, embeddedHost.selection),
+    comparisonIntent: hosted.comparison === "side",
+    route: hosted,
   };
-}
-
-/** Synchronize recovered preferences with the route that won initialization. */
-export function selectionForRoute(
-  selection: ViewerSelection,
-  route: ShellRoute,
-): ViewerSelection {
-  const next = { ...selection, screenPath: routeScreenId(route) };
-  if (route.snapshot) next.snapshotId = route.snapshot;
-  else delete next.snapshotId;
-  return next;
 }
 
 /** Project mutable route identity into the context consumed by shell children. */

@@ -14,70 +14,56 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#core-concepts">Core concepts</a> ·
-  <a href="#api-reference">API</a> ·
-  <a href="#deployment-and-security">Deployment</a> ·
+  <a href="./docs/concepts/README.md">Core concepts</a> ·
+  <a href="./docs/api/README.md">API</a> ·
+  <a href="./docs/deployment/README.md">Deployment</a> ·
   <a href="#development">Development</a>
 </p>
 
-`@mokly/viewer` is an open-source React library for rendering a served or
-exported Mokly catalogue inside another product. It provides the same browsing,
-comparison and inspection experience as Mokly's standalone catalogue while
-your application keeps control of its navigation, branding, authentication and
-collaboration UI.
-The `@mokly/viewer/data` boundary also validates Mokly's private manifest v10
-component view records, including optional inserted-stylesheet provenance.
-That provenance is not part of the public catalogue read model; see the
-[component manifest contract](../../docs/protocol/mokly-component-manifest.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-Saved component views have one explicit root boundary. It does not add a Used
-by instance. Catalogue v6 exposes optional `resourceEvidence` on views and
-whole-document pages while Changes is ready. Comparison v7 carries the same
-rule identities, changed component paths and page evidence. The readers validate
-these fields without receiving private match coordinates. These formats replace the released shapes; regenerate earlier output. Details show the selected
-screen's or saved view's evidence in Current, before a comparison loads: each
-changed stylesheet once, with its sentences and selectors under it, as the
-[CSS evidence presentation](../../docs/protocol/mokly-css-evidence-presentation.md)
-contract defines. A whole-document page's Details show its own evidence the
-same way, with page wording and its status beside its title. A public
-catalogue has no branch name, so embedded Details leave out the “Compared with
-the branch point” sentence and keep the rest of the evidence. Serve and an
-exported catalogue know their branch name, so their Details keep that
-sentence, also while another screen's data loads after navigation.
+`@mokly/viewer` is an open-source React library that renders a Mokly catalogue
+inside another product. It reads the catalogue that `mokly serve` serves or
+`mokly build` writes, and it renders the same Browse shell as the standalone
+catalogue: browsing, comparison, and inspection. Your application keeps control
+of its navigation, branding, authentication, and collaboration UI.
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a
-> delivery-only package: it reads public catalogue artifacts and never runs
-> application source, Git commands or the Mokly CLI.
+> delivery-only package. It reads public catalogue data, and it runs no
+> application source, no Git command, and no Mokly CLI.
 
 ## Why Mokly Viewer
 
-- **A complete catalogue experience.** Render Markdown documents, pages, screens, component
-  variants and user flows with search, tags, responsive previews, color
-  schemes, Changes filtering, inspection, and Overlay, Difference and Side by
-  side comparisons whose pages and paired scrolling panels move together by
-  default, with a reader-controlled Scroll together switch.
+- **A complete catalogue experience.** Browse Markdown documents, pages,
+  screens, components and their variants, and use-case flows. Search, filter by
+  tag, switch viewports and colour schemes, filter to Changes, inspect
+  component instances, and compare versions in Overlay, Difference, and Side by
+  side with a Scroll together switch.
 - **Designed to be embedded.** Connect the viewer to application state through
-  controlled selection, typed events, host-owned slots and an imperative ref.
+  controlled selection, typed events, host-owned slots, and an imperative ref.
 - **Component-aware collaboration.** Resolve saved component references,
-  highlight exact instances, start an instance picker and anchor host-owned
+  highlight exact instances, start an instance picker, and anchor host-owned
   markers such as comment controls.
-- **Same-origin or isolated delivery.** Use the built-in same-origin adapter or
-  an explicit, origin-pinned `postMessage` adapter for separately hosted
-  artifacts.
-- **Server-renderable.** Render the full shell on the server and hydrate it in
-  a React host without maintaining a second UI implementation.
-- **Typed and validated.** The package ships TypeScript declarations and
-  validates catalogue data at its public boundary.
+- **Same-origin or isolated delivery.** Use the built-in same-origin adapter, or
+  an explicit origin-pinned `postMessage` adapter when the catalogue files live
+  on another origin.
+- **One shell for every delivery.** The same React tree renders in your
+  application, in `mokly serve`, and in the static output of `mokly build`. It
+  renders only in the browser, from two JSON shapes: the catalogue index and
+  one entry detail per entry.
+- **Typed and validated.** The package ships TypeScript declarations generated
+  from Mokly's Rust model, and it validates every index and detail at its
+  public boundary.
 
 ## Requirements
 
 - React and React DOM 19 or newer
 - An ESM-compatible application build
-- A catalogue created by `@mokly/mokly` and available over HTTP(S)
+- A catalogue that `@mokly/mokly` serves or builds, reachable over HTTP(S)
 
-Mokly Viewer is currently pre-1.0. Minor releases may include breaking API
-changes; see the [changelog](./CHANGELOG.md) before upgrading.
+Mokly Viewer is pre-1.0. A minor release can change the API. Read the
+[changelog](./CHANGELOG.md) before you upgrade.
 
 ## Quick Start
 
@@ -89,21 +75,37 @@ npm install @mokly/viewer react react-dom
 
 ### Render a same-origin catalogue
 
-Import the stylesheet once, give the viewer a stable ID, and place it in a
-container with a definite height:
+Import the stylesheet once. Place the viewer in a container with a definite
+height. Give it the URL of the catalogue index and a `detail` function that
+names the detail of one entry:
 
 ```tsx
+import { useMemo } from "react";
 import { MoklyViewer } from "@mokly/viewer";
 import "@mokly/viewer/styles.css";
 
-interface CataloguePageProps {
-  catalogueUrl: string;
+/** Names the detail of one entry on the catalogue origin. */
+export function catalogueDetail(origin: string) {
+  return async (entryPath: string, snapshotId?: string) => {
+    if (!snapshotId) return `${origin}/mokly-viewer/entries/${entryPath}.json`;
+    // A removed entry's detail lives in the comparison generation that the
+    // index's comparisonUrl names.
+    const response = await fetch(`${origin}/mokly-viewer/index.json`, {
+      credentials: "omit",
+    });
+    const { comparisonUrl } = await response.json();
+    return new URL(`entries/${entryPath}.json`, `${origin}/${comparisonUrl}`);
+  };
 }
 
-export function CataloguePage({ catalogueUrl }: CataloguePageProps) {
+export function CataloguePage({ origin }: { origin: string }) {
+  const detail = useMemo(() => catalogueDetail(origin), [origin]);
   return (
     <main className="catalogue-page">
-      <MoklyViewer viewerId="product-catalogue" catalogue={catalogueUrl} />
+      <MoklyViewer
+        index={`${origin}/mokly-viewer/index.json`}
+        detail={detail}
+      />
     </main>
   );
 }
@@ -115,35 +117,42 @@ export function CataloguePage({ catalogueUrl }: CataloguePageProps) {
 }
 ```
 
-`catalogueUrl` must be an absolute HTTP(S) URL such as
-`https://app.example.com/mokly-viewer/catalogue.json`. When the catalogue artifacts
-share the application's origin, the default frame adapter is all you need.
+`index` is an absolute HTTP(S) URL such as
+`https://app.example.com/mokly-viewer/index.json`, or the index object with a
+`baseUrl`. The viewer validates the index, then calls `detail` for each entry
+it needs. A current entry's detail is `mokly-viewer/entries/<path>.json`. A
+removed entry's detail lives in the comparison generation that the index's
+`comparisonUrl` names. Every path resolves from the catalogue's origin root,
+never from the embedding page. When the catalogue files share the application's
+origin, the default frame adapter is all you need.
 
 The viewer fills its container and owns scrolling within the preview stage. It
 does not grow the embedding document to match the rendered screen.
 
 ### Render a cross-origin catalogue
 
-Use `postMessageAdapter` when catalogue artifacts live on a separate origin.
-Memoize the adapter so its identity remains stable between renders:
+Use `postMessageAdapter` when the catalogue files live on a separate origin.
+Memoize the adapter and the `detail` function so their identities stay stable
+between renders:
 
 ```tsx
 import { useMemo } from "react";
 import { MoklyViewer, postMessageAdapter } from "@mokly/viewer";
 import "@mokly/viewer/styles.css";
 
-export function CataloguePage({ catalogueUrl }: { catalogueUrl: string }) {
-  const frameOrigin = new URL(catalogueUrl).origin;
-  const frameAdapter = useMemo(
-    () => postMessageAdapter({ frameOrigin }),
-    [frameOrigin],
-  );
+import { catalogueDetail } from "./catalogue-page";
 
+export function IsolatedCataloguePage({ origin }: { origin: string }) {
+  const detail = useMemo(() => catalogueDetail(origin), [origin]);
+  const frameAdapter = useMemo(
+    () => postMessageAdapter({ frameOrigin: origin }),
+    [origin],
+  );
   return (
     <div style={{ height: "100vh" }}>
       <MoklyViewer
-        viewerId="product-catalogue"
-        catalogue={catalogueUrl}
+        index={`${origin}/mokly-viewer/index.json`}
+        detail={detail}
         frameAdapter={frameAdapter}
       />
     </div>
@@ -151,516 +160,126 @@ export function CataloguePage({ catalogueUrl }: { catalogueUrl: string }) {
 }
 ```
 
-The artifact server must opt into the embedding application's exact origin and
-serve the inspector and preview resources generated by Mokly. See
-[Deployment and security](#deployment-and-security) before shipping this
+The catalogue host must allow the embedding application's exact origin and
+serve the shell bundle and the inspector that Mokly writes beside the catalogue.
+Read [Deployment and security](./docs/deployment/README.md) before you ship this
 configuration.
 
-## Core Concepts
-
-### Catalogue sources
-
-`MoklyViewer` accepts one of three source forms:
-
-| Source                              | Use it when                                                    |
-| ----------------------------------- | -------------------------------------------------------------- |
-| Absolute `string` or `URL`          | The viewer should fetch `mokly-viewer/catalogue.json` directly |
-| `CatalogueReadModel` plus `baseUrl` | The host already has the catalogue object                      |
-| `CatalogueFetcher`                  | The host needs custom request orchestration or caching         |
-
-A fetcher receives an `AbortSignal` and returns
-`{ catalogue: CatalogueReadModel, url: URL }`. The returned URL identifies the
-artifact origin. Object sources require `baseUrl`; URL and fetcher sources must
-not provide it. Every form is validated with `readCatalogue`, and artifact
-paths always resolve from the catalogue's origin rather than the embedding
-page.
-
-Keep object and fetcher identities stable while mounted. Replacing the source
-or frame adapter intentionally remounts the viewer and cancels pending work.
-
-### Selection
-
-Markdown documents use the existing whole-page frame and the selected Light or
-Dark scheme. They have no viewport or usage axis. Removed documents load their
-historical scheme from the advertised preview generation. In catalogue v6, a
-related-doc match uses `mock:<path>`; source labels remain repository-relative.
-
-`screenPath` names one catalogue entry by its path, such as
-`checkout/overview`. Screen and component variants use their own paths, the
-parent's path plus their slug, just like parents, pages, documents and flows;
-there is no separate variant selection field. The component variant bar
-navigates between those paths, so controlled hosts receive ordinary
-`screenPath` proposals. A component variant page keeps the parent component
-title as its heading while the path chip, status, URL, and Details describe
-the selected variant entry. The shell URL of every entry is `/view/<path>/`.
-
-Use `defaultSelection` for an uncontrolled viewer:
-
-```tsx
-import { MoklyViewer } from "@mokly/viewer";
-
-export function Catalogue({ catalogueUrl }: { catalogueUrl: string }) {
-  return (
-    <MoklyViewer
-      viewerId="product-catalogue"
-      catalogue={catalogueUrl}
-      defaultSelection={{
-        screenPath: "checkout/overview",
-        viewport: "desktop",
-      }}
-    />
-  );
-}
-```
-
-Use `selection` with `onSelectionChange` when application state owns the active
-screen and filters:
-
-```tsx
-import { useState } from "react";
-import { MoklyViewer, type ViewerSelection } from "@mokly/viewer";
-
-export function ControlledCatalogue({
-  catalogueUrl,
-}: {
-  catalogueUrl: string;
-}) {
-  const [selection, setSelection] = useState<ViewerSelection>({
-    screenPath: null,
-    view: "all",
-    viewport: "both",
-    colorScheme: "light",
-    search: "",
-    tags: [],
-  });
-
-  return (
-    <MoklyViewer
-      viewerId="product-catalogue"
-      catalogue={catalogueUrl}
-      selection={selection}
-      onSelectionChange={setSelection}
-    />
-  );
-}
-```
-
-Controlled changes are proposals until the host passes the new selection back.
-Do not provide `defaultSelection` in controlled mode, and remount the viewer if
-you need to change modes.
-
-A removed component parent may have no remaining variants when they all moved
-to another parent. It keeps its removal record; current parents still require
-at least one current variant.
-
-Every removed variant carries `parentTitle`, its parent's title at the branch
-point. Public and scoped readers require this field and reject it on removed
-non-variants. The read model is v6.
-
-Current paired entries carry `previousPath`; comparisons select the original
-before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
-removed entry's `screenPath` to select that exact historical record. The viewer
-requires it whenever `comparisonUrl` is non-null; the reader never derives
-a missing id. It carries it through controlled proposals, navigation events and axis/filter
-changes. A path-only selection of a removed record normalizes to its published
-identity; stale or unknown snapshots render unavailable. Readers reject a
-catalogue in which a current and a removed record share a path. Live evidence
-may update an explicit snapshot in place and makes a replaced identity
-unavailable.
-
-Shell links may name `viewport` and `scheme` independently. Exactly one valid
-value for an axis applies in the same selection proposal; invalid or repeated
-values retain that sticky axis.
-
-The selected color scheme remains host-visible even when the chosen screen or
-component variant has only a Light render. In that case the preview keeps the
-Dark selection and Light-only label, while status, change marks, and
-comparisons use the effective Light view. If ready evidence does not cover
-every shown view, the Viewer preserves the selected entry's published status
-and comparison eligibility independently.
-
-The embedded viewer's public catalogue has no branch-point usage data. Details
-therefore shows no Before and Current input changes, whether an entry moved or
-stayed at the same path. Serve and export shells carry that data and show those
-input changes.
-
-Every shell resolves branch-point references through one lookup per catalogue
-generation. A removed variant joins its moved or case-renamed parent in the
-tree, the variant bar and Changes activation, and opens in that parent's
-workspace. When its former parent's path now names another kind, its
-breadcrumb shows the stored `parentTitle` as plain text.
-
-### Host integration
-
-The viewer owns catalogue presentation, navigation, comparison and inspection.
-The host owns the surrounding product experience and can connect it through:
-
-- **Slots** — add React content to the top bar, navigation rail, side panel,
-  preview overlay or catalogue home.
-- **Events** — observe selection, screen navigation, instance hover/click,
-  picking, marker visibility and safe viewer errors.
-- **Markers** — place host-owned React content on an exact `InstanceRef`; the
-  host keeps ownership of comment data and interaction.
-- **Imperative methods** — select screens, highlight or scroll to component
-  instances, and start or cancel instance picking.
-
-Slot children are ordinary host-owned React nodes. The viewer does not inspect
-their DOM or event handlers, and updating a slot does not reset selection or
-frame sessions.
-
-### Component instance references
-
-Instance events carry `frame: { entryPath, stepIndex? }` and an `InstanceRef`
-scoped to a screen, component variant
-or flow step, viewport, color scheme and stable component key. Persist that
-value to reconnect external data such as a review comment. `resolveInstance`
-compares a saved component record with its corresponding current record from a
-newer catalogue without fetching preview evidence.
-
-`InstanceRef.screenPath` is the owning entry's path, including for a component
-variant; the shape has no `variantId`. `onScreenNavigate` reports
-`{ screenPath, snapshotId?, fragment?, navigation? }`, with no route or variant
-id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
-`snapshotId` is present when the committed historical record publishes an
-opaque identity and is absent when that record has no published identity.
-
-Markers accept unique IDs, exact instance references and React content. Marker
-content is pointer-inert by default; opt an interactive child in with
-`style={{ pointerEvents: "auto" }}`. Geometry remains viewer-owned and is not
-exposed as a host API.
-
-## API Reference
-
-### `<MoklyViewer>`
-
-| Prop                                 | Purpose                                                                                                           |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `viewerId`                           | Required stable ID, unique in the document                                                                        |
-| `catalogue`                          | Catalogue object, absolute URL or fetcher                                                                         |
-| `baseUrl`                            | Required artifact origin for an object source only                                                                |
-| `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                              |
-| `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                      |
-| `defaultSelection`                   | Partial initial selection for uncontrolled mode                                                                   |
-| `selection`                          | Complete host-owned `ViewerSelection`                                                                             |
-| `onSelectionChange`                  | Receives viewer selection proposals                                                                               |
-| `slots`                              | Host content for `topBarStart`, `topBarEnd`, `railStart`, `railEnd`, `sidePanel`, `stageOverlay` and `emptyState` |
-| `markers`                            | Host-owned content anchored to component instances                                                                |
-| `onMarkerChange`                     | Reports each marker as visible, hidden or unavailable                                                             |
-| `onScreenNavigate`                   | Reports logical navigation for host routing                                                                       |
-| `onInstanceHover`, `onInstanceClick` | Reports interaction with inspectable component instances                                                          |
-| `onPickStart`, `onPickEnd`           | Reports the instance-picking lifecycle                                                                            |
-| `onError`                            | Reports safe catalogue, version, selection, frame, comparison or marker errors                                    |
-| `ref`                                | Exposes the `MoklyViewerHandle` methods below                                                                     |
-
-`viewerId` must contain 1–64 ASCII letters, digits, hyphens or underscores and
-start with a letter or digit.
-
-### `MoklyViewerHandle`
-
-| Method                          | Purpose                                                              |
-| ------------------------------- | -------------------------------------------------------------------- |
-| `select(partial)`               | Merge a partial selection into the current state                     |
-| `highlightInstance(instance)`   | Highlight one exact instance; pass `null` to clear                   |
-| `highlightInstances(instances)` | Atomically highlight several instances; pass an empty array to clear |
-| `scrollToInstance(instance)`    | Bring an exact instance into view                                    |
-| `startPick()`                   | Start component picking after the current view is inspectable        |
-| `cancelPick()`                  | Idempotently cancel active or pending picking                        |
-
-Highlighting, scrolling and picking are asynchronous because preview frames may
-still be loading. Await their promises and handle rejection. Exact event order,
-cancellation and evidence-refresh behavior are defined in the
-[viewer contract](../../docs/protocol/mokly-viewer.md).
-
-### Package entry points
-
-| Import                     | Purpose                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------- |
-| `@mokly/viewer`            | React component, public types, catalogue reader, instance resolver and frame adapters |
-| `@mokly/viewer/styles.css` | Required viewer stylesheet                                                            |
-| `@mokly/viewer/server`     | Node-only synchronous rendering and full-document server helpers                      |
-| `@mokly/viewer/browser`    | Side-effectful hydration entry for Mokly's standalone documents                       |
-| `@mokly/viewer/data`       | Pure catalogue, component and comparison value contracts for tooling                  |
-| `@mokly/viewer/runtime`    | Browser-safe standalone, entry-scoped bootstrap and live-host integration primitives  |
-
-React applications normally need only the root entry and stylesheet. Do not
-import `@mokly/viewer/browser` in an application-owned React root; it
-automatically hydrates a matching standalone Mokly document.
-
-`@mokly/viewer/data` also exports the directory constants `GENERATED_DIRECTORY`
-and `VIEWER_DIRECTORY`, and the shared path helpers `entryRoute`, `viewRoute`,
-`documentRoute`, `viewHref`, `parseViewHref`, `snapshotViewPath`,
-`snapshotDocumentPath`, `snapshotSidePath`, `snapshotResourcePath`,
-`previewMetadataPath`, `currentDocumentPath`, `currentDocumentRoute`,
-`generatedResourcePath` and `generatedResourceRoute`. `currentDocumentPath`
-builds a current static-document path; `currentDocumentRoute` validates and
-reads its URL pathname. `generatedResourcePath` and `generatedResourceRoute`
-add or remove the generated-directory prefix of a catalogue-relative resource.
-Entry helpers take a path;
-`snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
-resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
-the canonical, extensionless, and `index.html` forms of that URL back into a
-path, while `providerNormalizedHtmlPath` owns the forms a static host serves.
-The complete naming contract is
-[path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
-`isEntryPath` validates complete paths, `isPathSegment` validates one segment,
-and `isKebabCase` retains the separate grammar for tags and Review-ignore ids.
-`firstPathCaseCollision` checks entry and folder-prefix spelling across a path set.
-`isWindowsDeviceName` exposes the device-name check applied to path segments.
-
-## Server Rendering
-
-`renderViewer` accepts an in-memory catalogue and returns the complete viewer
-shell as HTML:
-
-```tsx
-import { readCatalogue } from "@mokly/viewer";
-import { renderViewer } from "@mokly/viewer/server";
-
-export function catalogueHtml(json: unknown, artifactOrigin: string) {
-  return renderViewer({
-    viewerId: "product-catalogue",
-    catalogue: readCatalogue(json),
-    baseUrl: artifactOrigin,
-    defaultSelection: { screenPath: null },
-  });
-}
-```
-
-Server rendering is synchronous and object-only. Hydrate with `MoklyViewer`
-using the same `viewerId`, catalogue, base URL, initial selection and slots so
-the first client render matches the server output. Pass the same `theme` as
-well. For first-party full-document rendering, an explicit `renderViewer`
-theme overrides the host context; omitting it preserves that context value.
-
-Standalone documents load `appearance-startup.js` before styles to apply stored,
-URL-pinned or automatic appearance for first paint. Hydration adopts that state,
-including a Dark interface around Light-only previews. A reader's choice wins
-over later URL pins during navigation and Back/Forward. Missing startup assets
-leave Appearance hidden; back/forward-cache restoration retains and refreshes
-the controller. Final disposal removes both system and selector listeners.
-Serve loads live capabilities separately; static navigation reads inert
-workspace evidence from the same finalized deployment.
-
-Serve's inline shell bootstrap keeps the complete navigation/index model but
-retains usage only for that entry's derived scope; other views use the
-runtime-only `omitted` state. The matching private capability descriptor
-supplies complete cross-route Usage. Static pages keep their compact external
-reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
-boundary accepts only that complete v6 model and rejects `omitted`.
-
-The runtime subpath exposes `projectScopedCatalogue`, the
-`ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
-`readScopedShellBootstrap` boundary. Browser hydration and live evidence use
-the centralized `readLiveShellBootstrap` boundary, which accepts only exact
-entry scope and rejects complete or partial live payloads. Its state reader
-also accepts the unchanged external reference used by finalized static pages.
-Serve's private `react-host.js` imports the same type-checked `react-shell.js`
-entry that finalized pages load directly. That one bundle handles strict live
-scope and the external static reference; viewer changes may change its bytes
-and therefore the finalized deployment identity.
-
-Full-document rendering serializes each bootstrap and capability descriptor
-once. Hydration reuses the exact embedded text across later React renders;
-canonical parse/validation plus serialization is tested to reproduce those
-bytes. See the
-[standalone bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
-
-### Standalone reader preferences
-
-Serve and export keep these origin-local preferences in `localStorage`:
-
-| Key                                | Choice                            |
-| ---------------------------------- | --------------------------------- |
-| `mokly:theme`                      | Explicit Light or Dark appearance |
-| `mokly:nav-disclosure:v4`          | Open catalogue groups             |
-| `mokly:details-disclosure`         | Details open or closed            |
-| `mokly:navigation-width:v1`        | Navigation split width            |
-| `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
-
-Scroll together appears after the comparison modes in Side by side, Overlay,
-and Difference. It updates the open comparison without reloading panes. An
-embedded `MoklyViewer` never reads this storage key; it keeps the choice only
-for the lifetime of that mounted viewer. The
-[region pairing](../../docs/protocol/mokly-comparison-region-pairing.md) and
-[Scroll together](../../docs/protocol/mokly-comparison-scroll-together.md)
-contracts define panel pairing, per-mode behavior, and re-alignment.
-
-## Theming
-
-`theme` accepts `"auto"`, `"light"` or `"dark"`. Auto is the default and follows
-system preference. It is independent of `selection.colorScheme`, so hosts can
-pair either interface appearance with either preview scheme. Theme updates
-preserve frame sessions, selection, temporary props, picking, highlights and
-markers, without changing the host document or sibling viewers.
-
-Standalone Serve/export instead expose one Appearance selector for interface
-and previews together. Its change indicator names changed views in another
-scheme; embedded viewers retain their independent preview control. See the
-[appearance contract](../../docs/protocol/mokly-viewer-appearance.md) and
-[semantic palette](../../docs/protocol/mokly-viewer-palette.md).
-
-Dark uses Mokly Cloud's warm Folio neutrals for backgrounds, panels, text and
-borders, with sage accents. The palette is packaged locally and preserves the
-colors authored inside each preview.
-
-Import the packaged stylesheet once, then override the supported custom
-properties on a containing element:
-
-```css
-.catalogue-page {
-  --mokly-accent: #315c4a;
-  --mokly-accent-contrast: #ffffff;
-  --mokly-accent-soft: rgb(49 92 74 / 12%);
-}
-```
-
-Maintain readable contrast in both appearances. Unset overrides use the current
-semantic palette defaults; fonts are packaged locally. These properties tune
-the viewer's accent only; the Mokly logo in the top bar keeps its brand colors
-in each appearance. Viewer styles are scoped away from the surrounding
-application and host slot content.
-Internal selectors, DOM structure, geometry and other custom properties are not
-extension APIs.
-
-At 560px wide or narrower, the viewer automatically switches to its compact
-search experience based on the viewer container—not the browser viewport.
-
-## Deployment and Security
-
-Mokly artifacts are static files. Deploy the exported directory at the root of
-an HTTP(S) origin with correct MIME types and without an SPA fallback.
-Catalogue v6 serves current documents only under
-`/static/mokly-generated/<route>`. The viewer uses the shared directory constant,
-not a model field or mount option. Older catalogue versions fail the version
-gate before URL derivation; no prefixless layout is supported. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).
-
-- **Same origin:** no CORS configuration is needed. Omit `frameAdapter` or pass
-  `sameOriginAdapter()` explicitly.
-- **Cross origin:** configure `postMessageAdapter` with the artifact's exact,
-  nonopaque origin. Allow the embedding application's exact origin with CORS on
-  every advertised catalogue, preview, font, stylesheet, client and comparison
-  generation resource, including the snapshot HTML the viewer fetches for
-  removed previews and comparison panes. Wildcard CORS and credentialed
-  requests are not used.
-- **Content Security Policy:** removed historical documents and comparison pane
-  documents are fetched and rendered in script-disabled `srcdoc` frames at the
-  host origin. Restrictive
-  policies must allow the artifact origin for the documented resource types and
-  permit their generated inline styles; this does not grant script execution.
-- **Isolation:** the cross-origin adapter pins both origins and a per-session
-  nonce. It requires a real origin and never relies on an opaque `null` origin.
-
-The [export and hosting guide](../../docs/guides/catalogue/export-and-host.md)
-and [delivery contract](../../docs/protocol/mokly-export-delivery.md) define the
-complete path, header, sandbox and CSP requirements.
+## Guides
+
+- [Core concepts](./docs/concepts/README.md): catalogue sources, selection,
+  host integration, component instance references, and live controls.
+- [API reference](./docs/api/README.md): the `MoklyViewer` props, the
+  `MoklyViewerHandle` methods, and the package entry points.
+- [Theming](./docs/theming/README.md): the interface appearance, the accent
+  properties, and the standalone reader preferences.
+- [Deployment and security](./docs/deployment/README.md): static hosting,
+  same-origin and cross-origin delivery, caching, and Content Security Policy.
 
 ## Responsibilities
 
-`@mokly/viewer` owns the validated catalogue reader, Browse presentation,
-selection model, navigation, inspection, instance resolution and frame
-adapters. Its runtime subpath owns strict entry-scoped bootstrap validation
-without extending the public catalogue type. It makes no analytics or
-discovery requests and does not use ambient credentials.
+`@mokly/viewer` owns the readers of the catalogue index and the entry detail,
+the Browse presentation, the selection model, navigation, comparison
+presentation, inspection, instance resolution, the frame adapters, the in-frame
+inspector, and the browser entry. It makes no analytics or discovery request,
+reads no cookie, and uses no ambient credential. Consumer code never enters the
+browser through the viewer.
 
 The embedding application owns catalogue delivery, authentication, its URL and
-route mapping, surrounding product UI, slot content, markers and collaboration
-data. Use `@mokly/mokly` to author, build, compare, export and publish the
-catalogue itself.
+route mapping, the surrounding product UI, slot content, markers, and
+collaboration data. Use `@mokly/mokly` to author, serve, build, compare, and
+publish the catalogue itself. `@mokly/mokly` depends on the exact released
+version of this package and ships its browser bundle in every served and built
+catalogue.
 
 ## Development
 
-From the repository root:
+The repository is an npm workspace. The Rust core is a Cargo workspace under
+`crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
+and the authoring API. `packages/viewer` holds this package; its shared shapes
+are the generated TypeScript types of the Rust model crate. From the repository
+root:
 
 ```bash
 npm ci
 npm run build
-npm run test --workspace @mokly/viewer
-npx playwright test tests/browser/viewer*.spec.ts
-npm run package:smoke
+npm test
+npm run test:browser
 cargo xtask check
 ```
 
-The root build compiles the viewer before the CLI. Package smoke tests pack both
-workspaces and exercise every public entry from clean ESM and NodeNext
-consumers.
-
-Version failures use `MoklyVersionError`, including unsupported numeric review
-versions with boundary `"review"`. Comparison requests retain that typed error.
-The comparison error surface keeps Current available and shows the existing
-compatible-viewer message with separate version diagnostics. The embedded viewer reports
-`onError` with code `version`, product copy, and separate diagnostic details.
-Standalone pages retain their server render and ordinary links when hydration
-is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-namespace.md).
+`npm run build` builds the host native target, the shim, the sidecar, and the
+viewer. The viewer build records every browser output in the browser module
+inventory; `mokly build` copies exactly those files, and Serve serves exactly
+them. `npm test -- packages/viewer/tests/<file> --test-name-pattern=<regex>`
+runs one viewer test. `cargo xtask check` is the complete repository gate; it
+runs the viewer typecheck, the viewer's Node tests, and the Playwright Browse
+and Review regressions against `mokly serve` of the example catalogue.
 
 ### Key Code
 
-- [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
-  and instance operations
+- [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
+  selection, host integration, and instance operations
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
   [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
-  the stable public handle and its highlight request, geometry and cancellation
-  ownership
-- [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
-- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — shared folder keys, labels, sibling order, the shared path tree, and each section's order
-- [`src/client`](./src/client) — frame adapters, transport and geometry
-- [`src/catalogue`](./src/catalogue) — public catalogue types and validation
-- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
-  view, snapshot, preview, shell-URL, and browser-path derivation
-- [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
-  ordering shared by review producers and readers
-- [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —
-  the one branch-point lookup per catalogue generation, reached through
-  `branchPoints`
-- [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
-  [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
-  routed workspace identity and key, and sibling component-variant entries
-- [`src/viewer/public_variants.ts`](./src/viewer/public_variants.ts) — the
-  public parent and variant records the lookup resolves for a workspace
+  the public handle and its highlight requests, geometry, and cancellation
+- [`src/shell`](./src/shell) — the Browse shell tree and its scoped styles,
+  shared by the embedded viewer and the browser entry
+- [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
+  the entry detail, and the public catalogue types
+- [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
+  directory names, the path and link grammar, and the prop schema validators
+- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
+  snapshot, preview, and shell URL derivation
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and
+  [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — folder keys,
+  labels, sibling order, and the path tree of each section
+- [`src/client`](./src/client) — the frame adapters, message transport, and
+  geometry
+- [`src/inspector`](./src/inspector) — the React-free in-frame inspector
+- [`src/previews`](./src/previews) — the removed-entry previews
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
-  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
-  [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
-  owner, request identity, and current/comparison presentation
-- [`src/shell/store_browser_actions.ts`](./src/shell/store_browser_actions.ts)
-  and [`src/shell/store_browser_urls.ts`](./src/shell/store_browser_urls.ts) —
-  standalone DOM actions and provider-normalized URL policy
-- [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
-  [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
-  routed workspace data and its usage/affected-consumer projection
+  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts),
+  and [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the comparison-mode
+  owner, request identity, and current and comparison presentation
+- [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
+  `InstanceRef` matching against mounted preview frames
 - [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
   [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
   controlled and uncontrolled selection commits, frame-link misses, and
   navigation events
-- [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
-  documented `InstanceRef` matching against mounted preview frames
-- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts),
-  [`src/standalone/bootstrap_types.ts`](./src/standalone/bootstrap_types.ts), and
-  [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
-  — standalone hydration projection, wire shape, and validation
-- [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
-- [`tests`](./tests) — package-level conformance tests; the retained-evidence
-  harness keeps setup in `evidence_harness.tsx` and frame rendering in
-  `evidence_runtime.tsx`
+- [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
+  [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
+  routed workspace data and its projection from the index and entry detail
+- [`src/review/result_validation.ts`](./src/review/result_validation.ts) and
+  [`src/review/result_order.ts`](./src/review/result_order.ts) — the strict
+  review result v8 reader and the canonical record order it requires
+- [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
+  [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
+  entry detail's `reasons` and the reason order it shares with review v8
+- [`src/viewer/public_reasons.ts`](./src/viewer/public_reasons.ts) — the
+  detail reasons that Details shows: listed records only, without the reasons
+  that contradict the record
+- [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs
 
-The [path/output contract](../../docs/protocol/mokly-path-output-integration.md)
-defines the generated catalogue layout and format boundaries.
-
-- [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
-- [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
-- [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
-- [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
+- [Embeddable viewer contract](../../docs/protocol/mokly-viewer.md)
+- [Shell delivery and read model routes](../../docs/protocol/mokly-shell-delivery.md)
+- [Public catalogue read model](../../docs/protocol/mokly-catalogue.md)
+- [Path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md)
 - [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
-- [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
+- [Viewer namespace and version gates](../../docs/protocol/mokly-viewer-namespace.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
+- [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
-- [Package ownership boundary](../../docs/architecture/package-boundary.md)
+- [Component controls](../../docs/protocol/mokly-component-controls.md)
+- [Static delivery](../../docs/protocol/mokly-export-delivery.md)
+- [Viewer appearance](../../docs/protocol/mokly-viewer-appearance.md)
+- [Package and consumer boundary](../../docs/architecture/package-boundary.md)
+- [Rust core architecture](../../docs/architecture/rust-core.md)
 - [Changelog](./CHANGELOG.md)
 
 ## License
 
 Mokly Viewer is available under the [MIT License](./LICENSE).
-
-## Delivery Status
-
-The [viewer library plan](../../plans/mokly-viewer-library.md) records delivery.

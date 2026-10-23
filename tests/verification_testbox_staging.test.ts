@@ -15,7 +15,7 @@ test("staging runs after the fingerprint and before history and suite preparatio
     "git rev-parse --is-shallow-repository",
     "read:/repo/package-lock.json",
     `read:${harness.stamp}`,
-    "cargo xtask check --executor local --suite unit --shard 1/4",
+    "cargo xtask check --executor local --suite viewer",
   ]);
   assert.deepEqual(harness.commands[0], {
     file: "git",

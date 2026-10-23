@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 concurrency:
   group: preview-${{ github.event.pull_request.number || github.ref }}
@@ -22,12 +21,14 @@ jobs:
   deploy-main:
     name: Deploy Main Preview
     if: github.event_name == 'push'
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -48,17 +49,27 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Build Mokly preview
-        run: npm run preview:build
+        run: |
+          npm run build
+          node packages/mokly/bin/mokly.mjs build --config examples/basic/mokly.config.json --strict --out ../../.context/mokly-preview --no-changes
+          node scripts/preview/hosting.mjs .context/mokly-preview .context/mokly-preview-deploy
       - name: Deploy main preview
-        run: npx --no-install wrangler pages deploy .context/mokly-preview --project-name "${CLOUDFLARE_PROJECT_NAME}" --branch main
+        run: npx --no-install wrangler pages deploy .context/mokly-preview-deploy --project-name "${CLOUDFLARE_PROJECT_NAME}" --branch main
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
 
   deploy-pr:
+    permissions:
+      contents: read
+      pull-requests: write
     name: Deploy PR Preview
     if: >-
       github.event_name == 'pull_request' &&
@@ -68,26 +79,21 @@ jobs:
         startsWith(github.event.pull_request.head.ref, 'release-please--') ||
         contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
       )
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24.21.0
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Validate Cloudflare configuration
         run: |
           missing=0
@@ -103,15 +109,22 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Build Mokly preview
-        run: npm run preview:build -- --include-changes --base origin/main
+        run: |
+          npm run build
+          node packages/mokly/bin/mokly.mjs build --config examples/basic/mokly.config.json --strict --out ../../.context/mokly-preview --base origin/main
+          node scripts/preview/hosting.mjs .context/mokly-preview .context/mokly-preview-deploy
       - name: Deploy Mokly preview
         id: deploy
         run: |
           branch="pr-${{ github.event.pull_request.number }}"
-          npx --no-install wrangler pages deploy .context/mokly-preview \
+          npx --no-install wrangler pages deploy .context/mokly-preview-deploy \
             --project-name "${CLOUDFLARE_PROJECT_NAME}" \
             --branch "${branch}"
           echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
@@ -145,7 +158,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
-            const existing = comments.find((comment) => comment.body?.includes(marker));
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -163,11 +176,15 @@ jobs:
             }
 
   close-pr:
+    permissions:
+      contents: read
+      pull-requests: write
     name: Close PR Preview
     if: >-
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Delete Cloudflare Pages PR deployments
@@ -176,79 +193,48 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
-        run: |
-          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ] || [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
-            echo "status=retained: missing Cloudflare configuration" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          api_root="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${CLOUDFLARE_PROJECT_NAME}"
-          deployments_file="$(mktemp)"
-          if ! deployments_status="$(
-            curl --silent --show-error --write-out "%{http_code}" --output "${deployments_file}" \
-              --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              "${api_root}/deployments?per_page=100"
-          )"; then
-            echo "status=retained: failed to list Cloudflare deployments" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if [ "${deployments_status}" -lt 200 ] || [ "${deployments_status}" -ge 300 ]; then
-            list_error="$(jq -r '[.errors[]?.message] | join("; ")' "${deployments_file}" 2>/dev/null || true)"
-            if [ -z "${list_error}" ]; then
-              list_error="HTTP ${deployments_status}"
-            else
-              list_error="HTTP ${deployments_status}: ${list_error}"
-            fi
-            echo "status=retained: failed to list Cloudflare deployments (${list_error})" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if ! deployments="$(jq -r --arg branch "${PREVIEW_BRANCH}" '.result[]? | select(.deployment_trigger.metadata.branch == $branch) | .id' "${deployments_file}")"; then
-            echo "status=retained: failed to parse Cloudflare deployments response" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          if [ -z "${deployments}" ]; then
-            echo "status=deleted: no matching branch deployments found" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          deleted_count=0
-          failed_delete_count=0
-          while IFS= read -r deployment_id; do
-            [ -z "${deployment_id}" ] && continue
-            delete_file="$(mktemp)"
-            if ! delete_status="$(
-              curl --silent --show-error --write-out "%{http_code}" --output "${delete_file}" \
-                --request DELETE \
-                --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-                "${api_root}/deployments/${deployment_id}?force=true"
-            )"; then
-              failed_delete_count=$((failed_delete_count + 1))
-              echo "::warning title=Cloudflare deployment cleanup failed::Deployment ${deployment_id} delete request failed."
-              continue
-            fi
-            if [ "${delete_status}" -ge 200 ] && [ "${delete_status}" -lt 300 ]; then
-              deleted_count=$((deleted_count + 1))
-              continue
-            fi
-            delete_error="$(jq -r '[.errors[]?.message] | join("; ")' "${delete_file}" 2>/dev/null || true)"
-            if [ -z "${delete_error}" ]; then
-              delete_error="HTTP ${delete_status}"
-            else
-              delete_error="HTTP ${delete_status}: ${delete_error}"
-            fi
-            failed_delete_count=$((failed_delete_count + 1))
-            echo "::warning title=Cloudflare deployment cleanup failed::Deployment ${deployment_id}: ${delete_error}"
-          done <<EOF
-          ${deployments}
-          EOF
-
-          if [ "${failed_delete_count}" -gt 0 ]; then
-            echo "status=retained: failed to delete ${failed_delete_count} Cloudflare deployment(s); deleted ${deleted_count}" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          echo "status=deleted: removed ${deleted_count} matching branch deployment(s)" >> "${GITHUB_OUTPUT}"
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const account = process.env.CLOUDFLARE_ACCOUNT_ID;
+            const token = process.env.CLOUDFLARE_API_TOKEN;
+            if (!account || !token) {
+              core.setOutput("status", "retained: missing Cloudflare configuration");
+              return;
+            }
+            const root = "https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(account) + "/pages/projects/" + encodeURIComponent(process.env.CLOUDFLARE_PROJECT_NAME);
+            const headers = { Authorization: "Bearer " + token };
+            const ids = [];
+            const safe = value => String(value).replaceAll(token, "[redacted]").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").slice(0, 300);
+            async function request(url, method = "GET") {
+              let response;
+              try { response = await fetch(url, { method, headers }); }
+              catch { throw new Error(method + " request failed"); }
+              const body = await response.json().catch(() => null);
+              if (!response.ok || !body?.success) {
+                const reason = body?.errors?.map(error => error.message).join("; ");
+                throw new Error(method + " HTTP " + response.status + (reason ? ": " + safe(reason) : ": invalid response"));
+              }
+              return body;
+            }
+            try {
+              for (let page = 1; ; page++) {
+                if (page > 100) throw new Error("deployment pagination exceeded 100 pages; branch deployments retained");
+                const body = await request(root + "/deployments?per_page=100&page=" + page);
+                if (!Array.isArray(body.result)) throw new Error("invalid deployment list");
+                ids.push(...body.result.filter(item => item.deployment_trigger?.metadata?.branch === process.env.PREVIEW_BRANCH).map(item => item.id));
+                const pages = body.result_info?.total_pages;
+                if (Number.isInteger(pages) && pages > 0 ? page >= pages : body.result.length === 0) break;
+              }
+              const failures = [];
+              for (const id of ids) {
+                try { await request(root + "/deployments/" + encodeURIComponent(id) + "?force=true", "DELETE"); }
+                catch (error) { failures.push(safe(id) + ": " + safe(error.message)); }
+              }
+              core.setOutput("status", failures.length ? "retained: " + failures.join("; ") : "deleted: " + ids.length + " branch deployments");
+            } catch (error) {
+              core.setOutput("status", "retained: " + safe(error.message));
+            }
       - name: Mark preview inactive
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
@@ -272,7 +258,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
-            const existing = comments.find((comment) => comment.body?.includes(marker));
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

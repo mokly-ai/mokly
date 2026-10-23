@@ -1,24 +1,30 @@
 import {
+  actionParent,
   actionVariants,
+  type ActionEntry,
   type ActionProps,
-  type ActionVariant,
 } from "../../parts/action_props.js";
 
 export type ControlsState =
+  | "parent"
   | "default"
   | "edited"
   | "unset"
   | "variant"
   | "reset"
   | "pending"
+  | "preparing"
+  | "preparing-failed"
   | "invalid"
   | "error"
   | "comparison"
   | "readonly"
-  | "readonly-variant";
+  | "readonly-variant"
+  | "invalid-together"
+  | "expired";
 
 interface ControlsFixture {
-  variant: ActionVariant;
+  variant: ActionEntry;
   draft: ActionProps;
   preview: ActionProps;
   edited: boolean;
@@ -37,6 +43,12 @@ delete unset.hint;
 
 /** Authored outcomes share inputs with the native fields and the rendered example. */
 export const controlsFixtures: Record<ControlsState, ControlsFixture> = {
+  parent: {
+    variant: "parent",
+    draft: actionParent.props,
+    preview: actionParent.props,
+    edited: false,
+  },
   default: { variant: "default", draft: saved, preview: saved, edited: false },
   edited: { variant: "default", draft: edited, preview: edited, edited: true },
   unset: { variant: "default", draft: unset, preview: unset, edited: true },
@@ -48,6 +60,18 @@ export const controlsFixtures: Record<ControlsState, ControlsFixture> = {
   },
   reset: { variant: "default", draft: saved, preview: saved, edited: false },
   pending: { variant: "default", draft: edited, preview: saved, edited: true },
+  preparing: {
+    variant: "default",
+    draft: saved,
+    preview: saved,
+    edited: false,
+  },
+  "preparing-failed": {
+    variant: "default",
+    draft: saved,
+    preview: saved,
+    edited: false,
+  },
   invalid: {
     variant: "default",
     draft: { ...saved, cornerRadius: 40 },
@@ -68,6 +92,13 @@ export const controlsFixtures: Record<ControlsState, ControlsFixture> = {
     preview: disabled,
     edited: false,
   },
+  "invalid-together": {
+    variant: "default",
+    draft: { ...saved, disabled: true, emphasis: "quiet" },
+    preview: saved,
+    edited: true,
+  },
+  expired: { variant: "default", draft: edited, preview: saved, edited: true },
 };
 
 export function isPublished(state: ControlsState): boolean {

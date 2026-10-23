@@ -17,8 +17,8 @@ use crate::rust_file_length::RustFileLengthAuditorRunMock;
 use super::{Application, Cli, Command, Xtask};
 
 #[test]
-fn parses_every_suite_and_a_valid_shard() {
-    for suite in ["repository", "package", "unit", "browser", "hydration"] {
+fn parses_every_verification_suite() {
+    for suite in ["repository", "viewer", "browser", "native"] {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {
@@ -34,13 +34,12 @@ fn parses_every_suite_and_a_valid_shard() {
         assert!(shard.is_none());
         assert!(dependency_audit.is_none());
     }
+}
 
-    let cli = Cli::try_parse_from(["xtask", "check", "--suite", "browser", "--shard", "3/4"])
-        .expect("browser shard parses");
-    let Command::Check { shard, .. } = cli.command else {
-        panic!("check command expected");
-    };
-    assert_eq!(shard.expect("shard exists").to_string(), "3/4");
+#[test]
+fn parses_standalone_generated_type_check() {
+    let parsed = Cli::try_parse_from(["xtask", "check-generated-types"]).unwrap();
+    assert!(matches!(parsed.command, Command::CheckGeneratedTypes));
 }
 
 #[test]
@@ -56,13 +55,13 @@ fn executor_command_accepts_the_same_mode_flag() {
 fn rejects_unknown_suite_and_missing_or_invalid_shard_values() {
     for args in [
         vec!["xtask", "check", "--suite", "unknown"],
-        vec!["xtask", "check", "--suite", "unit", "--shard"],
-        vec!["xtask", "check", "--suite", "unit", "--shard", "0/4"],
+        vec!["xtask", "check", "--suite", "browser", "--shard"],
+        vec!["xtask", "check", "--suite", "browser", "--shard", "0/4"],
         vec![
             "xtask",
             "check",
             "--suite",
-            "unit",
+            "browser",
             "--shard",
             "1/9007199254740992",
         ],
@@ -96,6 +95,7 @@ fn application_dispatches_source_length_and_complete_check() {
             .returns(Ok(())),
     )));
     let app = Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(Unimock::new(
             SelectorSelectMock
                 .next_call(matching!(Executor::Auto))
@@ -188,6 +188,7 @@ fn application_dispatches_both_dependency_audit_modes() {
 fn application_rejects_explicit_audit_modes_before_running_checks() {
     let unused = || Arc::new(Unimock::new(()));
     let app = Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: unused(),
         check_runner: unused(),
         remote_runner: unused(),
@@ -197,12 +198,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
         interrupt: unused(),
         workspace: PathBuf::from("/workspace"),
     };
-    for suite in [
-        VerificationSuite::Package,
-        VerificationSuite::Unit,
-        VerificationSuite::Browser,
-        VerificationSuite::Hydration,
-    ] {
+    for suite in [VerificationSuite::Viewer, VerificationSuite::Native] {
         for mode in ["baseline", "strict"] {
             let cli = Cli::try_parse_from([
                 "xtask",
@@ -224,6 +220,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
 /// Build an application whose automatic executor always selects the local gate.
 fn local_application(check_runner: Arc<Unimock>, complete: bool) -> Application {
     Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(if complete {
             Unimock::new(
                 SelectorSelectMock

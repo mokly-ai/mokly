@@ -5,9 +5,8 @@ import { VIEWPORTS } from "../registry/views.js";
 
 import type {
   ComponentViewRecord,
-  ManifestComponentVariant,
+  ManifestComponent,
 } from "./manifest_types.js";
-import { isManifestComponentVariant } from "./manifest_types.js";
 
 export interface GeneratedComponentView {
   viewport: Viewport;
@@ -17,12 +16,12 @@ export interface GeneratedComponentView {
   usage?: ComponentViewRecord;
 }
 
-/** Derive current and baseline-v10 artifacts from identity and view axes. */
+/**
+ * Derive the view documents of a screen or component entry. A component
+ * parent renders its own props, so it has views like each of its variants.
+ */
 export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
-  if (entry.kind === "component")
-    return isManifestComponentVariant(entry)
-      ? fragmentViews(entry, entry.path)
-      : [];
+  if (entry.kind === "component") return fragmentViews(entry, entry.path);
   if (entry.kind === "screen") return fragmentViews(entry);
   return [];
 }
@@ -43,8 +42,8 @@ export function orderedInstances(usage?: ComponentViewRecord) {
 }
 
 /** Derive current view artifacts from entry identity and retained axes. */
-export function fragmentViews(
-  entry: ManifestScreen | ManifestComponentVariant,
+function fragmentViews(
+  entry: ManifestScreen | ManifestComponent,
   variantPath?: string,
 ): GeneratedComponentView[] {
   return VIEWPORTS.flatMap((viewport) =>

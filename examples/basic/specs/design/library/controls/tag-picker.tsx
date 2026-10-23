@@ -1,16 +1,18 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
-import { optionalText, tagRecords } from "../schemas.js";
+import { tagRecords, text, type LibraryProps } from "../schemas.js";
 
 import { TagPickerView } from "./tag-picker.view.js";
 
 const propSchema = {
-  kind: "object",
-  properties: { tags: tagRecords, activeTag: optionalText },
+  type: "object",
+  additionalProperties: false,
+  required: ["tags"],
+  properties: { tags: tagRecords, activeTag: text },
 } as const;
-export type TagPickerProps = ComponentProps<typeof propSchema, []>;
+export type TagPickerProps = LibraryProps<typeof propSchema>;
 export const libraryTags = [
   { id: "forms", label: "forms", destination: DESTINATIONS.forms },
   {
@@ -27,6 +29,7 @@ export const tagPicker = defineComponent({
     "Catalogue tags and the active selection.",
   ),
   propSchema,
+  props: { tags: libraryTags },
   controls: { activeTag: { kind: "text", label: "Active tag" } },
   render: TagPickerView,
   variants: [

@@ -12,25 +12,6 @@ import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
 import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
-const sourceFiles = ["src/**/*.ts", "src/**/*.tsx"];
-const postcssCallsModule = "src/build/styles/postcss_calls.ts";
-const postcssCallsMessage = `Parse and process CSS only through ${postcssCallsModule}. Its calls always pass map: false, so PostCSS never loads a source map.`;
-const postcssModuleSource = String.raw`/^postcss(?:$|\x2F)/`;
-const postcssLoadRestrictions = [
-  {
-    selector: `ImportExpression[source.value=${postcssModuleSource}]`,
-    message: postcssCallsMessage,
-  },
-  {
-    selector: `CallExpression[arguments.0.value=${postcssModuleSource}]`,
-    message: postcssCallsMessage,
-  },
-];
-const sourcePathRestriction = {
-  selector: "CallExpression[callee.property.name='localeCompare']",
-  message:
-    "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
-};
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -124,57 +105,17 @@ export default tseslint.config(
     },
   },
   {
-    files: sourceFiles,
-    rules: {
-      "no-restricted-syntax": ["error", ...postcssLoadRestrictions],
-    },
-  },
-  {
-    files: sourceFiles,
-    ignores: [postcssCallsModule],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "postcss",
-              importNames: [
-                "default",
-                "fromJSON",
-                "Input",
-                "parse",
-                "Processor",
-              ],
-              allowTypeImports: true,
-              message: postcssCallsMessage,
-            },
-          ],
-          patterns: [
-            {
-              regex: "^postcss/",
-              allowTypeImports: true,
-              message: postcssCallsMessage,
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: [
-      "src/**/*.{ts,tsx}",
-      "packages/viewer/src/**/*.{ts,tsx}",
-      "scripts/preview/**/*.mjs",
+    files: ["packages/viewer/src/**/*.{ts,tsx}"],
+    ignores: [
+      "packages/viewer/src/catalogue/delivery_paths.ts",
+      "packages/viewer/src/generated/catalogue/Namespace.ts",
     ],
-    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
     rules: {
       "mokly/no-directory-literals": "error",
     },
   },
   {
     files: [
-      "src/**/*.{ts,tsx}",
       "packages/viewer/src/**/*.{ts,tsx}",
       "scripts/**/*.{mjs,mts,ts}",
       "examples/**/*.{ts,tsx,mjs}",
@@ -182,22 +123,6 @@ export default tseslint.config(
     ignores: ["packages/viewer/src/navigation/routes.ts", "**/tests/**"],
     rules: {
       "mokly/no-artifact-path-literals": "error",
-    },
-  },
-  {
-    files: [
-      "src/config/**/*.ts",
-      "src/build/discovery.ts",
-      "src/build/styles/**/*.ts",
-      "src/build/source_inventory.ts",
-      "src/build/package_owned_paths.ts",
-    ],
-    rules: {
-      "no-restricted-syntax": [
-        "error",
-        sourcePathRestriction,
-        ...postcssLoadRestrictions,
-      ],
     },
   },
 );

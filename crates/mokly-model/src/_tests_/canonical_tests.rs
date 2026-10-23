@@ -1,0 +1,81 @@
+//! Canonical byte and ordering tests.
+
+use serde::Serialize;
+use serde_json::json;
+
+use super::{compare_utf16, to_compact_string, to_string};
+use crate::prop_schema::PropSchema;
+use crate::typescript;
+use crate::versions;
+
+#[test]
+fn canonical_bytes_use_utf16_and_preserve_authored_arrays() {
+    let value = json!({
+        "\u{e000}": { "z": [], "a": {} },
+        "😀": null,
+        "tags": ["z", "a"],
+        "steps": [{"b": 2, "a": 1}, {}]
+    });
+    insta::assert_snapshot!(to_string(&value).unwrap());
+    assert!(compare_utf16("😀", "\u{e000}").is_lt());
+    let reversed = json!({"steps": [{"a": 1, "b": 2}, {}], "tags": ["z", "a"], "😀": null, "\u{e000}": {"a": {}, "z": []}});
+    assert_eq!(to_string(&value).unwrap(), to_string(&reversed).unwrap());
+}
+
+#[test]
+fn compact_bytes_keep_the_canonical_order_numbers_and_final_lf_without_whitespace() {
+    let value = json!({
+        "\u{e000}": { "z": [], "a": {} },
+        "😀": null,
+        "tags": ["z", "a"],
+        "steps": [{"b": 2, "a": 1.0}, {"text": "two words\n", "zero": -0.0}]
+    });
+    let compact = to_compact_string(&value).unwrap();
+    assert_eq!(
+        compact,
+        "{\"steps\":[{\"a\":1.0,\"b\":2},{\"text\":\"two words\\n\",\"zero\":-0.0}],\"tags\":[\"z\",\"a\"],\"😀\":null,\"\u{e000}\":{\"a\":{},\"z\":[]}}\n"
+    );
+    let pretty = to_string(&value).unwrap();
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&compact).unwrap(),
+        serde_json::from_str::<serde_json::Value>(&pretty).unwrap()
+    );
+}
+
+#[test]
+fn absent_optionals_stay_absent_and_null_constants_stay_present() {
+    #[derive(Serialize)]
+    struct Record {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        absent: Option<String>,
+        empty: Vec<String>,
+    }
+    assert_eq!(
+        to_string(&Record {
+            absent: None,
+            empty: vec![]
+        })
+        .unwrap(),
+        "{\n  \"empty\": []\n}\n"
+    );
+    let schema: PropSchema = serde_json::from_value(json!({"const": null})).unwrap();
+    assert_eq!(
+        serde_json::to_value(schema).unwrap(),
+        json!({"const": null})
+    );
+}
+
+#[test]
+fn type_generation_and_versions_are_stable() {
+    insta::assert_snapshot!(typescript::generate());
+    assert_eq!(
+        [
+            versions::CATALOGUE_INDEX,
+            versions::ENTRY_DETAIL,
+            versions::REVIEW_RESULT,
+            versions::CHANGE_SNAPSHOT,
+            versions::LIVE_DESCRIPTOR
+        ],
+        [7, 2, 8, 4, 3]
+    );
+}

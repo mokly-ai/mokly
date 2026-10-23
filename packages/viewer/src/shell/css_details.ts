@@ -3,6 +3,8 @@
  * chips it renders. The chip rules also dress the tag picker the search field
  * drops, so both surfaces draw one chip. */
 
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 /** Details inspector and shared chip styles. */
 export const SHELL_DETAILS_CSS = `
 .mbk-details {
@@ -208,7 +210,7 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   transform: translateY(1px);
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-details-body {
     grid-template-columns: 1fr;
     gap: 14px;

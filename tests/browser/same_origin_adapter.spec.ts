@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
-import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
+import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   type FrameTestWindow,
@@ -22,7 +23,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
   await page.goto(fixture.host.url);
   await page.evaluate(async (json) => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+      `${location.origin}/test-adapters.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as FrameTestWindow;
     state.frameEvents = [];
@@ -34,8 +35,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
           location.origin,
         ),
         usage: {
-          status: "ready",
-          ...(JSON.parse(json) as ComponentViewRecord),
+          ...(JSON.parse(json) as BrowserUsage),
         },
       },
     );
@@ -103,7 +103,7 @@ test("valid local logical navigation works without instance usage", async ({
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+      `${location.origin}/test-adapters.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as FrameTestWindow;
     state.frameEvents = [];
@@ -158,19 +158,16 @@ test("temporary previews authenticate masks and preserve logical navigation", as
   await page.evaluate(
     async ({ path, usageJson }) => {
       const { temporaryPreviewAdapter } = (await import(
-        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+        `${location.origin}/test-adapters.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as FrameTestWindow;
-      const usage = JSON.parse(usageJson) as ComponentViewRecord;
+      const usage = JSON.parse(usageJson) as BrowserUsage;
       const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
       frame.dataset["workspaceFrame"] = usage.viewport;
       state.frameEvents = [];
       state.mounted = await temporaryPreviewAdapter().mount(frame, {
         url: new URL(path, location.origin),
-        usage: {
-          status: "ready",
-          ...usage,
-        },
+        usage,
       });
       state.unsubscribe = state.mounted.subscribe((event) =>
         state.frameEvents.push(event),

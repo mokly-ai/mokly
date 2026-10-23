@@ -3,12 +3,13 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import {
-  browserWorkerCount,
-  playwrightSuiteEnvironment,
-} from "./concurrency.mjs";
+  browserFileArguments,
+  selectBrowserShard,
+} from "./browser-partition.mjs";
+import { parseShardArgument } from "./browser-shard.mjs";
+import { browserWorkerCount } from "./concurrency.mjs";
 import {
   defaultReportPath,
-  parseShardArgument,
   readReport,
   verificationIdentity,
   writeReport,
@@ -19,8 +20,10 @@ import { runInherited } from "./process.mjs";
 import { validateCompletedReport } from "./report-validation.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const { suite, project, shard } = browserArguments(process.argv.slice(2));
-const environment = playwrightSuiteEnvironment(suite);
+const suite = "browser";
+const project = "chromium";
+const shard = parseShardArgument(process.argv.slice(2));
+const environment = process.env;
 const workers = browserWorkerCount(environment);
 const identity = await verificationIdentity(repositoryRoot);
 const reportPath =
@@ -32,12 +35,10 @@ await Promise.all([
   fs.rm(reportPath, { force: true }),
   fs.rm(eventPath, { force: true }),
 ]);
-await requirePrepared(repositoryRoot);
-const complete = await discoverBrowserTests(repositoryRoot);
+await requirePrepared(repositoryRoot, { browser: true });
 const full = await discoverBrowserTests(repositoryRoot, { project });
-const assigned = shard
-  ? await discoverBrowserTests(repositoryRoot, { project, shard })
-  : full;
+const complete = full;
+const assigned = shard ? selectBrowserShard(full, shard) : full;
 
 const args = [
   path.join(repositoryRoot, "node_modules/@playwright/test/cli.js"),
@@ -45,16 +46,22 @@ const args = [
   `--project=${project}`,
   "--reporter=./scripts/verification/playwright-reporter.mjs",
 ];
-if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
+if (shard) args.push(...browserFileArguments(assigned.files));
 console.log(`${suite} Playwright workers: ${workers}`);
 const started = performance.now();
-const outcome = await runInherited(process.execPath, args, {
-  cwd: repositoryRoot,
-  env: { ...environment, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
-});
+let evidenceError;
+let outcome;
+try {
+  outcome = await runInherited(process.execPath, args, {
+    cwd: repositoryRoot,
+    env: { ...environment, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
+  });
+} catch (error) {
+  evidenceError = error;
+  outcome = { exitCode: null, signal: null, interrupted: null };
+}
 
 let raw;
-let evidenceError;
 try {
   raw = await readReport(eventPath);
   if (raw.reporterComplete !== true)
@@ -69,8 +76,8 @@ try {
     "Playwright assigned tests",
   );
 } catch (error) {
-  evidenceError = error;
-  raw = { observedTests: [] };
+  evidenceError ??= error;
+  raw ??= { observedTests: [] };
 }
 const observedTests = raw.observedTests ?? [];
 const observedFiles = summarizeObservedFiles(observedTests);
@@ -119,25 +126,7 @@ try {
 await writeReport(reportPath, report);
 await fs.rm(eventPath, { force: true });
 if (evidenceError) throw evidenceError;
-
-function browserArguments(args) {
-  let suite = "browser";
-  let remaining = args;
-  if (remaining[0] === "--suite") {
-    suite = remaining[1];
-    remaining = remaining.slice(2);
-  }
-  if (!["browser", "hydration"].includes(suite))
-    throw new Error("browser suite must be browser or hydration");
-  const shard = parseShardArgument(remaining);
-  if (suite === "hydration" && shard)
-    throw new Error("hydration suite does not support --shard");
-  return {
-    suite,
-    project: suite === "hydration" ? "hydration" : "chromium",
-    shard,
-  };
-}
+if (report.outcome.status !== "passed") process.exitCode = 1;
 
 function requireSameIds(expected, actual, label) {
   const ids = (tests) =>

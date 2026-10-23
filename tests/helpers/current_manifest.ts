@@ -1,12 +1,9 @@
-import {
-  entryRoute,
-  documentRoute,
-  generatedViews,
-  type ManifestEntry,
-} from "@mokly/viewer/data";
+import path from "node:path";
 
-import { documentResourceRoute } from "../../dist/documents/resource_paths.js";
-import { createManifest } from "../../dist/registry/manifest.js";
+import { entryRoute, documentRoute } from "@mokly/viewer/data";
+
+import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import type { ManifestEntry } from "../../packages/viewer/dist/registry/types.js";
 
 /** Add a deterministic synthetic inventory to metadata-only structural fixtures. */
 export function currentManifest<
@@ -38,7 +35,18 @@ export function currentManifest<
   };
 }
 
-/** Metadata-only test registries still exercise the real manifest builder. */
-export function fixtureManifest(...args: Parameters<typeof createManifest>) {
-  return currentManifest(createManifest(...args));
+/** Derive deterministic resource names for synthetic document metadata. */
+function documentResourceRoute(
+  entry: { path: string; sourcePath: string },
+  resource: string,
+) {
+  const folder = /^(readme|index)\.md$/i.test(
+    path.posix.basename(entry.sourcePath),
+  )
+    ? entry.path
+    : path.posix.dirname(entry.path);
+  return path.posix.join(
+    folder,
+    path.posix.relative(path.posix.dirname(entry.sourcePath), resource),
+  );
 }

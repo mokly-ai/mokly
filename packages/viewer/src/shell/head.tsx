@@ -13,6 +13,7 @@ import {
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
+import { variantHeading } from "./view_title.js";
 
 /** One crumb: a link to a folder's page, a folder reveal, or plain text. */
 function Crumb(props: { item: CatalogueCrumb }) {
@@ -169,7 +170,12 @@ function parentCrumb(parent: VariantParentResolution): CatalogueCrumb {
   };
 }
 
-/** The breadcrumb trail, path, and title for one resolved route target. */
+/**
+ * The breadcrumb trail, path, and title for one resolved route target. A
+ * component variant's heading is its parent's title, as on the parent's own
+ * page, so its crumbs end at the folders; a screen variant's crumbs end in
+ * its parent's title.
+ */
 export function targetHead(
   catalogue: Catalogue,
   target: RouteTarget,
@@ -179,13 +185,13 @@ export function targetHead(
       .find(({ entry }) => entry.path === target.entry.path)
       ?.folderTitles.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.path);
+  const heading = variantHeading(catalogue, target.entry);
+  if (heading !== undefined)
+    return { crumbs: ancestors, path: target.entry.path, title: heading };
   const parent = branchPoints(catalogue).parentOf(target.entry);
   return {
     crumbs: parent ? [...ancestors, parentCrumb(parent)] : ancestors,
     path: target.entry.path,
-    title:
-      target.entry.kind === "component" && parent && parent.source !== "title"
-        ? parent.entry.title
-        : target.entry.title,
+    title: target.entry.title,
   };
 }

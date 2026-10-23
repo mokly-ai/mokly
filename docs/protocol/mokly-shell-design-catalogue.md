@@ -1,16 +1,5 @@
 # Depicted Design Catalogue
 
-## Delivery Status
-
-Implemented in the path-addressed design catalogue. The outer shell renders the
-folder pages, entry rows, path chips, Markdown documents, and the first changed
-member that a folder screen's Changes row opens, and `Moved` rows.
-
-This document describes the fixture catalogue that the Browse and Changes
-design screens browse, the branches they depict, and their transitions. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists the screens;
-the [design mockup links contract](./mokly-design-links.md) owns link rules.
-
 ## Depicted Catalogue
 
 The artboards browse one fixture catalogue in the path model, so the

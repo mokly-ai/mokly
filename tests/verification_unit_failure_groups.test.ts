@@ -100,7 +100,7 @@ for (const status of ["failed", "cancelled"] as const) {
 test("complete failure entries keep only name and diagnostic", async (context) => {
   const harness = await createSelectedHarness(context);
   const report = path.join(harness.root, "complete.json");
-  await assert.rejects(runWrapper(harness.root, "run-unit.mjs", { report }));
+  await assert.rejects(runWrapper(harness.root, "run-viewer.mjs", { report }));
   const evidence = JSON.parse(await fs.readFile(report, "utf8"));
   assert.ok(evidence.failures.length > 0);
   for (const failure of evidence.failures)

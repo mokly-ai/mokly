@@ -1,18 +1,6 @@
 # Viewer Frame Adapter
 
-## Delivery Status
-
-Implemented in `@mokly/viewer`. Local Serve/export retain the same-origin
-sandbox and visible behavior; explicit cross-origin hosts use inspector
-transport. Host markers and trailing geometry refresh are implemented. Navigation
-messages name entries by `screenPath`. Same-origin frame identity accepts an
-`index.html` page at its containing directory with or without a trailing slash,
-and other HTML files without their final `.html`, while retaining origin and
-query identity.
-Historical pages and screens use the viewer-owned presentation defined by the
-[removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
-those frames or enters an inspection handshake; the viewer presents a
-same-origin document and enforces the read-only guard in every host.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Public Interface
 
@@ -82,7 +70,7 @@ declare function postMessageAdapter(options: {
 
 Current frames derive routes from `url` under `/static/mokly-generated/`; no prefix or route override exists.
 
-Mount validation follows [generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
+Mount validation follows the [artifact path contract](./mokly-artifact-paths.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.
@@ -188,8 +176,9 @@ redirect is accepted. The URL fragment is client-only positioning rather than
 resource identity, so the adapter authenticates the document first and then
 applies a missing or changed validated fragment. An authenticated document
 reload renews every document-scoped listener and observer without replacing the
-outer frame session. Preserve ownership and range authentication, clipping,
-highlighting, scroll restoration and logical-link classification unchanged.
+outer frame session. Range authentication, including a component page's markerless root region,
+follows the [range markers](./mokly-published-inspector.md#range-markers); ownership, clipping,
+highlighting, scroll restoration and logical-link classification match the inspector.
 Ready usage is required for instance inspection; absent usage does not disable
 valid navigation.
 
@@ -207,9 +196,9 @@ behavior until the replacement authenticates.
 The adapter records weak per-frame mount provenance and the last assigned
 resource, separately from the iframe's initial `src` attribute. On the first same-origin
 mount only, its immediate watcher may authenticate an already rendered
-document whose resource exactly matches the assignment; this is the explicit
-server-rendered hydration path. Every later mount captures the immediate
-pre-replacement `Document`. When that exact object was not previously
+document whose resource exactly matches the assignment; this is the document
+the frame's initial `src` started loading. Every later mount captures the
+immediate pre-replacement `Document`. When that exact object was not previously
 authenticated for the frame, both the watcher and `load` handler exclude it
 from assigned-resource authentication even if its URL exactly equals the new
 assignment. Only a different replacement `Document` may then pass the resource
@@ -223,8 +212,8 @@ cancels any earlier navigation, even when the still-visible authenticated
 document already matches the new choice. A delayed superseded response must
 never overwrite the latest preview selection.
 
-Authenticated matching documents and the initial matching server-rendered
-document are reused without reloading; incomplete accepted documents wait only
+Authenticated matching documents and the matching document of the initial
+`src` are reused without reloading; incomplete accepted documents wait only
 for their own load completion. Only the first mount may wait for a
 startup-assigned recorded fragment that has not committed yet. Frame and
 document provenance is weakly held and does not extend either object's lifetime.
@@ -233,17 +222,16 @@ As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and
 query, then moves the receiver before slower subresources can delay the iframe
 `load` event. The replacement watcher and `load` handler accept only this
-assigned-resource authentication; previously authenticated identity never lets
-a transferred document satisfy a new mount. Readiness installs inspection and
-geometry over the authenticated document. Unsubscribing or disposing removes
-the receiver, so an unenhanced document continues to use its portable native
-links.
+assigned-resource authentication; previously authenticated identity never lets a
+transferred document satisfy a new mount. Readiness installs inspection and
+geometry over the authenticated document. Unsubscribing or disposing removes the
+receiver, so an unenhanced document continues to use its portable native links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Historical [removed previews](./mokly-removed-previews.md) and
 [comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
 viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
-Existing local memory previews retain their authenticated private transport.
+Local memory previews use their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Panes gain no inspection, geometry, markers, or navigation messages.
 
@@ -269,16 +257,15 @@ The static host must ignore queries for file lookup. Never derive trust from
 
 After load, the adapter sends `hello` to the exact `frameOrigin`. The inspector
 accepts it only from `event.source === window.parent` and
-`event.origin === expectedHostOrigin`; it pins the first accepted nonce for
-that document and replies `ready` to that exact origin. Duplicate hello with
-the same nonce may resend ready; another nonce cannot replace the session.
-The adapter accepts replies only when
-`event.source === frame.contentWindow`, `event.origin === frameOrigin`, and
-channel, version and nonce match its active mount. Both sides use exact
-`targetOrigin` for every `postMessage`, never `"*"`. No `window.top` or
-`parent.location` reads/writes occur. The inspector is inert without handshake:
-no overlays, navigation interception, geometry collection or outgoing messages.
-Only its bounded handshake listener exists before activation.
+`event.origin === expectedHostOrigin`; it pins the first accepted nonce for that
+document and replies `ready` to that exact origin. Duplicate hello with the same
+nonce may resend ready; another nonce cannot replace the session. The adapter
+accepts replies only when `event.source === frame.contentWindow`,
+`event.origin === frameOrigin`, and channel, version and nonce match its active
+mount. Both sides use exact `targetOrigin` for every `postMessage`, never `"*"`.
+No `window.top` or `parent.location` reads/writes occur. The inspector is inert
+without handshake: no overlays, navigation interception, geometry collection or
+outgoing messages. Only its bounded handshake listener exists before activation.
 
 Ready/requests time out after five seconds, disposing the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
@@ -333,8 +320,8 @@ belong to that mount's validated usage. Never silently truncate lists or boxes;
 limit overflow reports unavailable inspection via `limit`, leaving content usable.
 
 Navigation paths follow the [path grammar](./mokly-paths.md), at most 256 ASCII
-characters; fragments use the [logical fragment grammar](./mokly-navigation.md),
-at most 256 characters. Named targets use its target grammar and the same limit;
+characters; wire fragments match `/^[A-Za-z][A-Za-z0-9_:.-]*$/`, at most 256
+characters. Named targets use the [target grammar](./mokly-navigation.md) and the same limit;
 all other target objects contain only `kind`. Navigation contains no URL, href,
 label or HTML. The inspector classifies only authenticated immediate native-link
 activations; the host revalidates paths against its catalogue and resolves URLs.
@@ -359,20 +346,19 @@ or inspector-bundle behavior.
 ## Published Inspector
 
 Static injection, inert document metadata, overlay isolation, and the script
-budget are defined by the
-[published inspector contract](./mokly-published-inspector.md). They do not
-change this adapter's handshake, wire messages, or same-origin behavior.
+budget are defined by the [published inspector contract](./mokly-published-inspector.md).
+They do not change this adapter's handshake, wire messages, or same-origin behavior.
 
 ## Acceptance
 
-Retain same-origin browser tests unchanged. Add an adversarial same-origin case
+Same-origin browser tests include an adversarial same-origin case
 where a frame navigates itself to an unowned document carrying a syntactically
 valid marker, then starts a replacement mount: the unowned document keeps native
 activation and emits no host navigation, while the authenticated replacement
 regains host-owned navigation. Repeat that case with the unowned document's URL
 exactly equal to the next assigned resource, proving the starting object is
-excluded while a different object loaded from that URL authenticates. Retain a
-first-mount SSR hydration case proving its matching starting document remains
+excluded while a different object loaded from that URL authenticates. A
+first-mount initial-`src` case proves its matching starting document remains
 eligible. Cross-origin fixtures must cover handshake and inertness, wrong
 origins/sources/nonces, opaque origins, limits, unknown fields, navigation,
 null/multi-root ranges, clipping, overlays, scroll, view swaps, timeout and

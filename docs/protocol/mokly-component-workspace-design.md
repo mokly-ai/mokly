@@ -1,20 +1,11 @@
 # Component Workspace Design
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-
-The [component explorer plan](../../plans/component-explorer.md) delivered these
-component, controls, and consuming-screen artboards in the package-owned layout.
-Owning mobile/desktop screens remain review entry points, aligned with
-the [removed content previews plan](../../plans/removed-content-previews.md).
-
 ## View Controls
 
 Place one compact icon toolbar beside the page title. It contains a native
 viewport dropdown (Mobile, Desktop, Both) and, on consuming screens, a Highlight
 components toggle. Standalone artboards use the single top-bar Appearance
-selector for interface and preview scheme. Embedded hosts retain their separate
+selector for interface and preview scheme. Embedded hosts keep their separate
 preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
 names, hover tooltips, selected states, and visible keyboard focus.
 
@@ -23,7 +14,7 @@ Usage uses a connected-node icon with clear, separated strokes. Icon boxes do
 not shrink; all glyphs are centered within their pointer targets.
 
 The viewport dropdown switches the actual displayed preview contexts. Both shows
-both mobile and desktop, with labels identifying each. Desktop content retains
+both mobile and desktop, with labels identifying each. Desktop content keeps
 its layout width when the available pane is narrow; scrolling happens inside the
 preview pane instead of scaling the document or widening the outer page.
 Theme changes affect the preview and its context labels, leaving the application
@@ -31,8 +22,8 @@ chrome legible. View changes preserve the selected variant and edited fields.
 
 Native form state and scoped CSS make these mockup controls work without scripts,
 including inside Browse's sandboxed frames. Preview fragments are authored from
-the same fixture values for both contexts. They do not implement server rendering
-of newly entered prop values. Highlighting uses the fixture's existing overlay
+the same fixture values for both contexts. They do not render newly entered
+prop values. Highlighting uses the fixture's existing overlay
 geometry and never dims an ancestor of a highlighted component.
 
 Disable highlighting when no registered components exist, inspection is
@@ -46,7 +37,7 @@ component; apply the same treatment to outer, nested, and single-instance region
 ## Fixed Shell And Resizable Inspector
 
 The artboard fills its viewport. Its top bar, screen title, view toolbar, saved
-variants, and comparison controls remain outside scrolling content. The enclosing
+variants, and comparison controls stay outside scrolling content. The enclosing
 page and main column have no vertical scrollbar. The preview and inspector are
 siblings on desktop; their contents may scroll independently without an enclosing
 scroll region. The inspector's icon strip stays visible while its content scrolls.
@@ -62,7 +53,7 @@ pointer keeps the resize cursor everywhere and preview frames ignore pointer inp
 so the gesture cannot be interrupted by the content underneath.
 The native sizing element sits behind the preview with its hit area centered
 on the divider; it changes layout height without consumer scripts. Both panes
-have minimum heights. Closing restores the preview's space; reopening retains
+have minimum heights. Closing restores the preview's space; reopening keeps
 the resized split, clamped to the available workspace. Runtime resizing supports
 the whole divider and keyboard input; native mockup dragging uses its center grip.
 
@@ -76,8 +67,8 @@ no sheet content or grabber.
 
 The mockup grabber is a native switch: touch/click or Space toggles between
 compact and expanded sheet heights without discarding edits or switching tabs.
-The checked state exposes the expanded size to assistive technology. Runtime
-implementation adds pan gestures and snap heights; the mockup does not claim
+The checked state exposes the expanded size to assistive technology. The
+runtime adds pan gestures and snap heights; the mockup does not claim
 native iOS drag behavior. Background preview/header controls stay available.
 
 ## Nested Components
@@ -85,15 +76,16 @@ native iOS drag behavior. Background preview/header controls stay available.
 A component can render other registered components. On its page, the inspector
 tab is named Nested components and lists those children, excluding the component
 whose page is open. Toolbar demonstrates its nested Action instance. Leaf
-components, including Action, omit this tab. Screen pages retain their Components
+components, including Action, omit this tab. Screen pages keep their Components
 tab, including the existing explicit empty and unavailable states.
 
 ## Comparison Availability
 
 Across the complete design catalogue, comparison controls require an explicit
-change state; the shared header defaults to omitting them. Their band always has
+change state, or a screen that only changed components affect; the shared
+header defaults to omitting them. Their band always has
 an opaque background. Browse/tag-picker, ignored-only, and
-empty designs retain Current without comparison controls.
+empty designs keep Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
@@ -102,18 +94,21 @@ effective displayed scheme before reading that state: a light-only preview uses
 Light status and marks while the catalogue's Dark preference stays selected.
 One view maps review states to Added, Changed, Removed, or Unmodified; Both uses
 that priority order. Changed is eligible, as is Removed only for a component
-variant. Missing or nonmatching evidence retains status and independently
-supplied eligibility; never derive one from the other. Axis, entry, and evidence
-updates recompute the decision. Unmodified omits the band and uses control marks
-plus `Changed views` for changes elsewhere. Removed screens show their badge
+variant. An entry that Changes does not list stays eligible while it shows
+Unmodified when its entry detail marks it comparison-eligible, because changed
+components affect it. Missing or nonmatching evidence keeps status and
+independently supplied eligibility; never derive one from the other. Axis,
+entry, and evidence updates recompute the decision. Any other Unmodified entry
+omits the band and uses control marks plus `Changed views` for changes
+elsewhere. Removed screens show their badge
 without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
 
 Normal component/control fixtures depict an unchanged saved example and zero
 catalogue changes. Changed component and independent screen-change fixtures
-retain their explicit Changes counts and before/current presentation. A Removed
-component variant retains before/current presentation; a Removed screen shows
+keep their explicit Changes counts and before/current presentation. A Removed
+component variant keeps before/current presentation; a Removed screen shows
 its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
@@ -121,7 +116,7 @@ The runtime uses actual comparison eligibility for the selected saved example.
 Missing, pending, or nonmatching per-view evidence uses the entry-level status
 fallback without changing that eligibility and cannot trigger eager screenshot
 work merely to decide whether to show a mode row. The same rule gates comparison
-deep links during server render, controlled selection, and later evidence
+deep links at the first shell render, controlled selection, and later evidence
 updates.
 Affected consumers may still expose comparisons while staying out of Changes.
 
@@ -134,7 +129,7 @@ selected Disabled variant entry is Unmodified and ineligible, so no comparison
 band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
 preview without comparison controls, plus one Changes entry. The existing unused Badge
-example remains Unmodified. Status must never be inferred from usage counts.
+example stays Unmodified. Status must never be inferred from usage counts.
 
 ## Comparison Details
 
@@ -145,16 +140,21 @@ when a parent or variant moves or changes letter case.
 Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
-above it. The panel remains available on a Removed screen's stage even though
+above it. The panel stays available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
 comparison section unless there is retained or excluded rendered-resource evidence.
 The `design/components/states/shared-impact/shared-impact` artboard in States → Stylesheet evidence depicts
 Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
 Its `design/components/states/shared-impact/style-changed` and `design/components/states/shared-impact/style-outside`
 siblings depict a changed Action and a screen styled outside it; each changed
-file lists its outcomes under that file.
+file lists its outcomes under that file. Its
+`design/components/states/shared-impact/affected-screen` sibling depicts
+Unmodified Welcome, which only the changed Action affects, in Side by side: its
+band offers the comparison, the shown view reads "Components this screen uses
+changed", and its Details end with the shared-component sentence in place of
+the no-changes line.
 
-Use structured evidence: entry/variant state, a generic output-change reason,
+Use structured evidence: entry/variant state, one sentence per direct reason,
 the component-level changed-file list and style outcomes, selected-variant
 stylesheet exclusions, paired prop values, and links to changed components
 actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-presentation.md#details-copy)
@@ -164,12 +164,46 @@ The mockup fixtures share these values with the rendered preview and Props panel
 Do not invent explanations such as “corners and spacing changed”: the runtime
 can populate factual rows from validated comparison/usage records and paired
 inputs, but does not generate visual-analysis prose. Temporary control edits
-remain separate from saved comparison evidence.
+stay separate from saved comparison evidence.
+
+Details read the routed entry's direct reasons from its
+[entry detail](./mokly-shell-delivery.md#entry-detail), so they show them as
+soon as the detail arrives: in Current before any comparison loads, in a loaded
+comparison, and under either filter. Each reason is one sentence, shown once
+whatever supplies it. As the designs show, the reason sentences follow the
+branch-point sentence and a moved entry's previous path, and come before the
+changed files, the paired prop values, and the changed components used here. A
+`dependency` reason reads only through the changed-files list of the
+[CSS evidence contract](./mokly-css-evidence-presentation.md), a `screen`
+reason, which only a use case carries, has no sentence, and a pure move has no
+reason sentence. Only a record that Changes lists shows reasons. A reason that
+contradicts its record is dropped: `removed` on a current record, `added` on a
+record with a base side, `screen` outside a use case, and `implementation`
+outside a component parent. A viewer still loads such a detail, and a detail
+whose reasons disagree with its record's Changes membership; Details then show
+only the reasons that fit, so that a recoverable mismatch never hides the entry.
+
+| Reason           | Sentence                                                 |
+| ---------------- | -------------------------------------------------------- |
+| `added`          | “Added to this branch.”                                  |
+| `removed`        | “Removed on this branch.”                                |
+| `material`       | “Rendered content changed.”                              |
+| `implementation` | “Rendered content changed where this component is used.” |
+| `inputs`         | “Supplied props or slots changed.”                       |
+| `structure`      | “Component instances changed.”                           |
+| `metadata`       | “Page details or saved examples changed.”                |
+
+The `implementation` sentence describes actual-instance impact. The
+component's own view states and comparison captions stay unchanged. The
+`design/components/states/shared-impact/style-changed` artboard depicts it: a
+markup change shows only where screens use Action, so Details read the
+sentence while the Default caption still names only the changed styles.
 
 ## Verification
 
-Capture regressions before implementing the changes. Exercise native viewport,
-theme, and highlight controls from disk and inside served frames. Verify both
+Capture regressions before making the changes. Exercise native viewport,
+theme, and highlight controls inside served frames and in the `mokly build`
+output. Verify both
 rendered contexts, independent mask ids, correct labels, retained control values,
 leaf/composite tab membership, and explicit comparison eligibility.
 
@@ -178,7 +212,8 @@ grabber. Check bounds, closing/reopening, retained edits and preview dimensions,
 and document/main/inspector scrolling separately at mobile and desktop sizes.
 Verify centered menu/caret SVGs and clear Usage geometry at both sizes.
 Keep existing link, prop, usage, highlight-geometry, and Changes-count assertions.
-Open and visually inspect every changed artboard and the interactive Both/Dark
-states. Regenerate with `npm run example:build`, verify with
-`npm run example:check`, and run `npx playwright test tests/browser/component*.spec.ts`.
+Open and visually inspect every changed artboard in the served Browse frames
+and the interactive Both/Dark states. Run the component specs of the browser
+suite against `mokly serve` with
+`npm run test:browser -- tests/browser/component*.spec.ts`.
 Finish with `cargo xtask check`, commit/push, and the post-push review.

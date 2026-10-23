@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<a href=\"mock:unknown\">Unknown</a>\n"
+  },
+  "errors": [
+    {
+      "code": "unknown-link-target",
+      "message": "link target unknown does not exist",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 4
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import type { CatalogueNode, CatalogueReadModel } from "@mokly/viewer";
 import type {} from "./viewer_harness.js";
 
-export function appendScreenVariant(
+function appendScreenVariant(
   node: CatalogueNode,
   parentId: string,
   variantPath: string,
@@ -11,7 +11,11 @@ export function appendScreenVariant(
       ...node,
       children: [
         ...(node.children ?? []),
-        { kind: "entry", path: variantPath },
+        ...(node.children?.some(
+          (child) => child.kind === "entry" && child.path === variantPath,
+        )
+          ? []
+          : [{ kind: "entry" as const, path: variantPath }]),
       ],
     };
   return node.children
@@ -25,9 +29,9 @@ export function appendScreenVariant(
 }
 
 export function screenVariantCatalogue(
-  catalogue: CatalogueReadModel,
+  index: CatalogueReadModel,
 ): CatalogueReadModel {
-  const source = structuredClone(catalogue);
+  const source = structuredClone(index);
   const unmodified = {
     status: "ready" as const,
     kind: "unmodified" as const,
@@ -55,8 +59,11 @@ export function screenVariantCatalogue(
   const parentIndex = model.screens.findIndex(({ path }) => path === "home");
   const parent = model.screens[parentIndex];
   if (!parent) throw new Error("Missing viewer screen fixture");
+  const nativeVariant = model.screens.find(
+    (entry) => entry.path === "home/error",
+  )!;
   const variant = {
-    ...parent,
+    ...nativeVariant,
     path: "home/error",
     title: "Save failed",
     variantOf: parent.path,
@@ -65,7 +72,7 @@ export function screenVariantCatalogue(
       kind: "changed" as const,
       included: true,
     },
-    views: parent.views.map((view) => ({
+    views: nativeVariant.views.map((view) => ({
       ...view,
       comparison:
         view.viewport === "mobile" && view.colorScheme === "dark"
@@ -88,7 +95,9 @@ export function screenVariantCatalogue(
       ...model.screens.slice(0, parentIndex),
       { ...parent, changes: unmodified },
       variant,
-      ...model.screens.slice(parentIndex + 1),
+      ...model.screens
+        .slice(parentIndex + 1)
+        .filter((entry) => entry.path !== variant.path),
     ],
     tree: model.tree.map((node) =>
       appendScreenVariant(node, parent.path, variant.path),

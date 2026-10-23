@@ -1,0 +1,54 @@
+[package]
+name = "mokly-static"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+mock = []
+
+[dependencies]
+mokly-model = { workspace = true }
+mokly-compare = { workspace = true }
+mokly-platform = { workspace = true }
+mokly-catalogue = { workspace = true }
+mokly-graph = { workspace = true }
+mokly-html = { workspace = true }
+mokly-source-interface = { workspace = true }
+thiserror = "2.0.21"
+serde_json = "1.0.154"
+bytes = "1.12.1"
+tracing = "0.1.44"
+unimock = "0.6.8"
+dunce = "1.0.5"
+serde = { version = "1.0.229", features = ["derive"] }
+oxc_allocator = "0.146.0"
+oxc_parser = "0.146.0"
+oxc_ast = "0.146.0"
+oxc_ast_visit = "0.146.0"
+oxc_span = "0.146.0"
+sha2 = "0.11.1"
+
+[dev-dependencies]
+insta = "1.49.0"
+tempfile = "3.27.0"
+
+[target."cfg(unix)".dependencies]
+libc = "0.2.190"
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
+
+[dev-dependencies.mokly-graph]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-source-interface]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-catalogue]
+workspace = true
+features = ["mock"]

@@ -1,250 +1,249 @@
 # Component Controls
 
-## Delivery Status
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-Local Serve edits props through the registered renderer; published controls are
-read-only. [Controls mockups](./mokly-component-controls-design.md) share the
-icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
-The render request names entries by path and keeps a separate page id for
-coalescing requests from one open page.
+## Scope And User Behaviour
 
-## Scope And User Behavior
+Saved variants work in every catalogue. Serve temporarily edits screen and
+component props through the catalogue render path: HTML in Rust, JavaScript
+through the [sidecar](./mokly-sidecar.md). Static `build` output shows saved
+props with read-only controls and `Open this catalogue locally to edit props.`
+as secondary text. Static frames add no interactive control or consumer
+JavaScript runtime. The [live descriptor](./mokly-shell-delivery.md#live-descriptor)
+grants this capability; an environment badge does not.
 
-Saved variants work in every catalogue. Local Serve temporarily edits declared
-props through server rendering; static frames add neither interactive controls
-nor a consumer JavaScript runtime.
+The inspector's Props tab lists controls derived from the
+[entry prop schema](./mokly-entry-props.md#one-model): text for `string`, a toggle for
+`boolean`, a number control for `number` and `integer` whose step is
+`multipleOf` counted from zero, else 1 for `integer`, else none, and a select
+for `enum` and `oneOf` of constants whose options are labelled by `title`,
+else the string itself, else the JSON text of the value. A Storybook stories
+file's `argTypes` enrich the derived controls as the sidecar contract states.
+`defineScreen` and `defineComponent` may declare `controls` to replace the
+derived ones; a declared control must name a declared prop, and optionality
+and types come only from the schema. A prop whose shape has no control is
+shown but not editable. The read model carries the result as `controls`.
 
-The Props/Controls tab in the shared component inspector lists only explicitly declared editable
-props. Data props without controls remain visible in the inspector and still
-participate in change detection. A control starts from the shown variant
-entry's actual value, updates the preview after validation, and has a label
-derived from declared metadata or the prop name. No invented sample values
-replace missing values; optional fields expose their unset state.
+The [generated control type](../../packages/viewer/src/generated/catalogue/ComponentControl.ts)
+defines its data shape.
 
-The normative declarations below reference the required
-[prop schema](./mokly-component-props.md). Unknown fields, an undeclared data
-prop, or a slot key fail registration. Optionality and data types come only from
-that schema; controls cannot override them. Empty text remains a string, and
-unset removes only an optional prop. React slots and arbitrary JSON editors are
-not live controls; complex values use schema-defined consumer preset keys.
+Controls keep their explicit declaration order. Derived controls follow schema
+property order. Inferred schemas use first-seen prop order: own props first,
+then variant props in variant order. Uneditable properties are omitted.
+Each visual entry's detail carries that order in `controlOrder`. Saved variants
+inherit it. The viewer follows the detail's order instead of sorting prop names.
+Until the routed entry's detail arrives, the Props tab shows `Loading props…`
+and no fields, so the fields first appear in that order and never move. A
+detail that fails to load shows `Props couldn’t be loaded.` with `Try again`.
+Showing the index's fields at once was rejected: the index carries no order.
 
-```ts
-interface ComponentControlLabel {
-  label?: string;
-  description?: string;
-}
+Text length is a non-negative integer of Unicode code points, as the schema's
+`maxLength` counts; the shell checks it itself and never uses the input's
+native `maxlength`, which counts UTF-16 code units, as the limit. Number bounds
+are finite, ordered, and never negative zero; `step` is finite and positive
+and counts from zero, with the first offered value the smallest multiple at
+or above `minimum`. A number control offers only values the schema accepts.
+Select options are non-empty, have non-empty labels, and unique values the
+schema accepts. A declared `step` must be a multiple of schema `multipleOf`.
+It must also be integral for an `integer` prop. An incompatible step fails the
+build with `component-controls`, because it would offer invalid values.
+The read model stores effective number limits for declared controls. Each
+bound uses the control's own value, else the schema's `minimum` or `maximum`.
+Step uses the control's own value, else the schema's `multipleOf`, else 1 for
+an integer, else no step. Parents and saved variants carry the same limits.
+Saved props or story args outside their controls produce `props-control-bounds`
+build warnings. This includes complete merged variants and Storybook hints.
+The viewer accepts these saved values when they satisfy the prop schema.
+The values still render. `--strict` makes the warnings fatal. Live validation
+keeps the complete merged-props check so every accepted preview meets its bounds.
 
-type ComponentControl = ComponentControlLabel &
-  (
-    | { kind: "text"; maxLength?: number }
-    | { kind: "boolean" }
-    | { kind: "number"; minimum?: number; maximum?: number; step?: number }
-    | {
-        kind: "select";
-        options: readonly { label: string; value: PropPrimitive }[];
-      }
-  );
-```
-
-Text length uses nonnegative safe integers and UTF-16 code units. Number bounds
-are finite, ordered, and not negative zero; step is finite and positive with
-base `minimum ?? 0`. Step is a UI increment, not floating-point divisibility
-validation. Select options are nonempty, have nonempty labels, and unique
-primitive values accepted by the field schema; numeric options reject negative
-zero for lossless schema JSON. Every saved value must satisfy its prop schema
-and control limits/options. A number control still sends negative-zero inputs
-losslessly through the tagged wire codec.
-
-Reset restores the shown variant entry's complete props. Navigating to another
-variant entry discards temporary edits, as does any other navigation or reload.
-Viewport/theme changes preserve validated edits and render them in the new
-context.
-Temporary state is neither written to source/generated files nor encoded as
-arbitrary prop data in URLs, local storage, comparisons, or Changes counts.
+A control starts from the shown entry's props, that is the entry's own props or
+a variant's merged props, updates the preview after validation, and has a label
+from the control's `label`, else the schema `title`, else the prop name. No
+invented sample value replaces a missing value; an optional prop exposes its
+unset state, and `unset` removes only an optional prop. Empty text stays a
+string. Reset restores the shown entry's complete props. Navigating to another
+entry discards temporary edits, as does a reload. Viewport and scheme changes
+keep validated edits and render them in the new context. Temporary state is
+never written to a source, never encoded in a URL, local storage, a comparison,
+or a Changes count, and never enters the catalogue model.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
-variant and compares its baseline output with its current rendered output;
-controls become unavailable while comparing. The product explains that the
-comparison shows the saved variant. Controls render responses cannot overwrite
-a comparison, another variant entry, a new viewport/theme, or a different entry.
-
-Published pages show the same saved variants and props with controls read-only
-and a secondary message, "Open this catalogue locally to edit props."
-Capability comes from delivery configuration rather than an environment badge.
-Users can browse, inspect, and compare the saved variants normally.
+props and compares the base render with the current render of the saved props;
+the controls are unavailable while comparing, and the product explains that the
+comparison shows the saved props. A render response cannot overwrite a
+comparison, another entry, another viewport or scheme, or a different page.
 
 ## Rendering Boundary
 
-Serve exposes private POST `/mokly-viewer/components/render`. Its request carries
-the parent component's path, the variant entry's path, view axes, catalogue
-generation, page id, and declared control overrides. It accepts no module
-path, source, callback, resource path, or renderer selection.
-
-The response's `view` uses [manifest usage records](./mokly-component-manifest.md).
-The separate `X-Mokly-Render-Token` header never enters generated metadata.
+Serve exposes the private route `POST /mokly-viewer/components/render`. The
+request names the entry by path and carries the view axes, the installed
+revision, a page id, and the overrides. It accepts no module path, source,
+callback, resource path, or renderer selection.
 
 ```ts
-interface ComponentRenderRequest {
-  componentId: string;
-  variantPath: string;
+interface RenderRequest {
+  entryPath: string; // a screen, a component, or a variant of either
   viewport: Viewport;
   colorScheme: ColorScheme;
-  generation: string;
+  revision: number; // the index revision the shell installed
   pageId: string;
   overrides: Readonly<
-    Record<
-      string,
-      { kind: "set"; value: ComponentWirePrimitive } | { kind: "unset" }
-    >
+    Record<string, { kind: "set"; value: unknown } | { kind: "unset" }>
   >;
 }
 
-interface ComponentRenderSuccess {
+interface RenderSuccess {
   renderId: string;
-  generation: string;
+  revision: number;
   previewUrl: string;
-  props: ComponentWireProps;
-  view: ComponentViewRecord;
+  props: ComponentWireProps; // the complete validated props
+  usage: CatalogueUsage; // the rendered view's usage, status "ready"
 }
 ```
 
-`componentId` names the parent by its path and `variantPath` names the variant
-entry. The server requires that entry's `variantOf` to equal `componentId`,
-then uses the parent schema/controls and variant props. Neither field is
-inferred or accepted independently.
+The server resolves `entryPath` against the current catalogue model, takes
+the entry's schema, controls, and props, merges the overrides into those
+props, and validates the complete merged props against the schema with the
+profile validator, including uneditable props and control bounds; a `set`
+value is JSON under the schema, and the JSON `null` value is a value, not an
+unset sentinel. It then renders the entry's view through the render graph
+with the merged props: the same composition, collected styles, markers, link
+rewriting, document safety, and resource validation as a catalogue render,
+memoized by the same fragment key, so a repeat render of saved props costs a
+cache hit. Server-supplied context cannot be overridden, and no second
+renderer or React resolution exists.
 
-The parent creates one random 32-hex `pageId` per mounted component edit owner
-and rendered viewport/color-scheme context, retaining it until that owner is
-replaced by navigation or reload. Repeated edits for the same visible context
-reuse its id so they coalesce, while simultaneous contexts use distinct ids so
-one preview cannot supersede another. It is a queue-coalescing key, not
-authority.
-The opaque generation must match the active catalogue. Decode overrides through
-the shared primitive codec; validate the complete merged props against the
-registration schema and control constraints, including uneditable props.
+A successful response returns an opaque render id, the revision, a sandboxed
+preview URL beneath `/mokly-viewer/components/renders/<render-id>/`, the
+validated props, and the view's usage from the composed tree; render
+resources resolve beneath that prefix through the same adapter as Browse.
+Malformed or expired ids are rejected. The response never enters the
+catalogue model, the index, a detail, or a publication.
 
-The server resolves the request against the current validated registry,
-merges overrides into that variant's props, validates types/constraints, then
-calls the same consumer render adapter, theme, stylesheet selection, marker,
-link, resource, and manifest-bound route validation as Build. Server-supplied context and
-uneditable props cannot be overridden. Optional values use an explicit unset
-operation; the tagged null value remains an actual value, not an unset sentinel.
+Preview documents stay script-disabled. The shell swaps only the matching
+preview frame and uses the returned usage for inspection and highlighting. No
+client-side prop interpolation or arbitrary HTML execution substitutes for
+the server render. A failed validation or render keeps the last valid
+preview, shows an actionable error, and offers retry and reset.
 
-A successful response returns a typed result with an opaque render id, the
-matching catalogue generation, a sandboxed preview URL, and validated usage
-records. Preview URLs are confined beneath
-`/mokly-viewer/components/renders/<render-id>/`; render resources retain valid
-public relative resolution through the same adapter as normal Browse. Reject
-malformed or expired ids. This response never updates the generated manifest or
-publishes watched changes.
-
-Preview documents stay script-disabled. The parent shell swaps only the matching
-preview frame and uses its returned usage records for inspection/highlighting.
-No client-side prop interpolation or arbitrary HTML execution substitutes for
-the consumer renderer. Failed validation/rendering preserves the last valid
-preview, shows an actionable error, and offers retry/reset.
+Only the standalone shell that Serve delivers builds this capability; a
+React host that embeds `MoklyViewer` and the static output have none, their
+controls are read-only, and they open no event stream. The shell holds the
+capability in one closure that performs the render request and exposes
+`temporaryPreviews.render` and `temporaryPreviews.expired` through one React
+context; `useViewerCapabilities()` returns them in Serve and `undefined`
+elsewhere, so the token never enters the index, a detail, a URL, local
+storage, or the shell store. Every call carries the current route and the
+installed `deploymentId` and `revision`; a result whose values differ from
+the installed ones is discarded, and navigation, a sibling-variant change, a
+revision adoption, and unmount abort work in flight. A response is accepted
+only when its revision equals the installed one and its view matches the
+request; expiry checks cover only preview URLs the shell received. When the
+index's `live.generation` changes, the shell refetches the live descriptor,
+replaces the capability, and rerenders the current validated props. No
+client module, host marker, or host loader is live-only: the client bundle
+is the same in Serve and in the static output, and a capability is behaviour
+the shell builds in the browser from Serve JSON, never catalogue data.
 
 ## Request And Lifecycle Rules
 
-The endpoint is available only in local Serve, with no published route or
-background requests in static catalogues. Accept JSON POST only, cap request
-bodies at 64 KiB, reject unknown fields and invalid component/variant/view
-combinations, and validate unset operations against optional controlled props.
-Use structured error codes for invalid input, unknown entry, stale generation,
-render failure, and temporary capacity limits. Map them to 400, 404, 409, 422,
-and 429 respectively; oversized bodies return 413 and unsupported methods 405.
-Worker failures carry their caught message as server-only detail, written to
-stderr at the HTTP boundary; the response retains the generic preview failure
-message without resource paths, exclusion causes, or other internal details.
+The route exists only in local Serve; the static output has no route and
+makes no background request. Serve accepts JSON POST only, caps request
+bodies at 64 KiB, rejects unknown fields and an invalid entry, view, or
+override combination, and validates `unset` against optional controlled props.
+Structured error codes for invalid input, an unknown entry, a stale revision,
+a render failure, and a temporary capacity limit map to 400, 404, 409, 422,
+and 429; oversized bodies return 413, unsupported methods 405, and an expired
+render id 410. A render failure's typed diagnostic is written to stderr through
+the reporter; the response carries a generic failure message without resource
+paths or other internal detail.
 
-When controls are active, every Serve request requires Host to be exactly
+When controls are active, every Serve request requires `Host` to be exactly
 `localhost:<port>` or `127.0.0.1:<port>`, where `<port>` contains only decimal
-digits, has no leading zero, and is between 1 and 65535 inclusive. Require an
-explicit port; reject other hostnames, IP spellings, IPv6, whitespace, suffixes,
-and userinfo. A non-loopback Host returns 403 for the whole catalogue, including
-ordinary pages and static assets. The Host port need not equal the listening
-socket port: forwarded local ports are supported. Serve binds only to
-`127.0.0.1`, so `[::1]` cannot reach the socket directly and accepting it would
-widen the Host surface without a working path; IPv6 support is out of scope.
-Forwarded headers (`x-forwarded-*`) grant nothing; never use those headers to
-repair Host, Origin, or authorization.
+digits, has no leading zero, and is between 1 and 65535 inclusive. An explicit
+port is required; other hostnames, IP spellings, IPv6, whitespace, suffixes,
+and userinfo are rejected. A non-loopback `Host` returns 403 for the whole
+catalogue, including ordinary pages and static assets. The `Host` port need
+not equal the listening port, so forwarded local ports work. Serve binds only
+`127.0.0.1`; IPv6 is out of scope. Forwarded headers (`x-forwarded-*`) grant
+nothing and never repair `Host`, `Origin`, or authorization.
 
-On render POST, Origin must equal `http://` plus the accepted Host exactly,
-including its explicit port, and `X-Mokly-Render-Token` must match the shell-issued
-unpredictable token. No case folding, default-port removal, trailing slash, or
-scheme substitution is allowed for this comparison. Preview GET/HEAD requires
-Host validation and the authenticated render id, without requiring Origin or the
-POST token. The token is scoped to the server instance and unavailable to consumer
-frames. There is no permissive CORS; missing or invalid required authorization
-returns 403. Loading a foreign web page must not cause consumer render code to
-execute through this endpoint.
+On a render POST, `Origin` must equal `http://` plus the accepted `Host`
+exactly, including its explicit port, and `X-Mokly-Render-Token` must equal the
+render token. No case folding, default-port removal, trailing slash, or scheme
+substitution is allowed. Preview GET and HEAD require `Host` validation and the
+authenticated render id, without `Origin` or the token. The token is a random
+value chosen once per server process, delivered only in the render capability of
+the live descriptor v3 as `render: { url: "/mokly-viewer/components/render",
+token }`, and never present in the index, a detail, a document, or consumer
+frames; a new server process means a new token. There is no permissive
+cross-origin access: Serve sends no CORS header on any route, so a foreign page
+cannot read the descriptor or call the route, and missing or invalid
+authorization returns 403. Loading a foreign web page cannot cause consumer
+render code to execute through this route.
 
-Text/number edits are debounced by 150 ms; boolean/select edits submit
-immediately. Each edit-owner context has one active request and at most one
-latest queued replacement. Sequence/generation checks discard stale responses.
-Cancel obsolete requests on navigation, reset, variant/context change, or
-disconnect; cancellation must not leave an unresolved UI loading state.
+Text and number edits are debounced by 150 ms; boolean and select edits
+submit immediately. The shell creates one random 32-hex `pageId` per mounted
+edit owner and viewport and scheme context and keeps it until navigation or
+reload, so repeated edits for one visible context coalesce while
+simultaneous contexts cannot supersede each other; it is a queue key, not
+authority. Each edit owner has one active request and at most one latest
+queued replacement; sequence and revision checks discard stale responses.
+Obsolete requests are cancelled on a newer edit, navigation, reset, entry or
+context change, or disconnect, and cancellation never leaves a loading state.
 
-Run bounded rendering outside the main HTTP event loop using the same compiled
-consumer graph in a supervised worker. Allow one active job and at most eight
-queued jobs server-wide; superseded jobs from the same page are coalesced.
-Terminate a job after ten seconds and return render failure, replacing the
-worker before accepting more work. This makes synchronous consumer render
-failures unable to hang Browse or shutdown. No second independently configured
-renderer or React resolution graph is permitted.
+Rendering runs through the render graph's scheduler outside the HTTP event
+loop, with one active job per page and at most eight queued jobs server-wide;
+superseded jobs from one page are coalesced. A job that passes ten seconds
+fails with a render failure; a sidecar render that passes its own deadline
+follows the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts),
+so a hanging consumer render cannot hang Browse or shutdown.
 
-Keep transient HTML, usage/props metadata, and generated style/resource bytes
-only in a process-local memory store behind opaque render ids. Mokly never
-spills these artifacts to disk, including `.context`, the OS temporary directory,
-or any source/output root. They never enter a manifest, Check's tree comparison,
-Git changed-path calculation, watch event stream, or publication inventory.
-Reading existing validated public assets is allowed; generated asset bytes stay
-in the same memory bundle as their document and are served through its render id.
+Preview document bundles, with usage, props, and resource bytes, live in a
+process-local memory store behind opaque render ids; nothing is spilled to disk,
+not to the cache directory, the OS temporary directory, or any root. Temporary
+documents never enter the saved document cache, saved comparison inputs,
+the watch set, or a publication. Content-addressed fragments may use the bounded
+fragment cache. Reading public assets is allowed; generated asset bytes stay in
+the same memory bundle as their document and are served through its render id.
+At most sixteen bundles and 32 MiB of encoded document, metadata, and resource
+bytes are kept; a result over the budget is rejected, and a bundle expires after
+five minutes. A valid but expired id returns 410 without an unbounded expired-id
+table; a malformed or foreign id returns 404. Eviction never reuses an id, and a
+page may re-render its current validated props after expiry. Every memory
+response uses `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and
+a fixed validated MIME type.
 
-Retain at most sixteen render bundles and 32 MiB total encoded document, metadata,
-and resource bytes. Reject a result exceeding the budget and expire bundles after
-five minutes. Ids are server-authenticated opaque tokens; a valid but no-longer
-retained id returns 410 without an unbounded expired-id table. Malformed/foreign
-ids return 404. Eviction never overwrites an id, and a page may rerender its
-current validated props after expiration. Every memory response uses no-store
-and nosniff headers and a fixed validated MIME type, preserving frame sandboxing.
-
-Watched registry/config replacement invalidates the old generation, stops or
-discards its queued work, and only swaps to a fully validated replacement graph.
-When the catalogue index is unchanged, apply the new runtime to the live child before
-publishing the update. A changed index or reconfiguration stages it for the
-next child, leaving the old catalogue and its controls paired through shutdown.
-Capture the startup runtime when spawning, so later staging cannot change either
-IPC response. Before readiness, the child requests that runtime's accepted
-serializable config, validated live index and retained renderer, constructs the
-catalogue and binds with controls enabled. No generated HTML or full rendered
-manifest is transferred. The worker evaluates the retained graph once, validates
-only the requested edited view, and captures its resource closure; it never clones
-the full rendered catalogue. Navigation-only destinations need no resource copy.
-Props and document requests jointly pause background rendering between documents.
-Failed index candidates retain the last-good registry/renderer and its controls.
-Server shutdown stops admission, rejects queued work, terminates the worker,
-and cleans transient artifacts. Controls cannot delay ordinary catalogue
-watch/reload or comparison generation indefinitely.
+A publication with a new revision invalidates the old revision's requests: a
+request that carries an older revision returns 409, and queued work of the old
+state is discarded. On a 409 the shell keeps the preview pending, refreshes the
+index once unless a refresh is loading, and retries with the installed revision
+after it adopts the new state, also while the event stream is down; it shows the
+failure only when that retry fails. The shell checks each field and the props as
+a whole before it renders, so a 400 after those checks pass shows `These values
+are not valid together.` Shutdown stops admission, rejects queued work, cancels
+active renders, and releases the memory store. Controls cannot delay a watched
+rebuild, a publication, or a comparison generation.
 
 ## Verification
 
-Add contract tests for every control type, optional/unset values, unknown props,
-type/constraint errors, preset resolution, malformed bodies, request size,
-origin/Host/token validation, old generations, worker failure/timeout, and queue
-bounds. Cover both loopback names through a different forwarded port for POST
-and preview reads, missing/zero/oversized/leading-zero ports, non-loopback Host
-with loopback forwarded headers, and mismatched Origin or token. Cover ordinary
-catalogue routes with rejected non-loopback and accepted forwarded Hosts.
-Prove repeat renders use the same consumer providers and React runtime
-resolution as saved variants and never mutate generated output. Assert that
-control requests create no filesystem output, Git status change, watch event,
-rebuild/reload notification, Check extra-file report, or publication entry, including when
-a consumer explicitly watches its repository root. Test aggregate bundle byte
-tracking, expiration/eviction, MIME/headers, and memory release on shutdown.
+Contract tests cover every control type, derived steps and labels, optional
+and unset values, unknown props, type and bound errors, malformed bodies,
+request size, `Origin`, `Host`, and token validation, stale revisions, render
+failure and timeout, and queue bounds. They cover both loopback names through
+a different forwarded port for POST and preview reads, missing, zero,
+oversized, and leading-zero ports, a non-loopback `Host` with loopback
+forwarded headers, and a mismatched `Origin` or token, plus ordinary routes
+with rejected non-loopback and accepted forwarded Hosts. They prove that a
+repeat render uses the same renderer and React resolution as the saved props,
+and that control requests create no file, Git status change, watch event, or
+publication entry, including when a consumer watches its repository root.
+They test bundle byte accounting, expiry and eviction, MIME types and
+headers, and memory release on shutdown.
 
-Browser tests cover actual prop changes, reset, variant switching, viewport/theme
-retention, rapid edits, stale responses, navigation, comparison selection,
-render errors, retry, worker replacement, and shutdown. Published smoke tests
-prove saved variants remain usable and issue no local-render requests.
-Update mobile and desktop controls mockups before implementing these controls.
+Browser tests cover prop changes, reset, variant switching, viewport and
+scheme retention, rapid edits, stale responses, navigation, comparison
+selection, render errors, retry, sidecar replacement, and shutdown. Static
+smoke tests prove the saved props are usable and issue no render request.
+The [controls mockups](./mokly-component-controls-design.md) show the states.

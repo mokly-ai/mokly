@@ -1,0 +1,5 @@
+---
+source: crates/mokly-sidecar/tests/smoke_tests.rs
+expression: result.html
+---
+<div data-renderer="components/control" data-axis="mobile"><!--mokly-output:start id="r-1"--><section class="smoke-control" data-viewport="mobile"><button>Smoke</button><!--mokly-ignore:start id="chrome"--><span>Chrome</span><!--mokly-ignore:end id="chrome"--><mokly-slot name="children" token="token" ignore-scope="disabled"></mokly-slot></section><!--mokly-output:end id="r-1"--></div>

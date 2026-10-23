@@ -1,0 +1,124 @@
+[
+  {
+    "name": "moved-consumers",
+    "base": {
+      "branch-assets.css": ".branch-badge { background-image: url(\"./branch-mark.svg\"); padding: 24px; display: inline-block; }",
+      "branch-mark.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\"><title>Before branch asset</title><rect width=\"24\" height=\"24\" fill=\"red\"/></svg>",
+      "specs/branch/consumers/badge.component.html": "---\ntitle: Badge\nelement: bp-badge\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Badge}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<span class=\"branch-badge\">Before {{label}}</span>",
+      "specs/branch/consumers/receipt.screen.html": "---\ntitle: Receipt\n---\n<h1>Receipt</h1><bp-badge label=\"Paid\"></bp-badge>",
+      "specs/branch/consumers/status.component.html": "---\ntitle: Status\nelement: bp-status\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Status}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<section><bp-badge label=\"{{label}}\"></bp-badge></section>"
+    },
+    "head": {
+      "specs/branch/consumers/receipt.screen.html": null,
+      "specs/branch/consumers/status.component.html": null,
+      "branch-mark.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\"><title>After branch asset</title><rect width=\"24\" height=\"24\" fill=\"blue\"/></svg>",
+      "specs/branch/consumers/archive/receipt.screen.html": "---\ntitle: Receipt\nmovedFrom: branch/consumers/receipt\n---\n<h1>Receipt</h1><bp-badge label=\"Paid\"></bp-badge>",
+      "specs/branch/consumers/archive/status.component.html": "---\ntitle: Status\nelement: bp-status\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Status}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\nmovedFrom: branch/consumers/status\n---\n<section><bp-badge label=\"{{label}}\"></bp-badge></section>",
+      "specs/branch/consumers/badge.component.html": "---\ntitle: Badge\nelement: bp-badge\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Badge}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Active\"}}]\n---\n<span class=\"branch-badge\">After {{label}}</span>"
+    },
+    "moves": {
+      "branch/consumers/archive/receipt": "branch/consumers/receipt",
+      "branch/consumers/archive/status": "branch/consumers/status",
+      "branch/consumers/archive/status/default": "branch/consumers/status/default"
+    },
+    "removed": {},
+    "affected": [
+      "branch/consumers/archive/status",
+      "branch/consumers/archive/receipt"
+    ]
+  },
+  {
+    "name": "moved-parent",
+    "base": {
+      "specs/branch/parent/action.component.html": "---\ntitle: Action\nelement: bp-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"secondary\",\"title\":\"secondary\",\"props\":{\"label\":\"Cancel\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/parent/index.component.html": "---\ntitle: Parent\nelement: bp-parent\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Parent}\n---\n<aside>{{label}}</aside>"
+    },
+    "head": {
+      "specs/branch/parent/action.component.html": null,
+      "specs/branch/parent/archive/action.component.html": "---\ntitle: Action\nelement: bp-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"}}]\nmovedFrom: branch/parent/action\n---\n<button>{{label}}</button>"
+    },
+    "moves": {
+      "branch/parent/archive/action": "branch/parent/action",
+      "branch/parent/archive/action/primary": "branch/parent/action/primary"
+    },
+    "removed": {
+      "branch/parent/action/secondary": "Action"
+    },
+    "affected": []
+  },
+  {
+    "name": "moved-variant",
+    "base": {
+      "specs/branch/variant/donor.component.html": "---\ntitle: Donor\nelement: bp-donor\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Donor}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"spare\",\"title\":\"spare\",\"props\":{\"label\":\"Later\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/variant/receiver.component.html": "---\ntitle: Receiver\nelement: bp-receiver\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Receiver}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Accept\"}}]\n---\n<button>{{label}}</button>"
+    },
+    "head": {
+      "specs/branch/variant/donor.component.html": "---\ntitle: Donor\nelement: bp-donor\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Donor}\nvariants: [{\"slug\":\"spare\",\"title\":\"spare\",\"props\":{\"label\":\"Later\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/variant/receiver.component.html": "---\ntitle: Receiver\nelement: bp-receiver\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Receiver}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Accept\"}},{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"},\"movedFrom\":\"branch/variant/donor/primary\"}]\n---\n<button>{{label}}</button>"
+    },
+    "moves": {
+      "branch/variant/receiver/primary": "branch/variant/donor/primary"
+    },
+    "removed": {},
+    "affected": []
+  },
+  {
+    "name": "case-renames",
+    "base": {
+      "specs/branch/case/Action.component.html": "---\ntitle: Case action\nelement: bp-case-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Case action}\nvariants: [{\"slug\":\"Primary\",\"title\":\"Primary\",\"props\":{\"label\":\"Continue\"}},{\"slug\":\"secondary\",\"title\":\"secondary\",\"props\":{\"label\":\"Cancel\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/case/Receipt.screen.html": "---\ntitle: Case receipt\n---\n<h1>Case receipt</h1>"
+    },
+    "head": {
+      "specs/branch/case/Action.component.html": null,
+      "specs/branch/case/Receipt.screen.html": null,
+      "specs/branch/case/action.component.html": "---\ntitle: Case action\nelement: bp-case-action\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Case action}\nvariants: [{\"slug\":\"primary\",\"title\":\"primary\",\"props\":{\"label\":\"Submit\"}}]\n---\n<button>{{label}}</button>",
+      "specs/branch/case/receipt.screen.html": "---\ntitle: Case receipt\n---\n<h1>Case receipt</h1>"
+    },
+    "moves": {},
+    "removed": {
+      "branch/case/Action/secondary": "Case action"
+    },
+    "affected": []
+  },
+  {
+    "name": "reused-parent",
+    "base": {
+      "specs/branch/reused/action.component.html": "---\ntitle: Former action\nelement: bp-former\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Former action}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Go\"}}]\n---\n<button>{{label}}</button>"
+    },
+    "head": {
+      "specs/branch/reused/action.component.html": null,
+      "specs/branch/reused/action.md": "# Action guide\n\nReplacement document\n"
+    },
+    "moves": {},
+    "removed": {
+      "branch/reused/action/default": "Former action"
+    },
+    "affected": []
+  },
+  {
+    "name": "affected-destinations",
+    "base": {
+      "specs/branch/impact/tally.component.html": "---\ntitle: Tally\nelement: bp-tally\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Tally}\n---\n<span class=\"branch-tally\">Before {{label}}</span>",
+      "specs/branch/impact/meter.component.html": "---\ntitle: Meter\nelement: bp-meter\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Meter}\nvariants: [{\"slug\":\"default\",\"title\":\"default\",\"props\":{\"label\":\"Level\"}}]\n---\n<section><bp-tally label=\"{{label}}\"></bp-tally></section>",
+      "specs/branch/impact/slip.screen.html": "---\ntitle: Slip\n---\n<h1>Slip</h1><bp-tally label=\"Paid\"></bp-tally>",
+      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total before</p>"
+    },
+    "head": {
+      "specs/branch/impact/slip.screen.html": null,
+      "specs/branch/impact/tally.component.html": "---\ntitle: Tally\nelement: bp-tally\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Tally}\n---\n<span class=\"branch-tally\">After {{label}}</span>",
+      "specs/branch/impact/archive/slip.screen.html": "---\ntitle: Slip\nmovedFrom: branch/impact/slip\n---\n<h1>Slip</h1><bp-tally label=\"Paid\"></bp-tally>",
+      "specs/branch/impact/ledger.screen.html": "---\ntitle: Ledger\n---\n<h1>Ledger</h1><bp-tally label=\"Due\"></bp-tally><p mokly-viewport=\"desktop\">Desktop total after</p>",
+      "specs/branch/impact/new.screen.html": "---\ntitle: New consumer\n---\n<h1>New consumer</h1><bp-tally label=\"New\"></bp-tally>"
+    },
+    "moves": {
+      "branch/impact/archive/slip": "branch/impact/slip"
+    },
+    "removed": {},
+    "affected": [
+      "branch/impact/meter",
+      "branch/impact/archive/slip",
+      "branch/impact/ledger",
+      "branch/impact/new"
+    ]
+  }
+]

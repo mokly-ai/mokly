@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 /** The catalogue background each appearance mockup paints for its scheme. */

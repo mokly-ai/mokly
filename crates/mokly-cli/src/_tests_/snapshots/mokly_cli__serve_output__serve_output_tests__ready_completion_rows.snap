@@ -1,0 +1,16 @@
+---
+source: crates/mokly-cli/src/_tests_/serve_output_tests.rs
+expression: "rows.join(\"\\n\")"
+---
+"  ✔ Catalogue ready · 96 screens · 12 pages · 18 components                                    312ms\n"
+"  ✔ Catalogue ready · 96 screens · 12 pages · 18 components                                     4.9s\n"
+"  ✔ Catalogue ready · 96 screens · 12 pages · 18 components                                   2m 03s\n"
+"  ! Changes unavailable · Git comparison is unavailable in this build.\n"
+"  \u{1b}[32m✔\u{1b}[0m Catalogue ready · 96 screens · 12 pages · 18 components                                    312ms\n"
+"  \u{1b}[32m✔\u{1b}[0m Catalogue ready · 96 screens · 12 pages · 18 components                                     4.9s\n"
+"  \u{1b}[32m✔\u{1b}[0m Catalogue ready · 96 screens · 12 pages · 18 components                                   2m 03s\n"
+"  \u{1b}[33m!\u{1b}[0m Changes unavailable · Git comparison is unavailable in this build.\n"
+"  + Catalogue ready · 96 screens … 312ms\n"
+"  + Catalogue ready · 96 screens ·… 4.9s\n"
+"  + Catalogue ready · 96 screens… 2m 03s\n"
+"  ! Changes unavailable · Git compariso…\n"

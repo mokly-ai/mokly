@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { ENTRY_PATHS, SCREEN_CRUMBS } from "../../parts/entry_paths.js";
 import { SchemeWorkspace } from "../../parts/example_workspace.js";
@@ -46,8 +47,10 @@ export const detailsScreen = defineScreen({
   ...designMetadata,
   description:
     "The Details screen with its inspector closed, in either catalogue scheme.",
-  desktop: <DetailsScreenDesktop />,
+  ...artboards({
+    desktop: <DetailsScreenDesktop />,
+    mobile: <DetailsScreenMobile />,
+  }),
   slug: "details-screen",
-  mobile: <DetailsScreenMobile />,
   title: "Details screen",
 });

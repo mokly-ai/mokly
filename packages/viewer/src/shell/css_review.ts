@@ -1,5 +1,7 @@
 /** In-place comparison controls and aligned snapshot panes. */
 
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 /** Styles appended to the catalogue shell. */
 export const SHELL_REVIEW_CSS = `
 .mbk-diff-screen, .mbk-current-screen {
@@ -95,6 +97,8 @@ export const SHELL_REVIEW_CSS = `
   padding: 24px;
   background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 / 22px 22px;
 }
+/* The empty state's action, inline in the comparison's failure line. */
+.mbk-diff-stage p > .mbk-empty-link { margin: 0 0 0 4px; }
 .mbk-diff-view { margin-bottom: 24px; }
 .mbk-diff-view h3 {
   margin: 0 0 12px;
@@ -174,7 +178,7 @@ export const SHELL_REVIEW_CSS = `
 }
 .mb-panes[data-compare-mode="overlay"] .mb-pane--after { opacity: .5; }
 .mb-panes[data-compare-mode="difference"] .mb-pane--after { mix-blend-mode: difference; }
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-diff-toolbar { padding: 8px 12px; }
   .mbk-diff-toolbar .mbk-seg { flex: 1 1 100%; }
   .mbk-diff-toolbar .mbk-seg button { flex: 1; padding: 6px; white-space: nowrap; font-size: 11px; }

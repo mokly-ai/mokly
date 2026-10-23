@@ -31,7 +31,7 @@ fn git_and_script_contracts_use_the_exact_arguments_and_runtime_profile() {
                             "--commit",
                             &"b".repeat(40),
                             "--runtimes",
-                            "node-22.14.0"
+                            "node-22.15.0"
                         ]
                     );
                     String::new()

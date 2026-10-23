@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
-import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
+import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   type FrameTestWindow,
@@ -48,10 +49,10 @@ for (const kind of ["current", "temporary"] as const) {
     });
 
     try {
-      const result = await page.evaluate(
+      const reconnect = await page.evaluateHandle(
         async ({ kind, path }) => {
           const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof LocalAdapter;
           const adapter =
             kind === "current"
@@ -70,28 +71,33 @@ for (const kind of ["current", "temporary"] as const) {
           const first = await adapter.mount(frame, view);
           const authenticated = frame.contentDocument;
           first.dispose();
-          await new Promise<void>((resolve) => {
-            const poll = setInterval(() => {
-              if (
-                frame.contentDocument !== authenticated &&
-                frame.contentDocument?.readyState === "interactive"
-              ) {
-                clearInterval(poll);
-                resolve();
-              }
-            }, 0);
-            frame.contentWindow!.location.replace(view.url.href);
-          });
-          const unowned = frame.contentDocument;
-          const mounted = await adapter.mount(frame, view);
-          const replaced = frame.contentDocument !== unowned;
-          mounted.dispose();
-          return replaced;
+          frame.contentWindow!.location.replace(view.url.href);
+          return { adapter, authenticated, frame, view };
         },
         { kind, path },
       );
-      expect(result).toBe(true);
-      expect(requests).toBe(3);
+      try {
+        await page.waitForFunction(
+          ({ authenticated, frame }) =>
+            frame.contentDocument !== authenticated &&
+            frame.contentDocument?.readyState === "interactive",
+          reconnect,
+          { timeout: 15_000 },
+        );
+        const result = await reconnect.evaluate(
+          async ({ adapter, frame, view }) => {
+            const unowned = frame.contentDocument;
+            const mounted = await adapter.mount(frame, view);
+            const replaced = frame.contentDocument !== unowned;
+            mounted.dispose();
+            return replaced;
+          },
+        );
+        expect(result).toBe(true);
+        expect(requests).toBe(3);
+      } finally {
+        await reconnect.dispose();
+      }
     } finally {
       release();
     }
@@ -103,9 +109,9 @@ for (const kind of ["current", "temporary"] as const) {
     await page.goto(fixture.host.url);
     const result = await page.evaluate(
       async ({ kind, path, usageJson }) => {
-        const usage = JSON.parse(usageJson) as ComponentViewRecord;
+        const usage = JSON.parse(usageJson) as BrowserUsage;
         const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-          `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+          `${location.origin}/test-adapters.js`
         )) as typeof LocalAdapter;
         const adapter =
           kind === "current" ? sameOriginAdapter() : temporaryPreviewAdapter();
@@ -118,7 +124,7 @@ for (const kind of ["current", "temporary"] as const) {
         await load;
         const view = {
           url: new URL(path, location.origin),
-          usage: { status: "ready" as const, ...usage },
+          usage,
         };
         const first = await adapter.mount(frame, view);
         const authenticated = frame.contentDocument;

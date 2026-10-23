@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{}",
+    "specs/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "unused-folder",
+      "message": "specs/a/_folder.json describes folder a, but no entry is below it",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

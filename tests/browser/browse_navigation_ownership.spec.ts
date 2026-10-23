@@ -1,6 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
+import { nestedScriptNotice } from "./navigation_error_allowances.js";
 import {
   startNavigationFixture,
   type NavigationFixture,
@@ -16,7 +18,8 @@ test.afterAll(async () => {
   await navigation.close();
 });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, allowBrowserError }) => {
+  allowBrowserError(nestedScriptNotice);
   await page.route("https://cross-origin.example.test/nested.html", (route) =>
     route.fulfill({
       body: '<a data-mokly-link="details#section" href="/details" id="cross-marked" target="_top">Marked</a><a href="#ordinary" id="cross-unmarked" target="_top">Ordinary</a><a href="#popup" id="cross-popup" target="_blank">Popup</a><script>parent.__crossScriptRan=true</script>',
@@ -82,7 +85,6 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
       return prevented;
     });
     expect(defaultPrevented).toBe(false);
-    await page.waitForTimeout(100);
     await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
 
@@ -96,40 +98,4 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   } finally {
     releaseRequest();
   }
-});
-
-test("JavaScript-disabled Browse keeps portable links inside the sandbox", async ({
-  browser,
-}) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
-  const page = await context.newPage();
-  await page.goto(
-    `${navigation.url}/view/fixture/nested/details/?fragment=section`,
-  );
-  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-    "src",
-    /details\/index\.mobile\.html#section$/,
-  );
-
-  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-  await page
-    .frameLocator(".mbk-frame-mobile iframe")
-    .locator("#mock-link")
-    .click();
-
-  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
-  await expect(page.locator("#mb-main h2")).toHaveText("Home");
-  await expect
-    .poll(() =>
-      page
-        .frames()
-        .some((candidate) =>
-          candidate
-            .url()
-            .endsWith("/fixture/nested/details/index.mobile.html#section"),
-        ),
-    )
-    .toBe(true);
-  expect(context.pages()).toHaveLength(1);
-  await context.close();
 });

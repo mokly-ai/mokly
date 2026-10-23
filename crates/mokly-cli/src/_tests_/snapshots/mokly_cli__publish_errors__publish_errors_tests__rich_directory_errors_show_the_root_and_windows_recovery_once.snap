@@ -1,0 +1,7 @@
+---
+source: crates/mokly-cli/src/_tests_/publish_errors_tests.rs
+expression: rendered
+---
+✖ The publish build directory could not be prepared.  [mokly/export-invalid]
+  Temporary root: missing-root.
+  Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.

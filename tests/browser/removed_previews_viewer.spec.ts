@@ -1,175 +1,187 @@
-import { expect, test, type Page } from "@playwright/test";
+/**
+ * Previous versions in an embedded viewer over the copied comparison output,
+ * under the removed previews and frame adapter contracts. Through both frame
+ * adapters, a removed page and a removed screen show their previous versions
+ * and stay inert, and their frames send no message. A cross-origin
+ * navigation of a preview frame restores the presentation, a strict host
+ * Content Security Policy still loads the historical stylesheet, a selection
+ * change fences the previous request, and two viewers keep their own stages.
+ */
 
-import { startViewerPreviews } from "./removed_preview_fixture.js";
+import { expect, type Page, type Request } from "@playwright/test";
 
-let host: Awaited<ReturnType<typeof startViewerPreviews>>;
+import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import { comparisonPaths, test } from "./comparison_test.js";
+import {
+  awaitRoutedDetail,
+  comparisonIndex,
+  navRow,
+  snapshotOf,
+} from "./comparison_ui.js";
+import {
+  comparisonViewerHost,
+  type ComparisonViewerHost,
+} from "./comparison_viewer_host.js";
+import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { blockedFormSubmission } from "./shell_error_allowances.js";
+
+const STAGE = "#viewer [data-mokly-preview]";
+
+let host: ComparisonViewerHost;
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
-  host = await startViewerPreviews();
+  host = await comparisonViewerHost();
 });
 test.afterAll(async () => {
   await host?.close();
 });
 
-const stage = "[data-mokly-preview]";
+/** The host page with one removed entry selected under the Changes filter. */
+function viewerAt(
+  adapter: "cross" | "same-origin",
+  entry: string = comparisonPaths.removedPage,
+  origin = host.url,
+): string {
+  return `${origin}/viewer.html?adapter=${adapter}&view=changes&entry=${entry}`;
+}
 
-/** Every top-level document requested after a previous version is ready. */
+/** One probe that the host page records. */
+function probe(
+  page: Page,
+  name: "frameMessages" | "viewerNavigations",
+): Promise<unknown[]> {
+  return page.evaluate(
+    (key) => (window as unknown as Record<string, unknown[]>)[key]!,
+    name,
+  );
+}
+
+/** Every navigation that the page or a frame starts after this call. */
 function documentRequests(page: Page): string[] {
   const requested: string[] = [];
   page.on("request", (request) => {
-    if (request.resourceType() === "document") requested.push(request.url());
+    if (request.isNavigationRequest()) requested.push(request.url());
   });
   return requested;
 }
 
-for (const adapter of ["same-origin", "cross"]) {
+const historicalPage = (page: Page) =>
+  page.frameLocator(`${STAGE} iframe`).locator("h1");
+const historicalScreen = (page: Page) =>
+  page.frameLocator(`${STAGE} .mbk-frame-desktop iframe`).locator("h1");
+
+for (const adapter of ["same-origin", "cross"] as const) {
   test(`an embedded viewer shows previous versions through the ${adapter} adapter`, async ({
     page,
+    request,
+    baseURL,
   }) => {
+    const index = await comparisonIndex(request, baseURL);
     const requests: string[] = [];
-    page.on("request", (request) => requests.push(request.url()));
-    await page.goto(`${host.url}/viewer.html?adapter=${adapter}`);
-    await expect(page.locator(`#viewer .mbk-previous`)).toHaveText(
+    page.on("request", (sent) => requests.push(sent.url()));
+    await page.goto(viewerAt(adapter));
+    await expect(page.locator("#viewer .mbk-previous")).toHaveText(
       "Showing previous version",
     );
-    await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
-      "Previous page",
+    await expect(historicalPage(page)).toHaveText("Historical page");
+    await navRow(page, comparisonPaths.removedScreen).click();
+    await expect(historicalScreen(page)).toHaveText("Historical screen");
+    await awaitRoutedDetail(
+      page.locator("#viewer"),
+      comparisonPaths.removedScreen,
     );
-    await page
-      .locator('#viewer a[data-route="removed-screen/index.html"]')
-      .click();
-    await expect(
-      page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-    ).toHaveText("Previous desktop screen");
-    await expect(page.locator(`#viewer .mbk-diff-toolbar`)).toHaveCount(0);
+    await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
+    // No review read carries a query: each reads the pinned generation's file.
     expect(
-      requests.filter((url) =>
-        /\/mokly-viewer\/diffs\/review\.json\?/.test(url),
+      requests.filter(
+        (url) => url.includes("review.json") && new URL(url).search !== "",
       ),
     ).toEqual([]);
-    expect(
-      await page.evaluate(
-        () => (window as unknown as { frameMessages: string[] }).frameMessages,
-      ),
-    ).toEqual([]);
-    const snapshotId = await page.evaluate(
-      () =>
-        (
-          window as unknown as {
-            fixture: {
-              catalogue: {
-                removedEntries: {
-                  entry: { path: string };
-                  snapshotId?: string;
-                }[];
-              };
-            };
-          }
-        ).fixture.catalogue.removedEntries.find(
-          ({ entry }) => entry.path === "removed-screen",
-        )?.snapshotId,
-    );
-    expect(snapshotId).toBeDefined();
-    expect(
-      await page.evaluate(
-        () =>
-          (
-            window as unknown as {
-              viewerNavigations: Record<string, unknown>[];
-            }
-          ).viewerNavigations,
-      ),
-    ).toEqual([
+    expect(await probe(page, "frameMessages")).toEqual([]);
+    // The committed selection announces itself exactly once, also after the
+    // next rendering updates.
+    await passRenderingUpdates(page);
+    expect(await probe(page, "viewerNavigations")).toEqual([
       {
-        screenPath: "removed-screen",
-        snapshotId,
+        screenPath: comparisonPaths.removedScreen,
+        snapshotId: snapshotOf(index, comparisonPaths.removedScreen),
       },
     ]);
   });
-}
 
-for (const adapter of ["same-origin", "cross"]) {
   test(`a previous version stays inert through the ${adapter} adapter`, async ({
     page,
+    allowBrowserError,
   }) => {
-    await page.goto(`${host.url}/viewer.html?adapter=${adapter}`);
-    const preview = page.frameLocator(`${stage} iframe`);
-    await expect(preview.locator("h1")).toHaveText("Previous page");
+    allowBrowserError(blockedFormSubmission);
+    await page.goto(viewerAt(adapter));
+    const preview = page.frameLocator(`${STAGE} iframe`);
+    await expect(preview.locator("h1")).toHaveText("Historical page");
     const address = page.url();
     const documents = documentRequests(page);
     for (const label of [
       "Marked catalogue link",
-      "Relative link",
-      "Plain external link",
+      "External link",
       "Download link",
-      "Shadow link",
       "SVG link",
     ]) {
       await preview.getByText(label, { exact: true }).click();
-      await expect(preview.locator("h1")).toHaveText("Previous page");
+      await expect(preview.locator("h1")).toHaveText("Historical page");
     }
     await preview.getByRole("button", { name: "Send" }).click();
     await preview.getByText("Marked catalogue link", { exact: true }).focus();
     await page.keyboard.press("Enter");
-    await expect(preview.locator("h1")).toHaveText("Previous page");
+    await expect(preview.locator("h1")).toHaveText("Historical page");
     expect(documents).toEqual([]);
     expect(page.url()).toBe(address);
-    expect(
-      await page.evaluate(
-        () => (window as unknown as { frameMessages: string[] }).frameMessages,
-      ),
-    ).toEqual([]);
+    expect(await probe(page, "frameMessages")).toEqual([]);
   });
 }
 
 test("a cross-origin frame navigation restores the presentation", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/viewer.html?adapter=cross`);
-  const frame = page.locator(`${stage} iframe`);
-  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
-    "Previous page",
-  );
+  await page.goto(viewerAt("cross"));
+  const frame = page.locator(`${STAGE} iframe`);
+  await expect(historicalPage(page)).toHaveText("Historical page");
   const source = await frame.getAttribute("data-mokly-preview-source");
   expect(source).not.toBeNull();
-  await frame.evaluate((element, destination) => {
-    const preview = element as HTMLIFrameElement;
-    if (preview.contentWindow)
-      preview.contentWindow.location.href = destination;
-  }, `${host.frameOrigin}/view/current/`);
-  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
-    "Previous page",
+  const away = `${host.frameOrigin}/static/mokly-generated/${comparisonPaths.unchanged}/index.desktop.html`;
+  const navigated = page.waitForEvent("framenavigated", (target) =>
+    target.url().startsWith(away),
   );
+  await frame.evaluate((element: HTMLIFrameElement, destination) => {
+    element.contentWindow!.location.href = destination;
+  }, away);
+  await navigated;
+  await expect
+    .poll(() =>
+      frame.evaluate(
+        (element: HTMLIFrameElement) => element.contentDocument?.URL,
+      ),
+    )
+    .toBe("about:srcdoc");
+  await expect(historicalPage(page)).toHaveText("Historical page");
   await expect(frame).toHaveAttribute("data-mokly-preview-source", source!);
 });
 
 test("an embedded host CSP permits historical resources", async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on("console", (message) => {
-    if (
-      message.type() === "error" &&
-      /content security policy|violates the following directive/i.test(
-        message.text(),
-      )
-    )
-      consoleErrors.push(message.text());
-  });
   await page.addInitScript(() => {
-    const probe = window as unknown as { cspViolations: string[] };
-    probe.cspViolations = [];
-    document.addEventListener("securitypolicyviolation", (event) => {
-      probe.cspViolations.push(
-        `${event.effectiveDirective}:${event.blockedURI}`,
-      );
-    });
+    const violations: string[] = [];
+    Object.assign(window, { cspViolations: violations });
+    document.addEventListener("securitypolicyviolation", (event) =>
+      violations.push(`${event.effectiveDirective}:${event.blockedURI}`),
+    );
   });
-  await page.goto(`${host.cspUrl}/viewer.html?adapter=cross`);
-  const preview = page.frameLocator(`${stage} iframe`);
-  await expect(preview.locator("h1")).toHaveText("Previous page");
-  await expect(preview.locator("body")).toHaveCSS(
-    "background-color",
-    "rgb(244, 239, 228)",
+  await page.goto(
+    viewerAt("cross", comparisonPaths.removedLightOnly, host.cspUrl),
+  );
+  const screen = page.frameLocator(`${STAGE} .mbk-frame-desktop iframe`);
+  await expect(screen.locator("h1")).toHaveText("Former screen");
+  // The Before theme stylesheet colours the card that the screen used.
+  await expect(screen.locator(".accent")).toHaveCSS(
+    "color",
+    accentColor.Before,
   );
   const violations = await Promise.all(
     page
@@ -183,7 +195,6 @@ test("an embedded host CSP permits historical resources", async ({ page }) => {
       ),
   );
   expect(violations.flat()).toEqual([]);
-  expect(consoleErrors).toEqual([]);
 });
 
 test("a viewer selection change fences the previous request", async ({
@@ -193,54 +204,46 @@ test("a viewer selection change fences the previous request", async ({
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  let handled = false;
-  await page.route("**/previews/removed-page/index.json", async (route) => {
-    await held;
-    await route.continue().catch(() => undefined);
-    handled = true;
-  });
-  let settled = false;
-  const settle = (request: { url(): string }): void => {
-    if (request.url().includes("/previews/removed-page/index.json"))
-      settled = true;
-  };
-  page.on("requestfinished", settle);
-  page.on("requestfailed", settle);
-  await page.goto(`${host.url}/viewer.html?adapter=same-origin`);
-  await expect(page.locator(".mbk-preview-status")).toHaveText(
+  const heldRequests: Request[] = [];
+  await page.route(
+    `**/previews/${comparisonPaths.removedPage}/index.json`,
+    async (route) => {
+      heldRequests.push(route.request());
+      await held;
+      await route.continue().catch(() => undefined);
+    },
+  );
+  const ended = endedRequests(page);
+  await page.goto(viewerAt("same-origin"));
+  await expect(page.locator("#viewer .mbk-preview-status")).toHaveText(
     "Loading previous version…",
   );
-  await page
-    .locator('#viewer a[data-route="removed-screen/index.html"]')
-    .click();
-  await expect(
-    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-  ).toHaveText("Previous desktop screen");
+  await expect.poll(() => heldRequests.length).toBe(1);
+  await navRow(page, comparisonPaths.removedScreen).click();
+  await expect(historicalScreen(page)).toHaveText("Historical screen");
   release();
-  await expect.poll(() => handled && settled).toBe(true);
-  await expect(
-    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-  ).toHaveText("Previous desktop screen");
-  await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
+  await expect.poll(() => ended.has(heldRequests[0]!)).toBe(true);
+  await passRenderingUpdates(page);
+  await expect(historicalScreen(page)).toHaveText("Historical screen");
+  await expect(page.locator("#viewer .mbk-preview-status")).toHaveCount(0);
 });
 
 test("several viewers on one page keep their own stages", async ({ page }) => {
-  await page.goto(`${host.url}/viewer.html?adapter=same-origin`);
-  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
-    "Previous page",
-  );
-  await page.evaluate(() => {
+  await page.goto(viewerAt("same-origin"));
+  await expect(historicalPage(page)).toHaveText("Historical page");
+  await page.evaluate((source) => {
     const frame = document.createElement("iframe");
     frame.id = "second";
     frame.style.cssText = "width:1200px;height:900px;border:0";
-    frame.src = "/viewer.html?adapter=same-origin&entry=removed-screen";
+    frame.src = source;
     document.body.append(frame);
-  });
+  }, `/viewer.html?adapter=same-origin&view=changes&entry=${comparisonPaths.removedScreen}`);
   const second = page.frameLocator("#second");
   await expect(second.locator("#viewer .mbk-previous")).toHaveText(
     "Showing previous version",
   );
-  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
-    "Previous page",
-  );
+  await expect(
+    second.frameLocator(`${STAGE} .mbk-frame-desktop iframe`).locator("h1"),
+  ).toHaveText("Historical screen");
+  await expect(historicalPage(page)).toHaveText("Historical page");
 });

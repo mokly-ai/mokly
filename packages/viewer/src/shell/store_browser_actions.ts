@@ -1,9 +1,4 @@
-import type {
-  Dispatch,
-  KeyboardEvent,
-  MouseEvent,
-  SetStateAction,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
 
@@ -11,7 +6,11 @@ import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import { routeFromUrl, routeHref } from "./routes.js";
-import { eligibleShellAnchor } from "./store_browser_routes.js";
+import {
+  eligibleShellAnchor,
+  type ShellClickEvent,
+  type ShellKeyEvent,
+} from "./store_browser_routes.js";
 import type { ShellState } from "./store_state.js";
 
 interface ShellBrowserActionInput {
@@ -31,8 +30,8 @@ interface ShellBrowserActionInput {
 /** Browser-only actions returned to the React shell provider. */
 export interface ShellBrowserActions {
   navigateFrame(href: string, navigation?: FrameNavigation): void;
-  onShellClick(event: MouseEvent<HTMLElement>): void;
-  onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
+  onShellClick(event: ShellClickEvent): void;
+  onShellKeyDown(event: ShellKeyEvent): void;
   openFrame(href: string, target: string): void;
 }
 
@@ -51,26 +50,17 @@ export function shellBrowserActions(
 }
 
 function handleShellClick(
-  event: MouseEvent<HTMLElement>,
+  event: ShellClickEvent,
   input: ShellBrowserActionInput,
 ): void {
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target) return;
   const state = input.state();
-  const outsidePickerTag =
-    target.closest("[data-mokly-tag]") &&
-    !target.closest("[data-mokly-tag-picker]");
   if (
     state.tagPickerOpen &&
     !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
   ) {
     input.setState((current) => ({ ...current, tagPickerOpen: false }));
-    if (outsidePickerTag) {
-      const root = event.currentTarget;
-      queueMicrotask(() =>
-        root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
-      );
-    }
   }
   if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
     return;
@@ -97,16 +87,16 @@ function handleShellClick(
 }
 
 function handleShellKeyDown(
-  event: KeyboardEvent<HTMLElement>,
+  event: ShellKeyEvent,
   input: ShellBrowserActionInput,
 ): void {
   if (event.key !== "Escape") return;
   if (input.state().tagPickerOpen) {
     event.preventDefault();
     input.setState((state) => ({ ...state, tagPickerOpen: false }));
-    event.currentTarget
-      .querySelector<HTMLElement>("[data-mokly-tag-toggle]")
-      ?.focus();
+    const root = event.currentTarget;
+    if (root instanceof Element)
+      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
   } else if (input.state().expandedFrame) {
     event.preventDefault();
     input.setState((state) => ({ ...state, expandedFrame: undefined }));

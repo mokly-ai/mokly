@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { readCatalogue, MoklyVersionError } from "@mokly/viewer";
-import { parseStaticDelivery } from "@mokly/viewer/data";
-import { readLiveShellBootstrapState } from "@mokly/viewer/runtime";
+import {
+  MoklyVersionError,
+  readCatalogueIndex,
+  readEntryDetail,
+} from "@mokly/viewer";
+
+import { readLiveDescriptor } from "../packages/viewer/dist/catalogue/live_reader.js";
 
 import { legacyCatalogueGate } from "./helpers/legacy_catalogue_gate.js";
 
@@ -24,9 +28,9 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
 });
 
 for (const [boundary, supported, read] of [
-  ["catalogue", 6, readCatalogue],
-  ["delivery", 5, parseStaticDelivery],
-  ["bootstrap", 2, readLiveShellBootstrapState],
+  ["catalogue", 7, readCatalogueIndex],
+  ["detail", 2, readEntryDetail],
+  ["live", 3, readLiveDescriptor],
 ] as const) {
   test(`${boundary} rejects unsupported versions before consuming payload fields`, () => {
     for (const version of [
@@ -37,20 +41,16 @@ for (const [boundary, supported, read] of [
     ]) {
       const value = {
         schemaVersion: version,
-        get context(): never {
+        get identity(): never {
           throw new Error("Unexpected payload read");
         },
-        get entries(): never {
+        get generation(): never {
+          throw new Error("Unexpected payload read");
+        },
+        get render(): never {
           throw new Error("Unexpected payload read");
         },
       };
-      if (boundary === "delivery") {
-        assert.deepEqual(parseStaticDelivery(value), {
-          kind: "unsupported-version",
-          version,
-        });
-        continue;
-      }
       assert.throws(
         () => read(value),
         (error: unknown) => {

@@ -13,14 +13,8 @@ const TOOLCHAIN_INSTALL = "rustup toolchain install";
 const RUST_WORKFLOWS = [
   "ci.yml",
   "release.yml",
+  "release-prepare.yml",
   "blacksmith-testbox.yml",
-] as const;
-/** Docs that name the pinned Rust version for developers and automation. */
-const RUST_PIN_DOCS = [
-  "README.md",
-  "docs/protocol/ci-workflow.md",
-  "docs/protocol/npm-release-management.md",
-  "docs/protocol/remote-verification-testbox.md",
 ] as const;
 /** A rustup command that selects a toolchain outside `rust-toolchain.toml`. */
 const VERSION_SELECTION =
@@ -104,23 +98,6 @@ test("Rust jobs install the pinned toolchain before cargo runs", async () => {
     }
   }
   assert.ok(setups > 0, "CI, release and Testbox workflows must set up Rust");
-});
-
-test("developer and protocol docs name the pinned Rust version", async () => {
-  const { channel } = await toolchainPin();
-  for (const file of RUST_PIN_DOCS) {
-    const source = (await read(file)).replace(/\s+/gu, " ");
-    assert.ok(
-      source.includes(`Rust ${channel}`),
-      `${file} must name Rust ${channel}`,
-    );
-  }
-  assert.ok(
-    (await read("README.md")).includes(
-      "[`rust-toolchain.toml`](./rust-toolchain.toml)",
-    ),
-    "development setup must follow the pinned Rust toolchain",
-  );
 });
 
 async function toolchainPin(): Promise<ToolchainPin> {

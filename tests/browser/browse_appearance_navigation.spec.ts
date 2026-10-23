@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   appearance,
@@ -10,6 +10,7 @@ import {
   face,
   mobileFrame,
 } from "./browse_assertions.js";
+import { test } from "./browser_test.js";
 import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
 test("scheme selection survives progressive navigation", async ({ page }) => {

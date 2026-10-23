@@ -1,157 +1,100 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+/**
+ * Details in an embedded viewer over the copied comparison output, under the
+ * CSS evidence shell contract. The host supplies a public index without
+ * `base`, so Details keep the "Comparison details" heading and the rest of
+ * the evidence and show no branch-point sentence: for a screen, for a saved
+ * view, and for a screen that the reader reaches by navigation, at both
+ * inspector sizes.
+ */
 
-import { readCatalogue } from "@mokly/viewer";
-import type { CatalogueReadModel } from "@mokly/viewer";
+import { expect, type Locator, type Page } from "@playwright/test";
 
-import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 
 import {
   EXAMINED_LEAD,
   EXCLUDED_LEAD,
   INSPECTOR_VIEWPORTS,
   SCREEN_TERMINAL,
+  VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
-  openCatalogue,
+  expectExcludedOnly,
   openEvidence,
-} from "./css_evidence_page.js";
-import type {} from "./viewer_harness.js";
+} from "./comparison_evidence_page.js";
+import { comparisonPaths, test } from "./comparison_test.js";
+import { navRow } from "./comparison_ui.js";
+import {
+  comparisonViewerHost,
+  type ComparisonViewerHost,
+} from "./comparison_viewer_host.js";
 
-/** The stylesheet that the screen and the saved view examined and excluded. */
-const EXCLUDED_PATH = "mockups/styles.css";
-/** The excluded-stylesheet sentence of a saved component view. */
-const VARIANT_EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this variant.";
-
-let fixture: Awaited<ReturnType<typeof viewerFixture>>;
-let catalogue: CatalogueReadModel;
-
+let host: ComparisonViewerHost;
 test.beforeAll(async () => {
-  fixture = await viewerFixture();
-  catalogue = readyCatalogue(fixture.catalogue);
+  host = await comparisonViewerHost();
 });
-test.afterAll(async () => fixture?.close());
-
-type JsonObject = Record<string, unknown>;
+test.afterAll(async () => {
+  await host?.close();
+});
 
 /**
- * The harness catalogue as a host receives it once Changes are ready: every
- * entry is unmodified, and the screen and Action's default saved view each
- * examined and excluded one stylesheet. A public catalogue has no branch name.
+ * Mount the viewer over an index without `base` and open its Details, which
+ * have no branch-point sentence.
  */
-function readyCatalogue(source: CatalogueReadModel): CatalogueReadModel {
-  const ready = (entry: JsonObject): JsonObject => {
-    const excluded =
-      entry["path"] === "home" || entry["path"] === "action/default";
-    const views = entry["views"];
-    return {
-      ...entry,
-      changes: { status: "ready", kind: "unmodified", included: false },
-      ...("comparison" in entry
-        ? { comparison: { status: "unavailable" } }
-        : {}),
-      ...(Array.isArray(views)
-        ? {
-            views: views.map((view: JsonObject) => ({
-              ...view,
-              comparison: { status: "unavailable" },
-              ...(excluded
-                ? {
-                    resourceEvidence: {
-                      excludedResources: [
-                        { path: EXCLUDED_PATH, reason: "no-matching-rule" },
-                      ],
-                    },
-                  }
-                : {}),
-            })),
-          }
-        : {}),
-    };
-  };
-  const model = JSON.parse(JSON.stringify(source)) as Record<
-    "screens" | "pages" | "components" | "useCases",
-    JsonObject[]
-  >;
-  return readCatalogue({
-    ...model,
-    changesStatus: "ready",
-    screens: model.screens.map(ready),
-    pages: model.pages.map(ready),
-    components: model.components.map(ready),
-    useCases: model.useCases.map(ready),
-  });
+async function embeddedDetails(page: Page, entry: string): Promise<Locator> {
+  await page.goto(
+    `${host.url}/viewer.html?adapter=same-origin&base=none&responsive=1&entry=${entry}`,
+  );
+  return openEvidence(page, null);
 }
 
-/** Mount the public viewer over the ready catalogue and open its Details. */
-async function embeddedEvidence(
-  page: Page,
-  screenPath: string,
-): Promise<Locator> {
-  await page.goto(fixture.host.url);
-  await page.waitForFunction(() => Boolean(window.viewerHarness));
-  await page.evaluate(
-    ({ source, screenPath }) => {
-      window.viewerHarness.start("one", {
-        defaultSelection: { screenPath },
-        responsive: true,
-        source: JSON.parse(source) as unknown,
-      });
-    },
-    { source: JSON.stringify(catalogue), screenPath },
+/** The excluded stylesheet of screens/stable, without the base sentence. */
+async function expectScreenDetails(evidence: Locator): Promise<void> {
+  await expectExcludedOnly(
+    evidence,
+    [EXCLUDED_LEAD, EXAMINED_LEAD, SCREEN_TERMINAL],
+    [sheets.theme],
   );
-  await page.waitForFunction(() =>
-    Boolean(window.viewerHarness.get("one").ref.current),
-  );
-  return openEvidence(page);
 }
 
-for (const [name, size] of INSPECTOR_VIEWPORTS) {
+for (const [name, size] of INSPECTOR_VIEWPORTS)
   test.describe(`${name} embedded Details`, () => {
     test.use({ viewport: size });
 
     test("an embedded screen keeps its Details without the branch-point sentence", async ({
       page,
     }) => {
-      const evidence = await embeddedEvidence(page, "home");
-      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
-      await expect(evidence.locator("p")).toHaveText([
-        EXCLUDED_LEAD,
-        EXAMINED_LEAD,
-        SCREEN_TERMINAL,
-      ]);
-      await expect(evidence.locator("li")).toHaveText([EXCLUDED_PATH]);
+      await expectScreenDetails(
+        await embeddedDetails(page, comparisonPaths.unchanged),
+      );
+      // The same viewer over the index with its base shows the sentence.
+      await page.goto(
+        `${host.url}/viewer.html?adapter=same-origin&responsive=1&entry=${comparisonPaths.unchanged}`,
+      );
+      await openEvidence(page);
     });
 
     test("an embedded saved view keeps its Details without the branch-point sentence", async ({
       page,
     }) => {
-      const evidence = await embeddedEvidence(page, "action/default");
-      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
-      await expect(evidence.locator("p")).toHaveText([
-        VARIANT_EXCLUDED_LEAD,
-        EXAMINED_LEAD,
-        VARIANT_TERMINAL,
-      ]);
-      await expect(evidence.locator("li")).toHaveText([EXCLUDED_PATH]);
+      await expectExcludedOnly(
+        await embeddedDetails(page, comparisonPaths.quietParent),
+        [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD, VARIANT_TERMINAL],
+        [sheets.theme],
+      );
     });
 
     test("an embedded screen reached by navigation stays without the branch-point sentence", async ({
       page,
     }) => {
-      await embeddedEvidence(page, "action/default");
-      await openCatalogue(page, name);
-      await page
-        .locator('#one a[data-nav-row][data-route="home/index.html"]')
-        .click();
-      await expect(page.locator("#one .mbk-screen-head h2")).toHaveText("Home");
-      const evidence = await openEvidence(page);
-      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
-      await expect(evidence.locator("p")).toHaveText([
-        EXCLUDED_LEAD,
-        EXAMINED_LEAD,
-        SCREEN_TERMINAL,
-      ]);
-      await expect(evidence.locator("li")).toHaveText([EXCLUDED_PATH]);
+      await embeddedDetails(page, comparisonPaths.quietParent);
+      if (name === "mobile")
+        await page
+          .getByRole("button", { name: "Open catalogue navigation" })
+          .click();
+      await navRow(page, comparisonPaths.unchanged).click();
+      await expect(page.locator("#viewer .mbk-screen-head h2")).toHaveText(
+        "Stable screen",
+      );
+      await expectScreenDetails(await openEvidence(page, null));
     });
   });
-}

@@ -1,14 +1,5 @@
 # Dependency Audit Baseline
 
-## Delivery Status
-
-The strict and baseline scripts, structured issues, byte comparison, JSON
-reports, xtask defaults, and CI mode selection are implemented. The scheduled
-strict audit and update script maintain the
-[dependency update pull request](./dependency-audit-update-pr.md).
-The [dependency security contract](./dependency-security.md) owns reviewed
-exceptions and dependency update policy.
-
 ## Modes And Command
 
 `npm run dependencies:check` runs the strict workspace audit.
@@ -204,8 +195,8 @@ The CI repository job passes `--dependency-audit "$DEPENDENCY_AUDIT"`:
 - Select `strict` for a same-repository Release Please pull request under
   the existing `release-please--` head-ref or `autorelease:` label detection.
 - Select `baseline` for all other pull requests, every push, and every manual
-  dispatch. A fork
-  cannot select strict mode through a matching branch name or label.
+  `workflow_dispatch`. A fork cannot select strict mode through a matching
+  branch name or label.
 
 Adding the `dependency-audit` label does not start CI. The label takes effect
 at the next `opened`, `synchronize`, or `reopened` pull request event. After
@@ -213,8 +204,8 @@ adding it, a maintainer pushes a commit or closes and reopens the pull request.
 The bot pull request selects strict mode from its head ref before the label
 is added.
 
-The Release workflow's direct `npm run dependencies:check` publish step stays
-strict. It runs before reusable evidence or the complete fallback is selected.
+Read-only release preparation runs the strict npm dependency audit before
+it selects reusable evidence or the complete fallback.
 The complete fallback runs `cargo xtask check --dependency-audit strict`, so
 its repeated workspace audit also stays strict.
 The scheduled audit and dependency update pull requests stay strict. On every

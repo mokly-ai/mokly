@@ -1,11 +1,98 @@
 ---
 title: "Links"
-description: "Link one catalogue entry to another and keep the link portable."
+description: "Link catalogue entries and adapt styled controls while keeping portable destinations."
 section: "authoring"
 order: 8
 ---
 
-## Link by path
+## Link by catalogue path
+
+Write a logical destination in an anchor's `href`.
+
+```html
+<a href="mock:account/invoice#summary">Invoice summary</a>
+<a href="mock:./history">Payment history</a>
+```
+
+The destination can be any entry, including a component parent, a variant,
+a page, a document, or a use case. A component parent opens its own props.
+A use case's standalone link opens its first screen.
+
+A complete path has no leading slash. A relative path starts with `./` or
+`../`. It resolves from the linking entry's parent. An index entry uses its
+own folder path. A variant uses its parent's base. A declared path follows
+the same rules.
+
+A relative link in a component body uses the component's own base, even when
+a screen uses that component. Supplied slot content keeps its supplier's
+base. Formatting or moving the receiving placeholder does not change it.
+
+## Link to a heading
+
+A `#fragment` names a bare HTML id. It can contain Unicode letters, numbers,
+combining marks, underscores, colons, dots, and hyphens. It must exist in
+every destination view that the catalogue can show. For a use case, it must
+exist in every view of the first screen.
+
+Use the same heading id in mobile, desktop, light, and dark output. A
+missing target or anchor fails the build with the referring route. A target
+that moved names its new path when a `movedFrom` hint is available.
+
+## Adapt a styled control
+
+Put `to` and an optional separate `fragment` on `a`, `button`, `div`, or
+`span`. A component element can use them when it renders one supported root.
+
+```html
+<button class="primary" to="account/invoice" fragment="summary">
+  View invoice
+</button>
+<ui-button label="Continue" to="account/checkout"></ui-button>
+```
+
+Mokly changes an active control into a native anchor. It keeps its classes,
+inline styles, labels, icons, and applicable attributes. It removes button
+form behavior and supplies a visible keyboard focus outline. A disabled,
+busy, or inert control keeps its element and stays inactive.
+
+`to` contains only a destination. Do not include `mock:`, `#fragment`, or
+percent-encoded syntax there. Put the fragment in its own attribute.
+
+## Place one interaction
+
+A control cannot contain another link, button, input, editable region, or
+inline event handler. It also cannot sit inside a link or editable region.
+Those structures fail the build.
+
+A control inside a button, label, summary, or interactive role produces a
+warning. Focusable or structural-role content inside it can also warn.
+Warnings keep the same rendered control. `build --strict` makes them fail
+the build before output is written.
+
+## Record a destination without activation
+
+`data-nav-href="mock:account/invoice"` records a destination on any element.
+It supplies no click or keyboard behavior. A logical `href` belongs only on
+an HTML anchor or area, or an SVG anchor. Two navigation attributes on one
+element must agree. A document with an active logical link cannot have
+`base href`.
+
+## Keep documents portable
+
+Mokly rewrites logical links to relative document URLs. Screen links use the
+source viewport and scheme, with light fallback. The catalogue uses the
+logical destination to open its canonical `/view/account/invoice/` page.
+Standalone documents keep native relative links.
+
+A Markdown link to another discovered `.md` file becomes a catalogue link.
+Markdown file destinations resolve from the source file, even when its
+catalogue path changes. Public images and attachments use confined relative
+paths. Links to private source files show their label as plain text.
+
+Read the [navigation contract](/docs/reference/navigation/) and
+[link control contract](/docs/reference/link-controls/) for the full rules.
+
+## Link from React
 
 Use `MockLink` for a destination inside the catalogue. `to` names the entry,
 and the separate `fragment` prop carries a bare HTML id.
@@ -41,79 +128,9 @@ The string helper is `mockLink(to, fragment?)`, and both produce
 `data-nav-href`. Neither helper accepts `path#fragment`, percent-encoded
 syntax or a `mock:` value in `to`. A link may name any entry, including a
 screen or component variant, a page or a Markdown document; a link to a component
-opens its first variant. In Markdown, a relative link to another discovered
+opens its own props. In Markdown, a relative link to another discovered
 `.md` file becomes a catalogue link. `mock:<path>` works there too.
 
 Relative links share the same base as flow references: an ordinary entry uses
 its parent path, an index uses its own folder path, and a variant uses its
 parent entry's base. Declared paths follow those same rules.
-
-## Style your own control
-
-To use a styled control as a link, opt into `asChild` with exactly one
-element:
-
-```tsx
-import { MockLink } from "@mokly/mokly";
-
-<MockLink asChild to="./invoice">
-  <button className="primary-action">View invoice</button>
-</MockLink>;
-```
-
-Mokly turns that one control into a native link during the build, keeping its
-classes, inline styles, label and icons. Put attributes on the child. A
-disabled or busy control stays inactive, and an adapted link keeps a visible
-keyboard focus outline.
-
-## Where a styled control can go
-
-The control becomes the link, so nothing inside it may be a control of its
-own. A link, button, form field, summary or editable element inside the child
-fails the build, and so does an inline event handler. Focusable content inside
-the child, such as an element with `tabindex`, builds with a warning because
-it adds a second keyboard stop to one link. A grouping role such as `menu`,
-`tablist` or `tree` inside the child also warns because that role does not
-belong inside a link.
-
-Placement around the control matters too. Inside another link or inside
-editable content the build fails, because the browser cannot give both
-elements the same click. Inside a button, a label, a summary or an element
-with a control role such as `menuitem` or `tab`, the build succeeds with a
-warning that one click has two targets. A focus target such as
-`<main tabIndex={-1}>`, the body of a `<details>` element and grouping roles
-such as `menubar` or `tablist` need no change and produce no warning.
-
-A warning names the route and the element on standard error and leaves the
-exit status at `0`. Pass `--strict` to `build`, `check`, `export` or `publish`
-when a warning should fail the command instead.
-
-## Metadata without an interaction
-
-`data-nav-href` records a logical destination on any element without inventing
-a click or a keyboard behaviour. A logical `href` belongs only on an HTML `a`
-or `area` or an SVG `a`; anywhere else it fails the build rather than becoming
-an accidental resource request.
-
-## What the build checks
-
-Generated files keep portable relative links, so standalone documents still
-navigate and comparison snapshots stay portable on disk, even though links
-inside a comparison pane do nothing. The build validates every destination and
-every fragment, and a fragment must exist in each generated view the catalogue
-may show for that destination. A document that contains an activatable logical
-link must not contain a `base href`. Root-absolute links and links into your
-source tree are rejected as non-portable; use a relative URL for a real static
-asset or a complete document.
-
-A link to a path that names no entry fails the build with the linking entry
-and the path. When a current entry declares that old path in `movedFrom`, the
-error names the new path. Later preview renders can also use move pairs accepted
-for the same comparison generation. Initial builds use authored hints only.
-Links never follow a move automatically; update the destination.
-
-## In the catalogue
-
-An eligible link opens its destination's canonical page at
-`/view/<path>/`, carries the fragment and reveals the destination in the
-navigation tree.

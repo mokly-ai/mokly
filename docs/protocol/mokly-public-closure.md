@@ -1,89 +1,84 @@
 # Public File Policy And Referenced Closure
 
-## Delivery Status
-
-This contract defines the implemented public-file boundary tracked by
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-It applies to compilation, on-demand rendering, Watch, Serve, export and
-publication. The [source protection contract](./mokly-source-protection.md)
-defines which authored inputs remain private.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## One Policy Per Compilation
 
-One generation-scoped policy owns the decision for each catalogue-relative
-authored path. Resolve its logical and physical location, source membership,
-protected-location membership and regular-file status once per compilation.
-Cache both accepted and rejected decisions by normalized path. Configured
-stylesheets, renderer resource declarations and the transitive link walk reuse
-this same instance. Create a new instance after every source/config/resource
-change; do not retain filesystem decisions across accepted generations.
+One policy per render generation owns the decision for each
+repository-relative authored path. It resolves the logical and the physical
+location, source membership, protected-location membership, and regular-file
+status once, and caches accepted and rejected decisions by normalized path.
+Configured stylesheets, declared component stylesheets, renderer resource
+seeds, and the transitive link walk reuse that one instance. A new generation
+after a source, configuration, or resource change decides again; no
+filesystem decision outlives its generation.
+Stylesheet admission does not authorize source-file delivery. Configured and
+component-declared local CSS inputs become private sources; their generated
+bundles and assets follow [stylesheet delivery](./mokly-imported-styles.md).
 
-The policy rejects unsafe or escaping paths, hidden path segments, symbolic
-links at any path component, nonregular files, the manifest, cache, Review and
-export/transaction output, consumer dependency/package trees, and every input
-protected by the source inventory or reserved source-name rules. Keep the
-existing denial precedence and source-specific explanation. It does not reject
-an otherwise valid authored file merely for a `.js`, `.ts`, `.map` or other
-extension, or a directory named `dist`, `target`, `coverage`, `test-results` or
-`playwright-report`. Actual inputs and actual protected locations remain private.
-Unreferenced files remain private regardless of their names.
+The policy rejects an unsafe or escaping path, a hidden path segment, a
+symbolic link at any path component, a non-regular file, a consumer
+dependency or package tree, the static output directory and its transaction
+paths when they lie inside the repository, and every input that the
+[source protection contract](./mokly-source-protection.md) protects: root
+matches, entry sources, the source inventory, and reserved basenames. It
+keeps the denial precedence and the cause of that contract. It does not
+reject an otherwise valid authored file for a `.js`, `.ts`, `.map`, or other
+extension, or for a directory named `dist`, `target`, `coverage`,
+`test-results`, or `playwright-report`. Actual inputs and actual protected
+locations stay private. An unreferenced file stays private whatever its
+name.
 
-Configured package roots may contain the catalogue or sit strictly inside it;
-an inner package tree remains private. A package root equal to `mockupsDir`,
-after realpath resolution fails export capture with `export-invalid` and:
-
-```text
-A consumer package root must not equal mockupsDir; choose a separate public output directory.
-```
-
-This is an export-policy check. Config loading, Build and Serve do not add
-this rejection. Ancestor roots such as `packageRoots: ["."]` remain supported.
-
-Entry discovery and PostCSS scanning skip the actual configured generated
-directory and its aliases by path. An unrelated directory named
-`mokly-generated` is not excluded by that name alone. Other discovery and
-hidden-name rules retain their current meaning. Do not change the unresolved
-source-root equality or Review-root overlap rules.
+A configured package root below the repository root is a private tree at its
+path after `.` and `..` segments are removed, in the working tree and in the
+base tree of a comparison. A package root equal to the repository root, such
+as `packageRoots: ["."]`, protects nothing by itself. The policy has no
+generated directory to skip: discovery and PostCSS scanning exclude only the
+trees that the configuration and the source protection contract name.
 
 ## One Closure Builder
 
-Build, requested-document compilation, resource Watch, Serve and both
-publication paths use one closure builder. Its inputs are the accepted
-generated documents, pending compiled CSS/assets, renderer-declared resources,
-the public-file policy and an explicit full/on-demand traversal mode.
-Return the sorted unique authored closure and traversal evidence for watching:
-per-file references, logical locations and invalid recovery targets.
+Serve, `build`, publish, watch, and the base side of a comparison use one
+closure builder. Its inputs are the composed documents of a generation, the
+pending bundled stylesheets and assets of the
+[imported stylesheet contract](./mokly-imported-styles.md), the resources
+that the renderer declared, the policy above, and a full or on-demand
+traversal mode. It returns the sorted unique authored closure and the
+traversal evidence that watch needs: per-file references, logical locations,
+and invalid targets whose repair starts another pass.
 
-Use the existing shared HTML/CSS reference parser. Include ordinary `<a href>`,
-`data-nav-href`, resource hints such as preload, `<iframe>`, `srcset`, CSS imports
-and URLs, and explicit renderer resource seeds. Ignore external/data URLs under
-the current URL rules. Decode and confine relative local paths, retain fragment
-validation, and walk authored HTML and CSS transitively. Read each file and
-visit each edge set once per pass; handle cycles without recursive duplication.
-Binary resources retain their exact bytes and have no parsed child links.
+References are read from the composed tree, each with the owner of the
+referencing element under the
+[comparison contract](./mokly-comparison.md#resources): `<a href>`,
+`data-nav-href`, resource hints such as `preload`, `<iframe>`, `src`,
+`srcset`, `poster`, inline style `url()`, and CSS `@import` and `url()`
+chains, including inside embedded documents. Composed `href` and `src` first
+pass the [document URL policy](./mokly-document-safety.md#url-policy): `data:`
+and protocol-relative `//` URLs fail there. The closure skips permitted
+external references. For other resource inputs, including `srcset`, `poster`,
+and CSS URLs, it skips external and data references. A relative reference resolves against
+the referencing document's route: a result under `static/mokly-generated/`
+names a rendered document or resource of the generation, and any other
+result under `static/` names the authored file at that repository-relative
+path. Relative local paths are decoded and confined, fragments keep their
+validation, and authored HTML and CSS are walked transitively; each file is
+read and each edge set visited once per pass, and a cycle is visited once. A
+binary resource keeps its exact bytes and has no child links. The walk stops
+at a catalogue page link: the link's
+identity and required anchors are checked through the catalogue, and the
+whole catalogue is never rendered to discover one document's closure. In
+on-demand mode the closure of a document joins the generation when the
+document renders, and the generation's closure only grows until the next
+generation replaces it. A full `build` computes the closure of every
+document. Identical input bytes give identical closures in every mode.
 
 A renderer resource declaration is a closure starting point even without an
-HTML link. Retain each valid CSS path and its transitive references after
-discarding only its ownership claim. Authored paths enter `assetClosure`;
-generated paths remain in the accepted generated inventory. Watch and Serve
-use the same checked result. Closure membership alone supplies no CSS Changes
-reason, component proof or inserted-link provenance.
-
-Every renderer resource seed passes the same policy and existence checks as a
-document link before it enters the closure. A declaration cannot bypass source
-protection, authorize a symlink or make an unlisted file public. A failure names
-the declaring/referring generated route. Link/seed traversal retains
-`build-invalid`. Authored renderer resources and stored component resources
-retain the existing component-resource validation path and policy cause:
-
-```text
-component resource is not a public file: <path> (<reason>)
-```
-
-`<path>` is the declared public path. `<reason>` is the shared policy denial,
-or `missing, non-regular, or outside mockupsDir` for an unavailable file.
-Validate before ignoring CSS ownership or recording a seed. Both boundaries
-use the same public-file policy. Link diagnostics are:
+HTML link. Every seed passes the same policy and existence checks as a
+document link before it enters the closure. A declaration cannot bypass
+source protection, authorize a symlink, or make an unlisted file public, and
+a failure names the declaring route. Closure membership alone supplies no
+CSS change reason, no component proof, and no ownership. Link and seed
+failures are `build-invalid`:
 
 ```text
 document links and resources are invalid:
@@ -91,73 +86,42 @@ document links and resources are invalid:
 - <route>: missing target <reference>
 ```
 
-Sort diagnostics deterministically. Preserve existing URL/anchor diagnostics.
-In on-demand mode, add and walk authored link destinations. Stop traversal at
-generated page links: resolve their registered identity and check required
-anchors through the existing requested-document mechanism, but do not render
-the whole generated catalogue merely to discover its closure.
+A declared component resource that fails the policy reports
+`component resource is not a public file: <path> (<reason>)`, where `<path>`
+is the declared public path and `<reason>` is the policy denial, or
+`missing, non-regular, or outside the repository` for an unavailable
+file. Diagnostics are sorted deterministically, and the URL and anchor
+diagnostics of [link validation](./mokly-link-validation.md) are kept.
 
-Full compilation and a successful full Watch pass produce identical closures
-for identical input bytes. Watch can retain invalid logical locations and prior
-edges solely so a repair triggers another pass. Invalid/recovery evidence never
-adds serving authority. Serve replaces its full closure only with a successful
-checked result; on-demand additions belong only to the same accepted generation.
-A checked result replaces only the checked closure. The on-demand additions of
-the same generation remain until the generation changes.
-A failed candidate retains the last accepted generation and its authority.
-A running server can adopt a new source generation before its checked result,
-for example after a resource reload or a rebuild that keeps the manifest
-structure. It then keeps the last checked closure and drops only the on-demand
-additions of the earlier generation. The update that announces the generation
-must not make a file in the checked closure return 404.
+## Serve Reads And The Static Output
 
-A resource reload reuses the earlier compilation, so the manifest closure of a
-completed reload pass can be older than the watched closure. Each completion
-therefore carries the parent's current checked closure, and the child serves
-that list instead of the manifest closure. An update message carries no list,
-so it cannot change the checked closure. A restarted watched child starts
-with the last checked closure unless the parent reloaded the config file. This
-covers a restart watch rule, crash recovery and a structural rebuild, including
-a rebuild whose new imports replace the source watcher. After a config-file
-change, the new child starts without a checked closure, because the earlier
-list can name files that the new configuration does not reference. Until its
-first checked result, it serves only the on-demand additions of its own
-generation.
+Membership in the closure is necessary but not sufficient at read time.
+Serve rechecks confinement and every path component, opens the final file
+without following a symbolic link, and verifies that the open handle is a
+regular file. `GET` and `HEAD` apply the same rule. A missing, replaced,
+protected, or unlisted resource returns 404; no watcher list can authorize
+it, and the render cache does not replace these checks. A served authored
+file is read from the working tree at request time, and a changed file is a
+watch input under the [watch contract](./mokly-watch.md).
 
-## Serve Reads And Publication
-
-Membership in the accepted closure is necessary but not sufficient at read
-time. Serve rechecks confinement and every path component, opens the final file
-without following a symbolic link, and verifies the open handle is a regular
-file. GET and HEAD apply the same rule. A missing, replaced, protected or
-unlisted resource returns 404; no unchecked watcher list can authorize it.
-The compilation cache does not replace these read-time checks.
-
-Export and publication capture only accepted generated bytes and this authored
-closure. Their input-stability checks use the same policy and closure builder.
-They do not enumerate the public directory to find extra assets. Keep exact
-binary bytes, manifest/cache privacy, ownership, collision checks and rollback.
+`build` copies exactly the closure of its generation under
+`static/<repository-relative path>`, as ordinary files, never as symlinks,
+with their exact bytes, and enumerates no directory to find extra assets.
+Publish uploads that output unchanged. The base side of a comparison reads
+the base commit's closure from Git blobs with the same policy applied to the
+base's own inventory; the Git reader rejects a symbolic link rather than
+following it, and the base's closure is the only public authored set of that
+side.
 
 ## Acceptance
 
-Write failing regressions before implementation. Use one fixture with a linked
-authored page, PDF, `data-nav-href`, preload, iframe, `srcset`, CSS dependencies
-and renderer resources. Assert exact equality between compiler and Watch
-closures. Fetch the linked page and PDF through watched Serve before and after
-resource changes. In-process, adopt a new generation before its checked result:
-the checked PDF stays readable, and a file that only an on-demand render of the
-earlier generation added returns 404. After two resource reloads, the second
-completion keeps the PDF that the first reload linked, although the reused
-manifest closure lacks it. Block the background write of a structural rebuild:
-the restarted child still serves the checked PDF. A rebuild that adds an
-import outside the entry roots also keeps the list. After a config-file change,
-the new child receives no list. Verify protected declarations fail with the
-referring route.
-Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.
-
-Exercise allowed authored script/map/build-folder names and denied actual
-inputs through Build, Serve, export and publication. Restore the package-root
-equality test, including an alias. Test an unrelated `mokly-generated` source
-folder beside the actual ignored output root. Instrument repeated configured
-stylesheet and link references to prove one policy decision per authored path
-per compilation, then prove that a new compilation rechecks changed files.
+Behaviour tests use one fixture with a linked authored page, a PDF,
+`data-nav-href`, a preload hint, an iframe, `srcset`, CSS dependencies, and
+renderer resources. They assert equal closures from `build` and from a full
+watch pass, serve the linked page and the PDF through watched Serve before
+and after resource changes, replace an accepted file and an ancestor with
+symlinks and require 404 on `GET` and `HEAD`, exercise allowed build-folder
+names and denied actual inputs through `build`, Serve, and publish, prove
+one policy decision per authored path per generation, and prove that a new
+generation rechecks changed files. A protected seed fails with the referring
+route.

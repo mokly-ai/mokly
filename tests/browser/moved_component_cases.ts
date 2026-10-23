@@ -1,14 +1,15 @@
 /** A moved component's variants, run against one host. */
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import type {
-  MovedChangesHost,
-  MovedHostKind,
-} from "./moved_changes_fixture.js";
-import { ACTION, consoleErrors, row, showDetails } from "./moved_rows.js";
+import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
-const BAR = ["Primary", "Ghost", "Iconic", "Secondary · Removed"];
+import type { test as baseTest } from "./browser_test.js";
+import { expectHostPath } from "./entry_hosts.js";
+import { ACTION, row, showDetails, type MovedHost } from "./moved_rows.js";
+
+/** The saved-variant bar of the moved Action: its parent, then its variants. */
+const BAR = ["Action", "Primary", "Ghost", "Iconic", "Secondary · Removed"];
 
 function savedVariants(page: Page) {
   return page.getByRole("navigation", { name: "Saved variants" });
@@ -21,89 +22,92 @@ async function expectBar(page: Page, status: string): Promise<void> {
   await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
 }
 
-/** Register the moved component cases for the host `current` returns. */
-export function movedComponentCases(
-  kind: MovedHostKind,
-  current: () => MovedChangesHost,
+/** Register the moved component cases on `host`, which `test` serves. */
+export function registerMovedComponentCases(
+  test: typeof baseTest,
+  host: MovedHost,
 ): void {
   test("a moved component's variants read their own changes, never the move", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const errors = consoleErrors(page);
-    for (const [slug, status] of [
-      ["primary", "Primary · Unmodified"],
-      ["ghost", "Ghost · Changed"],
-      ["iconic", "Iconic · Changed"],
+    for (const [entry, status] of [
+      [moves.unchangedMovedVariant, "Primary · Unmodified"],
+      [moves.metadataMovedVariant, "Ghost · Changed"],
+      [moves.nestedMovedVariant, "Iconic · Changed"],
     ] as const) {
-      await current().open(page, `${ACTION}/${slug}`);
+      await host.open(page, entry);
       await expectBar(page, status);
     }
-    expect(errors).toEqual([]);
   });
 
   test("a variant deleted during its parent's move opens with that parent's workspace", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const errors = consoleErrors(page);
-    await current().open(page, "components/action/secondary");
+    await host.open(page, moves.removedActionVariant);
     await expectBar(page, "Secondary · Removed");
     await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(
       page.getByRole("region", { name: "Inspector", exact: true }),
     ).toContainText("Go back");
-    expect(errors).toEqual([]);
   });
 
-  if (kind !== "viewer")
-    test("a moved variant keeps the nested inputs it changed in Details", async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 1280, height: 900 });
-      await current().open(page, `${ACTION}/iconic`);
-      await showDetails(page);
-      const evidence = page.locator("[data-workspace-evidence]");
-      for (const viewport of ["mobile", "desktop"])
+  test("a moved variant keeps the nested inputs it changed in Details", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await host.open(page, moves.nestedMovedVariant);
+    await showDetails(page);
+    const evidence = page.locator("[data-workspace-evidence]");
+    // The fixture renders both schemes, so each view names its own input.
+    for (const viewport of ["mobile", "desktop"])
+      for (const scheme of ["light", "dark"])
         await expect(
           evidence.getByRole("heading", {
-            name: `Icon · glyph · ${viewport} · light`,
+            name: `Icon · glyph · ${viewport} · ${scheme}`,
           }),
         ).toBeVisible();
-      await expect(evidence.locator("pre")).toHaveText([
-        /arrow/u,
-        /chevron/u,
-        /arrow/u,
-        /chevron/u,
-      ]);
-    });
+    await expect(evidence.locator("pre")).toHaveText(
+      Array.from({ length: 4 }, () => [/arrow/u, /chevron/u]).flat(),
+    );
+  });
 
-  if (kind !== "viewer")
-    test("a moved parent lists its removed variant from the first paint after navigation", async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 1280, height: 900 });
-      let release = () => {};
-      let fetching = () => {};
-      const held = new Promise<void>((resolve) => (release = resolve));
-      const fetched = new Promise<void>((resolve) => (fetching = resolve));
-      await page.route(`**/view/${ACTION}/`, async (route) => {
-        if (route.request().resourceType() === "fetch") {
-          fetching();
-          await held;
-        }
+  test("a moved parent lists its removed variant from the first paint after navigation", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    let release = () => {};
+    let fetching = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const fetched = new Promise<void>((resolve) => (fetching = resolve));
+    await page.route(
+      `**/mokly-viewer/entries/${ACTION}.json`,
+      async (route) => {
+        fetching();
+        await held;
         await route.continue();
-      });
-      await current().open(page, "ui/icon");
-      await row(page, ACTION).click();
-      await expect(page).toHaveURL(new RegExp(`/view/${ACTION}/$`, "u"));
-      await fetched;
-      await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
-      release();
-      await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-        "Primary · Unmodified",
-      );
-      await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
-    });
+      },
+    );
+    await host.open(page, moves.moveIcon);
+    const opened = new URL(page.url());
+    await page
+      .locator(
+        '[data-nav-disclosure="folder:components:branch/moves/current"] > summary',
+      )
+      .click();
+    await row(page, ACTION).click();
+    await expectHostPath(page, host, ACTION);
+    // The row adds no query or hash to the address that the host opened.
+    const routed = new URL(page.url());
+    expect([routed.search, routed.hash]).toEqual([opened.search, opened.hash]);
+    await fetched;
+    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+    release();
+    await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
+      "Action · Unmodified",
+    );
+    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+  });
 }

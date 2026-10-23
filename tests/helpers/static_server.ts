@@ -2,9 +2,9 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
-/** Exact files plus directory indexes: no extension guessing or provider rules. */
+/** Exact files and directory indexes; a root callback selects one copy per request. */
 export async function serveStaticFiles(
-  root: string,
+  root: string | (() => string),
   options: { allowedOrigin?: string; csp?: string } = {},
 ) {
   const allowedOrigins = new Set<string>();
@@ -17,6 +17,7 @@ export async function serveStaticFiles(
     requests.push(pathname);
     requestHeaders.push(request.headers);
     response.setHeader("X-Content-Type-Options", "nosniff");
+    response.setHeader("Cache-Control", "no-cache");
     if (allowedOrigins.size > 0) {
       response.setHeader("Vary", "Origin");
       if (request.headers.origin && allowedOrigins.has(request.headers.origin))
@@ -31,20 +32,36 @@ export async function serveStaticFiles(
       return;
     }
     void (async () => {
+      const requestRoot = typeof root === "string" ? root : root();
       const relative = decodeURIComponent(pathname).replace(/^\/+/, "");
-      let filename = path.resolve(root, relative);
-      if (filename !== root && !filename.startsWith(`${root}${path.sep}`))
+      let filename = path.resolve(requestRoot, relative);
+      if (
+        filename !== requestRoot &&
+        !filename.startsWith(`${requestRoot}${path.sep}`)
+      )
         throw new Error("outside root");
       if ((await fs.promises.stat(filename)).isDirectory())
         filename = path.join(filename, "index.html");
       const types: Record<string, string> = {
-        ".html": "text/html",
-        ".css": "text/css",
-        ".js": "text/javascript",
-        ".json": "application/json",
+        ".html": "text/html; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".mjs": "text/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".txt": "text/plain; charset=utf-8",
+        ".svg": "image/svg+xml; charset=utf-8",
         ".png": "image/png",
-        ".svg": "image/svg+xml",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+        ".avif": "image/avif",
+        ".ico": "image/x-icon",
+        ".woff": "font/woff",
         ".woff2": "font/woff2",
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
       };
       response.setHeader(
         "Content-Type",

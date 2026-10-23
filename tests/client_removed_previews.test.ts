@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
-import type { StaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
 import {
   advertisedPreviewPaths,
   previewEndpoint,
+  type PreviewDelivery,
 } from "../packages/viewer/dist/previews/request.js";
 import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
 
@@ -14,12 +14,7 @@ const GENERATION = "b".repeat(64);
 const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
 const BASE = "https://catalogue.test/view/archive/removed/";
 
-const delivery: StaticDelivery = {
-  schemaVersion: 5,
-  deploymentId: "c".repeat(64),
-  canonicalPath: "/view/archive/removed/",
-  comparisonUrl: COMPARISON,
-};
+const delivery: PreviewDelivery = { comparisonUrl: COMPARISON };
 
 const removedPage: RemovedPreviewData = {
   path: "removed-page",
@@ -35,21 +30,29 @@ const removedScreen: RemovedPreviewData = {
 
 const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
-test("development stages request the stable selected endpoint", () => {
+test("development stages never discover an unadvertised preview endpoint", () => {
   assert.equal(
-    previewEndpoint(removedPage, undefined, BASE, false)?.endpoint.href,
-    "https://catalogue.test/mokly-viewer/diffs/review.json?page=removed-page",
+    previewEndpoint(
+      { ...removedPage, published: { kind: "page" } },
+      undefined,
+      BASE,
+    ),
+    undefined,
   );
   assert.equal(
-    previewEndpoint(removedScreen, undefined, BASE, true)?.endpoint.href,
-    "https://catalogue.test/mokly-viewer/diffs/review.json?path=removed-screen&refresh=1",
+    previewEndpoint(
+      { ...removedScreen, published: { kind: "screen" } },
+      undefined,
+      BASE,
+    ),
+    undefined,
   );
 });
 
-test("static delivery loads only what the catalogue advertises", () => {
-  assert.equal(previewEndpoint(removedPage, delivery, BASE, false), undefined);
+test("every delivery loads only what the catalogue advertises", () => {
+  assert.equal(previewEndpoint(removedPage, delivery, BASE), undefined);
   assert.equal(
-    previewEndpoint({ ...removedScreen }, delivery, BASE, false),
+    previewEndpoint({ ...removedScreen }, delivery, BASE),
     undefined,
   );
   assert.equal(
@@ -57,7 +60,6 @@ test("static delivery loads only what the catalogue advertises", () => {
       { ...removedScreen, published: { kind: "screen" } },
       delivery,
       BASE,
-      true,
     )?.endpoint.href,
     `https://catalogue.test${COMPARISON}`,
   );
@@ -66,7 +68,6 @@ test("static delivery loads only what the catalogue advertises", () => {
       { ...removedPage, published: { kind: "page" } },
       delivery,
       BASE,
-      false,
     )?.endpoint.href,
     `https://catalogue.test/${pagePath}`,
   );
@@ -75,7 +76,6 @@ test("static delivery loads only what the catalogue advertises", () => {
       { ...removedPage, published: { kind: "page" } },
       { comparisonUrl: COMPARISON.slice(1) },
       BASE,
-      false,
     )?.endpoint.href,
     `https://catalogue.test/${pagePath}`,
   );
@@ -87,7 +87,6 @@ test("a mismatched kind or unavailable generation is declined", () => {
       { ...removedPage, published: { kind: "screen" } },
       delivery,
       BASE,
-      false,
     ),
     undefined,
   );
@@ -96,7 +95,6 @@ test("a mismatched kind or unavailable generation is declined", () => {
       { ...removedScreen, published: { kind: "screen" } },
       { ...delivery, comparisonUrl: null },
       BASE,
-      false,
     ),
     undefined,
   );

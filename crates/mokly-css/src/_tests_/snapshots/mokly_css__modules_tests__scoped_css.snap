@@ -1,0 +1,10 @@
+---
+source: crates/mokly-css/src/_tests_/modules_tests.rs
+expression: css
+---
+.mokly_295de5f6a611_base { color: red; }
+.mokly_295de5f6a611_card {  animation: mokly_295de5f6a611_pulse 1s; --color: blue; grid-area: main; container-name: card; view-transition-name: page; list-style: special; }
+#mokly_295de5f6a611_item { color: var(--color); }
+.global .mokly_295de5f6a611_local { opacity: .5; }
+@keyframes mokly_295de5f6a611_pulse { to { opacity: 0; } }
+@counter-style special { system: cyclic; symbols: x; }

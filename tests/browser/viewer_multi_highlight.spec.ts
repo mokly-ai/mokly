@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type {
@@ -7,6 +7,7 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
+import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -49,16 +50,14 @@ function homeInstance(
   viewport: "mobile" | "desktop",
   colorScheme: "light" | "dark",
 ): InstanceRef {
-  const screen = fixture.catalogue.screens.find(
-    (entry) => entry.path === "home",
-  )!;
+  const screen = fixture.details.current["home"]!;
   const view = screen.views.find(
     (candidate) =>
       candidate.viewport === viewport && candidate.colorScheme === colorScheme,
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
-    screenPath: screen.path,
+    screenPath: screen.entry.path,
     viewport,
     colorScheme,
     key: view.usage.instances.find((instance) => instance.id === "action")!.key,
@@ -97,6 +96,9 @@ for (const cross of [false, true]) {
       homeInstance("mobile", "light"),
       homeInstance("desktop", "light"),
     ];
+    await page.waitForFunction(
+      () => window.viewerHarness.get("one").ref.current !== null,
+    );
     await page.evaluate(
       (refs) =>
         window.viewerHarness.get("one").ref.current.highlightInstances(refs),
@@ -115,7 +117,7 @@ for (const cross of [false, true]) {
     await openViewer(page, cross);
     const refs = await page.evaluate(() => {
       const host = window.viewerHarness.get("one");
-      const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
+      const model = structuredClone(host.props.index) as CatalogueReadModel;
       const home = model.screens.find((entry) => entry.path === "home")!;
       home.useCasePaths = ["tour"];
       model.useCases = [
@@ -126,12 +128,12 @@ for (const cross of [false, true]) {
           title: "Tour",
           tags: [],
           details: home.details,
-          changes: { status: "disabled" },
+          changes: home.changes,
           steps: [{ screenPath: "home" }, { screenPath: "home" }],
         },
       ];
       model.tree = [...model.tree, { kind: "entry", path: "tour" }];
-      const view = home.views.find(
+      const view = host.details["home"]!.views.find(
         (candidate) =>
           candidate.viewport === "desktop" && candidate.colorScheme === "light",
       )!;
@@ -142,7 +144,7 @@ for (const cross of [false, true]) {
       )!.key;
       host.props = {
         ...host.props,
-        catalogue: model,
+        index: model,
         defaultSelection: { screenPath: "tour", viewport: "both" },
       } as MoklyViewerProps;
       host.render();
@@ -154,6 +156,10 @@ for (const cross of [false, true]) {
         key,
       }));
     });
+    await page.waitForFunction(
+      () => window.viewerHarness.get("one").ref.current !== null,
+    );
+    await expect(page.locator(".mbk-flow-screen iframe")).toHaveCount(2);
     await page.evaluate(
       (refs) =>
         window.viewerHarness.get("one").ref.current.highlightInstances(refs),
@@ -170,6 +176,9 @@ for (const cross of [false, true]) {
       homeInstance("mobile", "light"),
       homeInstance("desktop", "light"),
     ];
+    await page.waitForFunction(
+      () => window.viewerHarness.get("one").ref.current !== null,
+    );
     await page.evaluate(
       (refs) =>
         window.viewerHarness.get("one").ref.current.highlightInstances(refs),

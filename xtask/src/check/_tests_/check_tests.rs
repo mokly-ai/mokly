@@ -15,106 +15,56 @@ use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
-fn complete_gate_is_the_ordered_union_of_every_suite() {
-    let complete = VerificationSuite::ALL
-        .into_iter()
-        .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
-        .collect::<Vec<_>>();
-
-    assert_eq!(
-        complete
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
-        [
-            "npm run dependencies:check -- --baseline",
-            "npm run format:check",
-            "npm run lint",
-            "node scripts/verification/source-file-length.mjs",
-            "node scripts/verification/repository-ratchets.mjs",
-            "cargo fmt --all -- --check",
-            "cargo clippy --workspace --all-targets -- -D warnings",
-            "cargo test --workspace",
-            "npm run prepare:verification",
-            "npm run typecheck:prepared",
-            "npm run example:check",
-            "npm run package:artifacts -- --out .context/verification/package-artifacts",
-            "npm run package:check:prepared -- --artifacts .context/verification/package-artifacts",
-            "npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts",
-            "npm run prepare:unit",
-            "npm run test:prepared",
-            "npm run prepare:verification",
-            "npm run test:browser:prepared",
-            "npm run prepare:verification",
-            "npm run test:hydration:prepared",
-        ]
-    );
+fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
+    let command_runner = Arc::new(Unimock::new((
+        (
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check:rust" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        ),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo xtask check-generated-types" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo fmt --all -- --check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:delivery:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+    )));
+    let auditor = Arc::new(Unimock::new(
+        RustFileLengthAuditorRunMock
+            .next_call(matching!((root) if *root == workspace().as_path()))
+            .returns(Ok(())),
+    ));
+    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    runner
+        .run(CheckRequest::new(None, None, None).unwrap())
+        .unwrap();
 }
 
 #[test]
-fn selected_unit_shard_prepares_then_propagates_the_shard() {
+fn selected_viewer_builds_then_checks_and_tests() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run prepare:unit" && command.working_directory() == Some(Path::new("/workspace"))))
+            .next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(
-                matching!((command) if command.display() == "npm run test:prepared -- --shard 2/4" && command.working_directory() == Some(Path::new("/workspace"))),
-            )
+            .next_call(matching!((command) if command.display() == "npm run typecheck"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "npm run test:viewer:prepared"))
             .returns(Ok(())),
     )));
-    let auditor = Arc::new(Unimock::new(()));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(
-        Some(VerificationSuite::Unit),
-        Some(Shard::from_str("2/4").expect("valid shard")),
-        None,
-    )
-    .expect("unit suites support shards");
-
-    runner.run(request).expect("selected shard succeeds");
-}
-
-#[test]
-fn only_the_unit_suite_prepares_the_example_compilation_snapshot() {
-    for (suite, preparation) in [
-        (VerificationSuite::Package, "npm run prepare:verification"),
-        (VerificationSuite::Unit, "npm run prepare:unit"),
-        (VerificationSuite::Browser, "npm run prepare:verification"),
-        (VerificationSuite::Hydration, "npm run prepare:verification"),
-    ] {
-        let commands = commands_for(suite, None, DependencyAudit::Baseline)
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>();
-        assert_eq!(commands.first().map(String::as_str), Some(preparation));
-        assert_eq!(
-            commands
-                .iter()
-                .filter(|command| command.starts_with("npm run prepare:"))
-                .count(),
-            1,
-            "{suite} prepares exactly once",
-        );
-    }
-}
-
-#[test]
-fn selected_hydration_suite_prepares_then_runs_its_project() {
-    assert_eq!(
-        commands_for(
-            VerificationSuite::Hydration,
-            None,
-            DependencyAudit::Baseline
-        )
-        .iter()
-        .map(|command| command.display())
-        .collect::<Vec<_>>(),
-        [
-            "npm run prepare:verification",
-            "npm run test:hydration:prepared",
-        ]
-    );
+    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+    let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
+        .expect("viewer suite is valid");
+    runner.run(request).expect("viewer suite succeeds");
 }
 
 #[test]
@@ -122,6 +72,12 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check:rust"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "cargo xtask check-generated-types"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run format:check"))
@@ -141,6 +97,8 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
             .returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo test --workspace"))
             .returns(Ok(())),
@@ -200,21 +158,21 @@ fn dependency_check_failure_stops_verification() {
 fn subprocess_failure_is_propagated_from_a_selected_suite() {
     let command_runner = Arc::new(Unimock::new(
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run prepare:verification"))
+            .next_call(matching!((command) if command.display() == "npm run build"))
             .returns(Err(Error::CommandFailed {
-                command: "npm run prepare:verification".to_owned(),
+                command: "npm run build".to_owned(),
                 status: "9".to_owned(),
             })),
     ));
     let auditor = Arc::new(Unimock::new(()));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(Some(VerificationSuite::Package), None, None)
-        .expect("package request is valid");
+    let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
+        .expect("viewer request is valid");
 
     assert!(matches!(
         runner.run(request),
         Err(Error::CommandFailed { command, status })
-            if command == "npm run prepare:verification" && status == "9"
+            if command == "npm run build" && status == "9"
     ));
 }
 
@@ -249,14 +207,36 @@ fn shard_requires_a_supported_selected_suite() {
     ));
     for suite in [
         Some(VerificationSuite::Repository),
-        Some(VerificationSuite::Package),
-        Some(VerificationSuite::Hydration),
+        Some(VerificationSuite::Viewer),
+        Some(VerificationSuite::Native),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard), None),
             Err(Error::UnsupportedShard { .. })
         ));
     }
+}
+
+#[test]
+fn browser_selection_builds_and_forwards_only_validated_shards() {
+    let shard = Shard::from_str("2/4").expect("valid shard");
+    CheckRequest::new(Some(VerificationSuite::Browser), Some(shard), None)
+        .expect("browser supports shards");
+    let commands = commands_for(
+        VerificationSuite::Browser,
+        Some(shard),
+        DependencyAudit::Baseline,
+    );
+    assert_eq!(
+        commands
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>(),
+        [
+            "npm run build",
+            "npm run test:browser:prepared -- --shard 2/4"
+        ]
+    );
 }
 
 fn workspace() -> PathBuf {

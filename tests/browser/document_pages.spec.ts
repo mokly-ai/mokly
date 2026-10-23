@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 /** One labelled metadata row in the open Details panel. */

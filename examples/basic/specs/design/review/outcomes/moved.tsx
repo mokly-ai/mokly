@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "../../metadata.js";
 import { useDarkPreview } from "../../parts/appearance.js";
+import { artboards } from "../../parts/artboards.js";
 import { ComparePage, type CompareViewport } from "../../parts/compare_page.js";
 import { ComparisonStack, deviceChrome } from "../../parts/compare_stack.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -22,7 +23,7 @@ function MovedEvidence() {
 /**
  * Invoice moved under Account with edits. Changes keeps one row for it at its
  * new place, labelled Moved, and Overlay compares it with its previous version
- * in one frame; Details names the path it moved from.
+ * in one frame; Details name the path it moved from, then its reason.
  */
 function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
   const dark = useDarkPreview();
@@ -31,9 +32,9 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
       activeTitle="Invoice"
       crumbs={["Account", "Billing & Payments"]}
       design={DESTINATIONS.moved}
-      evidence={<MovedEvidence />}
       mode="overlay"
       path={ENTRY_PATHS.invoice}
+      reasons={["material"]}
       render={(previewViewport) => (
         <ComparisonStack
           after={<MiniInvoice compact={previewViewport === "mobile"} revised />}
@@ -46,6 +47,7 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
           mode="overlay"
         />
       )}
+      source={<MovedEvidence />}
       state="changed"
       subject="invoice"
       title="Invoice"
@@ -59,9 +61,11 @@ export const movedScreen = defineScreen({
   colorSchemes: ["light"],
   description:
     "A screen that moved with edits keeps one Changes row labelled Moved and compares in Overlay with the version at its previous path.",
-  desktop: <MovedOverlay viewport="desktop" />,
+  ...artboards({
+    desktop: <MovedOverlay viewport="desktop" />,
+    mobile: <MovedOverlay viewport="mobile" />,
+  }),
   slug: "moved",
-  mobile: <MovedOverlay viewport="mobile" />,
   rationale:
     "Moving a folder should not read as deleting one screen and adding another. Each moved entry keeps a single row at its new place, its variant and the document beside it move with it, and the comparison still starts from what the screen looked like before.",
   title: "Moved screen",

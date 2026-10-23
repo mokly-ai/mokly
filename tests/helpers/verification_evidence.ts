@@ -1,33 +1,21 @@
-export interface BrowserTestFixture {
-  id: string;
-  project: string;
-  specFile: string;
-  file: string;
-  line: number;
-  column: number;
-  title: string;
-}
-
-export interface ObservedBrowserTest extends BrowserTestFixture {
-  durationMs: number;
-  status: string;
-  errors: unknown[];
-}
-
 export interface VerificationReportFixture {
   schemaVersion: number;
   suite: string;
   commit: string;
   runtime: string;
   nodeVersion: string;
-  shard: { index: number; total: number } | null;
+  shard: null | { index: number; total: number };
   playwrightFiles?: string[];
+  fullTests?: BrowserTest[];
+  assignedTests?: BrowserTest[];
+  observedTests?: (BrowserTest & {
+    status: string;
+    durationMs: number;
+    errors: unknown[];
+  })[];
   fullFiles: string[];
   assignedFiles: string[];
-  observedFiles: Array<{ file: string; durationMs: number; tests: number }>;
-  fullTests: BrowserTestFixture[];
-  assignedTests: BrowserTestFixture[];
-  observedTests: ObservedBrowserTest[];
+  observedFiles: { file: string; durationMs: number; tests: number }[];
   failures: unknown[];
   reporterComplete: boolean;
   reporterErrors: unknown[];
@@ -36,102 +24,78 @@ export interface VerificationReportFixture {
   outcome: { exitCode: number; signal: null; status: string };
 }
 
-export function unitReport(
-  index: number,
-  assignedFiles: string[],
-  fullFiles = assignedFiles,
-): VerificationReportFixture {
-  return {
-    schemaVersion: 1,
-    suite: "unit",
-    commit: "a".repeat(40),
-    runtime: "node-24.21.0",
-    nodeVersion: "24.21.0",
-    shard: { index, total: 4 },
-    fullFiles,
-    assignedFiles,
-    observedFiles: assignedFiles.map((file) => ({
-      file,
-      durationMs: 1,
-      tests: 1,
-    })),
-    fullTests: [],
-    assignedTests: [],
-    observedTests: [],
-    failures: [],
-    reporterComplete: true,
-    reporterErrors: [],
-    skipped: 0,
-    cancelled: 0,
-    outcome: { exitCode: 0, signal: null, status: "passed" },
-  };
-}
-
-export function browserTest(
-  id: string,
-  file: string,
-  project = "chromium",
-): BrowserTestFixture {
-  return {
-    id,
-    project,
-    specFile: file,
-    file,
-    line: 1,
-    column: 1,
-    title: `test ${id}`,
-  };
-}
-
 export function ciReports(
-  runtimes: readonly string[] = ["node-22.14.0", "node-24"],
+  runtimes: readonly string[] = ["node-22.15.0", "node-24"],
 ): VerificationReportFixture[] {
-  return runtimes.flatMap((runtime) => {
-    const nodeVersion = runtime === "node-22.14.0" ? "22.14.0" : "24.21.0";
-    const unitFiles = [1, 2, 3, 4].map(
-      (index) => `tests/unit/shard-${index}.test.ts`,
-    );
-    const browserFiles = [1, 2, 3, 4].map(
-      (index) => `tests/browser/shard-${index}.spec.ts`,
-    );
-    const hydrationFiles = ["tests/browser/shell_hydration.spec.ts"];
-    const playwrightFiles = [...browserFiles, ...hydrationFiles];
-    const browserTests = browserFiles.map((file, index) =>
-      browserTest(`${runtime}-browser-${index}`, file),
-    );
-    const hydrationTests = hydrationFiles.map((file, index) =>
-      browserTest(`${runtime}-hydration-${index}`, file, "hydration"),
-    );
-    const unit = unitFiles.map((file, index) => ({
-      ...unitReport(index + 1, [file], unitFiles),
+  return runtimes.flatMap((runtime): VerificationReportFixture[] => {
+    const files = [
+      "tests/tooling.test.ts",
+      "packages/viewer/tests/viewer.test.tsx",
+    ];
+    const viewer: VerificationReportFixture = {
+      schemaVersion: 1,
+      suite: "viewer",
+      commit: "a".repeat(40),
       runtime,
-      nodeVersion,
-    }));
-    const browser = browserFiles.map((file, index) => ({
-      ...unitReport(index + 1, [file], browserFiles),
-      runtime,
-      nodeVersion,
-      suite: "browser",
-      playwrightFiles,
-      fullTests: browserTests,
-      assignedTests: [browserTests[index]!],
-      observedTests: [passedTest(browserTests[index]!)],
-    }));
-    const hydration = {
-      ...unitReport(1, hydrationFiles, hydrationFiles),
-      runtime,
-      nodeVersion,
-      suite: "hydration",
+      nodeVersion: runtime === "node-22.15.0" ? "22.15.0" : "24.21.0",
       shard: null,
-      playwrightFiles,
-      fullTests: hydrationTests,
-      assignedTests: hydrationTests,
-      observedTests: hydrationTests.map(passedTest),
+      fullFiles: files,
+      assignedFiles: files,
+      observedFiles: files.map((file) => ({ file, durationMs: 1, tests: 1 })),
+      failures: [],
+      reporterComplete: true,
+      reporterErrors: [],
+      skipped: 0,
+      cancelled: 0,
+      outcome: { exitCode: 0, signal: null, status: "passed" },
     };
-    return [...unit, ...browser, hydration];
+    const tests = Array.from({ length: 8 }, (_, index) => ({
+      id: `chromium:test-${index}`,
+      project: "chromium",
+      specFile: `tests/browser/test-${index}.spec.ts`,
+      file: `tests/browser/test-${index}.spec.ts`,
+      line: 1,
+      column: 1,
+      title: `test ${index}`,
+    }));
+    const browser = Array.from(
+      { length: 4 },
+      (_, offset): VerificationReportFixture => {
+        const assigned = tests.slice(offset * 2, offset * 2 + 2);
+        const files = assigned.map((test) => test.specFile);
+        return {
+          ...viewer,
+          suite: "browser",
+          shard: { index: offset + 1, total: 4 },
+          playwrightFiles: tests.map((test) => test.specFile),
+          fullFiles: tests.map((test) => test.specFile),
+          assignedFiles: files,
+          observedFiles: files.map((file) => ({
+            file,
+            durationMs: 1,
+            tests: 1,
+          })),
+          fullTests: tests,
+          assignedTests: assigned,
+          observedTests: assigned.map((test) => ({
+            ...test,
+            status: "passed",
+            durationMs: 1,
+            errors: [],
+          })),
+        };
+      },
+    );
+    return [viewer, ...browser];
   });
 }
 
-function passedTest(test: BrowserTestFixture): ObservedBrowserTest {
-  return { ...test, durationMs: 1, status: "passed", errors: [] };
+export interface BrowserTest {
+  id: string;
+  project: string;
+  specFile: string;
+  file: string;
+  line: number;
+  column: number;
+  title: string;
 }

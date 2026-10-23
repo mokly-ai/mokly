@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/billing/invoice.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n"
+  },
+  "paths": ["billing/invoice"]
+}

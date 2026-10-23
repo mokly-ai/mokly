@@ -1,0 +1,5 @@
+---
+source: crates/mokly-sidecar/tests/smoke_tests.rs
+expression: page.html
+---
+<!doctype html><html><head><title>Page</title></head><body>Document</body></html>

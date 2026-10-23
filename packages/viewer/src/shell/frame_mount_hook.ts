@@ -31,6 +31,8 @@ import {
 interface MountedFrameInput {
   adapter?: FrameAdapter;
   enabled: boolean;
+  /** Advances when the frame element is replaced to load changed bytes. */
+  generation?: number;
   identity: ShellFrameIdentity;
   onEvent?(event: FrameEvent): void;
   source: string | undefined;
@@ -143,7 +145,14 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         }
       });
     return () => disposeSession(registry, session, active);
-  }, [input.adapter, input.enabled, input.source, registry, replacement]);
+  }, [
+    input.adapter,
+    input.enabled,
+    input.generation,
+    input.source,
+    registry,
+    replacement,
+  ]);
 
   useEffect(() => {
     const session = active.current;

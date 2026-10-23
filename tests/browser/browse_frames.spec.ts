@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   computedStyle,
@@ -10,6 +10,7 @@ import {
   overlayStyle,
   tourRow,
 } from "./browse_assertions.js";
+import { test } from "./browser_test.js";
 import {
   chooseScheme,
   chooseViewport,

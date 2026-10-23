@@ -1,1 +1,1 @@
-export { reviewStyleScreens } from "../../../review_style_screens.js";
+export { pageScreen } from "../../../review_style_screens.js";

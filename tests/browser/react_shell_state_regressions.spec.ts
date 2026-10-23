@@ -1,4 +1,6 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+
+import { test } from "./browser_test.js";
 
 const componentPath = "/view/design/library/inspector/inspector/";
 const variantPath = "/view/design/library/inspector/inspector/props/";

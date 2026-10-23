@@ -1,1 +1,1 @@
-export { publishedScreens } from "./screens.js";
+export { readonlyScreen, readonlyVariantScreen } from "./screens.js";

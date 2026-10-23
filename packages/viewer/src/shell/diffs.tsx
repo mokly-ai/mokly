@@ -15,6 +15,8 @@ import {
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
+import type { ShellContext } from "./context.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
@@ -26,12 +28,15 @@ export function ControlledDiffScreen({
   entryId,
   entryKind,
   eligible = true,
+  usingChanged,
 }: {
   children: ReactNode;
   comparison: ComparisonController;
   entryId: string;
   entryKind: ViewRouteKind;
   eligible?: boolean;
+  /** The axes keys of the routed views that use a changed component. */
+  usingChanged?: ReadonlySet<string>;
 }) {
   const views = useMemo(
     () =>
@@ -41,15 +46,23 @@ export function ControlledDiffScreen({
             comparison.presentation,
             entryKind,
             entryId,
+            usingChanged,
           )
         : undefined,
-    [comparison.loaded, comparison.presentation, entryId, entryKind],
+    [
+      comparison.loaded,
+      comparison.presentation,
+      entryId,
+      entryKind,
+      usingChanged,
+    ],
   );
   const documents = useComparisonDocuments(
     comparison.presentation ? comparison.loaded : undefined,
     selectedComparisonDocuments(views),
   );
   const together = useScrollTogether();
+  const store = useOptionalShellStore();
   const current = comparison.mode === "current";
   const failure =
     comparison.failure ??
@@ -89,6 +102,9 @@ export function ControlledDiffScreen({
         {failure ? (
           <ComparisonFailure
             details={failure}
+            reload={reviewReload(store?.context, () =>
+              globalThis.location.reload(),
+            )}
             retry={comparison.retry}
             versionError={comparison.versionError}
           />
@@ -109,25 +125,65 @@ export function ControlledDiffScreen({
   );
 }
 
-function ComparisonFailure({
+/**
+ * The Reload of a rejected review: only the standalone shell offers it,
+ * because a reload loads the viewer that ships with its catalogue; an
+ * embedded viewer reports the failure to its host instead.
+ */
+export function reviewReload(
+  context: Pick<ShellContext, "embedded"> | undefined,
+  reload: () => void,
+): (() => void) | undefined {
+  return context?.embedded === false ? reload : undefined;
+}
+
+/**
+ * A comparison that could not load offers Try again. A rejected review
+ * shows the version headline, with Reload when the host offers it.
+ */
+export function ComparisonFailure({
   details,
+  reload,
   retry,
   versionError,
 }: {
   details: string;
+  reload?: (() => void) | undefined;
   retry(): void;
   versionError?: MoklyVersionError | undefined;
 }) {
   return (
     <>
-      <p role={versionError ? "alert" : undefined}>
-        {versionError
-          ? VERSION_ERROR_MESSAGE
-          : "The comparison could not be loaded."}{" "}
-        <button data-diff-refresh="" onClick={retry} type="button">
-          Try again
-        </button>
-      </p>
+      {versionError ? (
+        <p role="alert">
+          {VERSION_ERROR_MESSAGE}
+          {reload ? (
+            <>
+              {" "}
+              <button
+                className="mbk-empty-link"
+                data-diff-reload=""
+                onClick={reload}
+                type="button"
+              >
+                Reload
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : (
+        <p>
+          The comparison could not be loaded.{" "}
+          <button
+            className="mbk-empty-link"
+            data-diff-refresh=""
+            onClick={retry}
+            type="button"
+          >
+            Try again
+          </button>
+        </p>
+      )}
       <details data-comparison-failure="">
         <summary>Comparison details</summary>
         <p>{details}</p>

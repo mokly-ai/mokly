@@ -1,0 +1,6 @@
+{
+  "roots": [{ "dir": "specs" }],
+  "colorSchemes": ["light", "dark"],
+  "renderer": "renderer.tsx",
+  "postcss": "postcss.mjs"
+}

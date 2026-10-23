@@ -1,0 +1,147 @@
+{
+  "$schema": "../../node_modules/@mokly/mokly/config.schema.json",
+  "colorSchemes": ["light", "dark"],
+  "roots": [
+    { "dir": "specs" },
+    { "dir": "src/components", "path": "example/components" }
+  ],
+  "postcss": "postcss.config.mjs",
+  "moduleResolution": {
+    "aliases": { "react-native": "react-native-web" },
+    "conditions": ["react-native", "import", "module", "default"],
+    "loaders": { ".js": "jsx" },
+    "mainFields": ["react-native", "module", "main"],
+    "resolveExtensions": [
+      ".web.tsx",
+      ".web.ts",
+      ".web.js",
+      ".tsx",
+      ".ts",
+      ".js",
+      ".jsx",
+      ".json"
+    ]
+  },
+  "renderer": "renderer.tsx",
+  "repoRoot": "../..",
+  "stylesheets": [
+    {
+      "match": "design/library/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        "$componentStylesheets",
+        "design-components.css",
+        "design-component-inspection.css",
+        "design-component-details.css",
+        "design-component-inspector.css",
+        "design-component-workspace.css",
+        "design-component-view.css",
+        "design-component-controls.css",
+        "design-library.css"
+      ]
+    },
+    {
+      "match": "design/components/controls/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        "$componentStylesheets",
+        "design-components.css",
+        "design-component-inspection.css",
+        "design-component-details.css",
+        "design-component-inspector.css",
+        "design-component-workspace.css",
+        "design-component-view.css",
+        "design-component-controls.css"
+      ]
+    },
+    {
+      "match": "design/components/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        "$componentStylesheets",
+        "design-components.css",
+        "design-component-inspection.css",
+        "design-component-details.css",
+        "design-component-inspector.css",
+        "design-component-workspace.css",
+        "design-component-view.css"
+      ]
+    },
+    {
+      "match": "design/browse/appearance/states/light-only-{current,document}/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        "$componentStylesheets",
+        "design-component-inspector.css",
+        "design-component-workspace.css"
+      ]
+    },
+    {
+      "match": "design/browse/appearance/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        "$componentStylesheets",
+        "design-component-inspector.css",
+        "design-component-workspace.css"
+      ]
+    },
+    {
+      "match": "design/changes/diff-controls/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        "design-review-scroll.css",
+        "$componentStylesheets",
+        "design-component-inspector.css",
+        "design-component-workspace.css"
+      ]
+    },
+    {
+      "match": "design/changes/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        "design-review-scroll.css",
+        "$componentStylesheets",
+        "design-component-inspector.css",
+        "design-component-workspace.css"
+      ]
+    },
+    {
+      "match": "design/**/index*.html",
+      "stylesheets": [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "$componentStylesheets",
+        "design-component-inspector.css",
+        "design-component-workspace.css"
+      ]
+    },
+    {
+      "match": "example/{team,components/workspace-*}/**",
+      "stylesheets": ["workspace.css", "workspace-components.css"],
+      "darkStylesheets": ["workspace-dark.css"]
+    },
+    {
+      "match": "**/*.html",
+      "stylesheets": ["styles.css"],
+      "darkStylesheets": ["styles-dark.css"]
+    }
+  ]
+}

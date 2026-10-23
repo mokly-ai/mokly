@@ -2,7 +2,7 @@
 
 ## Scope
 
-This implemented contract makes this repository the owner of the versioned
+This contract makes this repository the owner of the versioned
 documentation for the public Mokly CLI and catalogue. The guides are plain
 Markdown shipped in `@mokly/mokly` beside the published protocol documents and
 changelog. The private `mokly-cloud` repository owns the public documentation
@@ -21,13 +21,13 @@ section id, its filename without `.md` is the route slug, and the cloud route is
 
 Sections appear in this order:
 
-| Order | Section id  | Title                  | Summary                                                         |
-| ----- | ----------- | ---------------------- | --------------------------------------------------------------- |
-| 1     | `start`     | Getting started        | Install Mokly, point it at your screens and open the catalogue. |
-| 2     | `authoring` | Authoring              | Describe screens, components, flows and pages in TypeScript.    |
-| 3     | `catalogue` | Catalogue              | Browse, search, compare and export what the build produced.     |
-| 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.            |
-| 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.         |
+| Order | Section id  | Title                  | Summary                                                                          |
+| ----- | ----------- | ---------------------- | -------------------------------------------------------------------------------- |
+| 1     | `start`     | Getting started        | Install Mokly, point it at your screens and open the catalogue.                  |
+| 2     | `authoring` | Authoring              | Describe screens, components, flows, pages and documents in HTML and TypeScript. |
+| 3     | `catalogue` | Catalogue              | Browse, search and compare the catalogue, and build the static site.             |
+| 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.                             |
+| 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.                          |
 
 The cloud repository may add its own `cloud`, `reference`, and `review`
 sections. They are not valid section values in this repository's guides.
@@ -120,7 +120,7 @@ mapping and rejects a path that escapes the repository.
 ## Versions And Releases
 
 Guides write package versions as literals, never placeholders. Every semantic
-version literal in `docs/guides/` equals the root `package.json` version.
+version literal in `docs/guides/` equals the `packages/mokly/package.json` version.
 `start/install.md` uses it both in the pinned install command and in the
 sentence naming the documented version. `ci/github-action.md` uses it as the
 example Action `version`.
@@ -134,15 +134,15 @@ The version-bearing prose or fenced block is here.
 <!-- x-release-please-end -->
 ```
 
-Markers sit outside a fenced block rather than inside it. The root package's
+Markers sit outside a fenced block rather than inside it. The `@mokly/mokly` package's
 Release Please configuration lists both Markdown files as `generic`
-`extra-files`, so a release PR updates the literals with `package.json`. Root
+`extra-files`, so a release PR updates the literals with `packages/mokly/package.json`. Root
 tests reject a missing marker, a stale literal, or any other version literal
 that differs from the package version.
 
 ## Package Publication
 
-The root package `files` allowlist contains both `docs/guides` and
+The `@mokly/mokly` package `files` allowlist contains both `docs/guides` and
 `docs/protocol`. A packed package contains the complete guide tree, all protocol
 documents, `CHANGELOG.md`, and the existing runtime surface. Tests, plans,
 examples, site sources, and repository-only tooling remain excluded.

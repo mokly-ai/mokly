@@ -3,38 +3,20 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import { buildBrowserModules, writeBrowserManifest } from "./browser.mjs";
+import { writeBrowserManifest } from "./browser.mjs";
 import { bundleInspector } from "./inspector-bundle.mjs";
 import { embeddedStyles } from "./styles.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const target = path.join(root, "dist");
+const browser = path.join(target, "browser");
 await fs.cp(path.join(root, "src/shell/assets"), path.join(target, "assets"), {
   recursive: true,
 });
-await buildBrowserModules(
-  path.join(root, "src/client"),
-  path.join(target, "browser"),
-  {
-    additionalEntries: {
-      recovery: path.join(root, "src/standalone/recovery.ts"),
-    },
-  },
-);
-await build({
-  bundle: true,
-  entryPoints: Object.fromEntries(
-    ["logical", "routes", "target", "delivery"].map((name) => [
-      name,
-      path.join(root, `src/navigation/${name}.ts`),
-    ]),
-  ),
-  format: "esm",
-  logLevel: "silent",
-  outdir: path.join(target, "browser-navigation"),
-  platform: "browser",
-  target: "es2023",
-});
+await fs.rm(browser, { force: true, recursive: true });
+await fs.mkdir(browser, { recursive: true });
+// The standalone shell that Serve and `build` deliver as
+// `mokly-viewer/client/shell.js`, with React and React DOM bundled in.
 await build({
   bundle: true,
   define: { "process.env.NODE_ENV": '"production"' },
@@ -42,32 +24,21 @@ await build({
   format: "esm",
   logLevel: "silent",
   minify: true,
-  outfile: path.join(target, "browser/react-shell.js"),
-  platform: "browser",
-  target: "es2023",
-});
-await build({
-  bundle: true,
-  entryPoints: {
-    "appearance-startup": path.join(
-      root,
-      "src/standalone/appearance_startup.ts",
-    ),
-    "navigation-resize": path.join(root, "src/standalone/navigation_resize.ts"),
-  },
-  format: "iife",
-  logLevel: "silent",
-  outdir: path.join(target, "browser"),
+  outfile: path.join(browser, "shell.js"),
   platform: "browser",
   target: "es2023",
 });
 await bundleInspector(
   path.join(root, "src/inspector/index.ts"),
-  path.join(target, "browser/inspector.js"),
+  path.join(browser, "inspector.js"),
 );
-await writeBrowserManifest(path.join(target, "browser"));
-const { SHELL_CSS } = await import("../dist/shell/css.js");
+await writeBrowserManifest(browser);
+const { SHELL_CSS, STANDALONE_SHELL_CSS } =
+  await import("../dist/shell/css.js");
 const { VIEWER_CSS } = await import("../dist/viewer/styles.js");
+// The standalone stylesheet that Serve and `build` deliver as
+// `mokly-viewer/shell.css`, and the scoped stylesheet of an embedded root.
+await fs.writeFile(path.join(target, "shell.css"), STANDALONE_SHELL_CSS);
 await fs.writeFile(
   path.join(target, "styles.css"),
   embeddedStyles(SHELL_CSS, VIEWER_CSS),

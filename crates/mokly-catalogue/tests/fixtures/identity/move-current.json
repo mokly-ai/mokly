@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nmovedFrom: other\n---\n<h1>Home</h1>\n",
+    "specs/other.md": "# Other"
+  },
+  "errors": [
+    {
+      "code": "moved-from-current",
+      "message": "specs/home.screen.html: movedFrom other names a current entry",
+      "path": "specs/home.screen.html",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

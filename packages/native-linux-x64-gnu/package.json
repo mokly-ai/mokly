@@ -1,0 +1,27 @@
+{
+  "name": "@mokly/native-linux-x64-gnu",
+  "version": "0.15.0",
+  "description": "Mokly native CLI for linux-x64-gnu.",
+  "license": "MIT",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/mokly"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/native-linux-x64-gnu"
+  },
+  "libc": [
+    "glibc"
+  ]
+}

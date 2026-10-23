@@ -8,6 +8,7 @@ import { parse } from "yaml";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 interface WorkflowJob {
+  uses?: string;
   permissions?: Readonly<Record<string, string>>;
   "runs-on"?: unknown;
   steps?: readonly { run?: string }[];
@@ -41,8 +42,17 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
 
     for (const [jobName, job] of Object.entries(workflow.jobs)) {
       const context = `${workflowName}:${jobName}`;
+      if (job.uses) {
+        assert.equal(context, "release.yml:prepare-release");
+        assert.equal(job.uses, "./.github/workflows/release-prepare.yml");
+        continue;
+      }
       const runsOn = job["runs-on"];
       assert.ok(typeof runsOn === "string", `${context} runner`);
+      if (context === "design-attribution.yml:design-attribution") {
+        assert.equal(runsOn, "blacksmith-8vcpu-ubuntu-2404");
+        continue;
+      }
       if (publishesWithProvenance(job)) {
         provenancePublishers.push(context);
         assert.equal(
@@ -58,11 +68,30 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
         continue;
       }
 
-      const values = job.strategy?.matrix?.[matrixReference[1]!];
+      const key = matrixReference[1]!;
+      const values =
+        job.strategy?.matrix?.[key] ??
+        (
+          job.strategy?.matrix?.include as Record<string, unknown>[] | undefined
+        )?.map((row) => row[key]);
       assert.ok(Array.isArray(values), `${context} runner matrix`);
       for (const value of values) {
         assert.ok(typeof value === "string", `${context} runner matrix value`);
-        assertMinimumRunner(value, context);
+        if (
+          (workflowName === "release.yml" ||
+            workflowName === "release-check.yml") &&
+          jobName === "build-native" &&
+          value === "macos-26-intel"
+        ) {
+          const rows = job.strategy?.matrix?.include as Record<
+            string,
+            unknown
+          >[];
+          assert.deepEqual(
+            rows.filter((row) => row[key] === value).map((row) => row.target),
+            ["darwin-x64"],
+          );
+        } else assertMinimumRunner(value, context);
       }
     }
   }

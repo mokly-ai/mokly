@@ -1,26 +1,18 @@
 # Mokly Design Component Library Inventory
 
-## Delivery Status
-
-CSS provenance without derived owners is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The remaining contract is implemented.
-Delivered inventory for [design component adoption](./mokly-design-components.md).
-Source paths below are relative to `examples/basic/specs/design/` and identify
-the original composition points, which now delegate to registered implementations
-in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
-those implementations and use path identity. The navigation designs include
-the `document` row kind, browse-only folders, and `Overview`; runtime delivery
-is tracked by the [path identity plan](../../plans/path-identity.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Components And Saved Examples
 
 Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
 [variant contract](./mokly-variants.md). Each variant's slug is the table's
 kebab-case name, so its path is the parent's path plus that name, and every
-file name follows the [artifact contract](./mokly-artifact-paths.md); the first
-listed variant is the default shown by the parent page.
+file name follows the [artifact contract](./mokly-artifact-paths.md). A
+variant's props replace the parent's own props key by key, so the parent's own
+`props` hold the keys that every variant sets, with the first listed variant's
+values. The parent page shows its own example first, then each variant. A slot
+holds caller content: the parent's own example renders without slot content,
+and only its variants and the screens that compose it fill slots.
 
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
@@ -31,7 +23,7 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Variant names                                                                                                                                 |
+| Group / slug                  | Implementation                                                      | Variant names                                                                                                                                 |
 | ----------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
@@ -47,7 +39,7 @@ to depict a different setting, as the `auto-appearance` sample does.
 | inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
 | preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
 | preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState, LoadingState`                 | `home`, `missing-route`, `no-changes`                                                                                                         |
 | preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
 
 Fixtures for each variant come from the corresponding existing screen state,
@@ -56,11 +48,11 @@ render-context fallback a dual-scheme sample uses above. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
 complete owning artboard. All selected-screen footers use the icon panel and the
 viewport control uses the grouped icons. No disclosure variant or segmented
-viewport presentation is supported. Comparison-mode segments remain.
+viewport presentation is supported. Comparison-mode segments stay.
 
 ## Data, Slots And Controls
 
-Use literal object schemas and the existing validator/codec. Lists are typed
+Use literal object schemas and the shared validator/codec. Lists are typed
 arrays of plain records; optional means omitted, distinct from an empty value.
 Numbers are finite, counts/depth are nonnegative integers and flow numbers start
 at one. Logical destinations are existing catalogue paths from the design-link
@@ -130,7 +122,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    the existing forms/onboarding examples. Empty input follows the current hidden
    picker behavior; the outer inspector can still inspect the empty variant.
 7. **Tag chip:** stable tag id, label, selected state and optional destination.
-   Controls: label and selected state. Missing destinations remain non-links;
+   Controls: label and selected state. Missing destinations stay non-links;
    repeated picker/metadata instances are keyed by tag identity, not label.
 8. **Change status:** `unmodified/added/changed/removed` status. Control: status.
    It is a pictured badge; it does not set the actual outer component's change
@@ -154,27 +146,36 @@ Controls below use text, boolean, number and primitive enum selections only.
 11. **Prop field:** label, stable input id, optional description/error and
     optional-field/supplied flags; a `control` slot contains the native input or
     selection control. Controls: label and optional description/error. Typed
-    field values and disabled/read-only behavior remain with the caller's slot,
+    field values and disabled/read-only behavior stay with the caller's slot,
     while the field frames that control's surface, border and invalid state so
     a prop panel reads the same in every host.
     Preserve label/input/error associations and assign unique ids for repeated
     forms. This is reusable field framing, not a new forms or schema engine.
-12. **Device frame:** device `phone/browser`, optional caption, depicted dark
-    state, light-only note, compact-phone and expandable flags, browser address;
-    `children` is the screen-content slot. Controls: device, dark state, compact frame and
-    address. Depicted device is independent of render viewport. Saved phone samples use compact sizing so the whole phone fits both viewports.
-    Turning compact sizing off preserves the full-size frame in a scrolling host.
+12. **Device frame:** device `phone/browser`, optional caption, a `scheme`
+    flag that adds the rendered scheme to the caption, depicted dark state,
+    light-only note, compact-phone and expandable flags, browser address;
+    `children` is the screen-content slot. Controls: device, scheme in caption,
+    dark state, compact frame and address. The component explorer previews
+    caption their frames through the `scheme` flag, so no screen draws its own
+    frame caption. Depicted device is independent of render viewport. Saved
+    phone samples use compact sizing so the whole phone fits both viewports.
+    Turning compact sizing off preserves the full-size frame in a scrolling
+    host.
 13. **Comparison pane:** side `before/after`, label, state `present/missing`,
     optional missing message and `children` slot. Controls: label, state and
     optional message. Missing state hides the content slot and uses the existing
     explicit missing pane; comparison-grid layout remains caller-owned.
-14. **Empty state:** title, body, optional code, action label and destination.
-    Controls: title, body and action label. Retain the existing canonical recovery
+14. **Empty state:** no required prop: an optional title, body, code, action
+    label, destination, and busy flag. The busy flag marks a loading state,
+    sets `aria-busy`, and makes the body a status.
+    Controls: title, body, loading and action label. Keep the canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
-15. **Flow step:** positive step number, title, description, owning screen path
-    and `children` slot containing the reused screen preview. Controls: number,
-    title and description. References still point to the standalone owning
-    screen, and flows never become the original home of screen markup.
+15. **Flow step:** positive step number, title, description, the owning
+    screen's title and path, and `children` slot containing the reused screen
+    preview. The reference reads `This screen in the catalogue: <title> →`.
+    Controls: number, title, description and screen title. References still
+    point to the standalone owning screen, and flows never become the original
+    home of screen markup.
 16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
     compact flag for narrow bars. Controls: setting and compact. It is a native
     selection control named Appearance, holding one value; it is the catalogue's
@@ -197,11 +198,11 @@ Keep registered definitions/variant fixtures outside the exclusive `.view.tsx`
 implementation; registration/fixture changes are metadata or rendered-output
 changes, not path-based implementation evidence.
 
-Every library component declares its own exclusive public CSS file in
+Every library component declares its own exclusive local CSS delivery root in
 `stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
 links only components actually rendered in a view, including nested components
 and transient prop edits; an absent child adds no link. CSS changes use
-[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Retain required
+[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Keep required
 mixed/global sheets in configured rules; remove
 only migrated selectors from them, preserving their remaining behavior.
 Use a minimal host for standalones, with design tokens, original root classes,

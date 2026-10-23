@@ -1,21 +1,24 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import type { ViewerSelection } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
+import { test } from "./browser_test.js";
+
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
-  fixture = await viewerFixture("", {
-    extra: `const setup = defineScreen({ ...metadata, path: "tools/setup", title: "Setup", description: "Setup", mobile: <main>Setup</main>, desktop: <main>Setup</main> });
-const forms = defineScreen({ ...metadata, path: "forms", title: "Forms", description: "Forms", tags: ["forms"], mobile: <main>Forms</main>, desktop: <main>Forms</main> });`,
-    exports: "...action.entries, ...pane.entries, setup, forms,",
+  fixture = await viewerFixture({
+    extra: `
+export const setup = defineScreen({...metadata, path: "tools/setup", title: "Setup", props: {}, render: () => <main>Setup</main>});
+export const forms = defineScreen({...metadata, path: "forms", title: "Forms", tags: ["forms"], props: {}, render: () => <main>Forms</main>});
+`,
   });
 });
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 
 /** Mount a controlled viewer on Setup whose host commits only on request. */

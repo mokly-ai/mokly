@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 8,
+  "baseCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "entries": [
+    {
+      "kind": "component",
+      "path": "card",
+      "title": "Card",
+      "state": "changed",
+      "included": true,
+      "before": {
+        "path": "card",
+        "title": "Card",
+        "props": {},
+        "suppliedSlots": []
+      },
+      "after": {
+        "path": "card",
+        "title": "Card",
+        "props": {},
+        "suppliedSlots": []
+      },
+      "reasons": [{ "kind": "dependency", "path": "static/theme.css" }],
+      "views": [
+        {
+          "viewport": "mobile",
+          "colorScheme": "light",
+          "state": "changed",
+          "ignoredIds": [],
+          "rules": [
+            {
+              "stylesheet": "static/theme.css",
+              "selector": ".card",
+              "status": "matched",
+              "owner": { "kind": "component", "path": "card" }
+            }
+          ]
+        }
+      ],
+      "variants": []
+    },
+    {
+      "kind": "screen",
+      "path": "home",
+      "title": "Home",
+      "state": "unchanged",
+      "included": false,
+      "before": { "path": "home", "title": "Home", "props": {} },
+      "after": { "path": "home", "title": "Home", "props": {} },
+      "reasons": [],
+      "views": [
+        {
+          "viewport": "mobile",
+          "colorScheme": "light",
+          "state": "unchanged",
+          "ignoredIds": [],
+          "rules": [
+            {
+              "stylesheet": "static/theme.css",
+              "selector": ".card",
+              "status": "matched",
+              "owner": { "kind": "component", "path": "card" }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "affected": [
+    {
+      "changedComponentId": "card",
+      "consumer": { "kind": "screen", "path": "home" },
+      "evidence": [
+        {
+          "side": "before",
+          "context": {
+            "kind": "screen",
+            "entry": { "path": "home", "title": "Home", "props": {} },
+            "viewport": "mobile",
+            "colorScheme": "light"
+          },
+          "via": [
+            {
+              "componentId": "card",
+              "instanceKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

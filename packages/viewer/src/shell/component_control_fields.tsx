@@ -1,183 +1,144 @@
 /** Declarative prop controls with explicit optional supply and field errors. */
 
-import { decodeProps, encodeValue } from "../components/codec.js";
-import { validateControlledValues } from "../components/controls.js";
-import type { ManifestComponent } from "../components/manifest_types.js";
-import type {
-  ComponentWirePrimitive,
-  PropPrimitive,
-} from "../components/prop_types.js";
-import { validateValue } from "../components/props.js";
-import type { ComponentOverride } from "../components/render_types.js";
+import type { ComponentControl } from "../components/control_types.js";
+import { optionalProperty } from "../components/props.js";
 
+import { CONTROLS_COPY } from "./component_controls_copy.js";
+import {
+  effectiveNumberControl,
+  numberInputBounds,
+} from "./control_numbers.js";
+import {
+  controlEntries,
+  type ControlDraft,
+  type ControlDraftField,
+  type ControlTarget,
+} from "./control_values.js";
 import { useShellIdentifierScope } from "./identifier_context.js";
-import type { WorkspaceVariant } from "./workspace_data.js";
 
-/** Input representation that preserves partial numeric and text edits. */
-export interface ControlDraftField {
-  supplied: boolean;
-  value: boolean | string;
-}
+export {
+  controlDraft,
+  validateControlDraft,
+  type ControlDraft,
+  type ControlDraftField,
+  type ControlTarget,
+  type ValidatedControlDraft,
+} from "./control_values.js";
 
-/** Draft values keyed by declared controlled prop. */
-export type ControlDraft = Readonly<Record<string, ControlDraftField>>;
-
-/** Validated overrides and field-specific product errors. */
-export interface ValidatedControlDraft {
-  errors: Readonly<Record<string, string>>;
-  overrides?: Readonly<Record<string, ComponentOverride>>;
-}
-
-/** Build a fresh form state from one saved variant. */
-export function controlDraft(
-  component: ManifestComponent,
-  variant: WorkspaceVariant,
-): ControlDraft {
-  const values = decodeProps(variant.value.props);
-  return Object.fromEntries(
-    controlEntries(component).map(([key, control]) => {
-      const value = values[key];
-      const field: ControlDraftField = {
-        supplied: value !== undefined,
-        value:
-          control.kind === "boolean"
-            ? value === true
-            : control.kind === "select"
-              ? (() => {
-                  const selected = control.options.findIndex((option) =>
-                    Object.is(option.value, value),
-                  );
-                  return selected < 0 ? "" : String(selected);
-                })()
-              : value === undefined
-                ? ""
-                : Object.is(value, -0)
-                  ? "-0"
-                  : String(value),
-      };
-      return [key, field];
-    }),
-  );
-}
-
-/** Validate the complete draft without replacing the last valid preview. */
-export function validateControlDraft(
-  component: ManifestComponent,
-  variant: WorkspaceVariant,
-  draft: ControlDraft,
-): ValidatedControlDraft {
-  const saved = decodeProps(variant.value.props);
-  const overrides: Record<string, ComponentOverride> = {};
-  const errors: Record<string, string> = {};
-  for (const [key, control] of controlEntries(component)) {
-    const field = draft[key]!;
-    if (!field.supplied) {
-      if (saved[key] !== undefined) overrides[key] = { kind: "unset" };
-      continue;
-    }
-    try {
-      let value: PropPrimitive;
-      if (control.kind === "boolean") value = field.value === true;
-      else if (control.kind === "select") {
-        if (field.value === "") throw new Error("Choose an available value.");
-        const option = control.options[Number(field.value)];
-        if (!option) throw new Error("Choose an available value.");
-        value = option.value;
-      } else if (control.kind === "number") {
-        value = Number(field.value);
-        if (!String(field.value).trim() || !Number.isFinite(value))
-          throw new Error("Enter a finite number.");
-      } else value = String(field.value);
-      validateValue(component.propSchema.properties[key]!.schema, value, key);
-      validateControlledValues({ [key]: control }, { [key]: value }, key);
-      if (!Object.is(value, saved[key]))
-        overrides[key] = {
-          kind: "set",
-          value: encodeValue(value) as ComponentWirePrimitive,
-        };
-    } catch {
-      errors[key] =
-        control.kind === "number"
-          ? "Enter a number within the allowed range."
-          : control.kind === "select"
-            ? "Choose an available value."
-            : "Check this value and its allowed limits.";
-    }
-  }
-  return {
-    errors,
-    ...(Object.keys(errors).length ? {} : { overrides }),
-  };
-}
-
-/** Native form fields for all author-declared controls. */
+/**
+ * Native form fields for every control of the shown entry, one row each: the
+ * field's name in a label column, then its value, help, and error.
+ */
 export function ComponentControlFields({
-  component,
   disabled,
   draft,
   errors,
   onChange,
+  target,
 }: {
-  component: ManifestComponent;
   disabled: boolean;
   draft: ControlDraft;
   errors: Readonly<Record<string, string>>;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
+  target: ControlTarget;
 }) {
   const identifier = useShellIdentifierScope();
   return (
-    <div className="mbk-control-grid">
-      {controlEntries(component).map(([key, control]) => {
+    <div className="mbk-control-rows">
+      {controlEntries(target).map(([key, control]) => {
         const field = draft[key]!;
-        const label = control.label ?? key;
-        const optional = component.propSchema.properties[key]?.optional;
-        const id = identifier(`mb-prop-${component.path}-${key}`);
+        const label =
+          control.label ?? target.propSchema.properties?.[key]?.title ?? key;
+        const optional = optionalProperty(target.propSchema, key);
+        const id = identifier(`mb-prop-${target.path}-${key}`);
+        const shown =
+          control.kind === "number"
+            ? effectiveNumberControl(target, key, control)
+            : control;
+        const bounds =
+          shown.kind === "number" ? numberInputBounds(shown) : undefined;
         const help =
           control.description ??
-          (control.kind === "number" &&
-          (control.minimum !== undefined || control.maximum !== undefined)
-            ? `Allowed range: ${control.minimum ?? "no minimum"} to ${control.maximum ?? "no maximum"}.`
+          target.propSchema.properties?.[key]?.description ??
+          (shown.kind === "number"
+            ? CONTROLS_COPY.range(bounds?.min, bounds?.max, shown.step)
             : "");
+        const error = errors[key];
+        // An optional toggle's value check box carries the field's name.
+        const named = control.kind === "boolean" && optional;
+        const name = (
+          <>
+            {label}
+            {optional ? (
+              <>
+                {" "}
+                <span aria-hidden="true" className="mbk-control-optional">
+                  {CONTROLS_COPY.optional}
+                </span>
+              </>
+            ) : null}
+          </>
+        );
         return (
           <div className="mbk-control-field" key={key}>
-            {optional ? (
-              <label className="mbk-control-supplied">
-                <input
-                  aria-label={`Supply ${label}`}
-                  checked={field.supplied}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    onChange(
-                      key,
-                      { ...field, supplied: event.currentTarget.checked },
-                      true,
-                    )
-                  }
-                  type="checkbox"
-                />
-                <span>Supplied</span>
+            {named ? (
+              <span className="mbk-control-label">{name}</span>
+            ) : (
+              <label className="mbk-control-label" htmlFor={id}>
+                {name}
               </label>
-            ) : null}
-            <label htmlFor={id}>{label}</label>
-            <ControlInput
-              control={control}
-              disabled={disabled || !field.supplied}
-              field={field}
-              id={id}
-              invalid={errors[key] !== undefined}
-              name={key}
-              onChange={(value, immediate) =>
-                onChange(key, { ...field, value }, immediate)
-              }
-            />
-            <small id={`${id}-help`}>{help}</small>
-            <small
-              className="mbk-control-error"
-              hidden={errors[key] === undefined}
-              id={`${id}-error`}
-            >
-              {errors[key]}
-            </small>
+            )}
+            <div className="mbk-control-value">
+              {optional ? (
+                <label className="mbk-control-set">
+                  <input
+                    checked={field.supplied}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      onChange(
+                        key,
+                        { ...field, supplied: event.currentTarget.checked },
+                        true,
+                      )
+                    }
+                    type="checkbox"
+                  />
+                  <span>{CONTROLS_COPY.set(label)}</span>
+                </label>
+              ) : null}
+              <ControlInput
+                control={shown}
+                describedBy={
+                  error !== undefined
+                    ? `${id}-error`
+                    : help
+                      ? `${id}-help`
+                      : undefined
+                }
+                disabled={disabled}
+                field={field}
+                id={id}
+                invalid={error !== undefined}
+                {...(named ? { label } : {})}
+                name={key}
+                onChange={(value, immediate) =>
+                  onChange(key, { ...field, value }, immediate)
+                }
+              />
+              {field.supplied ? null : (
+                <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
+              )}
+              <small hidden={!help || error !== undefined} id={`${id}-help`}>
+                {help}
+              </small>
+              <small
+                className="mbk-control-error"
+                hidden={error === undefined}
+                id={`${id}-error`}
+              >
+                {error}
+              </small>
+            </div>
           </div>
         );
       })}
@@ -185,34 +146,35 @@ export function ComponentControlFields({
   );
 }
 
-function controlEntries(component: ManifestComponent) {
-  return Object.entries(component.controls).sort(([left], [right]) =>
-    left < right ? -1 : left > right ? 1 : 0,
-  );
-}
-
 function ControlInput({
   control,
+  describedBy,
   disabled,
   field,
   id,
   invalid,
+  label,
   name,
   onChange,
 }: {
-  control: ManifestComponent["controls"][string];
+  control: ComponentControl;
+  /** The visible help or error that describes the field. */
+  describedBy: string | undefined;
   disabled: boolean;
   field: ControlDraftField;
   id: string;
   invalid: boolean;
+  /** The visible name of a check box that the field's heading does not label. */
+  label?: string;
   name: string;
   onChange(value: boolean | string, immediate: boolean): void;
 }) {
   const accessibility = {
-    "aria-describedby": `${id}-help ${id}-error`,
+    "aria-describedby": describedBy,
     "aria-invalid": invalid || undefined,
     "data-prop-control": name,
     disabled,
+    hidden: !field.supplied,
     id,
   };
   if (control.kind === "select")
@@ -222,7 +184,7 @@ function ControlInput({
         onChange={(event) => onChange(event.currentTarget.value, true)}
         value={String(field.value)}
       >
-        <option value="">Choose a value</option>
+        <option value="">{CONTROLS_COPY.chooseValue}</option>
         {control.options.map((option, index) => (
           <option key={index} value={index}>
             {option.label}
@@ -230,8 +192,8 @@ function ControlInput({
         ))}
       </select>
     );
-  if (control.kind === "boolean")
-    return (
+  if (control.kind === "boolean") {
+    const box = (
       <input
         {...accessibility}
         checked={field.value === true}
@@ -239,18 +201,25 @@ function ControlInput({
         type="checkbox"
       />
     );
+    return label === undefined ? (
+      box
+    ) : (
+      <label className="mbk-control-check" hidden={!field.supplied}>
+        {box}
+        <span>{label}</span>
+      </label>
+    );
+  }
   return (
     <input
       {...accessibility}
       {...(control.kind === "number"
         ? {
             inputMode: "decimal" as const,
-            max: control.maximum,
-            min: control.minimum,
-            step: control.step ?? "any",
+            ...numberInputBounds(control),
             type: "number",
           }
-        : { maxLength: control.maxLength, type: "text" })}
+        : { type: "text" })}
       onChange={(event) => onChange(event.currentTarget.value, false)}
       value={String(field.value)}
     />

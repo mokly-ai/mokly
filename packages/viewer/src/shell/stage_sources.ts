@@ -1,6 +1,9 @@
 /** Source and usage projection for saved and temporary stage views. */
 
-import { currentDocumentPath } from "../catalogue/delivery_paths.js";
+import {
+  currentDocumentPath,
+  VIEWER_DIRECTORY,
+} from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
@@ -33,7 +36,7 @@ export function frameSource(
   );
 }
 
-/** Normalize bootstrap-only omission to the frame's existing pending state. */
+/** A view whose entry detail is not held yet has pending usage in its frame. */
 export function shellFrameUsage(
   usage: ShellCatalogueUsage | undefined,
 ): CatalogueUsage {
@@ -73,11 +76,11 @@ export function generatedUsage(view: GeneratedComponentView): CatalogueUsage {
   if (!record) return unavailableUsage;
   const current = generatedUsages.get(record);
   if (current) return current;
-  const usage = {
-    status: "ready" as const,
-    instances: record.instances,
-    slots: record.slots,
-    ranges: record.ranges,
+  const usage: CatalogueUsage = {
+    status: "ready",
+    instances: [...record.instances],
+    slots: [...record.slots],
+    ranges: [...record.ranges],
   };
   generatedUsages.set(record, usage);
   return usage;
@@ -88,4 +91,14 @@ export function resolvedFrameSource(
   baseUrl: string | URL | undefined,
 ): string | undefined {
   return source && baseUrl ? new URL(source, baseUrl).href : source;
+}
+
+/** Saved workspace views retain their index key; temporary documents own their URL. */
+export function stageDocumentKey(
+  view: ShellCatalogueView | undefined,
+  preview: GeneratedComponentView | undefined,
+): string | undefined {
+  return preview?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
+    ? undefined
+    : view?.documentKey;
 }

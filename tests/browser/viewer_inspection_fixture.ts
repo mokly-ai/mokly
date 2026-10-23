@@ -40,10 +40,8 @@ export async function startInspection(
         cross,
         defaultSelection: { viewport: sibling ? "both" : "mobile" },
       });
-      const catalogue = structuredClone(
-        host.props.catalogue,
-      ) as CatalogueReadModel;
-      const home = catalogue.screens.find((entry) => entry.path === "home")!;
+      const catalogue = structuredClone(host.props.index) as CatalogueReadModel;
+      const home = host.details["home"]!;
       const usage = home.views.find(
         (view) => view.viewport === "mobile",
       )!.usage;
@@ -67,7 +65,7 @@ export async function startInspection(
       };
       window.inspectionProbe = probe;
       const original = host.props.frameAdapter!;
-      host.props.catalogue = catalogue;
+      host.props.index = catalogue;
       /**
        * Pass a preview event on unless it is the preview's own geometry. The
        * viewer receives events through the mount-time `onEvent` and then

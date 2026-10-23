@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {title: Error, props: {}}\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "slug must be a string",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 5
+    }
+  ]
+}

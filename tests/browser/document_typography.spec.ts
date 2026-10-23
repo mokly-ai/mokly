@@ -1,18 +1,43 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
-import { documentTemplate } from "../../dist/documents/template.js";
+import { test } from "./browser_test.js";
+import { serveCatalogue } from "./catalogue_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 
-/** The design's Payment terms document, as the Markdown renderer emits it. */
-const body = `<h1 id="payment-terms">Payment terms</h1>
-<p>When an invoice is due, and what a customer sees once it is late.</p>
-<h2 id="due-dates">Due dates</h2>
-<p>Every invoice is due 30 days after it is issued, and invoice numbers keep the form <code>INV-1042</code>.</p>
-<h2 id="overdue-invoices">Overdue invoices</h2>
-<p>An overdue invoice shows a reminder, as the <a href="#overdue-invoices">overdue invoice</a> shows.</p>
-<table><thead><tr><th>Days overdue</th><th>Reminder</th></tr></thead>
-<tbody><tr><td>1</td><td>Reminder email</td></tr><tr><td>7</td><td>Second email</td></tr></tbody></table>
-<h2 id="payment-methods">Payment methods</h2>
-<ul><li>Card</li><li>Bank transfer</li></ul>`;
+let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+});
+test.beforeAll(async () => {
+  fixture = await serveCatalogue({
+    "specs/payment.md": `---
+title: Payment terms
+---
+# Payment terms
+
+When an invoice is due, and what a customer sees once it is late.
+
+## Due dates
+
+Every invoice is due 30 days after it is issued, and invoice numbers keep the form \`INV-1042\`.
+
+## Overdue invoices
+
+An overdue invoice shows a reminder, as the [overdue invoice](#overdue-invoices) shows.
+
+| Days overdue | Reminder |
+| --- | --- |
+| 1 | Reminder email |
+| 7 | Second email |
+
+## Payment methods
+
+- Card
+- Bank transfer
+`,
+  });
+});
+test.afterAll(async () => fixture?.close());
 
 /** Computed properties compared for each depicted part of a document. */
 const PROPERTIES = {
@@ -118,12 +143,24 @@ function computedParts(root: Locator, selectors: Record<Part, string>) {
         const element = document.querySelector(selector);
         if (!element) return `missing ${selector}`;
         const style = getComputedStyle(element);
+        let surface = element;
+        // Native documents paint the canvas on html; transparent descendants show that same surface.
+        while (
+          getComputedStyle(surface).backgroundColor === "rgba(0, 0, 0, 0)" &&
+          surface.parentElement
+        )
+          surface = surface.parentElement;
         return Object.fromEntries(
           names.map((name) => [
             name,
-            style.getPropertyValue(
-              name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
-            ),
+            name === "backgroundColor"
+              ? getComputedStyle(surface).backgroundColor
+              : style.getPropertyValue(
+                  name.replace(
+                    /[A-Z]/g,
+                    (letter) => `-${letter.toLowerCase()}`,
+                  ),
+                ),
           ]),
         );
       };
@@ -161,7 +198,7 @@ async function designParts(page: Page, viewport: "desktop" | "mobile") {
 
 async function templateParts(page: Page, width: number) {
   await page.setViewportSize({ width, height: 900 });
-  await page.setContent(documentTemplate("Payment terms", body, "light"));
+  await page.goto(`${fixture.url}/static/mokly-generated/payment/index.html`);
   return computedParts(page.locator("html"), TEMPLATE);
 }
 
@@ -174,7 +211,9 @@ for (const [viewport, width] of [
     page,
   }) => {
     const design = await designParts(page, viewport);
-    const rendered = await templateParts(await browser.newPage(), width);
+    const preview = await browser.newPage();
+    const rendered = await templateParts(preview, width);
+    await preview.close();
     expect(rendered).toEqual(design);
     expect(design.tableFillsMeasure).toBe(true);
   });

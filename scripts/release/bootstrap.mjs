@@ -4,14 +4,14 @@ import { createBootstrapArchive } from "./bootstrap_archive.mjs";
 
 if (!process.argv[2] || process.argv.length > 5)
   throw new Error(
-    "Usage: node scripts/release/bootstrap.mjs <reviewed-full-commit-sha> [new-output-dir] [@mokly/mokly|@mokly/viewer]",
+    "Usage: node scripts/release/bootstrap.mjs <reviewed-full-commit-sha> [new-output-dir] [@mokly/viewer|@mokly/native-{target}]",
   );
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const { archivePath, report } = await createBootstrapArchive({
   repositoryRoot,
   expectedCommit: process.argv[2],
-  packageName: process.argv[4] ?? "@mokly/mokly",
+  packageName: process.argv[4] ?? "@mokly/viewer",
   destination: path.resolve(
     repositoryRoot,
     process.argv[3] ?? ".context/bootstrap-artifact",

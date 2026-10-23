@@ -1,12 +1,16 @@
 # A guide for agents
 
+Status: In progress under the [Rust rebuild plan](./plans/rust-rebuild.md).
+
 Mokly builds app-independent static mockup catalogues, serves them for
-development browsing, and renders visual comparisons. The `@mokly/mokly`
-CLI, build, and server are under `src/`. The `@mokly/viewer` React viewer is
-under `packages/viewer`. The example catalogue is under `examples/basic`, the
-tests are under `tests/` and `packages/viewer/tests`, and the Rust
-verification task runner is under `xtask/`. The protocol docs under
-`docs/protocol` are the spec.
+development browsing, and renders visual comparisons. The Rust core is a
+Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
+`mokly` shim, the render sidecar, and the authoring API, is under
+`packages/mokly`. The `@mokly/viewer` React viewer is under
+`packages/viewer`. The example catalogue is under `examples/basic`, the
+tooling tests and browser specs are under `tests/`, the viewer tests are
+under `packages/viewer/tests`, and the Rust verification task runner is under
+`xtask/`. The protocol docs under `docs/protocol` are the spec.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -26,7 +30,7 @@ the rule. Rules for one application, package, or feature live in the
   request.
 - `git-merge`: before you merge or rebase, and after each merge commit.
 - `documentation`: before you edit a `README.md`, a doc, or a protocol doc.
-- `rust`: before you edit Rust under `xtask/`.
+- `rust`: before you edit Rust under `crates/` or `xtask/`.
 - `mockups`: before you create or change an entry of the example catalogue
   under `examples/basic`, including the design mockups under
   `examples/basic/specs/design`.
@@ -53,10 +57,13 @@ the rule. Rules for one application, package, or feature live in the
 
 ## Commands
 
-- Build: `npm run build`.
-- Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for unit
-  tests and `npm run test:browser -- <spec> -g "<name>"` for browser specs.
-  Both commands build first. The
+- Build: `npm run build`. It builds the host native target, the shim, the
+  sidecar, and the viewer.
+- Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
+  Node test files under `tests/` and `packages/viewer/tests/`,
+  `cargo test -p <crate>` for one crate, and
+  `npm run test:browser -- <spec> -g "<name>"` for browser specs. The npm
+  commands build first. The
   [developer test commands](./docs/protocol/developer-test-commands.md)
   hold the full rules, including the raw commands that test the last build.
 - Early check (format, lint, file length, exports, Rust):
@@ -68,9 +75,9 @@ the rule. Rules for one application, package, or feature live in the
 - Markdown check: `npm run format:check` and
   `npm test -- tests/markdown_links.test.ts`.
 - Mockup check, after you change an example entry, the renderer, the
-  configuration, or a configured style: `npm run build`,
-  `npm run example:build`, and `npm run example:check`. Then smoke-test the
-  changed pages through `npm run dev`.
+  configuration, or a configured style: `npm run build`, then
+  `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
+  Then smoke-test the changed pages through `npm run dev`.
 
 ## Repository rules
 
@@ -82,11 +89,10 @@ the rule. Rules for one application, package, or feature live in the
   `crates/` at 300 lines. Every run audits every Rust file there. There is
   no override.
 - `tests/markdown_links.test.ts` checks the local links and anchors in
-  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`. It needs the
-  example output from `npm run prepare:verification`.
-- Never commit anything under `examples/basic/mokly-generated/`, and never
-  hand-edit its HTML or `mokly-manifest.json`. Commit the authored specs,
-  configuration, components, and CSS under `examples/basic/`.
+  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+- Never commit build output. `mokly-static/` and every `--out` directory
+  stay ignored by Git. Commit the authored specs, configuration, components,
+  and CSS under `examples/basic/`.
 - Do not write angle-bracket placeholders such as `<path>` in commit
   messages or pull request descriptions. Write `{path}` instead. Release
   Please copies changelog text into the release PR body and parses that
@@ -94,16 +100,19 @@ the rule. Rules for one application, package, or feature live in the
   help, because the parser does not read Markdown. See
   [release recovery](./docs/protocol/npm-release-management.md#release-recovery).
 - [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
-  contract for the unit, browser, and hydration suites. Read it with the
+  contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
-- Read a plan item that names the removed `cargo xtask review` command as a
-  review item that uses the `implementation-review` skill.
+- Read the
+  [Rust rebuild procedures](./docs/protocol/rust-rebuild-procedures.md)
+  before you capture references from the previous backend or close a rebuild
+  milestone.
 
 ## Product
 
 - The product screens are the Browse shell under
-  `packages/viewer/src/shell`. Serve, export, and React hosts render this
-  same tree. Check its existing components before you create a component.
+  `packages/viewer/src/shell`. Serve, the static build, and React hosts
+  render this same tree in the browser. Check the shell's components before
+  you create a component.
 - The design mockups of these screens live in
   `examples/basic/specs/design`. Build them from the shared design
   components in `examples/basic/specs/design/library`. Each shared
@@ -115,8 +124,10 @@ the rule. Rules for one application, package, or feature live in the
 
 - App independence, generated-output safety, server and watcher lifecycle,
   comparison behaviour, and protocol alignment.
-- The current-documentation rule in the
-  [documentation policy](./docs/protocol/documentation-policy.md).
+- The end-state rule in the
+  [documentation policy](./docs/protocol/documentation-policy.md): a page
+  describes intended behaviour only, with a `Status: In progress` line when it
+  is not implemented yet.
 
 ## Status
 

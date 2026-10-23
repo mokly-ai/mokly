@@ -3,6 +3,7 @@ import { MockLink } from "@mokly/mokly";
 import { useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
 import { MetaRow } from "../../parts/metadata_row.js";
+import { ReasonSentences } from "../../parts/reason_sentences.js";
 import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
@@ -20,7 +21,10 @@ export function ChangeStatusBadge({ status }: { status: ChangeStatus }) {
   );
 }
 
-/** Factual evidence belongs to the inspector, with no generated visual narrative. */
+/**
+ * Factual evidence belongs to the inspector, with no generated visual
+ * narrative: each direct reason reads as one sentence after the branch point.
+ */
 export function ComparisonDetails({
   comparison,
   subject,
@@ -31,30 +35,24 @@ export function ComparisonDetails({
 }) {
   if (!comparison) return null;
   const detail = comparison.status === "unmodified" ? undefined : comparison;
+  const affected = "affected" in comparison ? comparison : undefined;
   const excludedStylesheets =
-    comparison.status === "unmodified"
+    "excludedStylesheets" in comparison
       ? comparison.excludedStylesheets
       : undefined;
+  const stylesheets = detail?.stylesheets ?? affected?.stylesheets;
+  const changedComponents =
+    detail?.changedComponents ?? affected?.changedComponents;
   const prop = detail?.propChange;
   const styleCopy =
     subject === "component" ? COMPONENT_STYLE_COPY : SCREEN_STYLE_COPY;
-  const reasons = {
-    output: "Rendered output changed",
-    inputs: "Supplied props changed",
-    added: "Added since the comparison baseline",
-    removed: "Removed since the comparison baseline",
-    "variant-removed": "Saved variant removed",
-    styles: styleCopy.stylesChanged,
-  } as const;
   return (
     <section className="ce-comparison-evidence" aria-label="Comparison details">
       <h3>Comparison details</h3>
       <p className="ce-muted">Compared with the branch point on origin/main.</p>
-      {detail ? (
+      {detail ? <ReasonSentences reasons={detail.reasons} /> : null}
+      {detail && (detail.variant || detail.savedPropsUnchanged) ? (
         <dl className="ce-props">
-          <MetaRow name="change" label="Change" presentation="props">
-            {reasons[detail.reason]}
-          </MetaRow>
           {detail.variant ? (
             <MetaRow
               name="saved-variant"
@@ -86,10 +84,10 @@ export function ComparisonDetails({
           </ul>
         </>
       ) : null}
-      {detail?.stylesheets ? (
+      {stylesheets ? (
         <StylesheetEvidenceList
           lead={styleCopy.files}
-          stylesheets={detail.stylesheets}
+          stylesheets={stylesheets}
         />
       ) : null}
       {prop ? (
@@ -119,19 +117,14 @@ export function ComparisonDetails({
           </table>
         </>
       ) : null}
-      {detail?.changedComponents?.length ? (
-        <>
-          <h4>Changed components used here</h4>
-          <ul className="ce-usage-list">
-            {detail.changedComponents.map((component) => (
-              <li key={component.to}>
-                <MockLink to={component.to}>{component.title}</MockLink>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-      {excludedStylesheets ? <p>No changes to this saved view.</p> : null}
+      {changedComponents?.map((component) => (
+        <p key={component.to}>
+          Changed component:{" "}
+          <MockLink to={component.to}>{component.title}</MockLink>
+        </p>
+      ))}
+      {affected ? <p>{styleCopy.sharedImpact}</p> : null}
+      {excludedStylesheets ? <p>{COMPONENT_STYLE_COPY.noChanges}</p> : null}
     </section>
   );
 }

@@ -1,139 +1,114 @@
-# Large Mokly Consumer
+# Large Consumer Fixture
 
-A deterministic, synthetic workload for finding catalogue-size bottlenecks.
-It uses the real build, watched server, component usage collector, Firna controls,
-React Native Web styling and Git Changes path. Nothing is added to the basic
-example's generated files or shipped as product data.
+Status: In progress under the [Rust rebuild plan](../../../plans/rust-rebuild.md).
 
-```bash
-npm run fixture:large
-npm run dev:large -- --debug-timings
-npm run benchmark:large
-npm run fixture:large -- --areas 2 --screens 10 --rows 6
-npm run benchmark:large -- --areas 2 --screens 10 --rows 6
-npm run fixture:large -- --stylesheets 8 --stylesheet-share 0.75
-npm run benchmark:large -- --stylesheets 8 --stylesheet-share 0.75
-npm run fixture:large -- --tracked-output
-npm run dev:large -- --tracked-output --debug-timings
-npm run benchmark:large -- --tracked-output
+The generator makes HTML and React catalogues with the same entry paths,
+viewports, colour schemes, component variants, slots, pages, flows,
+Markdown documents, CSS imports, and images. React uses Firna and React Native Web.
+HTML starts no sidecar. Defaults produce 1,620 routes and 5,850 documents.
+Component parents have their own views as well as three saved variants.
+
+Build the workspace before these opt-in commands. Select small dimensions on
+a shared machine. Run one benchmark at a time.
+
+```sh
+npm run build
+npm run fixture:large -- --variant html --areas 2 --screens 12 --rows 8 --root .context/large-html
+npm run benchmark:large -- --root .context/large-html --scenario all --sidecars 2
+npm run fixture:large -- --variant react --areas 2 --screens 12 --rows 8 --root .context/large-react
+npm run benchmark:large -- --root .context/large-react --scenario build --sidecars 2
 ```
 
-`fixture:large` creates a `.context/mokly-large-*` directory, builds its output
-and commits a `main` baseline **inside that isolated fixture**, not in Mokly's
-repository. It reports setup time separately and saves a size-keyed record for reuse.
-The record key includes the stylesheet count, share, and tracked-output choice. After committing, setup
-appends one unrelated `.scale-unrelated-rule` rule to `assets/shared-1.css`.
-That is the only worktree edit; when built, generated documents stay current. The
-selector occurs in no screen, so rule attribution examines and excludes the
-edited sheet from each linked view. It adds no screens or flows to Changes.
-Tracked-output `dev:large` and `benchmark:large` reuse those baseline bytes.
-Neither choice repeats package compilation. Run `npm run build` explicitly after changing Mokly's
-source. Missing setup fails with the matching preparation command; `--config`
-can select an existing fixture. `dev:large` serves until Ctrl-C.
+Generation requires an empty directory. Options and their defaults are
+`--areas` (30), `--screens` (40, at least two), `--rows` (12), `--stylesheets`
+(4, zero or more), and `--stylesheet-share` (0.5, from 0 to 1). Shared
+stylesheets apply to the leading `ceil(screens * share)` screens in each area,
+so a zero count or a zero share links none. Setup commits the source, then
+adds one non-matching CSS rule to the first shared stylesheet. With
+`--stylesheets 0`, setup adds no rule. Entries name the fixture's root
+`notes.md` as a related document. It stays outside the `specs` root, so it is
+not an entry. Generated output stays ignored.
 
-`benchmark:large` launches Chrome, starts a fresh server and measures command start
-to searchable navigation with a real selected preview visible. It verifies record
-count, both viewports/themes, a successful Action label Props edit and a whole page.
-Then it waits for complete Changes and verifies zero changed entries for the
-unrelated stylesheet rule. It repeats with a new server and browser context for
-a warm restart. Zero stylesheets or a zero share also yield zero Changes.
-JSON records separate listening, usable startup, Props, cached delivery and Changes
-times. Either usable startup at five seconds or above fails the command.
-Chrome is launched before timing; “cold” means application-cold, not a flushed
-OS page cache. Generated fixtures remain for inspection.
+`--toolchain workspace` is the default. It links the workspace dependencies
+and records their lockfile. It measures no install time. `--toolchain install`
+packs the CLI, viewer, and every native package, pins consumer dependencies,
+and runs an isolated install. Only the host native package needs a built binary.
+Other native archives carry their available metadata and remain optional.
+Their platform selectors prevent installation on the host. Local overrides
+keep all five targets in the consumer lockfile without registry publication.
+Full isolated setup must finish below 60000 ms and stay below 1.5 GiB sampled
+RSS for the setup harness and its descendants. Both limits are exclusive.
+Setup includes generation, package archives, npm, and Git. Product builds
+finish before the setup clock and RSS sampler start. Workspace reuse has no
+isolated-setup budget. Setup writes its result and samples to `.context/setup.json`,
+also when installation or a budget fails. A budget failure exits unsuccessfully
+after preserving the complete fixture record. Setup time is separate from Serve.
 
-### Untracked baselines
+The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
+select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
+Use `--scenario startup` for focused cold/warm startup acceptance. It keeps
+those browser checks and the real base, but does not wait for Changes or review
+availability. Its result omits those measurements. `all` keeps the four complete
+scenarios; `serve` includes delivered Changes and available review.
+Cold and warm runs each use a new Serve process and browser context.
+Both keep the native comparison caches. Cold means application-cold, not an
+empty disk cache. Serve prepares the pinned fixture base from its sources. HTML
+reads Git sources. React acquires source and dependency leases. The harness
+records the announced cache directory and never resets a baseline output.
+Serve reports delivered Changes readiness and review availability separately.
+Changes verifies the browser's own event stream, delivered index, Changes
+control, and advertised review. The unrelated CSS edit must list no Changes.
+Its report includes each classification duration and the union of CSS analysis
+intervals on that classification's core clock. These are observations.
+Watch uses one Serve process. It edits one screen, one component, and one
+stylesheet in turn. Each edit records the browser publication, changed frame,
+ready index, Changes control, and available review. The browser clock starts
+immediately before the driver requests the file write. This includes driver
+dispatch. Publication and index timestamps come from the shell's own stream
+and fetch responses. Frame and control times include browser assertion work.
+Every edit restores its original bytes. The next edit waits for the restored
+frame and Changes state. A failed run keeps completed edits in its report.
+When Serve stops during a measurement, the harness closes that measurement's
+browser context and waits for source restoration before it reports failure.
+For ordinary development, reuse a generated configuration with
+`npx mokly serve --config .context/large-html/mokly.config.json`.
 
-The default uses a separate record for the same dimensions and leaves generated
-HTML and the manifest untracked. Setup packs the already-built Mokly package
-into `tooling/mokly.tgz`, pins Firna and its peers from this repository's
-lockfile, creates the consumer's own lockfile and installs it. Source, public
-CSS/SVG, the package archive and lockfile form the fixture's Git baseline.
-`node_modules` and `.mokly-cache` remain ignored. Source-only setup does not
-build or prewarm the baseline cache.
+The harness needs `ps`, Chrome (or `PLAYWRIGHT_CHANNEL`), and a Unix host.
+It samples aggregate RSS. `--memory-stop-kib` defaults to 1750000; use 0 to
+disable it. React Serve needs a larger stop on a machine with more memory.
+Do not raise the stop on a shared machine without sufficient capacity.
+A safety stop records failure and keeps completed measurements and diagnostics.
+Startup acceptance uses an optimized release native binary. Before a Serve
+benchmark, workspace mode builds that binary and installs it in the host
+native package. Isolated generation builds it before packing, outside setup
+timing. An installed fixture verifies its recorded binary digest before Serve.
+Each startup result records the release profile, target, source, and digest.
+The opt-in benchmark fails at or above 5000 ms for HTML or 15000 ms for React,
+for both cold and warm startup.
 
-Cold Serve executes `npm ci` and
-`npx --no-install mokly build --config mokly.config.ts` from the archived
-commit. It therefore uses the fixture commit's packaged Mokly and dependencies,
-even after this checkout's package changes. The current side uses the CLI in
-this checkout. Regenerate the fixture to baseline a newer package version.
+Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
+set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
+`GOMAXPROCS`, and `GOMEMLIMIT`. These values can change time and memory use.
+Default build and listening waits stop after 300 seconds. Browser operations allow
+60 seconds. The watch scenario uses a 30-minute browser liveness allowance for
+the full-size React catalogue. This allowance covers initial rendering,
+delivered Changes, review fetches, and restoration. It is a harness liveness
+guard, not an edit-to-reload budget or a product timeout. Shutdown escalates
+to SIGKILL after 10 seconds.
 
-The benchmark resets only the pinned baseline entry while holding its lock,
-requires a real cold rebuild, then requires a cache hit on the warm restart.
-Stop other servers using the fixture before running it; an active builder makes
-the reset fail. Normal `dev:large` reuses completed entries. The npm download and
-OS caches are retained in both cases; “cold” refers to rebuilt-output caching.
+`generate` accepts variant, toolchain, and size flags. `benchmark` reads those
+from the fixture record and rejects overrides. It accepts scenario, sidecar,
+memory-stop, and sidecar-timeout flags. Each scenario prints a progress line.
+Both commands warn if Git does not confirm that `--root` is ignored.
+Each fixture's `.context/` holds its setup record, logs, timing records, and
+`measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture)
+and [reference capture procedure](../../../docs/protocol/rust-rebuild-procedures.md#reference-capture).
 
-Both runs must provide usable navigation within five seconds. JSON additionally
-reports `baselineMs`, `baselineReadyMs`, `preparingToPendingMs`, `cacheHit` and
-`baselinePhases`. These come from builder timings, so they also work without
-Serve's preparing UI. A warm hit has zero `preparingToPendingMs`. Baseline
-preparation and final Changes are measured separately from navigation and have
-no five-second budget. To smoke-test faster, add matching
-`--areas 2 --screens 10 --rows 6` options to both setup and benchmark.
-
-Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
-adds two registered components with three saved variants, a page and one flow
-per ten screens. The default therefore has 1,590 routed entries and 5,550
-documents plus the manifest. Each area contains Components and Flows folders, plus Screens with one Activity group
-folder per ten screens. The guide stays directly under its area. Paths provide this
-hierarchy without extra entries.
-Each screen and component variant renders in mobile/desktop and light/dark.
-Flows reuse the canonical screens rather than adding documents. Shared panels
-contain nested actions and caller-owned slots; screens also invoke repeated
-actions. Local CSS imports and SVG resources exercise resource validation and
-watch discovery. Templates use the basic example's theme tokens.
-
-Four additional shared stylesheets are generated by default. Every sheet is
-linked by the first 50% of screens in each area, in all four viewport/scheme
-documents. This adds four direct CSS dependencies to 600 screens in the default
-fixture; pages and saved component variants keep only the existing catalogue
-stylesheet. `catalogue.css` and its imported `tokens.css` are always present and
-are additional to the configured shared-sheet count.
-
-`--areas`, `--screens` and `--rows` take positive integers; screens must be at
-least two per area. To reproduce a source edit, change an entry module in the
-printed directory, or its shared `src/screens.tsx`, then observe rebuild
-and Changes timings. To compare repeated startups, reuse the printed config
-path instead of generating a new baseline every time.
-
-`--stylesheets` takes a non-negative integer (default `4`).
-`--stylesheet-share` takes a fraction from `0` to `1` inclusive (default `0.5`).
-The share rounds up per area: `--screens 3 --stylesheet-share 0.34` links the
-first two screens of each area to every shared sheet. Zero stylesheets disables
-the CSS edit; a zero share still edits the first sheet when present, but links
-no screens to it. Small CI instances use the same inexpensive defaults. Pass
-matching size options to setup and benchmark, including with `--config`.
-
-`benchmark:large` enables `--debug-timings` automatically and emits `review.*`
-spans for background classification to stderr, including `review.css-analysis`
-for rule parsing, diffing, matching and reduction.
-It does not write comparison artifacts. To measure the complete artifact path
-on the same prepared fixture, run
-`node dist/cli/bin.js export --config <printed-config> --base main --out .context/site --debug-timings`.
-The output must stay inside the fixture; review timing rows are inclusive, and
-overlapping traversals must not be added to their parent duration.
-
-This is representative structure and volume, not private consumer data or an
-exact prediction of production timing. OS, hardware, cache state, markup complexity
-and instance counts matter. Benchmark while other heavy checks are idle. There
-are no fixed timing thresholds in CI's small correctness suite. Small fixtures exercise the same generator
-in `tests/large_fixture.test.ts`; CLI timing tests cover stdout/byte stability,
-child propagation and watched rebuilds.
-
-Renderers must produce valid standalone views regardless of request order. Libraries
-with global style registries may include different unused CSS depending on prior
-views; foreground previews preserve the requested view's real styles. Background
-output retains exhaustive Build order, avoiding artificial changes to committed
-artifacts. Full output and Changes remain asynchronous and are not included in the
-five-second interactive target.
-
-Key files: `generate.ts` produces consumer sources; `area.tsx`, `components.tsx`
-and `screens.tsx` define the catalogue; `renderer.tsx` collects native styles;
-`scripts/large/setup.mjs` owns baseline setup,
-`scripts/large/toolchain.mjs` archives the derived tooling,
-`scripts/large/baseline.mjs` resets the pinned cache safely, and
-`scripts/large/benchmark.mjs` owns browser
-acceptance. The
-[diagnostic contract](../../../docs/protocol/mokly-timings.md) describes timing
-records, inclusive durations and process boundaries.
+Build reports include input-capture and recheck spans, retained private source
+payload, per-root CSS preparation, and bracketing RSS samples. These are
+observations, not acceptance budgets. Captured read totals exclude inner cache
+hits and bundle copies. An unfinished span stays marked `incomplete`.
+Programmatic build probes can pass `{ buildChanges: false }` to `benchmark`
+to isolate current-source preparation from comparison work.
+They can set `buildDeadlineMs` for an observation that needs a longer build wait.
+The report records the chosen deadline. It changes no acceptance or memory budget.

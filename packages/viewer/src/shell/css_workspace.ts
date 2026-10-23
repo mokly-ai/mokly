@@ -1,4 +1,7 @@
 /** Bounded preview/inspector panes and grouped, aligned view controls. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const SHELL_WORKSPACE_CSS = `
 .mbk-workspace {
   display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden;
@@ -47,7 +50,10 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-entry-status[data-status="Removed"] { color: var(--mb-removed); background: var(--mb-removed-soft); }
 .mbk-variant-status { color: var(--chrome-muted); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
-.mbk-preview-pane { display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }
+.mbk-preview-pane { position: relative; display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }
+.mbk-preview-busy { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; }
+.mbk-edit-status { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; color: var(--chrome-muted); font-size: 11px; pointer-events: none; }
+.mbk-pending-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mbk-accent-deep); }
 .mbk-inspector { position: relative; flex: none; display: flex; flex-direction: column; min-height: 45px; background: var(--chrome-surface); border-top: 1px solid var(--chrome-border); z-index: 5; }
 .mbk-inspector[data-open="true"] { height: var(--inspector-height, 260px); max-height: calc(100% - 100px); }
 .mbk-inspector-tabs { display: flex; align-items: center; flex: none; gap: 5px; height: 45px; padding: 5px 16px; }
@@ -56,6 +62,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-inspector-content > section { padding: 10px 24px 24px; }
 .mbk-inspector-content .mbk-details-body { padding: 0; }
 .mbk-inspector-content h3 { font-size: 13px; margin: 0 0 12px; }
+.mbk-inspector-content h4 { font-size: 12px; margin: 14px 0 8px; }
 .mbk-inspector-content p { line-height: 1.5; }
 .mbk-inspector-content a { color: var(--mokly-accent); }
 .mbk-sheet-grab { display: none; }
@@ -74,10 +81,11 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-instance-tree summary { cursor: pointer; color: var(--chrome-muted); font-size: 12px; padding: 4px 0; }
 .mbk-instance-select { border: 1px solid transparent; border-radius: 5px; background: transparent; padding: 6px 8px; color: var(--chrome-ink); text-align: left; cursor: pointer; font: inherit; }
 .mbk-instance-select[aria-pressed="true"] { background: var(--mokly-accent-soft); color: var(--mokly-accent); border-color: var(--chrome-border); }
-.mbk-props-table { width: 100%; border-collapse: collapse; text-align: left; }
-.mbk-props-table td, .mbk-props-table th { border-bottom: 1px solid var(--chrome-border); padding: 8px; vertical-align: top; }
-.mbk-props-table th { width: 130px; font-size: 12px; }
-.mbk-props-table pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 12px; }
+.mbk-props { margin: 0 0 14px; font-size: 12px; }
+.mbk-props > div { display: grid; grid-template-columns: minmax(60px, .7fr) minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--chrome-border); }
+.mbk-props dt { color: var(--chrome-muted); }
+.mbk-props dd { margin: 0; overflow-wrap: anywhere; }
+.mbk-props code { font-family: var(--mono); font-size: 11px; white-space: pre-wrap; }
 .mbk-usage-list li { padding: 8px 0; border-bottom: 1px solid var(--chrome-border); }
 .mbk-usage-list small { display: block; margin-top: 4px; color: var(--chrome-muted); }
 .mbk-text-button { background: none; border: 0; color: var(--mbk-accent-deep); cursor: pointer; font: inherit; padding: 0; }
@@ -89,20 +97,40 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--_mokly-private-on-accent-deep); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
-.mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
-.mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
-.mbk-control-field > label:not(.mbk-control-supplied) { font-size: 12px; font-weight: 600; }
-.mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; padding: 8px 10px; font: inherit; color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--chrome-surface); }
-.mbk-control-field input[type=checkbox] { align-self: start; accent-color: var(--mokly-accent); width: 16px; height: 16px; }
+.mbk-control-field { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: start; position: relative; min-width: 0; padding: 9px 0; border-top: 1px solid var(--chrome-border); }
+.mbk-control-label { padding-top: 8px; color: var(--chrome-ink-2); font-family: var(--mono); font-size: 11px; overflow-wrap: anywhere; }
+.mbk-control-optional { display: block; margin-top: 3px; color: var(--chrome-muted); font-family: var(--sans); font-size: 10px; font-weight: 400; }
+.mbk-control-value { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; height: 32px; padding: 5px 8px; font: inherit; font-size: 12px; color: var(--chrome-ink); border: 1px solid var(--chrome-control-edge); border-radius: 5px; background: var(--chrome-surface); }
+.mbk-control-field input[type=checkbox] { margin: 0; accent-color: var(--mbk-accent-deep); width: 16px; height: 16px; }
+.mbk-control-value > input[type=checkbox] { margin: 8px 0; }
 .mbk-control-field [aria-invalid=true] { border-color: var(--mbk-danger-ink); }
 .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-control-field :disabled { opacity: .6; cursor: default; }
-.mbk-control-field small { color: var(--chrome-muted); }
-.mbk-control-field .mbk-control-supplied { display: flex; align-items: center; gap: 4px; position: absolute; right: 0; top: -3px; color: var(--chrome-muted); font-size: 11px; }
-.mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); }
-.mbk-control-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-.mbk-control-actions p { margin: 0 auto 0 0; color: var(--chrome-muted); }
-@media (max-width: 56.25rem) {
+.mbk-control-field small { color: var(--chrome-muted); font-size: 10px; }
+.mbk-control-set, .mbk-control-check { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 11px; }
+.mbk-control-unset { margin: 0; color: var(--chrome-muted); font-size: 11px; }
+.mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); font-size: 11px; }
+.mbk-component-controls { max-width: 680px; }
+.mbk-controls-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.mbk-inspector-content .mbk-controls-heading h3 { margin-bottom: 4px; }
+.mbk-controls-heading p { margin: 0; color: var(--chrome-muted); font-size: 11px; }
+.mbk-controls-edited { margin-left: 4px; padding: 2px 5px; border-radius: 4px; background: var(--mbk-status-changed-bg); color: var(--mbk-status-changed-ink); }
+.mbk-controls-reset { padding: 0; border: 0; background: none; color: var(--mbk-accent-deep); font: inherit; font-size: 11px; text-decoration: underline; white-space: nowrap; cursor: pointer; }
+.mbk-controls-reset:disabled { color: var(--chrome-muted); text-decoration: none; cursor: default; }
+.mbk-controls-notice { padding: 10px 12px; border-radius: 6px; background: var(--chrome-hover); color: var(--chrome-ink-2); font-size: 12px; }
+.mbk-control-alert { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--mbk-danger-edge); border-radius: 6px; background: var(--mbk-danger-bg); color: var(--mbk-danger-ink); font-size: 12px; }
+.mbk-control-alert p { margin: 4px 0 6px; }
+.mbk-control-alert .mbk-text-button { text-decoration: underline; }
+.mbk-controls-restored { margin: 0 0 8px; color: var(--mbk-accent-deep); font-size: 11px; }
+.mbk-controls-restored:empty { margin: 0; }
+.mbk-control-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.mbk-empty-copy { max-width: 310px; color: var(--chrome-ink-2); font-size: 12px; }
+@media ${NARROW_SHELL} {
+  .mbk-control-field { grid-template-columns: 100px minmax(0, 1fr); }
+  /* Above the inspector sheet, which covers the bottom of the preview. */
+  .mbk-edit-status { top: 8px; bottom: auto; width: max-content; margin: 0 auto; }
+  .mbk-edit-status:not(:empty) { padding: 3px 9px; border-radius: 999px; background: var(--chrome-surface); box-shadow: var(--chrome-shadow-sheet); }
   .mbk-workspace .mbk-screen-head { gap: 8px; padding: 12px; }
   .mbk-selection-bar { padding: 8px 12px; }
   .mbk-workspace-panes { padding-bottom: 46px; }

@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { renderViewer } from "../src/viewer/server.js";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+
+import { MoklyViewer } from "../src/viewer/component.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
+
+import { detailFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
 
 /**
  * The protocol catalogue with Details neither moved nor changed, so Browse
@@ -11,31 +15,32 @@ import type { ViewerSelection } from "../src/viewer/types.js";
  * Details.
  */
 function catalogue() {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  );
+  const model = rawIndexFixture();
   const details = model.screens.find(
-    (entry: { path: string }) => entry.path === "product/browse/details",
+    (entry) => entry.path === "product/browse/details",
   );
+  assert.ok(details);
   delete details.previousPath;
   details.changes = { status: "ready", included: false, kind: "unmodified" };
   return model;
 }
 
-/** Each folder's count as the server renders it under one selection. */
+/**
+ * Each folder's count as the first render shows it under one selection. Only
+ * the embedded viewer starts from a filtered selection, so it renders here.
+ */
 function counts(selection: Partial<ViewerSelection>) {
-  const html = renderViewer({
-    viewerId: "counts",
-    catalogue: catalogue(),
-    baseUrl: "https://catalogue.example",
-    defaultSelection: { screenPath: "guide", ...selection },
-  });
+  const html = renderToString(
+    createElement(MoklyViewer, {
+      index: catalogue(),
+      baseUrl: "https://catalogue.test",
+      detail: (path, snapshotId) =>
+        detailFixture(
+          snapshotId === undefined ? { path } : { path, snapshotId },
+        ),
+      defaultSelection: { screenPath: "guide", ...selection },
+    }),
+  );
   return Object.fromEntries(
     ["folder:product", "folder:product/browse"].map((folder) => {
       const summary = html

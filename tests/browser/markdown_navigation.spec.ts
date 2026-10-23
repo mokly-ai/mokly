@@ -1,4 +1,6 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+
+import { test } from "./browser_test.js";
 
 /** The extra line that sets the document icon apart from the page icon. */
 const DOCUMENT_ICON = '.mbk-nav-ico path[d="M9 13h6M9 17h4"]';

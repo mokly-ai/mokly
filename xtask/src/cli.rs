@@ -8,6 +8,7 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 
 use crate::application::{Application, Xtask};
+use crate::artifacts::{DefaultArtifacts, SystemArtifactFiles};
 use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
 use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
@@ -45,12 +46,18 @@ pub(crate) struct Cli {
 #[derive(Debug, Subcommand)]
 /// Repository task variants.
 pub(crate) enum Command {
+    /// Build and install the host native binary.
+    BuildNative,
+    /// Write TypeScript declarations from mokly-model.
+    GenerateTypes,
+    /// Compare generated TypeScript bytes without writing files.
+    CheckGeneratedTypes,
     /// Run the full gate or one selected verification suite.
     Check {
         /// Run one partial verification suite.
         #[arg(long, value_enum)]
         suite: Option<VerificationSuite>,
-        /// Run one one-based whole-file shard of a unit or browser suite.
+        /// Select one whole-file partition of the browser suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
         /// Select the workspace audit policy for complete or repository checks.
@@ -97,6 +104,13 @@ pub(crate) fn main() -> ExitCode {
         dependencies: dependencies.clone(),
     });
     let app: Arc<dyn Xtask> = Arc::new(Application {
+        artifacts: Arc::new(DefaultArtifacts {
+            workspace: workspace.clone(),
+            os: std::env::consts::OS.to_owned(),
+            architecture: std::env::consts::ARCH.to_owned(),
+            commands: Arc::clone(&command_runner),
+            files: Arc::new(SystemArtifactFiles),
+        }),
         selector,
         check_runner: Arc::new(DefaultCheckRunner::new(
             command_runner,

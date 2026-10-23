@@ -1,0 +1,12 @@
+---
+source: crates/mokly-graph/tests/render_tests.rs
+expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
+---
+<!doctype html><html style="color-scheme: dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Card</title><link rel="stylesheet" href="../../styles/css/base.css"><link rel="stylesheet" href="../../styles/css/dark.css"></head><body>
+<article>
+  <h2>Card</h2>
+  
+  <p>Header default</p>
+  <time>Now</time>
+</article>
+</body></html>

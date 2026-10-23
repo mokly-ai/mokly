@@ -17,16 +17,18 @@ that URL in your default browser as soon as the server is ready.
 
 ## Options
 
-| Option            | Meaning                                                             |
-| ----------------- | ------------------------------------------------------------------- |
-| `--config <path>` | Use an explicit `mokly.config` file                                 |
-| `--port <port>`   | Starting port; advances if occupied, `0` selects any free port      |
-| `--base <ref>`    | Git base ref used to find the branch point                          |
-| `--watch`         | Watch your inputs; this is the default                              |
-| `--no-watch`      | Serve one deterministic snapshot                                    |
-| `--build`         | Write `mokly-generated/` after each successful complete compilation |
-| `--open`          | Open the served URL in your default browser                         |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error         |
+| Option                      | Meaning                                                              |
+| --------------------------- | -------------------------------------------------------------------- |
+| `--config <path>`           | Use an explicit `mokly.config` file                                  |
+| `--port <port>`             | Starting port; advances if occupied, `0` selects any free port       |
+| `--base <ref>`              | Git base ref used to find the branch point                           |
+| `--base-install-scripts`    | Run lifecycle scripts during base dependency installation.           |
+| `--no-base-install-scripts` | Keep lifecycle scripts disabled during base dependency installation. |
+| `--watch`                   | Watch your inputs; this is the default                               |
+| `--no-watch`                | Serve one deterministic snapshot                                     |
+| `--build`                   | Write `mokly-generated/` after each successful complete compilation  |
+| `--open`                    | Open the served URL in your default browser                          |
+| `--debug-timings`           | Report phase timings and catalogue counts on standard error          |
 
 ## The port
 
@@ -54,13 +56,14 @@ never the HTTP child, performs opted-in writes.
 
 A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does
-not follow later edits.
+not follow later edits. If an imported stylesheet asset changes, its request
+fails and the terminal names the asset. Restart Serve or use watching to
+load the edited asset.
 
 When the complete generated output finishes, Serve prints that generation's
 build warnings once on standard error. Previews you open afterwards are not
 reported again, and Serve never stops for a warning.
-`--strict` is not a Serve option; use it with `build`, `check`, `export`, or
-`publish` when warnings must fail automation.
+`--strict` is not a Serve option; use it with `build` or `publish` when warnings must fail automation.
 
 ## Access
 

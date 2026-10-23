@@ -1,24 +1,11 @@
 # Paths, Roots, And Identity
 
-## Delivery Status
-
-Build, Check, Serve, export, and the viewer use file-derived paths.
-Move pairing and its viewer presentation are implemented.
-
-This is the single contract for an entry's path: how it derives from the
-discovered file that exports the entry, which strings are valid segments, how `index`
-collapses onto a directory, how a path becomes a URL, and which collisions
-fail the build. [Folders](./mokly-folders.md) owns titles and order,
-[entry modules](./mokly-entry-modules.md) owns export collection and slugs,
-[documents](./mokly-documents.md) owns Markdown entries, and
-[moves](./mokly-moves.md) owns baseline pairing.
-
 ## Identity
 
 Every entry has exactly one path. A path is one or more segments joined with
 `/`, such as `account/billing/invoice`. The last segment is the entry's slug;
 every earlier segment names a folder. The path is unique across the whole
-catalogue, regardless of kind. It is the entry's identity in the manifest,
+catalogue, regardless of kind. It is the entry's identity in the catalogue model,
 the public read model, the review result, links, flow steps, and comment
 anchors, and it is the entry's URL under [URLs](#urls). Nothing else
 identifies an entry: there is no authored id and no label list.
@@ -37,15 +24,19 @@ inheritance and validation.
 `roots` in the [configuration](./mokly-configuration.md#roots) lists the
 directories Mokly scans. Each root has:
 
-| Field         | Meaning                                                     | Default                              |
-| ------------- | ----------------------------------------------------------- | ------------------------------------ |
-| `dir`         | Config-relative directory inside `repoRoot`                 | required                             |
-| `files`       | Globs relative to `dir` selecting the files to read         | `**/*.mockup.{ts,tsx}` and `**/*.md` |
-| `path`        | Path prefix placed before every derived path from this root | none                                 |
-| `transparent` | Directory names removed from derived paths                  | `[]`                                 |
+| Field         | Meaning                                                     | Default                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dir`         | Config-relative directory inside `repoRoot`                 | required                                                                                                                                                         |
+| `files`       | Globs relative to `dir` selecting the files to read         | `**/*.mockup.{ts,tsx}`, `**/*.md`, and the HTML, YAML and stories suffixes of the [HTML screens contract](./mokly-html-screens.md#file-kinds-without-javascript) |
+| `path`        | Path prefix placed before every derived path from this root | none                                                                                                                                                             |
+| `transparent` | Directory names removed from derived paths                  | `[]`                                                                                                                                                             |
 
-A matched `.md` file is a document. Every other matched file is an entry
-module. A root that does not exist, or whose globs match no file, fails with
+A matched `.md` file is a document; a matched `.screen.html`,
+`.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
+entry of the [HTML screens contract](./mokly-html-screens.md); a
+`.stories.{ts,tsx,js,jsx}` file is a Storybook component entry of the
+[render sidecar](./mokly-sidecar.md#storybook); every other matched file is an
+entry module. A root that does not exist, or whose globs match no file, fails with
 `config-invalid`. Several roots merge into one catalogue; the same path from two distinct files
 is a [duplicate path](#diagnostics). Each matched file belongs to exactly one
 root; the [roots validation contract](./mokly-configuration.md#roots) rejects a
@@ -57,17 +48,17 @@ path; each `transparent` name is validated as a segment.
 An entry's path is derived in three steps and no others:
 
 1. the root's `path` prefix, if any;
-2. the directories between the root and the discovered exporting entry module
-   (or document file), in order, with every
-   directory named in `transparent` removed;
-3. the leaf: a document's file name up to its first `.`, or an entry's slug under
-   the [slug rule](./mokly-entry-modules.md#slugs).
+2. the directories between the root and the discovered file, in order, with
+   every directory named in `transparent` removed;
+3. the leaf: a document's file name up to its first `.`, an HTML or YAML
+   file's name with its kind suffix removed, or an entry module export's slug
+   under the [slug rule](./mokly-entry-modules.md#slugs).
 
 For TypeScript and JavaScript, "the file" always means the discovered entry
 module that exports the definition. A helper's defining-module attribution is
 independent and never changes the path or default slug.
 
-A module entry's slug `index`, from its file name or field, collapses: it adds
+An entry's slug `index`, from its file name or field, collapses: it adds
 no segment, so the entry owns its folder's path. A document is an index only
 when its complete file name is `README.md` or `index.md`, compared without case.
 Thus `index.draft.md` has the ordinary leaf `index`; it does not collapse. An index at a root without a prefix would have an empty path and
@@ -81,10 +72,10 @@ slug still follows the segment grammar, and variants still require a slug.
 A declared path is always complete. Index-ness comes from the `index` slug or an
 index document's `README.md`/`index.md` name; the declared path says where that
 folder's own page lives. Its relative-link base is that complete path. These rules
-also apply to a document's front-matter path. Imported CSS delivery still derives
-stylesheet routes from the exporting module's repository path. A declared entry
-path cannot make a nonportable module path URL-safe; importing CSS in such a
-module fails with the [dedicated diagnostic](./mokly-imported-styles-errors.md).
+also apply to a document's front-matter path. Imported CSS delivery derives
+stylesheet routes from the importing module's repository path, never from a
+declared entry path; importing CSS in a module whose path is not URL-safe
+fails with the [dedicated diagnostic](./mokly-imported-styles-errors.md).
 
 No other input changes a path. Mokly never compares a file name with its
 directory name, never counts the entries in a file, never changes the
@@ -99,10 +90,11 @@ character, and its lowercase form is not a Windows device name (`aux`, `con`,
 `nul`, `prn`, `com1`–`com9`, `lpt1`–`lpt9`). A path is one or more segments
 joined with `/`, with no empty, leading, or trailing segment. Two paths whose
 lowercase forms are equal name the same path for every collision rule, because
-generated files share case-insensitive hosts and filesystems. Links, URLs, and
+built files share case-insensitive hosts and filesystems. Links, URLs, and
 stored paths use the authored case. The first segment must not equal
-`mokly-generated`, compared case-insensitively: that output folder contains
-Mokly's generated documents, stylesheets, copied assets and private manifest. This applies to derived paths, declared paths and root
+`mokly-generated`, compared case-insensitively: that route prefix carries
+Mokly's rendered documents and bundled stylesheets under the
+[artifact path contract](./mokly-artifact-paths.md). This applies to derived paths, declared paths and root
 `path` prefixes; later segments may use that name. Entries fail with the
 attributed `invalid-path` diagnostic below; root prefixes use `config-invalid`.
 
@@ -114,8 +106,7 @@ still validate their names. Mokly does not
 rewrite names, so `Getting Started.md` is rejected rather than normalised, and
 no segment is percent-encoded when written. `@mokly/viewer/data` exports
 `isPathSegment`, `isEntryPath`, and `isWindowsDeviceName` as the shared
-implementation of this grammar; the former `isEntryId` and `isCatalogueId`
-helpers do not exist.
+implementation of this grammar.
 
 ## Folders And Leaves
 
@@ -137,22 +128,22 @@ is an ordinary folder.
 
 ## URLs
 
-The catalogue URL of an entry is `/view/<path>/`. Static hosts serve the shell
-document written at `view/<path>/index.html` for that URL without rewrites.
-Serve and the exported shell also accept `/view/<path>` and
+The catalogue URL of an entry is `/view/<path>/`. `build` writes the shell
+stub at `view/<path>/index.html`, which a static host serves for that URL
+without rewrites. Serve and the built shell also accept `/view/<path>` and
 `/view/<path>/index.html` and normalise them to the canonical form in
 history. A folder's own page shares the folder's path, so `/view/<folder>/`
 opens its index entry. A path that names no current or removed entry opens the
 missing view and never guesses. The
-[artifact path contract](./mokly-artifact-paths.md) owns every generated file
-name beneath `view/`, `static/`, and comparison generations, and the
+[artifact path contract](./mokly-artifact-paths.md) owns every document route
+beneath `view/`, `static/`, and comparison generations, and the
 [navigation contract](./mokly-navigation.md) owns in-shell routing.
 
 ## Diagnostics
 
 Every message below is a build failure attributed to the files it names. A
 location is a repository-relative POSIX path, followed by ` export <name>` for
-an entry module export and `[<index>]` for a member of an exported array.
+an entry module export.
 
 | Code                  | Exact text                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -172,7 +163,10 @@ duplicate check runs after collapse and declared paths, so two slug-less
 entries in one module, a file beside a same-named directory, and two roots
 mapping onto one place all report it. `moved-link-target` is emitted instead
 of `unknown-link-target` when the [move pairing](./mokly-moves.md) knows the
-new path. Folder record diagnostics live in the
+new path. HTML and Markdown link diagnostics use the link's one-based line
+and column. The CLI inserts the source code after that location under the
+[terminal error format](./mokly-terminal-errors.md#plain-compatibility).
+Folder record diagnostics live in the
 [folder contract](./mokly-folders.md#diagnostics); export collection
 diagnostics live in the [entry module contract](./mokly-entry-modules.md).
 

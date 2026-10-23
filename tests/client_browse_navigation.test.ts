@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../packages/viewer/dist/catalogue/scoped_types.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import {
   defaultDisclosures,
@@ -54,7 +54,7 @@ test("label paths and earlier section ids naming a current folder are ignored", 
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery({ "/product": false, "folder:pages:product": false }),
+      disclosures: { "/product": false, "folder:pages:product": false },
     },
   });
   assert.equal(state.disclosures["folder:specs:product"], true);
@@ -64,12 +64,12 @@ test("earlier keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery({
+      disclosures: {
         "legacy:product": true,
         "collection:product": true,
         "folder:pages:product": true,
         "folder:specs:product": false,
-      }),
+      },
     },
   });
   assert.equal(state.disclosures["folder:specs:product"], false);
@@ -214,7 +214,6 @@ function navigationContext(changedEntries: readonly string[]): ShellContext {
     base: "",
     changedEntries,
     changesStatus: "ready",
-    updateVersion: 0,
   };
 }
 
@@ -253,22 +252,7 @@ function group(label: string, children: NavLeafNode[]): NavGroupNode {
   };
 }
 
-function recovery(disclosures: Readonly<Record<string, boolean>>) {
-  return {
-    disclosures,
-    colorScheme: "light" as const,
-    detailsOpen: false,
-    drawerOpen: false,
-    filterBaselineDisclosures: null,
-    navScroll: 0,
-    query: "",
-    regionScrolls: {},
-    view: "all" as const,
-    viewport: "both" as const,
-  };
-}
-
-function navigationModel(): CatalogueReadModel {
+function navigationModel(): ShellCatalogueReadModel {
   const model = catalogueModel();
   const template = model.screens[0]!;
   return {
@@ -277,13 +261,13 @@ function navigationModel(): CatalogueReadModel {
       {
         ...template,
         path: welcome.entryId,
-        tags: welcome.tags ?? [],
+        tags: [...(welcome.tags ?? [])],
         title: welcome.label,
       },
       {
         ...template,
         path: "product/browse/details",
-        tags: details.tags ?? [],
+        tags: [...(details.tags ?? [])],
         title: details.label,
       },
     ],

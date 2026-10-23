@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
 use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
+use crate::command::program_for_platform;
 use crate::remote::contracts::{Clock, Interrupt, LogSink, Logs, Output};
 use crate::remote::error::{Error, Operation, Result};
 
@@ -69,7 +70,7 @@ pub(crate) struct SystemProcess {
 impl Process for SystemProcess {
     fn execute(&self, request: &Request) -> Result<Output> {
         if request.cancellable && self.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         let sink = match &request.log {
             Some(path) => Some(self.logs.open(path)?),
@@ -205,7 +206,7 @@ impl SystemProcess {
 
 /// Configure a request without starting it or reading ambient state.
 fn build_command(request: &Request) -> Command {
-    let mut command = Command::new(&request.program);
+    let mut command = Command::new(program_for_platform(&request.program, std::env::consts::OS));
     command
         .args(&request.args)
         .current_dir(&request.cwd)

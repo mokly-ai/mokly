@@ -25,7 +25,7 @@ pub(super) fn client(case: Case, events: Arc<Mutex<Vec<String>>>) -> Arc<Unimock
             event(&run_events, if log.is_none() { "probe" } else { "suite" });
             if let Some(log) = log {
                 assert!(log.starts_with("/workspace/.context/verification-logs/remote"));
-                assert!(command.starts_with("node scripts/verification/testbox-suite.mjs --expect sha256:"));
+                assert!(command.starts_with("node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:"));
                 Ok(output(String::new()))
             } else {
                 assert_eq!(command, format!("node scripts/verification/source-tree.mjs --expect sha256:{} --print-head", "a".repeat(64)));

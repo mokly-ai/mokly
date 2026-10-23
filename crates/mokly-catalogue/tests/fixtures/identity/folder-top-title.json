@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/_folder.json": "{\"title\":\"Bad\"}",
+    "specs/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/_folder.json: title is not allowed at the top level",
+      "path": "specs/_folder.json",
+      "line": 1,
+      "column": 2
+    }
+  ]
+}

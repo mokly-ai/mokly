@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type {
@@ -6,8 +6,8 @@ import type {
   InstanceRef,
   MoklyViewerProps,
 } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
 
+import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
 import { chooseVariant } from "./workspace_actions.js";
@@ -27,9 +27,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
         cross,
         defaultSelection: { screenPath, viewport: "both" },
       });
-      const catalogue = structuredClone(
-        host.props.catalogue,
-      ) as CatalogueReadModel;
+      const catalogue = structuredClone(host.props.index) as CatalogueReadModel;
       catalogue.screens[0]!.useCasePaths = ["tour"];
       catalogue.useCases = [
         {
@@ -39,7 +37,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
           title: "Tour",
           tags: [],
           details: catalogue.screens[0]!.details,
-          changes: { status: "disabled" },
+          changes: catalogue.screens[0]!.changes,
           steps: [
             { screenPath: "home" },
             { screenPath: "home" },
@@ -48,7 +46,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
         },
       ];
       catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
-      host.props = { ...host.props, catalogue } as MoklyViewerProps;
+      host.props = { ...host.props, index: catalogue } as MoklyViewerProps;
       host.render();
     },
     { cross, screenPath },
@@ -172,18 +170,19 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await start(page, cross, "pane");
-    const component = fixture.catalogue.components.find(
+    const component = fixture.index.components.find(
       (entry) => entry.path === "pane",
     )!;
-    for (const variant of catalogueComponentVariants(
-      fixture.catalogue,
-      component.path,
+    for (const variant of fixture.index.components.filter(
+      (entry) => entry.variantOf === component.path,
     )) {
       await chooseVariant(page, variant.title);
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
-      const usage = variant.views[0]!.usage;
+      const usage = fixture.details.current[variant.path]!.views.find(
+        (view) => view.viewport === "desktop" && view.colorScheme === "light",
+      )!.usage;
       if (usage.status !== "ready") throw new Error("Expected ready usage");
       await highlight(
         page,

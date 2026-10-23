@@ -1,137 +1,57 @@
-/** Browser preference handoff performed before standalone hydration. */
-
-import type {
-  ShellInitialState,
-  WorkspaceHydrationState,
-} from "../shell/store_state.js";
+/** Origin-local preferences the standalone bundle reads before its first render. */
 
 import {
-  setDisclosureOpen,
-  readEarlyDetailsOpen,
-  readEarlyDisclosures,
-  persistHydrationDisclosures,
-  readStoredDetailsPreference,
-  readStoredDisclosures,
-} from "./early_disclosures.js";
-import { readInitialNavigationWidth } from "./nav_resize.js";
+  disclosureStorageKey,
+  parseDisclosureMap,
+} from "../shell/disclosure_storage.js";
+import type { ShellInitialState } from "../shell/store_state.js";
 
-const detailsStorageKey = "mokly:details-disclosure";
+const DETAILS_KEY = "mokly:details-disclosure";
+const WIDTH_KEY = "mokly:navigation-width:v1";
+const MINIMUM_WIDTH = 192;
+const MAXIMUM_WIDTH = 480;
 
-/** Read values already reflected into the server DOM for React's first render. */
-export function prepareHydrationState(
-  doc: Document,
-  activeDisclosures: readonly string[] = [],
+/** The storage and viewport surface this module reads. */
+export interface PreferenceWindow {
+  innerWidth: number;
+  localStorage?: Pick<Storage, "getItem"> | undefined;
+}
+
+/**
+ * Read the stored disclosure map, Details choice and navigation width. A
+ * blocked or invalid store is a missing preference, never a failure.
+ */
+export function readStandalonePreferences(
+  win: PreferenceWindow,
+  colorScheme: "dark" | "light",
 ): ShellInitialState {
-  const win = doc.defaultView;
-  const detailsOpen = readStoredDetailsPreference(win);
-  const earlyDetailsOpen = readEarlyDetailsOpen(doc);
-  const effectiveDetailsOpen = earlyDetailsOpen ?? detailsOpen;
-  if (effectiveDetailsOpen !== undefined) {
-    applyDetailsOpen(doc, effectiveDetailsOpen);
-    persistDetailsPreference(win, effectiveDetailsOpen);
-  }
-  const navigation = readInitialNavigationWidth(doc);
-  const colorScheme = doc.body.getAttribute("data-mokly-color-scheme");
-  const disclosures = readStoredDisclosures(doc);
-  const earlyDisclosures = Object.fromEntries(readEarlyDisclosures(doc));
-  const activePath = Object.fromEntries(
-    activeDisclosures.map((key) => [key, true]),
+  const read = (key: string): string | null => {
+    try {
+      return win.localStorage?.getItem(key) ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const disclosures = parseDisclosureMap(read(disclosureStorageKey));
+  const details = read(DETAILS_KEY);
+  const maximum = Math.max(
+    MINIMUM_WIDTH,
+    Math.min(MAXIMUM_WIDTH, Math.floor(win.innerWidth / 2)),
   );
-  applyDisclosures(doc, {
-    ...disclosures,
-    ...activePath,
-    ...earlyDisclosures,
-  });
-  persistHydrationDisclosures(doc);
-  const workspace = readWorkspaceHydration(doc);
+  const stored = Number(read(WIDTH_KEY) ?? Number.NaN);
   return {
-    ...(workspace ? { workspace } : {}),
-    ...(colorScheme === "dark" || colorScheme === "light"
-      ? { colorScheme }
-      : {}),
+    colorScheme,
     disclosures,
-    ...(detailsOpen === undefined ? {} : { detailsOpen }),
-    ...(earlyDetailsOpen === undefined ? {} : { earlyDetailsOpen }),
-    ...(Object.keys(earlyDisclosures).length ? { earlyDisclosures } : {}),
-    ...(navigation
+    ...(details === "open" || details === "closed"
+      ? { detailsOpen: details === "open" }
+      : {}),
+    navigationMaximum: maximum,
+    ...(Number.isFinite(stored)
       ? {
-          navigationMaximum: navigation.maximum,
-          navigationWidth: navigation.width,
+          navigationWidth: Math.round(
+            Math.max(MINIMUM_WIDTH, Math.min(maximum, stored)),
+          ),
         }
       : {}),
   };
-}
-
-function readWorkspaceHydration(
-  doc: Document,
-): WorkspaceHydrationState | undefined {
-  const workspace = doc.querySelector<HTMLElement>("[data-workspace]");
-  if (!workspace) return;
-  const status = workspace.querySelector<HTMLElement>("[data-workspace-status]")
-    ?.dataset["status"];
-  const toolbar = workspace.querySelector<HTMLElement>(".mbk-diff-toolbar");
-  const mark = (kind: "scheme" | "viewport") =>
-    doc.querySelector<HTMLElement>(`[data-view-changed="${kind}"]`)?.hidden ===
-    false;
-  return {
-    status:
-      status === "Added" ||
-      status === "Changed" ||
-      status === "Removed" ||
-      status === "Unmodified"
-        ? status
-        : undefined,
-    comparisonEligible: toolbar?.hidden === false,
-    marks: { scheme: mark("scheme"), viewport: mark("viewport") },
-  };
-}
-
-function persistDetailsPreference(win: Window | null, open: boolean): void {
-  try {
-    win?.localStorage.setItem(detailsStorageKey, open ? "open" : "closed");
-  } catch {
-    return;
-  }
-}
-
-function applyDisclosures(
-  doc: Document,
-  values: Readonly<Record<string, boolean>>,
-): void {
-  for (const group of doc.querySelectorAll<HTMLElement>(
-    "[data-nav-disclosure]",
-  )) {
-    const key = group.getAttribute("data-nav-disclosure");
-    if (key && values[key] !== undefined) setDisclosureOpen(group, values[key]);
-  }
-}
-
-function applyDetailsOpen(doc: Document, open: boolean): void {
-  const details = doc.querySelector<HTMLDetailsElement>("[data-mokly-details]");
-  if (details) details.open = open;
-  const inspector = doc.querySelector<HTMLElement>(
-    "[data-workspace-inspector]",
-  );
-  if (!inspector) return;
-  inspector.dataset["open"] = String(open);
-  const content = inspector.querySelector<HTMLElement>(
-    ".mbk-inspector-content",
-  );
-  if (content) content.hidden = !open;
-  const close = inspector.querySelector<HTMLElement>("[data-inspector-close]");
-  if (close) close.hidden = !open;
-  const title = inspector.querySelector<HTMLElement>("[data-inspector-title]");
-  if (title) title.textContent = open ? "Details" : "";
-  for (const tab of inspector.querySelectorAll<HTMLElement>(
-    "[data-inspector-tab]",
-  )) {
-    tab.setAttribute(
-      "aria-selected",
-      String(open && tab.dataset["inspectorTab"] === "details"),
-    );
-  }
-  for (const panel of inspector.querySelectorAll<HTMLElement>(
-    "[data-inspector-panel]",
-  ))
-    panel.hidden = !open || panel.dataset["inspectorPanel"] !== "details";
 }

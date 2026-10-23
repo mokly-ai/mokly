@@ -1,0 +1,461 @@
+{
+  "current": {
+    "components/action": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "component",
+        "path": "components/action"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": false,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": ["label"]
+    },
+    "components/action/default": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "component",
+        "path": "components/action/default"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": [
+              {
+                "owner": {
+                  "kind": "entry"
+                },
+                "selector": "",
+                "status": "excluded",
+                "stylesheet": "mockups/action.css"
+              }
+            ]
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": [
+              {
+                "owner": {
+                  "kind": "entry"
+                },
+                "selector": "",
+                "status": "excluded",
+                "stylesheet": "mockups/action.css"
+              }
+            ]
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": false,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": ["label"]
+    },
+    "guide": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "page",
+        "path": "guide"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "resourceEvidence": {
+        "resources": [],
+        "rules": [
+          {
+            "owner": {
+              "kind": "entry"
+            },
+            "selector": "",
+            "status": "excluded",
+            "stylesheet": "mockups/page.css"
+          }
+        ]
+      },
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": []
+    },
+    "product": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "document",
+        "path": "product"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "reasons": [
+        {
+          "kind": "added"
+        }
+      ],
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": []
+    },
+    "product/browse/details": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "screen",
+        "path": "product/browse/details"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "reasons": [],
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": [
+              {
+                "owner": {
+                  "kind": "entry"
+                },
+                "selector": "",
+                "status": "excluded",
+                "stylesheet": "mockups/action.css"
+              }
+            ]
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": false,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": []
+    },
+    "product/browse/home": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "screen",
+        "path": "product/browse/home"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "reasons": [
+        {
+          "kind": "material"
+        }
+      ],
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": true,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": []
+    },
+    "product/browse/home/empty": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "screen",
+        "path": "product/browse/home/empty"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": false,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": []
+    },
+    "tour": {
+      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "entry": {
+        "kind": "use-case",
+        "path": "tour"
+      },
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "revision": 0,
+      "schemaVersion": 2,
+      "views": []
+    }
+  },
+  "removed": {
+    "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e": {
+      "entry": {
+        "kind": "screen",
+        "path": "product/browse/home/retired",
+        "snapshotId": "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e"
+      },
+      "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "reasons": [
+        {
+          "kind": "removed"
+        }
+      ],
+      "schemaVersion": 2,
+      "views": [
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "resourceEvidence": {
+            "resources": [],
+            "rules": []
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ],
+      "workspace": {
+        "affected": [],
+        "comparisonEligible": false,
+        "inputChanges": [],
+        "relatedComponents": [],
+        "usedBy": []
+      },
+      "controlOrder": []
+    },
+    "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c": {
+      "entry": {
+        "kind": "page",
+        "path": "product/removed-page",
+        "snapshotId": "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c"
+      },
+      "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "identity": {
+        "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+        "title": "Mokly"
+      },
+      "reasons": [
+        {
+          "kind": "removed"
+        }
+      ],
+      "resourceEvidence": {
+        "resources": [],
+        "rules": []
+      },
+      "schemaVersion": 2,
+      "views": []
+    }
+  }
+}

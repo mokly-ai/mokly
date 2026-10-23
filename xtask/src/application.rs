@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::artifacts::Artifacts;
 use crate::check::request::CheckRequest;
 use crate::check::runner::CheckRunner;
 use crate::cli::Command;
@@ -23,6 +24,8 @@ pub(crate) trait Xtask: Send + Sync {
 
 /// Application dependencies created by the CLI composition root.
 pub(crate) struct Application {
+    /// Native and shared-type artifact builder.
+    pub(crate) artifacts: Arc<dyn Artifacts>,
     /// Ordered availability selector.
     pub(crate) selector: Arc<dyn Selector + Send + Sync>,
     /// Local gate dispatcher.
@@ -44,6 +47,9 @@ pub(crate) struct Application {
 impl Xtask for Application {
     fn run(&self, command: Command) -> Result<()> {
         match command {
+            Command::BuildNative => self.artifacts.build_native(),
+            Command::GenerateTypes => self.artifacts.generate_types(),
+            Command::CheckGeneratedTypes => self.artifacts.check_generated_types(),
             Command::Check {
                 suite,
                 shard,
@@ -85,7 +91,7 @@ impl Xtask for Application {
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();
                                 if self.interrupt.requested()
-                                    || matches!(source, error::Error::Interrupted { .. })
+                                    || matches!(source, error::Error::Cancelled)
                                 {
                                     return Err(Error::Remote {
                                         source: error::Error::Interrupted { cleanup: 0 },
@@ -142,3 +148,7 @@ mod application_tests;
 #[cfg(test)]
 #[path = "_tests_/fallback_tests.rs"]
 mod fallback_tests;
+
+#[cfg(test)]
+#[path = "_tests_/artifact_dispatch_tests.rs"]
+mod artifact_dispatch_tests;

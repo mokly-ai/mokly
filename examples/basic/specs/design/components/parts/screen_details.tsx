@@ -1,4 +1,9 @@
+import type { ReactNode } from "react";
+
 import { MockLink } from "@mokly/mokly";
+
+import { CONTROLS_COPY } from "../controls/parts/copy.js";
+import { ScreenControls } from "../controls/parts/screen_controls.js";
 
 import { ComparisonDetails } from "./comparison_details.js";
 import { screenComparison } from "./comparison_fixtures.js";
@@ -80,7 +85,14 @@ function ScreenUsage({ state }: { state: ScreenPageState }) {
   );
 }
 
-export function ScreenDetails({ state }: { state: ScreenPageState }) {
+/** A Props-tab limit opens its own Props panel instead of the state's. */
+export function ScreenDetails({
+  props,
+  state,
+}: {
+  props?: ReactNode;
+  state: ScreenPageState;
+}) {
   const screen = SCREENS[screenIdentity(state)];
   const removed = state === "removed-consumer";
   const loading = state === "inspection-loading";
@@ -88,9 +100,9 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
   const initial =
     state === "closed" || removed
       ? "closed"
-      : noInstances || state === "highlight"
+      : props === undefined && (noInstances || state === "highlight")
         ? "components"
-        : state === "style-outside"
+        : state === "style-outside" || state === "affected-screen"
           ? "info"
           : "props";
   return (
@@ -127,17 +139,21 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
               {
                 id: "props",
                 label: "Props",
-                content: noInstances ? (
-                  <p className="ce-empty-copy">
-                    {loading
-                      ? "Waiting for the component preview."
-                      : state === "unavailable"
-                        ? "Props are unavailable for this screen."
-                        : "Select a component to see its supplied props."}
-                  </p>
-                ) : (
-                  <InstanceDetails state={state} />
-                ),
+                content:
+                  props ??
+                  (noInstances ? (
+                    <p className="ce-empty-copy">
+                      {loading
+                        ? "Waiting for the component preview."
+                        : state === "unavailable"
+                          ? CONTROLS_COPY.propsUnavailable
+                          : CONTROLS_COPY.noProps}
+                    </p>
+                  ) : state === "screen-props" ? (
+                    <ScreenControls />
+                  ) : (
+                    <InstanceDetails state={state} />
+                  )),
               },
               {
                 id: "usage",

@@ -1,6 +1,8 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { controlsDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
+import { ScreenPage } from "../../parts/screen_page.js";
 import { ControlsPage } from "../parts/page.js";
 
 export function EditedControlsDesktop() {
@@ -28,45 +30,63 @@ export function ResetControlsMobile() {
   return <ControlsPage state="reset" viewport="mobile" />;
 }
 
-export const editingScreens = [
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "edited",
-    title: "Edited props",
-    description:
-      "Edited values update the component example while leaving the saved Default variant intact.",
-    colorSchemes: ["light"],
+export const editedScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "edited",
+  title: "Edited props",
+  description:
+    "Edited values update the component example while leaving the saved Default variant intact.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <EditedControlsDesktop />,
     mobile: <EditedControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "unset",
-    title: "Optional prop unset",
-    description:
-      "The hint prop is absent, distinct from an explicitly empty hint.",
-    colorSchemes: ["light"],
+});
+export const unsetScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "unset",
+  title: "Optional prop unset",
+  description:
+    "The hint prop is absent, distinct from an explicitly empty hint.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <UnsetControlsDesktop />,
     mobile: <UnsetControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "variant",
-    title: "Switch saved variant",
-    description:
-      "Choosing Disabled replaces temporary edits with its complete saved preset.",
-    colorSchemes: ["light"],
+});
+export const variantScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "variant",
+  title: "Switch saved variant",
+  description:
+    "Choosing Disabled replaces temporary edits with its complete saved preset.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <VariantControlsDesktop />,
     mobile: <VariantControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "reset",
-    title: "Reset saved values",
-    description:
-      "Reset restores the selected preset and clears the Edited indicator.",
-    colorSchemes: ["light"],
+});
+export const resetScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "reset",
+  title: "Reset saved values",
+  description:
+    "Reset restores the selected preset and clears the Edited indicator.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <ResetControlsDesktop />,
     mobile: <ResetControlsMobile />,
   }),
-];
+});
+export const screenPropsScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "screen",
+  title: "Screen props",
+  description:
+    "With no component selected, a screen's Props tab edits the screen's own props.",
+  colorSchemes: ["light"],
+  ...artboards({
+    desktop: <ScreenPage state="screen-props" viewport="desktop" />,
+    mobile: <ScreenPage state="screen-props" viewport="mobile" />,
+  }),
+});

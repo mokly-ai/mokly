@@ -1,9 +1,6 @@
 # Dependency Security
 
-## Delivery Status
-
-Implemented. Baseline and strict audits share the reviewed exception rules.
-The scheduled workflow maintains the dependency update pull request.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Verification Boundary
 
@@ -17,7 +14,7 @@ configuration would otherwise omit a category. The Node entry point is
 Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
 transport, report, and input errors always fail. The
 [baseline audit contract](./dependency-audit-baseline.md) defines the
-implemented modes, CLI, JSON summary, and comparison rules.
+modes, CLI, JSON summary, and comparison rules.
 
 `npm run dependencies:check` stays strict. Under this contract,
 `cargo xtask check` runs the baseline audit first by default. Ordinary pull
@@ -31,28 +28,51 @@ branches with human commits. Audit command, registry, report, and input failures
 do not change pull requests.
 Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
 
-The release workflow retains its strict live audit immediately after install,
+The release workflow runs a strict live audit immediately after install,
 before reusable evidence or the complete fallback. Complete mode runs
 `cargo xtask check --dependency-audit strict` and repeats the strict live audit
 when its gate starts. Evidence mode never reuses an earlier audit
 as time-sensitive security evidence. The CI repository prerequisite must pass
-before package, unit, browser, or native jobs start. A cache hit never replaces
+before viewer, browser, or native jobs start. A cache hit never replaces
 an audit. Both modes require registry access. An audit is evidence about known
 advisories at execution time, not a guarantee that every dependency is safe.
 See the [CI workflow graph](./ci-workflow.md) and
 [CI verification contract](./ci-verification.md) for job ownership and aggregation.
 
-The packed ESM-consumer smoke also audits its freshly resolved production,
-optional, and peer dependencies before exercising the installed CLI on every
-runtime selected for that CI event. Ordinary changes use the minimum supported
-Node 22.14 runtime; Release Please pull requests repeat this boundary on Node 24
-before publication. This is a separate boundary: npm does not apply Mokly's
-workspace overrides or lockfile to downstream installations. Other consumer
-fixtures continue to exercise their respective integration contracts without
-duplicating registry requests. This production audit has no exceptions. It calls
-strict `npm audit` directly in `scripts/package/consumer_cases/esm.mjs` and never
-loads the workspace exception file. Consumers must maintain and audit their own
+The release workflow's packed ESM-consumer smoke also audits its freshly
+resolved production, optional, and peer dependencies before exercising the
+installed CLI, on the publish job's Node runtime before publication. This is a
+separate boundary: npm does not apply Mokly's workspace overrides or lockfile to
+downstream installations. Other consumer smokes exercise their respective
+integration contracts without duplicating registry requests. This production
+audit has no exceptions. It calls strict `npm audit` directly in the release
+smoke and never loads the workspace exception file. Consumers must maintain and audit their own
 lockfiles, including dependencies they bring to their renderer or application.
+
+## Rust Advisory Audit
+
+The Rust dependency audit is independent of npm baseline comparisons and
+exceptions. `npm run dependencies:check:rust` audits every crate in the committed
+`Cargo.lock` against the current RustSec advisory database. It verifies pinned
+`cargo-audit` 0.22.2 source before extraction, then builds it with the committed
+tool lock and locked resolution, so no update silently changes the tool.
+Reported vulnerabilities and audit errors fail verification. Informational
+warnings remain visible. The repository `.cargo/audit.toml` configuration exempts
+only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires
+`parcel_sourcemap` 2.1.1, which requires `rkyv` 0.7.46. Mokly never reads or
+writes source maps. Review this exception by 2027-01-31 or at the next
+`lightningcss` update, whichever comes first. Every other vulnerability fails.
+The command rejects any other ignored advisory ID, any severity threshold,
+or any target architecture or operating system filter. It also fails after
+2027-01-31 UTC or when locked `lightningcss` changes, even without the approved
+ID. These date and version failures require a reviewed script change.
+The repository suite, daily dependency audit, and release verification run it.
+A release with reusable CI evidence still runs a fresh Rust audit. The daily
+and release Rust audits run with read-only permissions and no publication
+credentials. Release publication depends on successful read-only preparation.
+The daily npm update automation keeps its npm report and does not update Rust crates.
+Rust fixes require a reviewed dependency change. A cached tool or build never
+replaces the live advisory check.
 
 ## Reviewed Workspace Exceptions
 
@@ -160,8 +180,8 @@ an old override is not proof that the current tree is clean.
 
 Record each hold below a compatible release with its reason and removal
 condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
-for a declared floor; `tests/dependency_security.test.ts` matches each one to
-a `package-lock.json` install.
+for a declared floor. Dependency audit tests check the committed exception
+against the installed lockfile.
 
 List only reviewed exceptions, overrides, exact pins and holds here, because
 later updates must respect them. Explain a one-time update in its pull request,
@@ -169,6 +189,18 @@ and describe a runtime dependency's role in the protocol doc of the feature that
 uses it.
 
 The current maintenance choices are:
+
+- `wrangler` 4.151.0 is an exact development pin for preview deployment and
+  the Cloudflare local static-host checks. It resolves prerelease Miniflare
+  `5.20261012.0-beta` and adds 29 development packages, including workerd and
+  sharp/libvips. The lockfile has no Miniflare override. Update the pin in a
+  reviewed tooling change after static URL, header, preview cleanup, and live
+  dependency-audit checks pass. Remove it if previews no longer use Cloudflare.
+
+- `release-please` 17.6.0 is an exact development pin. Release tests exercise
+  its real manifest parser, changelog writer, workspace plugin, and version
+  updaters. Update the pin with the workflow action and schema in a reviewed
+  tooling change. It is not a runtime dependency of any published package.
 
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
   / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
@@ -181,15 +213,6 @@ The current maintenance choices are:
   or when Metro drops Micromatch. Re-run the live audit and complete gate after
   that dependency update. Remove a stale record; expiry requires removal or
   a new explicit risk review, not an automatic extension.
-- `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
-  versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
-  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
-  The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
-  whose bundled native image libraries include the librsvg fix for
-  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
-  Remove each override when a deliberately upgraded Wrangler/Miniflare version
-  resolves a patched version without it and passes the complete gate. These
-  overrides do not apply to unrelated dependency parents.
 - `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
   Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
   through 0.12), which the root `^0.8.3` range excludes. Move to one of them
@@ -199,6 +222,12 @@ The current maintenance choices are:
   0.15.0 and 4.0.0, accepts only React Native below 0.86. Move to 4.7 only
   after `@firna/ui` accepts React Native 0.86, in a reviewed change that also
   moves `react-native-worklets` to 0.13.
+- `react-native-svg` 15.15.5 stays on its 15.15 line through a tilde range.
+  Release 15.16.0 imports `TurboModuleRegistry` from `react-native`, which
+  `react-native-web` does not export, so Serve and `build` cannot bundle the
+  example catalogue through its `react-native` alias. Move to a later release
+  only after one works with that alias, in a reviewed change that runs the
+  design catalogue test and `npm run package:smoke`.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that

@@ -1,4 +1,5 @@
 import type {
+  EntryDetailV2,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -9,6 +10,7 @@ import type {
 export interface ViewerHost {
   ref: { current: MoklyViewerHandle };
   props: MoklyViewerProps;
+  details: Record<string, EntryDetailV2>;
   events: { name: string; value: unknown }[];
   render(): void;
   setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;
@@ -19,11 +21,6 @@ interface Harness {
   start(id: string, options?: Record<string, unknown>): ViewerHost;
   get(id: string): ViewerHost;
   remove(id: string): void;
-}
-interface ViewerHydrationHarness {
-  recoverableErrors: string[];
-  ready(): boolean;
-  retained(): Record<string, { frame: boolean; shell: boolean }>;
 }
 interface FrameHookHarness {
   highlight(id: string): Promise<void>;
@@ -72,6 +69,5 @@ declare global {
   interface Window {
     frameHookHarness: FrameHookHarness;
     viewerHarness: Harness;
-    viewerHydrationHarness: ViewerHydrationHarness;
   }
 }

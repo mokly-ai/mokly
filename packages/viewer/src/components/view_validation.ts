@@ -9,73 +9,17 @@ import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentViewRecord,
-  ManifestComponent,
+  ComponentSchemaRecord,
 } from "./manifest_types.js";
 import { validateProps } from "./props.js";
 import { validateComponentSource } from "./source.js";
 import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
 import { validateViewReferences } from "./view_references.js";
 
-export function validateComponentViews(
-  value: unknown,
-  dark: boolean,
-  components: ReadonlyMap<
-    string,
-    Pick<ManifestComponent, "propSchema" | "slots">
-  >,
-  at: string,
-  rootId?: string,
-): asserts value is readonly ComponentViewRecord[] {
-  const axes = ["mobile", "desktop"].flatMap((viewport) =>
-    (dark ? ["light", "dark"] : ["light"]).map(
-      (scheme) => `${viewport}/${scheme}`,
-    ),
-  );
-  if (!Array.isArray(value) || value.length !== axes.length)
-    invalidData(at, "componentViews must record every available view");
-  value.forEach((view, i) => {
-    exactKeys(
-      view,
-      [
-        "viewport",
-        "colorScheme",
-        "instances",
-        "slots",
-        "ranges",
-        "styles",
-        "resources",
-        "insertedStylesheets",
-      ],
-      at,
-    );
-    if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
-      invalidData(at, "view axes must be unique and ordered");
-    for (const field of [
-      "instances",
-      "slots",
-      "ranges",
-      "styles",
-      "resources",
-      "insertedStylesheets",
-    ])
-      if (!Array.isArray(view[field]))
-        invalidData(at, `missing ${field} array`);
-    validateComponentViewRecord(
-      view as unknown as ComponentViewRecord,
-      components,
-      `${at} / ${axes[i]}`,
-      rootId,
-    );
-  });
-}
-
 /** Validate one actual render without asserting completeness of other views. */
 export function validateComponentViewRecord(
   view: ComponentViewRecord,
-  components: ReadonlyMap<
-    string,
-    Pick<ManifestComponent, "propSchema" | "slots">
-  >,
+  components: ReadonlyMap<string, ComponentSchemaRecord>,
   at: string,
   rootId?: string,
   historical = false,

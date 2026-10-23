@@ -1,8 +1,7 @@
 # Catalogue Upload Exchange v1
 
-## Delivery Status And Boundary
+## Boundary
 
-The installed `mokly publish` implements this Plan → Blobs → Complete exchange.
 The [CLI and manifest contract](./mokly-upload.md) owns repository metadata; the
 [ownership contract](./mokly-export-ownership.md) owns the content address
 list. This document owns all exchange and receiver behavior.
@@ -15,6 +14,11 @@ follows no redirect. Plan, Blob and Complete URLs must be absolute `http:` or
 `https:` URLs without userinfo. Their scheme, hostname and effective port must
 equal the configured endpoint's, so the bearer credential is never sent to a
 different origin or protocol.
+
+HTTPS verifies certificate chains and hostnames. Publish trusts the Mozilla
+root certificates bundled with Mokly as well as the operating system store.
+An empty operating system store still permits a chain to a bundled root.
+OS-only trust is insufficient for minimal containers without CA packages.
 
 ### Plan
 
@@ -33,7 +37,7 @@ headers when needed. It contains only regular root-relative files, with no
 enclosing directory, in fixed order: `mokly-upload.json`,
 `.mokly-export-artifact`, then the non-null `comparisonPath` review file.
 
-The two or three files are byte-identical to the finalized export. No other
+The two or three files are byte-identical to the finalized output. No other
 entry is permitted. Success is `200` with `Content-Type: application/json`,
 optionally with media-type parameters, and this response shape. These example
 URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
@@ -131,7 +135,7 @@ Success does not depend on its optional
 `{ "id", "projectId", "state", "catalogueUrl", "viewerUrl" }` body. Use
 `viewerUrl` only from a JSON object no larger than 16 MiB when it parses as an
 absolute HTTP(S) URL; print normalized `href`, never raw input. An unusable body
-does not fail or retry. Omit a URL containing the token or its URI encoding.
+does not fail or retry. Omit a URL containing the token or any case variant of its percent encoding. Terminal redaction uses the same rule.
 
 `409` means the receiver still lacks a listed digest and `410` means the upload
 expired. Either begins one fresh Plan for the whole command. A second `409`,
@@ -141,7 +145,7 @@ upload id and fails without re-planning.
 ### Retries And Expiry
 
 Plan, Blob and Complete requests are tried at most five times. Retry only 408,
-429, 500, 502, 503 and 504, plus transport failures such as fetch rejection,
+429, 500, 502, 503 and 504, plus transport failures such as a connection failure,
 attempt timeout, or an interrupted response before its result is known. Before
 attempts 2, 3, 4 and 5, wait a uniformly random duration from zero through 1,
 2, 4 and 8 seconds respectively. An integer `Retry-After` from 0 through 60
@@ -200,24 +204,24 @@ kept publication's viewer URL. Rich mode uses the same wording after its
 success glyph and before its duration.
 
 This document owns cancellation classification and precedence for
-`mokly publish`. A failure is a cancellation only when it is a platform abort
-error whose `name` is `AbortError` (as produced by an `AbortSignal` or the Git
-runner), or a `MoklyError` explicitly marked as a cancellation where the
-cancellation was detected. The only signal-based exception is the
+`mokly publish`. A failure is a cancellation only when the command's
+cancellation aborted it, in a request or in the Git runner, or when the core
+explicitly marked the error as a cancellation where it detected the
+cancellation. The only signal-based exception is the
 [pre-installation window](./mokly-export-recovery.md#pre-installation-window)
-owned by the export recovery contract. Outside that window, never infer
-cancellation from a cause chain, `AggregateError` members, error text or an
+owned by the static build recovery contract. Outside that window, never infer
+cancellation from a cause chain, a combined error's members, error text or an
 already-aborted command signal.
 Never put the mark on an error that combines cancellation with a rollback,
 backup or reservation-cleanup failure.
 
 `mokly publish` uses the cancellation output below only for a cancellation. It
 prints every other error unchanged with that error's own category, whether or
-not the command was also cancelled. This includes an export recovery error
+not the command was also cancelled. This includes a build recovery error
 that names the backup or reservation path required for recovery. Every failed
 publish exits with status 1. The
-[export recovery contract](./mokly-export-recovery.md#cancellation-and-recovery-precedence)
-owns export transaction outcomes and keeps `mokly export` output unchanged.
+[static build recovery contract](./mokly-export-recovery.md#cancellation-and-recovery-precedence)
+owns output transaction outcomes and the `mokly build` output.
 
 A cancellation keeps category `upload-failed`. Plain mode prints exactly:
 

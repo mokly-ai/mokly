@@ -1,16 +1,8 @@
 # Remote Verification: Base Commit Sync
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Remote Verification](./remote-verification.md).
-
-## Delivery Status
-
-Base lookup, snapshot sync, cleanup, identity and executor selection are
-implemented under the [base sync plan](../../plans/remote-verification-base-commit.md).
-The linked-worktree spike and automatic gate after an unpushed main merge passed.
-Automatic and explicit remote checks accept unpushed commits with a pushed base.
-The staging smoke deleted a plan and renamed a capped page. With main as base,
-all 11 commands, nine reports and aggregation passed. The checkout stayed unchanged.
-Cleanup stopped every box and removed the snapshot and temporary index.
 
 ## Base Commit
 
@@ -130,9 +122,13 @@ Do not add special handling for this case.
 
 ## Sync Source And Probe
 
-Run each probe and all 11 suite commands with the snapshot directory as the
+Run each probe and all seven commands with the snapshot directory as the
 local working directory. The Blacksmith CLI fetches its `HEAD`, which is the
 base, then copies its non-ignored source differences to the box.
+Before any build, each remote command gives every regular copied path that
+differs from `HEAD` a fresh modification time. Unchanged paths keep their
+warmup times, so Cargo can reuse unchanged native artifacts and rebuild every
+changed crate.
 Keep the checkout root for warmup, download, SSH disconnect, status and stop.
 Keep local aggregation, logs and reports under the checkout root too.
 
@@ -142,7 +138,7 @@ defines the command, readiness bound, parsing and all-box barrier.
 The wrapper changes only to stage the synced tree under the
 [box index rule](#box-index). Keep strict report runners and aggregate schema unchanged.
 Suite reports therefore name the box `HEAD`, which is the base.
-Run the aggregate with that same base and exactly nine downloaded reports.
+Run the aggregate with that same base and exactly five downloaded reports.
 The final fingerprint check reads the checkout, so it detects local edits
 made during remote execution.
 

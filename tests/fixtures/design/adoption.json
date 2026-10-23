@@ -1,0 +1,236 @@
+{
+  "families": {
+    "browse": "^design/browse/(views|states|index-entries|variants|pages|publication)/",
+    "changes": "^design/changes/",
+    "components": "^design/components/(?!controls/)",
+    "appearance": "^design/browse/appearance/"
+  },
+  "parts": [
+    {
+      "family": "browse",
+      "component": "inspector/inspector",
+      "reason": "Home, the drawer, and the missing route select no entry, and the use case shows its steps instead.",
+      "except": [
+        "design/browse/states/missing-route",
+        "design/browse/states/navigation",
+        "design/browse/views/home",
+        "design/browse/views/use-case"
+      ]
+    },
+    {
+      "family": "browse",
+      "component": "preview/device-frame",
+      "reason": "Document pages, home, the drawer, the missing route, and the folder page frame no preview.",
+      "except": [
+        "design/browse/pages/details",
+        "design/browse/pages/document",
+        "design/browse/pages/navigation",
+        "design/browse/pages/previous-version/loading",
+        "design/browse/pages/previous-version/long",
+        "design/browse/pages/previous-version/unavailable",
+        "design/browse/pages/removed",
+        "design/browse/pages/view",
+        "design/browse/states/missing-route",
+        "design/browse/states/navigation",
+        "design/browse/views/folder-overview",
+        "design/browse/views/home"
+      ]
+    },
+    {
+      "family": "browse",
+      "component": "controls/view-controls",
+      "reason": "Screens without a framed preview, and the use case, whose steps choose no viewport.",
+      "except": [
+        "design/browse/pages/details",
+        "design/browse/pages/document",
+        "design/browse/pages/navigation",
+        "design/browse/pages/previous-version/loading",
+        "design/browse/pages/previous-version/long",
+        "design/browse/pages/previous-version/unavailable",
+        "design/browse/pages/removed",
+        "design/browse/pages/view",
+        "design/browse/states/missing-route",
+        "design/browse/states/navigation",
+        "design/browse/views/folder-overview",
+        "design/browse/views/home",
+        "design/browse/views/use-case"
+      ]
+    },
+    {
+      "family": "browse",
+      "component": "controls/tag-chip",
+      "reason": "Subjects without tags: documents, Profile, home, the drawer, the missing route, the folder page, and the use case.",
+      "except": [
+        "design/browse/index-entries/member",
+        "design/browse/index-entries/member-changes",
+        "design/browse/index-entries/screen",
+        "design/browse/index-entries/screen-changes",
+        "design/browse/pages/details",
+        "design/browse/pages/document",
+        "design/browse/pages/navigation",
+        "design/browse/pages/previous-version/loading",
+        "design/browse/pages/previous-version/long",
+        "design/browse/pages/previous-version/unavailable",
+        "design/browse/pages/removed",
+        "design/browse/pages/view",
+        "design/browse/states/missing-route",
+        "design/browse/states/navigation",
+        "design/browse/views/folder-overview",
+        "design/browse/views/home",
+        "design/browse/views/use-case"
+      ]
+    },
+    {
+      "family": "browse",
+      "component": "preview/empty-state",
+      "reason": "The screens that show an empty or recovery message.",
+      "only": [
+        "design/browse/pages/previous-version/unavailable",
+        "design/browse/states/missing-route",
+        "design/browse/states/navigation",
+        "design/browse/views/home"
+      ]
+    },
+    {
+      "family": "browse",
+      "component": "controls/tag-picker",
+      "reason": "The states with the tag picker open.",
+      "only": [
+        "design/browse/states/tag-filter",
+        "design/browse/views/screen/tag-onboarding-picker",
+        "design/browse/views/screen/tag-picker"
+      ]
+    },
+    {
+      "family": "changes",
+      "component": "preview/device-frame",
+      "reason": "The document styles page and the previous version that is loading or unavailable frame no preview.",
+      "except": [
+        "design/changes/impact/styles/page",
+        "design/changes/outcomes/previous-version/loading",
+        "design/changes/outcomes/previous-version/unavailable"
+      ]
+    },
+    {
+      "family": "changes",
+      "component": "controls/comparison-toolbar",
+      "reason": "The states that offer comparison modes.",
+      "only": [
+        "design/changes/diff-controls/current",
+        "design/changes/diff-controls/overlay",
+        "design/changes/diff-controls/overlay-long",
+        "design/changes/diff-controls/overlay-panel",
+        "design/changes/diff-controls/side-by-side-apart",
+        "design/changes/impact/styles/matched-excluded/excluded",
+        "design/changes/impact/styles/matched-excluded/matched",
+        "design/changes/impact/styles/unresolved-unnamed/unnamed",
+        "design/changes/impact/styles/unresolved-unnamed/unresolved",
+        "design/changes/outcomes/changed",
+        "design/changes/outcomes/difference",
+        "design/changes/outcomes/moved"
+      ]
+    },
+    {
+      "family": "changes",
+      "component": "preview/comparison-pane",
+      "reason": "The states that show two comparison panes.",
+      "only": [
+        "design/changes/diff-controls/side-by-side-apart",
+        "design/changes/impact/styles/matched-excluded/matched",
+        "design/changes/impact/styles/unresolved-unnamed/unnamed",
+        "design/changes/impact/styles/unresolved-unnamed/unresolved",
+        "design/changes/outcomes/changed"
+      ]
+    },
+    {
+      "family": "changes",
+      "component": "preview/empty-state",
+      "reason": "The unavailable previous version.",
+      "only": ["design/changes/outcomes/previous-version/unavailable"]
+    },
+    {
+      "family": "components",
+      "component": "inspector/metadata-row",
+      "reason": "The empty, loading, and unavailable inspection states show no metadata, and the removed consumer keeps only its Details panel, whose comparison details show a reason sentence and no metadata row.",
+      "except": [
+        "design/components/states/empty",
+        "design/components/states/loading/inspection-loading",
+        "design/components/states/removed-consumer",
+        "design/components/states/unavailable"
+      ]
+    },
+    {
+      "family": "components",
+      "component": "controls/comparison-toolbar",
+      "reason": "The states that offer comparison modes.",
+      "only": [
+        "design/components/inspection/inspection-direct-change",
+        "design/components/pages/affected",
+        "design/components/pages/comparison",
+        "design/components/pages/stacked/difference",
+        "design/components/pages/stacked/overlay",
+        "design/components/pages/stacked/overlay-tall",
+        "design/components/states/removed",
+        "design/components/states/shared-impact/style-changed",
+        "design/components/states/shared-impact/style-outside"
+      ]
+    },
+    {
+      "family": "components",
+      "component": "preview/comparison-pane",
+      "reason": "The states that show two comparison panes.",
+      "only": [
+        "design/components/pages/comparison",
+        "design/components/states/removed",
+        "design/components/states/shared-impact/style-changed"
+      ]
+    },
+    {
+      "family": "appearance",
+      "component": "preview/device-frame",
+      "reason": "Document pages, the error and home states, and the drawer frame no preview.",
+      "except": [
+        "design/browse/appearance/states/light-only-current",
+        "design/browse/appearance/states/light-only-document",
+        "design/browse/appearance/status/error",
+        "design/browse/appearance/status/home",
+        "design/browse/appearance/workspaces/drawer"
+      ]
+    },
+    {
+      "family": "appearance",
+      "component": "inspector/inspector",
+      "reason": "The flow shows its steps, and home and the drawer select no entry.",
+      "except": [
+        "design/browse/appearance/status/flow",
+        "design/browse/appearance/status/home",
+        "design/browse/appearance/workspaces/drawer"
+      ]
+    },
+    {
+      "family": "appearance",
+      "component": "controls/comparison-toolbar",
+      "reason": "The comparison panels.",
+      "only": [
+        "design/browse/appearance/workspaces/difference",
+        "design/browse/appearance/workspaces/side-by-side"
+      ]
+    },
+    {
+      "family": "appearance",
+      "component": "preview/comparison-pane",
+      "reason": "The side-by-side panel.",
+      "only": ["design/browse/appearance/workspaces/side-by-side"]
+    },
+    {
+      "family": "appearance",
+      "component": "preview/empty-state",
+      "reason": "The error, home, and drawer states.",
+      "only": [
+        "design/browse/appearance/status/error",
+        "design/browse/appearance/status/home",
+        "design/browse/appearance/workspaces/drawer"
+      ]
+    }
+  ]
+}

@@ -1,10 +1,17 @@
-import { validatePackageReport } from "../package/archive.mjs";
+import { validatePackageReport } from "./archive.mjs";
 
 /** Require registry bytes and metadata to match the immutable local artifact. */
 export function comparePublishedPackage(local, remote, metadata, commit) {
   validatePackageReport(local, local.name);
   validatePackageReport(remote, local.name);
-  for (const key of ["name", "version", "integrity", "shasum"]) {
+  for (const key of [
+    "name",
+    "version",
+    "integrity",
+    "shasum",
+    "size",
+    "unpackedSize",
+  ]) {
     if (local[key] !== remote[key]) {
       throw new Error(
         `published package ${key} differs from the checked artifact`,

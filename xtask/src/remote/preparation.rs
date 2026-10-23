@@ -34,7 +34,7 @@ impl DefaultRemoteRunner {
         let run = RunId::new(&dependencies.clock.stamp(), dependencies.environment.pid())?;
         let snapshot = owner.create(&run, &base.sha)?;
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         let fingerprint = self.fingerprint(&dependencies.workspace)?;
         let captured = self.fingerprint(&snapshot)?;
@@ -68,7 +68,7 @@ impl DefaultRemoteRunner {
         )?;
         dependencies
             .reporter
-            .executor("information: all 11 probes passed");
+            .executor(&format!("information: all {} probes passed", boxes.len()));
         Ok(PreparedRun { identity, snapshot })
     }
 }

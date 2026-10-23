@@ -1,16 +1,10 @@
 /** Shared React frame primitives for browser-only registry harnesses. */
 
-import type {
-  CatalogueRecord,
-  CatalogueUsage,
-  CatalogueView,
-} from "../src/catalogue/types.js";
+import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
+import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type { FrameEvent } from "../src/client/frame_adapter.js";
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
-import {
-  useOptionalShellFrameRegistry,
-  type ShellFrameRegistry,
-} from "../src/shell/frame_registry.js";
+import { useOptionalShellFrameRegistry } from "../src/shell/frame_registry.js";
 import { useFrameSource } from "../src/shell/frame_source_hook.js";
 import { frameSource } from "../src/shell/stage_sources.js";
 
@@ -21,10 +15,10 @@ export function RegistryHarnessFrame({
   usage,
   view,
 }: {
-  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>;
+  entry: { path: string; kind: "component" | "screen" };
   onEvent(event: FrameEvent): void;
   usage: CatalogueUsage;
-  view: CatalogueView;
+  view: ShellCatalogueView;
 }) {
   const registry = useOptionalShellFrameRegistry();
   const source = frameSource(entry, view);
@@ -50,14 +44,4 @@ export function RegistryHarnessFrame({
       title={view.viewport}
     />
   );
-}
-
-/** Wait until the expected sessions have completed their current readiness. */
-export async function mountedRegistrySessions(
-  registry: ShellFrameRegistry,
-  count: number,
-): Promise<void> {
-  while (registry.values().length !== count)
-    await new Promise(requestAnimationFrame);
-  await Promise.all(registry.values().map((session) => session.ready));
 }

@@ -5,9 +5,55 @@ use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
 
+#[test]
+fn probe_diagnostic_counts_completed_boxes_before_starting_suites() {
+    for case in [Case::Success, Case::Probe, Case::Fingerprint] {
+        let fixture = harness(case);
+        let result = DefaultRemoteRunner {
+            dependencies: fixture.dependencies,
+        }
+        .run(DependencyAudit::Baseline);
+        let events = fixture.events.lock().unwrap();
+        let announcements: Vec<_> = events
+            .iter()
+            .enumerate()
+            .filter(|(_, event)| event.ends_with("probes passed"))
+            .collect();
+        if case != Case::Success {
+            assert!(result.is_err());
+            assert!(announcements.is_empty());
+            continue;
+        }
+        result.unwrap();
+        let probes = events
+            .iter()
+            .filter(|event| event.starts_with("probe:"))
+            .count();
+        assert_eq!(probes, 7);
+        assert_eq!(announcements.len(), 1);
+        let (announced_at, message) = announcements[0];
+        assert_eq!(
+            message,
+            &format!("message:information: all {probes} probes passed")
+        );
+        assert!(
+            events[..announced_at]
+                .iter()
+                .filter(|event| event.starts_with("probe:"))
+                .count()
+                == probes
+        );
+        assert!(
+            !events[..announced_at]
+                .iter()
+                .any(|event| event.starts_with("suite:"))
+        );
+    }
+}
+
 /// Keep the existing remote evidence and cleanup assertions.
 #[test]
-fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
+fn complete_remote_gate_downloads_five_reports_after_seven_commands() {
     let fixture = harness(Case::Success);
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
@@ -20,21 +66,21 @@ fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
             .iter()
             .filter(|event| event.starts_with("suite:"))
             .count(),
-        11
+        7
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("download:"))
             .count(),
-        9
+        5
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("stop:"))
             .count(),
-        11
+        7
     );
     let aggregate = events
         .iter()

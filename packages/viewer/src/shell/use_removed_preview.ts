@@ -20,6 +20,7 @@ import {
   useComparisonEnvironment,
 } from "./comparison_context.js";
 import type { RemovedPreviewData } from "./previews.js";
+import { useOptionalShellStore } from "./store_context.js";
 
 /** Display state for one route-owned previous-version request. */
 export type RemovedPreviewState =
@@ -92,6 +93,8 @@ export function useRemovedPreview({
   viewport: "both" | "desktop" | "mobile";
 }): { retry(): void; state: RemovedPreviewState } {
   const environment = useComparisonEnvironment();
+  const comparisonUrl =
+    useOptionalShellStore()?.catalogue.publicModel.comparisonUrl;
   const key = previewKey(data);
   const selection = `${viewport}:${colorScheme}`;
   const [attempt, bumpAttempt] = useReducer((value: number) => value + 1, 0);
@@ -112,9 +115,12 @@ export function useRemovedPreview({
       const delivery = environment.delivery();
       const request = previewEndpoint(
         data,
-        delivery.kind === "pinned" ? delivery : undefined,
+        comparisonUrl !== undefined
+          ? { comparisonUrl }
+          : delivery.kind === "pinned"
+            ? delivery
+            : undefined,
         String(environment.baseUrl),
-        refresh,
       );
       const requestKey = request
         ? `${request.endpoint.href}:${request.generation?.href ?? ""}`
@@ -193,6 +199,7 @@ export function useRemovedPreview({
   }, [
     attempt,
     colorScheme,
+    comparisonUrl,
     environment,
     interactive,
     key,
@@ -207,6 +214,8 @@ export function useRemovedPreview({
         ? owned.selection === selection
           ? owned.value
           : { status: "loading" }
-        : { status: "unavailable" },
+        : interactive && environment
+          ? { status: "loading" }
+          : { status: "unavailable" },
   };
 }

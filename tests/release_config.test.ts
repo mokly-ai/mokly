@@ -1,141 +1,98 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { releasePackages } from "../scripts/release/targets.mjs";
+import { releaseUpdates } from "../scripts/release/version_updates.mjs";
+import { verifyPackageVersions } from "../scripts/release/versions.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
-test("scoped npm identity preserves the Mokly executable", async () => {
-  const packageJson = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
+const json = async (file: string) =>
+  JSON.parse(await fs.readFile(path.join(repositoryRoot, file), "utf8"));
+
+test("the private workspace releases the CLI and viewer with one root version", async () => {
+  await verifyPackageVersions(repositoryRoot);
+  const [manifest, config, versions] = await Promise.all([
+    json("package.json"),
+    json("release-please-config.json"),
+    json(".release-please-manifest.json"),
+  ]);
+  for (const key of ["bin", "exports", "files", "publishConfig", "types"])
+    assert.equal(manifest[key], undefined, key);
+  assert.deepEqual(Object.keys(config.packages), ["."]);
+  assert.deepEqual(Object.keys(versions).sort(), [".", "packages/viewer"]);
+  assert.equal(config.plugins, undefined);
+  const entry = config.packages["."];
+  assert.equal(entry.component, "mokly");
+  assert.equal(entry["release-type"], "node");
+  assert.equal(entry["include-component-in-tag"], false);
+  assert.equal(entry["include-v-in-tag"], true);
+  assert.equal(entry["bump-minor-pre-major"], true);
+  assert.ok(
+    Array.isArray(entry["extra-files"]) &&
+      entry["extra-files"].some(
+        (file: unknown) =>
+          typeof file === "object" &&
+          file !== null &&
+          "path" in file &&
+          file.path === "/packages/viewer/package.json",
+      ),
   );
-  assert.equal(packageJson.name, "@mokly/mokly");
-  assert.equal(packageJson.author, "Mokly");
-  assert.deepEqual(packageJson.bin, { mokly: "./dist/cli/bin.js" });
-  assert.equal(
-    packageJson.homepage,
-    "https://github.com/mokly-ai/mokly#readme",
-  );
-  assert.deepEqual(packageJson.repository, {
-    type: "git",
-    url: "git+https://github.com/mokly-ai/mokly.git",
-  });
-  assert.deepEqual(packageJson.bugs, {
-    url: "https://github.com/mokly-ai/mokly/issues",
-  });
-  assert.deepEqual(packageJson.publishConfig, {
-    access: "public",
-    registry: "https://registry.npmjs.org/",
-  });
-  const lock = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package-lock.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(lock.name, packageJson.name);
-  assert.equal(lock.packages[""].name, packageJson.name);
-  assert.deepEqual(lock.packages[""].bin, { mokly: "dist/cli/bin.js" });
 });
 
-test("release-please owns the Node manifest and first release state", async () => {
-  const config = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "release-please-config.json"),
-      "utf8",
-    ),
+test("pinned Release Please updates all manifest and lockfile edges and retains changelog history", async (t) => {
+  const sourceHistory = await fs.readFile(
+    path.join(repositoryRoot, "CHANGELOG.md"),
+    "utf8",
   );
-  const manifest = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, ".release-please-manifest.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(
-    config.packages["."].releaseType ?? config.packages["."]["release-type"],
-    "node",
-  );
-  assert.equal(config.packages["."]["include-v-in-tag"], true);
-  assert.equal(
-    config["bootstrap-sha"],
-    "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
-  );
-  assert.equal(config.packages["."]["bump-minor-pre-major"], true);
-  const releaseAs = config.packages["."]["release-as"];
-  if (releaseAs !== undefined) {
-    assert.match(releaseAs, /^0\.\d+\.\d+$/);
+  for (const changed of [
+    ["crates/mokly-css/src/compiler.rs"],
+    ["packages/mokly/src/index.ts"],
+    ["packages/viewer/src/index.ts"],
+    ["packages/mokly/src/index.ts", "packages/viewer/src/index.ts"],
+  ]) {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "mokly-release-versions-"),
+    );
+    t.after(() => fs.rm(root, { recursive: true, force: true }));
+    const updates = await releaseUpdates(repositoryRoot, changed);
+    assert.ok(updates.has("packages/mokly/package.json"));
+    assert.ok(updates.has("packages/viewer/package.json"));
+    assert.match(
+      updates.get("packages/viewer/CHANGELOG.md") ?? "",
+      /Shared release version: 0\.16\.0/,
+    );
+    for (const file of [
+      "package.json",
+      "package-lock.json",
+      ".release-please-manifest.json",
+      ...releasePackages().map(({ directory }) => `${directory}/package.json`),
+    ]) {
+      const destination = path.join(root, file);
+      await fs.mkdir(path.dirname(destination), { recursive: true });
+      await fs.copyFile(path.join(repositoryRoot, file), destination);
+    }
+    assert.ok(
+      updates
+        .get("CHANGELOG.md")
+        ?.includes(sourceHistory.slice(sourceHistory.indexOf("\n") + 1).trim()),
+    );
+    assert.ok(!updates.has("packages/mokly/CHANGELOG.md"));
+    for (const [file, content] of updates) {
+      const destination = path.join(root, file);
+      await fs.mkdir(path.dirname(destination), { recursive: true });
+      await fs.writeFile(destination, content);
+    }
+    const { cli, viewer } = await verifyPackageVersions(root);
+    assert.notEqual(
+      cli.version,
+      (await json("packages/mokly/package.json")).version,
+    );
+    assert.equal(viewer.version, cli.version);
+    assert.match(cli.version, /^0\./);
+    assert.match(viewer.version, /^0\./);
   }
-  assert.equal(config.packages["."]["include-component-in-tag"], false);
-  assert.deepEqual(
-    Object.keys(config.packages["."])
-      .filter((key) => key !== "release-as")
-      .sort(),
-    [
-      "bump-minor-pre-major",
-      "changelog-path",
-      "extra-files",
-      "include-component-in-tag",
-      "include-v-in-tag",
-      "release-type",
-    ],
-  );
-  assert.deepEqual(config.packages["."]["extra-files"], [
-    {
-      type: "generic",
-      path: "docs/guides/start/install.md",
-    },
-    {
-      type: "generic",
-      path: "docs/guides/ci/github-action.md",
-    },
-  ]);
-  const packageVersion = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
-  ).version;
-  assert.equal(manifest["."], packageVersion);
-  const viewer = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "packages/viewer/package.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(
-    manifest["packages/viewer"],
-    manifest["packages/viewer"] === "0.0.0" ? "0.0.0" : viewer.version,
-  );
-  if (manifest["packages/viewer"] === "0.0.0")
-    assert.equal(viewer.version, "0.1.0");
-  assert.deepEqual(Object.keys(config.packages), [".", "packages/viewer"]);
-  assert.deepEqual(config.plugins, [
-    { type: "node-workspace", updateAllPackages: true },
-  ]);
-  assert.deepEqual(config.packages["packages/viewer"], {
-    "release-type": "node",
-    component: "viewer",
-    "initial-version": "0.1.0",
-    "changelog-path": "CHANGELOG.md",
-    "include-component-in-tag": true,
-    "include-v-in-tag": true,
-    "bump-minor-pre-major": true,
-    "extra-files": [
-      {
-        type: "json",
-        path: "/package-lock.json",
-        jsonpath: "$['packages']['']['dependencies']['@mokly/viewer']",
-      },
-    ],
-  });
-  const root = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(root.dependencies["@mokly/viewer"], viewer.version);
 });

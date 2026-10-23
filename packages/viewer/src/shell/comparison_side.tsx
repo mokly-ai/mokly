@@ -1,6 +1,6 @@
 /** Side by side: one chrome per version, their viewports mirrored. */
 
-import type { ViewReview } from "../review/types.js";
+import type { ReviewView } from "../review/types.js";
 
 import {
   ChromeScheme,
@@ -10,24 +10,28 @@ import {
 import { ComparisonFrame } from "./comparison_frame.js";
 import type { ComparisonScrollSync } from "./comparison_scroll_types.js";
 import { ComparisonViewport } from "./comparison_viewport.js";
+import type { EntryWording } from "./entry_wording.js";
 
 const labels = { after: "Current", before: "Before" } as const;
 
+/** The design catalogue's copy for a side without a document. */
 const missing = {
-  after: "This screen was removed on this branch.",
-  before: "This screen was added on this branch.",
+  after: "This screen has been removed.",
+  before: "This screen did not exist before.",
 } as const;
 
 /**
  * Each version keeps its own chrome and viewport. Both viewports share the
  * section's scroll owner, so their ranges match and scrolling either moves
- * the other; a side without a document keeps its explicit message.
+ * the other; a side without a document keeps its explicit message, worded
+ * for the entry's kind like the pane heading.
  */
 export function SideBySideComparison({
   chrome,
   documents,
   sync,
   view,
+  wording,
 }: {
   chrome: ComparisonChrome;
   documents: {
@@ -35,7 +39,8 @@ export function SideBySideComparison({
     before?: PaneDocument | undefined;
   };
   sync: ComparisonScrollSync;
-  view: ViewReview;
+  view: ReviewView;
+  wording: Pick<EntryWording, "label">;
 }) {
   return (
     <div className="mb-panes" data-compare-mode="side">
@@ -53,7 +58,7 @@ export function SideBySideComparison({
                 )}
               </ChromeScheme>
             ) : (
-              <p className="mb-pane-missing">{missing[side]}</p>
+              <p className="mb-pane-missing">{wording.label(missing[side])}</p>
             )}
           </div>
         );

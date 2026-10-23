@@ -1,52 +1,37 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { EXAMPLE_SNAPSHOT_PATH } from "./example-snapshot-key.mjs";
-
-const outputs = {
-  package: ["dist/cli/bin.js", "packages/viewer/dist/browser/inspector.js"],
-  example: ["examples/basic/mokly-generated/mokly-manifest.json"],
-  snapshot: [EXAMPLE_SNAPSHOT_PATH],
-};
-
-const kinds = {
-  all: {
-    names: [...outputs.package, ...outputs.example],
-    preparation: "verification",
-  },
-  package: { names: outputs.package, preparation: "verification" },
-  example: { names: outputs.example, preparation: "verification" },
-  unit: {
-    names: [...outputs.package, ...outputs.example, ...outputs.snapshot],
-    preparation: "unit",
-  },
-};
-
-/** Fail before a prepared runner starts when its preparation output is missing. */
-export async function requirePrepared(repositoryRoot, kind = "all") {
-  const selected = Object.hasOwn(kinds, kind) ? kinds[kind] : undefined;
-  if (!selected) throw new Error(`unknown prepared output kind ${kind}`);
+/** Require the build under test without preparing or modifying it. */
+export async function requirePrepared(
+  repositoryRoot,
+  { browser = false } = {},
+) {
   const missing = [];
-  for (const name of selected.names) {
+  const files = [
+    "packages/viewer/dist/index.js",
+    "packages/viewer/dist/browser/inspector.js",
+  ];
+  if (browser) {
+    const { platformPackage } =
+      await import("../../packages/mokly/src/platform.mjs");
+    files.push(
+      "packages/mokly/dist/shim.mjs",
+      "packages/mokly/dist/sidecar.js",
+      "packages/viewer/dist/browser/shell.js",
+      `packages/${platformPackage(process.platform, process.arch, true).replace("@mokly/", "")}/bin/${process.platform === "win32" ? "mokly.exe" : "mokly"}`,
+    );
+  }
+  for (const name of files) {
     try {
-      const stat = await fs.stat(path.join(repositoryRoot, name));
-      if (!stat.isFile()) missing.push(name);
+      if (!(await fs.stat(path.join(repositoryRoot, name))).isFile())
+        missing.push(name);
     } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
+      if (error.code !== "ENOENT") throw error;
       missing.push(name);
     }
   }
-  if (missing.length > 0)
+  if (missing.length)
     throw new Error(
-      `prepared verification output is missing: ${missing.join(", ")}; run npm run prepare:${selected.preparation} first`,
+      `prepared verification output is missing: ${missing.join(", ")}; run npm run build first`,
     );
-}
-
-if (
-  process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
-) {
-  const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-  const kind = process.argv[2] ?? "all";
-  await requirePrepared(repositoryRoot, kind);
 }

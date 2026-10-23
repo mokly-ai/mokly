@@ -1,0 +1,123 @@
+//! Parent-side executable resolution that excludes every relative PATH entry.
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
+use std::{env, fs, process};
+
+use crate::commands::Command;
+use crate::error::{Error, Result};
+use crate::node_executable::{NodeExecutable, SystemNodeExecutable};
+
+pub(crate) fn command(request: &Command) -> Result<process::Command> {
+    if request.program == "node" {
+        return Ok(process::Command::new(SystemNodeExecutable.resolve()?));
+    }
+    if !["npm", "pnpm", "yarn"]
+        .iter()
+        .any(|name| request.program == *name)
+    {
+        return Ok(process::Command::new(&request.program));
+    }
+    let paths = env::var_os("PATH").unwrap_or_default();
+    let directories = env::split_paths(&paths)
+        .filter(|path| path.is_absolute())
+        .collect::<Vec<_>>();
+    let prefix = request.node.as_deref().and_then(Path::parent);
+    let child_paths = prefix.into_iter().chain(
+        directories
+            .iter()
+            .map(PathBuf::as_path)
+            .filter(|directory| Some(*directory) != prefix),
+    );
+    let path = match env::join_paths(child_paths) {
+        Ok(path) => path,
+        Err(_) => return Err(Error::CommandUnavailable),
+    };
+    #[cfg(unix)]
+    for directory in &directories {
+        let candidate = directory.join(&request.program);
+        if fs::metadata(&candidate)
+            .is_ok_and(|metadata| metadata.is_file() && metadata.permissions().mode() & 0o111 != 0)
+        {
+            let mut command = process::Command::new(candidate);
+            command.env("PATH", &path);
+            return Ok(command);
+        }
+    }
+    #[cfg(windows)]
+    {
+        let mut command = windows_manager(
+            &directories,
+            &request.program.to_string_lossy(),
+            request.node.as_deref(),
+        )?;
+        command.env("PATH", path);
+        Ok(command)
+    }
+    #[cfg(not(windows))]
+    Err(Error::CommandUnavailable)
+}
+
+#[cfg(windows)]
+fn windows_manager(
+    directories: &[PathBuf],
+    manager: &str,
+    pinned_node: Option<&Path>,
+) -> Result<process::Command> {
+    let extensions = env::var_os("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".into());
+    for directory in directories {
+        for extension in extensions
+            .to_string_lossy()
+            .split(';')
+            .filter(|extension| !extension.is_empty())
+        {
+            let candidate = directory.join(format!("{manager}{extension}"));
+            if !fs::metadata(&candidate).is_ok_and(|metadata| metadata.is_file()) {
+                continue;
+            }
+            if extension.eq_ignore_ascii_case(".exe") || extension.eq_ignore_ascii_case(".com") {
+                return Ok(process::Command::new(candidate));
+            }
+            if !extension.eq_ignore_ascii_case(".cmd") {
+                return Err(Error::UnsupportedManager);
+            }
+            let candidates: &[&str] = match manager {
+                "npm" => &[
+                    "node_modules/npm/bin/npm-cli.js",
+                    "node_modules/corepack/dist/npm.js",
+                ],
+                "pnpm" => &[
+                    "node_modules/pnpm/bin/pnpm.cjs",
+                    "node_modules/pnpm/bin/pnpm.mjs",
+                    "node_modules/corepack/dist/pnpm.js",
+                ],
+                "yarn" => &[
+                    "node_modules/yarn/bin/yarn.js",
+                    "node_modules/@yarnpkg/cli-dist/bin/yarn.js",
+                    "node_modules/corepack/dist/yarn.js",
+                ],
+                _ => return Err(Error::UnsupportedManager),
+            };
+            let Some(cli) = candidates
+                .iter()
+                .map(|path| directory.join(path))
+                .find(|path| path.is_file())
+            else {
+                return Err(Error::UnsupportedManager);
+            };
+            let node = pinned_node.map(Path::to_owned).or_else(|| {
+                std::iter::once(directory.join("node.exe"))
+                    .chain(directories.iter().map(|path| path.join("node.exe")))
+                    .find(|path| path.is_file())
+            });
+            let Some(node) = node else {
+                return Err(Error::CommandUnavailable);
+            };
+            let mut command = process::Command::new(node);
+            command.arg(cli);
+            return Ok(command);
+        }
+    }
+    Err(Error::CommandUnavailable)
+}

@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<main><script>alert(1)</script></main>\n"
+  },
+  "errors": [
+    {
+      "code": "html-element",
+      "message": "forbidden element script",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 7
+    }
+  ]
+}

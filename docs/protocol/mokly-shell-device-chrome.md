@@ -1,16 +1,5 @@
 # Shell Device Chrome And Preview Scheme
 
-## Delivery Status
-
-Implemented in the shared `@mokly/viewer` shell and depicted in Mokly's design
-catalogue, as the [shell design contract](./mokly-shell-design.md) records.
-This document owns the device frames, the whole-document pane, and the preview
-color-scheme tokens and containment rules those frames use; the shell design
-contract owns the surrounding layout, tokens, and responsive behavior, and the
-[viewer appearance contract](./mokly-viewer-appearance.md) owns the interface
-appearance around the frames. The document pane's Markdown document follows
-the implemented [document contract](./mokly-documents.md).
-
 ## Device Chrome
 
 - **Phone frame** — 390×844, 12px bezel padding, `#171a18` body,
@@ -41,11 +30,16 @@ the implemented [document contract](./mokly-documents.md).
   control outweighs the other. Expanding fixes the frame to `inset: 2.5vh 2.5vw` at
   overlay z-index over a scrim (`rgba(20, 28, 22, 0.55)`), locks body scroll,
   and swaps the icon for its inward-arrow collapse counterpart; Escape or
-  clicking outside collapses it. Only one frame expands at a time.
+  clicking outside collapses it. Only one frame expands at a time. An
+  expanded frame that leaves the page, such as a use-case step that a narrow
+  shell shows in a phone frame, collapses, so no scrim stays.
 - **Use-case flow** — vertical numbered steps (32px accent number tiles)
   joined by a 2px connector line, each with title, description, a
-  `This screen in the catalogue: <title> →` link, and one browser frame
-  (height 640px) indented under the step head.
+  `This screen in the catalogue: <title> →` link, and one device frame
+  indented under the step head: the step screen's desktop view in a browser
+  frame (height 640px), or, while the shell is at most 760px wide, its mobile
+  view in a phone frame. Crossing that width while the flow is open swaps
+  every step's frame.
 - **Document pane** — a bordered, 12px-radius iframe pane on the dotted stage
   holding a whole page or a Markdown document; a document has no viewport
   controls and follows the Appearance control between its light and dark
@@ -100,21 +94,25 @@ of those two.
 
 ## Responsive Behavior
 
-The shell has one breakpoint at **56.25rem (900px)**:
+The shell has one layout breakpoint at **56.25rem (900px)** and one device
+breakpoint at **760px**:
 
-- At or above it, the navigation column is persistent and the layout is the
-  fixed two-column split above.
-- Below it, the navigation becomes a scrimmed overlay drawer (82% width, max
+- At or above 900px, the navigation column is persistent and the layout is
+  the fixed two-column split above.
+- Below 900px, the navigation becomes a scrimmed overlay drawer (82% width, max
   20rem) opened by the top-bar menu button throughout the catalogue. The
   drawer opens under the 48px bar and the bar stacks above the scrim, so the
   menu button that opened it, the brand and the query stay
   at full strength while only the shell below the bar dims. The tag picker
   stops anchoring to the narrow field and drops as a sheet spanning the shell,
-  flush under the bar's bottom border with only its lower corners rounded. The
-  phone frame scales via `aspect-ratio: 390 / 844` within available width, the
-  browser frame drops to 560px height, flow connector lines hide, the details
-  body stacks to one column inside its bottom sheet. The grouped view controls
-  stay together in the screen head band and wrap beneath the title when needed.
+  flush under the bar's bottom border with only its lower corners rounded.
+  The details body stacks to one column inside its bottom sheet. The grouped
+  view controls stay together in the screen head band and wrap beneath the
+  title when needed.
+- At or below 760px, each use-case step shows its mobile view in a phone
+  frame, the phone frame scales via `aspect-ratio: 390 / 844` within available
+  width, the browser frame drops to 560px height, and flow connector lines
+  hide.
 
 `prefers-reduced-motion: reduce` disables shell transitions.
 

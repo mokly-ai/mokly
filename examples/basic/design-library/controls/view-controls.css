@@ -16,6 +16,58 @@
   flex: 1 1 720px;
 }
 
+/* A component stage places the 390px mobile canvas and the 1024px desktop
+   canvas side by side, 40px apart, as the shell does: centred while the row
+   fits, otherwise from the left edge of the scrolling preview pane. The mobile
+   shell, below 760px, stacks them from the left edge. */
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .ce-preview-set:has(.ce-canvas) {
+  flex-wrap: nowrap;
+  gap: 40px;
+  justify-content: safe center;
+}
+
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .ce-preview-set:has(.ce-canvas)
+  > [data-preview-viewport="mobile"] {
+  flex: 0 0 390px;
+}
+
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .ce-preview-set:has(.ce-canvas)
+  > [data-preview-viewport="desktop"] {
+  flex: 1 0 720px;
+}
+
+/* The current desktop canvas keeps its fixed 1024px width beside the mobile
+   one; the row scrolls when the pane is narrower. */
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .ce-preview-set:has(.ce-canvas--current)
+  > [data-preview-viewport="desktop"] {
+  flex: 0 0 auto;
+}
+
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .mbk-shell--mobile
+  .ce-preview-set:has(.ce-canvas) {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .mbk-shell--mobile
+  .ce-preview-set:has(.ce-canvas)
+  > .ce-preview-view {
+  flex: none;
+}
+
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .mbk-shell--mobile
+  .ce-preview-set:has(.ce-canvas)
+  > [data-preview-viewport="mobile"] {
+  width: 390px;
+}
+
 .ce-view-controls {
   align-items: center;
   display: flex;

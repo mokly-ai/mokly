@@ -31,14 +31,12 @@ import {
   type ViewerInspectionPresentation,
 } from "./inspection_layer.js";
 import { Picking } from "./picking.js";
-import type { LoadedCatalogue } from "./source.js";
 import type { MoklyViewerHandle, MoklyViewerProps, PickEnd } from "./types.js";
 
 interface HostBridgeProps {
   callbacks: MutableRefObject<MoklyViewerProps>;
   failureOwner: object;
   handleRef: MoklyViewerProps["ref"];
-  loaded: LoadedCatalogue;
   navigationEnd: MutableRefObject<(() => void) | undefined>;
   replaced(): boolean;
   root: RefObject<HTMLElement | null>;
@@ -49,7 +47,6 @@ export function ViewerHostBridge({
   callbacks,
   failureOwner,
   handleRef,
-  loaded,
   navigationEnd,
   replaced,
   root,
@@ -247,7 +244,7 @@ export function ViewerHostBridge({
   if (!registry) return <div data-mokly-label-layer="" />;
   return (
     <ViewerInspectionLayer
-      model={loaded.catalogue}
+      model={store.catalogue.publicModel}
       onError={reportFrameError}
       onSelect={(session, key, boxes) =>
         receiveInstance(session, key, boxes, "click")

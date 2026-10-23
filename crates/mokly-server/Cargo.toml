@@ -1,0 +1,49 @@
+[package]
+name = "mokly-server"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+mock = []
+
+[dependencies]
+mokly-css = { workspace = true }
+mokly-compare = { workspace = true }
+mokly-model = { workspace = true }
+mokly-catalogue = { workspace = true }
+mokly-graph = { workspace = true }
+mokly-source-interface = { workspace = true }
+async-stream = "0.3.6"
+async-trait = "0.1.92"
+axum = "0.8.9"
+cap-std = "4.0.3"
+hmac = "0.13.0"
+hyper = { version = "1.12.0", features = ["server", "http1"] }
+hyper-util = { version = "0.1.21", features = ["tokio", "service"] }
+mime_guess = "2.0.5"
+percent-encoding = "2.3.2"
+rand = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+thiserror = "2.0.21"
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal", "io-util", "fs"] }
+tower = "0.5.3"
+tracing = "0.1.44"
+unimock = "0.6.8"
+cap-fs-ext = "4.0.3"
+tempfile = "3.27.0"
+
+[dev-dependencies]
+mokly-graph = { workspace = true, features = ["mock"] }
+mokly-html = { workspace = true }
+mokly-css = { workspace = true }
+insta = "1.49.0"
+reqwest = { version = "0.13.5", features = ["json", "stream"] }
+tempfile = "3.27.0"
+tokio = { version = "1.53.3", features = ["test-util"] }
+tower = { version = "0.5.3", features = ["util"] }
+tracing-subscriber = "0.3.23"

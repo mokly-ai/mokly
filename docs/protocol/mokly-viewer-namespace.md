@@ -1,149 +1,152 @@
 # Portable Viewer Namespace And Version Gates
 
-## Delivery Status
-
-The `mokly-viewer/` namespace and its version gates are implemented in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Delivery uses catalogue v6, delivery v5, bootstrap v2, ownership v3 and upload v2.
-Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
-must support those versions and paths before accepting a publication.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Paths And Single Ownership
 
-Define `VIEWER_DIRECTORY = "mokly-viewer"` alongside `GENERATED_DIRECTORY` in
-`packages/viewer/src/catalogue/delivery_paths.ts`, exported from
-`@mokly/viewer/data`. Every CLI, viewer and preview-script path builder imports
-it directly. The [directory lint](./mokly-directory-lint.md) covers both names.
-Identifiers, DOM attributes and protocol names containing `mokly` do not change.
+`mokly-viewer/` is the root of every package-owned public and Serve route.
+The model crate defines the directory names once in `namespace`, beside the
+`mokly-generated` document prefix, and the generated TypeScript of
+`@mokly/viewer/data` carries them in its generated `Namespace` module; every path builder of the binary and of
+the viewer uses that one definition. Identifiers, DOM attributes, and
+protocol names that contain `mokly` are fixed.
 
-All package-owned public and private Serve routes use this root:
+| Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
+| ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
+| `index.json`                                                 | the catalogue index v7                                          | Serve, output |
+| `entries/<entry path>.json`                                  | one entry detail v2 per current entry                           | Serve, output |
+| `diffs/generations/<generation>/review.json`                 | review result v8                                                | Serve, output |
+| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v2 of a removed entry                          | Serve, output |
+| `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
+| `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
+| `live.json`                                                  | the live descriptor v3                                          | Serve only    |
+| `events`                                                     | the event stream, one message per publication                   | Serve only    |
+| `diffs/review.json`                                          | the on-demand selected comparison and removed preview endpoint  | Serve only    |
+| `components/**`                                              | live controls and transient component renders                   | Serve only    |
 
-| Path below `mokly-viewer/`            | Purpose                                                  |
-| ------------------------------------- | -------------------------------------------------------- |
-| `catalogue.json`                      | Complete public catalogue                                |
-| `client/**`, `shell.css`, `fonts/**`  | Browser modules, inspector, appearance, styles and fonts |
-| `diffs/review.json`                   | Live comparison endpoint only                            |
-| `diffs/generations/<generation>/**`   | Immutable review and snapshot resources                  |
-| `components/**`                       | Live controls and transient component renders            |
-| `views/**`, `navigation/**`, `events` | Live evidence, navigation and watch capabilities         |
+The [shell delivery contract](./mokly-shell-delivery.md#routes) owns the
+first two rows and the stub routes `/`, `/view/<route>`, and `/404.html`; the
+[comparison serving](./mokly-comparison-serving.md),
+[removed previews](./mokly-removed-previews.md),
+[on-demand](./mokly-on-demand.md), and
+[component controls](./mokly-component-controls.md) contracts own the others,
+with their authentication, retention, and generation identity rules. Per-view
+usage, resource evidence, and the workspace lists travel in the entry
+details, and the navigation tree and the Changes marks in the index; no route
+exists for them beside those two. `<generation>` is 64 lowercase hex
+characters for a complete generation; the nested segment is `generations`,
+and no deployed segment that Mokly chooses starts with `_`. Snapshot and
+preview names come from the
+[artifact path contract](./mokly-artifact-paths.md).
 
-Every descendant endpoint uses this prefix, including retained
-local generation aliases, with their authentication, retention and
-generation identity rules. The nested generation segment is `generations`;
-no deployed Mokly-owned path segment starts with `_`.
-Retain generation-local `snapshots/before/`, `snapshots/after/` and page metadata
-paths. Use path-derived names and the current review-v7 content shape.
-
-Exports, publication captures, ownership inventory entries, upload metadata,
-Plan archives and Blob reconstruction use those exact paths without a leading
-slash. HTTP URLs prepend `/`. In particular:
+The static output, the ownership inventory, the upload metadata, Plan
+archives, and Blob reconstruction use these exact paths without a leading
+slash; HTTP URLs prepend `/`:
 
 ```text
-mokly-viewer/catalogue.json
+mokly-viewer/index.json
+mokly-viewer/entries/<entry path>.json
 mokly-viewer/diffs/generations/<64 lowercase hex>/review.json
-static/mokly-generated/<generated-relative file>
+mokly-viewer/diffs/generations/<64 lowercase hex>/entries/<entry path>.json
+static/mokly-generated/<document route>
 static/<catalogue-relative authored closure file>
 ```
 
-The static artifact never includes event, control or other live capabilities.
-The upload Plan contains only `mokly-upload.json`, `.mokly-export-artifact`,
-and the optional pinned review file, without a
-full-artifact upload. Blob digest, size and snapshot accounting stay unchanged.
+The static output never contains `live.json`, `events`, `diffs/review.json`,
+`components/**`, or any other live capability. The upload Plan contains only
+`mokly-upload.json`, `.mokly-export-artifact`, and the optional pinned review
+file, without a full-artifact upload; Blob digest, size, and snapshot
+accounting follow the [upload exchange](./mokly-upload-exchange.md). Every
+producer and consumer uses the one path definition: catalogue references,
+frame URLs, the inspector, geometry and navigation checks, CORS allowlists,
+deployment hashing, receiver fixtures, archive assertions, and provider
+adapters. `/view/` and `/static/` keep their meanings. No other file or alias
+exists under `mokly-viewer/`, and a host does not rewrite another path to the
+index.
 
-Update every producer and consumer together: SSR/hydration bootstraps,
-catalogue references, source descriptors, frame URLs, inspector scripts,
-geometry and navigation checks, CORS allowlists, static input fingerprints,
-deployment hashing, export capture, receiver fixtures, archive assertions and
-provider adapters. `/view/` and `/static/` keep their meanings. No old namespace
-file or redirect alias is written. `/__mokly/catalogue.json` is intentionally
-removed; hosts must not rewrite it to the new catalogue.
+## Public Paths
+
+The public paths of a catalogue are `mokly-viewer/index.json`,
+`mokly-viewer/entries/**`, `static/**`, `mokly-viewer/client/**`,
+`mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and the immutable
+generations under `mokly-viewer/diffs/generations/**`. Serve answers
+`live.json`, `events`, `diffs/review.json`, and `components/**` to the
+same-origin shell only, outside the public paths. The public paths keep ordinary path confinement and grant no
+access to sources, controls, or the watcher.
 
 ## Version Matrix
 
-Versions identify meaning before readers interpret any paths. The supported versions
-are:
+Versions identify meaning before a reader interprets any path. The supported
+versions are:
 
-| Boundary                            | Writer | Reader policy                                       |
-| ----------------------------------- | ------ | --------------------------------------------------- |
-| Private source manifest             | 10     | Accept 10; earlier output makes Changes unavailable |
-| Public complete or scoped catalogue | 6      | Accept 6 before entry/path validation               |
-| Static delivery descriptor          | 5      | Accept 5 with four required fields                  |
-| Shell bootstrap envelope            | 2      | Require root version 2                              |
-| Export ownership marker             | 3      | Accept 3 for upload and replacement                 |
-| Upload metadata envelope            | 2      | Strict current fields and namespace                 |
-| Plan response                       | 1      | Content-delta exchange                              |
-| Comparison result                   | 7      | Current path-addressed snapshots                    |
+| Boundary                      | Writer | Reader policy                                |
+| ----------------------------- | ------ | -------------------------------------------- |
+| Catalogue index               | 7      | Require 7 before entry and path validation   |
+| Entry detail                  | 1      | Require 1 before reading entry fields        |
+| Live descriptor               | 3      | Require 3 before using the render capability |
+| Review result                 | 8      | Require 8 before reading comparison content  |
+| Removed page preview metadata | 3      | Require 3 before resolving a document        |
+| Export ownership marker       | 3      | Accept 3 for upload and output replacement   |
+| Upload metadata envelope      | 2      | Strict current fields and namespace          |
+| Plan response                 | 1      | Content-delta exchange                       |
 
-The [combined version inventory](./mokly-format-versions.md) also defines
-private IPC, inspector, preview and cache formats. Unknown versions fail closed.
+The [combined version inventory](./mokly-format-versions.md) lists every
+boundary, including the inspector wire version. Unknown versions fail closed.
+The index carries `deploymentId`, `revision`, and `comparisonUrl`, and a page
+embeds no state; no other envelope exists.
 
-Catalogue v6, delivery v5 and bootstrap v2 identify the unified layout.
-Only the current `mokly-viewer/` namespace is accepted. Upload v2 and ownership
-v3 require that namespace even for current-only artifacts. Strict version gates
-apply before reading paths; unsupported versions never authorize a content read.
-A v5 catalogue reader cannot interpret a v6 model.
-
-Catalogue v6 retains identity-only entries. It contains no layout-prefix field,
-per-entry routes, `documentPath` or `fragmentPath`. Derive current files from
-path/viewport/scheme and `GENERATED_DIRECTORY`. The schema version is 5. Public models remain
-complete; `omitted` usage is permitted only in the strictly scoped live reader.
-Bootstrap v2 requires its root version field and validates its scope;
-its external reference
-is exactly `/mokly-viewer/catalogue.json`. Static descriptor v5 keeps
-`canonicalPath`, `comparisonUrl`, `deploymentId`, and `schemaVersion`; only
-the pinned comparison namespace is valid. Catalogue comparison paths are
-root-relative without `/`; descriptor URLs include `/`.
-
-Ownership v3 uses the `{ path, sha256, size }` inventory and all limits,
-collision rules, classification precedence, content-delta semantics and
-duplicate-JSON-key checks. Upload v2 requires the strict field list, limits,
-metadata identity and null-without-comparisons rule. Version changes are
-deliberate even when comparisons are disabled. A current-only artifact must
-not bypass the gate simply because it contains no comparison path.
+Index v7 carries identity-only entries: no layout prefix, per-entry route,
+`documentPath`, or `fragmentPath`. A reader derives every file from the
+entry's path, viewport, and scheme through the artifact path contract. The
+index carries no `usage` and no `resourceEvidence`, and its reader rejects
+either field anywhere; the detail carries them. Ownership v3 uses the
+`{ path, sha256, size }` inventory with its limits, collision rules,
+classification precedence, content-delta semantics, and duplicate-JSON-key
+checks. Upload v2 requires the strict field list, limits, metadata identity,
+the `mokly-viewer/` namespace, and the null-without-comparisons rule, even for
+a current-only output; an output without a comparison path does not bypass
+the gate.
 
 ## Compatibility Failure
 
-An older conforming receiver rejects ownership v3 or upload v2 with HTTP 426
-before validating paths or creating a publication. Preserve bounded
-archive parsing, authentication and upload-limit checks before version checks.
-The CLI maps 426 to `upload-unsupported-version`, with this exact message:
+A receiver that does not support ownership v3 or upload v2 rejects the upload
+with HTTP 426 before it validates paths or creates a publication, after
+bounded archive parsing, authentication, and upload-limit checks. The CLI
+maps 426 to `upload-unsupported-version` with this exact message:
 
 ```text
 The catalogue service does not support this Mokly version. Update the service and try again.
 ```
 
-Do not retry, send Blobs, call Complete, downgrade, or expose a response body.
-An old-format artifact offered to the current receiver also fails 426. For local
-export replacement, a regular marker with an unsupported version fails before
-mutation with `[mokly/export-invalid] Invalid export ownership inventory: <output>.`
-Missing ownership and unsafe filesystem entries retain separate errors.
-The marker remains required for upload and local recovery.
+It does not retry, send Blobs, call Complete, downgrade, or expose a response
+body. For local output replacement, a marker with an unsupported version
+fails before mutation with
+`[mokly/export-invalid] Invalid export ownership inventory: <output>.`
+Missing ownership and unsafe filesystem entries have separate errors. The
+marker is required for upload and local replacement.
 
-An independently hosted older viewer given catalogue v6 must reject its
-unsupported version before deriving `/static/` URLs or reading entry fields.
-The current viewer exposes a typed version failure that a host can distinguish
-from malformed data; its diagnostic is `Unsupported Mokly catalogue version <version>; this viewer supports version 6.`
-Unknown delivery/bootstrap versions likewise fail before any resource request
-or hydration. Use `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
-with boundary `delivery`, `bootstrap` or `review` and the table's supported version.
-Numeric review versions other than 7 fail before comparison content is read.
-The comparison error surface uses the same product message and keeps version
-numbers in its diagnostic details. Current remains available; rejected results
-produce no comparison panes. Malformed current results remain invalid data.
-Do not infer a version from file existence or silently fall back to a live URL.
+A viewer given an index, a detail, a live descriptor, or a review with
+another version rejects it before it derives a `/static/` URL or reads an
+entry field. The viewer exposes a typed version failure that a host can
+distinguish from malformed data; its diagnostic is
+`Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
+with boundary `catalogue`, `detail`, `live`, or `review` and the table's
+supported version. A rejected review produces no comparison panes and leaves
+Current available; a malformed current result is invalid data, not a version
+failure. No reader infers a version from file existence or falls back to
+another URL.
 
-First-party loaders and embedding hosts present a version failure through their
-existing error surface as `This catalogue needs a compatible Mokly viewer. Update the viewer and reload.`
-Keep version numbers in diagnostic details. A static page retains its server
-render and ordinary links if hydration is rejected; it must not install partial
-interaction. Atomic exports ship their own matching browser bundle, so a host
-must not substitute a cached, independently versioned client. An older viewer's
-existing unsupported-version exception is the compatibility boundary; this
-repository cannot change the wording in an already installed older binary.
-
-The embedded viewer reports `onError` with `code: "version"`, the product
-message above and optional `details` containing the typed version diagnostic.
-Other error codes and messages stay unchanged. `ViewerError` is:
+Every host shows one headline for a version failure:
+`This catalogue needs a compatible viewer`. The standalone shell shows it in its
+mount element with one `Reload` action, because Serve and the static build ship
+the viewer that matches their catalogue; it logs the diagnostic separately and
+renders no navigation and no frame after a rejected index or detail. The
+embedded viewer shows the headline without an action, because only its host can
+update the viewer, and reports `onError` with `code: "version"`, the headline as
+`message`, and `details` with the typed diagnostic. A rejected review follows the
+same rule in the comparison pane: the standalone shell shows the headline with
+`Reload`, and the embedded viewer shows it without an action and reports
+`onError`. `ViewerError` is:
 
 ```ts
 interface ViewerError {
@@ -154,61 +157,47 @@ interface ViewerError {
 }
 ```
 
-Standalone loading places the same product line in an alert within the existing
-page and logs the diagnostic separately. No React hydration starts after a
-rejected delivery, bootstrap or catalogue. Existing server markup and links remain.
-
-There is no automatic conversion of older public artifacts. They keep their
-original bundled viewer at their original deployment, or are re-exported.
-The separate private baseline boundary also reads only v10. Older manifest
-envelopes are checked solely to produce the approved earlier-baseline outcome;
-they cannot authorize content reads or a mixed public artifact.
-Mokly Cloud must update upload validation, stored path lookup, catalogue fetch
-URLs and embedded viewer/version-error handling before accepting this format.
-A receiver that does not support this contract rejects publication with 426.
-Receiver deployment is independent of local catalogue compilation and export.
+One build ships its own matching browser bundle, so a host must not
+substitute a cached, independently versioned client. An existing static
+output keeps its own bundled viewer at its own deployment; running `build`
+again updates both. Mokly Cloud implements upload validation, stored path
+lookup, index and detail fetch URLs, and the embedded viewer's version error
+for these versions; a receiver that does not rejects publication with 426.
+Receiver deployment is independent of a local build.
 
 ## Names And Acceptance
 
-Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#` or
-`~`. This applies to the generated tree, viewer namespace, `generations`, and
-other fixed path segments written by Mokly. It adds no validation rule for
-authored closure names, entry paths, or repository paths mirrored below `styles/`
-and `assets/`. Those user-chosen names retain existing path validation
-and diagnostics, including its hidden-segment rejection. Do not reject or
-rename an otherwise accepted authored path to enforce this naming policy.
+Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#`, or
+`~`. This applies to the viewer namespace, `entries`, `generations`,
+`snapshots`, `previews`, `mokly-generated`, and every other fixed segment
+Mokly writes. It adds no validation rule for authored closure names, entry
+paths, or repository paths mirrored below `styles/` and `assets/`; those
+user-chosen names keep their path validation and diagnostics, including
+hidden-segment rejection, and no accepted authored path is rejected or
+renamed for this policy.
 
-The plain Mokly directory names do not guarantee that every consumer path is
-portable to every host. For example, GitHub Pages with Jekyll can also omit a
-user-chosen name starting with `_`. Consumers must configure their host or
-choose compatible authored names; Mokly adds no build error for this caveat.
+Plain Mokly directory names do not make every consumer path portable to every
+host. GitHub Pages with Jekyll, for example, omits a user-chosen name that
+starts with `_`. Consumers configure their host or choose compatible authored
+names; `build` adds no error for this caveat.
 
-A root `.mokly-export-artifact` is the optional deployment marker: a static
-host may omit it because the viewer never reads it. Upload and local export
-recovery still require it. Other dot-prefixed fixed Mokly names identify
-local-only cache and transaction state. Provider metadata is optional host
-configuration and must not become a visitor dependency.
+The root `.mokly-export-artifact` is the optional deployment marker: a static
+host may omit it because the viewer never reads it, while upload and local
+output replacement require it. Other dot-prefixed fixed names belong to the
+static build's output transaction; they are local state and are never
+deployed. Provider metadata is optional host configuration and never a
+visitor dependency.
 
-Regression tests cover failure cases for an old receiver rejecting new
-current-only and Changes-enabled uploads, new readers rejecting old/unknown
-versions before path use, and a strict older catalogue reader rejecting v6.
-The ownership-v3 fixtures retain v2 digest coverage and explicit
-unsupported-v2 cases; preserve Plan v1 retry, keep-first, delta and cancellation
-tests. Update installed-package fixtures for catalogue v6, ownership v3 and
-upload v2. No source or private manifest enters any artifact.
-
-Smoke-test Serve, a plain static-server export with the optional marker removed,
-and a publication Plan/Blobs/Complete round trip. Keep the export and upload
-regression on the example artifact: inspect every segment in its complete
-exported and reconstructed inventories for `.`, `_`, `#` or `~` prefixes,
-with only the root marker exception. This is an assertion about that fixture,
-not a validator for arbitrary consumer names. Add a unit test that enumerates
-the fixed deployed names Mokly chooses and checks the same rule. Include
-Changes-enabled example artifacts so `generations/`, removed previews and
-binary CSS resources are covered. Stop every server after testing.
-
-The approved [path/output integration](./mokly-path-output-integration.md)
-defines the current path-derived layout. Its
-[format inventory](./mokly-format-versions.md) defines manifest v10, catalogue v6,
-review v7 and all other boundaries. Only v10 baseline content is readable after
-that integration; the earlier-version product outcome remains unchanged.
+Regression tests cover an old receiver rejecting a new current-only and a
+Changes-enabled upload, new readers rejecting old and unknown versions before
+any path use, and ownership v3 fixtures with explicit unsupported-v2 cases;
+Plan v1 retry, keep-first, delta, and cancellation tests stay. No source
+enters any output. Smoke-test Serve, a plain static server with the optional
+marker removed, and a publication Plan, Blobs, and Complete round trip. Keep
+the build and upload regression on the example output: inspect every segment
+of its complete built and reconstructed inventories for `.`, `_`, `#`, or `~`
+prefixes, with only the root marker exception; this asserts the fixture, not
+arbitrary consumer names. A unit test enumerates the fixed deployed names
+Mokly chooses and checks the same rule. Include a Changes-enabled example
+output so `generations/`, removed previews, and binary CSS resources are
+covered. Stop every server after testing.

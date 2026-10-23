@@ -14,10 +14,17 @@ Changed, `added` to Added, `removed` to Removed, and `unchanged` or
 `ignored-only` to Unmodified. While Both is selected, the shown status is
 Changed when any shown view is Changed, else Added when any is Added, else
 Removed when any is Removed, else Unmodified. Comparison eligibility follows
-that shown status under the existing kind rule: Changed is eligible, and
-Removed is eligible only for a component variant. Thus an entry with
+that shown status under the kind rule: Changed is eligible, and
+Removed is eligible only for a component. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
-controls and the `Changed views` row point to the views that changed.
+controls and the `Changed views` row point to the views that changed. Changed
+components make the one exception: when the entry detail marks the entry
+comparison-eligible, an Unmodified view whose usage holds a changed component
+that the detail's `relatedComponents` names stays eligible while it shows
+Unmodified. This holds in or out of Changes: for an entry that Changes does not
+list, a pure move, a component variant, and an entry whose other views changed
+alike. With Both selected, one eligible shown view makes the comparison
+eligible.
 
 Per-view evidence is authoritative only when it names every effective view in
 the current selection. Unknown, pending, or partial per-view evidence preserves
@@ -28,28 +35,34 @@ viewport or requested scheme recomputes the effective views, status, marks, and
 eligibility without a page load, as does a background evidence refresh;
 selecting a sibling variant is navigation to that entry.
 
-Server rendering, controlled selection, and comparison deep links use the same
-decision; a deep link is honored only after it confirms eligibility. Nonmatching
-evidence retains the existing fallback decision.
+Controlled selection and comparison deep links use the same decision; a deep link is honored only after it confirms eligibility. Nonmatching
+evidence uses the fallback decision.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
-band beneath the heading. Added and Unmodified views retain their current
-preview without that band; removed screens show their
-[previous version](./mokly-removed-previews.md) without it. Affected-only
-consumers can compare actual rendered differences while staying outside
-Changes. Current is selected initially, including after navigation and reload.
+band beneath the heading. Added views, and Unmodified views that use no changed
+component, retain their current preview without that band; removed screens show
+their [previous version](./mokly-removed-previews.md) without it. Affected
+consumers can compare actual rendered differences while their views stay
+Unmodified, and an affected-only consumer stays outside Changes. Current is
+selected initially, including after navigation and reload.
 Selecting Changes, opening a current screen, changing its viewport or color
 scheme in Current, and receiving a watched update do not generate comparison
 snapshots in development; opening a removed entry is the one selection that
-requests its historical preview. Publications with Changes prepare snapshots
+requests its historical preview. A static build with Changes prepares snapshots
 at build time, but never fetch or render them while browsing in Current. The first
 explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
 Navigation must never let a late comparison response replace another screen.
 Shell-owned links carry comparison intent only when the destination view
-is eligible. The destination revalidates that eligibility before honoring a
+is eligible. An eligible Affected link names a view that its destination can compare:
+a Changed view, or an Unmodified view whose usage holds the changed component.
+An Added view is never eligible, so its Affected link opens Current without a
+comparison query.
+The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
-current-only state or trigger a hidden comparison request.
+current-only state or trigger a hidden comparison request. It honors the query
+once for each navigation, when that eligibility is first known; a watched
+update or a later eligibility change never applies it again.
 
 When a ready classification marks only some of a screen's views changed, the
 view controls say so rather than leaving the reviewer to find the difference.
@@ -65,8 +78,8 @@ unmodified container row still redirects to its first visible changed variant
 or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
 URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
 selection.
-These marks and the `Changed views` row apply in exports with Changes as well as
-in Serve.
+These marks and the `Changed views` row apply in a static build with Changes as
+well as in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot

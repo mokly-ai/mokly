@@ -1,8 +1,27 @@
-/** Rendered branch-point facts shared by the Serve, export and viewer specs. */
+/** Rendered branch-point facts on Serve, the branch copy, and the embedded viewer. */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import type { BranchHost, BranchHostKind } from "./branch_hosts.js";
+import { expectHostPath, type EntryHost } from "./entry_hosts.js";
+import type { MovedHost } from "./moved_rows.js";
+import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+
+/**
+ * How one host runs the branch-point checks. The hosts of the moved cases
+ * fit: each says how it opens an entry, which page path it shows for that
+ * entry, whether a narrow window shows the compact search control, and how
+ * it opens an Affected link. Only Serve captures comparisons on demand.
+ */
+export type BranchPointHost = Pick<
+  MovedHost,
+  "affectedLinks" | "comparisons" | "compactSearch" | "open" | "path"
+>;
+
+/**
+ * The widest viewer that shows the compact search control in place of the
+ * field, in CSS pixels, under the viewer contract.
+ */
+const COMPACT_SEARCH_WIDTH = 560;
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -11,7 +30,7 @@ export const BRANCH_POINT_WIDTHS = [
 ] as const;
 
 /** One crumb as `label -> href`, `label [button]`, or `label [text]`. */
-export async function crumbs(page: Page): Promise<string[]> {
+async function crumbs(page: Page): Promise<string[]> {
   return page
     .locator(".mbk-screen-head .mbk-crumbs > span")
     .evaluateAll((spans) =>
@@ -61,10 +80,18 @@ export async function inspectorTab(page: Page, name: string): Promise<void> {
   await expect(tab).toHaveAttribute("aria-selected", "true");
 }
 
-/** Switch the comparison band to Side by side and wait for its props. */
-export async function compareSideBySide(page: Page): Promise<void> {
+/**
+ * Switch the comparison band to Side by side. On Serve the click waits for
+ * the comparison that it requests, through its redirect.
+ */
+export async function compareSideBySide(
+  page: Page,
+  host: BranchPointHost,
+): Promise<void> {
   const side = page.locator("[data-diff-mode=side]");
-  await side.click();
+  if (host.comparisons === "on demand")
+    await awaitSelectedComparison(page, () => side.click());
+  else await side.click();
   await expect(side).toHaveAttribute("aria-pressed", "true");
 }
 
@@ -110,47 +137,64 @@ export async function activateRow(page: Page, entryId: string): Promise<void> {
   await nav.locator(`a[data-nav-row][data-entry-id="${entryId}"]`).click();
 }
 
-/** Search the catalogue; Changes keeps only the rows the query matches. */
-export async function search(page: Page, query: string): Promise<void> {
-  await openChanges(page);
-  await page.locator("[data-mokly-search]").fill(query);
+/**
+ * Expect the search control that `host` claims at the window width: the
+ * compact control when a narrow window shows it, otherwise the field.
+ * Return whether the control is compact.
+ */
+async function expectSearchControl(
+  page: Page,
+  host: EntryHost,
+): Promise<boolean> {
+  const compact =
+    host.compactSearch && page.viewportSize()!.width <= COMPACT_SEARCH_WIDTH;
+  const field = page.locator("[data-mokly-search]");
+  const control = page.getByRole("button", { name: "Search catalogue" });
+  await expect(compact ? control : field).toBeVisible();
+  await expect(compact ? field : control).toBeHidden();
+  return compact;
 }
 
 /**
- * Wait until a host shows one entry: its head names the entry's path, and a
- * standalone shell's address is that entry's route. The embedded viewer's
- * host page owns its own address, so only the rendered head applies there.
+ * Search the catalogue; Changes keeps only the rows the query matches. The
+ * compact control opens the field, and closing it again keeps the query and
+ * shows the navigation menu.
  */
+export async function search(
+  page: Page,
+  host: EntryHost,
+  query: string,
+): Promise<void> {
+  await openChanges(page);
+  const compact = await expectSearchControl(page, host);
+  if (compact)
+    await page.getByRole("button", { name: "Search catalogue" }).click();
+  await page.locator("[data-mokly-search]").fill(query);
+  if (compact) await page.getByRole("button", { name: "Close search" }).click();
+}
+
+/** Wait until the head and the host's page path name one entry. */
 export async function expectRouted(
   page: Page,
-  kind: BranchHostKind,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await expect(
     page.locator(".mbk-screen-head [data-copy-path]"),
   ).toHaveAttribute("data-copy-path", entry);
-  if (kind !== "viewer")
-    await expect
-      .poll(() => decodeURIComponent(new URL(page.url()).pathname))
-      .toBe(`/view/${entry}/`);
+  await expectHostPath(page, host, entry);
 }
 
-/** Record every server error a page meets, for a final assertion. */
-export function serverErrors(page: Page): string[] {
-  const failures: string[] = [];
-  page.on("response", (response) => {
-    if (response.status() >= 500)
-      failures.push(`${response.status()} ${response.url()}`);
-  });
-  return failures;
-}
-
-/** Open an entry and wait for its workspace head. */
+/**
+ * Open an entry on `host`, wait for its workspace head, and expect the
+ * search control that the host claims at the window width.
+ */
 export async function openEntry(
   page: Page,
-  host: BranchHost,
+  host: EntryHost,
   entry: string,
 ): Promise<void> {
   await host.open(page, entry);
   await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
+  await expectSearchControl(page, host);
 }

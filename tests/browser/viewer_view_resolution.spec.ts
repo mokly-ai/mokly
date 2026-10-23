@@ -1,8 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
 
+import { test } from "./browser_test.js";
+import { awaitRoutedDetail } from "./comparison_ui.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -16,7 +17,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => fixture?.close());
 
 function readyCatalogue(): CatalogueReadModel {
-  const source = structuredClone(fixture.catalogue);
+  const source = structuredClone(fixture.index);
   const changes = {
     status: "ready" as const,
     kind: "unmodified" as const,
@@ -36,12 +37,12 @@ function readyCatalogue(): CatalogueReadModel {
 async function openViewer(
   page: Page,
   id: string,
-  catalogue: CatalogueReadModel,
+  index: CatalogueReadModel,
   defaultSelection: Record<string, unknown>,
 ) {
   await page.goto(fixture.host.url);
   await page.waitForFunction(() => Boolean(window.viewerHarness));
-  const source = JSON.stringify(catalogue);
+  const source = JSON.stringify(index);
   await page.evaluate(
     ({ defaultSelection, id, source }) =>
       window.viewerHarness.start(id, {
@@ -84,6 +85,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   await expect(root.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(root, screen.path);
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
@@ -103,9 +105,9 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   const component = catalogue.components.find(({ path }) => path === "pane");
   if (!component) throw new Error("Missing Viewer component fixture");
   component.changes = { status: "ready", kind: "changed", included: true };
-  const variant = catalogueComponentVariants(catalogue, component.path).find(
-    ({ path }) => path === "pane/default",
-  );
+  const variant = catalogue.components
+    .filter((entry) => entry.variantOf === component.path)
+    .find(({ path }) => path === "pane/default");
   if (!variant) throw new Error("Missing Viewer saved variant fixture");
   variant.comparison = { status: "unavailable" };
   variant.views = variant.views.map((view) => ({
@@ -122,5 +124,6 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   await expect(root.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await awaitRoutedDetail(root, variant.path);
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
 });

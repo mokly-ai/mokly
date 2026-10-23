@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "./metadata.js";
 import { useDarkPreview } from "./parts/appearance.js";
+import { artboards } from "./parts/artboards.js";
 import { CompareGrid, Pane } from "./parts/compare.js";
 import {
   ComparePage,
@@ -14,6 +15,7 @@ import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { REMOVED_SCREENS } from "./parts/nav_data.js";
+import { ReasonSentences } from "./parts/reason_sentences.js";
 import { RemovedScreen, RemovedView } from "./parts/removed_screen.js";
 import { MiniFarewell } from "./parts/removed_shots.js";
 import { ReviewNav } from "./parts/review.js";
@@ -27,6 +29,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
       activeTitle="Welcome"
       subject="welcome"
       path={ENTRY_PATHS.welcome}
+      reasons={["material"]}
       state="changed"
       title="Welcome"
       viewport={viewport}
@@ -77,7 +80,7 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       <ExampleWorkspace
         subject="details"
         viewport={viewport}
-        comparisonEvidence={<p>Added to this branch.</p>}
+        comparisonEvidence={<ReasonSentences reasons={["added"]} />}
       />
     </Shell>
   );
@@ -111,6 +114,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       subject="welcome"
       path={ENTRY_PATHS.welcome}
       mode="difference"
+      reasons={["material"]}
       state="changed"
       title="Welcome"
       viewport={viewport}
@@ -133,44 +137,50 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
 }
 
 /** Review design screens for per-screen comparison outcomes. */
-export const reviewOutcomeScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "A changed screen compared side by side with its base render, in either catalogue scheme.",
+export const changedScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "A changed screen compared side by side with its base render, in either catalogue scheme.",
+  ...artboards({
     desktop: <ChangedCompare viewport="desktop" />,
-    slug: "changed",
     mobile: <ChangedCompare viewport="mobile" />,
-    title: "Changed screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description: "An added screen shown directly in its current state.",
+  slug: "changed",
+  title: "Changed screen",
+});
+export const addedScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description: "An added screen shown directly in its current state.",
+  ...artboards({
     desktop: <AddedCurrent viewport="desktop" />,
-    slug: "added",
     mobile: <AddedCurrent viewport="mobile" />,
-    title: "Added screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A removed screen shown as the previous version of its mobile and desktop views.",
+  slug: "added",
+  title: "Added screen",
+});
+export const removedScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A removed screen shown as the previous version of its mobile and desktop views.",
+  ...artboards({
     desktop: <RemovedPrevious viewport="desktop" />,
-    slug: "removed",
     mobile: <RemovedPrevious viewport="mobile" />,
-    rationale:
-      "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. The catalogue-wide Appearance selector remains the only theme control, while the historical frame stays Light because that is the only scheme captured for those views.",
-    title: "Removed screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    description:
-      "Difference mode blends the two screen versions in place, in either catalogue scheme.",
+  slug: "removed",
+  rationale:
+    "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. The catalogue-wide Appearance selector remains the only theme control, while the historical frame stays Light because that is the only scheme captured for those views.",
+  title: "Removed screen",
+});
+export const differenceScreen = defineScreen({
+  ...changesDesignMetadata,
+  description:
+    "Difference mode blends the two screen versions in place, in either catalogue scheme.",
+  ...artboards({
     desktop: <DifferenceCompare viewport="desktop" />,
-    slug: "difference",
     mobile: <DifferenceCompare viewport="mobile" />,
-    title: "Difference mode",
   }),
-];
+  slug: "difference",
+  title: "Difference mode",
+});

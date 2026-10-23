@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { readDisclosureStorage } from "./disclosure_storage.js";
 
 const earlierVersions = {

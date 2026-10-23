@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import {
-  packageReport,
+  viewerPackageReport as packageReport,
   type PackageReport,
 } from "./helpers/release_fixture.js";
 

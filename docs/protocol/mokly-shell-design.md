@@ -2,51 +2,16 @@
 
 ## Scope
 
-This document records the approved design for the package-owned Browse shell
+This document records the design for the package-owned Browse shell
 and the optional in-place screen comparisons. The visual source of truth is the
 design catalogue in the basic example, whose entry paths start with `design/`;
 this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
 
-## Delivery Status
-
-The shared [React shell](./mokly-viewer.md#shell-tree-and-state) preserves these
-tokens, dimensions and interactions in Serve, export and embedded hosts.
-The [component explorer designs](./mokly-component-design.md) own component
-states. Specs, browse-only folders, Overview rows, path chips, documents and
-Moved rows use the designs listed in the [inventory](./mokly-shell-design-inventory.md).
-
-Auto/Light/Dark interface appearance is designed in the
-`design/browse/appearance/**` mockups and specified by the
-[semantic palette](./mokly-viewer-palette.md). The shell now carries that
-palette in both appearances, selected on a viewer root, and an embedded host
-chooses one with `theme`. A standalone document carries the delivered Appearance
-control at every width and uses it for both the shell and the previews.
-
-The page and publication designs are implemented in the example catalogue and
-shared shell. Whole documents use a plain bordered pane and omit
-device/comparison controls. Removed pages are flat Changes rows; baseline
-breadcrumbs are text even after their parents are deleted. Ordinary
-publications omit the Changes filter and comparison band while preserving the
-same navigation, search, tags, and variants. `design/changes/impact/styles/page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-
-The comparison designs implement the [pane](./mokly-comparison-panes.md),
-[scrolling](./mokly-comparison-scrolling.md), and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts, including
-stacked component frames, paired app-shell panels, and the switched-off state.
-
-The removed-document and removed-screen designs depict the shipped
-[removed previews](./mokly-removed-previews.md) behavior: the previous version
-under a quiet "Showing previous version" label, with loading, unavailable, and
-long-content states in their own child pages. The shell renders those states at
-runtime. The removed-screen family also designs a viewport with no captured
-previous view; the shell renders the note fixed by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-
 ## Design Mockups
 
-The approved screens are authored in `examples/basic/specs/design/`. The
+The design screens are authored in `examples/basic/specs/design/`. The
 [shell design inventory](./mokly-shell-design-inventory.md) lists every Browse
 and Changes design screen with its folder and depicted state, describes the
 fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
@@ -73,7 +38,7 @@ is package-owned identity and ignores these consumer accent overrides.
 ## Package-Owned Tokens
 
 The shell chrome supports Light and Dark independently of the preview's color
-scheme. Light retains its neutral/sage family; Dark uses Mokly Cloud's warm
+scheme. Light uses the neutral/sage family; Dark uses Mokly Cloud's warm
 Folio neutrals with sage accents. The complete mapping and both palettes live in
 the [semantic palette](./mokly-viewer-palette.md). The Light values are:
 
@@ -91,9 +56,9 @@ the [semantic palette](./mokly-viewer-palette.md). The Light values are:
 | `--chrome-brand`         | `#2f5945`                        | Mokly brand mark         |
 | `--chrome-shadow`        | `0 30px 90px rgba(20,28,22,.14)` | Overlay elevation        |
 
-The shipped shell and appearance mockups share the two corrected Light values:
+The shell and the appearance mockups share these two Light values:
 `--chrome-muted` is `#676e6a`, and control outlines, grips and field borders use
-`--chrome-control-edge` `#868e88` so `--chrome-border-strong` remains limited to
+`--chrome-control-edge` `#868e88` so `--chrome-border-strong` stays limited to
 device and pane frames. Both are recorded, with their contrast, in the
 [semantic palette](./mokly-viewer-palette.md).
 
@@ -119,8 +84,8 @@ scrollable region scrolls internally:
   catalogue drawer. Search uses
   `Search catalogue` as its accessible name and `Search catalogue…` as its
   placeholder in both viewport sizes, covering screens, pages, and flows.
-  The bar carries no preview mode switch; the delivered Auto/Light/Dark
-  Appearance control is the one setting that belongs here.
+  The bar carries no preview mode switch; the Auto/Light/Dark Appearance
+  control is the one setting that belongs here.
   Matching uses the single [search rule](./mokly-folders.md#titles).
   Filtering hides empty groups and opens retained groups, and composes with
   the All/Changes filter.
@@ -141,11 +106,11 @@ scrollable region scrolls internally:
   panel moves focus to the chip for the entered tag, or to the first chip when
   no tag is entered; the chip row then keeps a single tab stop that ArrowLeft
   and ArrowRight rove and wrap at both ends, Home and End send to its ends, and
-  Enter or Space activates. That chip row is a labelled toolbar carrying the
-  single tab stop, while the details inspector's chips stay independent tab
-  stops. Escape closes the panel and returns focus to the control without
-  changing the query, and a click outside closes it, returning focus to the
-  control only when the closing panel still holds it. A catalogue that declares
+  Enter or Space activates. The row is a labelled toolbar with one tab stop.
+  Details chips keep independent tab stops. Escape closes the panel and
+  returns focus to the control without changing the query. An outside click
+  closes it and returns focus only if the panel held focus. Selecting a Details
+  tag closes an open picker and focuses its toggle. A catalogue that declares
   no tags renders neither the control nor the panel.
 - **Navigation** — 248px initial column, `#fbfbfa` background, hairline right
   border. On desktop, an 8px-wide split separator with a centred 2×32px grip
@@ -175,15 +140,15 @@ scrollable region scrolls internally:
   shows `0` and “No changes found.” The filter and tree origin keep their
   positions throughout, and All stays selectable in every state.
   Reduced-motion settings disable rotation.
-  The drawer below the breakpoint shows the same body. Static exports without
-  Changes retain their filter-free layout. The catalogue-navigation component's
+  The drawer below the breakpoint shows the same body. A static build without
+  Changes keeps the filter-free layout. The catalogue-navigation component's
   `loading`, `preparing`, and `unavailable` variants are the mobile/desktop
   owning mockups for the three non-ready states.
   `design/changes/availability/preparing` and `design/changes/availability/unavailable` additionally own
   the preparing and failed states inside the complete shell, where Changes is
   selected and the chosen screen stays available. The preparing state exists only
-  for derived baselines; see
-  [derived baselines](./mokly-derived-baselines.md) for when it is published.
+  while the base side renders from the base commit's sources; the
+  [catalogue read model](./mokly-catalogue.md) carries it as `changesStatus`.
   - The tree begins with separate `Specs` and `Components` native disclosures,
     both open by default and both closed by `Collapse all`. Search and Changes
     hide sections when they hide every row in them. Both sections are views of
@@ -229,7 +194,7 @@ scrollable region scrolls internally:
     its mockups, the latter for a folder screen listing its members.
   - Catalogue-link navigation opens the active section and every folder on the active
     row's path and scrolls that row into view. Search and Changes filtering may
-    stay selected only while the active row remains visible. Reapplying an
+    stay selected only while the active row stays visible. Reapplying an
     active filter during navigation preserves collapsed groups outside the
     destination path, while editing the search or filter opens groups to reveal
     current matches. Clearing filtering restores earlier disclosures except
@@ -255,14 +220,14 @@ scrollable region scrolls internally:
   `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap that stack from the top below 760px, internal `overflow: auto`,
+  safe centring (a row or frame wider than the stage starts at its left edge),
   `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
 - **Details inspector** — the shared icon footer opens the chosen tab in place;
   closing it leaves no icon selected. Desktop uses a centered grip on the divider
   and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
   grabber. The footer owns that sheet's surface and shadow while its dock owns
   placement and height. Only panel content scrolls within the bounded workspace.
-  Details contains a two-column
-  body (`1.35fr / 1fr`) with description and
+  Details contains a two-column body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
   rows (Source, Moved from, Schemes, Changed views, Tags, Related docs,
   Dependencies, Used by) on the right. Paths render as monospace chips; use
@@ -277,7 +242,7 @@ scrollable region scrolls internally:
   chip whose tag is in the entered query carries the accent active state with
   contrast text and glyph. An entry that declares no tags omits the row.
 
-Details has no Generated or Route row: every file derives from the entry's
+Details has no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
@@ -308,7 +273,7 @@ See [responsive shell behavior](./mokly-shell-device-chrome.md#responsive-behavi
 
 ## In-place Comparisons
 
-The catalogue remains the only shell. Eligible shown views place Current, Side
+The catalogue is the only shell. Eligible shown views place Current, Side
 by side, Overlay, and Difference below the heading; Current starts selected.
 Diffs load on demand in the same main region while navigation, details,
 viewport, scheme, Refresh, and Retry stay available. The band appears for a
@@ -318,9 +283,9 @@ and empty states. Static catalogues without comparison data omit it.
 
 Both viewports reuse their device frames. Overlay and Difference keep both
 script-disabled versions inside one opaque chrome; Side by side keeps one
-captioned chrome per version. Missing component-variant panes remain explicit
+captioned chrome per version. Missing component-variant panes stay explicit
 and fall back to Side by side. Loading, failure, evidence, and ignored details
-remain secondary and never invent pixel measurements. Exact presentation,
+stay secondary and never invent pixel measurements. Exact presentation,
 scrolling, switch geometry, responsive wrapping, app-shell dimensions, and
 fixed-row depictions live in the linked comparison contracts above.
 

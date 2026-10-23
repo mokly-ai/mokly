@@ -6,9 +6,9 @@ import { ESLint } from "eslint";
 const ruleId = "mokly/no-directory-literals";
 const eslint = new ESLint();
 const probes = [
-  "src/generated-directory-lint-probe.ts",
+  "packages/viewer/src/generated-directory-lint-probe.ts",
   "packages/viewer/src/generated-directory-lint-probe.tsx",
-  "scripts/preview/generated-directory-lint-probe.mjs",
+  "packages/viewer/src/client/generated-directory-lint-probe.ts",
 ];
 
 test("regular-expression directory names cannot bypass lint", async () => {
@@ -100,11 +100,12 @@ test("each offending template segment is reported only once", async () => {
   );
 });
 
-test("only the defining module is exempt inside production roots", async () => {
+test("path builders and generated directory definitions are exempt", async () => {
   for (const [filePath, expected] of [
     ["packages/viewer/src/catalogue/delivery_paths.ts", []],
+    ["packages/viewer/src/generated/catalogue/Namespace.ts", []],
     ["packages/viewer/src/catalogue/other_paths.ts", [ruleId]],
-    ["src/catalogue/delivery_paths.ts", [ruleId]],
+    ["packages/viewer/src/client/delivery_paths.ts", [ruleId]],
     ["tests/generated-directory-lint-probe.ts", []],
   ] as const) {
     const [result] = await eslint.lintText(
@@ -122,7 +123,7 @@ test("only the defining module is exempt inside production roots", async () => {
 test("later no-restricted-syntax options cannot replace the directory rule", async () => {
   const merged = new ESLint({
     overrideConfig: {
-      files: ["src/config/**/*.ts"],
+      files: ["packages/viewer/src/catalogue/**/*.ts"],
       rules: {
         "no-restricted-syntax": [
           "error",
@@ -136,7 +137,10 @@ test("later no-restricted-syntax options cannot replace the directory rule", asy
   });
   const [result] = await merged.lintText(
     'export const route = "mokly-generated"; route.localeCompare("page");',
-    { filePath: "src/config/generated-directory-lint-probe.ts" },
+    {
+      filePath:
+        "packages/viewer/src/catalogue/generated-directory-lint-probe.ts",
+    },
   );
   assert.deepEqual(
     result!.messages.map((entry) => entry.ruleId).sort(),

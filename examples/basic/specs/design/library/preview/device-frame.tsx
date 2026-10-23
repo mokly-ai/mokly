@@ -1,16 +1,19 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { flag, optionalText, text } from "../schemas.js";
+import { flag, text, type LibraryProps } from "../schemas.js";
 
 import { DeviceFrameView } from "./device-frame.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["device", "dark", "lightOnly", "small", "expandable", "address"],
   properties: {
-    device: { schema: { kind: "enum", values: ["phone", "browser"] } },
-    label: optionalText,
+    device: { enum: ["phone", "browser"] },
+    label: text,
+    scheme: flag,
     dark: flag,
     lightOnly: flag,
     small: flag,
@@ -19,7 +22,7 @@ const propSchema = {
   },
 } as const;
 const slots = ["children"] as const;
-export type DeviceFrameProps = ComponentProps<typeof propSchema, typeof slots>;
+export type DeviceFrameProps = LibraryProps<typeof propSchema, typeof slots>;
 const sample = {
   device: "phone",
   label: "Mobile",
@@ -28,8 +31,8 @@ const sample = {
   small: true,
   expandable: true,
   address: "example.test/welcome",
-  children: <MiniWelcome compact />,
 } as const;
+const sampleSlots = { children: <MiniWelcome compact /> };
 export const deviceFrame = defineComponent({
   ...libraryMetadata(
     "preview",
@@ -38,6 +41,7 @@ export const deviceFrame = defineComponent({
     "Phone and browser chrome around caller-owned screen content.",
   ),
   propSchema,
+  props: sample,
   slots,
   controls: {
     device: {
@@ -48,32 +52,31 @@ export const deviceFrame = defineComponent({
         { label: "Browser", value: "browser" },
       ],
     },
+    scheme: { kind: "boolean", label: "Scheme in caption" },
     dark: { kind: "boolean", label: "Dark preview" },
     small: { kind: "boolean", label: "Compact frame" },
     address: { kind: "text", label: "Address" },
   },
   render: DeviceFrameView,
   variants: [
-    { slug: "phone", title: "Phone", props: sample },
+    { slug: "phone", title: "Phone", props: sample, slots: sampleSlots },
     {
       slug: "browser",
       title: "Browser",
-      props: {
-        ...sample,
-        device: "browser",
-        label: "Desktop",
-        children: <MiniWelcome />,
-      },
+      props: { ...sample, device: "browser", label: "Desktop" },
+      slots: { children: <MiniWelcome /> },
     },
     {
       slug: "dark",
       title: "Dark preview",
       props: { ...sample, dark: true },
+      slots: sampleSlots,
     },
     {
       slug: "light-only",
       title: "Light only",
       props: { ...sample, lightOnly: true },
+      slots: sampleSlots,
     },
   ],
 });

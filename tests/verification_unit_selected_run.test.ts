@@ -99,7 +99,9 @@ test("repeated patterns are alternatives when Node executes them", async (contex
 
 test("argument validation precedes preparation and every test process", async (context) => {
   const harness = await createSelectedHarness(context);
-  await fs.rm(path.join(harness.root, "dist"), { recursive: true });
+  await fs.rm(path.join(harness.root, "packages/viewer/dist"), {
+    recursive: true,
+  });
   await writeHarnessFile(harness.root, "helper.test.ts", "");
   for (const args of [
     ["--unknown"],
@@ -126,14 +128,14 @@ test("selected concurrency validation follows arguments and precedes discovery",
   const harness = await createSelectedHarness(context);
   const environment = { MOKLY_UNIT_CONCURRENCY: "0" };
   await assert.rejects(
-    runWrapper(harness.root, "run-unit-dev.mjs", {
+    runWrapper(harness.root, "run-viewer.mjs", {
       args: ["--unknown"],
       environment,
     }),
     /usage: npm test --/u,
   );
   await assert.rejects(
-    runWrapper(harness.root, "run-unit-dev.mjs", {
+    runWrapper(harness.root, "run-viewer.mjs", {
       args: ["tests/failing.test.ts"],
       environment,
     }),
@@ -144,7 +146,7 @@ test("selected concurrency validation follows arguments and precedes discovery",
   });
   await fs.rm(path.join(harness.root, "tests"), { recursive: true });
   await assert.rejects(
-    runWrapper(harness.root, "run-unit-dev.mjs", {
+    runWrapper(harness.root, "run-viewer.mjs", {
       args: ["--test-name-pattern=any"],
       environment,
     }),
@@ -154,7 +156,7 @@ test("selected concurrency validation follows arguments and precedes discovery",
 
 test("selected runs print the shared concurrency override they use", async (context) => {
   const harness = await createSelectedHarness(context);
-  const { stdout } = await runWrapper(harness.root, "run-unit-dev.mjs", {
+  const { stdout } = await runWrapper(harness.root, "run-viewer.mjs", {
     args: ["tests/passing.test.ts"],
     environment: { MOKLY_UNIT_CONCURRENCY: "3" },
   });
@@ -171,7 +173,7 @@ for (const present of [true, false]) {
         failing,
       async (context) => {
         const harness = await createSelectedHarness(context);
-        const defaultPath = defaultReportPath(harness.root, "unit", undefined);
+        const defaultPath = defaultReportPath(harness.root);
         const override = path.join(harness.root, "custom-report.json");
         const contents = Buffer.from("complete report sentinel\n");
         if (present) {

@@ -1,0 +1,5 @@
+---
+source: crates/mokly-sidecar/tests/smoke_tests.rs
+expression: result.html
+---
+<button>Smoke callback</button>

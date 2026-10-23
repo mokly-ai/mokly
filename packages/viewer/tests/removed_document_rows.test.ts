@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import {
   catalogueNavSections,
@@ -11,37 +8,34 @@ import {
 } from "../src/shell/nav_model.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
 
-const entry = (kind: string, path: string, title: string): ManifestEntry =>
-  ({
-    colorSchemes: ["light"],
-    description: title,
-    kind,
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.md`,
-    title,
-    ...(kind === "screen" ? { useCasePaths: [] } : {}),
-  }) as unknown as ManifestEntry;
+import {
+  publishedCatalogue,
+  publishedDocument,
+  publishedPage,
+  publishedScreen,
+  removedEntry,
+} from "./published_entries_fixture.js";
 
-const manifest: ManifestV10 = currentManifest({
-  entries: [entry("screen", "guide/current", "Current")],
-  folders: [],
-  generatedBy: "mokly",
-  schemaVersion: 10,
-  sourceFiles: [],
-});
-
+/** A removed document, page, and screen from the Guide folder. */
 const removed = [
-  entry("document", "guide/terms", "Terms"),
-  entry("page", "guide/handbook", "Handbook"),
-  entry("screen", "guide/farewell", "Farewell"),
+  publishedDocument("guide/terms", "Terms", "removed"),
+  publishedPage("guide/handbook", "Handbook", "removed"),
+  publishedScreen("guide/farewell", "Farewell", "removed"),
 ];
 
 function rows(): Map<string, NavLeafNode> {
-  const catalogue = createCatalogue(
-    manifest,
-    removed.map((record) => ({ entry: record, folderTitles: ["Guide"] })),
-  );
+  const catalogue = publishedCatalogue({
+    removedEntries: removed.map((record) => removedEntry(record, ["Guide"])),
+    screens: [publishedScreen("guide/current", "Current")],
+    tree: [
+      {
+        children: [{ kind: "entry", path: "guide/current" }],
+        kind: "folder",
+        path: "guide",
+        title: "Guide",
+      },
+    ],
+  });
   const found = new Map<string, NavLeafNode>();
   const visit = (nodes: readonly NavNode[]): void => {
     for (const node of nodes)
@@ -57,7 +51,6 @@ const context: ShellContext = {
   base: "main",
   changedEntries: removed.map(({ path }) => path),
   changesStatus: "ready",
-  updateVersion: 1,
 };
 
 test("removed documents are Changes-only rows, like removed pages", () => {

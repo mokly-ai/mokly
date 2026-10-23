@@ -1,0 +1,22 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nprops: {user: {name: Ada}}\n---\n<h1>{{user}}</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "html-props",
+      "message": "prop reference user must name a scalar value",
+      "path": "specs/home.screen.html",
+      "line": 5,
+      "column": 5
+    }
+  ],
+  "warnings": [
+    {
+      "code": "html-unused-props",
+      "subject": "entry \"home\"",
+      "message": "prop \"user\" is not read by the body"
+    }
+  ]
+}

@@ -17,7 +17,6 @@ import { SideBySideComparison } from "./comparison_side.js";
 import { StackedComparison } from "./comparison_stack.js";
 import { entryWording } from "./entry_wording.js";
 import type { ComparisonPresentation } from "./use_comparison.js";
-import { isStyleOnlyView } from "./workspace_style_evidence.js";
 
 const stateLabels = {
   added: "New screen",
@@ -50,7 +49,14 @@ export function ComparisonViews({
   views: readonly SelectedComparisonView[] | undefined;
 }) {
   const [owner] = useState(createScrollOwner);
-  if (!views) return <p>This screen has no comparison available.</p>;
+  if (!views)
+    return (
+      <p>
+        {entryWording(props.entryKind).label(
+          "This screen has no comparison available.",
+        )}
+      </p>
+    );
   return (
     <>
       {views.map((selected) => (
@@ -79,12 +85,15 @@ function ComparisonSection({
     createComparisonScrollSync({ owner, together }),
   );
   useEffect(() => sync.setTogether(together), [sync, together]);
-  const { documents, mode, view, viewport } = selected;
+  const { componentsOnly, documents, mode, styleOnly, view, viewport } =
+    selected;
   const component = entryKind === "component";
   const wording = entryWording(component ? "component" : "screen");
-  const label = isStyleOnlyView(view)
-    ? "Styles this screen uses changed"
-    : stateLabels[view.state];
+  const label = styleOnly
+    ? wording.stylesChanged
+    : componentsOnly
+      ? wording.componentsChanged
+      : wording.label(stateLabels[view.state]);
   const pane = (side: ComparisonSide): PaneDocument | undefined => {
     const address = documents[side];
     const document = address ? presentations.get(address) : undefined;
@@ -104,7 +113,7 @@ function ComparisonSection({
       data-diff-viewport={viewport}
     >
       <h3>
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · {wording.label(label)}
+        {viewport === "mobile" ? "Mobile" : "Desktop"} · {label}
         {presentation.requestedColorScheme !== view.colorScheme
           ? " · Light only"
           : ""}
@@ -124,6 +133,7 @@ function ComparisonSection({
           documents={{ after, before }}
           sync={sync}
           view={view}
+          wording={wording}
         />
       )}
     </section>

@@ -1,26 +1,39 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { optionalText, text } from "../schemas.js";
+import { text, type LibraryProps } from "../schemas.js";
 
 import { ComparisonPaneView } from "./comparison-pane.view.js";
 import { deviceFrame } from "./device-frame.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["side", "label", "state"],
   properties: {
-    side: { schema: { kind: "enum", values: ["before", "after"] } },
+    side: { enum: ["before", "after"] },
     label: text,
-    state: { schema: { kind: "enum", values: ["present", "missing"] } },
-    message: optionalText,
+    state: { enum: ["present", "missing"] },
+    message: text,
   },
 } as const;
 const slots = ["children"] as const;
-export type ComparisonPaneProps = ComponentProps<
-  typeof propSchema,
-  typeof slots
->;
+export type ComparisonPaneProps = LibraryProps<typeof propSchema, typeof slots>;
+const welcomeFrame = {
+  children: (
+    <deviceFrame.Component
+      device="phone"
+      dark={false}
+      small
+      lightOnly={false}
+      expandable
+      address="example.test/welcome"
+    >
+      <MiniWelcome compact inert />
+    </deviceFrame.Component>
+  ),
+};
 export const comparisonPane = defineComponent({
   ...libraryMetadata(
     "preview",
@@ -29,6 +42,7 @@ export const comparisonPane = defineComponent({
     "A before or current preview, including an absent screen.",
   ),
   propSchema,
+  props: { side: "before", label: "Before", state: "present" },
   slots,
   controls: {
     label: { kind: "text", label: "Label" },
@@ -47,44 +61,14 @@ export const comparisonPane = defineComponent({
     {
       slug: "before",
       title: "Before",
-      props: {
-        side: "before",
-        label: "Before",
-        state: "present",
-        children: (
-          <deviceFrame.Component
-            device="phone"
-            dark={false}
-            small
-            lightOnly={false}
-            expandable
-            address="example.test/welcome"
-          >
-            <MiniWelcome compact inert />
-          </deviceFrame.Component>
-        ),
-      },
+      props: { side: "before", label: "Before", state: "present" },
+      slots: welcomeFrame,
     },
     {
       slug: "current",
       title: "Current",
-      props: {
-        side: "after",
-        label: "Current",
-        state: "present",
-        children: (
-          <deviceFrame.Component
-            device="phone"
-            dark={false}
-            small
-            lightOnly={false}
-            expandable
-            address="example.test/welcome"
-          >
-            <MiniWelcome compact inert />
-          </deviceFrame.Component>
-        ),
-      },
+      props: { side: "after", label: "Current", state: "present" },
+      slots: welcomeFrame,
     },
     {
       slug: "missing-before",

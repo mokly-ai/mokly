@@ -110,6 +110,7 @@ impl Repository {
             ["config", "user.name", "Adapter Test"],
             ["config", "user.email", "adapter@example.invalid"],
             ["config", "core.hooksPath", "/dev/null"],
+            ["config", "core.autocrlf", "false"],
         ] {
             repository.git(&args);
         }

@@ -1,423 +1,250 @@
 # Mokly Build And Browse Runtime
 
-[Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. Current and baseline output use manifest v10
-under the [compatibility contract](./mokly-baseline-compatibility.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
+This page is the runtime contract of `mokly serve` and `mokly build`: how a
+catalogue is discovered, rendered, cached, served, written, and shut down. The
+[Rust core architecture](../architecture/rust-core.md) is the map of the
+crates; the pages linked below own the exact rules of each subsystem.
 
 ## Source Of Truth
 
-Authored entry modules, Markdown and imported helpers define the catalogue.
-Build writes the whole `mokly-generated/` tree. Serve and comparisons consume
-the accepted generation without another renderer. Git tracking and per-commit
-baselines follow [generated output](./mokly-generated-output.md).
+Authored sources define the catalogue: HTML screens, components, and pages,
+use case files, Markdown documents, folder records, entry modules, and
+stories files under the configured roots, plus the configuration file, the
+renderer module, and the configured stylesheets. The catalogue model is built
+from them in memory on every start and after every watched change. The [catalogue index v7](./mokly-shell-delivery.md#catalogue-index)
+and the [entry detail v2](./mokly-shell-delivery.md#entry-detail) are the
+public form of the model.
 
-## Delivery Status
+## Discovery And Validation
 
-This document defines the release-ready runtime contract. The Build, Check,
-watch, server, and comparison engines, the responsive package-owned catalogue,
-on-demand screen diffs, packed-package consumers, CI/release
-automation, and Playwright browser coverage are implemented. Both npm packages
-have completed their [initial registration](./npm-bootstrap.md); subsequent
-versions follow the [coordinated release contract](./npm-release.md).
-Canonical outer navigation from links inside fragment frames, request-visible
-fragment transport, manifest-bound preview adaptation, and active-tree
-disclosure are implemented. Their delivery history is recorded in the completed
-[in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v10, Markdown documents, and move detection are
-implemented.
+1. Load the configuration under the
+   [configuration contract](./mokly-configuration.md).
+2. Walk every root once. A file's suffix gives its kind under the
+   [HTML screens contract](./mokly-html-screens.md) and the
+   [entry module contract](./mokly-entry-modules.md); its place gives its
+   path under the [path contract](./mokly-paths.md).
+3. Parse HTML, YAML, Markdown, and folder records in Rust. When the catalogue
+   has JavaScript, bundle it through the [sidecar](./mokly-sidecar.md) and
+   take every definition from `describe`. A configured renderer also requires
+   a bundle inventory when no JavaScript entry is present. Its imports are
+   private sources in both Serve and build.
+4. Build the catalogue model: paths, folders, variants, props and prop
+   schemas under the [entry props contract](./mokly-entry-props.md), use
+   cases, documents, and the component registry.
+5. Validate metadata, relationships, paths, links, markers, stylesheets, and
+   colour schemes. Every error is reported with its repository-relative file,
+   line, and column before any render starts, and a command with an error
+   fails with `build-invalid`. Non-fatal findings are
+   [build warnings](./mokly-build-warnings.md).
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+## Render Graph And Cache
 
-## Component Workspaces
+Every output is a node of the content-addressed render graph that the
+[architecture page](../architecture/rust-core.md#render-graph) defines, keyed
+by the hash of its inputs. A screen or component renders once per view, that
+is per viewport and colour scheme. A page renders once. A Markdown document renders once per enabled
+colour scheme.
+A node recomputes only when its key moves. Fragments are memoized across
+screens, so a component rendered with the same props on many screens renders
+once.
 
-Registered components extend this runtime with component pages, variant
-entries, nested usage, actual screen instances, and local prop editing. The [explorer contract](./mokly-component-explorer.md)
-owns the icon inspector, bounded panes, desktop resizing, mobile bottom sheet,
-viewport/theme controls, and authenticated highlighting. The [controls contract](./mokly-component-controls.md)
-owns the private same-origin endpoint, bounded worker, immutable memory previews,
-last-good watched generation, and no-output/no-reload editing boundary. Exported
-workspaces retain variant entries and inspection with read-only props.
+Rendered documents live in the render cache: process memory, bounded by bytes,
+evicted least recently used. Serve and `build` read it. Changes captures the
+base within 256 MiB and reads the head from this cache. Base capture misses use
+the pinned source; evicted head documents render again on the head root. The
+base-side extraction cache and the dependency install cache live in the
+operating system's cache directory under a key derived from the repository
+path, each with its own byte bound; the terminal names that directory, and
+deleting it is safe. No cache is in the repository.
 
-[Component attribution](./mokly-component-changes.md) separates directly changed
-entries from affected consumers. Watch, Browse and export share that calculation;
-a component implementation edit cannot add its otherwise unchanged screens to
-Changes. Screen-owned prop and slot changes still count as screen changes.
+## Serve
+
+`mokly serve` runs discovery and validation, builds the catalogue model, binds
+the port, and publishes its first state with `revision` `1`. The listening
+URL is reported only after validation passes. Before readiness, Serve
+renders no document. Documents render on first request under the
+[on-demand contract](./mokly-on-demand.md); the other views, the usage of
+every entry detail, and Changes follow in background work. Serve publishes changed
+state as a new revision under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve). Serve
+watches the sources by default under the [watch contract](./mokly-watch.md);
+`--no-watch` serves one snapshot and computes the background evidence once.
+
+Serve binds `127.0.0.1` only, starting at the port the
+[package contract](./mokly-package.md#cli) names, and keeps the resolved port
+for the life of the process. Git never runs on the request path: ref
+resolution and base reads run in background work with their
+own cancellation. `--base <ref>` overrides `review.base` for the life of the
+process.
 
 ## Build
 
-`mokly build` performs this transaction:
+`mokly build` runs discovery and validation, renders every view of every
+entry, reports warnings, and writes the static site into the directory `--out`
+names, `mokly-static/` at the repository root by default, which Git must
+ignore. It writes the shell stub per route, the index, one detail per entry,
+every document, the comparison generation, the viewer bundle, styles, and
+fonts under the [static build contract](./mokly-export.md) and the
+[static delivery contract](./mokly-export-delivery.md). An error fails the
+command before any file is written. With `--strict`, a warning fails it too.
+The output transaction stages the whole site, replaces the output directory
+in one step, and rolls back on failure, so the last successful output stays
+in place. A validation-only run is a build to a temporary directory.
 
-1. Load and validate config.
-2. Walk the configured roots; bundle entry, renderer, and imported
-   helper modules and read Markdown documents and folder records.
-3. Validate registry metadata, relationships, derived paths, and output
-   collisions.
-4. Render screen views, whole-document pages, and Markdown documents in
-   deterministic order.
-5. Resolve path links and validate document links and anchors.
-6. Build the version 10 manifest, asset closure, generated-file inventory and
-   resolved source inventory; validate closure and hrefs from `mokly-generated/`.
-7. Stage the entire `mokly-generated/` tree before changing the last-good output.
-8. Replace that tree transactionally; restore it on failure.
+`mokly publish` builds into its own directory outside the repository and
+uploads the result through the [upload exchange](./mokly-upload-exchange.md).
+There is no other verb: validation is `build --strict`, and the static site
+is `build`.
 
-An error leaves the last-good generated tree unchanged. Build output and
-diagnostics use repo-relative paths and deterministic ordering. Non-fatal
-[build warnings](./mokly-build-warnings.md) are reported after rendering and
-fail the command only with `--strict`. Source-attributed authoring failures from
-the consumer bundle retain their typed code and appear with one
-`[mokly/<code>]` prefix plus their source module; unexpected module evaluation
-failures remain bundling errors. Forbidden authored fields on flattened variants
-remain available for registry validation even when their values are `undefined`.
+## Sidecar Pool
 
-## Check
+A sidecar starts when the catalogue uses any of these inputs:
 
-`mokly check` computes expected output without mutating files. When the index
-tracks all expected output it compares the entire `mokly-generated/` tree, including
-missing, stale, and extra files. When no output is indexed it ignores local
-output. A mixture fails `build-invalid` with both remedies; indexed cache
-contents fail independently, only under Check. Build and Serve never read
-head tracking or run the cache index guard; adding an entry builds before it
-can be staged. It
-fails for:
+- A JavaScript entry or registered JavaScript component.
+- A Storybook stories file.
+- A configured renderer module.
+- A stylesheet processed by a consumer PostCSS module.
 
-- invalid config or registry metadata;
-- duplicate or case-colliding paths, or a derived view or document that
-  collides with another generated file;
-- [path](./mokly-paths.md#diagnostics), [folder](./mokly-folders.md#diagnostics),
-  and [entry module](./mokly-entry-modules.md#diagnostics) violations, unknown
-  or moved link targets, missing use-case screens, or reciprocal memberships;
-- unresolved `mock:` links, raw document links, local HTML/CSS resources, or
-  anchors;
-- missing configured or component-declared public stylesheets;
-- invalid `colorSchemes` config, per-screen `colorSchemes` declarations, or
-  color-scheme subsets unsupported by the catalogue config;
-- missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
-  rule would link twice into the same fragment;
-- missing, stale, or extra generated files when output is tracked;
-- malformed Review-ignore markers or material keys;
-- protected-source or source-inventory violations.
+HTML, YAML, and Markdown alone start no sidecar. The
+[sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,
+and failure codes. The core selects renders, cache keys, invalidation, and
+document composition. A sidecar failure fails only the request that needs it,
+with its typed code.
+Other routes and shutdown stay available.
 
-The tracked failure report groups missing, stale, and extra paths. Run
-`mokly build` and commit the whole tree, or untrack and ignore `mokly-generated/`.
-`check` never rewrites output; plain Serve, export, and publication never write it.
-Only `build`, `build --watch`, and `serve --build` write after a complete
-successful compilation, as specified in [generated output](./mokly-generated-output.md).
+## Routes
 
-## Catalogue And Routes
+Serve answers the routes of the
+[shell delivery contract](./mokly-shell-delivery.md#routes), and `build`
+writes the same relative paths as files. In addition:
 
-`mokly export --out <directory>` uses the same build, catalogue, shell, and
-comparison engines to create a complete static site. Its separate output
-transaction, Git prerequisites, path ownership, and input-consistency checks
-are defined by [Consumer static export](./mokly-export.md). Exact file routes,
-static delivery metadata, and lazy immutable comparisons are defined by
-[Static export delivery](./mokly-export-delivery.md).
-No server or watcher is started for export; served behavior below is unchanged.
+| Route                                           | Serve | `build` | Content                                                                                                   |
+| ----------------------------------------------- | ----- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `/static/mokly-generated/<route>`               | live  | files   | rendered views, pages, and documents, named under the [artifact path contract](./mokly-artifact-paths.md) |
+| `/static/<closure path>`                        | live  | files   | authored assets in the [public closure](./mokly-public-closure.md), read from the roots                   |
+| `/mokly-viewer/diffs/review.json?path=<path>`   | live  | absent  | an on-demand comparison, redirected to its immutable generation                                           |
+| `/mokly-viewer/components/render`               | live  | absent  | the live prop render of the [controls contract](./mokly-component-controls.md)                            |
+| `/mokly-viewer/components/renders/<render-id>/` | live  | absent  | a temporary preview document and its resources                                                            |
 
-Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v10
-output and a current source inventory. These scans never render pages or rewrite
-output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
-worker isolation and generation-local caches. Browse exposes:
-
-- `/` for the catalogue home;
-- `/view/<path>/` for every current or removed entry, where the path is the
-  entry's identity under the [path contract](./mokly-paths.md#urls);
-  `/view/<path>` and `/view/<path>/index.html` answer with the same shell;
-- `/static/<file>` for generated views, page and Markdown documents and copied
-  resources under `mokly-generated/`, plus referenced authored assets, always delivered with
-  `Cache-Control: no-store` because watched rebuilds replace bytes at stable
-  URLs;
-- `/mokly-viewer/diffs/review.json` for explicitly requested comparisons, with
-  redirects to immutable generations and snapshot files beneath the same prefix;
-- package-owned client and update endpoints under `/mokly-viewer/`.
-
-Serve also exposes [`/mokly-viewer/catalogue.json`](./mokly-catalogue.md)
-as the public read model, refreshed atomically on watched content/evidence
-updates. It keeps the private manifest and on-demand readiness boundary intact.
-
-Browse does not run Git classification on its HTTP event loop or request path.
-The watched child receives the accepted config, live index and retained bundle
-before readiness, without rendered HTML or a full manifest-file read. It validates
-metadata and source-inventory freshness, then binds with local controls enabled.
-Requested views render in a bounded worker. Complete output, catalogue-wide usage
-and Changes follow in background work; versioned updates install only current
-generation evidence. Non-watched Serve has the same readiness boundary and computes
-background evidence once, without later file/ref observation. A derived baseline
-is prepared in the parent between output adoption and classification, so a
-replaced worker never orphans a rebuild; the parent cancels and restarts it when
-an observed ref change moves the merge base.
-
-All ordinary routes support GET and HEAD. HEAD returns the same status and
-headers without a body, including not-found and fragment-validation errors. A HEAD request to the update endpoint completes without opening or
-registering an event stream.
-
-Folder rows browse without navigating; `/view/<folder>/` opens the folder's
-own page when one exists. Unknown paths return a not-found main view while
-keeping catalogue navigation available.
-Static path handling rejects traversal and does not expose repository files
-outside configured public roots. The shared relative-path decoder rejects
-malformed encoding, absolute and empty paths, dot segments, and forward or
-backslash separators introduced by decoding one original URL segment before
-any filesystem resolution.
-
-Browse projects one [catalogue tree](./mokly-catalogue.md#tree) from validated
-manifest v10 paths and folder records and splits it into the Components and
-Specs sections. The serve-mode `live-index-2` retains that literal
-`schemaVersion` but carries the v10 entry shape and folder records (with
-unrendered usage metadata omitted), validated through the v10 metadata schema.
+`static/mokly-generated/` is a route prefix; no directory of that name exists
+in the repository. Every route answers GET and HEAD; HEAD returns the same
+status and headers without a body, and a HEAD request to the event stream
+opens no stream. Serve sends `Cache-Control: no-store` on every response,
+because a watched rebuild replaces bytes at stable URLs. A route that the
+catalogue model does not declare returns 404 even when a file of that name
+exists; no reserved route falls back to the filesystem. The path decoder
+rejects malformed encoding, absolute and empty paths, dot segments, and
+separators introduced by decoding before any filesystem resolution, and
+authored assets never resolve outside the roots or through a symlink that
+leaves the repository. Protected authoring inputs are never served.
 
 ## Browse Shell
 
-The shell is the viewer package's React component tree, rendered on the server
-by its SSR entry and hydrated in the browser by Serve, export and React hosts
-alike, as defined by the [viewer contract](./mokly-viewer.md#shell-tree-and-state).
-Serve/export mount it without slots using the
-[same-origin adapter](./mokly-frame-adapter.md) and load the standalone
-hydration entry, which bundles React. Slots, theming and host-triggered pick
-mode are public embedding APIs; they add no local UI. First-party Serve
-supplies its private control/evidence capabilities to the tree through a typed
-context outside the public catalogue; export supplies none.
+The Browse shell is the viewer package's React tree, rendered only in the
+browser from the catalogue index and the current route's details under the
+[shell delivery contract](./mokly-shell-delivery.md). Serve and `build`
+deliver one identical stub page per shell route and never render shell HTML.
+The [viewer contract](./mokly-viewer.md#shell-tree-and-state) owns the tree:
+the top bar, search and tags, the navigation column with its All/Changes
+filter, the breadcrumbs, the viewport and appearance controls, the device
+chrome, the expand toggle, and the details inspector. The
+[navigation contract](./mokly-navigation.md) owns routes, links, history,
+and the active-tree rule; the
+[variant navigation](./mokly-variant-navigation.md),
+[disclosure persistence](./mokly-disclosure-persistence.md),
+[appearance](./mokly-viewer-appearance.md), and
+[shell design](./mokly-shell-design.md) contracts own their parts.
 
-The package owns a neutral, responsive Mokly shell: a top bar with brand,
-search with its tag picker; a catalogue navigation
-column with a `Collapse all` control, an All/Changes filter, nested disclosure
-groups with folder/screen/page/document/flow icons and indent guides; an accessible
-desktop split separator that resizes the navigation within the design bounds
-and remembers the served-origin preference; linked breadcrumbs with a path
-chip; viewport and appearance controls; realistic phone and browser device
-chrome; a per-frame expand-to-overlay toggle; and a collapsible details
-inspector. Current and comparison views share the same navigation and saved
-width. The package build records every browser output in a generated manifest;
-Serve validates exact manifest/directory equality and export copies that same
-inventory. `navigation-resize.js` and `appearance-startup.js` are classic
-pre-hydration bundles under `/mokly-viewer/client/`. They capture native disclosure
-and width choices and restore appearance before React hydrates; the React shell
-then adopts those values and owns ongoing navigation, selection and rendering.
-The appearance controller remains responsible for its stored preference and
-system-theme listener. Comparison snapshots carry no shell scripts. The mobile
-drawer does not expose the separator.
-Consumer brand chrome does not appear in the shell. A small set of documented
-CSS custom properties may tune the shell accent without replacing its
-structural styles. The shell serves its packaged Inter variable font from
-`/mokly-viewer/fonts/`. The All/Changes filter lives at the top of the navigation
-column, shows the changed count, and derives from Git changes between the
-current workspace and the merge base shared by `HEAD` and the serve base ref.
-Commits reachable only from the base ref are not branch changes. Staged,
-unstaged, and untracked workspace changes remain eligible. When the repository,
-base ref, or common ancestor cannot be resolved, live Browse keeps both tabs and
-shows an explicit unavailable message when Changes is selected. Pending calculation
-shows a spinner in the reserved count slot and, when selected, in the sidebar.
-A derived-baseline rebuild precedes that calculation with its own `preparing`
-state, which uses the same spinner and adds a secondary sidebar line; see the
-[derived baselines contract](./mokly-derived-baselines.md).
-All remains available throughout; a completed empty result shows zero. See the
-[on-demand lifecycle](./mokly-on-demand.md).
-Route attribution compares each current manifest entry with its base entry and
-matches material fragment changes and changes to rendered local resources.
-Component membership follows [component attribution](./mokly-component-changes.md#rendered-resources-and-styles).
-Screen-only catalogues follow [Changes membership](./mokly-changes.md#changes-membership).
-Entry comparison projects reviewable metadata; a title or description
-difference marks the entry changed under the
-[Changes rule](./mokly-changes.md#changes-membership), while a changed path is
-a move the [move contract](./mokly-moves.md) pairs with its baseline entry.
-The projection excludes source locations and dependency declarations; changes
-to those implementation details never supply comparison evidence. Fragment
-comparison applies the same paired ignore rules and material keys as screen
-comparisons. Ignored-only edits stay out of Changes. Referenced CSS, images,
-fonts, and transitive local resources remain eligible even when HTML bytes are
-unchanged. Removed
-screens remain accessible using their baseline metadata and open their
-[previous version](./mokly-removed-previews.md).
-Both watched and non-watched serving compute the filter.
-When a screen is directly affected, every use case that embeds that screen's
-fragments is affected too and remains visible in the changed-only filter.
+A screen embeds its rendered views inside package-owned device frames; a use
+case renders ordered steps that reference those views; a page or document
+embeds its complete document. Frames are sandboxed without script permission,
+so a document cannot alter the shell; the explicit cross-origin exception is
+confined to the [frame adapter](./mokly-frame-adapter.md). The All/Changes
+filter, the per-view status beside the title, and the marks on the view
+controls derive from the Changes evidence of the index and the detail under
+the [Changes contract](./mokly-changes.md#changes-membership); a pending
+calculation shows a spinner, an unavailable one keeps All browsable, and a
+removed entry opens its base render under
+[removed previews](./mokly-removed-previews.md). An event message from
+another server process reloads the page; no other update does: the shell
+replaces the index and the details in place and reloads only the frames
+whose `documentKey` changed.
+A usage completion that changes no detail publishes nothing. Reused ready
+usage counts as complete in the new Serve snapshot.
 
-A screen embeds its generated mobile and desktop fragments inside package-owned
-device frames. A use case renders ordered steps that reference those same
-fragments and link back to their standalone screens. A page or Markdown document embeds its complete generated document without viewport or comparison
-controls. The details inspector may show description, rationale,
-source and fragment paths including dark renders, the schemes a screen renders
-in, the tags the entry declares, related docs, use cases, and
-comparison context.
-Default Browse fragments and document pages are sandboxed without script permission
-so they cannot alter the same-origin Browse shell. Package-owned same-origin
-inspection permits parent-owned outer navigation after explicit user
-activation. Browse does not grant either
-top-navigation sandbox token, so direct and nested consumer contexts retain the
-active restriction that prevents them from replacing the shell. The
-served/preview adapter authenticates logical markers only for current-manifest
-screen fragments and generated document pages present in the accepted
-in-memory compilation and validated manifest. Only the current plain notice
-is stripped with LF or CRLF, without granting access or validating ownership.
-Former source-path headers stay ordinary text. Other HTML loses package-reserved
-metadata in the adapted copy; a trusted route with invalid logical markers or a
-marker/portable-href mismatch fails closed. One strict typed
-target parser supplies inert metadata only to trusted parent enhancement. A
-trusted document that carries an activatable marker and `<base href>` also
-fails closed, including if post-build tampering introduced the base URL;
-consumer-authored `href`, `<base target>`, `target`, and `formtarget` values
-otherwise remain portable and sandbox-confined. Consumer scripts, forms,
-popups, downloads, and top navigation remain forbidden in this default mode. The
-explicit cross-origin host exception is confined to the frame-adapter contract.
-Comparison panes keep byte-unmodified files and no script permission.
+## Component Workspaces
 
-Stored disclosure rules are in the [persistence contract](./mokly-disclosure-persistence.md).
-
-The [variant navigation contract](./mokly-variant-navigation.md) adds
-`variants:<parent path>` for the variant list a screen or component row
-discloses, persisted, restored, and collapsed beside the folder keys. That list
-is a container rather than a `<details>`, because the row beside it is a link and
-cannot also be a summary; its `hidden` state and its button's `aria-expanded`
-carry the same disclosure the folder keys carry, and the button's accessible name
-follows the state. When search or the Changes filter hides a parent row, it hides
-the entire leaf container, so no disclosure button remains visible or focusable
-without its row; the container reappears with the row. A parent row whose list
-holds a changed variant carries `data-changed-variants`, the aggregate mark that
-keeps the group visible under the Changes filter without claiming the parent
-itself changed. The stylesheet draws that attribute and `data-changed` as the
-same trailing dot, and reveals the row's visually hidden change wording to
-assistive technology, so a background evidence refresh moves the mark by toggling
-the attributes alone. A Removed row is never marked. Activating a parent row that
-carries only the aggregate mark while the Changes filter is selected navigates to
-the first changed variant row its list still shows.
-
-Per-view change evidence drives the status beside the title and the comparison
-band, so both describe the shown view rather than the entry-wide result. With
-one viewport and one scheme selected, `changed`, `added`, and `removed` map to
-Changed, Added, and Removed; `unchanged` and `ignored-only` map to Unmodified.
-While Both is selected, the shown status is Changed if any shown view is
-Changed, else Added if any is Added, else Removed if any is Removed, else
-Unmodified. Comparison eligibility follows the shown status under the existing
-kind rule: Changed, or Removed for a component variant. If neither a ready
-result nor screen-view evidence exists for the entry, entry-level status and
-eligibility remain in force. Switching viewport or scheme recomputes both
-without a page load, and a background evidence refresh does the same.
-
-The workspace publishes the changed views in its serialized data. Each view
-control carries a mark for changed views the reader cannot currently see: the
-theme control for the other scheme and the viewport control for the other
-viewport. Both shows every viewport, so its control is never marked. The 6px
-accent dot has a visually hidden description named through `aria-describedby`,
-keeping it distinct from the pressed state and independent of color. The
-details inspector lists the same views as `Changed views`, in mobile-before-
-desktop and light-before-dark order, and hides the row while nothing is named.
-The marks and row point to the changed views when the shown view is Unmodified.
-A light-only catalogue has no scheme control or scheme mark. For a component
-page, this evidence describes the variant entry whose views it shows.
-
-Opening a changed row while the Changes filter is selected lands on the
-first changed view instead of the sticky selection. Arriving from the
-filter is an explicit signal rather than a guess: activating the row
-records one session-scoped intent naming the destination, and the
-destination workspace reads and clears that intent as it installs,
-landing only when the intent names the page being installed. A URL that
-names `viewport` or `scheme` is an explicit request and wins outright.
-Because the intent is consumed once, a direct URL, an All-filter
-activation, Back, Forward, and a reload all keep the sticky selection. A
-light-only catalogue clamps the requested scheme to light, so it never
-lands on dark.
-
-Every standalone document carries one Appearance selector in the top bar —
-Auto, Light and Dark — at both widths and on every route, including home,
-unavailable routes and light-only catalogues. It sets the interface and preview
-selection together, survives React-owned navigation and follows the preference,
-URL pin and system rules in the
-[appearance contract](./mokly-viewer-appearance.md). The standalone head band
-and component workspace expose no second scheme control. An embedded root has
-no Appearance selector: its host owns interface `theme`, while top-bar,
-head-band and workspace controls continue to select preview color scheme when
-dark fragments exist. A screen without a dark render keeps its light fragments
-and names the fallback in its frame label (`MOBILE — LIGHT ONLY`); a use-case
-step, which has no label, simply stays light. A wholly light-only catalogue
-shows no fallback labels because no dark axis exists.
-
-Browse is server rendered first and hydrated. The server output is the complete
-shell with real anchors, so direct URLs, refresh, missing routes, and
-JavaScript-disabled use remain functional before and without hydration. For an
-eligible unmodified same-origin Browse link, the hydrated shell renders the
-destination from the catalogue read model instead of loading a document, and
-updates URL, title, active row, focus, and history; it never fetches shell HTML
-to swap into the page. Logical links activated inside a consumer frame navigate
-that same outer route model rather than replacing only the iframe document. The
-shell opens the active row's ancestor folders, conditionally clears a search or
-Changes filter that would hide it, and scrolls it into view. The complete target,
-portable-link, safe-degradation, sandbox, fragment, and active-tree behavior is
-defined by the [catalogue navigation contract](./mokly-navigation.md). Search,
-disclosure, filters, and catalogue scroll remain mounted. Matching follows the
-single [search rule](./mokly-folders.md#titles); filters hide groups left empty.
-Selecting a tag chip enters `tag:<tag>` in the search field,
-replacing any tag term already entered; selecting the chip whose tag is entered
-clears that term. Chips are buttons that report the entered tag through
-`aria-pressed`, and they keep that mark through in-shell navigation and watched
-reloads. The search field's tag control opens and closes a panel of every tag the
-catalogue declares: opening moves focus to the entered tag's chip, else to the
-first, and the chip row carries one tab stop that ArrowLeft and ArrowRight rove
-and wrap at both ends, Home and End send to its ends, and Enter or Space
-activates. Choosing a chip there also closes the panel and returns focus to the
-control. An open panel answers Escape before an expanded frame does, closing the
-panel and returning focus to the control without changing the query, while a
-click outside closes it and leaves focus where the click put it, returning focus
-to the control only when the closing panel still holds it. The panel is
-ephemeral: nothing reopens it after a watched reload or a restored session. Each
-user edit to search or the All/Changes filter opens groups to reveal its current
-matches. Disclosure restoration and reconciliation follow the
-[persistence contract](./mokly-disclosure-persistence.md), including filtered
-watched reloads. Clearing all filtering restores the earlier disclosure state,
-but a destination path opened by navigation stays open. Navigation groups and the
-details inspector retain explicit disclosure choices across in-shell navigation,
-durable navigation, and browser reloads for that origin. Unavailable or malformed
-browser storage leaves the server-rendered default intact; the latest choice
-still survives in-shell navigation when writes fail. A native disclosure toggled
-before hydration completes is captured by the pre-hydration script and wins over
-the stored preference for that load. The browser-frame expand toggle overlays one
-frame at a time and collapses on Escape, on an outside click, and on route
-navigation. Clicking a screen or use-case path chip copies the entry's path
-without navigating. Clicking a frame address copies it to the clipboard.
-
-The shell scrolls inside its stage, flow, and embed regions rather than the
-document. Back and Forward restore the matching route and that history entry's
-latest per-region scroll positions. Scroll persistence is limited to one leading
-update per animation frame, and route-change focus never overrides the restored
-positions. Overlapping requests are latest-wins. Download, external, hash-only,
-metadata-only, and unmarked links retain their existing frame-owned behavior.
-Trusted parent code owns primary and new-context navigation for a marked catalogue
-link inside a Browse frame when the shell is hydrated. There is no native
-outer-navigation fallback; an unhydrated or failed shell keeps the portable link
-frame-owned and the sandbox prevents direct or nested content from replacing the
-shell. Served Browse applies a request-visible logical fragment during server
-rendering. In the static deployed preview the hydrated shell renders it into each
-current and light/dark swap source so scheme changes retain the anchor.
-
-The shell meets keyboard, focus, reduced-motion, contrast, semantics, and status
-announcement requirements. Mobile and desktop shell variants are specified by
-the design mockups in the basic example's `design/` catalogue, and the
-[shell design contract](./mokly-shell-design.md) records the approved CSS
-custom properties, tokens, and responsive behavior the implementation
-preserves. Intentional presentation differences between the mockups and the
-shipped shell are recorded beside the design catalogue in the example notes.
-
-Navigation disclosure storage and recovery follow the
-[disclosure persistence contract](./mokly-disclosure-persistence.md).
+Registered components have component pages, variant entries, usage from the
+composed trees, and live prop editing in Serve. The
+[explorer contract](./mokly-component-explorer.md) owns the inspector and the
+component page; the [controls contract](./mokly-component-controls.md) owns
+live editing; [component attribution](./mokly-component-changes.md) separates
+changed entries from affected consumers.
 
 ## Watched Development
 
-The [watch lifecycle contract](./mokly-watch.md) defines reload recovery,
-transactional config changes, stable ports, invalidation, and shutdown.
+The [watch contract](./mokly-watch.md) and its
+[runtime continuation](./mokly-watch-runtime.md) define the inputs,
+invalidation through the render graph, recovery, and publication.
 
-## Screen Comparisons
+## Changes
 
-The [Changes contract](./mokly-changes.md) defines on-demand controls,
-Git comparison, snapshot isolation, ignored regions, and the metadata format.
-There is no Review section or standalone comparison CLI command.
+Both sides of a comparison render from sources with the current Mokly
+version, the head from the working tree and the base from the base commit's
+Git tree, under the [comparison contract](./mokly-comparison.md). Serve
+classifies Changes in background work after readiness and publishes the
+result as a revision. Comparison snapshots render on demand when the reader
+selects a diff, under the
+[comparison serving contract](./mokly-comparison-serving.md). `build` writes
+one complete comparison generation. There is no standalone comparison
+command.
 
-## Required Coverage
+## Shutdown
 
-Unit, integration, packed-consumer, and browser checks cover build/check,
-route safety, navigation, history/focus, color schemes, watch recovery, shutdown,
-and on-demand comparison with rendered-resource and ignored-region classification.
+Serve installs its `SIGINT`, `SIGTERM`, and `SIGHUP` handling before it
+reports the listening URL. An interrupt at any later moment closes it cleanly.
+Shutdown runs in this order:
+
+1. Stop accepting connections, end every event stream, and close every
+   remaining client connection, including incomplete requests.
+   Event-stream connections have a 250 ms grace period to flush their final
+   chunk before the other connections close.
+2. Stop the watcher and discard a configuration candidate that has not been
+   adopted.
+3. Cancel outstanding render, background, and comparison work; drain the
+   comparison generation work in flight before any generation is released.
+4. Cancel every Git process through its process group, `SIGTERM` then
+   `SIGKILL` after one second, and wait for its pipes to close.
+5. Send `shutdown` to every sidecar and kill one that survives the grace
+   period of the sidecar contract.
+6. Release the port and the file locks, and exit.
+
+No orphan process survives a normal shutdown, a failed startup, or an
+interruption, and a step that fails does not skip the steps after it. `build`
+and `publish` check cancellation before and after the output transaction's
+commit point and never leave a partial output directory in place.
+
+## No Writes
+
+No command writes into the repository except `build` into its output
+directory. Serve, Changes, live prop editing, and comparison generations keep
+every result in process memory. The caches outside the repository are the
+only other files Mokly writes, and deleting them changes time only.
+
+## Verification
+
+Rust tests cover discovery, the render graph keys, cache eviction, route
+safety, the no-writes rule, and shutdown ordering with real processes. The
+browser suite covers navigation, history and focus, colour schemes, watched
+updates without a page reload, and on-demand comparison with
+rendered-resource and ignored-region classification.
 
 ## Related Docs
 
+- [Rust core architecture](../architecture/rust-core.md)
+- [Render pipeline](../architecture/build-pipeline.md)
 - [Package and authoring contract](./mokly-package.md)
+- [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Changes and comparisons](./mokly-changes.md)
-- [CI and npm release](./npm-release.md)

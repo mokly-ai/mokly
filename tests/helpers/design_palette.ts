@@ -39,7 +39,7 @@ function channel(value: number): number {
 }
 
 /** Relative luminance of an opaque `#rgb` or `#rrggbb` color. */
-export function luminance(color: string): number {
+function luminance(color: string): number {
   const hex = color.trim().replace("#", "");
   const full =
     hex.length === 3
@@ -67,7 +67,7 @@ export function contrast(foreground: string, background: string): number {
 }
 
 /** The CSS `rgb()` form of an opaque `#rgb` or `#rrggbb` colour. */
-export function cssColor(color: string): string {
+function cssColor(color: string): string {
   const hex = color.trim().replace("#", "");
   const full =
     hex.length === 3

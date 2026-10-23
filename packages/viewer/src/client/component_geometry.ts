@@ -11,6 +11,7 @@ import { uncoveredBoxes } from "./component_occlusion.js";
 import { componentNodeRects } from "./component_range_nodes.js";
 import {
   authenticateDocumentRanges,
+  documentRangeRecords,
   type AuthenticatedRanges,
 } from "./document_ranges.js";
 import { localFrameAccess } from "./same_origin_access.js";
@@ -45,16 +46,7 @@ export function authenticateRanges(
       ? path
       : `/${currentDocumentPath(path)}`;
     if (actual !== normalizedHtmlPath(expected)) return;
-    return authenticateDocumentRanges(
-      doc,
-      usage.ranges.map((range) => ({
-        id: range.id,
-        ...(range.parentId ? { parentId: range.parentId } : {}),
-        ...(range.target.kind === "instance"
-          ? { key: range.target.instanceKey }
-          : {}),
-      })),
-    );
+    return authenticateDocumentRanges(doc, documentRangeRecords(usage.ranges));
   } catch {
     return;
   }

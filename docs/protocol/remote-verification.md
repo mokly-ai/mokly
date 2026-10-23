@@ -1,29 +1,6 @@
 # Remote Verification
 
-## Delivery Status
-
-The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-defines this approved target. Explicit remote execution, the scripts and the
-Testbox workflow are implemented. Automatic remote selection and
-`cargo xtask executor` are implemented. The complete automatic smoke check passes.
-The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
-implemented. The complete explicit remote smoke check passes.
-The [Testbox execution contract](./remote-verification-testbox.md) defines the
-workflow, commands, probe, suite wrapper, source-tree fingerprint, report
-download and aggregation.
-The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
-It closes the shared SSH connection, cancels a known run once before stop and
-keeps one bounded diagnostic line for cleanup command failures.
-The complete default remote smoke check passes with prompt shutdown.
-The [base commit sync plan](../../plans/remote-verification-base-commit.md)
-approves the base lookup, snapshot and identity contract below. Base selection,
-snapshot sync and identity evidence are implemented. Automatic and explicit
-remote checks accept unpushed `HEAD` when local origin history provides a base.
-The [base sync contract](./remote-verification-base.md) defines this behavior.
-The complete automatic gate passed after a local, unpushed merge of `main`.
-It selected the main tip as the base. All 11 commands and nine reports passed.
-The aggregate passed. The checkout stayed unchanged. Cleanup stopped every
-box and removed the snapshot and temporary index.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Executor Selection
 
@@ -138,7 +115,7 @@ Run probes and suite commands from the snapshot under the
 1. Read local `HEAD` and the base commit. Build the snapshot. Then read the
    checkout and snapshot fingerprints and require equal values before warmup.
    Record the [run identity](./remote-verification-base.md#identity-output-and-file).
-2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
+2. Warm up seven boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
    `--idle-timeout 30`. Use `MOKLY_TESTBOX_REF` when it is set.
    Record each box ID. Warmup must return exactly one
@@ -146,9 +123,10 @@ Run probes and suite commands from the snapshot under the
 3. Probe every box through `blacksmith testbox run`.
    Allow at most 10 minutes for readiness. The probe must confirm both the
    checkout fingerprint and selected base commit on every box.
-4. Start the [11 suite commands](./remote-verification-testbox.md#remote-commands)
+4. Start the [seven commands](./remote-verification-testbox.md#remote-commands)
    in parallel. Assign one command to each box. No suite may start until
-   all probes pass.
+   all probes pass. Each command refreshes every regular copied path that
+   differs from the warmup `HEAD` before its first build.
 5. When a command ends, download its report if it produces one.
    Collect available failure reports as well as success reports.
    Clean up that box at once under the
@@ -156,13 +134,13 @@ Run probes and suite commands from the snapshot under the
    shared SSH connection, cancel the known GitHub run, then apply status and
    stop rules. Do not wait for another command.
 6. After all commands end, clean up boxes that are not yet stopped.
-7. Run the local report aggregate with the base commit and `node-22.14.0`.
+7. Run the local report aggregate with the base commit and `node-22.15.0`.
 8. Compute the local fingerprint again. Fail if the source tree changed.
 9. Remove the snapshot and temporary index under the
    [snapshot cleanup contract](./remote-verification-base.md#snapshot-cleanup).
 
-A successful check requires all 11 commands to exit 0. It also requires all
-nine downloads, a valid aggregate and an unchanged local source tree.
+A successful check requires all seven commands to exit 0. It also requires all
+five downloads, a valid aggregate and an unchanged local source tree.
 After the first suite command starts, a box that is neither stopped nor proven
 completed after all cleanup attempts does not fail the check. The
 [cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts)
@@ -179,7 +157,7 @@ blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30
 ## Report Download And Aggregation
 
 Use the [Testbox report contract](./remote-verification-testbox.md#report-download-and-aggregation)
-for the nine downloads, fresh run directories and local aggregate.
+for the five downloads, fresh run directories and local aggregate.
 
 ## Output And Logs
 
@@ -216,8 +194,8 @@ A socket that disappears during a failed close prints no close output.
 - Remote execution for a selected `--suite`.
 - A selected base commit that GitHub no longer has.
 - Reusing boxes between checks.
-- Native macOS and Windows tests. They remain in hosted CI.
-- The Node 24 release profile. It remains in hosted CI.
+- Native macOS and Windows tests. They run in hosted CI.
+- The Node 24 release profile. It runs in hosted CI.
 - Changes to the report schema or release evidence acceptance.
 
 ## Related Docs

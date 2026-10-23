@@ -1,37 +1,42 @@
 # Public Catalogue Read Model
 
-## Delivery Status
-
-Optional per-view/page `resourceEvidence` and root usage ranges are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); screen and saved-view display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Read model v6 replaces released v5. `ResourceEvidence` follows the
-[CSS evidence schema](./mokly-css-attribution-membership.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Supported Formats
 
-| Catalogue                     | Generated manifest | Comparison result |
-| ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 9                  | 6                 |
-| With registered components    | 9                  | 6                 |
+| Boundary                  | Version                                      |
+| ------------------------- | -------------------------------------------- |
+| Catalogue model           | none: it lives in memory, nothing is written |
+| Public catalogue index    | 7                                            |
+| Entry detail              | 1                                            |
+| Review result             | 8                                            |
+| Catalogue change snapshot | 4                                            |
 
-Current output uses manifest v10, review result v7, and public read model v6,
-with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
-page preview metadata is v3. Delivery descriptors are v5. The manifest stores
-folder records, component variants, per-view usage, root output ranges and
-inserted-stylesheet provenance,
-with no derived file names on entries; the generated inventory lists exact paths. Markdown documents and their resource copies are
-implemented. Accepted move pairs carry `previousPath` in review records and
-the public read model; the manifest retains authored hints only.
-Current and baseline manifest readers accept only one version; earlier output
-follows [baseline compatibility](./mokly-baseline-compatibility.md).
+Both catalogue kinds, with and without registered components, use the same
+numbers, with globally unique entry paths. Nothing is written: the catalogue
+renders from sources into a bounded render cache, usage derives
+from the composed trees, and the private catalogue change snapshot pairs
+review v8 with the base commit, as the
+[format inventory](./mokly-format-versions.md) states. The
+[shell delivery contract](./mokly-shell-delivery.md) delivers the read model
+as the catalogue index v7, which carries no per-view usage or resource
+evidence, plus one entry detail v2 per entry. Removed page preview metadata
+is v3. No entry carries a derived file name. Accepted move pairs carry
+`previousPath` in review records and in the read model.
 
 ## Location And Types
 
-Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
-GET/HEAD `/mokly-viewer/catalogue.json` with `application/json; charset=utf-8`.
-Component value types follow the [manifest](./mokly-component-manifest.md),
+Serve answers GET and HEAD `/mokly-viewer/index.json` and
+`/mokly-viewer/entries/<entry path>.json` with
+`application/json; charset=utf-8`, and `build` writes the same paths under
+its output directory; the
+[shell delivery contract](./mokly-shell-delivery.md#routes) owns the routes.
+Component value types follow the
+[component records](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
-and [instance](./mokly-instances.md) contracts. The viewer exports these types
-without a CLI dependency.
+and [instance](./mokly-instances.md) contracts; the prop schema follows the
+[entry props contract](./mokly-entry-props.md). The viewer exports these
+types without a CLI dependency.
 
 ```ts
 import type {
@@ -40,7 +45,7 @@ import type {
   ComponentRangeRecord,
   ComponentSlotRecord,
   ComponentWireProps,
-  ObjectPropSchema,
+  PropSchema, // a JSON Schema object under the entry props profile
 } from "@mokly/viewer";
 
 type Viewport = "mobile" | "desktop";
@@ -51,10 +56,12 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 6;
+  schemaVersion: 7;
   identity: { id: string; title: string };
   deploymentId: string;
-  revision: { content: number; evidence: number };
+  revision: number; // one counter per Serve state, from 1; 0 in a build
+  base?: string; // the Changes base ref when Changes is configured
+  live?: { generation: string }; // Serve only: the render generation
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
   tree: readonly CatalogueNode[];
@@ -101,7 +108,7 @@ type CatalogueChanges =
   | { status: Exclude<ChangesStatus, "ready"> };
 type ComparisonSelection =
   | { status: "ready"; kind: ChangeKind; eligible: boolean }
-  | { status: "pending" | "unavailable" | "disabled" };
+  | { status: "preparing" | "pending" | "unavailable" | "disabled" };
 interface CatalogueDetails {
   description: string;
   rationale?: string;
@@ -116,6 +123,8 @@ interface CatalogueEntry {
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
+// Usage and resource evidence travel in the entry detail of the shell
+// delivery contract, not in the index.
 type CatalogueUsage =
   | {
       status: "ready";
@@ -127,25 +136,28 @@ type CatalogueUsage =
 interface CatalogueView {
   viewport: Viewport;
   colorScheme: ColorScheme;
-  usage: CatalogueUsage;
   comparison: ComparisonSelection;
-  resourceEvidence?: ResourceEvidence;
+  documentKey: string; // the document node's input hash in the render graph
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
   address?: string;
   variantOf?: string; // Present exactly on variant screens; the parent path.
   colorSchemes: readonly ColorScheme[];
+  propSchema: PropSchema;
+  props: ComponentWireProps; // the entry's own props, or a variant's merged props
+  controls: Readonly<Record<string, ComponentControl>>;
   views: readonly CatalogueView[];
   useCasePaths: readonly string[];
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
-  resourceEvidence?: ResourceEvidence;
+  documentKey: string;
 }
 interface CatalogueDocument extends CatalogueEntry {
   kind: "document";
   colorSchemes: readonly ColorScheme[];
+  documentKeys: readonly { colorScheme: ColorScheme; documentKey: string }[];
 }
 interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
@@ -157,20 +169,17 @@ interface CatalogueUseCase extends CatalogueEntry {
 }
 interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
+  variantOf?: string; // Present exactly on variant entries; the parent path.
   colorSchemes: readonly ColorScheme[];
-  propSchema: ObjectPropSchema;
+  propSchema: PropSchema;
+  props: ComponentWireProps; // the entry's own props, or a variant's merged props
   slots: readonly string[];
+  suppliedSlots: readonly string[]; // empty on a parent
   controls: Readonly<Record<string, ComponentControl>>;
-}
-interface CatalogueComponentVariant extends CatalogueEntry {
-  kind: "component";
-  variantOf: string; // Present exactly on variant entries; the parent path.
-  colorSchemes: readonly ColorScheme[];
-  props: ComponentWireProps;
-  suppliedSlots: readonly string[];
   views: readonly CatalogueView[];
   comparison: ComparisonSelection;
 }
+type CatalogueComponentVariant = CatalogueComponent & { variantOf: string };
 ```
 
 No entry record carries a derived route or file name. Resource evidence names
@@ -182,9 +191,9 @@ have no current files; their historical documents come only from their
 `preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
 without a leading slash, origin, query or hash; resolve it against the source's
 origin root, not the JSON directory or host app URL. A current component parent
-has no views; its page shows its first current variant. `previousPath` is
+has its own views, rendered from its own props, and its page shows them first. `previousPath` is
 present exactly on entries the
-[move contract](./mokly-moves.md) paired with a baseline entry.
+[move contract](./mokly-moves.md) paired with an entry of the base commit.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.
@@ -212,4 +221,4 @@ bytes, historical snapshot identities, deployment identity and reader versions.
 
 Serve headers, revisions, comparison pointers, public paths, and the fetch
 rules for cross-origin artifact hosts live in the
-[catalogue fetch contract](./mokly-catalogue-fetch.md).
+[shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences).

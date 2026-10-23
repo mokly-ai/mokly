@@ -7,12 +7,13 @@ import type {
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { CatalogueEntry } from "../catalogue/types.js";
-import type {
-  ComponentViewRecord,
-  ManifestComponentVariant,
-} from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "../components/manifest_types.js";
 import type { ManifestEntry } from "../registry/types.js";
-import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
+import {
+  catalogueRouteEntry,
+  createCatalogue,
+  type Catalogue,
+} from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -63,29 +64,28 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
         kind: "screen",
         componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
         useCasePaths: entry.useCasePaths,
+        propSchema: entry.propSchema,
+        props: entry.props,
+        controls: entry.controls,
         ...(entry.address ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
       };
     case "component":
-      if ("variantOf" in entry)
-        return {
-          ...base,
-          colorSchemes: entry.colorSchemes,
-          componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
-          kind: "component",
-          variantOf: entry.variantOf,
-          props: entry.props,
-          suppliedSlots: entry.suppliedSlots,
-        } as ManifestComponentVariant;
       return {
         ...base,
         colorSchemes: entry.colorSchemes,
+        componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
         kind: "component",
         propSchema: entry.propSchema,
-        slots: entry.slots,
+        props: entry.props,
         controls: entry.controls,
+        slots: entry.slots,
+        suppliedSlots: entry.suppliedSlots,
+        ...(entry.variantOf !== undefined
+          ? { variantOf: entry.variantOf }
+          : {}),
       };
   }
 }
@@ -154,10 +154,11 @@ export function viewerContext(
     changes.status === "ready" ? [{ path, ...changes }] : [],
   );
   return {
-    base: "",
+    base: model.base ?? "",
     embedded: true,
-    updateVersion: model.revision.evidence,
-    comparisons: model.comparisonUrl !== null,
+    comparisons:
+      model.comparisonUrl !== null ||
+      (model.live !== undefined && model.changesStatus !== "disabled"),
     ...(model.changesStatus === "disabled"
       ? {}
       : { changesStatus: model.changesStatus }),
@@ -177,24 +178,18 @@ export function viewerContext(
 }
 
 export function viewerView(
-  catalogue: ReturnType<typeof viewerCatalogue>,
+  catalogue: Catalogue,
   selection: ViewerSelection,
 ): ShellView {
   if (selection.screenPath === null) return { kind: "home" };
-  const selected = catalogue.publicModel
-    ? resolveCatalogueSelection(
-        catalogue.publicModel,
-        selection.screenPath,
-        selection.snapshotId,
-      )
+  const selected = resolveCatalogueSelection(
+    catalogue.publicModel,
+    selection.screenPath,
+    selection.snapshotId,
+  );
+  const entry = selected
+    ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
     : undefined;
-  const entry = catalogue.publicModel
-    ? selected
-      ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
-      : undefined
-    : selection.snapshotId === undefined
-      ? catalogue.byPath.get(selection.screenPath)
-      : undefined;
   const target = entry && toRouteTarget(entry);
   return target
     ? { kind: "target", target }

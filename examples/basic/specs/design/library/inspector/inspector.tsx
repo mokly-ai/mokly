@@ -1,43 +1,35 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { destination, text } from "../schemas.js";
+import { destination, text, type LibraryProps } from "../schemas.js";
 
 import { InspectorView } from "./inspector.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["tabs", "initial", "sheetSize"],
   properties: {
     tabs: {
-      schema: {
-        kind: "array",
-        maxItems: 4,
-        items: {
-          kind: "object",
-          properties: {
-            id: {
-              schema: {
-                kind: "enum",
-                values: ["info", "components", "props", "usage"],
-              },
-            },
-            label: text,
-            destination,
-          },
+      type: "array",
+      maxItems: 4,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "label"],
+        properties: {
+          id: { enum: ["info", "components", "props", "usage"] },
+          label: text,
+          destination,
         },
       },
     },
-    initial: {
-      schema: {
-        kind: "enum",
-        values: ["info", "components", "props", "usage", "closed"],
-      },
-    },
-    sheetSize: { schema: { kind: "enum", values: ["compact", "expanded"] } },
+    initial: { enum: ["info", "components", "props", "usage", "closed"] },
+    sheetSize: { enum: ["compact", "expanded"] },
   },
 } as const;
 const slots = ["info", "components", "props", "usage"] as const;
-export type InspectorProps = ComponentProps<typeof propSchema, typeof slots>;
+export type InspectorProps = LibraryProps<typeof propSchema, typeof slots>;
 const sample = {
   tabs: [
     { id: "info", label: "Details" },
@@ -46,6 +38,8 @@ const sample = {
   ],
   initial: "info",
   sheetSize: "compact",
+} as const;
+const sampleSlots = {
   info: <p>A shared action with an optional destination and hint.</p>,
   props: (
     <dl className="ce-props">
@@ -58,7 +52,7 @@ const sample = {
     </dl>
   ),
   usage: <p>Used by Welcome and Details.</p>,
-} as const;
+};
 export const inspector = defineComponent({
   ...libraryMetadata(
     "inspector",
@@ -67,6 +61,7 @@ export const inspector = defineComponent({
     "The shared inspector: icon tabs, panel content and responsive sizing.",
   ),
   propSchema,
+  props: sample,
   slots,
   controls: {
     initial: {
@@ -88,16 +83,18 @@ export const inspector = defineComponent({
   },
   render: InspectorView,
   variants: [
-    { slug: "details", title: "Details", props: sample },
+    { slug: "details", title: "Details", props: sample, slots: sampleSlots },
     {
       slug: "props",
       title: "Props",
       props: { ...sample, initial: "props" },
+      slots: sampleSlots,
     },
     {
       slug: "closed",
       title: "Closed",
       props: { ...sample, initial: "closed" },
+      slots: sampleSlots,
     },
   ],
 });

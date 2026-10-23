@@ -1,52 +1,51 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
+import { viewRoute } from "@mokly/viewer/data";
 
-import {
-  compileCatalogue,
-  type Compilation,
-} from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { componentEntrySource } from "../helpers/component_fixture.js";
-import {
-  createFixture,
-  removeFixture,
-  type TestFixture,
-} from "../helpers/fixture.js";
+import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
-let fixture: TestFixture;
-let compilation: Compilation;
-let generatedDir: string;
+import { test } from "./browser_test.js";
+import { componentFragmentFixture } from "./component_fragment_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 
+let fixture: Awaited<ReturnType<typeof componentFragmentFixture>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+});
+const expectedEntries = [
+  "action",
+  "action/default",
+  "action/disabled",
+  "pane",
+  "pane/default",
+];
 test.beforeAll(async () => {
-  fixture = await createFixture(componentEntrySource(), {
-    extraConfig: 'colorSchemes: ["light", "dark"],',
+  fixture = await componentFragmentFixture({
+    "specs/index.mockup.tsx": browserSources({
+      body: '<pane.Component><action.Component label="Slot action" /></pane.Component><MockLink to="action/default">Open Action</MockLink>',
+      actionRender:
+        "(props, context) => <button disabled={props.disabled} data-viewport={context.viewport} data-scheme={context.colorScheme}>{props.label}</button>",
+    }),
   });
-  const config = await loadConfig(fixture.root);
-  generatedDir = config.generatedDir;
-  compilation = await compileCatalogue(config);
-  await writeCompilation(compilation, config);
+  const index = fixture.index;
+  expect(
+    index.components.map((entry: { path: string }) => entry.path).sort(),
+  ).toEqual(expectedEntries);
 });
-test.afterAll(async () => {
-  if (fixture) await removeFixture(fixture);
-});
+test.afterAll(async () => fixture?.close());
 
-test("saved component variants render through standalone portable links in every viewport and scheme", async ({
-  page,
-}, testInfo) => {
-  for (const viewport of ["mobile", "desktop"])
-    for (const scheme of ["light", "dark"]) {
-      await page.setViewportSize(
-        viewport === "mobile"
-          ? { width: 390, height: 844 }
-          : { width: 1280, height: 900 },
-      );
-      const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
-      const url = (route: string) =>
-        pathToFileURL(path.join(generatedDir, route)).href;
-      await page.goto(url(`home/index.${suffix}`));
+for (const viewport of ["mobile", "desktop"] as const) {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`${viewport}/${scheme}: parent props and saved component variants have portable documents`, async ({
+      page,
+    }) => {
+      const networkRequests: string[] = [];
+      page.on("request", (request) => {
+        if (/^https?:/.test(request.url())) networkRequests.push(request.url());
+      });
+      const url = (entry: string) =>
+        `${fixture.url}/static/mokly-generated/${viewRoute(entry, viewport, scheme)}`;
+      await page.goto(url("home"));
       await expect(
         page.getByRole("button", { name: "Slot action", exact: true }),
       ).toBeVisible();
@@ -54,17 +53,26 @@ test("saved component variants render through standalone portable links in every
         page.getByRole("button", { name: "Inside", exact: true }),
       ).toBeVisible();
       await page.getByRole("link", { name: "Open Action" }).click();
-      await expect(page).toHaveURL(url(`action/default/index.${suffix}`));
-      await expect(
-        page.getByRole("button", { name: "Continue" }),
-      ).toHaveAttribute("data-viewport", viewport);
-      await page.goto(url(`action/disabled/index.${suffix}`));
-      await expect(
-        page.getByRole("button", { name: "Continue" }),
-      ).toBeDisabled();
-      await page.screenshot({
-        path: testInfo.outputPath(`action-${viewport}-${scheme}.png`),
-      });
-    }
-  expect(compilation.manifest.schemaVersion).toBe(10);
-});
+      await expect(page).toHaveURL(url("action/default"));
+      for (const entry of expectedEntries) {
+        await page.goto(url(entry));
+        const button = page.getByRole("button", {
+          name: entry.startsWith("action") ? "Continue" : "Inside",
+          exact: true,
+        });
+        await expect(button).toHaveAttribute("data-viewport", viewport);
+        await expect(button).toHaveAttribute("data-scheme", scheme);
+        if (entry === "action/disabled") await expect(button).toBeDisabled();
+        else await expect(button).toBeEnabled();
+        if (entry === "pane/default")
+          await expect(
+            page.getByText("Saved content", { exact: true }),
+          ).toBeVisible();
+      }
+      if (process.env["MOKLY_PLAYWRIGHT_FILE_DIR"]) {
+        expect(new URL(page.url()).protocol).toBe("file:");
+        expect(networkRequests).toEqual([]);
+      }
+    });
+  }
+}

@@ -1,11 +1,6 @@
 /** Pure route projection and input handling for application-owned shell roots. */
 
-import type {
-  Dispatch,
-  KeyboardEvent,
-  MouseEvent,
-  SetStateAction,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
@@ -17,9 +12,14 @@ import type { ShellContext } from "./context.js";
 import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
-import { sameShellRoute } from "./store_browser_routes.js";
+import {
+  sameShellRoute,
+  type ShellClickEvent,
+  type ShellKeyEvent,
+} from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
+import { viewTitle } from "./view_title.js";
 
 export interface PendingNavigation {
   fragment?: string;
@@ -70,14 +70,16 @@ export function frameMissState(
   route: ShellRoute,
   sections: readonly NavSectionNode[],
   controlled: boolean,
+  catalogue: Catalogue,
 ): ShellState {
-  return controlled ? state : withHostRoute(state, route, sections);
+  return controlled ? state : withHostRoute(state, route, sections, catalogue);
 }
 
 export function withHostRoute(
   state: ShellState,
   route: ShellRoute,
   sections: readonly NavSectionNode[],
+  catalogue: Catalogue,
 ): ShellState {
   const path =
     route.view.kind === "target"
@@ -87,8 +89,9 @@ export function withHostRoute(
     ...state,
     announcement:
       route.view.kind === "target"
-        ? `Loaded ${route.view.target.entry.title} · Mokly`
+        ? `Loaded ${viewTitle(catalogue, route.view)}`
         : "Loaded Mokly",
+    comparisonIntent: route.comparison === "side",
     disclosures: openDisclosures(state.disclosures, path),
     drawerOpen: false,
     expandedFrame: undefined,
@@ -96,12 +99,14 @@ export function withHostRoute(
       ? openDisclosures(state.filterBaseline, path)
       : undefined,
     route,
+    routeInstallation: state.routeInstallation + 1,
     tagPickerOpen: false,
   };
 }
 
 export function announceNavigation(
   environment: EmbeddedShellEnvironment,
+  catalogue: Catalogue,
   selection: ViewerSelection,
   fragment: string | undefined,
   pending: PendingNavigation | undefined,
@@ -109,7 +114,7 @@ export function announceNavigation(
   const entry =
     typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
-          environment.model,
+          catalogue.publicModel,
           selection.screenPath,
           selection.snapshotId,
         )?.entry
@@ -124,17 +129,15 @@ export function announceNavigation(
 }
 
 export function hostClick(
-  event: MouseEvent<HTMLElement>,
+  event: ShellClickEvent,
   catalogue: Catalogue,
   context: ShellContext,
   environment: EmbeddedShellEnvironment | undefined,
   request: (route: ShellRoute) => void,
-  setState: Dispatch<SetStateAction<ShellState>>,
   state: ShellState,
 ): void {
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target || !environment) return;
-  closePickerFromTag(event.currentTarget, target, setState, state);
   if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
     return;
   if (target.closest("[data-mokly-slot]")) return;
@@ -173,26 +176,8 @@ function ownedCatalogueUrl(
   );
 }
 
-function closePickerFromTag(
-  root: HTMLElement,
-  target: Element,
-  setState: Dispatch<SetStateAction<ShellState>>,
-  state: ShellState,
-): void {
-  if (
-    !state.tagPickerOpen ||
-    !target.closest("[data-mokly-tag]") ||
-    target.closest("[data-mokly-tag-picker]")
-  )
-    return;
-  setState((current) => ({ ...current, tagPickerOpen: false }));
-  queueMicrotask(() =>
-    root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
-  );
-}
-
 export function hostKeyDown(
-  event: KeyboardEvent<HTMLElement>,
+  event: ShellKeyEvent,
   setState: Dispatch<SetStateAction<ShellState>>,
   state: ShellState,
 ): void {
@@ -200,9 +185,9 @@ export function hostKeyDown(
   if (state.tagPickerOpen) {
     event.preventDefault();
     setState((current) => ({ ...current, tagPickerOpen: false }));
-    event.currentTarget
-      .querySelector<HTMLElement>("[data-mokly-tag-toggle]")
-      ?.focus();
+    const root = event.currentTarget;
+    if (root instanceof Element)
+      root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
   } else if (state.expandedFrame) {
     event.preventDefault();
     setState((current) => ({ ...current, expandedFrame: undefined }));
@@ -210,7 +195,7 @@ export function hostKeyDown(
 }
 
 function eligibleAnchor(
-  event: MouseEvent<HTMLElement>,
+  event: ShellClickEvent,
   anchor: HTMLAnchorElement,
 ): boolean {
   return (

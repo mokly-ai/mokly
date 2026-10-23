@@ -32,12 +32,12 @@ test("live host routing carries exact history and announces its entry", () => {
   const navigations: unknown[] = [];
   announceNavigation(
     {
-      model,
       events: () => ({
         onScreenNavigate: (event: ScreenNavigateEvent) =>
           navigations.push(event),
       }),
     } as never,
+    catalogue,
     selection,
     route.fragment,
     undefined,
@@ -65,7 +65,7 @@ test("bare removed routes announce only published snapshot identity", () => {
     const initial = createInitialShellState(
       candidateCatalogue,
       viewerContext(candidate, defaultSelection),
-      { kind: "home" },
+      { view: { kind: "home" } },
       undefined,
     );
     const state = withRoute(
@@ -77,12 +77,12 @@ test("bare removed routes announce only published snapshot identity", () => {
     const navigations: ScreenNavigateEvent[] = [];
     announceNavigation(
       {
-        model: candidate,
         events: () => ({
           onScreenNavigate: (event: ScreenNavigateEvent) =>
             navigations.push(event),
         }),
       } as never,
+      candidateCatalogue,
       state.selection,
       state.route.fragment,
       undefined,
@@ -113,15 +113,19 @@ test("unknown frame routes mutate only uncontrolled host display state", () => {
     catalogue,
     new URL("https://example.test/view/missing-entry"),
   );
-  const state = createInitialShellState(
-    catalogue,
-    context,
-    home.view,
-    undefined,
-  );
+  const state = createInitialShellState(catalogue, context, home, undefined);
 
-  assert.equal(frameMissState(state, missing, sections, true), state);
-  const uncontrolled = frameMissState(state, missing, sections, false);
+  assert.equal(
+    frameMissState(state, missing, sections, true, catalogue),
+    state,
+  );
+  const uncontrolled = frameMissState(
+    state,
+    missing,
+    sections,
+    false,
+    catalogue,
+  );
   assert.equal(uncontrolled.route.view.kind, "missing");
   assert.equal(
     hostSelectionRouteChanged(catalogue, uncontrolled, state.selection),

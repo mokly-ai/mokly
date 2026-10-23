@@ -1,0 +1,7 @@
+---
+source: crates/mokly-cli/src/_tests_/output_tests.rs
+expression: "style.error(Code::BuildInvalid, \"specs/home.screen.html:2:1 unknown element\",\n&redactor)"
+---
+✖ The catalogue could not be built.  [mokly/build-invalid]
+  specs/home.screen.html:2:1 unknown element
+  Fix the reported catalogue source and retry.

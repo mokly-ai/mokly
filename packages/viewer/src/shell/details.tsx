@@ -20,11 +20,11 @@ import {
 import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
-import type { ChangedView } from "./view_marks.js";
+import { SCHEME_LABELS, type ChangedView } from "./view_marks.js";
 
 /** The schemes a screen renders in, named for the reader. */
 function schemeNames(screen: ManifestScreen): string {
-  return screen.colorSchemes.join(", ");
+  return screen.colorSchemes.map((scheme) => SCHEME_LABELS[scheme]).join(", ");
 }
 
 export function EntryDetailsBody(props: {
@@ -72,7 +72,7 @@ export function EntryDetailsBody(props: {
         {entry.kind === "screen" || entry.kind === "component" ? (
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
-        {removed ? (
+        {removed?.folderTitles.length ? (
           <MetaRow label="Location">{removed.folderTitles.join(" › ")}</MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />

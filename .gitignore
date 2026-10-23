@@ -13,3 +13,12 @@ target/
 test-results/
 playwright-report/
 .superpowers/
+
+# Host and release binaries are build output.
+packages/native-*/bin/
+packages/mokly/docs/
+
+# Static sites and persistent output reservation namespaces.
+/mokly-static/
+.mokly-export-reservations/
+packages/mokly/CHANGELOG.md

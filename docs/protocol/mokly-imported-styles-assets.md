@@ -1,144 +1,147 @@
 # Imported Stylesheet Assets And Delivery
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
-
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Imported delivery is implemented. Uniform rule identity and Changes attribution
-are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Assets, Links And Delivery
 
-CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
-case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
-URL is invalid.
+A CSS `url()` value that begins with `data:`, `http:`, `https:`, matched
+case-insensitively, `//`, or `#` stays unchanged. A root-absolute `/...` URL
+is invalid. A quoted string URL inside `image-set()` is rejected, with the
+guidance to write `image-set(url("./a.png") 1x)`; the same rule applies to
+authored public CSS under [link validation](./mokly-link-validation.md), and
+such a string is never an already-delivered asset. Quoted `data:`, `http:`,
+`https:`, and `//` values stay external. A local `@import` at the end of a
+file without a semicolon still belongs to the prelude.
 
-Check reads index tracking for the complete generated tree. A tracked
-Check compares every expected file and byte; a partly tracked tree fails with
-both tracking remedies. An untracked Check validates compilation without
-reading old generated output. Build writes the tree regardless of ignore rules.
-CLI Publish separately checks committed or ignored generated output under the
-[upload contract](./mokly-upload.md).
-See [the command contract](./mokly-generated-output.md#tracked-state-and-commands).
+A relative URL resolves against the referring stylesheet; `?query` and
+`#hash` are removed for resolution and restored on the rewritten route. The
+target must be a regular file inside the repository, reached without a
+symbolic link; a missing, non-regular, or escaping target fails. An imported
+asset and a nested `@import` target are protected inputs of the source
+inventory; a document that references one of them as a public file fails
+with the protected-target diagnostic of the
+[referenced closure](./mokly-public-closure.md), whose reason names the
+importing stylesheet. An in-repository `node_modules` asset is allowed
+and its full repository-relative path is mirrored; when that logical path is
+a symlink into an in-repository workspace package, both the logical and the
+physical identity enter the inventory, and physically installed package code
+is not inventoried.
 
-Quoted local string URLs inside `image-set()` are not validated by esbuild's
-`url-token` hook; reject them, including in authored public CSS, with guidance
-to write `image-set(url("./a.png") 1x)` instead. Resource reference extraction
-also identifies strings inside `image-set()` for validation. They are never
-treated as already-delivered CSS assets, whether the stylesheet is imported or
-authored under `mockupsDir`. Quoted `data:`, `http:`, `https:` and `//` values
-stay external and unchanged. A local `@import` at end of file without a
-semicolon still belongs to the prelude and renderer closure. Relative URLs resolve
-against the referring CSS file; strip `?query`/`#hash` for resolution and
-restore that exact suffix after esbuild rewrites the relative path. Require a
-regular confined file. A nested `@import` of a public stylesheet under
-`mockupsDir` is likewise rejected before it can become an inventoried private
-source. Compare both logical and physical locations with `mockupsDir` for
-both kinds of source. An asset inside `mockupsDir` that is not already an
-inventoried graph source fails instead of silently making an existing public
-URL private; move the imported asset outside `mockupsDir` or keep it as a
-separately linked public asset. In-repository `node_modules` assets are allowed and
-their full repo-relative paths are mirrored. When that logical path is a
-symlink into an in-repository workspace package, keep both logical and physical
-source identities in the inventory and delivered-source evidence; physically
-installed package code under `node_modules` is not inventoried. Only `.avif`, `.bmp`, `.gif`,
-`.ico`, `.jpeg`, `.jpg`, `.png`, `.svg`, `.webp`, `.eot`, `.otf`, `.ttf`,
-`.woff`, `.woff2` (matched case-sensitively) use esbuild's `file` loader.
-Every other extension fails.
-Serve, on-demand views and transient previews use the same extension-to-MIME
-mapping for these assets: `.avif` `image/avif`, `.bmp` `image/bmp`, `.gif`
-`image/gif`, `.ico` `image/vnd.microsoft.icon`, `.jpeg`/`.jpg` `image/jpeg`,
-`.png` `image/png`, `.svg` `image/svg+xml`, `.webp` `image/webp`, `.eot`
-`application/vnd.ms-fontobject`, `.otf` `font/otf`, `.ttf` `font/ttf`, `.woff`
-`font/woff`, and `.woff2` `font/woff2`. Binary assets are never decoded.
-`mokly-generated/assets/<path>` must satisfy the existing portable URL-path
-rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no trailing
-dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`, `com1`–`9`,
-`lpt1`–`9`, ignoring case). No empty, `.`, `..`, backslash, drive or colon
-segments. **Only** the segment immediately after `node_modules` may instead
-match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/` (npm scope, e.g. `@fontsource`);
-all other constraints remain, including for a stylesheet root inside a scoped
-npm package. Esbuild emits the literal `@` in relative CSS
-`url()` references; `encodeUrlPath` converts it to
-`%40` for links, Serve decodes it, and export resource discovery accepts and
-decodes both forms. The complete stylesheet route obeys the usual rule.
+Only these extensions, matched case-sensitively, are assets; every other
+extension fails. Serve and the static output use the same content types:
+
+| Extension       | Content type                    |
+| --------------- | ------------------------------- |
+| `.avif`         | `image/avif`                    |
+| `.bmp`          | `image/bmp`                     |
+| `.gif`          | `image/gif`                     |
+| `.ico`          | `image/vnd.microsoft.icon`      |
+| `.jpeg`, `.jpg` | `image/jpeg`                    |
+| `.png`          | `image/png`                     |
+| `.svg`          | `image/svg+xml`                 |
+| `.webp`         | `image/webp`                    |
+| `.eot`          | `application/vnd.ms-fontobject` |
+| `.otf`          | `font/otf`                      |
+| `.ttf`          | `font/ttf`                      |
+| `.woff`         | `font/woff`                     |
+| `.woff2`        | `font/woff2`                    |
+
+Binary assets are never decoded. `assets/<path>` satisfies the portable
+URL-path rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no
+trailing dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`,
+`com1` to `com9`, `lpt1` to `lpt9`, ignoring case); no empty, `.`, `..`,
+backslash, drive, or colon segment. Only the segment directly after
+`node_modules` may instead match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/`, an npm
+scope such as `@fontsource`; every other constraint still applies, including
+for a stylesheet root inside a scoped package. The rewritten `url()` carries
+the literal `@`; a link encodes it as `%40`, Serve decodes it, and the
+referenced closure accepts and decodes both forms.
 
 The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
-owns the complete `RenderInput.stylesheets` list, its order, href encoding
-and how pages link CSS.
+owns the complete stylesheet list of a document, its order, href encoding,
+and how pages link CSS. The owning entry root of a definition is the entry
+module or stories file whose export contributed it, under the
+[entry module contract](./mokly-entry-modules.md), independent of the module
+where its `define*` call ran; the definition's handle names that file. Two
+entries may import the same helper and still link their own bundles.
 
-The owning entry root is the **discovered entry module whose default or named
-export contributed the definition**, per the
-[entry-module contract](./mokly-entry-modules.md). It is independent of the module
-where its `define*` call ran. Record it in memory during export collection and
-propagate it through registry preparation
-without adding a manifest field. Two entries may import the same helper but
-link their own independent entry bundles.
+## Validation And The Render Cache
 
-Validation uses one generation-local pending set of HTML text, CSS text and
-opaque asset bytes, seeded with all style outputs before rendering. On-demand
-documents add HTML lazily to that same set; never decode asset bytes. Validate
-generated CSS `url()` references recursively as CSS resources, and binary
-assets by existence only. Pending generated routes satisfy stylesheet and
-component resource checks before any output is written.
-The internal manifest is not a public pending resource, even though it is a
-generated text output; links and component resources naming it retain the
-existing internal-metadata rejection before the manifest exists on disk.
-The complete output inventory includes the pending public set plus the private
-manifest. Only a writer or tracked Check validates the existing output tree.
-Never read a reserved route from disk during compilation: absent pending
-reserved bytes mean a missing target even if an old file exists. On-demand
-Serve responds to `/static/` generated CSS and assets from the accepted
-generation's bytes, not on-disk files.
-Full compilation continues to walk and validate transitive references in linked
-authored public HTML; on-demand validation reads only the requested view and
-resources it must validate for that request.
-One accepted on-demand generation computes its pending route set once from
-the complete route index and parses each generated CSS file at most once.
-Subsequent view requests reuse both indexes while HTML and edited component
-props remain request-specific. A new accepted generation owns fresh indexes;
-the public validation rules and diagnostic order do not change.
+Validation uses one pending set per render generation: the composed
+documents, the bundled stylesheet text, and opaque asset metadata, seeded
+with every stylesheet node before any document is validated. A document that
+renders on demand joins the same set. A bundled stylesheet's `url()`
+references are validated recursively as CSS resources; an asset by existence
+only. A pending route satisfies stylesheet and component resource checks
+before anything is served or written. Nothing is read from disk by route: an
+absent pending route is a missing target. One generation computes its route
+set once from the catalogue model and parses each bundled stylesheet at most
+once; later requests reuse both while documents and edited component props
+stay request-specific. A new generation owns fresh indexes; the validation
+rules and the diagnostic order do not change.
 
-Use esbuild `write: false`, `metafile: true`, `bundle: true`, `minify: false`,
-`target: "esnext"`, `outbase: repoRoot`, path-mirroring
-`assetNames: "../assets/[dir]/[name]"` relative to `styles/`, and no content
-hashes, source maps or browser syntax lowering. Strip only esbuild-inserted
-source-path comments and their separator blank lines, and end CSS with one
-newline. The [module contract](./mokly-imported-styles-modules.md)
-only renames local CSS identities before this pass; it does not restore or
-normalize image URLs. Mokly does not otherwise rewrite PostCSS/CSS Modules/esbuild output.
-Esbuild itself may drop ordinary authored comments or move legal comments,
-even without minification. Repeated builds with the same
-inputs and deterministic plugins yield byte-identical output; plugin
-determinism is the consumer's responsibility.
+An opaque asset keeps its generated route, logical path, confined source
+identity, and captured SHA-256 digest. Stylesheet roots share one resource
+plan per asset path. Hash-only preparation memoizes the digest and retains
+no asset payload in source snapshots, stylesheet bundles, stylesheet caches,
+or render caches. Input and document keys include the digest. Parsed CSS
+sources retain their separate snapshot policy.
 
-`Compilation.outputs` carries text or raw bytes; compare, stage, roll back,
-read and export by bytes. Build replaces the complete generated tree under
-one repository-scoped output lock. Watched Build and opted-in Serve use that
-same writer boundary. Failed compilation retains the previous output tree.
-Serve `/static/mokly-generated/<encoded-route>` and transient previews use
-this generation's compiled stylesheet/asset bytes without a disk fallback
-(correct content types, GET/HEAD and confined paths). Retained Serve runtimes
-carry per-root stylesheet routes and the CSS/asset outputs as raw bytes through
-the worker and watched child IPC boundaries. Recompiling an accepted JavaScript
-graph reuses those outputs without rescanning CSS; runtime transfer may not
-lose the route map or decode assets as UTF-8. An imported CSS, nested import,
-asset, config or plugin-dependency edit rebuilds; new matching files in watched
-dependency directories also rebuild. Ordinary linked authored public CSS
-changes still reload.
+Serve answers `GET` and `HEAD` for `/static/mokly-generated/styles/<route>`
+and `/static/mokly-generated/assets/<route>` with the generation's bytes, the
+content types above, and confined paths. There is no disk fallback, and a
+route absent from the current generation is not found even when an earlier
+generation had it. Transient component renders of the
+[component controls contract](./mokly-component-controls.md) use the same
+bytes. `build` writes every stylesheet and asset of its generation under
+`static/mokly-generated/`; publish uploads that output; the comparison
+contract reads the base side's bundles from the base commit's sources.
+Imported CSS, PostCSS, and asset sources never enter the static output.
 
-Export, publication and Changes capture validated in-memory generated bytes,
-including binary assets, and keep imported sources private. Generated linked
-stylesheets are public resources analyzed by
-[CSS change attribution](./mokly-css-attribution.md); configured, declared, CSS-imported and JavaScript-bundled rules all follow
-[one membership rule](./mokly-css-attribution-rules.md). Equal normalized
-before/after tuples join copies across generated entry roots. Components change
-only from kept own-page matches after nested filtering; outside matches and
-unresolved rules give a page its own row. Consumer invocation matches alone
-never change that component. Private CSS inputs are rebuild inputs only.
-Both comparison sides use v10. Earlier output at the selected generated location
-or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
-resource reader or one-time cross-layout stylesheet comparison.
+Delivery reads bounded chunks from the captured source identity and checks
+the complete stream against the generation digest and its opened length.
+Serve verifies into an unnamed temporary file before sending headers, then
+streams that immutable response file. A mismatch fails the request. Watched
+Serve requests a new generation through its coalesced rebuild queue.
+With `--no-watch`, the generation stays fixed. The terminal diagnostic names
+the asset and tells the user to restart Serve or use watching. Static output
+captures one immutable final payload after the existing file-size check.
+A mismatch stops the build with the input-change error before installation;
+publish uses the final captured bytes. The final live fingerprint recheck
+still applies under [Output Transaction](./mokly-export.md#output-transaction).
+
+A vanished path (`NotFound` or `NotADirectory`), stopped symbolic-link
+resolution or a symbolic-link loop, and a non-regular replacement count as
+changed inputs. Other open failures keep their original IO diagnostic and do
+not request regeneration. Delivery retries interrupted reads. Explicit command
+cancellation stops the copy with the cancellation diagnostic.
+
+Each opaque asset `GET` and `HEAD` reads, hashes, and captures the complete
+asset into a private response file. Concurrent requests for the same route
+do not share or coalesce this capture. Worker parallelism bounds active
+captures. Each capture is bounded by the byte length observed at open.
+The worker permit ends after capture; the file lives until its response
+closes. There is no aggregate byte bound on these live response files.
+Temporary storage uses the OS temporary directory, which can be backed by
+`tmpfs` and consume memory outside process RSS measurements.
+
+Git asset delivery buffers one blob under the 64 MiB Git limit, then copies
+it to the destination. Each digest cache miss starts one `cat-file blob`
+command; each delivery starts one bounded `cat-file --batch` command.
+
+An edit to an imported stylesheet, a nested import, an asset, the
+configuration, or a plugin-reported dependency invalidates the stylesheet
+node and re-renders the views that link it; a new file that matches a
+watched directory dependency does the same. An edit to an authored public
+stylesheet reloads the views that link it under the
+[watch contract](./mokly-watch.md).
+
+Delivered stylesheets are public resources that
+[CSS change attribution](./mokly-css-attribution.md) analyses; configured,
+declared, CSS-imported, and JavaScript-bundled rules follow
+[one membership rule](./mokly-css-attribution-rules.md). A changed asset is
+conservative evidence for every view whose closure reaches it, without
+decoding it. Both sides of a comparison render with the current Mokly
+version, so no old resource reader exists.

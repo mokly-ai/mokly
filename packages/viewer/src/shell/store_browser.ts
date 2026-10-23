@@ -7,7 +7,6 @@ import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { currentDeploymentMatches } from "./delivery.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
 import {
@@ -24,7 +23,7 @@ import {
   restoreScrolls,
 } from "./store_scroll.js";
 import type { ShellState } from "./store_state.js";
-import { viewTitle } from "./views.js";
+import { viewTitle } from "./view_title.js";
 
 interface BrowserStoreInput {
   catalogue: Catalogue;
@@ -37,10 +36,14 @@ interface BrowserStoreInput {
 
 export type { ShellBrowserActions } from "./store_browser_actions.js";
 
-/** Bind one store to standalone history without reading globals during SSR. */
+/** Bind one store to standalone history, focus and scroll. */
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   const stateRef = useRef(input.state);
   stateRef.current = input.state;
+  // The catalogue changes in place when details arrive or a publication is
+  // adopted; history listeners read the latest one instead of rebinding.
+  const latest = useRef(input);
+  latest.current = input;
   const sequence = useRef<AbortController | undefined>(undefined);
   const installedDocumentKey = useRef<string | undefined>(undefined);
   const pendingScroll = useRef<Readonly<Record<string, number>> | undefined>(
@@ -57,7 +60,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       const win = window;
-      const route = activated ?? routeFromUrl(input.catalogue, url);
+      const { catalogue, sections, setState } = latest.current;
+      const route = activated ?? routeFromUrl(catalogue, url);
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
@@ -70,11 +74,9 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         pendingFocus.current = true;
       }
       standaloneAppearanceHost(win)?.applyRoute(route.colorScheme);
-      input.setState((state) =>
-        withRoute(state, route, input.catalogue, input.sections),
-      );
+      setState((state) => withRoute(state, route, catalogue, sections));
     },
-    [input.catalogue, input.context.delivery, input.sections, input.setState],
+    [],
   );
 
   const transition = useCallback(
@@ -84,11 +86,11 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       scrolls: Readonly<Record<string, number>> = {},
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
-      if (!input.interactive) return;
+      if (!latest.current.interactive) return;
       const win = window;
       const sameDocument =
         installedDocumentKey.current === routeDocumentKey(requested);
-      const requestedRoute = routeFromUrl(input.catalogue, requested);
+      const requestedRoute = routeFromUrl(latest.current.catalogue, requested);
       let canonical = canonicalRouteUrl(requested, requestedRoute);
       if (requestedRoute.view.kind === "target") {
         canonical = new URL(
@@ -104,19 +106,6 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const controller = new AbortController();
       sequence.current?.abort();
       sequence.current = controller;
-      if (input.context.delivery && input.catalogue.publicModel) {
-        const matches = await currentDeploymentMatches(
-          win,
-          input.catalogue.publicModel,
-          controller.signal,
-        );
-        if (controller.signal.aborted) return;
-        if (!matches) {
-          win.location.assign((sameDocument ? requested : canonical).href);
-          return;
-        }
-      }
-      if (controller.signal.aborted) return;
       if (sameDocument) {
         if (activated) {
           install(
@@ -135,7 +124,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       install(canonical, push, scrolls, true, activated);
       if (sequence.current === controller) sequence.current = undefined;
     },
-    [input.catalogue, input.context.delivery, input.interactive, install],
+    [install],
   );
   const navigate = useCallback(
     (href: string) => transition(new URL(href, window.location.href), true),
@@ -151,13 +140,14 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     if (!input.interactive) return;
     const win = window;
     if (win.history.scrollRestoration) win.history.scrollRestoration = "manual";
+    const catalogue = latest.current.catalogue;
     let initialUrl = new URL(win.location.href);
-    let initialRoute = routeFromUrl(input.catalogue, initialUrl);
+    let initialRoute = routeFromUrl(catalogue, initialUrl);
     const canonicalInitial = canonicalRouteUrl(initialUrl, initialRoute);
     if (canonicalInitial.href !== initialUrl.href) {
       win.history.replaceState(win.history.state, "", canonicalInitial);
       initialUrl = canonicalInitial;
-      initialRoute = routeFromUrl(input.catalogue, initialUrl);
+      initialRoute = routeFromUrl(catalogue, initialUrl);
     }
     installedDocumentKey.current = routeDocumentKey(initialUrl);
     persistScroll(win, captureScrolls(document));
@@ -172,7 +162,10 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         if (scrollFrame) return;
         const scrolls = captureScrolls(document);
         persistScroll(win, scrolls);
-        input.setState((state) => ({ ...state, regionScrolls: scrolls }));
+        latest.current.setState((state) => ({
+          ...state,
+          regionScrolls: scrolls,
+        }));
         scrollFrame = win.requestAnimationFrame(() => {
           scrollFrame = 0;
         });
@@ -193,15 +186,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       sequence.current?.abort();
       if (scrollFrame) win.cancelAnimationFrame(scrollFrame);
     };
-  }, [
-    input.catalogue,
-    input.context.delivery,
-    input.interactive,
-    input.sections,
-    input.setState,
-    install,
-    navigateHistory,
-  ]);
+  }, [input.interactive, install, navigateHistory]);
 
   useLayoutEffect(() => {
     if (!input.interactive) return;

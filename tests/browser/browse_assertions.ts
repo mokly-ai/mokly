@@ -102,9 +102,3 @@ export function overlayStyle(
       property,
     );
 }
-
-export async function workspaceRoute(page: Page): Promise<string | undefined> {
-  const state = await page.locator("script[data-workspace-data]").textContent();
-  if (!state) return;
-  return (JSON.parse(state) as { entry?: { path?: string } }).entry?.path;
-}

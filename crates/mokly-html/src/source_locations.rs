@@ -1,0 +1,138 @@
+//! Associate authored tags with tree nodes without inventing locations for implied nodes.
+
+use std::collections::{BTreeMap, VecDeque};
+
+use html5gum::Token;
+use mokly_catalogue::html_tokens;
+use mokly_catalogue::template_types::Template;
+use mokly_model::catalogue::SourceLocation;
+
+use crate::error::Result;
+use crate::tree::{self, Attribute, Element, Node};
+use crate::{parse, source_checks};
+
+/// Authored positions grouped by diagnostic identity, in source order.
+pub(crate) type Locations = BTreeMap<String, VecDeque<SourceLocation>>;
+/// Wrapper positions grouped by kept-attribute identity, preserving empty slots.
+pub(crate) type WrapperLocations = BTreeMap<String, VecDeque<Option<SourceLocation>>>;
+
+pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
+    source_checks::validate(&template.body, false)?;
+    let mut locations = Locations::new();
+    let mut wrappers = WrapperLocations::new();
+    let mut cursor = template.source.char_indices().peekable();
+    let (mut line, mut column) = (1, 1);
+    for parsed in html_tokens::parse(&template.body) {
+        if let Token::StartTag(tag) = parsed.token {
+            let name = String::from_utf8_lossy(&tag.name);
+            let attributes: BTreeMap<_, _> = tag
+                .attributes
+                .iter()
+                .map(|(name, value)| {
+                    (
+                        String::from_utf8_lossy(name).into_owned(),
+                        String::from_utf8_lossy(&value.value).into_owned(),
+                    )
+                })
+                .collect();
+            let key = format!("{name}:{attributes:?}");
+            let end = (template.body_offset + tag.span.start).min(template.source.len());
+            while cursor.peek().is_some_and(|(index, _)| *index < end) {
+                if let Some((_, character)) = cursor.next() {
+                    if character == '\n' {
+                        line += 1;
+                        column = 1;
+                    } else {
+                        column += 1;
+                    }
+                }
+            }
+            let location = SourceLocation {
+                path: template.source_path.clone(),
+                line,
+                column,
+                export: None,
+            };
+            if let Some(signature) = parsed.source_signature {
+                wrappers
+                    .entry(signature)
+                    .or_default()
+                    .push_back(Some(location));
+            } else {
+                locations.entry(key).or_default().push_back(location);
+            }
+        }
+    }
+    let mut nodes = parse::located(&template.body, template.page, wrappers);
+    attach(&mut nodes, &mut locations);
+    Ok(nodes)
+}
+
+fn attach(nodes: &mut [Node], locations: &mut Locations) {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
+        if let Node::Element(element) = node {
+            if element.source.is_none() {
+                let key = signature(element);
+                element.source = locations.get_mut(&key).and_then(VecDeque::pop_front);
+                element.origin = element
+                    .source
+                    .as_ref()
+                    .map(|source| format!("{}:{}:{}", source.path, source.line, source.column));
+            }
+            pending.extend(element.children.iter_mut().rev());
+        }
+    }
+}
+
+pub(crate) fn ignore_signature(name: &str, attributes: &[Attribute]) -> Option<String> {
+    html_tokens::ignore_source_signature(
+        name,
+        attributes
+            .iter()
+            .map(|attribute| (attribute.name.clone(), attribute.value.clone())),
+    )
+}
+
+/// Re-key surviving wrappers in serialized order for the plaintext repair pass.
+pub(crate) fn wrapper_locations(nodes: &[Node]) -> WrapperLocations {
+    let mut locations = WrapperLocations::new();
+    for node in tree::walk(nodes) {
+        if let Node::Element(element) = node
+            && let Some(key) = ignore_signature(&element.name, &element.attributes)
+        {
+            locations
+                .entry(key)
+                .or_default()
+                .push_back(element.source.clone());
+        }
+    }
+    locations
+}
+
+fn signature(element: &Element) -> String {
+    let attributes: BTreeMap<_, _> = element
+        .attributes
+        .iter()
+        .map(|attribute| (attribute.name.clone(), attribute.value.clone()))
+        .collect();
+    format!("{}:{attributes:?}", element.name)
+}
+
+pub(crate) fn slot(body: &str, entry: &str, name: &str) -> Vec<Node> {
+    let mut nodes = parse::fragment(body);
+    let mut next = 0;
+    slot_origins(&mut nodes, &format!("saved-slot:{entry}:{name}"), &mut next);
+    nodes
+}
+
+fn slot_origins(nodes: &mut [Node], prefix: &str, next: &mut usize) {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
+        if let Node::Element(element) = node {
+            element.origin = Some(format!("{prefix}:{}", *next));
+            *next += 1;
+            pending.extend(element.children.iter_mut().rev());
+        }
+    }
+}

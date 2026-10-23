@@ -1,10 +1,12 @@
 import fs from "node:fs/promises";
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -13,10 +15,10 @@ test.beforeAll(async () => {
   fixture = await viewerFixture();
 });
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 
-for (const source of ["object", "fetcher", "url"] as const)
+for (const source of ["object", "url"] as const)
   test(`the embedded ${source} loader reports a typed version failure`, async ({
     page,
   }) => {
@@ -29,21 +31,21 @@ for (const source of ["object", "fetcher", "url"] as const)
       const host = window.viewerHarness.start("one");
       const catalogue = { schemaVersion: 3 } as unknown as CatalogueReadModel;
       if (source === "object")
-        host.props = { ...host.props, catalogue, baseUrl: location.origin };
+        host.props = {
+          ...host.props,
+          index: catalogue,
+          baseUrl: location.origin,
+        };
       else {
         host.props = {
           ...host.props,
-          catalogue:
-            source === "url"
-              ? new URL("/old-catalogue.json", location.href)
-              : async () => ({ catalogue, url: new URL(location.href) }),
+          index: new URL("/old-catalogue.json", location.href),
         } as MoklyViewerProps;
         delete host.props.baseUrl;
       }
       host.render();
     }, source);
-    const message =
-      "This catalogue needs a compatible Mokly viewer. Update the viewer and reload.";
+    const message = "This catalogue needs a compatible viewer";
     await expect(page.getByRole("alert")).toContainText(message);
     expect(
       await page.evaluate(() =>
@@ -57,7 +59,7 @@ for (const source of ["object", "fetcher", "url"] as const)
         code: "version",
         message,
         details:
-          "Unsupported Mokly catalogue version 3; this viewer supports version 6.",
+          "Unsupported Mokly catalogue version 3; this viewer supports version 7.",
       },
     ]);
     await expect(page.locator("#one iframe")).toHaveCount(0);
@@ -79,21 +81,18 @@ test("released review v6 uses the embedded typed version failure", async ({
   await page.waitForFunction(() => Boolean(window.viewerHarness));
   await page.evaluate(() => {
     const host = window.viewerHarness.start("one");
-    const catalogue = structuredClone(
-      host.props.catalogue,
-    ) as CatalogueReadModel;
+    const catalogue = structuredClone(host.props.index) as CatalogueReadModel;
     catalogue.changesStatus = "ready";
     catalogue.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
     for (const entry of [...catalogue.screens, ...catalogue.components])
       entry.changes = { status: "ready", kind: "changed", included: true };
     for (const view of catalogue.screens[0]!.views)
       view.comparison = { status: "ready", kind: "changed", eligible: true };
-    host.props = { ...host.props, catalogue } as MoklyViewerProps;
+    host.props = { ...host.props, index: catalogue } as MoklyViewerProps;
     host.render();
   });
   await page.locator('[data-diff-mode="side"]').click();
-  const message =
-    "This catalogue needs a compatible Mokly viewer. Update the viewer and reload.";
+  const message = "This catalogue needs a compatible viewer";
   await expect(page.getByRole("alert")).toContainText(message);
   expect(
     await page.evaluate(() =>
@@ -107,7 +106,7 @@ test("released review v6 uses the embedded typed version failure", async ({
       code: "version",
       message,
       details:
-        "Unsupported Mokly review version 6; this viewer supports version 7.",
+        "Unsupported Mokly review version 6; this viewer supports version 8.",
     },
   ]);
   await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);

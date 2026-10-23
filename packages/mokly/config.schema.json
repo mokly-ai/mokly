@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mokly configuration",
+  "description": "Data-only catalogue configuration. Paths resolve from this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dir": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?![!#])(?!/)(?!.*[\\\\:\\u0000-\\u001f\\u007f-\\u009f])(?!.*(?:^|/)(?:\\.{1,2})?(?:/|$)).*\\S.*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$",
+            "not": {
+              "pattern": "^[Mm][Oo][Kk][Ll][Yy]-[Gg][Ee][Nn][Ee][Rr][Aa][Tt][Ee][Dd](?:/|$)"
+            },
+            "allOf": [
+              {
+                "not": {
+                  "pattern": "(?:^|/)(?:[Aa][Uu][Xx]|[Cc][Oo][Nn]|[Nn][Uu][Ll]|[Pp][Rr][Nn]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:/|$)"
+                }
+              }
+            ]
+          },
+          "transparent": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "not": {
+                "pattern": "^(?:[Aa][Uu][Xx]|[Cc][Oo][Nn]|[Nn][Uu][Ll]|[Pp][Rr][Nn]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])$"
+              }
+            }
+          }
+        },
+        "required": ["dir"]
+      },
+      "minItems": 1
+    },
+    "repoRoot": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "colorSchemes": {
+      "type": "array",
+      "items": {
+        "enum": ["light", "dark"]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "contains": {
+        "const": "light"
+      }
+    },
+    "renderer": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "postcss": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "moduleResolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_.-]+)*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_.-]+)*$"
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "loaders": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^\\.[A-Za-z0-9][A-Za-z0-9.]*$"
+          },
+          "additionalProperties": {
+            "enum": [
+              "base64",
+              "binary",
+              "dataurl",
+              "empty",
+              "file",
+              "js",
+              "json",
+              "jsx",
+              "text",
+              "ts",
+              "tsx"
+            ]
+          },
+          "properties": {
+            ".css": {
+              "const": "empty"
+            },
+            ".module.css": {
+              "const": "empty"
+            }
+          }
+        },
+        "mainFields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "packageRoots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "resolveExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\.[A-Za-z0-9][A-Za-z0-9.]*$"
+          }
+        }
+      }
+    },
+    "stylesheets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "match": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "stylesheets": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "not": {
+                    "pattern": "^\\$"
+                  }
+                },
+                {
+                  "const": "$componentStylesheets"
+                }
+              ]
+            },
+            "allOf": [
+              {
+                "contains": {
+                  "const": "$componentStylesheets"
+                },
+                "minContains": 0,
+                "maxContains": 1
+              }
+            ]
+          },
+          "lightStylesheets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "not": {
+                "pattern": "^\\$"
+              }
+            }
+          },
+          "darkStylesheets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "not": {
+                "pattern": "^\\$"
+              }
+            }
+          }
+        },
+        "required": ["match", "stylesheets"]
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "baseInstallScripts": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "watch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "debounceMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": ["ignore", "rebuild", "reload"]
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^(?![!#])(?!/)(?!.*[\\\\:\\u0000-\\u001f\\u007f-\\u009f])(?!.*(?:^|/)(?:\\.{1,2})?(?:/|$)).*\\S.*$"
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            },
+            "required": ["action", "paths"]
+          }
+        }
+      }
+    }
+  }
+}
