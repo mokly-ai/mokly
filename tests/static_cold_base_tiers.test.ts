@@ -93,7 +93,7 @@ const cases: ReadonlyArray<{ tier: DependencyTier; title: string }> = [
   {
     tier: 3,
     title:
-      "a cold base build warns and uses working dependencies when the offline install fails",
+      "a strict cold base build warns and uses working dependencies when the offline install fails",
   },
 ];
 
@@ -115,6 +115,7 @@ for (const { tier, title } of cases) {
             "--out=.context/site",
             "--sidecars=1",
             "--debug-timings",
+            ...(tier === 3 ? ["--strict"] : []),
           ],
           "plain",
           env,

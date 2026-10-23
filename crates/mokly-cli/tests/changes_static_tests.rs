@@ -57,7 +57,7 @@ fn static_build_retains_changes_and_selects_the_explicit_base_once() {
 }
 
 #[test]
-fn base_dependency_warnings_gate_strict_static_builds_and_publish_after_comparison() {
+fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
     let root = base(&[
         (
             "mokly.config.json",
@@ -97,28 +97,28 @@ fn base_dependency_warnings_gate_strict_static_builds_and_publish_after_comparis
             ]);
         }
         let output = run(root.path(), &args);
+        let stderr = String::from_utf8_lossy(&output.stderr);
         assert_eq!(
             output.status.code(),
-            Some(1),
-            "{verb}: {}",
-            String::from_utf8_lossy(&output.stderr)
+            Some(if verb == "build" { 0 } else { 1 }),
+            "{verb}: {stderr}"
         );
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("base dependencies"), "{verb}: {stderr}");
-        assert!(
-            stderr.contains(if strict {
-                "1 build warning with --strict"
-            } else {
-                "[mokly/upload-failed]"
-            }),
+        assert_eq!(
+            stderr.matches("base dependencies").count(),
+            1,
+            "{verb}: {stderr}"
+        );
+        assert!(!stderr.contains("with --strict"), "{verb}: {stderr}");
+        assert_eq!(
+            stderr.contains("[mokly/upload-failed]"),
+            verb == "publish",
             "{verb}: {stderr}"
         );
         assert!(!stderr.contains("upload-transport"), "{stderr}");
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Comparing with base-point"));
-        if verb == "publish" && !strict {
-            assert!(String::from_utf8_lossy(&output.stdout).contains("Changes ready · 1 change"));
-        }
-        assert!(!root.path().join(".context/strict/index.html").exists());
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(stdout.contains("Comparing with base-point"), "{stdout}");
+        assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+        assert!(root.path().join(".context/strict/index.html").is_file());
     }
     let output = run(root.path(), &["build", "--base", "base-point"]);
     assert_eq!(

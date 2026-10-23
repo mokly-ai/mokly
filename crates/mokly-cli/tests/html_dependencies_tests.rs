@@ -9,6 +9,11 @@ use tempfile::TempDir;
 
 #[path = "html_dependencies/scoped_tests.rs"]
 mod scoped_tests;
+#[path = "html_dependencies/strict_tests.rs"]
+mod strict_tests;
+
+/// The plain line of the warning for differing dependency identities.
+const WARNING_LINE: &str = "[mokly/warning] configuration \"mokly.config.json\": Base dependencies differ. HTML comparison uses working-tree dependencies.\n";
 
 fn write(root: &Path, path: &str, text: &str) {
     let path = root.join(path);
@@ -91,7 +96,7 @@ fn build(root: &Path, strict: bool) -> Output {
 }
 
 #[test]
-fn html_package_upgrade_warns_without_node_and_strict_preserves_the_old_output() {
+fn html_package_upgrade_warns_without_node_and_builds_with_or_without_strict() {
     let root = fixture();
     let first = build(root.path(), true);
     assert!(
@@ -100,37 +105,29 @@ fn html_package_upgrade_warns_without_node_and_strict_preserves_the_old_output()
         String::from_utf8_lossy(&first.stderr)
     );
     assert!(!String::from_utf8_lossy(&first.stderr).contains("Base dependencies differ."));
-    let index_path = root.path().join(".context/site/mokly-viewer/index.json");
-    let original = fs::read(&index_path).unwrap();
+    let site = root.path().join(".context/site");
     write(
         root.path(),
         "package.json",
         "{\"dependencies\":{\"theme\":\"2.0.0\"}}",
     );
-    let strict = build(root.path(), true);
-    assert_eq!(strict.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&strict.stderr).contains("Base dependencies differ."));
-    assert_eq!(fs::read(&index_path).unwrap(), original);
-    let result = build(root.path(), false);
-    assert!(
-        result.status.success(),
-        "{}",
-        String::from_utf8_lossy(&result.stderr)
-    );
-    let stderr = String::from_utf8_lossy(&result.stderr);
-    assert!(stderr.contains("Base dependencies differ."), "{stderr}");
-    assert!(stderr.contains("working-tree dependencies"), "{stderr}");
-    let index: Value = serde_json::from_slice(&fs::read(index_path).unwrap()).unwrap();
-    assert_eq!(index["changesStatus"], "ready");
-    assert_eq!(index["screens"][0]["changes"]["included"], false);
-    assert!(
-        fs::read_to_string(
-            root.path()
-                .join(".context/site/static/mokly-generated/styles/style.css")
-        )
-        .unwrap()
-        .contains("7px")
-    );
+    for strict in [true, false] {
+        fs::remove_dir_all(&site).unwrap();
+        let result = build(root.path(), strict);
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        assert!(result.status.success(), "{stderr}");
+        assert_eq!(stderr, WARNING_LINE);
+        let index: Value =
+            serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap())
+                .unwrap();
+        assert_eq!(index["changesStatus"], "ready");
+        assert_eq!(index["screens"][0]["changes"]["included"], false);
+        assert!(
+            fs::read_to_string(site.join("static/mokly-generated/styles/style.css"))
+                .unwrap()
+                .contains("7px")
+        );
+    }
 }
 
 #[test]

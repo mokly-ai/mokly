@@ -21,7 +21,7 @@ use crate::codes::Code;
 use super::build_tests::{config, graphs, options, prepared};
 
 #[test]
-fn strict_counts_head_and_base_preparation_warnings_after_classification() {
+fn strict_reports_head_and_base_preparation_warnings_after_classification() {
     let head = Warning {
         code: "html-unused-props",
         subject: WarningSubject::Entry("home".into()),
@@ -64,8 +64,12 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
     let mut options = options();
     options.no_changes = false;
     options.strict = true;
-    let BuildError::Strict { warnings } = service.run(Path::new("/repo"), &options).unwrap_err()
-    else {
+    let error = service.run(Path::new("/repo"), &options).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "[mokly-cli/build] 1 build warning(s) with --strict"
+    );
+    let BuildError::Strict { warnings } = error else {
         panic!()
     };
     assert_eq!(warnings.len(), 2);

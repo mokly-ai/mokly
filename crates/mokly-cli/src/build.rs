@@ -228,3 +228,7 @@ mod changes_failure_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_checkpoint_tests.rs"]
 mod changes_checkpoint_tests;
+
+#[cfg(test)]
+#[path = "_tests_/build_strict_tests.rs"]
+mod build_strict_tests;

@@ -13,7 +13,7 @@ mod large;
 const WARNING: &str = "Base dependencies differ. HTML comparison uses working-tree dependencies.";
 
 #[test]
-fn extensionless_package_stylesheets_keep_the_dependency_warning_and_strict_exit() {
+fn extensionless_package_stylesheets_keep_the_dependency_warning_under_strict() {
     let root = fixture();
     fs::rename(
         root.path().join("node_modules/theme/theme.css"),
@@ -30,8 +30,9 @@ fn extensionless_package_stylesheets_keep_the_dependency_warning_and_strict_exit
         "{\"lockfileVersion\":3,\"name\":\"changed\"}",
     );
     let result = build(root.path(), true);
-    assert_eq!(result.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&result.stderr).contains(WARNING));
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(result.status.success(), "{stderr}");
+    assert!(stderr.contains(WARNING), "{stderr}");
 }
 
 #[test]
@@ -72,7 +73,7 @@ fn an_unrelated_manifest_edit_keeps_a_package_stylesheet_comparison_silent() {
 }
 
 #[test]
-fn a_used_nested_lockfile_warns_and_fails_strict_after_unrelated_edits_stay_silent() {
+fn a_used_nested_lockfile_warns_under_strict_after_unrelated_edits_stay_silent() {
     let root = fixture();
     write(
         root.path(),
@@ -107,22 +108,18 @@ fn a_used_nested_lockfile_warns_and_fails_strict_after_unrelated_edits_stay_sile
         "{\"lockfileVersion\":3}",
     );
     let silent = build(root.path(), true);
-    assert!(
-        silent.status.success(),
-        "{}",
-        String::from_utf8_lossy(&silent.stderr)
-    );
-    let index = root.path().join(".context/site/mokly-viewer/index.json");
-    let previous = fs::read(&index).unwrap();
+    let stderr = String::from_utf8_lossy(&silent.stderr);
+    assert!(silent.status.success(), "{stderr}");
+    assert!(!stderr.contains(WARNING), "{stderr}");
     write(
         root.path(),
         "frontend/package-lock.json",
         "{\"lockfileVersion\":3,\"packages\":{}}",
     );
     let strict = build(root.path(), true);
-    assert_eq!(strict.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&strict.stderr).contains(WARNING));
-    assert_eq!(fs::read(&index).unwrap(), previous);
+    let stderr = String::from_utf8_lossy(&strict.stderr);
+    assert!(strict.status.success(), "{stderr}");
+    assert!(stderr.contains(WARNING), "{stderr}");
     let permissive = build(root.path(), false);
     assert!(
         permissive.status.success(),

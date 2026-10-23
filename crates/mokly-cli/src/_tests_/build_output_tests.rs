@@ -100,7 +100,7 @@ fn build_warning_subjects_escape_controls_and_redact_secrets_in_both_modes() {
 }
 
 #[test]
-fn build_warning_strict_failures_use_singular_and_plural_counts() {
+fn build_warning_strict_failures_count_all_but_base_dependencies_in_both_numbers() {
     let style = Style {
         mode: Mode::Plain,
         color: false,
@@ -108,20 +108,25 @@ fn build_warning_strict_failures_use_singular_and_plural_counts() {
         columns: 80,
     };
     for (count, noun) in [(1, "warning"), (2, "warnings")] {
-        let records: Vec<_> = (0..count)
+        let mut records: Vec<_> = (0..count)
             .map(|index| Warning {
                 code: "html-unused-props",
                 subject: WarningSubject::Entry(format!("entry-{index}")),
                 message: "unused prop".into(),
             })
             .collect();
+        records.push(Warning {
+            code: "base-dependencies",
+            subject: WarningSubject::Configuration("mokly.config.json".into()),
+            message: "Base dependencies differ.".into(),
+        });
         let text = failure(
             &style,
             &BuildError::Strict { warnings: records },
             &Redactor::default(),
             Path::new("/repo"),
         );
-        assert_eq!(text.matches("[mokly/warning]").count(), count);
+        assert_eq!(text.matches("[mokly/warning]").count(), count + 1);
         assert!(text.ends_with(&format!(
             "[mokly/build-invalid] {count} build {noun} with --strict\n"
         )));
