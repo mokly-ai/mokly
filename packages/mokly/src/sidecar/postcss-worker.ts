@@ -6,6 +6,7 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
+import { flushAsyncModulePaths } from "./postcss-async-registration.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
   beginReadEvidenceGeneration,
@@ -15,6 +16,7 @@ import {
   readEvidence,
 } from "./postcss-evidence.js";
 import { loadPostcss } from "./postcss-loader.js";
+import { observeModulePaths } from "./postcss-path-hooks.js";
 import { PostcssPhases } from "./postcss-phases.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
@@ -40,6 +42,7 @@ process.once("message", (workerData: WorkerData) => {
   initializeReadEvidenceGeneration(workerData.context);
   if (!preloadedObserver()) {
     observeFileReads();
+    observeModulePaths();
   }
   observeModuleLoads((url) => phases.moduleUrl(url));
   const configuration = configureResolution(workerData).then((paths) =>
@@ -103,6 +106,7 @@ process.once("message", (workerData: WorkerData) => {
             ...(typeof message.glob === "string" ? { glob: message.glob } : {}),
           });
         }
+        flushAsyncModulePaths();
         process.send?.({
           id,
           result: {

@@ -13,9 +13,8 @@ their dependency role in attribution.
 
 PostCSS children retain raw whole-file and byte-range witnesses for one
 generation beside dependency reports. A new generation drops earlier
-witnesses. Coverage remains incomplete for opaque readers. Asynchronous
-loaders and consumer hooks that bypass later providers can hide module paths
-and raw reads. Unknown paths have no late baseline. See the
+witnesses. Coverage remains incomplete for opaque readers. File modules from
+consumer module hooks keep their resolved paths. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
 Observation starts before consumer preloads. File providers retain their
 transformed output and the raw witnesses of underlying observed reads.
@@ -206,9 +205,13 @@ terminal child state.
 The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
 before consumer preloads in each owned child.
 Its CommonJS build supports asynchronous loaders on Node 22 and shares one
-observation ledger with the worker. Asynchronous loaders and consumer hooks can
-supply a module without a module path or raw witness after observation starts.
-Loader-transformed source stays opaque.
+observation ledger with the worker. The
+[async resolve hook](./src/sidecar/postcss-async-loader.ts) reports supplied
+module paths through a message port. Loader-transformed source stays opaque.
+[Async hook registration](./src/sidecar/postcss-async-registration.ts) follows
+each consumer `module.register` call and drains queued paths before each result.
+The [module path observer](./src/sidecar/postcss-path-hooks.ts) retains paths
+from consumer hooks without certifying their source bytes.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
 file positions and reuse. FileHandle and Node stream reads share range evidence.
 The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds

@@ -1,11 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 
+import { observeAsyncModuleLoads } from "./postcss-async-registration.js";
 import {
   observeModuleLoads,
   shareReadEvidence,
   trustEarlyReaders,
 } from "./postcss-evidence.js";
+import { observeModulePaths } from "./postcss-path-hooks.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { observeDescriptorSharing } from "./postcss-read-sharing.js";
@@ -23,6 +25,8 @@ if (isMainThread) {
   observeFileReads();
   observeDescriptors();
   observeDescriptorSharing();
+  observeAsyncModuleLoads();
   observeModuleLoads();
+  observeModulePaths();
   shareReadEvidence();
 }

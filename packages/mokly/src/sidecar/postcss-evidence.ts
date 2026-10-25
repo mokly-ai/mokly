@@ -30,15 +30,12 @@ const generationKey = Symbol.for("mokly.postcss.readEvidenceGeneration");
 const generationInitKey = Symbol.for(
   "mokly.postcss.readEvidenceGenerationInit",
 );
+const modulePathKey = Symbol.for("mokly.postcss.modulePath");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
-type GenerationReset = (generation: string) => void;
-type GenerationInit = (generation: string) => void;
+/** A shared generation reset, generation start, or module path recorder. */
+type SharedRecorder = (value: string) => void;
 
-function isGenerationReset(value: unknown): value is GenerationReset {
-  return typeof value === "function";
-}
-
-function isGenerationInit(value: unknown): value is GenerationInit {
+function isSharedRecorder(value: unknown): value is SharedRecorder {
   return typeof value === "function";
 }
 
@@ -60,12 +57,13 @@ export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, generationInitKey, {
     value: initializeReadEvidenceGeneration,
   });
+  Object.defineProperty(globalThis, modulePathKey, { value: recordModulePath });
 }
 
 /** Keep only witnesses observed after the current generation starts. */
 export function beginReadEvidenceGeneration(generation: string): void {
   const value: unknown = Reflect.get(globalThis, generationKey);
-  if (isGenerationReset(value)) {
+  if (isSharedRecorder(value)) {
     value(generation);
     return;
   }
@@ -84,11 +82,26 @@ function resetReadEvidence(generation: string): void {
 /** Mark the worker's first generation without dropping preload observations. */
 export function initializeReadEvidenceGeneration(generation: string): void {
   const value: unknown = Reflect.get(globalThis, generationInitKey);
-  if (isGenerationInit(value) && value !== initializeReadEvidenceGeneration) {
+  if (isSharedRecorder(value) && value !== initializeReadEvidenceGeneration) {
     value(generation);
     return;
   }
   activeGeneration = generation;
+}
+
+/** Add a resolved file URL to the current module inventory. */
+export function recordModulePath(url: string): void {
+  if (!url.startsWith("file:")) return;
+  const recorder: unknown = Reflect.get(globalThis, modulePathKey);
+  if (isSharedRecorder(recorder) && recorder !== recordModulePath) {
+    recorder(url);
+    return;
+  }
+  try {
+    modules.add(fileURLToPath(url));
+  } catch {
+    /* A malformed loader URL cannot be a module input. */
+  }
 }
 
 /** Async loaders cannot certify raw source or synchronously load an ESM preload. */

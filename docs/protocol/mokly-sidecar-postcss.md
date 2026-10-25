@@ -78,9 +78,9 @@ Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
 This includes native scanners, memory maps, inherited or transferred handles,
 and asynchronous loader workers. Known inputs retain their late opaque baseline.
-Asynchronous loaders and consumer hooks that bypass later providers can supply
-modules without exposing their paths or raw read witnesses. These modules have
-no late baseline unless another input report identifies their paths.
+File modules supplied by consumer module hooks retain their resolved paths,
+including when a hook supplies a module without delegating. Their bytes remain
+opaque without raw provenance.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
