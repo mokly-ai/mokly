@@ -73,21 +73,36 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
         at_rule("value"),
     ];
     assert_eq!(statements(source, Grammar::Stylesheet), rules);
+    assert_eq!(statements(source, Grammar::Rules), rules);
     assert_eq!(statements(source, Grammar::Lenient), rules);
 }
 
 /// A block's grammar depends on its statement and on the grammar around it.
 /// In a rule list, a conditional, layer, scope, or starting-style block is a
 /// rule list, a rule or `@-moz-document` block is a style block, and a
-/// keyframes or `@document` block is a lenient rule list. In a style block, a
-/// rule, conditional, layer, scope, starting-style, or `@-moz-document` block
-/// is a style block. In a lenient rule list, a keyframes, conditional, layer,
-/// `@document`, scope, or starting-style block is a lenient rule list. Every
-/// other block is a declarations block, also the block of a rule that starts
-/// with an HTML comment token.
+/// keyframes or `@document` block is a lenient rule list. The stylesheet
+/// skips an HTML comment token before a statement, so the statement after it
+/// opens its usual block. In a nested rule list, the token starts a rule. In a
+/// style block, a rule, conditional, layer, scope, starting-style, or
+/// `@-moz-document` block is a style block. In a lenient rule list, a
+/// keyframes, conditional, layer, `@document`, scope, or starting-style block
+/// is a lenient rule list. Every other block is a declarations block.
 #[test]
 fn blocks_open_the_grammar_that_lightningcss_parses() {
     let cases = [
+        (Grammar::Rules, ".a{}", Grammar::Style),
+        (Grammar::Rules, "@MEDIA all{}", Grammar::Rules),
+        (
+            Grammar::Rules,
+            "@-moz-document url-prefix(){}",
+            Grammar::Style,
+        ),
+        (Grammar::Rules, "@keyframes k{}", Grammar::Lenient),
+        (Grammar::Rules, "@document x{}", Grammar::Lenient),
+        (Grammar::Rules, "@font-face{}", Grammar::Declarations),
+        (Grammar::Rules, "@foo{}", Grammar::Declarations),
+        (Grammar::Rules, "-->.a{}", Grammar::Style),
+        (Grammar::Rules, "<!--@foo{}", Grammar::Style),
         (Grammar::Stylesheet, ".a{}", Grammar::Style),
         (Grammar::Stylesheet, "@MEDIA all{}", Grammar::Rules),
         (
@@ -188,6 +203,7 @@ fn statements_without_a_block_stay_as_authored_where_lightningcss_reads_no_rules
         "{error}"
     );
 }
+
 /// In a style rule, an at-rule under a keyframes name that lightningcss does
 /// not know is text only without a block. With a block, the renamer still
 /// reads its keyframes name.

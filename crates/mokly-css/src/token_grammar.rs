@@ -44,19 +44,14 @@ pub(crate) fn normalize(statement: Statement, grammar: Grammar, block: bool) -> 
     if block {
         return statement;
     }
-    match grammar {
-        Grammar::Declarations if !matches!(statement, Statement::Declaration(_)) => match statement
-        {
-            Statement::AtRule(name) => Statement::Text(Some(name)),
-            _ => Statement::Text(None),
-        },
-        Grammar::Style if matches!(&statement, Statement::AtRule(name) if unknown_keyframes(name)) => {
-            match statement {
-                Statement::AtRule(name) => Statement::Text(Some(name)),
-                _ => unreachable!(),
-            }
+    match (grammar, statement) {
+        (Grammar::Declarations, statement @ Statement::Declaration(_)) => statement,
+        (Grammar::Declarations, Statement::AtRule(name)) => Statement::Text(Some(name)),
+        (Grammar::Declarations, _) => Statement::Text(None),
+        (Grammar::Style, Statement::AtRule(name)) if unknown_keyframes(&name) => {
+            Statement::Text(Some(name))
         }
-        _ => statement,
+        (_, statement) => statement,
     }
 }
 
