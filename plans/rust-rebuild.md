@@ -1,6 +1,7 @@
 # Rust Rebuild
 
-Status: Active. Created 2026-10-12 with the user's consent. It supersedes the
+Status: Completed. [PR #199](https://github.com/mokly-ai/mokly/pull/199) merged on 2026-10-25.
+Created 2026-10-12 with the user's consent. It supersedes the
 native engine plan, which the documentation reset of 2026-10-14 deleted with
 every other plan; the branch history before commit `d4bac78d` keeps it.
 On 2026-10-12 the user decided to freeze the TypeScript backend immediately,
@@ -62,6 +63,9 @@ for every catalogue, the deployment id in each event message, and no usage
 route (Decision 30).
 On 2026-10-14 the user settled the remaining review items of the end-state
 rewrite as Decisions 31 to 38.
+The open follow-ups and the user items that the user deferred on 2026-10-21,
+up to user item 189, stay in the post-merge section for the user to decide,
+and user item 159 is High and must be fixed before the first npm release.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -3774,9 +3778,19 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     (user, 2026-10-21).
 - [x] Commit and push.
   - Integration batch 31; evidence: `.context/integration-31/final-gate/`.
-- [ ] Open the pull request. Its description and squash body write `{target}`
+- [x] Open the pull request. Its description and squash body write `{target}`
       for the package placeholder, justify each merge decision with its paths,
       and record every approved removal.
+  - PR #199, opened on 2026-10-22 with the user's yes (user decision 1, A).
+  - User decision 2 (2026-10-25): A. The description summarizes the internal
+    merge decisions, and each merge commit message keeps its resolutions. No
+    index comment is posted.
+  - User decision 3 (2026-10-25): B. The release notes override block stays
+    in the PR body.
+
+User decision 184 (2026-10-25): A. The hub squash-merges PR #199 when every
+check passes on this commit.
+
 - [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
