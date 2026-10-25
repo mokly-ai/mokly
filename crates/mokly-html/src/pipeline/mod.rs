@@ -65,9 +65,7 @@ impl<'a> CallbackSink<'a> {
     }
 
     fn source_location(&self) -> Option<SourceLocation> {
-        let Some(path) = self.source_path else {
-            return None;
-        };
+        let path = self.source_path?;
         let (line, column) = self.position(self.start_offset);
         Some(SourceLocation {
             path: path.into(),
