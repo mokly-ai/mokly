@@ -5474,9 +5474,37 @@ check passes on this commit.
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
       option A merged as `033e5059`.
 
-- [ ] Record PostCSS module paths through an asynchronous resolve hook and a
+- [x] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
       baseline. User decision 117 C, after option A merged as `951c666e`.
+  - User decision 117 (2026-10-21): C, ported in `c4c736f2` from
+    `rebuild/postcss-loader-paths` at `9739ebaa`. A file module that a
+    consumer module hook supplies keeps its resolved path, so it gets a
+    late baseline. Its transformed source gets no raw witness. Evidence:
+    `.context/port-117c/`.
+
+- [ ] Resolve PostCSS loader-path review finding 2 (performance): each
+      repeated asynchronous registration keeps the earlier observer hooks,
+      and each message port stays open until its peer closes. Severity Low,
+      performance, effort Large for B. Options: A, close the superseded
+      ports after they drain, while the duplicate hook work stays, Medium;
+      B, use one registration broker and one observer channel, and keep the
+      consumer hook order and output, Large. Recommended: B. No option is
+      applied.
+
+- [ ] Resolve the 117 C port finding (code structure): the asynchronous
+      observer of 117 C adds hook work but no tested path. Synchronous
+      module hooks wrap the asynchronous loader chain, so the path-only
+      synchronous hook already reports each loader-supplied module. With
+      the asynchronous observer off, the 12 loader-path tests and the `tsx`
+      smoke builds still pass on Node 22.15.0 and 24.21.0. It adds only the
+      path of a hook module that a later `module.register` call loads.
+      Severity Low, code structure, effort Medium for B. Options: A, keep
+      both observers and state in the code why the asynchronous observer
+      stays, Small; B, remove the asynchronous resolve hook, its message
+      port and drain, and its build entry, which also closes loader-path
+      review finding 2, Medium. Recommended: B. No option is applied.
+      Evidence: `.context/port-117c/`.
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
