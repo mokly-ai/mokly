@@ -91,6 +91,11 @@
     "yaml": "^2.9.1",
     "yarn": "1.22.22"
   },
+  "overrides": {
+    "miniflare": {
+      "undici": "7.30.1"
+    }
+  },
   "workspaces": [
     "packages/viewer",
     "packages/mokly"

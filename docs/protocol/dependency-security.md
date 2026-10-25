@@ -195,9 +195,16 @@ The current maintenance choices are:
 - `wrangler` 4.151.0 is an exact development pin for preview deployment and
   the Cloudflare local static-host checks. It resolves prerelease Miniflare
   `5.20261012.0-beta` and adds 29 development packages, including workerd and
-  sharp/libvips. The lockfile has no Miniflare override. Update the pin in a
-  reviewed tooling change after static URL, header, preview cleanup, and live
-  dependency-audit checks pass. Remove it if previews no longer use Cloudflare.
+  sharp/libvips. Miniflare's exact `undici` pin is overridden, as the next
+  item says. Update the pin in a reviewed tooling change after static URL,
+  header, preview cleanup, and live dependency-audit checks pass. Remove it if
+  previews no longer use Cloudflare.
+
+- `undici` 7.30.1 is an override scoped to `miniflare`, which pins `undici`
+  7.29.1. That release has GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, and
+  GHSA-xjj6-f33q-929c, and 7.30.1 patches all three. A parent update does not
+  help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
+  override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
 
 - `release-please` 17.6.0 is an exact development pin. Release tests exercise
   its real manifest parser, changelog writer, workspace plugin, and version
