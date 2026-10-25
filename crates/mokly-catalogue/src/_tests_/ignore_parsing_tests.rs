@@ -1,8 +1,6 @@
 //! A token consumer cannot recover ignored values, but diagnostics retain their evidence.
 
-use html5gum::{Error, Token};
-
-use crate::html_tokens;
+use crate::html_tokens::{self, Error, Token};
 
 #[test]
 fn new_token_consumers_cannot_read_unknown_ignore_attributes() {
@@ -51,7 +49,7 @@ fn new_token_consumers_cannot_read_unknown_ignore_attributes() {
                 .get(b"class".as_slice())
                 .unwrap()
                 .value
-                .as_ref(),
+                .as_slice(),
             b"kept"
         );
         assert!(nested.ignored_attributes.is_empty());
@@ -120,7 +118,7 @@ fn markup_contexts_keep_wrappers_visible_to_catalogue_checks() {
     ] {
         let wrappers: Vec<_> = html_tokens::parse(source)
             .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
                     Some(parsed.ignored_attributes)
                 }
                 _ => None,
@@ -141,7 +139,7 @@ fn markup_context_tracker_keeps_tree_raw_text_and_integration_points() {
     ] {
         let wrappers: Vec<_> = html_tokens::parse(source)
             .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
                     Some(parsed.ignored_attributes)
                 }
                 _ => None,
@@ -161,7 +159,7 @@ fn foreign_and_noframes_raw_text_matches_the_tree_parser() {
     ] {
         let wrappers: Vec<_> = html_tokens::parse(source)
             .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_ref() == b"mokly-ignore-scope" => {
+                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
                     Some(parsed.ignored_attributes)
                 }
                 _ => None,

@@ -30,9 +30,9 @@ fn text_content_models_and_ignored_initial_line_feeds_are_stable() {
                 let source = format!(
                     "<!doctype html><html><head></head><body>{prefix}<{tag}>{content}</{tag}></body></html>"
                 );
-                let first = parse::document(&source);
+                let first = parse::delivered_document(&source);
                 let bytes = serialize::html(&first);
-                let second = parse::document(&bytes);
+                let second = parse::delivered_document(&bytes);
                 assert_eq!(first, second, "{tag}: {content}");
                 assert_eq!(
                     bytes,
@@ -51,13 +51,16 @@ fn plaintext_after_active_formatting_is_stable() {
         "<b><plaintext>text",
         "<table><b><plaintext>text",
     ] {
-        let first = parse::document(source);
+        let first = parse::delivered_document(source);
         let bytes = serialize::html(&first);
-        let second = parse::document(&bytes);
+        let second = parse::delivered_document(&bytes);
         assert_eq!(first, second, "{bytes}");
         assert_eq!(bytes, serialize::html(&second));
-        let fragment = parse::fragment(source);
-        assert_eq!(fragment, parse::fragment(&serialize::html(&fragment)));
+        let fragment = parse::delivered_fragment(source);
+        assert_eq!(
+            fragment,
+            parse::delivered_fragment(&serialize::html(&fragment))
+        );
     }
 }
 
@@ -66,12 +69,18 @@ fn plaintext_formatting_clones_keep_authored_characters_and_entity_spellings() {
     let payload = "text & <i>literal</i> \"quotes\" &amp; &#60;";
     for prefix in ["<p><b>", "<b>", "<table><b>"] {
         let source = format!("<p>Before &amp;</p>{prefix}<plaintext>{payload}");
-        for nodes in [parse::document(&source), parse::fragment(&source)] {
+        for nodes in [
+            parse::delivered_document(&source),
+            parse::delivered_fragment(&source),
+        ] {
             let bytes = serialize::html(&nodes);
             assert!(bytes.contains(payload), "{bytes}");
             assert!(bytes.contains("Before &amp;"), "{bytes}");
-            let repaired = parse::document(&bytes);
-            assert_eq!(repaired, parse::document(&serialize::html(&repaired)));
+            let repaired = parse::delivered_document(&bytes);
+            assert_eq!(
+                repaired,
+                parse::delivered_document(&serialize::html(&repaired))
+            );
             assert!(serialize::html(&repaired).contains(payload));
         }
     }
@@ -96,6 +105,6 @@ fn plaintext_serialization_does_not_expose_private_repair_markers() {
     let payload = bytes.split("literal").nth(1).unwrap();
     assert_eq!(payload, " <b>&<p>sibling</p>");
     assert!(!payload.contains("mokly-normalize"));
-    let parsed = parse::document(&bytes);
-    assert_eq!(parsed, parse::document(&serialize::html(&parsed)));
+    let parsed = parse::delivered_document(&bytes);
+    assert_eq!(parsed, parse::delivered_document(&serialize::html(&parsed)));
 }

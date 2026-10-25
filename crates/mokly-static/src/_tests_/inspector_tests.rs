@@ -10,7 +10,7 @@ use crate::inspector_error::InspectorFailure;
 
 pub(super) fn document(html: &str) -> Composed {
     Composed {
-        tree: parse::document(html),
+        tree: parse::delivered_document(html),
         usage: CatalogueUsage::Ready {
             instances: vec![],
             slots: vec![],

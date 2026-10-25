@@ -27,6 +27,29 @@ const SCRIPT_DATA_CASES: &[&str] = &[
     "<script><!--x</script?tail--></script>",
 ];
 
+const REGRESSION_CASES: &[(&str, &str)] = &[
+    (
+        "f19-fostered-wrapper",
+        "<table>\n<tr><td><mokly-ignore-scope enabled='invalid' extra='first'>First</mokly-ignore-scope></td></tr>\n<mokly-ignore-scope enabled='invalid' extra='second'>Second</mokly-ignore-scope>\n</table>",
+    ),
+    (
+        "f19-select-wrapper",
+        "<select><mokly-ignore-scope enabled='invalid' extra='first'>First</mokly-ignore-scope></select>\n<mokly-ignore-scope enabled='invalid' extra='second'>Second</mokly-ignore-scope>",
+    ),
+    (
+        "f21-markup-contexts",
+        "<noscript><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></noscript><svg><style><mokly-ignore-scope typo='x'>B</mokly-ignore-scope></style></svg>",
+    ),
+    (
+        "f21-foreign-raw",
+        "<noframes><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></noframes><svg><script><mokly-ignore-scope typo='x'>B</mokly-ignore-scope></script></svg>",
+    ),
+    (
+        "f22-page-wrapper",
+        "<!doctype html><html><head></head><body><mokly-ignore id='x' class='kept'>Ignored</mokly-ignore></body></html>",
+    ),
+];
+
 #[derive(Default)]
 struct Report {
     inputs: usize,
@@ -69,7 +92,7 @@ fn source_count(nodes: &[crate::tree::Node]) -> usize {
 
 fn compare(report: &mut Report, name: &str, source: &str) {
     report.inputs += 1;
-    let old = crate::parse::document(source);
+    let old = crate::parse::legacy_authored_document(source);
     let new = pipeline::document(source, name);
     if serialize::html(&old) != serialize::html(&new) {
         report.new_defects.push(name.into());
@@ -91,7 +114,7 @@ fn compare_srcdoc(report: &mut Report, name: &str, source: &str) {
     let wrapper = format!("<iframe srcdoc=\"{}\"></iframe>", escaped_srcdoc(source));
     compare(report, &format!("{name}-wrapper"), &wrapper);
 
-    let wrapper_tree = crate::parse::document(&wrapper);
+    let wrapper_tree = crate::parse::legacy_authored_document(&wrapper);
     let content = tree::walk(&wrapper_tree).find_map(|node| match node {
         crate::tree::Node::Element(element) if element.name == "iframe" => {
             element.get("srcdoc").map(str::to_owned)
@@ -122,6 +145,9 @@ fn repository_html_differential_report_has_no_new_tree_or_byte_defects() {
     for (index, source) in SCRIPT_DATA_CASES.iter().enumerate() {
         compare(&mut report, &format!("script-data-{index}"), source);
         compare_srcdoc(&mut report, &format!("script-data-srcdoc-{index}"), source);
+    }
+    for (name, source) in REGRESSION_CASES {
+        compare(&mut report, name, source);
     }
     assert!(
         report.new_defects.is_empty(),

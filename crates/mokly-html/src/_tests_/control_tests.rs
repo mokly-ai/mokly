@@ -6,7 +6,7 @@ use crate::{parse, serialize};
 
 #[test]
 fn warning_tiers_keep_identical_control_bytes_and_have_separate_route_records() {
-    let mut nodes = parse::document(
+    let mut nodes = parse::delivered_document(
         "<!doctype html><html><head></head><body><label><div to=\"home\"><span tabindex=\"-1\">Go</span></div></label></body></html>",
     );
     let warnings = adapt(&mut nodes, "entry/index.mobile.html").unwrap();
@@ -32,7 +32,7 @@ fn all_error_features_and_nested_controls_fail_before_navigation() {
         "<div to=\"home\" href=\"mock:other\">Go</div>",
     ] {
         assert!(
-            adapt(&mut parse::fragment(source), "route").is_err(),
+            adapt(&mut parse::delivered_fragment(source), "route").is_err(),
             "{source}"
         );
     }
@@ -46,7 +46,8 @@ fn inactive_controls_keep_their_element_and_cannot_submit_or_activate() {
         "aria-busy=\"true\"",
         "inert",
     ] {
-        let mut nodes = parse::fragment(&format!("<button {state} to=\"home\">Go</button>"));
+        let mut nodes =
+            parse::delivered_fragment(&format!("<button {state} to=\"home\">Go</button>"));
         adapt(&mut nodes, "route").unwrap();
         let html = serialize::html(&nodes);
         assert!(html.contains("<button"));
@@ -54,7 +55,7 @@ fn inactive_controls_keep_their_element_and_cannot_submit_or_activate() {
         assert!(html.contains("data-nav-href=\"mock:home\""));
         assert!(!html.contains("data-mokly-link-control"));
     }
-    let mut nodes = parse::fragment(
+    let mut nodes = parse::delivered_fragment(
         "<fieldset disabled><legend><button to=\"home\">Go</button></legend></fieldset>",
     );
     adapt(&mut nodes, "route").unwrap();
@@ -63,7 +64,7 @@ fn inactive_controls_keep_their_element_and_cannot_submit_or_activate() {
         ("a", "aria-disabled=\"true\" href=\"mock:home\""),
         ("div", "role=\"button\" aria-busy=\"true\" tabindex=\"0\""),
     ] {
-        let mut nodes = parse::fragment(&format!(
+        let mut nodes = parse::delivered_fragment(&format!(
             "<{tag} {attributes} to=\"home\">Unavailable</{tag}>"
         ));
         assert!(adapt(&mut nodes, "route").unwrap().is_empty());
@@ -101,7 +102,7 @@ fn duplicate_and_reserved_navigation_attributes_survive_token_validation() {
 
 #[test]
 fn ancestor_features_leave_the_stack_before_the_next_sibling() {
-    let mut nodes = parse::fragment(
+    let mut nodes = parse::delivered_fragment(
         "<label><div role=\"button\"><span to=\"home\">A</span></div><span to=\"home\">B</span></label><span to=\"home\">C</span>",
     );
     let warnings = adapt(&mut nodes, "route").unwrap();
@@ -125,7 +126,7 @@ fn ancestor_features_leave_the_stack_before_the_next_sibling() {
 #[test]
 fn nearest_error_ancestor_takes_precedence_over_a_closer_warning() {
     for value in ["", "true", "plaintext-only"] {
-        let mut nodes = parse::fragment(&format!(
+        let mut nodes = parse::delivered_fragment(&format!(
             "<div contenteditable=\"{value}\"><span to=\"home\">Go</span></div>"
         ));
         let error = adapt(&mut nodes, "route").unwrap_err();
@@ -133,7 +134,7 @@ fn nearest_error_ancestor_takes_precedence_over_a_closer_warning() {
             "MockLink child control is inside <div contenteditable=\"{value}\">; move the control outside it"
         )));
     }
-    let mut nodes = parse::fragment(
+    let mut nodes = parse::delivered_fragment(
         "<section contenteditable=\"true\"><div contenteditable=\"plaintext-only\"><label><span to=\"home\">Go</span></label></div></section>",
     );
     let error = adapt(&mut nodes, "route").unwrap_err();

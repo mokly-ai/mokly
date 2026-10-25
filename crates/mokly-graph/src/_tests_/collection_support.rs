@@ -71,7 +71,7 @@ pub(super) fn probe(count: usize) -> Probe {
                 else if options.cross_link && path == "page-000" { "<a href='mock:page-003#missing'>Target</a>" }
                 else { "" };
             Ok(Composed {
-                tree: parse::document(&format!("<!doctype html><html><head><title>{path}</title></head><body><p id=anchor>{path}</p>{content}</body></html>")),
+                tree: parse::delivered_document(&format!("<!doctype html><html><head><title>{path}</title></head><body><p id=anchor>{path}</p>{content}</body></html>")),
                 usage: CatalogueUsage::Unavailable, warnings: vec![warning(path)], resources: vec![], components: vec![], links: vec![],
             })
         })),

@@ -30,7 +30,7 @@ fn a_control_adapted_to_an_anchor_is_valid_inside_a_paragraph() {
     let html = String::from_utf8(artifact.bytes.clone()).unwrap();
     assert!(html.contains("<p>Intro <!--mokly-instance:start"));
     assert!(html.contains("<a class=\"card\""));
-    assert_eq!(serialize::html(&parse::document(&html)), html);
+    assert_eq!(serialize::html(&parse::delivered_document(&html)), html);
 }
 
 #[test]

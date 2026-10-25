@@ -61,7 +61,7 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
                     && request.viewport == Viewport::Mobile
                     && request.color_scheme == ColorScheme::Dark;
                 Ok(Composed {
-                    tree: parse::document(if missing {
+                    tree: parse::delivered_document(if missing {
                         "<h1>No anchor</h1>"
                     } else {
                         "<h1 id=summary>Target</h1>"

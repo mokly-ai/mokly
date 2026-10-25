@@ -44,12 +44,12 @@ fn unsafe_final_markup_and_outer_wrapper_events_are_rejected_independently() {
             "<!doctype html><html lang=\"en\" style=\"color-scheme: light\"><head><title>Safe</title><style>p{{color:red}}</style></head><body><main>{body}</main></body></html>"
         );
         assert!(
-            safety::validate(&parse::document(&document)).is_err(),
+            safety::validate(&parse::delivered_document(&document)).is_err(),
             "{body}"
         );
     }
     let document = "<!doctype html><html lang=\"en\" style=\"color-scheme: light\"><head><style>p{}</style></head><body><html onload=\"run()\"><main>Text</main></body></html>";
-    assert!(safety::validate(&parse::document(document)).is_err());
+    assert!(safety::validate(&parse::delivered_document(document)).is_err());
 }
 
 #[test]

@@ -134,7 +134,7 @@ fn graph_with_key(key: &str) -> Unimock {
             .returns(Ok(Arc::new(Artifact {
                 bytes: vec![],
                 document: Some(Composed {
-                    tree: parse::document("<h1>Home</h1>"),
+                    tree: parse::delivered_document("<h1>Home</h1>"),
                     usage: CatalogueUsage::Ready {
                         instances: vec![],
                         slots: vec![],

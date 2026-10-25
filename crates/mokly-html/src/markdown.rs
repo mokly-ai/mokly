@@ -150,7 +150,7 @@ pub fn render(
     }
     let mut html_body = String::new();
     html::push_html(&mut html_body, rewritten.into_iter());
-    let mut rendered = parse::fragment(&html_body);
+    let mut rendered = parse::delivered_fragment(&html_body);
     table_alignment(&mut rendered);
     let mut document = assembly::document(
         title,

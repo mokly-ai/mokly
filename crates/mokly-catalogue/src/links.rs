@@ -1,11 +1,10 @@
 //! Validate static logical targets before rendering resolves document fragments.
 
-use html5gum::Token;
 use mokly_model::catalogue::{ModelEntry, SourceLocation};
 use pulldown_cmark::{Event, Parser, Tag};
 
 use crate::diagnostic::Issue;
-use crate::html_tokens;
+use crate::html_tokens::{self, Token};
 use crate::locations::at;
 use crate::relationships;
 use crate::template_types::{ElementRegistry, Template};
@@ -30,10 +29,10 @@ pub(crate) fn html(
         let element = String::from_utf8_lossy(&tag.name);
         for (name, value) in &tag.attributes {
             let text = String::from_utf8_lossy(&value.value);
-            let target = if name.as_ref() == b"href" {
+            let target = if name.as_slice() == b"href" {
                 text.strip_prefix("mock:")
-            } else if name.as_ref() == b"to"
-                && (matches!(tag.name.as_ref(), b"a" | b"button" | b"div" | b"span")
+            } else if name.as_slice() == b"to"
+                && (matches!(tag.name.as_slice(), b"a" | b"button" | b"div" | b"span")
                     || registry.contains_key(element.as_ref()))
             {
                 Some(text.as_ref())

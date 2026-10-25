@@ -33,21 +33,26 @@ fn arena_sink_preserves_html5_moves_namespaces_and_template_contents() {
             "<noscript><p>Enable JS</p></noscript>",
         ),
     ] {
-        assert_eq!(serialize::html(&parse::fragment(source)), expected);
+        assert_eq!(
+            serialize::html(&parse::delivered_fragment(source)),
+            expected
+        );
     }
 }
 
 #[test]
 fn adoption_agency_reconstructs_misnested_formatting_elements() {
     assert_eq!(
-        serialize::html(&parse::fragment("<p><b>one<i>two</b>three</i>four</p>")),
+        serialize::html(&parse::delivered_fragment(
+            "<p><b>one<i>two</b>three</i>four</p>"
+        )),
         "<p><b>one<i>two</i></b><i>three</i>four</p>"
     );
 }
 
 #[test]
 fn foster_parented_text_merges_with_the_previous_text_node() {
-    let nodes = parse::fragment("a<table>b<tr><td>x</td></tr>c</table>d");
+    let nodes = parse::delivered_fragment("a<table>b<tr><td>x</td></tr>c</table>d");
     assert!(matches!(nodes.first(), Some(Node::Text(text)) if text == "abc"));
     assert_eq!(
         serialize::html(&nodes),
@@ -57,7 +62,7 @@ fn foster_parented_text_merges_with_the_previous_text_node() {
 
 #[test]
 fn repeated_html_and_body_tags_keep_first_values_and_merge_new_attributes() {
-    let nodes = parse::document(
+    let nodes = parse::delivered_document(
         "<html lang=\"en\"><html lang=\"fr\" dir=\"rtl\"><head></head><body class=\"one\"><body class=\"two\" id=\"extra\">Text</body></html>",
     );
     assert_eq!(

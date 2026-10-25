@@ -33,7 +33,7 @@ const STRUCTURAL: &[&str] = &[
 ];
 
 fn document(body: &str) -> Vec<crate::tree::Node> {
-    parse::document(&format!(
+    parse::delivered_document(&format!(
         "<!doctype html><html><head></head><body>{body}</body></html>"
     ))
 }

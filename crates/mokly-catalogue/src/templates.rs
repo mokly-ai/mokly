@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use html5gum::{StartTag, Token};
+use crate::html_tokens::{StartTag, Token};
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
@@ -55,7 +55,7 @@ pub(crate) fn validate(
                     });
                 }
                 for (i, name) in ["html", "head", "body"].iter().enumerate() {
-                    if tag.name.as_ref() == name.as_bytes() {
+                    if tag.name.as_slice() == name.as_bytes() {
                         document_tags[i] += 1;
                     }
                 }
@@ -63,11 +63,7 @@ pub(crate) fn validate(
             }
             Token::EndTag(tag) => {
                 let name = String::from_utf8_lossy(&tag.name);
-                if let Some(index) = checker
-                    .stack
-                    .iter()
-                    .rposition(|entry| entry == name.as_ref())
-                {
+                if let Some(index) = checker.stack.iter().rposition(|entry| entry == &name) {
                     checker.stack.truncate(index);
                 }
             }
@@ -151,7 +147,7 @@ impl Checker<'_> {
             );
         }
     }
-    fn start(&mut self, tag: StartTag<usize>) {
+    fn start(&mut self, tag: StartTag) {
         let name = String::from_utf8_lossy(&tag.name).into_owned();
         let component = self.registry.get(&name);
         if self.role.check_elements()
@@ -179,7 +175,7 @@ impl Checker<'_> {
         let slot_name = tag
             .attributes
             .iter()
-            .find(|(name, _)| name.as_ref() == b"slot")
+            .find(|(name, _)| name.as_slice() == b"slot")
             .map(|(_, value)| String::from_utf8_lossy(&value.value).into_owned())
             .unwrap_or_else(|| "children".into());
         self.slot_content(&slot_name, tag.span.start);
@@ -187,7 +183,7 @@ impl Checker<'_> {
             let slot = tag
                 .attributes
                 .iter()
-                .find(|(name, _)| name.as_ref() == b"name")
+                .find(|(name, _)| name.as_slice() == b"name")
                 .map(|(_, value)| String::from_utf8_lossy(&value.value).into_owned())
                 .unwrap_or_else(|| "children".into());
             if !self.role.slots().is_some_and(|slots| slots.contains(&slot)) {

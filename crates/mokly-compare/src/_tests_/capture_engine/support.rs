@@ -109,7 +109,7 @@ pub(super) fn generation(
                 content_type: "text/html".into(),
                 fragment: None,
                 document: Some(Composed {
-                    tree: parse::document(&html),
+                    tree: parse::delivered_document(&html),
                     usage: CatalogueUsage::Unavailable,
                     warnings: vec![],
                     resources: vec![],

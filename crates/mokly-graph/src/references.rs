@@ -168,14 +168,16 @@ fn element_references(
                     .into_iter()
                     .map(|value| reference(value.value)),
             ),
-            "srcdoc" => output.extend(parse::document(&attribute.value).into_iter().map(|node| {
-                Step::Node(
-                    NodeRef::Owned(Box::new(node)),
-                    owner.clone(),
-                    instance_key.map(str::to_owned),
-                    ignored,
-                )
-            })),
+            "srcdoc" => output.extend(parse::delivered_document(&attribute.value).into_iter().map(
+                |node| {
+                    Step::Node(
+                        NodeRef::Owned(Box::new(node)),
+                        owner.clone(),
+                        instance_key.map(str::to_owned),
+                        ignored,
+                    )
+                },
+            )),
             _ => {}
         }
     }

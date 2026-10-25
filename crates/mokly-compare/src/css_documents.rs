@@ -51,7 +51,7 @@ pub(crate) fn collect(
             }
             if let Some(srcdoc) = element.attributes.get("srcdoc") {
                 let embedded = matching_tree::embedded(
-                    &parse::document(srcdoc),
+                    &parse::delivered_document(srcdoc),
                     &element.regions,
                     &element.owner,
                 );
@@ -75,7 +75,7 @@ pub(crate) fn collect(
             let Some(bytes) = memo.read(side, &route)? else {
                 continue;
             };
-            let nodes = parse::document(&String::from_utf8_lossy(&bytes));
+            let nodes = parse::delivered_document(&String::from_utf8_lossy(&bytes));
             let embedded = matching_tree::embedded(&nodes, &element.regions, &element.owner);
             let id = aliases.get(&route).unwrap_or(&route).clone();
             queue.push_back((id, route, embedded));

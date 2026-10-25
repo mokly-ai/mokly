@@ -80,7 +80,7 @@ pub(super) fn source_calls(
                     content_type: "text/html".into(),
                     fragment: None,
                     document: Some(Composed {
-                        tree: parse::document("<!doctype html><p>saved</p>"),
+                        tree: parse::delivered_document("<!doctype html><p>saved</p>"),
                         usage: CatalogueUsage::Unavailable,
                         warnings: vec![],
                         resources: vec![],

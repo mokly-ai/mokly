@@ -96,7 +96,7 @@ pub(crate) fn resolve(
 }
 
 pub(crate) fn direct(body: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
-    let nodes = parse::fragment(body);
+    let nodes = parse::delivered_fragment(body);
     tree::walk(&nodes)
         .filter_map(|node| match node {
             tree::Node::Element(element) => catalogue

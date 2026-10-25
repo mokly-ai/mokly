@@ -6,22 +6,28 @@ use html5ever::tendril::StrTendril;
 use html5ever::tokenizer::{
     Doctype, Tag, TagKind, Token, TokenSink, TokenSinkResult, states::RawKind,
 };
-use html5ever::tree_builder::{TreeBuilder, TreeBuilderOpts};
+use html5ever::tree_builder::TreeBuilder;
 use html5ever::{Attribute, QualName};
 use html5gum::emitters::callback::{Callback, CallbackEmitter, CallbackEvent};
-use html5gum::{Emitter, ForwardingEmitter, Span, State, Tokenizer};
+use html5gum::{Emitter, ForwardingEmitter, Span, State};
 use mokly_model::catalogue::SourceLocation;
 
 use crate::html_arena::{Arena, Handle};
 use crate::tree::Node;
 
-/// Crate-internal switch for the differential harness and future migration.
-pub(crate) const ENABLED: bool = false;
+mod runner;
+
+/// The token-driven pipeline is the production parser path.
+pub(crate) const ENABLED: bool = true;
 
 struct CallbackSink<'a> {
     builder: &'a mut TreeBuilder<Handle, Arena>,
     source: &'a str,
-    source_path: &'a str,
+    source_path: Option<&'a str>,
+    base_line: usize,
+    base_column: usize,
+    authored: bool,
+    positions: Vec<(usize, usize, usize)>,
     start_name: Option<String>,
     start_offset: usize,
     start_attributes: Vec<Attribute>,
@@ -52,34 +58,33 @@ impl<'a> CallbackSink<'a> {
     }
 
     fn line_number(&self, offset: usize) -> u64 {
-        self.source
-            .char_indices()
-            .take_while(|(index, _)| *index < offset)
-            .filter(|(_, character)| *character == '\n')
-            .count() as u64
-            + 1
+        if self.source_path.is_none() {
+            return 1;
+        }
+        self.position(offset).0 as u64
     }
 
-    fn source_location(&self) -> SourceLocation {
-        let mut line = 1;
-        let mut column = 1;
-        for (index, character) in self.source.char_indices() {
-            if index >= self.start_offset {
-                break;
-            }
-            if character == '\n' {
-                line += 1;
-                column = 1;
-            } else {
-                column += 1;
-            }
-        }
-        SourceLocation {
-            path: self.source_path.into(),
+    fn source_location(&self) -> Option<SourceLocation> {
+        let Some(path) = self.source_path else {
+            return None;
+        };
+        let (line, column) = self.position(self.start_offset);
+        Some(SourceLocation {
+            path: path.into(),
             line,
             column,
             export: None,
-        }
+        })
+    }
+
+    fn position(&self, offset: usize) -> (usize, usize) {
+        self.positions
+            .partition_point(|(index, _, _)| *index <= offset)
+            .checked_sub(1)
+            .and_then(|index| self.positions.get(index).copied())
+            .map_or((self.base_line, self.base_column), |(_, line, column)| {
+                (line, column)
+            })
     }
 }
 
@@ -107,9 +112,14 @@ impl<'a> Callback<Infallible, usize> for CallbackSink<'a> {
                 }
             }
             CallbackEvent::CloseStartTag { self_closing } => {
-                let source = self.source_location();
                 let element_name = self.start_name.clone().unwrap_or_default();
-                self.builder.sink.set_active_source(element_name, source);
+                if self.authored
+                    && let Some(source) = self.source_location()
+                {
+                    self.builder
+                        .sink
+                        .set_active_source(element_name.clone(), source);
+                }
                 let name = self.start_name.take().unwrap_or_default().into();
                 let token = Token::TagToken(Tag {
                     kind: TagKind::StartTag,
@@ -177,12 +187,38 @@ struct PipelineEmitter<'a> {
 }
 
 impl<'a> PipelineEmitter<'a> {
-    fn new(builder: &'a mut TreeBuilder<Handle, Arena>, source: &'a str, path: &'a str) -> Self {
+    fn new(
+        builder: &'a mut TreeBuilder<Handle, Arena>,
+        source: &'a str,
+        path: Option<&'a str>,
+        base_line: usize,
+        base_column: usize,
+        authored: bool,
+    ) -> Self {
+        let mut positions = Vec::new();
+        if authored {
+            let mut line = base_line;
+            let mut column = base_column;
+            for (index, character) in source.char_indices() {
+                positions.push((index, line, column));
+                if character == '\n' {
+                    line += 1;
+                    column = 1;
+                } else {
+                    column += 1;
+                }
+            }
+            positions.push((source.len(), line, column));
+        }
         Self {
             inner: CallbackEmitter::new(CallbackSink {
                 builder,
                 source,
                 source_path: path,
+                base_line,
+                base_column,
+                authored,
+                positions,
                 start_name: None,
                 start_offset: 0,
                 start_attributes: Vec::new(),
@@ -221,18 +257,31 @@ impl<'a> ForwardingEmitter for PipelineEmitter<'a> {
 
 /// Parse a complete document through the experimental token-driven pipeline.
 pub(crate) fn document(source: &str, path: &str) -> Vec<Node> {
-    let mut builder = TreeBuilder::new(
-        Arena::default(),
-        TreeBuilderOpts {
-            scripting_enabled: false,
-            ..Default::default()
-        },
-    );
-    let emitter = PipelineEmitter::new(&mut builder, source, path);
-    let tokenizer = Tokenizer::new_with_emitter(source, emitter);
-    match tokenizer.finish() {
-        Ok(()) => {}
-        Err(error) => match error {},
-    }
-    builder.sink.output()
+    runner::run(source, false, true, Some(path), 1, 1)
+}
+
+pub(crate) fn authored_document(
+    source: &str,
+    path: &str,
+    base_line: usize,
+    base_column: usize,
+) -> Vec<Node> {
+    runner::run(source, false, true, Some(path), base_line, base_column)
+}
+
+pub(crate) fn delivered_document(source: &str) -> Vec<Node> {
+    runner::run(source, false, false, None, 1, 1)
+}
+
+pub(crate) fn authored_fragment(
+    source: &str,
+    path: &str,
+    base_line: usize,
+    base_column: usize,
+) -> Vec<Node> {
+    runner::run(source, true, true, Some(path), base_line, base_column)
+}
+
+pub(crate) fn delivered_fragment(source: &str) -> Vec<Node> {
+    runner::run(source, true, false, None, 1, 1)
 }

@@ -20,7 +20,7 @@ fn history() -> Arc<Artifact> {
         content_type: "text/html".into(),
         fragment: None,
         document: Some(Composed {
-            tree: parse::document("<p>History</p>"),
+            tree: parse::delivered_document("<p>History</p>"),
             usage: CatalogueUsage::Ready {
                 instances: vec![],
                 slots: vec![],

@@ -1,67 +1,110 @@
-//! HTML5 parsing into the package-owned arena, with scripting disabled for frames.
+//! Authored and delivered HTML parsing through the shared token pipeline.
 
-use std::mem;
-
-use html5ever::tendril::TendrilSink;
-use html5ever::tree_builder::TreeBuilderOpts;
-use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
-
-use crate::html_arena::Arena;
-use crate::source_locations::WrapperLocations;
+use crate::pipeline;
+use crate::serialize;
 use crate::tree::{self, Node};
-use crate::{serialize, source_locations};
 
-fn options() -> ParseOpts {
-    ParseOpts {
-        tree_builder: TreeBuilderOpts {
-            scripting_enabled: false,
-            ..Default::default()
-        },
-        ..Default::default()
-    }
-}
-
-/// Parse a complete document, including implied wrappers.
-pub fn document(source: &str) -> Vec<Node> {
-    located(source, true, WrapperLocations::new())
-}
-
-/// Parse a body-context fragment with the standard HTML5 algorithm.
-pub fn fragment(source: &str) -> Vec<Node> {
-    located(source, false, WrapperLocations::new())
-}
-
-/// Bind wrapper source locations before tree repair can change their traversal order.
-pub(crate) fn located(source: &str, page: bool, locations: WrapperLocations) -> Vec<Node> {
-    let parser = if page { raw_document } else { raw_fragment };
-    let nodes = parser(source, locations);
+/// Parse complete HTML bytes delivered by a document source.
+pub fn delivered_document(source: &str) -> Vec<Node> {
+    let nodes = pipeline::delivered_document(source);
     if terminal_text(&nodes) {
-        parser(
-            &serialize::html(&nodes),
-            source_locations::wrapper_locations(&nodes),
-        )
+        pipeline::delivered_document(&serialize::html(&nodes))
     } else {
         nodes
     }
 }
 
-fn raw_document(source: &str, locations: WrapperLocations) -> Vec<Node> {
-    parse_document(Arena::with_locations(locations), options()).one(source)
+/// Parse an HTML fragment delivered by a document source.
+pub fn delivered_fragment(source: &str) -> Vec<Node> {
+    let nodes = pipeline::delivered_fragment(source);
+    if terminal_text(&nodes) {
+        pipeline::delivered_fragment(&serialize::html(&nodes))
+    } else {
+        nodes
+    }
 }
 
-/// Plaintext consumes every later byte. One browser repair makes formatting
-/// clones and foster-parented siblings into the literal serialized payload.
-/// The serializer removes private annotations from reconstructed literal tags.
 fn terminal_text(nodes: &[Node]) -> bool {
     tree::walk(nodes).any(|node| {
         matches!(node, Node::Element(element) if element.is_html() && element.name == "plaintext")
     })
 }
 
-fn raw_fragment(source: &str, locations: WrapperLocations) -> Vec<Node> {
-    parse_fragment(
-        Arena::with_locations(locations),
-        options(),
+#[cfg(test)]
+#[expect(dead_code, reason = "reserved for delivered differential probes")]
+pub(crate) fn legacy_document(source: &str) -> Vec<Node> {
+    legacy_document_with_mode(source, false)
+}
+
+#[cfg(test)]
+pub(crate) fn legacy_authored_document(source: &str) -> Vec<Node> {
+    legacy_document_with_mode(source, true)
+}
+
+#[cfg(test)]
+fn legacy_document_with_mode(source: &str, authored: bool) -> Vec<Node> {
+    use html5ever::tendril::TendrilSink;
+    use html5ever::tree_builder::TreeBuilderOpts;
+    use html5ever::{ParseOpts, parse_document};
+
+    let nodes = parse_document(
+        crate::html_arena::Arena::new(authored),
+        ParseOpts {
+            tree_builder: TreeBuilderOpts {
+                scripting_enabled: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .one(source);
+    if terminal_text(&nodes) {
+        parse_document(
+            crate::html_arena::Arena::new(authored),
+            ParseOpts {
+                tree_builder: TreeBuilderOpts {
+                    scripting_enabled: false,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )
+        .one(serialize::html(&nodes))
+    } else {
+        nodes
+    }
+}
+
+#[cfg(test)]
+#[expect(dead_code, reason = "reserved for fragment differential probes")]
+pub(crate) fn legacy_fragment(source: &str) -> Vec<Node> {
+    legacy_fragment_with_mode(source, false)
+}
+
+#[cfg(test)]
+#[expect(
+    dead_code,
+    reason = "reserved for authored fragment differential probes"
+)]
+pub(crate) fn legacy_authored_fragment(source: &str) -> Vec<Node> {
+    legacy_fragment_with_mode(source, true)
+}
+
+#[cfg(test)]
+fn legacy_fragment_with_mode(source: &str, authored: bool) -> Vec<Node> {
+    use html5ever::tendril::TendrilSink;
+    use html5ever::tree_builder::TreeBuilderOpts;
+    use html5ever::{ParseOpts, QualName, local_name, ns, parse_fragment};
+
+    let nodes: Vec<Node> = parse_fragment(
+        crate::html_arena::Arena::new(authored),
+        ParseOpts {
+            tree_builder: TreeBuilderOpts {
+                scripting_enabled: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         QualName::new(None, ns!(html), local_name!("body")),
         Vec::new(),
         false,
@@ -69,8 +112,54 @@ fn raw_fragment(source: &str, locations: WrapperLocations) -> Vec<Node> {
     .one(source)
     .into_iter()
     .flat_map(|mut node| match &mut node {
-        Node::Element(element) if element.name == "html" => mem::take(&mut element.children),
+        Node::Element(element) if element.name == "html" => std::mem::take(&mut element.children),
         _ => vec![node],
     })
-    .collect()
+    .collect();
+    if terminal_text(&nodes) {
+        parse_fragment(
+            crate::html_arena::Arena::new(authored),
+            ParseOpts {
+                tree_builder: TreeBuilderOpts {
+                    scripting_enabled: false,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            QualName::new(None, ns!(html), local_name!("body")),
+            Vec::new(),
+            false,
+        )
+        .one(serialize::html(&nodes))
+        .into_iter()
+        .flat_map(|mut node| match &mut node {
+            Node::Element(element) if element.name == "html" => {
+                std::mem::take(&mut element.children)
+            }
+            _ => vec![node],
+        })
+        .collect()
+    } else {
+        nodes
+    }
+}
+
+/// Parse a complete authored page and attach source locations to its elements.
+pub(crate) fn authored_document(
+    source: &str,
+    path: &str,
+    base_line: usize,
+    base_column: usize,
+) -> Vec<Node> {
+    pipeline::authored_document(source, path, base_line, base_column)
+}
+
+/// Parse an authored HTML fragment and attach source locations to its elements.
+pub(crate) fn authored_fragment(
+    source: &str,
+    path: &str,
+    base_line: usize,
+    base_column: usize,
+) -> Vec<Node> {
+    pipeline::authored_fragment(source, path, base_line, base_column)
 }

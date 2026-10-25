@@ -5,7 +5,6 @@ use std::cell::RefCell;
 use html5ever::{QualName, local_name, ns};
 use mokly_model::catalogue::SourceLocation;
 
-use crate::source_locations::WrapperLocations;
 use crate::tree::Node;
 
 #[derive(Clone)]
@@ -24,16 +23,16 @@ pub(crate) struct Entry {
 
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
-    pub(crate) locations: RefCell<WrapperLocations>,
     active_source: RefCell<Option<(String, SourceLocation)>>,
+    authored: bool,
 }
 
 impl Default for Arena {
     fn default() -> Self {
         Self {
             entries: RefCell::new(vec![Entry::new(None)]),
-            locations: RefCell::default(),
             active_source: RefCell::default(),
+            authored: false,
         }
     }
 }
@@ -60,11 +59,15 @@ impl Handle {
 }
 
 impl Arena {
-    pub(crate) fn with_locations(locations: WrapperLocations) -> Self {
+    pub(crate) fn new(authored: bool) -> Self {
         Self {
-            locations: RefCell::new(locations),
+            authored,
             ..Self::default()
         }
+    }
+
+    pub(crate) fn filters_authored_attributes(&self) -> bool {
+        self.authored
     }
 
     pub(crate) fn set_active_source(&self, name: String, source: SourceLocation) {

@@ -75,7 +75,7 @@ fn scan(
     targets: &mut BTreeSet<String>,
     opaque: &mut bool,
 ) {
-    let nodes = parse::fragment(body);
+    let nodes = parse::delivered_fragment(body);
     for node in tree::walk(&nodes) {
         if let Node::Element(element) = node {
             for attribute in &element.attributes {

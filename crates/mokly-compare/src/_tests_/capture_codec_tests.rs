@@ -53,7 +53,7 @@ fn artifact(tree: Vec<Node>) -> Artifact {
 
 #[test]
 fn encoded_views_preserve_bytes_and_all_trusted_annotations() {
-    let mut nodes = parse::fragment(
+    let mut nodes = parse::delivered_fragment(
         "<style data-mokly-owners='forged'>.card{color:red}</style><svg><text>x</text></svg>",
     );
     let Node::Element(element) = &mut nodes[0] else {
@@ -142,7 +142,8 @@ fn encoded_views_preserve_bytes_and_all_trusted_annotations() {
 
 #[test]
 fn capture_and_restore_are_iterative_and_keep_authored_owner_attributes_untrusted() {
-    let mut nodes = parse::fragment("<style data-mokly-owners='forged'>a{color:red}</style>");
+    let mut nodes =
+        parse::delivered_fragment("<style data-mokly-owners='forged'>a{color:red}</style>");
     for _ in 0..10_000 {
         nodes = vec![Node::Region {
             region: Region {
@@ -219,7 +220,7 @@ fn capture_preserves_valid_props_at_the_64_level_limit() {
         let props = BTreeMap::from([("deep".into(), value)]);
         let wire = wire_props::encode(&props);
         assert_eq!(wire_decode::decode(&wire).unwrap(), props);
-        let mut input = artifact(parse::fragment("<p>deep props</p>"));
+        let mut input = artifact(parse::delivered_fragment("<p>deep props</p>"));
         input.document.as_mut().unwrap().usage = CatalogueUsage::Ready {
             instances: vec![ComponentInstanceRecord {
                 key: "instance".into(),

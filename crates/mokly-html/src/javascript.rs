@@ -106,9 +106,9 @@ impl Engine<'_> {
         }
         source_checks::validate(&result.html, true)?;
         let nodes = if page {
-            parse::document(&result.html)
+            parse::delivered_document(&result.html)
         } else {
-            parse::fragment(&result.html)
+            parse::delivered_fragment(&result.html)
         };
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
             && effective.metadata.path == self.request.entry.metadata.path;

@@ -39,7 +39,7 @@ pub(crate) fn seeds(
             } else {
                 template.body.clone()
             };
-            for reference in references::collect(&parse::document(&body)) {
+            for reference in references::collect(&parse::delivered_document(&body)) {
                 queue.push_back((source.clone(), reference.url));
             }
         }

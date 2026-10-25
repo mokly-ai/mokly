@@ -111,7 +111,7 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
                 content_type: "text/html".into(),
                 fragment: None,
                 document: Some(Composed {
-                    tree: parse::document("<p>Historical</p>"),
+                    tree: parse::delivered_document("<p>Historical</p>"),
                     usage: CatalogueUsage::Ready {
                         instances: vec![],
                         slots: vec![],

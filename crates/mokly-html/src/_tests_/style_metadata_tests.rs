@@ -45,7 +45,7 @@ fn iterative_annotation_preserves_owners_through_browser_repair() {
     )];
     let mut repair = Repair::default();
     let annotated = normalization_annotate::annotate(nodes, &mut repair);
-    let reparsed = parse::document(&serialize::html(&annotated));
+    let reparsed = parse::delivered_document(&serialize::html(&annotated));
     let repaired = tree_transform::postorder(reparsed, &mut |mut node| {
         if let Node::Element(element) = &mut node {
             metadata(element, &repair);

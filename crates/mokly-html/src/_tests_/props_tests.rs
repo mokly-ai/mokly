@@ -98,5 +98,5 @@ fn substitutions_read_only_declared_scalars_and_leave_open_braces_literal() {
 #[test]
 fn html5_tree_building_repairs_tables_and_formatting_before_serialization() {
     let source = "<table><tr><td>A &amp; B</td></tr></table><p><b>one<i>two</b>three</i>";
-    insta::assert_snapshot!(serialize::html(&parse::fragment(source)));
+    insta::assert_snapshot!(serialize::html(&parse::delivered_fragment(source)));
 }

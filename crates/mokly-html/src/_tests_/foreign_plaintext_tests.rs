@@ -59,7 +59,7 @@ fn foreign_plaintext_components_keep_later_escaped_text_inert() {
             html.contains("&lt;img src=x onerror=alert(1)&gt;"),
             "{html}"
         );
-        assert_eq!(html, serialize::html(&parse::document(&html)));
+        assert_eq!(html, serialize::html(&parse::delivered_document(&html)));
     }
 }
 
@@ -118,7 +118,7 @@ fn foreign_grafts_follow_math_integration_and_html_breakout_rules() {
             false,
         ),
     ] {
-        let mut nodes = parse::fragment(context);
+        let mut nodes = parse::delivered_fragment(context);
         let mut children = &mut nodes;
         while !children.is_empty() {
             children = children[0].children_mut().unwrap();
@@ -130,7 +130,7 @@ fn foreign_grafts_follow_math_integration_and_html_breakout_rules() {
         ));
         assert_graft_mode(nodes, plaintext);
     }
-    let mut svg = parse::fragment("<svg></svg>");
+    let mut svg = parse::delivered_fragment("<svg></svg>");
     svg[0]
         .children_mut()
         .unwrap()
@@ -148,7 +148,7 @@ fn assert_graft_mode(nodes: Vec<Node>, plaintext: bool) {
     let marked = annotate(nodes, &mut repair);
     let html = serialize::html(&marked);
     assert_eq!(html.contains("literal & <i>text</i>"), plaintext, "{html}");
-    let parsed = parse::document(&html);
+    let parsed = parse::delivered_document(&html);
     assert_eq!(walk(&parsed).any(|node| matches!(node, Node::Element(element) if element.name == "plaintext" && element.is_html())), plaintext, "{html}");
     assert!(
         !walk(&parsed).any(|node| matches!(node, Node::Element(element) if element.name == "i")),
@@ -158,7 +158,7 @@ fn assert_graft_mode(nodes: Vec<Node>, plaintext: bool) {
 
 #[test]
 fn foreign_plaintext_does_not_stop_metadata_annotation() {
-    let mut svg = parse::fragment("<svg></svg>");
+    let mut svg = parse::delivered_fragment("<svg></svg>");
     svg[0]
         .children_mut()
         .unwrap()
@@ -173,7 +173,7 @@ fn foreign_plaintext_does_not_stop_metadata_annotation() {
 #[test]
 fn foreign_end_tags_after_breakout_close_the_remaining_matching_ancestor() {
     for point in ["desc", "foreignObject", "title"] {
-        let mut nodes = parse::fragment(&format!(
+        let mut nodes = parse::delivered_fragment(&format!(
             "<svg><svg><{point}><svg></svg></{point}></svg></svg>"
         ));
         let middle = &mut nodes[0].children_mut().unwrap()[0];
@@ -195,7 +195,7 @@ fn foreign_end_tags_after_breakout_close_the_remaining_matching_ancestor() {
                 nodes.clone()
             };
             let html = serialize::html(&nodes);
-            let parsed = parse::document(&html);
+            let parsed = parse::delivered_document(&html);
             assert!(
                 !walk(&parsed)
                     .any(|node| matches!(node, Node::Element(element) if element.name == "b")),

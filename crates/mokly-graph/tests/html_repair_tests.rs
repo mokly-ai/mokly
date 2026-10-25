@@ -150,7 +150,7 @@ fn block_and_anchor_components_that_escape_their_parent_lose_the_region() {
         assert!(html.contains(expected), "{html}");
         assert!(!html.contains("mokly-instance:"));
         assert!(!html.contains("mokly-normalize"));
-        assert_eq!(serialize::html(&parse::document(&html)), html);
+        assert_eq!(serialize::html(&parse::delivered_document(&html)), html);
         let document = artifact.document.as_ref().unwrap();
         let CatalogueUsage::Ready {
             instances,

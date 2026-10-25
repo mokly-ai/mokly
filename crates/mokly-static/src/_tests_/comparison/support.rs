@@ -64,7 +64,7 @@ pub(super) fn artifact(document: bool) -> Arc<Artifact> {
         content_type: "text/html".into(),
         fragment: None,
         document: document.then(|| Composed {
-            tree: parse::document("<p>Historical page</p>"),
+            tree: parse::delivered_document("<p>Historical page</p>"),
             usage: CatalogueUsage::Ready {
                 instances: vec![],
                 slots: vec![],

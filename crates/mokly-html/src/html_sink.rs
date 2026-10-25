@@ -10,7 +10,6 @@ use mokly_catalogue::html_tokens::reserved_navigation_attribute;
 use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::html_arena::{Arena, Handle};
-use crate::source_locations;
 use crate::tree::{self, Element, Node};
 
 impl TreeSink for Arena {
@@ -33,21 +32,7 @@ impl TreeSink for Arena {
 
     fn create_element(&self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Handle {
         let attributes: Vec<_> = attrs.into_iter().map(attribute).collect();
-        let source = self.take_active_source(name.local.as_ref()).or_else(|| {
-            if self.locations.borrow().is_empty() {
-                None
-            } else {
-                source_locations::ignore_signature(name.local.as_ref(), &attributes).and_then(
-                    |key| {
-                        self.locations
-                            .borrow_mut()
-                            .get_mut(&key)
-                            .and_then(|queue| queue.pop_front())
-                            .flatten()
-                    },
-                )
-            }
-        });
+        let source = self.take_active_source(name.local.as_ref());
         let node = Node::Element(Element {
             style_owners: None,
             style_attribution: None,
@@ -60,7 +45,10 @@ impl TreeSink for Arena {
             namespace: name.ns.to_string(),
             attributes: attributes
                 .into_iter()
-                .filter(|value| keep_attribute(name.local.as_ref(), value))
+                .filter(|value| {
+                    !self.filters_authored_attributes()
+                        || keep_attribute(name.local.as_ref(), value)
+                })
                 .collect(),
             children: Vec::new(),
         });
@@ -123,7 +111,7 @@ impl TreeSink for Arena {
     fn add_attrs_if_missing(&self, target: &Handle, attrs: Vec<Attribute>) {
         if let Some(Node::Element(element)) = &mut self.entries.borrow_mut()[target.index].node {
             for value in attrs.into_iter().map(attribute) {
-                if keep_attribute(&element.name, &value)
+                if (!self.filters_authored_attributes() || keep_attribute(&element.name, &value))
                     && !element
                         .attributes
                         .iter()

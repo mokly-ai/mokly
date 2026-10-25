@@ -24,6 +24,11 @@ mod folder_input;
 mod folders;
 mod front_matter;
 mod globs;
+mod html_token_conversion;
+#[cfg(test)]
+#[path = "_tests_/ignore_parsing_tests.rs"]
+mod html_token_tests;
+mod html_token_types;
 pub mod html_tokens;
 mod identity;
 pub mod input;

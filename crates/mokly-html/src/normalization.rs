@@ -88,18 +88,19 @@ fn reparse(
     let mut repair = Repair::default();
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
-    let mut parsed = parse::document(&serialized.html);
+    let mut parsed = parse::delivered_document(&serialized.html);
     let plaintext_ok = serialized.plaintext.as_ref().is_none_or(|start| {
         confirmed_plaintext(&parsed, &start.id)
             && confirmed_plaintext(
-                &parse::document(&serialized.html[..start.prefix_end]),
+                &parse::delivered_document(&serialized.html[..start.prefix_end]),
                 &start.id,
             )
     });
     if !plaintext_ok || !confirmed_raw_text(&parsed, &serialized.raw_text) {
         repair = Repair::default();
         let retry = normalization_annotate::annotate_with_plaintext(source, &mut repair, false);
-        parsed = parse::document(&serialize::document_with_options(&retry, true, false).html);
+        parsed =
+            parse::delivered_document(&serialize::document_with_options(&retry, true, false).html);
     } else if let Some(start) = &serialized.plaintext {
         normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
     }
