@@ -76,8 +76,10 @@ replaces the live advisory check.
 
 ## Reviewed Workspace Exceptions
 
-`scripts/verification/dependency-audit-exceptions.json` is a JSON array. Each
-record has exactly these six required fields, with no unknown keys:
+`scripts/verification/dependency-audit-exceptions.json` is a JSON array. It is
+empty while no risk is accepted. Each record has exactly these six required
+fields, with no unknown keys. This example shows the shape only; it is not a
+current exception:
 
 ```json
 {
@@ -181,7 +183,7 @@ an old override is not proof that the current tree is clean.
 Record each hold below a compatible release with its reason and removal
 condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
 for a declared floor. Dependency audit tests check the committed exception
-against the installed lockfile.
+file against the installed lockfile.
 
 List only reviewed exceptions, overrides, exact pins and holds here, because
 later updates must respect them. Explain a one-time update in its pull request,
@@ -193,26 +195,22 @@ The current maintenance choices are:
 - `wrangler` 4.151.0 is an exact development pin for preview deployment and
   the Cloudflare local static-host checks. It resolves prerelease Miniflare
   `5.20261012.0-beta` and adds 29 development packages, including workerd and
-  sharp/libvips. The lockfile has no Miniflare override. Update the pin in a
-  reviewed tooling change after static URL, header, preview cleanup, and live
-  dependency-audit checks pass. Remove it if previews no longer use Cloudflare.
+  sharp/libvips. Miniflare's exact `undici` pin is overridden, as the next
+  item says. Update the pin in a reviewed tooling change after static URL,
+  header, preview cleanup, and live dependency-audit checks pass. Remove it if
+  previews no longer use Cloudflare.
+
+- `undici` 7.30.1 is an override scoped to `miniflare`, which pins `undici`
+  7.29.1. That release has GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, and
+  GHSA-xjj6-f33q-929c, and 7.30.1 patches all three. A parent update does not
+  help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
+  override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
 
 - `release-please` 17.6.0 is an exact development pin. Release tests exercise
   its real manifest parser, changelog writer, workspace plugin, and version
   updaters. Update the pin with the workflow action and schema in a reviewed
   tooling change. It is not a runtime dependency of any published package.
 
-- [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
-  / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
-  on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only
-  path is `metro-file-map` 0.84.6 → `micromatch` 4.0.8 → `braces` 3.0.3 at the
-  three top-level install locations above. Metro arrives through React Native
-  peers of development packages. Repository code does not run Metro and sends
-  no untrusted patterns to it. The tracking advisory records patched releases.
-  Remove the record when Braces or Micromatch ships a fix that Metro resolves,
-  or when Metro drops Micromatch. Re-run the live audit and complete gate after
-  that dependency update. Remove a stale record; expiry requires removal or
-  a new explicit risk review, not an automatic extension.
 - `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
   Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
   through 0.12), which the root `^0.8.3` range excludes. Move to one of them
