@@ -64,8 +64,7 @@ route (Decision 30).
 On 2026-10-14 the user settled the remaining review items of the end-state
 rewrite as Decisions 31 to 38.
 The open follow-ups and the user items that the user deferred on 2026-10-21,
-up to user item 189, stay in the post-merge section for the user to decide,
-and user item 159 is High and must be fixed before the first npm release.
+up to user item 189, stay in the post-merge section for the user to decide.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -5855,7 +5854,7 @@ does not ask the user before the merge.
       private installs, Small; B, document the CI-dependent result, effort
       not recorded. Recommended: A.
 
-- [ ] Resolve user item 159 (release-lockstep review finding 1): fixed test
+- [x] Resolve user item 159 (release-lockstep review finding 1): fixed test
       versions block the first release PR. `tests/release_config.test.ts:64`
       requires version `0.16.0`, and
       `tests/public_export_ratchet_git.test.ts:214` requires the audit
@@ -5865,6 +5864,11 @@ does not ask the user before the merge.
       not recorded; B, fixed input fixtures for the exact-version tests, and
       live checks relative to generated metadata, Medium. Recommended: B.
   - Fix before the first npm release.
+  - User decision 159 (2026-10-25): B. Fixed in `7dd50726`: the
+    exact-version checks read fixed fixture inputs, and the live checks
+    follow the release manifest, the package versions, and the reachable
+    release tags. The sidecar hello test had the same pin and follows its
+    package version now. Evidence: `.context/release-version-fixtures/`.
 
 - [ ] Resolve user item 160 (W2 finding 1): Props and Usage Try again leave
       focus on the page. Severity Low, product bug, effort Medium
@@ -6123,6 +6127,50 @@ does not ask the user before the merge.
       reference (a new review format version; Large); C, split
       `review.json` into files per entry (a new format version; Large).
       Recommended: B.
+
+- [x] Resolve user item 190 (PR #200 strict audit): three `undici`
+      advisories and a stale `braces` exception failed the strict
+      dependency audit of PR #200 and release PR #201.
+  - User decision 190 (2026-10-25): A. An npm `overrides` entry sets
+    `undici` 7.30.1 for `miniflare`, and the stale `braces` exception is
+    removed, in PR #200 (`72cbbd90` and `006a49c4`). This record merges
+    with PR #200.
+
+- [ ] Resolve user item 191 (docs): `docs/protocol/dependency-security.md`
+      names "Cloudflare local static-host checks" for the `wrangler` pin,
+      but no test or script runs `wrangler` or `miniflare`. Severity Low,
+      docs, effort not recorded. Options (estimate): A, remove the phrase;
+      B, add a test that serves a built site with `wrangler pages dev`
+      (Medium; every gate starts the local Cloudflare runtime).
+      Recommended: A.
+
+- [ ] Resolve user item 192 (test):
+      `tests/static_base_manager_mirror.test.ts`, "a cold Yarn Classic base
+      installs ordinary versions from its committed offline mirror", fell
+      back to tier 3 instead of tier 2 once on hosted CI (PR #200 run
+      40194214551, attempt 1) and passed on the rerun. Severity Low, test,
+      effort not recorded. Options (estimate): A, find the cause from a
+      reproduction with the manager output captured; B, also print the
+      manager output in the failure message. Recommended: A.
+
+- [x] Resolve user item 193 (test):
+      `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs:90`
+      sometimes recorded no `sidecar.stop` span (integration batch 32 on
+      Linux; PR #200 run 40194214551 on hosted macOS, attempts 1 and 2).
+      Severity High, test.
+  - User decision 193 (2026-10-25): B. Fixed in its own pull request by
+    `298ede89`: the shared trace capture installs one global dispatcher
+    that keeps every callsite's interest at `sometimes`, so a callsite
+    that a thread without a capture registers first cannot cache `never`.
+    Evidence: `.context/sidecar-release-trace/`.
+
+- [x] Resolve user item 194 (plan): the status paragraph still named user
+      item 159 as High and open after its fix.
+  - User decision 194 (2026-10-25): A. The clause is removed in the same
+    commit as this record.
+
+- [x] Resolve user item 195 (merge): PR #202, the fix of user item 159.
+  - User decision 195 (2026-10-25): A. PR #202 merged as `6d9705aa`.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`

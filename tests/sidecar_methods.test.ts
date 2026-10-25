@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import test from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
@@ -16,7 +17,14 @@ import {
 
 test("sidecar bundles, describes and renders every entry kind", async (context) => {
   const sidecar = startSidecar(context);
-  assert.deepEqual(await sidecar.call("hello"), { version: "0.15.0" });
+  // The sidecar reports the version of the package that contains it.
+  const { version } = JSON.parse(
+    await fs.readFile(
+      new URL("../packages/mokly/package.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(await sidecar.call("hello"), { version });
   const bundle = await sidecar.call<BundleResult>("bundle", bundleParams());
   assert.match(bundle.generation, /^[a-f0-9]{64}$/);
   assert.ok(

@@ -1,14 +1,52 @@
 //! A synchronous trace observer captures fields at the private cleanup boundary.
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Once};
 
 use tracing::field::{Field, Visit};
 use tracing::span::{Attributes, Id, Record};
+use tracing::subscriber::Interest;
 use tracing::{Event, Metadata, Subscriber};
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub(crate) struct Trace(Arc<Mutex<State>>);
+
+impl Default for Trace {
+    /// Install the process-wide interest guard before the first capture.
+    fn default() -> Self {
+        static GUARD: Once = Once::new();
+        GUARD.call_once(|| {
+            tracing::subscriber::set_global_default(InterestGuard)
+                .expect("the sidecar tests own the global trace dispatcher");
+        });
+        Self(Arc::default())
+    }
+}
+
+/// The global dispatcher of the test process. It enables nothing, but it keeps
+/// every callsite's cached interest at `sometimes`, so each span asks the
+/// dispatcher of its own thread. Without it, while one scoped capture is the
+/// only dispatcher, `tracing-core` takes a new callsite's interest from the
+/// thread that registers it first; a thread without a capture caches `never`
+/// and disables that span for the capture too.
+struct InterestGuard;
+
+impl Subscriber for InterestGuard {
+    fn register_callsite(&self, _: &'static Metadata<'static>) -> Interest {
+        Interest::sometimes()
+    }
+    fn enabled(&self, _: &Metadata<'_>) -> bool {
+        false
+    }
+    fn new_span(&self, _: &Attributes<'_>) -> Id {
+        Id::from_u64(1)
+    }
+    fn record(&self, _: &Id, _: &Record<'_>) {}
+    fn record_follows_from(&self, _: &Id, _: &Id) {}
+    fn event(&self, _: &Event<'_>) {}
+    fn enter(&self, _: &Id) {}
+    fn exit(&self, _: &Id) {}
+}
 
 #[derive(Default)]
 struct State {
@@ -34,12 +72,16 @@ impl Visit for Span {
 
 impl Trace {
     pub(crate) fn stopped(&self) -> Vec<Span> {
+        self.closed("sidecar.stop")
+    }
+
+    pub(crate) fn closed(&self, name: &str) -> Vec<Span> {
         self.0
             .lock()
             .unwrap()
             .closed
             .iter()
-            .filter(|span| span.metadata.name() == "sidecar.stop")
+            .filter(|span| span.metadata.name() == name)
             .cloned()
             .collect()
     }
@@ -93,3 +135,7 @@ impl Subscriber for Trace {
         true
     }
 }
+
+#[cfg(test)]
+#[path = "trace_capture_tests.rs"]
+mod trace_capture_tests;
