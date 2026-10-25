@@ -9,9 +9,13 @@ use crate::build::{BuildChanges, BuildSummary};
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 use crate::serve_output::{
-    accept_failure, accept_recovery, catalogue, changes_ready, changes_unavailable, ready,
-    shortcuts,
+    ReadyPanel, accept_failure, accept_recovery, catalogue, changes_ready, changes_unavailable,
+    ready, shortcuts,
 };
+use crate::version::VERSION;
+
+/// Fixed input for exact layouts; the live header names `VERSION` instead.
+const FIXED_VERSION: &str = "0.15.0";
 
 #[test]
 fn ready_layouts_and_shortcuts_follow_the_terminal_contract() {
@@ -23,18 +27,21 @@ fn ready_layouts_and_shortcuts_follow_the_terminal_contract() {
         (Mode::Rich, true, false, 80, false, false),
         (Mode::Rich, false, true, 32, true, false),
     ] {
-        let text = ready(
+        let text = ReadyPanel {
+            version: FIXED_VERSION,
+            url: "http://127.0.0.1:4173",
+            config: "examples/basic/mokly.config.json",
+            base: "origin/main",
+            watching,
+            interactive,
+        }
+        .render(
             &Style {
                 mode,
                 color,
                 ascii,
                 columns,
             },
-            "http://127.0.0.1:4173",
-            "examples/basic/mokly.config.json",
-            "origin/main",
-            watching,
-            interactive,
             &Redactor::default(),
         );
         if !color && mode == Mode::Rich {
@@ -57,6 +64,16 @@ fn ready_layouts_and_shortcuts_follow_the_terminal_contract() {
         ascii: false,
         columns: 80,
     };
+    let live = ready(
+        &style,
+        "http://127.0.0.1:4173",
+        "examples/basic/mokly.config.json",
+        "origin/main",
+        true,
+        true,
+        &Redactor::default(),
+    );
+    assert!(live.starts_with(&format!("  mokly {VERSION} ")), "{live}");
     insta::assert_snapshot!("shortcuts", shortcuts(&style));
     insta::assert_snapshot!(
         "shortcuts_narrow",
