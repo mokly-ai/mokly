@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { inc, major } from "semver";
+
 import { releasePackages } from "../scripts/release/targets.mjs";
 import { releaseUpdates } from "../scripts/release/version_updates.mjs";
 import { verifyPackageVersions } from "../scripts/release/versions.mjs";
@@ -12,6 +14,9 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const json = async (file: string) =>
   JSON.parse(await fs.readFile(path.join(repositoryRoot, file), "utf8"));
+
+/** Fixed release inputs: after the 0.15.0 release, a breaking release is 0.16.0. */
+const FIXED_MANIFEST = { ".": "0.15.0", "packages/viewer": "0.6.0" };
 
 test("the private workspace releases the CLI and viewer with one root version", async () => {
   await verifyPackageVersions(repositoryRoot);
@@ -48,6 +53,10 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     path.join(repositoryRoot, "CHANGELOG.md"),
     "utf8",
   );
+  const released: string = (await json(".release-please-manifest.json"))["."];
+  // A breaking change bumps the minor version before 1.0 (`bump-minor-pre-major`).
+  const next = inc(released, major(released) === 0 ? "minor" : "major");
+  assert.ok(next, released);
   for (const changed of [
     ["crates/mokly-css/src/compiler.rs"],
     ["packages/mokly/src/index.ts"],
@@ -58,12 +67,18 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       path.join(os.tmpdir(), "mokly-release-versions-"),
     );
     t.after(() => fs.rm(root, { recursive: true, force: true }));
+    const fixed = await releaseUpdates(repositoryRoot, changed, FIXED_MANIFEST);
+    assert.match(
+      fixed.get("packages/viewer/CHANGELOG.md") ?? "",
+      /Shared release version: 0\.16\.0/,
+    );
     const updates = await releaseUpdates(repositoryRoot, changed);
     assert.ok(updates.has("packages/mokly/package.json"));
     assert.ok(updates.has("packages/viewer/package.json"));
-    assert.match(
-      updates.get("packages/viewer/CHANGELOG.md") ?? "",
-      /Shared release version: 0\.16\.0/,
+    const viewerHistory = updates.get("packages/viewer/CHANGELOG.md") ?? "";
+    assert.ok(
+      viewerHistory.includes(`Shared release version: ${next}`),
+      viewerHistory,
     );
     for (const file of [
       "package.json",
@@ -87,6 +102,7 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       await fs.writeFile(destination, content);
     }
     const { cli, viewer } = await verifyPackageVersions(root);
+    assert.equal(cli.version, next);
     assert.notEqual(
       cli.version,
       (await json("packages/mokly/package.json")).version,

@@ -5855,7 +5855,7 @@ does not ask the user before the merge.
       private installs, Small; B, document the CI-dependent result, effort
       not recorded. Recommended: A.
 
-- [ ] Resolve user item 159 (release-lockstep review finding 1): fixed test
+- [x] Resolve user item 159 (release-lockstep review finding 1): fixed test
       versions block the first release PR. `tests/release_config.test.ts:64`
       requires version `0.16.0`, and
       `tests/public_export_ratchet_git.test.ts:214` requires the audit
@@ -5865,6 +5865,11 @@ does not ask the user before the merge.
       not recorded; B, fixed input fixtures for the exact-version tests, and
       live checks relative to generated metadata, Medium. Recommended: B.
   - Fix before the first npm release.
+  - User decision 159 (2026-10-25): B. Fixed in `7dd50726`: the
+    exact-version checks read fixed fixture inputs, and the live checks
+    follow the release manifest, the package versions, and the reachable
+    release tags. The sidecar hello test had the same pin and follows its
+    package version now. Evidence: `.context/release-version-fixtures/`.
 
 - [ ] Resolve user item 160 (W2 finding 1): Props and Usage Try again leave
       focus on the page. Severity Low, product bug, effort Medium

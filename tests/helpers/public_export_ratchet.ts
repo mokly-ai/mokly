@@ -59,6 +59,66 @@ export async function createPublicExportFixture(
   return { root };
 }
 
+/**
+ * Create the root release layout at fixed versions: the CLI and viewer are
+ * tagged `v0.15.0` and `viewer-v0.6.0`, then a release commit sets 0.16.0
+ * without a tag, as a release pull request does.
+ */
+export async function createReleaseLayoutFixture(): Promise<PublicExportFixture> {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-release-layout-"),
+  );
+  const versions = (cli: string, viewer: string) =>
+    Promise.all([
+      writeJson(root, "package.json", {
+        name: "fixture-workspace",
+        private: true,
+        version: cli,
+        workspaces: ["packages/mokly", "packages/viewer"],
+      }),
+      writeJson(root, ".release-please-manifest.json", { ".": cli }),
+      ...(
+        [
+          ["mokly", cli],
+          ["viewer", viewer],
+        ] as const
+      ).map(([name, version]) =>
+        writeJson(root, `packages/${name}/package.json`, {
+          name: `@mokly/${name}`,
+          type: "module",
+          version,
+          exports: defaultExports,
+        }),
+      ),
+    ]);
+  await Promise.all([
+    writeJson(root, "release-please-config.json", {
+      packages: {
+        ".": {
+          component: "mokly",
+          "include-component-in-tag": false,
+          "include-v-in-tag": true,
+          "package-name": "@mokly/mokly",
+          "release-type": "node",
+        },
+      },
+    }),
+    writeNotes(root, "# Release notes\n"),
+    writeFile(root, "packages/mokly/src/index.ts", "export const kept = 1;\n"),
+    writeFile(root, "packages/viewer/src/index.ts", "export const kept = 1;\n"),
+    versions("0.15.0", "0.6.0"),
+  ]);
+  git(root, "init", "--quiet", "--initial-branch=main");
+  git(root, "config", "user.name", "Ratchet Tests");
+  git(root, "config", "user.email", "ratchets@example.invalid");
+  commitFixture(root, "chore: release 0.15.0");
+  git(root, "tag", "v0.15.0");
+  git(root, "tag", "viewer-v0.6.0");
+  await versions("0.16.0", "0.16.0");
+  commitFixture(root, "chore(main): release 0.16.0");
+  return { root };
+}
+
 /** Replace the fixture package export map. */
 export async function writePackageExports(
   root: string,
