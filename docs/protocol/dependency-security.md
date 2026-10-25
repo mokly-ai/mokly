@@ -76,8 +76,10 @@ replaces the live advisory check.
 
 ## Reviewed Workspace Exceptions
 
-`scripts/verification/dependency-audit-exceptions.json` is a JSON array. Each
-record has exactly these six required fields, with no unknown keys:
+`scripts/verification/dependency-audit-exceptions.json` is a JSON array. It is
+empty while no risk is accepted. Each record has exactly these six required
+fields, with no unknown keys. This example shows the shape only; it is not a
+current exception:
 
 ```json
 {
@@ -181,7 +183,7 @@ an old override is not proof that the current tree is clean.
 Record each hold below a compatible release with its reason and removal
 condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
 for a declared floor. Dependency audit tests check the committed exception
-against the installed lockfile.
+file against the installed lockfile.
 
 List only reviewed exceptions, overrides, exact pins and holds here, because
 later updates must respect them. Explain a one-time update in its pull request,
@@ -202,17 +204,6 @@ The current maintenance choices are:
   updaters. Update the pin with the workflow action and schema in a reviewed
   tooling change. It is not a runtime dependency of any published package.
 
-- [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
-  / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
-  on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only
-  path is `metro-file-map` 0.84.6 → `micromatch` 4.0.8 → `braces` 3.0.3 at the
-  three top-level install locations above. Metro arrives through React Native
-  peers of development packages. Repository code does not run Metro and sends
-  no untrusted patterns to it. The tracking advisory records patched releases.
-  Remove the record when Braces or Micromatch ships a fix that Metro resolves,
-  or when Metro drops Micromatch. Re-run the live audit and complete gate after
-  that dependency update. Remove a stale record; expiry requires removal or
-  a new explicit risk review, not an automatic extension.
 - `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
   Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
   through 0.12), which the root `^0.8.3` range excludes. Move to one of them
