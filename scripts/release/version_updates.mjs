@@ -4,9 +4,19 @@ import path from "node:path";
 
 import { Manifest, setLogger } from "release-please";
 
-export async function releaseUpdates(root, changedFiles) {
-  const read = async (file) => await fs.readFile(path.join(root, file), "utf8");
-  const versions = JSON.parse(await read(".release-please-manifest.json"));
+const MANIFEST = ".release-please-manifest.json";
+
+/**
+ * Compute the updates of one breaking release from `root`. A `fixedManifest`
+ * replaces the release manifest everywhere Release Please reads it, including
+ * the previous release tags derived from it.
+ */
+export async function releaseUpdates(root, changedFiles, fixedManifest) {
+  const read = async (file) =>
+    file === MANIFEST && fixedManifest
+      ? `${JSON.stringify(fixedManifest, null, 2)}\n`
+      : await fs.readFile(path.join(root, file), "utf8");
+  const versions = JSON.parse(await read(MANIFEST));
   const config = JSON.parse(await read("release-please-config.json"));
   const previous = "a".repeat(40);
   const github = {
