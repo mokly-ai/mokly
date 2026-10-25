@@ -4362,7 +4362,7 @@ check passes on this commit.
   - [x] Phase 1 implementation: add the new pipeline module behind a crate-internal switch. Keep the current parser entry points and protected modules unchanged. Evidence: `.context/html-pipeline-tests-final.log`.
   - [x] Phase 1 differential harness: run repository HTML inputs, fixtures, generated divergence cases, CRLF, and character references. Classify tree, serialization, and position differences. Result: 24 inputs, 24 equivalent serializations, 203 source identities, and zero new defects. Evidence: `.context/html-pipeline-differential-final.log`.
   - [x] Phase 1 escaped script-data boundary: map html5ever escaped and double-escaped requests to html5gum's public script-data state, then compare marker splits, `</script` prefixes, and `srcdoc` content. Result: 54 inputs, 54 equivalent serializations, 233 source identities, and zero new defects. Evidence: `.context/html-pipeline-escaped-script-data.log` and `.context/html-pipeline-feasibility.md`.
-  - [ ] Phase 2 after `rebuild/defaults-engine`, `rebuild/followups-f21-fix1`, and `rebuild/followups-f22` merge: make the new pipeline the selected path, remove text-mode prediction and signature queues, and update 115 C to use one parse entry point per purpose and 116 C to make the token boundary the only html5gum user. Keep this work parallel and non-blocking.
+  - [x] Phase 2 after `rebuild/defaults-engine`, `rebuild/followups-f21-fix1`, and `rebuild/followups-f22` merge: make the new pipeline the selected path, remove text-mode prediction and signature queues, and update 115 C to use one parse entry point per purpose and 116 C to make the token boundary the only html5gum user. Keep this work parallel and non-blocking. Completed by `dc4d8127`; the delivered-document escaped-text retry remains as the safety option recorded under item 98.
   - User decision 98 (2026-10-21): B, in parallel and non-blocking.
 
   - [x] F19 review findings 1 and 2: count warning names once per shared body
@@ -5453,7 +5453,7 @@ check passes on this commit.
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
 
-- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
+- [x] Resolve user item 98 (engine review 2 finding 2, option C, a class
       decision): let the parser choose the plaintext point. Four cases of
       serializer-versus-parser divergence so far: hub review 1 finding 2,
       `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
@@ -5472,15 +5472,18 @@ check passes on this commit.
     Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
     request.
   - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
-    98 B post-merge.
+    98 B post-merge. The selected token pipeline and source identity work
+    landed in `dc4d8127`; the delivered-document escaped-text retry remains
+    as the safety option described above.
 
-- [ ] Split the public HTML parser into an authored parse and a
+- [x] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
+      Completed in `dc4d8127`.
 
-- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
+- [x] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
-      option A merged as `033e5059`.
+      option A merged as `033e5059`. Completed in `dc4d8127`.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late

@@ -73,6 +73,13 @@ this same template language with the component's own props and adds slot
 placeholders under the [HTML components contract](./mokly-html-components.md#body);
 one parser and one renderer serve both.
 
+Authored screens, components, and pages use the authored parser. It removes
+unknown attributes from `mokly-ignore` and `mokly-ignore-scope` before
+composition and attaches the source location of each authored element.
+Delivered documents, including sidecar pages and `srcdoc` values, use the
+delivered parser. It keeps authored attributes so resource and style checks
+see the same document that the browser receives.
+
 Substitutions accept ASCII whitespace around the prop path: `{{ name }}`
 equals `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
@@ -142,8 +149,8 @@ Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
 warn once per shared body and attribute. Their values are not evaluated.
-Strict builds fail. HTML5 parses remove unknown attributes from these wrappers
-in HTML, `srcdoc`, and `definePage`; closure and Changes omit them.
+Strict builds fail. Delivered HTML keeps unknown attributes on these wrappers;
+authored composition removes them before closure and Changes inspect the tree.
 
 ## Variants
 

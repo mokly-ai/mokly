@@ -28,9 +28,11 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
-The parser uses a package-owned arena and disables scripting. Composition
-re-parses its output with the same HTML5 algorithm. Usage and comparison use
-that browser tree. Split instance, slot, and ignore regions lose their regions.
+The authored parser and delivered-document parser use one token-driven HTML5
+pipeline. Authored parses remove unknown ignore-wrapper attributes and attach
+source locations. Delivered parses keep every authored attribute. Composition
+re-parses its output with the delivered parser. Usage and comparison use that
+browser tree. Split instance, slot, and ignore regions lose their regions.
 A re-owned instance with a colliding identity also loses its region. The
 `html-foster-parented` warning names the component element and parent; shared
 body warnings use the parent entry once across its variants.
@@ -79,10 +81,11 @@ Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
-The HTML5 tree sink removes ordinary unknown ignore-wrapper attributes when
-it creates elements. Composition and slot routing never see those attributes.
-Wrapper source locations survive attribute filtering, HTML table repair, and
-plaintext reparsing. Diagnostic identities do not expose discarded values.
+The authored HTML sink removes ordinary unknown ignore-wrapper attributes when
+it creates elements. The delivered sink keeps those attributes so resource
+closure and callback documents see the same bytes as the browser. The token
+pipeline gives authored elements their source locations before HTML table
+repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
 and attribute. Their values are not evaluated. Strict builds fail on these
 warnings. Reserved navigation metadata and duplicate-navigation failures
@@ -104,7 +107,7 @@ by the graph. The crate performs no direct filesystem access or writes.
 ```rust
 use mokly_html::{parse, serialize};
 
-let tree = parse::fragment("<main><p>Hello &amp; welcome</p></main>");
+let tree = parse::delivered_fragment("<main><p>Hello &amp; welcome</p></main>");
 assert_eq!(serialize::html(&tree), "<main><p>Hello &amp; welcome</p></main>");
 ```
 
@@ -125,7 +128,8 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 
 ### Key Code
 
-- [Annotated tree](./src/tree.rs), [HTML5 parser](./src/parse.rs), and [tree sink](./src/html_sink.rs).
+- [Annotated tree](./src/tree.rs), [authored and delivered parsers](./src/parse.rs),
+  the [token pipeline](./src/pipeline/mod.rs), and [tree sink](./src/html_sink.rs).
 - [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
   share plaintext activation. The [noscript guard](./src/noscript_text.rs)
   escapes raw HTML `noscript` closing text.

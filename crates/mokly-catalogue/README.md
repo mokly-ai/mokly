@@ -120,8 +120,8 @@ Token checks follow markup contexts inside `noscript` and foreign `style` or
 entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
-Opaque wrapper signatures retain source identity without exposing discarded values.
-Every consumer of authored-HTML tokens must call `html_tokens::parse`. Direct
+The HTML token boundary returns Mokly-owned token and span types. Every
+consumer of authored-HTML tokens must call `html_tokens::parse`. Direct
 construction of an `html5gum::Tokenizer` is outside the catalogue boundary.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
@@ -205,7 +205,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
-- [HTML token boundary](./src/html_tokens.rs) filters ignore-wrapper attributes before token consumers run.
+- [HTML token boundary](./src/html_tokens.rs) owns spans, tokens, and ignore-wrapper filtering before token consumers run.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).
 
