@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { canonicalJson } from "../components/data.js";
-
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
+import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
+import { controlTarget } from "./control_values.js";
 import { ControlledDiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
@@ -15,7 +15,6 @@ import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
-import { useWorkspaceUsage } from "./use_workspace_usage.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
@@ -23,7 +22,7 @@ import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
-import { WorkspaceProps } from "./workspace_props.js";
+import { WorkspacePropsTab } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
@@ -44,8 +43,7 @@ export function ComponentWorkspace({
   const workspaceRef = useRef<HTMLElement>(null);
   const workspace = useActiveWorkspace();
   if (!workspace) throw new Error("The active workspace is unavailable.");
-  const { data, refresh, request, selection, resolvedView, presentation } =
-    workspace;
+  const { data, selection, resolvedView, presentation } = workspace;
   const variant = selection.variant;
   const variantPath = variant?.value.path;
   const previousPath = branchPoints(catalogue).previousPath(
@@ -62,16 +60,27 @@ export function ComponentWorkspace({
   const comparison = useComparison({
     effectiveColorScheme: resolvedView.colorScheme,
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    eligibilityKnown: comparisonEligibilityKnown(
+      catalogue.publicModel.changesStatus,
+      workspace.detailDelivery,
+    ),
+    historical: data.removed || variant?.removed === true,
     entryId: variantPath ?? entry.path,
     ...(data.component ? { owner: data.component.path } : {}),
   });
   const comparing = comparison.mode !== "current";
+  const editTarget = controlTarget(
+    entry,
+    variant,
+    data.removed,
+    data.controlOrder,
+  );
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
     data,
-    request,
-    variant,
+    onCurrent: () => comparison.selectMode("current"),
+    target: editTarget,
     workspaceRef,
   });
   const views = useMemo(
@@ -103,13 +112,6 @@ export function ComponentWorkspace({
   );
 
   useInspectorResize(workspaceRef, store?.interactive ?? false);
-  useWorkspaceUsage({
-    active: !comparing && !data.removed,
-    data,
-    refresh,
-    ...(request ? { request } : {}),
-    views: savedViews,
-  });
 
   useEffect(() => {
     setActiveViewport(
@@ -176,21 +178,17 @@ export function ComponentWorkspace({
     />
   );
   const showComponents =
-    data.previewGeneration !== undefined ||
     entry.kind === "screen" ||
     views.some((view) => view.usage?.instances.length);
-  const propsPanel = selectedInstance ? (
-    <WorkspaceProps
+  const propsPanel = (
+    <WorkspacePropsTab
+      controls={controls.panel}
       data={data}
-      selection={{
-        instance: selectedInstance,
-        ...(activeView?.usage ? { usage: activeView.usage } : {}),
-      }}
+      delivery={workspace.detailDelivery}
+      instance={selectedInstance}
+      target={editTarget}
+      usage={activeView?.usage}
     />
-  ) : entry.kind === "component" ? (
-    controls.panel
-  ) : (
-    <WorkspaceProps data={data} selection={{}} />
   );
   const highlight = {
     available: inspection.available,
@@ -227,20 +225,27 @@ export function ComponentWorkspace({
       <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
       <div className="mbk-workspace-panes">
         <div className="mbk-preview-pane" data-workspace-preview="">
-          {preview ? (
-            <RemovedPreviewStage data={preview} />
-          ) : data.comparisons ? (
-            <ControlledDiffScreen
-              comparison={comparison}
-              entryId={variantPath ?? entry.path}
-              entryKind={entry.kind}
-              eligible={presentation.comparisonEligible}
-            >
-              {stage}
-            </ControlledDiffScreen>
-          ) : (
-            stage
-          )}
+          <div
+            aria-busy={controls.pending || undefined}
+            className="mbk-preview-busy"
+          >
+            {preview ? (
+              <RemovedPreviewStage data={preview} />
+            ) : data.comparisons ? (
+              <ControlledDiffScreen
+                comparison={comparison}
+                entryId={variantPath ?? entry.path}
+                entryKind={entry.kind}
+                eligible={presentation.comparisonEligible}
+                usingChanged={presentation.usingChanged}
+              >
+                {stage}
+              </ControlledDiffScreen>
+            ) : (
+              stage
+            )}
+          </div>
+          {controls.previewStatus}
         </div>
         <Inspector
           catalogue={catalogue}
@@ -275,19 +280,12 @@ export function ComponentWorkspace({
             ),
             props: propsPanel,
             usage: (
-              <WorkspaceUsage data={data} delivery={workspace.usageDelivery} />
+              <WorkspaceUsage data={data} delivery={workspace.detailDelivery} />
             ),
           }}
         />
       </div>
       {inspection.overlay}
-      <script
-        data-workspace-data=""
-        dangerouslySetInnerHTML={{
-          __html: canonicalJson(data).replaceAll("<", "\\u003c"),
-        }}
-        type="application/json"
-      />
     </section>
   );
 }

@@ -1,41 +1,27 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { test } from "./browser_test.js";
+import { serveCatalogue } from "./catalogue_fixture.js";
 import { readDisclosureStorage } from "./disclosure_storage.js";
-import {
-  buildDevelopmentBundle,
-  captureBrowserErrors,
-  delayHydration,
-  expectCleanHydration,
-} from "./react_shell_hydration_helpers.js";
-import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
 
-const source = `import { defineFolder, definePage, defineScreen } from "@mokly/mokly";
-import React from "react";
-const meta = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
-const shot = (id: string) => ({ ...meta, desktop: <main id={id}>{id}</main>, mobile: <main id={id + "-mobile"}>{id}</main> });
-const page = (title: string) => () => "<!doctype html><html lang=\\"en\\"><head><title>" + title + "</title></head><body><h1>" + title + "</h1></body></html>";
-export const guide = definePage({ ...meta, path: "fixture/guide", slug: "index", title: "Guide", description: "Guide index", render: page("Guide") });
-export const intro = defineScreen({ ...shot("intro"), path: "fixture/guide/intro", title: "Intro", description: "Intro" });
-export const invoice = defineScreen({ ...shot("invoice"), path: "fixture/billing/invoice", slug: "index", title: "Invoice", description: "Invoice", variants: [{ ...shot("overdue"), slug: "overdue", title: "Overdue", description: "Overdue" }] });
-export const history = defineScreen({ ...shot("history"), path: "fixture/billing/invoice/history", title: "History", description: "History" });
-export const old = defineScreen({ ...shot("old"), path: "fixture/billing/invoice/archive/old", title: "Old", description: "Old" });
-export const setup = defineScreen({ ...shot("setup"), path: "fixture/tools/setup", title: "Setup", description: "Setup" });
-export const billing = defineFolder({ path: "fixture/billing", title: "Billing & Payments" });
-`;
-
-let server: WatchedServe;
-let developmentBundle: string;
-
+let server: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
-  developmentBundle = await buildDevelopmentBundle();
-  server = await startWatchedServe(source);
+  server = await serveCatalogue({
+    "specs/index.mockup.tsx": `import React from "react";
+import {defineFolder, definePage, defineScreen} from "@mokly/mokly";
+const meta = {relatedDocs: []};
+const shot = (id) => ({...meta, props: {id}, render: (props, context) => <main id={props.id + (context.viewport === "mobile" ? "-mobile" : "")}>{props.id}</main>});
+export const guide = definePage({...meta, path: "fixture/guide", slug: "index", title: "Guide", description: "Guide index", render: () => '<!doctype html><html lang="en"><head><title>Guide</title></head><body><h1>Guide</h1></body></html>'});
+export const intro = defineScreen({...shot("intro"), path: "fixture/guide/intro", title: "Intro", description: "Intro"});
+export const invoice = defineScreen({...shot("invoice"), path: "fixture/billing/invoice", slug: "index", title: "Invoice", description: "Invoice", variants: [{slug: "overdue", title: "Overdue", description: "Overdue", props: {id: "overdue"}}]});
+export const history = defineScreen({...shot("history"), path: "fixture/billing/invoice/history", title: "History", description: "History"});
+export const old = defineScreen({...shot("old"), path: "fixture/billing/invoice/archive/old", title: "Old", description: "Old"});
+export const setup = defineScreen({...shot("setup"), path: "fixture/tools/setup", title: "Setup", description: "Setup"});
+export const billing = defineFolder({path: "fixture/billing", title: "Billing & Payments"});
+`,
+  });
 });
-
-test.afterAll(async () => {
-  if (server) await server.stop();
-});
-
+test.afterAll(async () => server?.close());
 function folder(page: Page, path: string) {
   return page.locator(`details[data-nav-folder="folder:${path}"]`);
 }
@@ -177,47 +163,25 @@ test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
   await expect(page.locator("#mb-main h2")).toHaveText("Setup");
 });
 
-test("a saved list choice restores the contents label before and after hydration", async ({
+test("a saved list choice restores the contents label after mount", async ({
   page,
 }) => {
-  const errors = captureBrowserErrors(page);
-  await page.addInitScript(() => {
-    if (window !== window.top) return;
-    if (sessionStorage.getItem("seeded")) return;
-    sessionStorage.setItem("seeded", "1");
+  await page.addInitScript(() =>
     localStorage.setItem(
       "mokly:nav-disclosure:v4",
       JSON.stringify({
         "folder:specs:fixture/billing": true,
         "variants:fixture/billing/invoice": true,
       }),
-    );
-  });
-  const toggle = page.locator(
-    '[data-nav-variants-toggle][data-nav-variants-label="Invoice"]',
+    ),
   );
-  const list = page.locator(
-    '[data-nav-disclosure="variants:fixture/billing/invoice"]',
-  );
-  const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto(`${server.url}/view/fixture/tools/setup/`);
-  try {
-    await gate.requested;
-    await expect(page.locator("html")).not.toHaveAttribute(
-      "data-mokly-hydrated",
-      "",
-    );
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await expect(toggle).toHaveAccessibleName("Hide contents of Invoice");
-    await expect(list).toBeVisible();
-  } finally {
-    gate.release();
-    await navigation;
-  }
-  await expectCleanHydration(page, errors, "with the list saved open");
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(toggle).toHaveAccessibleName("Hide contents of Invoice");
-  await expect(list).toBeVisible();
+  await page.goto(`${server.url}/view/fixture/tools/setup/`);
+  await expect(
+    page.getByRole("button", { name: "Hide contents of Invoice" }),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.locator('[data-nav-disclosure="variants:fixture/billing/invoice"]'),
+  ).toBeVisible();
 });
 
 test("search through a folder's title shows its rows and keeps the query on navigation", async ({

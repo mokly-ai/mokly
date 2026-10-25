@@ -1,15 +1,5 @@
 # Comparison Region Pairing
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of this pairing. It decides which inner scroll region of
-another version follows a region the reader scrolls, under the
-[comparison scrolling contract](./mokly-comparison-scrolling.md#inner-scroll-regions),
-which defines regions, their axes, and how a pair is written. The runtime
-implements it in `packages/viewer/src/shell/comparison_region_identity.ts`,
-`comparison_region_match.ts`, and `comparison_region_mirror.ts`.
-
 ## Counterpart Algorithm
 
 For each source region and other pane document, cache one counterpart or no
@@ -124,12 +114,8 @@ selected unless it clearly wins.
 
 ## Acceptance
 
-`packages/viewer/tests/comparison_region_identity.test.ts` proves the name
-grammar, roles, accessible names, and fingerprints;
-`comparison_region_match.test.ts` proves every rule in order, uniqueness
-counts, ineligible picks, and each row of the table above; and
-`comparison_region_mirror.test.ts` proves caching, reservations, the reverse
-pair, and matching afresh after a measurement. In the browser,
-`tests/browser/comparison_regions.spec.ts` pairs an app shell's panels by
-authored name, id, landmark and label, and text alone, and leaves an ambiguous,
-an `off`, and a new panel unpaired.
+Unit tests prove the identity grammar, every rule in order with each row of
+the table above, and the counterpart cache, and a browser regression, listed in
+the [browser test guide](../../tests/browser/README.md#comparison-scrolling-suites),
+pairs an app shell's panels by each rule and leaves an ambiguous, an `off`,
+and a new panel unpaired.

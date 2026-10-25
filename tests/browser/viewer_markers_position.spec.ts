@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type {
   CatalogueReadModel,
@@ -6,6 +6,7 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
+import { test } from "./browser_test.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerAligned,
@@ -179,7 +180,7 @@ for (const cross of [false, true]) {
     await openMarkerViewer(page, fixture, cross);
     const flowRef = await page.evaluate(() => {
       const host = window.viewerHarness.get("one");
-      const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
+      const model = structuredClone(host.props.index) as CatalogueReadModel;
       const home = model.screens.find(({ path }) => path === "home")!;
       home.useCasePaths = ["tour"];
       model.useCases = [
@@ -190,12 +191,12 @@ for (const cross of [false, true]) {
           title: "Tour",
           tags: [],
           details: home.details,
-          changes: { status: "disabled" },
+          changes: home.changes,
           steps: [{ screenPath: "home" }, { screenPath: "home" }],
         },
       ];
       model.tree = [...model.tree, { kind: "entry", path: "tour" }];
-      const view = home.views.find(
+      const view = host.details["home"]!.views.find(
         (view) => view.viewport === "desktop" && view.colorScheme === "light",
       )!;
       if (view.usage.status !== "ready") throw new Error("Expected usage");
@@ -208,7 +209,7 @@ for (const cross of [false, true]) {
       };
       host.props = {
         ...host.props,
-        catalogue: model,
+        index: model,
         defaultSelection: { screenPath: "tour", viewport: "both" },
       } as MoklyViewerProps;
       host.setMarkers([{ id: "flow", instance }]);

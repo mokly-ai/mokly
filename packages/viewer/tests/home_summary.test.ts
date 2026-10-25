@@ -1,28 +1,15 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
+import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { homeSummary } from "../src/shell/home_summary.js";
-import { renderViewer } from "../src/viewer/server.js";
 
-const model = () =>
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  );
+import { indexFixture } from "./catalogue_v7_fixture.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
 /** The summary line the home page renders, or undefined without one. */
-function homeNote(catalogue: unknown): string | undefined {
-  const html = renderViewer({
-    viewerId: "home",
-    catalogue: catalogue as Parameters<typeof renderViewer>[0]["catalogue"],
-    baseUrl: "https://catalogue.example",
-  });
+function homeNote(index: CatalogueReadModel): string | undefined {
+  const html = standaloneMarkup({ index });
   return /<p class="mbk-empty-note">([^<]*)<\/p>/u.exec(
     html.replaceAll("<!-- -->", ""),
   )?.[1];
@@ -30,24 +17,24 @@ function homeNote(catalogue: unknown): string | undefined {
 
 test("home counts every current entry kind, documents included", () => {
   assert.equal(
-    homeNote(model()),
+    homeNote(indexFixture()),
     "3 screens · 2 components · 1 user flow · 1 catalogue page · 1 document",
   );
 });
 
 test("home omits kinds with no current entries", () => {
-  const documentsOnly = model();
-  documentsOnly.screens = [];
-  documentsOnly.components = [];
-  documentsOnly.pages = [];
-  documentsOnly.useCases = [];
-  documentsOnly.removedEntries = [];
-  documentsOnly.tree = documentsOnly.tree
-    .filter((node: { path: string }) => node.path === "product")
-    .map((node: { children: unknown[] }) => ({
-      ...node,
-      children: [node.children[0]],
-    }));
+  const documentsOnly = indexFixture((index) => {
+    index.screens = [];
+    index.components = [];
+    index.pages = [];
+    index.useCases = [];
+    index.removedEntries = [];
+    index.tree = index.tree.flatMap((node) =>
+      node.kind === "folder" && node.path === "product"
+        ? [{ ...node, children: node.children.slice(0, 1) }]
+        : [],
+    );
+  });
   assert.equal(homeNote(documentsOnly), "1 document");
 });
 

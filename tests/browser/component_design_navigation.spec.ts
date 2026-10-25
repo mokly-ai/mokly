@@ -1,7 +1,6 @@
-import { setTimeout } from "node:timers/promises";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
-
+import { test } from "./browser_test.js";
 import { expectFrameLoaded } from "./workspace_actions.js";
 
 for (const delayedStyles of [false, true]) {
@@ -22,15 +21,16 @@ for (const delayedStyles of [false, true]) {
     );
     await expect(desktop.locator(".ce-canvas:visible")).toBeVisible();
     let delayedRequests = 0;
+    let release!: () => void;
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     if (delayedStyles) {
-      await page.route(
-        "**/static/design-component-workspace.css",
-        async (route) => {
-          delayedRequests++;
-          await setTimeout(500);
-          await route.continue();
-        },
-      );
+      await page.route("**/*.css", async (route) => {
+        delayedRequests++;
+        await released;
+        await route.continue();
+      });
     }
     try {
       await desktop
@@ -45,6 +45,10 @@ for (const delayedStyles of [false, true]) {
           'a[data-nav-row][data-route="design/components/pages/variants/index.html"]',
         ),
       ).toHaveAttribute("aria-current", "page");
+      if (delayedStyles) {
+        await expect.poll(() => delayedRequests).toBeGreaterThan(0);
+        release();
+      }
       await expectFrameLoaded(
         iframe,
         /\/static\/mokly-generated\/design\/components\/pages\/variants\/index\.desktop\.html$/,
@@ -59,6 +63,7 @@ for (const delayedStyles of [false, true]) {
       ).toBeVisible();
       if (delayedStyles) expect(delayedRequests).toBeGreaterThan(0);
     } finally {
+      release();
       await page.unrouteAll({ behavior: "ignoreErrors" });
     }
   });

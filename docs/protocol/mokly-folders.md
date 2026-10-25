@@ -1,17 +1,5 @@
 # Folders
 
-## Delivery Status
-
-Folder records, title resolution, order, exclusions, path trees, the Specs
-and Components rows, the `Overview` row, entry rows for a folder's own screen
-or component, and breadcrumb links and folder reveals are implemented.
-
-A folder is a path with entries below it. It has no definition of its own, no
-status, and no Changes row. This contract owns the optional folder record that
-gives a folder a readable title, a display order, a hidden flag, and file
-exclusions, and it owns how a folder and its own page render in the navigation
-tree. Path derivation lives in the [path contract](./mokly-paths.md).
-
 ## Folder Record
 
 A folder record describes exactly one folder, keyed by its path:
@@ -24,8 +12,7 @@ A folder record describes exactly one folder, keyed by its path:
 | `hidden`  | `boolean`           | Hides the folder and descendants in All/search; Changes keeps them. |
 | `exclude` | `readonly string[]` | Directory files only: safe relative globs of files to skip.         |
 
-Every field except `path` is optional. Unknown fields are rejected. The code carrier ignores removed `dependencies`
-with a path-scoped [warning](./mokly-build-warnings.md); directory JSON has no such exception. A record
+Every field except `path` is optional. Unknown fields are rejected. A record
 whose folder has no entry below it is an error, because it is almost always a
 typo. A folder may have at most one record from either carrier. A record
 never changes a path: titles, order, and hidden state are presentation only,
@@ -111,10 +98,10 @@ That complete free-text phrase must be a case-insensitive substring of at least
 one field: the entry path, its authored title, an entry tag, or a resolved title
 of any folder at or above its path. Empty free text matches every row; every
 tag term and the phrase must match. Display labels such as `Overview` and
-`· Removed` never supply search text. A matching folder title therefore retains
+`· Removed` never supply search text. A matching folder title therefore keeps
 its entries, variants and own page. A hidden folder still hides its rows in
 All and search. Search composes with Changes without changing its membership.
-Removed entries carry the baseline titles of their folders as display text.
+Removed entries carry the base side's folder titles as display text.
 
 ## Order
 
@@ -142,8 +129,8 @@ carries every `order` so the viewer can.
 A screen/component index represented as an entry node carries the same flag.
 The viewer hides that node and its descendants in All and search, pruning any
 ancestor left without visible children. Changes keeps hidden ancestry so changed
-entries still have rows inside their folders. URLs, links, generated files and
-breadcrumbs remain available. A hidden
+entries still have rows inside their folders. URLs, links, documents and
+breadcrumbs stay available. A hidden
 folder is still a folder: its entries keep their paths and its records keep
 applying below it.
 
@@ -187,7 +174,7 @@ it also opens the navigation drawer. Without active filtering the opened disclos
 are saved like a user toggle under the
 [persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
 A hidden folder without its own page has no row in All, so its segment is
-plain text, as are the baseline folder titles of a removed entry. The public
+plain text, as are the base folder titles of a removed entry. The public
 read model emits these shapes directly under the
 [catalogue contract](./mokly-catalogue.md#tree) so the viewer applies no
 further rule. A variant's parent crumb uses the
@@ -230,11 +217,3 @@ behaviour, and the exact text of every diagnostic.
 - [Variant navigation](./mokly-variant-navigation.md)
 - [Public catalogue read model](./mokly-catalogue.md)
 - [Catalogue navigation](./mokly-navigation.md)
-
-## Removed Input Warnings
-
-A `defineFolder` with removed `dependencies` emits `removed-dependencies` with
-a folder subject and exactly
-`dependencies has been removed; ignoring it. Delete the field.`
-It never warns on descendants. Directory JSON and document front matter remain
-strict. Retired nested/root helpers have no runtime boundary.

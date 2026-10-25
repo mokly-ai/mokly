@@ -1,15 +1,8 @@
 # Remote Verification: Testbox Execution
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Remote Verification](./remote-verification.md).
-
-## Delivery Status
-
-The [Blacksmith plan](../../plans/blacksmith-remote-verification.md) defines the implemented workflow,
-fingerprint, wrapper, automatic selection and executor command. The wrapper uses `--executor local`.
-Workflow validation executes its scripts. Both box suite smokes and complete explicit and automatic checks pass.
-Main's dependency fixes are merged. The [base sync plan](../../plans/remote-verification-base-commit.md) defines implemented snapshot and base identity.
-Xtask accepts unpushed `HEAD`. The type-change fix passes the complete gate.
-A one-box spike syncs a file-to-directory and a directory-to-file change; its probe and staged fingerprints pass.
 
 ## Workflow
 
@@ -31,20 +24,23 @@ Run the steps in this order:
    The public repository lets boxes fetch pushed commits without a token.
 2. Run `useblacksmith/begin-testbox` with `testbox_id: ${{ inputs.testbox_id }}`.
    An empty input uses validation mode, including on push runs.
-3. Install Node 22.14.0 with `actions/setup-node` and npm's download cache.
+3. Install Node 22.15.0 with `actions/setup-node` and npm's download cache.
    Use `cache: npm` and `cache-dependency-path: package-lock.json`.
    Set `package-manager-cache: false`. Then install npm 11.21.0.
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Run `npm ci`. Write the lowercase SHA-256 digest of `package-lock.json`
+5. Run `npm ci`.
+6. Run `cargo xtask build-native` to build the host native artifact.
+7. Write the lowercase SHA-256 digest of `package-lock.json`
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
-   Create the stamp directory if needed. Write the stamp only after success.
-6. Run `npx playwright install --with-deps chromium`.
-7. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
+   Create the stamp directory if needed. Write the stamp only after both
+   installation and the native build succeed.
+8. Run `npx playwright install --with-deps chromium`.
+9. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
    Replace previous entries for those two names. Preserve other entries.
-   New Testbox SSH sessions must use Node 22.14.0 and Chromium.
-8. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
+   New Testbox SSH sessions must use Node 22.15.0 and Chromium.
+10. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
 
 Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
 The pinned action does not detect the SSH session in this environment.
@@ -65,20 +61,9 @@ Key login saves the key in the local CLI credential file.
 It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
 
-[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
-executes the lockfile stamp step and the environment step on Linux hosts with
-controlled inputs and asserts the written files. The environment run redirects
-`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
-pins are review-owned literals.
-
-Pin each action to these immutable revisions. Keep the version comments.
-
-| Action                        | Commit                                     | Comment    |
-| ----------------------------- | ------------------------------------------ | ---------- |
-| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
-| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
-| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
-| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |
+Workflow action revisions and their version comments require review.
+The [verification reference](../../scripts/verification/README.md#testbox-workflow-reference)
+lists the revisions and the controlled workflow-step tests.
 
 ## Remote Commands
 
@@ -87,28 +72,31 @@ Each box runs `node scripts/verification/testbox-suite.mjs` with
 repository root. Derive the command name from the suite and optional shard.
 Use that name for its report and log.
 
-| Command name     | Wrapper arguments                              |
-| ---------------- | ---------------------------------------------- |
-| `repository`     | `--suite repository --dependency-audit <mode>` |
-| `package`        | `--suite package`                              |
-| `unit-1-of-4`    | `--suite unit --shard 1/4`                     |
-| `unit-2-of-4`    | `--suite unit --shard 2/4`                     |
-| `unit-3-of-4`    | `--suite unit --shard 3/4`                     |
-| `unit-4-of-4`    | `--suite unit --shard 4/4`                     |
-| `browser-1-of-4` | `--suite browser --shard 1/4`                  |
-| `browser-2-of-4` | `--suite browser --shard 2/4`                  |
-| `browser-3-of-4` | `--suite browser --shard 3/4`                  |
-| `browser-4-of-4` | `--suite browser --shard 4/4`                  |
-| `hydration`      | `--suite hydration`                            |
+| Command name      | Wrapper arguments                              |
+| ----------------- | ---------------------------------------------- |
+| `repository`      | `--suite repository --dependency-audit <mode>` |
+| `viewer`          | `--suite viewer`                               |
+| `browser-1-of-4`  | `--suite browser --shard 1/4`                  |
+| `browser-2-of-4`  | `--suite browser --shard 2/4`                  |
+| `browser-3-of-4`  | `--suite browser --shard 3/4`                  |
+| `browser-4-of-4`  | `--suite browser --shard 4/4`                  |
+| `static-delivery` | `--suite static-delivery`                      |
 
-The wrapper accepts only the suite and shard forms from
-[CI verification](./ci-verification.md#verification-boundary).
+The wrapper accepts the suite and shard forms from
+[CI verification](./ci-verification.md#verification-boundary), plus the
+independent `static-delivery` command without a shard.
 `<mode>` is the complete gate's `--dependency-audit` value, `baseline` by
 default or `strict`. The wrapper accepts that option only with the repository
 suite and passes it to `cargo xtask check`. The command name stays
 `repository`. Invalid arguments fail before any suite starts.
 Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
+
+Static delivery runs on its own box. It builds the source and checks the
+example through static HTTP and file URLs. Both modes must pass.
+These selected delivery checks do not replace any of the five suite reports.
+No browser shard runs delivery after its ordinary specs. Browser work and portable
+delivery use separate 30-minute Testbox job guards.
 
 ## Readiness And Sync Probe
 
@@ -154,8 +142,11 @@ fallback at this boundary.
 5. Set `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json`.
    Run `cargo xtask check --executor local --suite <suite>`.
-   Add `--shard INDEX/4` for a unit or browser shard.
+   Add `--shard INDEX/4` for a browser shard.
    Explicit local mode prevents recursive remote execution.
+   For `static-delivery`, run `npm run build`, then
+   `npm run test:delivery:prepared` instead. A failed or interrupted build
+   prevents delivery. The parent validates both delivery reports before exit.
 6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
 
 Stream child standard output and standard error. Forward SIGINT and SIGTERM
@@ -210,8 +201,8 @@ nonzero. The probe checks that SHA independently from the digest.
 
 The suite wrapper writes each report on its box to
 `.context/verification-reports/remote/<command>.json`.
-Only unit shards 1 through 4, browser shards 1 through 4 and hydration produce
-the nine required reports. Repository and package outcomes use command exits.
+Only the viewer command and browser shards 1 through 4 produce the five
+required reports. Repository and static-delivery outcomes use their command exits.
 
 Allocate a new local report directory for each run:
 `.context/verification-reports/remote/<run>/`.
@@ -231,13 +222,13 @@ blacksmith testbox download --id <box-id> .context/verification-reports/remote/<
 Run the existing aggregate after box cleanup:
 
 ```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.14.0
+node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.15.0
 ```
 
 The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
 still apply. Keep the report schema unchanged. The aggregate must accept
-exactly nine reports for the expected commit and runtime profile.
-It must prove complete shard coverage and the browser/hydration partition.
+exactly five reports for the expected commit and runtime profile.
+It must prove complete browser shard coverage.
 The box `HEAD` and reports name the base; the
 [identity contract](./remote-verification-base.md#identity-output-and-file) records
 checkout `HEAD`. Fingerprints cover source changes and reject edits during the run.

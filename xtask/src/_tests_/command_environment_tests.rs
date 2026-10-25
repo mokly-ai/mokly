@@ -13,7 +13,10 @@ fn local_command_removes_the_org_key_and_keeps_its_arguments_and_directory() {
             .args(["run", "lint"])
             .in_directory("/workspace"),
     );
-    assert_eq!(command.get_program(), OsStr::new("npm"));
+    assert_eq!(
+        command.get_program(),
+        OsStr::new(if cfg!(windows) { "npm.cmd" } else { "npm" })
+    );
     assert_eq!(
         command.get_args().collect::<Vec<_>>(),
         [OsStr::new("run"), OsStr::new("lint")]

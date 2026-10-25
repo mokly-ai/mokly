@@ -1,22 +1,5 @@
 # Comparison Scrolling
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of the page-scrolling, inner-region, key, anchor, and
-reader-control rules. The design catalogue depicts them in
-`design/changes/diff-controls/overlay-panel`, `design/changes/diff-controls/side-by-side-apart`, and the
-switch in every diff-mode band of the
-[shell design](./mokly-shell-design.md#in-place-comparisons).
-
-This contract owns every scroll interaction in the Before and Current panes
-defined by the [pane presentation contract](./mokly-comparison-panes.md). The
-[region pairing contract](./mokly-comparison-region-pairing.md) owns how a
-region finds its counterpart, and the
-[Scroll together contract](./mokly-comparison-scroll-together.md) owns the
-reader control and realignment. Removed previews keep their independent
-in-frame scrolling and are unchanged.
-
 ## Page Scroller
 
 Each comparison frame stays exactly the size of its device viewport. Viewport
@@ -182,19 +165,9 @@ follows before the page viewport moves.
 
 ## Acceptance
 
-The page cases are proved by the three
-`tests/browser/comparison_alignment*.spec.ts` suites, whose inner-region case
-now proves an app shell's panel scrolls every version while its page stays.
-The region, key, and anchor cases are proved by
-`tests/browser/comparison_regions.spec.ts` (Overlay, Difference, Side by side
-in both directions, Both, a component, nested, horizontal, unmatched, `off`,
-ambiguous, and shorter regions) and `comparison_regions_input.spec.ts` (every
-listed key after a pointer press and from focus, right-to-left arrows, a key
-falling back to the page at a region's end, focus moving into a panel, a touch
-drag, a scroll the browser made in the lower layer, anchors through a panel
-and then the page in Overlay and Side by side, and instant two-axis writes
-under smooth-scroll CSS). The Scroll together and region pairing contracts
-name their own proofs. Controller unit tests under `packages/viewer/tests/`
-cover measurement, key routing including right-to-left regions, anchors,
-echoes, and the page mirror; removed-preview scrolling stays proved by
-`tests/browser/removed_previews.spec.ts`.
+Browser regressions, listed in the
+[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
+the page and region cases in every comparison mode, the key cases in Overlay,
+the anchor cases in Overlay and Side by side, and the scrolling of a previous
+version, and controller unit tests prove measurement, key routing including
+right-to-left regions, anchors, echoes, and the page mirror.

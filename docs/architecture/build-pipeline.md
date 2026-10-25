@@ -1,346 +1,128 @@
-# React To Static HTML Build Pipeline
+# Render Pipeline
 
-## Delivery Status
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-The [path identity plan](../../plans/path-identity.md) records the delivered work.
-
-Removal of baseline compatibility below is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-CSS rule attribution and ignored stylesheet owner records are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-Other behavior below remains implemented.
-
-Component CSS linking, manifest v10 and source-path-free classification were
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-and implemented in Milestones 3, 6 and 4 respectively. The pipeline below
-describes current behavior. Milestone 11 implemented the renderer-entry
-refinement below.
+This page walks one render from the configuration file to a cached document.
+The [Rust core architecture](./rust-core.md) is the map of the crates and the
+render graph; the protocol pages own the exact rules.
 
 ## Overview
 
 ```text
-mokly.config.ts
+mokly.config.json
         |
         v
-walk `roots` -> entry modules, Markdown documents, `_folder.json` records + renderer
+walk `roots` -> HTML screens and components, entry modules, stories files,
+                Markdown documents, use case files, `_folder.json` records
         |
         v
-one esbuild graph, with React resolved from the consumer
+catalogue model: paths, folders, variants, props, the component registry
+        |          (JavaScript definitions arrive through the sidecar's `describe`)
+        v
+render graph: one node per output, keyed by the hash of its inputs
+        |
+        +-- HTML component     -> substitution and slots, in Rust
+        +-- React or Storybook -> a sidecar fragment, memoized by handle, props,
+        |                         viewport, scheme, and enclosing ignore scope
+        +-- stylesheet bundle  -> lightningcss, or the consumer's PostCSS module
+        v
+compose the document: viewports, colour schemes, ownership and ignore regions,
+collected styles, `mock:` links, link validation
         |
         v
-collect imported CSS, run optional PostCSS, bundle per-root CSS and assets
+render cache (process memory, bounded by bytes)
         |
-        v
-derive paths, collect exports, validate definitions and cross-references in memory
-        |
-        v
-renderer({ node, entry, viewport, colorScheme, stylesheets })
-        |
-        v
-adapt explicit child controls -> resolve mock:<path> links
-        |
-        v
-validate markers/links/resources
-        |
-        v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v10 manifest + CSS and binary asset outputs in memory
-        |
-        +---- check (tracked): compare entire mokly-generated/ tree, write nothing
-        |
-        +---- check (untracked): validate compilation, ignore local output
-        |
-        `---- build: stage and replace mokly-generated/ tree, roll back on failure
+        +---- serve:   documents on request, live updates on change
+        +---- build:   every document and the shell routes into `--out`
+        `---- Changes: the same graph over the base commit's tree
 ```
 
-Path identity, roots, manifest v10, review result v7, Markdown rendering and move
-pairing and viewer presentation are implemented. The
-[path/output contract](../protocol/mokly-path-output-integration.md) owns their combined layout.
+No step writes into the repository. `build` writes its output directory; the
+base-side extraction cache and the dependency install cache live in the
+operating system's cache directory.
 
-## 1. Config Loading
+## 1. Configuration
 
-Mokly searches upward from the process working directory, or loads the path
-given by `--config`. Config code is bundled to a temporary ESM module so `.ts`,
-`.mts`, `.js`, and `.mjs` work from a local install or npx cache. Every path is
-then resolved from the config file and confined to `repoRoot`. The configured
-`roots`, defaulting to `[{ dir: "specs" }]`, are walked once into a sorted set
-of matched files. Each root's `files` globs define the file shape without
-another suffix filter; the default `**/*.mockup.{ts,tsx}` and `**/*.md`
-patterns select the recommended `.mockup.ts` and `.mockup.tsx` convention and
-Markdown documents. A matched `.md` file is a document, every other matched
-file is an entry module, and a `_folder.json` file is a folder record whose
-`exclude` globs remove files from its directory before derivation. Every
-matched file derives one path from the root prefix, the directories between
-the root and the file minus transparent names, and its leaf, under the
-[path contract](../protocol/mokly-paths.md); duplicate and case-colliding
-paths fail before bundling.
+`mokly.config.json` is discovered from the working directory upward under the
+[configuration contract](../protocol/mokly-configuration.md#configuration-discovery).
+It names the `roots` that Mokly scans, the optional renderer module that wraps
+React renders with the product's providers, the configured stylesheets, the
+module resolution settings the sidecar bundles with, and the comparison base.
+The [configuration contract](../protocol/mokly-configuration.md) owns the
+fields; every path is relative to the configuration file.
 
-Before any walk, discovery projects the repository and every distinct root
-once for the pass; Review projection alone falls back to its lexical path. A
-non-benign root failure, including one for a later root, therefore precedes all
-per-root file validation. Walks and file validation then run in declared root
-order. An earlier denial precedes a later empty-root failure, and reversing the
-roots reverses that diagnostic precedence. Accepted and vanished candidates are
-validated once per pass. Every root must retain a file so another root cannot
-hide a typo or omission; a file matched by two roots derives two paths and
-fails as a duplicate path.
+## 2. Discovery And The Catalogue Model
 
-Walks skip `review.outDir` and denied directories. Directories that vanish or
-are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with denied
-paths in the empty-root message. Other read or projection errors fail with
-`config-invalid`, naming the repository-relative path and error code (`unknown`
-if absent). A matched file that is deleted, or replaced by something other
-than a regular file, between the directory listing and validation is dropped
-and listed under `not searched` when its root is then empty. A projection or
-lstat failure with any code other than `ENOENT` fails with `config-invalid`.
+Each root is walked once. A file's suffix gives its kind: `.screen.html`,
+`.component.html`, `.page.html`, `.use-case.yaml`, `.md`, `.mockup.{ts,tsx}`,
+or `.stories.{ts,tsx,js,jsx}`. Its place in the root gives its path under the
+[path contract](../protocol/mokly-paths.md), and `_folder.json` records give
+folders their titles and order.
 
-Config validation rejects private-cache roots before discovery. Direct
-discovery retains a defense for surviving `.mokly-cache/` candidates, while a
-candidate that vanishes during its preceding existence check is dropped. Each
-file is classified by the shared source policy so none lies inside Review
-output, the baseline cache, or a denied directory below its root. A matched
-file may be nested below `mockupsDir`; it joins `sourceFiles`, stays private
-through lexical and realpath aliases, and cannot overlap a generated path. The
-resolved set travels with the config beside `sourceFiles`.
+HTML and YAML files are parsed in Rust: the front matter, the props, the
+variants, and the body. JavaScript files are bundled by the
+[sidecar](../protocol/mokly-sidecar.md) into one generation, and `describe`
+returns every definition they export, one per export, each with its handle.
+The HTML components and the JavaScript components join one registry keyed by
+element name, with the `mokly-` prefix reserved. Props and variants follow the
+[entry props contract](../protocol/mokly-entry-props.md): every screen and
+component is a render over props, and a variant is a props set. Validation
+reports every diagnostic with its file, line, and column before any render
+starts.
 
-## 2. One Consumer Graph
+## 3. The Render Graph
 
-The additional stylesheet step follows
-[imported stylesheet delivery](../protocol/mokly-imported-styles.md). After
-the JavaScript graph, derive renderer and entry
-import order, compute the full renderer CSS closure, and prune its files
-at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
-per effective stylesheet input; lazy CSS Modules plugins rename local
-classes, IDs and keyframes using a repo-relative path hash without rewriting
-other authored CSS. A second esbuild pass produces one CSS file per
-configured renderer/entry root and path-mirrored local assets. The union of
-both passes and plugin dependencies is used even by inventory-only freshness
-checks. Generated text and binary bytes share the same ownership, check,
-transaction and export boundaries without changing manifest v10.
-Imported CSS does not add a separate
-manifest schema. Routes and navigation both derive from each entry path.
+Every output is a node whose key is the hash of its inputs: the configuration,
+an entry's source bytes, a bundle generation, a fragment, an HTML component, a
+stylesheet bundle, or a composed document. A node is recomputed only when its
+key changes, in parallel across a worker pool sized to the machine. A watched
+change hashes the changed file and recomputes the nodes whose keys moved: an
+HTML-only edit never rebundles JavaScript, and a JavaScript edit rebundles once
+and re-renders only the fragments whose generation changed. A component
+rendered with the same props on many screens renders once.
 
-The resolved entry modules, the configured renderer and imported page
-helpers are imported by a single virtual entry and bundled together.
-Matched Markdown files are parsed and rendered under the
-[document contract](../protocol/mokly-documents.md); their source stays private
-and watched while generated documents and copied resources join the output.
-The internal bundle is CommonJS so Node-oriented consumer
-dependencies can retain dynamic built-in imports. Esbuild returns this bundle
-in memory; evaluation creates no temporary module file. A private compilation
-association retains the exact bundle, configuration and accepted artifacts for
-local controls. Serve prepares a distinct validated live index and transfers that
-index and bundle over private IPC before readiness, without rendering the catalogue.
-Failed index candidates preserve the last-good graph. `DocumentCompiler` reuses
-Build's rendering, links, ranges and resource validators
-for a requested view. Foreground and Props workers retain only bounded
-generation-local documents/resources. Background compilation runs the ordinary
-exhaustive Build pipeline with cooperative checkpoints in the original render order,
-then retains the validated output in memory. Only `serve --build` invokes the
-transactional writer from the parent after an accepted complete compilation;
-Build/Check/Export stay exhaustive, and only Build writes by default.
-Background Git I/O is parent-owned over a private worker channel. Cancellation
-drains the actual subprocesses before worker termination, even if the worker cannot
-yield; CPU-intensive classification stays in the worker.
-See [on-demand Serve](../protocol/mokly-on-demand.md) and the
-[local rendering service](../../src/server/controls/README.md).
+## 4. Composition
 
-An esbuild resolver uses `createRequire(configPath)` for `react`, React
-subpaths, `react-dom`, and React DOM subpaths. Imports of `@mokly/mokly` resolve to
-the executing package. The result is one React runtime even when Mokly itself
-lives in npm's transient npx directory.
+One document is composed per view, that is per viewport and colour scheme:
 
-Consumer-owned aliases, export conditions, package fields, loaders, resolution
-extensions, and in-repository package roots pass directly to this graph after
-strict config validation. This supports React Native Web or other workspace
-layouts without putting an app alias or TypeScript-root assumption in Mokly.
+1. The body is parsed by the HTML fragment algorithm, and every hyphenated
+   element is resolved against the registry.
+2. An HTML component renders in Rust by substitution and slot filling,
+   recursively. A JavaScript component renders through `renderComponent` with
+   its coerced props, its slot placeholders, and the enclosing ignore scope;
+   the fragment comes back with its collected styles, and the core grafts it
+   in, reading its markers into ownership and ignore regions.
+3. A whole React screen renders through `renderScreen`, a story through
+   `renderStory`, and a JavaScript page through `renderPage`; `.page.html`
+   files and Markdown documents are composed in Rust.
+4. Collected styles are placed in the head as owned style elements, and the
+   configured stylesheets are bundled on `lightningcss` or through the
+   consumer's PostCSS module.
+5. `mock:` links are rewritten to routes, links and markers are validated, and
+   the document is assembled under the
+   [document safety rules](../protocol/mokly-document-safety.md).
 
-Every repository-owned module, meaning one whose real path is inside
-`repoRoot` and outside `node_modules`, `.mokly-cache/`, and Mokly's own runtime,
-imports a module-bound Mokly authoring facade. Each definition or nested marker
-is therefore attributed at the helper call itself, including calls made later
-through a shared helper factory or from a helper beside a product component,
-without sticky process-global state or an absolute checkout path. Installed
-packages import the plain API and cannot self-attribute. Registry validation
-accepts an attributed source only when it is a resolved entry module or an
-inventoried source file. Generated output needs no header ownership proof:
-`mokly-generated/` is entirely replaceable. Export and Review confinement remain
-limited to directories that hold resolved entry modules and documents; a
-repository-root root does not protect the whole repository as an export source root.
+The finished document is kept in the render cache with its ownership tree,
+which the [comparison contract](../protocol/mokly-comparison.md) reads.
 
-Both config and consumer bundle metafiles supply the complete source inventory,
-including tree-shaken repository inputs. Serving and publication resolve these
-graphs without evaluation to reject stale inventories; reserved `.source.*`
-names remain private even when no longer imported.
+## 5. Consumers Of The Cache
 
-## 3. Rendering
+- `serve` renders the catalogue index at start and each document on request,
+  watches the sources, and pushes live updates to the shell. Live prop edits
+  render through the same path.
+- `build` validates the catalogue, renders every view, fails on errors and,
+  with `--strict`, on warnings, and writes the static output: the shell stub
+  per route, the index, one detail per entry, every document, the comparison
+  generation, the viewer bundle, styles, and fonts, under the output
+  transaction of the [static build contract](../protocol/mokly-export.md).
+- Changes renders the base commit's sources through the same graph, with the
+  base tree read from Git and JavaScript dependencies resolved under the
+  dependency tiers, and compares the composed trees.
 
-Each page calls its synchronous `render()` exactly once for one complete HTML
-document. It bypasses the screen renderer and variant loop, then uses the same
-link and resource validation before any requested output transaction. Each Markdown
-document is rendered by Mokly's own CommonMark renderer into one light document
-and, when the catalogue enables dark, one dark document; the consumer renderer
-never sees it, and its relative links and image resources are resolved under
-the [document contract](../protocol/mokly-documents.md).
+## Related Docs
 
-Each screen owns a mobile and desktop React node. Mokly selects the first
-stylesheet rule matching the screen's logical route (`<path>/index.html`),
-applies it to each effective viewport/color-scheme view, and resolves each
-emitted URL relative to that view's generated file. It then calls the configured
-renderer, or its neutral default. The renderer receives:
-
-```ts
-interface RenderInput {
-  entry: ScreenDefinition | ComponentVariantDefinition;
-  componentProps?: Readonly<Record<string, unknown>>;
-  node: ReactNode;
-  stylesheets: readonly string[];
-  viewport: "mobile" | "desktop";
-  colorScheme: "light" | "dark";
-}
-
-type Renderer = (input: RenderInput) => string | RenderResult;
-```
-
-`RenderInput` has no `variantId`: for a component render, `entry` is the
-variant entry itself and `componentProps` carries its validated props.
-
-The returned string, or `RenderResult.html`, must be a complete HTML document.
-The optional structured result supplies document-style and non-CSS resource ownership;
-stylesheet resource-owner records are ignored with a warning;
-see the [component manifest](../protocol/mokly-component-manifest.md).
-Each component variant entry renders in every configured context through the
-same consumer graph. Wrappers record actual invocations, data, caller-owned
-slots, and layout-neutral ranges. The variant's root render is not its own
-instance. All catalogues emit manifest v10 with the complete source inventory.
-Registered components add variant entries and complete per-view
-invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current and Git-baseline readers require v10; earlier output
-makes Changes unavailable under
-[baseline compatibility](../protocol/mokly-baseline-compatibility.md).
-
-The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
-source locations to patch only the marked control and its boundary templates.
-It validates one supported root, classifies the control's ancestors and
-descendants into error, warning, and silent placement tiers, returns
-[build warnings](../protocol/mokly-build-warnings.md) for the warning tier,
-retains inactive destinations as metadata, and adds default link/focus CSS only
-to documents with active adapted controls. Custom screen renderers and page callbacks use the
-same adapter before logical records are captured. The adapter rejects
-consumer-authored control metadata and unconsumed child markers. Its parsed
-attribute policy enforces case-insensitive reserved names in rendered input,
-including inert template contents, without mistaking ordinary text for metadata.
-Unmarked document bytes stay unchanged.
-
-The [catalogue navigation contract](../protocol/mokly-navigation.md) retains
-the target path and optional fragment in a reserved `data-mokly-link`
-marker when an HTML `<a>`/`<area>` or SVG `<a>` has a logical `href`. A
-`data-nav-href`-only reference remains validated portable metadata and does not
-gain Browse interaction. The builder rejects logical `href` on every non-link
-or resource element and rejects `<base href>` in a document containing an
-activatable logical link. It validates matching destinations when both
-navigation attributes coexist, rejects consumer-authored markers, verifies
-fragment anchors across every target view, and retains each logical target with
-its referring route for that final check. Element namespace and native-link
-classification belong to rewriting, not retained per-reference metadata.
-
-After link rewriting, validate final HTML, component ranges, controls,
-resources and every logical fragment target. Configured renderers and page
-callbacks produce document content; there is no later consumer transformation.
-The plain generated marker is not ownership authority.
-
-React Native Web style collection is not a second conversion stage. If an app
-uses it, its renderer wraps the node in the app provider, registers or renders
-the tree with the app's React Native Web version, obtains that version's style
-element, and inserts the result in the returned document. Mokly sees only
-the completed HTML string.
-
-## 4. Validation And Commit
-
-Registry paths, relationships, files, output collisions, stylesheets,
-ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
-`srcset`, inline/style-block CSS, transitive CSS imports/URLs,
-Review-ignore/material markers, protected source inventory, and manifest data are
-validated before output changes. All expected bytes are held in memory.
-`check` compares expected bytes with every file under `mokly-generated/` when
-the Git index tracks complete output; it reports missing, stale and extra
-paths. When no generated output is indexed it validates compilation without
-reading local output. Mixed index state fails with both recovery options.
-Authored closure assets may be tracked independently of generated output.
-
-This repository's example ignores `mokly-generated/`. The `test:unit`, `test`,
-and `test:browser` entrypoints build the package and example before tests read
-generated files, so the verification order (`npm test` before `example:check`)
-works on a fresh clone. Comparisons rebuild
-the baseline commit with `npm ci`, `npm run build`, then `npm run example:build`
-inside its extraction and read the validated cached output. Head and baseline
-compilation use their respective source and package versions; see the
-[per-commit baseline contract](../protocol/mokly-derived-baselines.md).
-
-Current entries have no source-path declarations. Browse and Review attribute
-only rendered output, linked public resources, reviewable metadata, ancestry
-and component usage; a changed directory alone is not evidence.
-
-Link/resource validation targets only the candidate generated tree and its
-referenced authored closure, never files left by an earlier build. The closure
-and generated-file inventory are recorded in manifest v10; see
-[generated output](../protocol/mokly-generated-output.md).
-
-Watched Serve and Browse use the accepted compiled route and validated
-manifest to authenticate generated HTML. They do not parse generated markers.
-
-Every generated file name derives from the entry's path under the
-[artifact path contract](../protocol/mokly-artifact-paths.md): the entry
-document inside `mokly-generated/` is `<path>/index.html`, each view there is
-`<path>/index.<viewport>[.dark].html`, and each shell is
-`view/<path>/index.html`. Path segments are portable ASCII letters, digits,
-`-`, and `_` with case preserved; a segment that is a Windows device name is
-rejected, and two paths that differ only by case collide. Framework-generated
-links and redirects still percent-encode every path segment defensively; static
-asset paths may therefore contain characters such as spaces without corrupting
-HTML attributes or URL query/fragment boundaries.
-
-`build` stages the whole `mokly-generated/` tree on the same filesystem, moves
-the previous tree aside, installs the staged tree by rename, and restores
-the previous tree on failure. It never replaces the catalogue's authored
-asset/source paths. Plain Serve, export and publication capture in-memory generated
-output and never write the catalogue.
-
-## Package Browser Assets
-
-The root build compiles the viewer workspace before the CLI. Viewer TypeScript
-emits declarations and ESM modules; its asset step bundles the standalone
-hydration entry (the shell tree with React and React DOM), the transport and
-geometry modules it imports, the inspector, navigation, fonts and scoped
-embedding CSS. The CLI asset step builds only its private Serve capability
-composition and rewrites its public runtime imports to the existing delivery
-paths. After each browser directory is complete, its build writes an adjacent
-generated manifest containing the sorted delivered module names. Serve and the
-package gate require exact manifest/directory equality, so a missing or extra
-output fails before delivery rather than silently changing the inventory.
-The package graph gate checks each delivered module's static and dynamic
-imports against that inventory. It rejects unresolved relative imports, bare
-package imports and Node dependencies, and confines React to the standalone
-hydration bundle. The temporary source partition used during the rewrite is
-retired with the old implementation.
-
-Serve's live-state restoration does not depend on the catalogue validator.
-An evidence refresh loads the public revision adopter dynamically after its
-response arrives, then rechecks cancellation and navigation before adoption.
-The package graph gate validates both static and dynamic import destinations.
-
-Serve/export combine package-owned assets from both distributions under the
-existing `mokly-viewer/client`, `mokly-viewer/navigation`, shell CSS and font paths. The
-standalone stylesheet is unchanged; embedding CSS is a separate scoped artifact.
-Exported browsers receive the same hydration bundle as Serve, including React;
-no consumer runtime is ever bundled, and the in-frame inspector stays a
-React-free IIFE under its byte budget.
-Static shell documents reference the single owned catalogue JSON and validate
-its identity and finalized deployment before hydration. They still contain the
-complete server-rendered route, but do not repeat the full catalogue payload
-for every route. Serve retains its inline accepted snapshot.
-Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
-Node digests; source inventory excludes the resolved viewer runtime even when
-npm installs it as a workspace symlink. Browser
-packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same strict review-result v7 validator used by its producer.
+- [Rust core architecture](./rust-core.md)
+- [Package and consumer boundary](./package-boundary.md)
+- [HTML screens, pages, and use cases](../protocol/mokly-html-screens.md)
+- [Render sidecar](../protocol/mokly-sidecar.md)
+- [Tree comparison and Changes](../protocol/mokly-comparison.md)

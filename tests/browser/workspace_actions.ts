@@ -9,6 +9,13 @@ export async function chooseScheme(
   page: Page,
   value: "light" | "dark",
 ): Promise<void> {
+  await expect(
+    page
+      .locator(
+        "[data-mokly-appearance-select]:visible, [data-workspace-scheme]:visible, [data-color-scheme-option]:visible",
+      )
+      .first(),
+  ).toBeVisible();
   const appearance = page.locator("[data-mokly-appearance-select]");
   if (await appearance.count()) {
     await appearance.selectOption(value);
@@ -35,23 +42,6 @@ export async function chooseVariant(page: Page, title: string): Promise<void> {
     .getByRole("navigation", { name: "Saved variants" })
     .getByRole("link", { name: title, exact: true })
     .click();
-}
-/** Assert the actual immediate document, including history-replacing frame swaps. */
-export async function expectFramePath(
-  page: Page,
-  selector: string,
-  path: RegExp,
-): Promise<void> {
-  await expect
-    .poll(() =>
-      page
-        .locator(selector)
-        .evaluate(
-          (frame: HTMLIFrameElement) =>
-            frame.contentWindow?.location.href ?? "",
-        ),
-    )
-    .toMatch(path);
 }
 export async function expectFrameSource(
   frame: Locator,

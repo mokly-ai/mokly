@@ -3,11 +3,36 @@
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
+#[cfg(unix)]
+use crate::child_environment::GIT_REPOSITORY_VARIABLES;
+use crate::child_environment::SECRET_VARIABLES;
 use crate::remote::error::Operation;
 #[cfg(unix)]
 use crate::remote::process::kill_command;
 use crate::remote::process::{Request, build_command};
+
+#[test]
+fn remote_process_uses_the_host_node_shim_without_changing_arguments() {
+    let command = build_command(&Request {
+        program: "npx".into(),
+        args: vec!["--no-install".into(), "tool name".into()],
+        cwd: PathBuf::from("/workspace"),
+        operation: Operation::Blacksmith,
+        input: None,
+        log: None,
+        cancellable: false,
+        git_index: None,
+        blacksmith: false,
+    });
+    assert_eq!(
+        command.get_program(),
+        OsStr::new(if cfg!(windows) { "npx.cmd" } else { "npx" })
+    );
+    assert_eq!(
+        command.get_args().collect::<Vec<_>>(),
+        [OsStr::new("--no-install"), OsStr::new("tool name")]
+    );
+}
 
 #[test]
 fn every_remote_request_removes_the_org_key_and_keeps_cli_configuration() {

@@ -1,5 +1,6 @@
 import {
-  VIEWER_DIRECTORY,
+  RENDER_ID,
+  RENDERS_PATH,
   currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
 import { origin } from "../inspector/values.js";
@@ -32,17 +33,21 @@ export function frameUrl(
   });
 }
 
-/** Confine a private live preview mount to one authenticated render bundle. */
+/**
+ * Confine a private live preview mount to one render bundle: a document below
+ * one opaque render id under the renders prefix. Serve authenticates the id.
+ */
 export function temporaryFrameUrl(
   frame: HTMLIFrameElement,
   view: FrameMount,
   expectedOrigin: string,
 ): URL {
-  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
-    new RegExp(
-      `^\\/${VIEWER_DIRECTORY}\\/components\\/renders\\/[a-f0-9]{48}\\.[a-f0-9]{64}\\/.+\\.html?$`,
-    ).test(pathname),
-  );
+  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) => {
+    const prefix = `/${RENDERS_PATH}/`;
+    if (!pathname.startsWith(prefix)) return false;
+    const [id = "", ...document] = pathname.slice(prefix.length).split("/");
+    return RENDER_ID.test(id) && document.length > 0;
+  });
 }
 
 function validatedFrameUrl(

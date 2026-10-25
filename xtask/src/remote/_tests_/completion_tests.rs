@@ -37,18 +37,11 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 })
             }),
         BlacksmithDownloadMock
-            .each_call(matching!("tbx_unit", _, _))
+            .each_call(matching!(_, _, _))
             .answers_arc(Arc::new(move |_, id, source, target| {
-                assert_eq!(
-                    source,
-                    ".context/verification-reports/remote/unit-1-of-4.json"
-                );
-                assert_eq!(
-                    target,
-                    &PathBuf::from(
-                        "/workspace/.context/verification-reports/remote/20261006T120000Z-42/unit-1-of-4.json"
-                    )
-                );
+                let name = id.strip_prefix("tbx_").unwrap();
+                assert_eq!(source, format!(".context/verification-reports/remote/{name}.json"));
+                assert_eq!(target, &PathBuf::from(format!("/workspace/.context/verification-reports/remote/20261006T120000Z-42/{name}.json")));
                 downloads.lock().unwrap().push(format!("download:{id}"));
                 Ok(())
             })),
@@ -96,11 +89,18 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             workspace: PathBuf::from("/workspace"),
         },
     };
-    let boxes: Vec<String> = vec![
-        "tbx_repository".into(),
-        "tbx_package".into(),
-        "tbx_unit".into(),
-    ];
+    let boxes: Vec<String> = [
+        "repository",
+        "viewer",
+        "browser-1-of-4",
+        "browser-2-of-4",
+        "browser-3-of-4",
+        "browser-4-of-4",
+        "static-delivery",
+    ]
+    .into_iter()
+    .map(|name| format!("tbx_{name}"))
+    .collect();
     let cleanup = CleanupGuard::new(&runner.dependencies);
     let head = CommitSha::read(&"b".repeat(40)).unwrap();
     let identity = RunIdentity::new(
@@ -126,11 +126,11 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 DependencyAudit::Baseline,
             )
             .len(),
-        3
+        7
     );
     assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();
-    assert!(events.iter().any(|event| event == "download:tbx_unit"));
+    assert!(events.iter().any(|event| event == "download:tbx_viewer"));
     for id in boxes {
         let close = events
             .iter()

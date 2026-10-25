@@ -5,6 +5,7 @@ import {
   DesignAppearanceScope,
   useDarkPreview,
 } from "../../../parts/appearance.js";
+import { artboards } from "../../../parts/artboards.js";
 import { CompareGrid, Pane } from "../../../parts/compare.js";
 import {
   ComparePage,
@@ -21,8 +22,6 @@ import { ReviewNav } from "../../../parts/review.js";
 import { EmptyState } from "../../../parts/stage_content.js";
 import { TopBar } from "../../../parts/top_bar.js";
 import { APPEARANCE_NAV_TREE, AppearanceShell } from "../parts/scaffold.js";
-
-import { appearanceInspectorScreens } from "./inspectors.js";
 
 /** The drawer artboard draws the selector holding the scheme it renders for. */
 function DrawerTopBar() {
@@ -118,6 +117,7 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.appearanceSideBySide}
       path={ENTRY_PATHS.welcome}
       nav={<ReviewNav activeTitle="Welcome" />}
+      reasons={["material"]}
       render={(previewViewport) => (
         <CompareGrid>
           <WelcomePanes viewport={previewViewport} />
@@ -139,6 +139,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       path={ENTRY_PATHS.welcome}
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
+      reasons={["material"]}
       render={(previewViewport) => <WelcomeStack viewport={previewViewport} />}
       state="changed"
       subject="welcome"
@@ -149,39 +150,42 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
 }
 
 /** Appearance across the panels and comparisons that fill the main region. */
-export const appearanceWorkspaceScreens = [
-  ...appearanceInspectorScreens,
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "The catalogue drawer open over a narrow layout, in either appearance.",
+export const drawerScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "The catalogue drawer open over a narrow layout, in either appearance.",
+  ...artboards({
     desktop: <NavigationDrawerDesktop />,
-    slug: "drawer",
     mobile: <NavigationDrawerMobile />,
-    rationale:
-      "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need values in each appearance that still separate the two layers.",
-    title: "Navigation drawer",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "Two versions of a screen compared side by side, in either appearance.",
+  slug: "drawer",
+  rationale:
+    "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need values in each appearance that still separate the two layers.",
+  title: "Navigation drawer",
+});
+export const sideBySideScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "Two versions of a screen compared side by side, in either appearance.",
+  ...artboards({
     desktop: <SideBySideCompare viewport="desktop" />,
-    slug: "side-by-side",
     mobile: <SideBySideCompare viewport="mobile" />,
-    rationale:
-      "The comparison band, the Before and Current captions, the stage behind the frames and both compared screens follow the one catalogue appearance, so a side-by-side read stays in a single scheme rather than mixing chrome and content.",
-    title: "Side by side",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "The blended difference of two screen versions, in either appearance.",
+  slug: "side-by-side",
+  rationale:
+    "The comparison band, the Before and Current captions, the stage behind the frames and both compared screens follow the one catalogue appearance, so a side-by-side read stays in a single scheme rather than mixing chrome and content.",
+  title: "Side by side",
+});
+export const differenceScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "The blended difference of two screen versions, in either appearance.",
+  ...artboards({
     desktop: <DifferenceCompare viewport="desktop" />,
-    slug: "difference",
     mobile: <DifferenceCompare viewport="mobile" />,
-    rationale:
-      "Difference blends the two versions, so the blend needs an opaque base taken from the compared screens rather than the stage behind them. Both versions follow the catalogue appearance together, so the difference stays legible in either one.",
-    title: "Difference",
   }),
-];
+  slug: "difference",
+  rationale:
+    "Difference blends the two versions, so the blend needs an opaque base taken from the compared screens rather than the stage behind them. Both versions follow the catalogue appearance together, so the difference stays legible in either one.",
+  title: "Difference",
+});

@@ -7,6 +7,8 @@ export function InstanceTree({ state }: { state: ScreenPageState }) {
   const nested = state === "nested";
   const toolbar = state === "toolbar-selection";
   const help = state === "help-selection";
+  // The screen's own props are edited with no instance selected.
+  const footer = !nested && !toolbar && !help && state !== "screen-props";
   const actionCount = welcomeInstances.filter(
     (instance) => instance.component === "Action",
   ).length;
@@ -43,7 +45,7 @@ export function InstanceTree({ state }: { state: ScreenPageState }) {
         </MockLink>
         <MockLink
           to="design/components/inspection/inspection-details"
-          aria-current={!nested && !toolbar && !help ? "true" : undefined}
+          aria-current={footer ? "true" : undefined}
         >
           Footer action <small>Welcome</small>
         </MockLink>

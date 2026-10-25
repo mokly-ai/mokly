@@ -1,8 +1,28 @@
 [workspace]
-members = ["xtask"]
+members = ["xtask", "crates/*"]
 resolver = "3"
 
 [workspace.package]
 edition = "2024"
 license = "MIT"
 rust-version = "1.95"
+
+[workspace.dependencies]
+mokly-model = { path = "crates/mokly-model" }
+mokly-platform = { path = "crates/mokly-platform" }
+
+mokly-sidecar = { path = "crates/mokly-sidecar" }
+mokly-git = { path = "crates/mokly-git" }
+mokly-compare = { path = "crates/mokly-compare" }
+mokly-publish = { path = "crates/mokly-publish" }
+mokly-source-interface = { path = "crates/mokly-source-interface" }
+mokly-catalogue = { path = "crates/mokly-catalogue" }
+mokly-html = { path = "crates/mokly-html" }
+mokly-css = { path = "crates/mokly-css" }
+mokly-graph = { path = "crates/mokly-graph" }
+
+mokly-render = { path = "crates/mokly-render" }
+mokly-server = { path = "crates/mokly-server" }
+
+mokly-static = { path = "crates/mokly-static" }
+mokly-watch = { path = "crates/mokly-watch" }

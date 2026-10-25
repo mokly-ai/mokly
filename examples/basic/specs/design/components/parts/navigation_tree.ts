@@ -15,6 +15,7 @@ import type { CatalogueIdentity } from "./metadata.js";
 import {
   isStyleScenario,
   styleScenarioRows,
+  styleStoryRowsInAll,
   type StyleScenario,
 } from "./style_navigation.js";
 
@@ -67,10 +68,24 @@ export function explorerNodes(
             to: DESTINATIONS.exampleOverview,
           },
         ]
-      : []),
-    ...(isStyleScenario(scenario)
-      ? styleScenarioRows(scenario)
-      : exampleMembers(scenario, active, design, activeKey)
+      : scenario === "styles-all"
+        ? [
+            {
+              key: "example-overview",
+              depth: 1,
+              kind: "document" as const,
+              label: "Overview",
+            },
+          ]
+        : []),
+    ...(scenario === "styles-all"
+      ? styleStoryRowsInAll(
+          exampleMembers("all", active, design, activeKey),
+          design,
+        )
+      : isStyleScenario(scenario)
+        ? styleScenarioRows(scenario)
+        : exampleMembers(scenario, active, design, activeKey)
     ).map((row) => ({
       ...row,
       depth: row.depth + 1,

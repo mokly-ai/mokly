@@ -1,7 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 
+import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerState,
@@ -23,7 +25,13 @@ for (const cross of [false, true]) {
 
   test(`${adapter} marker states cover hidden, missing, other-screen, comparison and pending views`, async ({
     page,
+    allowBrowserError,
   }) => {
+    allowBrowserError(
+      missingResourceNotice(
+        `${cross ? fixture.frames.url : fixture.host.url}/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
+      ),
+    );
     await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
     const visible = screenInstance(fixture, "mobile", "action");
     const hidden = screenInstance(fixture, "mobile", "hidden");
@@ -71,41 +79,41 @@ for (const cross of [false, true]) {
     await expectMarkerState(page, "visible", "visible");
 
     await page.evaluate(() => {
-      const root = document.querySelector<HTMLElement>("#one .mokly-viewer")!;
-      const current = document.createElement("button");
-      current.dataset["diffMode"] = "current";
-      current.setAttribute("aria-pressed", "false");
-      const side = document.createElement("button");
-      side.dataset["diffMode"] = "side";
-      side.setAttribute("aria-pressed", "true");
-      root.append(current, side);
-      root.dispatchEvent(new CustomEvent("mokly:comparison"));
+      const host = window.viewerHarness.get("one");
+      const index = structuredClone(host.props.index) as CatalogueReadModel;
+      index.changesStatus = "ready";
+      index.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
+      for (const entry of [...index.screens, ...index.components])
+        entry.changes = {
+          status: "ready",
+          kind: "unmodified",
+          included: false,
+        };
+      const home = index.screens.find((entry) => entry.path === "home")!;
+      home.changes = { status: "ready", kind: "changed", included: true };
+      home.views = home.views.map((view) => ({
+        ...view,
+        comparison: { status: "ready", kind: "changed", eligible: true },
+      }));
+      host.props.index = index;
+      host.render();
     });
+    await page.locator('[data-diff-mode="side"]').click();
     await expectMarkerState(page, "visible", "unavailable");
-    await page.evaluate(() => {
-      const root = document.querySelector<HTMLElement>("#one .mokly-viewer")!;
-      root
-        .querySelector('[data-diff-mode="current"]')!
-        .setAttribute("aria-pressed", "true");
-      root
-        .querySelector('[data-diff-mode="side"]')!
-        .setAttribute("aria-pressed", "false");
-      root.dispatchEvent(new CustomEvent("mokly:comparison"));
-    });
+    await page.locator('[data-diff-mode="current"]').click();
     await expectMarkerState(page, "visible", "visible");
 
     await page.evaluate((visible) => {
       const host = window.viewerHarness.get("one");
-      const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
-      const home = model.screens.find(({ path }) => path === "home")!;
-      home.views = home.views.map((view) =>
+      const model = structuredClone(host.props.index) as CatalogueReadModel;
+      host.details["home"]!.views = host.details["home"]!.views.map((view) =>
         view.viewport === "mobile" && view.colorScheme === "light"
           ? { ...view, usage: { status: "pending" as const } }
           : view,
       );
       host.props = {
         ...host.props,
-        catalogue: model,
+        index: model,
         defaultSelection: {
           screenPath: "home",
           viewport: "mobile",

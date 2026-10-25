@@ -1,31 +1,6 @@
 # CSS Evidence In The Shell
 
-## Delivery Status
-
-Existing compact evidence is implemented. The [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence)
-mockups of the [source-path removal plan](../../plans/remove-source-path-evidence.md)
-depict the outside-component evidence and the per-file layout below; the shell
-implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
-mockup depicts the whole-document page rule below; the shell implements it in
-[M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Omitting the branch-point sentence when its name is unknown is implemented in
-[M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
-The known-name rule needs no new mockup; existing mockups already show a name.
-
-Keeping the export's known branch name during navigation is implemented in
-[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
-The excluded-only screen depiction, the linked child pages and the shared
-Excluded/Matched Details card are implemented in
-[M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
-M31 checked the viewer's excluded-only state against that depiction at both
-widths. The viewer already matched it, and a browser test now keeps them
-aligned.
-
-This document owns visual rules for evidence defined by
-[CSS change attribution](./mokly-css-attribution.md); the
-[presentation contract](./mokly-css-evidence-presentation.md) owns derivation
-and exact copy.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Shell Presentation
 
@@ -36,18 +11,18 @@ language, for example "This stylesheet changed, but none of the changed styles
 apply to this screen"; selector text appears only in the details list. Excluded
 resources never produce Changes rows.
 
-In Details for screens, component saved views and whole-document pages, show
+In Details for screens, component variants and whole-document pages, show
 “Compared with the branch point on \<name\>.” only when the name is known.
-An embedded catalogue supplied through the `@mokly/viewer` public catalogue
+The name is the `base` ref of the catalogue index; an index without `base`
 has no name, so omit that sentence. Keep the “Comparison details” heading
-and the rest of Details. A served catalogue with a known name retains the
-sentence. Use the same shared heading for all three entry kinds, as the
+and the rest of Details. An index with `base` retains the sentence in every
+delivery. Use the same shared heading for all three entry kinds, as the
 [presentation contract](./mokly-css-evidence-presentation.md#details-copy) defines.
 
-During exported navigation, the temporary view uses the branch name already
-known to the export while the selected screen's full data loads. The sentence
-must not disappear and return when that data arrives. A nameless embedded
-catalogue still omits it.
+During navigation, the temporary view uses the `base` ref the index already
+carries while the selected entry's detail loads. The sentence must not
+disappear and return when the detail arrives. An index without `base` still
+omits it.
 
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
@@ -57,7 +32,8 @@ recorded in the
 `design/changes/impact/styles/unresolved-unnamed/unresolved` and `design/changes/impact/styles/unresolved-unnamed/unnamed`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
-`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`, and
+`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`,
+`design/components/states/shared-impact/affected-screen`, and
 `design/components/states/shared-impact/shared-impact`. These screens follow these presentation
 rules:
 
@@ -89,7 +65,7 @@ rules:
   under an "Examined and excluded" heading. An excluded-only screen is not in
   Changes, offers no comparison, and shows no stage heading; its evidence panel
   ends with the terminal status line "No changes to this screen." A component
-  variant's terminal line reads "No changes to this saved view." The wording
+  variant's terminal line reads "No changes to this variant." The wording
   follows the entry kind through one shared helper.
 - Linked Excluded and Matched screens show the same changed Welcome in All
   and Changes. They use one shared Details card with the retained file, its
@@ -105,11 +81,24 @@ rules:
   file's item. The mockup card must render that spacing as authored, whatever
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
+- A screen or component that only changed components affect stays
+  Unmodified with no Changes row, and its comparison band stays available.
+  Its Details keep the full matched styles of each file, link each changed
+  component, and end with the shared-component sentence in place of the
+  terminal line: “Changed components that this screen uses affect its
+  preview.” for a screen, as
+  `design/components/states/shared-impact/affected-screen` depicts, and
+  “Changed components that this variant uses affect its preview.” for a
+  component. In a
+  loaded comparison, each of its affected views reads the stage heading
+  "Components this screen uses changed", or "Components this variant uses
+  changed" for a component.
 - A whole-document page in Changes keeps its plain document pane, with no
   comparison toolbar and no stage heading. Its Details hold the same
   comparison details and files list, led by "Changes to these files may affect
   this page:", with the page sentences of the presentation contract under each
-  file. A page consumes no components, so its Details link no changed component.
+  file. A page may use component elements, but it has no usage records, so its
+  Details link no changed component.
   Its status sits beside its title, as a screen's does. The open Details panel
   takes at most 60% of the main region and scrolls, with its bar kept in view,
   so long evidence stays reachable and the document stays visible. On narrow

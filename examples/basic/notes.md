@@ -171,7 +171,7 @@ following presentation differences are intentional:
 
 ## Delivery Status
 
-- The completed [in-frame catalogue navigation work](../../plans/in-frame-catalogue-link-navigation.md)
+- The completed in-frame catalogue navigation work
   reused the approved active-row, disclosure, and frame visuals, adding runtime
   behavior and inert generated metadata without new design screens. The
   [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
+import { useComparisonIntent } from "./comparison_intent.js";
 import {
   comparisonDemand,
   type ComparisonDemand,
@@ -57,20 +58,39 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
+  eligibilityKnown,
+  historical = false,
   entryId,
   owner,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
+  /**
+   * Whether `eligible` is final for the routed view, as
+   * `comparisonEligibilityKnown` decides. The route's comparison intent waits
+   * for it.
+   */
+  eligibilityKnown: boolean;
+  historical?: boolean;
   entryId: string;
   owner?: string;
 }): ComparisonController {
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
-  const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
-  const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
-  const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
+  // A publication returns an active comparison to Current.
+  const evidenceKey = String(store?.catalogue.publicModel.revision ?? 0);
+  const comparisonUrl = historical
+    ? (store?.catalogue.publicModel.comparisonUrl ?? null)
+    : undefined;
+  const scope = useMemo<ComparisonScope>(
+    () => ({
+      id: entryId,
+      ...(comparisonUrl === undefined ? {} : { comparisonUrl }),
+    }),
+    [entryId, comparisonUrl],
+  );
+  const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
   const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (
@@ -205,15 +225,14 @@ export function useComparison({
     [environment],
   );
 
+  // Another comparison environment starts from Current.
   useEffect(() => {
-    setModeState({
-      ownerKey: currentOwner.current,
-      mode:
-        currentEligibility.current && environment?.initialMode?.() === "side"
-          ? "side"
-          : "current",
-    });
-  }, [eligible, environment, ownerKey]);
+    setModeState({ ownerKey: currentOwner.current, mode: "current" });
+  }, [environment]);
+
+  useComparisonIntent(eligible, eligibilityKnown, () =>
+    setModeState({ ownerKey: currentOwner.current, mode: "side" }),
+  );
 
   useEffect(() => {
     if (!eligible) setModeState({ ownerKey, mode: "current" });

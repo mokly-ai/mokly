@@ -127,7 +127,9 @@ fn identity_is_written_to_logs_and_keeps_the_report_directory_empty() {
         .join("identity.json");
     assert_eq!(
         fs::read(&path).unwrap(),
-        include_bytes!("fixtures/identity.json")
+        include_str!("fixtures/identity.json")
+            .replace("\r\n", "\n")
+            .as_bytes()
     );
     assert_eq!(
         fs::read_dir(
@@ -145,6 +147,8 @@ fn identity_is_written_to_logs_and_keeps_the_report_directory_empty() {
     );
     assert_eq!(
         fs::read(path).unwrap(),
-        include_bytes!("fixtures/identity.json")
+        include_str!("fixtures/identity.json")
+            .replace("\r\n", "\n")
+            .as_bytes()
     );
 }

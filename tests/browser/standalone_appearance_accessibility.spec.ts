@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   appearance,
@@ -7,6 +7,8 @@ import {
   screen,
   select,
 } from "./appearance_assertions.js";
+import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 test("the appearance keeps working when storage refuses", async ({ page }) => {
@@ -50,7 +52,14 @@ test("Appearance can be set from the keyboard alone", async ({ page }) => {
     });
 });
 
-test("an unavailable route still offers Appearance", async ({ page }) => {
+test("an unavailable route still offers Appearance", async ({
+  page,
+  baseURL,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    missingResourceNotice(new URL("/view/missing/", baseURL).href),
+  );
   await page.goto("/view/missing/");
   await expect(page.locator(control)).toBeVisible();
   await page.locator(select).selectOption("dark");
@@ -64,33 +73,6 @@ test("an unavailable route still offers Appearance", async ({ page }) => {
   );
 });
 
-test.describe("without JavaScript", () => {
-  test.use({ javaScriptEnabled: false });
-
-  test("the control stays hidden and the system still dresses the shell", async ({
-    page,
-  }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    await page.goto(screen);
-    // Nothing can act on the control, so the reader is never shown a dead one.
-    await expect(page.locator(control)).toBeHidden();
-    // Auto is CSS alone, so the interface is still dark.
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-theme",
-      "auto",
-    );
-    await expect(page.locator("body")).toHaveCSS(
-      "background-color",
-      "rgb(22, 21, 18)",
-    );
-    // The frames keep the sources the server rendered.
-    await expectFrameSource(
-      page.locator(mobileFrame),
-      /example\/screens\/welcome\/index\.mobile\.html$/,
-    );
-  });
-});
-
 test("a component sample follows the one Appearance control", async ({
   page,
 }) => {
@@ -98,7 +80,7 @@ test("a component sample follows the one Appearance control", async ({
   const sample = page.locator('[data-workspace-frame="desktop"]');
   await expectFrameSource(
     sample,
-    /example\/components\/action\/default\/index\.desktop\.html$/,
+    /example\/components\/action\/index\.desktop\.html$/,
   );
   // No separate preview control: the sample follows the interface appearance.
   await expect(page.getByRole("button", { name: "Dark preview" })).toHaveCount(
@@ -112,12 +94,12 @@ test("a component sample follows the one Appearance control", async ({
   );
   await expectFrameSource(
     sample,
-    /example\/components\/action\/default\/index\.desktop\.dark\.html$/,
+    /example\/components\/action\/index\.desktop\.dark\.html$/,
   );
 
   await page.locator(select).selectOption("light");
   await expectFrameSource(
     sample,
-    /example\/components\/action\/default\/index\.desktop\.html$/,
+    /example\/components\/action\/index\.desktop\.html$/,
   );
 });

@@ -1,8 +1,7 @@
 # Published frame inspector
 
 The inspector is a dependency-free browser IIFE for the optional cross-origin
-frame adapter. The viewer package build emits `dist/browser/inspector.js`, and the root
-`scripts/package-check.mjs` enforces its 9,216-byte minified, uncompressed budget.
+frame adapter. The viewer package build emits `dist/browser/inspector.js`, and `packages/viewer/tests/inspector_budget.test.ts` enforces its 9,216-byte minified, uncompressed budget.
 Serve and export publish it at `/mokly-viewer/client/inspector.js`.
 The build uses esbuild, then [`scripts/inspector-pool.mjs`](../../scripts/inspector-pool.mjs) shares repeated strings
 and native references before Terser minification. The output is ordinary
@@ -28,7 +27,11 @@ messages and metadata always receive the full UTF-8 check before parsing.
 
 `metadata.ts` reads the bounded inert map authenticated by the Browse adapter.
 Its `ranges` array stores `[instanceKey | null, parentIndex | null]` tuples:
-index `n` names `r-n`, null keys identify slots, and null parents identify roots.
+index `n` names `r-n`, null keys identify slots, and null parents identify
+top-level ranges. The tuple `[null, null]` at index 0 is a component page's root
+region, which has no marker and spans the `body` content. `ranges.ts` reads the
+`mokly-instance` and `mokly-slot` markers of the comparison contract through the
+pattern in `markers.ts`, which the same-origin adapter shares.
 Keys are derived uniquely from the range map, including empty/null instances.
 `links` contains deduplicated logical navigation identities; native links carry
 `data-mokly-inspector-link` indices into that array. An optional `error`
@@ -55,16 +58,9 @@ minification.
 
 ```bash
 npm run build
-npm run package:check
-node --import tsx --test tests/inspector*.test.ts
-npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adapter_security.spec.ts
+cargo xtask check --suite viewer
 ```
 
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
 [published inspector contract](../../../../docs/protocol/mokly-published-inspector.md),
-[client adapters](../client/README.md), and [publication boundary](../../../../src/browse/README.md).
-
-## Delivery Status
-
-The completed [component explorer plan](../../../../plans/component-explorer.md)
-records the measured inspector size and alternatives.
+[client adapters](../client/README.md), and [publication boundary](../../../../docs/protocol/mokly-export-delivery.md).

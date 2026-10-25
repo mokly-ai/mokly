@@ -8,29 +8,38 @@ import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
 } from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
-import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
+import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
-import type { ViewReview } from "../packages/viewer/dist/review/types.js";
+import type {
+  ReviewEntry,
+  ReviewView,
+  ViewResourceEvidence,
+} from "../packages/viewer/dist/review/types.js";
+import { viewEvidenceReasons } from "../packages/viewer/dist/review/view_evidence.js";
+import { entryWording } from "../packages/viewer/dist/shell/entry_wording.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
 import { cssReason, cssRule } from "./helpers/css_evidence.js";
 
-const RULES = "mockups/rule.css";
-const outsideRule = cssRule({
-  ruleKey: "1".repeat(64),
-  selectors: [".action", ".heading"],
-  changedComponentPaths: ["action"],
-  pageSelectors: [".heading"],
-});
-const componentRule = cssRule({
-  ruleKey: "2".repeat(64),
-  selectors: [".action"],
-  changedComponentPaths: ["action"],
-});
+const RULES = "static/rule.css";
+const action = { kind: "component", path: "action" } as const;
+/** One review v8 rule record of the changed stylesheet. */
+const rule = (
+  selector: string,
+  owner: RuleEvidence["owner"] = { kind: "entry" },
+  status: RuleEvidence["status"] = "matched",
+): RuleEvidence => ({ stylesheet: RULES, selector, status, owner });
+/** `.heading` also matches outside the changed component it styles. */
+const outsideRules = [
+  rule(".action", action),
+  rule(".heading", action),
+  rule(".heading"),
+];
+const componentRules = [rule(".action", action)];
 
 test("a screen's changed file holds its outside sentence and styles, as the mockup does", () => {
-  const data = screenWorkspace([view("mobile", "light", [outsideRule])]);
+  const data = screenWorkspace([evidence("mobile", "light", outsideRules)]);
   const markup = render(data);
   assert.ok(
     markup.includes(
@@ -43,11 +52,11 @@ test("a screen's changed file holds its outside sentence and styles, as the mock
     markup,
   );
   assert.doesNotMatch(markup, />\.action</);
-  assert.ok(!markup.includes("1".repeat(64)));
+  assert.doesNotMatch(markup, /selector:/);
 });
 
 test("a component's own page keeps the mockup's matched-component sentence", () => {
-  const data = componentWorkspace("Changed", [componentRule]);
+  const data = componentWorkspace("Changed", componentRules);
   const markup = render(data, "action/default");
   assert.ok(
     markup.includes(
@@ -90,14 +99,9 @@ test("paths and selectors render as text, including generated bundle paths", () 
 });
 
 test("classification and a loaded comparison merge into one file and one paragraph", () => {
-  const data = screenWorkspace([view("mobile", "light", [outsideRule])]);
-  data.change = {
-    kind: "screen",
-    before: { path: "home", title: "Home" },
-    after: { path: "home", title: "Home" },
-    reasons: [cssReason(RULES, [outsideRule])],
-  };
-  const loaded = loadedScreen([view("mobile", "light", [outsideRule])]);
+  const data = screenWorkspace([evidence("mobile", "light", outsideRules)]);
+  data.reasons = [{ kind: "dependency", path: RULES }];
+  const loaded = loadedScreen([view("mobile", "light", outsideRules)]);
   const markup = render(data, undefined, loaded);
   assert.equal(markup.split(`<li>${RULES}<p>`).length - 1, 1);
   assert.equal(markup.split(SCREEN_STYLE_COPY.outside).length - 1, 1);
@@ -105,14 +109,11 @@ test("classification and a loaded comparison merge into one file and one paragra
 });
 
 test("Details read the same facts whatever viewport or scheme is shown", () => {
-  const tone = cssRule({
-    ruleKey: "4".repeat(64),
-    status: "unresolved",
-    selectors: [".tone"],
-  });
   const data = screenWorkspace([
-    view("mobile", "light", [outsideRule]),
-    view("desktop", "dark", [tone]),
+    evidence("mobile", "light", outsideRules),
+    evidence("desktop", "dark", [
+      rule(".tone", { kind: "entry" }, "unresolved"),
+    ]),
   ]);
   const markup = render(data);
   assert.ok(
@@ -127,27 +128,39 @@ test("Details read the same facts whatever viewport or scheme is shown", () => {
 });
 
 test("a consuming component shows its live view evidence before any comparison loads", () => {
-  const data = componentWorkspace("Unmodified", [componentRule], "toolbar");
-  delete data.change;
+  const data = componentWorkspace("Unmodified", componentRules, "toolbar");
+  data.included = false;
   data.relatedComponents = [{ path: "action", title: "Action" }];
-  data.variants = savedViews("toolbar/default", "Changed");
+  data.variants = savedViews("toolbar/default", "Unmodified");
   const markup = render(data, "toolbar/default");
   assert.match(
     markup,
-    /<li>mockups\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
+    /<li>static\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
   );
-  assert.match(markup, /Shared component changes affect this preview\./);
-  assert.doesNotMatch(markup, /No changes to this saved view\./);
+  assert.ok(
+    markup.endsWith(`<p>${COMPONENT_STYLE_COPY.sharedImpact}</p></section>`),
+    markup,
+  );
+  assert.doesNotMatch(markup, /No changes to this variant\./);
+});
+
+test("the shared-component pane headings follow the design copy", () => {
+  assert.equal(
+    entryWording("screen").componentsChanged,
+    SCREEN_STYLE_COPY.componentsChanged,
+  );
+  assert.equal(
+    entryWording("component").componentsChanged,
+    COMPONENT_STYLE_COPY.componentsChanged,
+  );
 });
 
 test("a parent route closes with the selected saved view's own status", () => {
-  const frame = cssRule({ selectors: [".frame"], pageSelectors: [".frame"] });
-  const data = componentWorkspace("Unmodified", [frame]);
-  delete data.change;
+  const data = componentWorkspace("Unmodified", [rule(".frame")]);
   data.variants = savedViews("action/default", "Changed");
   const markup = render(data, "action/default");
-  assert.match(markup, /Changed styles that apply to this saved view:/);
-  assert.doesNotMatch(markup, /No changes to this saved view\./);
+  assert.match(markup, /Changed styles that apply to this variant:/);
+  assert.doesNotMatch(markup, /No changes to this variant\./);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 
@@ -160,30 +173,41 @@ function savedViews(
   ] as unknown as WorkspaceData["variants"];
 }
 
+/** The entry detail's evidence of one view, as the shell presents it. */
+function evidence(
+  viewport: "mobile" | "desktop",
+  colorScheme: "light" | "dark",
+  rules: readonly RuleEvidence[],
+): ViewResourceEvidence {
+  return {
+    viewport,
+    colorScheme,
+    ...viewEvidenceReasons({ rules: [...rules], resources: [] }),
+  };
+}
+
 function view(
   viewport: "mobile" | "desktop",
   colorScheme: "light" | "dark",
-  rules: Parameters<typeof cssReason>[1],
-): ViewReview {
+  rules: readonly RuleEvidence[],
+): ReviewView {
   return {
     viewport,
     colorScheme,
     state: "changed",
     ignoredIds: [],
-    reasons: [cssReason(RULES, rules)],
+    rules: [...rules],
   };
 }
 
-function screenWorkspace(views: readonly ViewReview[]): WorkspaceData {
+function screenWorkspace(
+  resourceEvidence: readonly ViewResourceEvidence[],
+): WorkspaceData {
   return {
     base: "main",
     status: "Changed",
     entry: { path: "home", kind: "screen", title: "Home" },
-    resourceEvidence: views.map(({ viewport, colorScheme, reasons }) => ({
-      viewport,
-      colorScheme,
-      ...(reasons ? { reasons } : {}),
-    })),
+    resourceEvidence,
     components: [],
     comparisonEligible: true,
     comparisons: true,
@@ -197,38 +221,22 @@ function screenWorkspace(views: readonly ViewReview[]): WorkspaceData {
   } as unknown as WorkspaceData;
 }
 
+/**
+ * A component workspace whose shown saved view keeps these rule records in
+ * its entry detail, the evidence a route shows before any comparison loads.
+ */
 function componentWorkspace(
   status: "Changed" | "Unmodified",
-  rules: Parameters<typeof cssReason>[1],
+  rules: readonly RuleEvidence[],
   id = "action",
 ): WorkspaceData {
-  const address = { path: id, title: id };
-  const variantPath = `${id}/default`;
   return {
     base: "main",
     status,
     entry: { path: id, kind: "component", title: id },
     component: { path: id, title: id, kind: "component" },
-    change: {
-      kind: "component",
-      before: address,
-      after: address,
-      reasons: [cssReason(RULES, rules)],
-    },
-    comparison: {
-      ...address,
-      before: address,
-      after: address,
-      state: "changed",
-      variants: [
-        {
-          path: variantPath,
-          title: "Default",
-          state: "changed",
-          views: [view("mobile", "light", rules)],
-        },
-      ],
-    },
+    reasons: [{ kind: "dependency", path: RULES }],
+    resourceEvidence: [evidence("mobile", "light", rules)],
     components: [],
     comparisonEligible: true,
     comparisons: true,
@@ -242,22 +250,30 @@ function componentWorkspace(
   } as unknown as WorkspaceData;
 }
 
-function loadedScreen(views: readonly ViewReview[]) {
-  const address = { path: "home", title: "Home" };
-  const result: ReviewResultV7 = {
-    schemaVersion: 7,
-    baseRef: "main",
-    baseCommit: "a".repeat(40),
-    changedPaths: [RULES],
-    ignoredImpact: [],
-    screens: [
-      { ...address, before: address, after: address, state: "changed", views },
-    ],
-    components: [],
-    changes: [],
-    affectedConsumers: [],
+/** The screen `home`, changed by the stylesheet its views keep. */
+function screenEntry(views: ReviewView[]): ReviewEntry {
+  const side = { path: "home", title: "Home", props: {} };
+  return {
+    kind: "screen",
+    path: "home",
+    title: "Home",
+    before: side,
+    after: side,
+    state: "changed",
+    included: true,
+    reasons: [{ kind: "dependency", path: RULES }],
+    views,
   };
-  return parseReviewResult(result);
+}
+
+function loadedScreen(views: ReviewView[]) {
+  return parseReviewResult({
+    schemaVersion: 8,
+    baseCommit: "a".repeat(40),
+    entries: [screenEntry(views)],
+    affected: [],
+    diagnostics: [],
+  });
 }
 
 function render(

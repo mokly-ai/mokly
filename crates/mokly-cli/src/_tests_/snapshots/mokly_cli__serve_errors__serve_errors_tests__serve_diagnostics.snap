@@ -1,0 +1,33 @@
+---
+source: crates/mokly-cli/src/_tests_/serve_errors_tests.rs
+expression: "output.join(\"\\n\")"
+---
+[mokly/server-failed] Could not listen on 127.0.0.1 starting at port 4173: address in use
+
+[mokly/server-failed] The matching viewer assets are missing or invalid.
+
+[mokly/build-invalid] The temporary render exceeded its ten-second deadline.
+
+[mokly/build-invalid] A preview resource is no longer available. Retry the render.
+
+[mokly/server-failed] permission denied
+
+✖ The catalogue server could not start.  [mokly/server-failed]
+  Could not listen on 127.0.0.1 starting at port 4173: address in use
+  Check the reported port or process and retry.
+
+✖ The catalogue server could not start.  [mokly/server-failed]
+  The matching viewer assets are missing or invalid.
+  Build or reinstall the matching @mokly/viewer package and retry.
+
+✖ The catalogue could not be built.  [mokly/build-invalid]
+  The temporary render exceeded its ten-second deadline.
+  Fix the reported catalogue source and retry.
+
+✖ The catalogue could not be built.  [mokly/build-invalid]
+  A preview resource is no longer available. Retry the render.
+  Fix the reported catalogue source and retry.
+
+✖ The catalogue server could not start.  [mokly/server-failed]
+  permission denied
+  Check the reported port or process and retry.

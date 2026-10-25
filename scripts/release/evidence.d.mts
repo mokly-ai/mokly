@@ -31,7 +31,7 @@ export interface ReleaseEvidenceOptions {
     runtimes: readonly string[],
   ) => void;
   readReports?: (root: string) => Promise<VerificationReport[]>;
-  discoverUnitFiles?: (root: string) => Promise<string[]>;
+  discoverNodeFiles?: (root: string) => Promise<string[]>;
   discoverBrowserFiles?: (root: string) => Promise<string[]>;
 }
 

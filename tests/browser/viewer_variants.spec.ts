@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { InstanceRef, ViewerSelection } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
 
+import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
 
@@ -23,7 +23,7 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       window.viewerHarness.start("one", {
         cross,
         controlled,
-        defaultSelection: { screenPath: "pane", viewport: "desktop" },
+        defaultSelection: { screenPath: "pane/default", viewport: "desktop" },
       }),
     { cross, controlled },
   );
@@ -169,14 +169,13 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross);
-    const component = fixture.catalogue.components.find(
+    const component = fixture.index.components.find(
       (entry) => entry.path === "pane",
     )!;
-    const variant = catalogueComponentVariants(
-      fixture.catalogue,
-      component.path,
-    ).find((entry) => entry.path === "pane/second")!;
-    const view = variant.views.find(
+    const variant = fixture.index.components
+      .filter((entry) => entry.variantOf === component.path)
+      .find((entry) => entry.path === "pane/second")!;
+    const view = fixture.details.current[variant.path]!.views.find(
       (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
     )!;
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
@@ -186,10 +185,22 @@ for (const cross of [false, true]) {
       colorScheme: "light",
       key: view.usage.instances[0]!.key,
     };
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .ref.current.select({ screenPath: "pane/second" }),
+    );
+    await expect(
+      page.locator('iframe[data-workspace-frame="desktop"]'),
+    ).toHaveAttribute("data-mokly-frame-state", "ready");
+    await expect(
+      page
+        .frameLocator('iframe[data-workspace-frame="desktop"]')
+        .getByText("Second content"),
+    ).toBeVisible();
     await page.evaluate(
       async ({ instance }) => {
         const viewer = window.viewerHarness.get("one").ref.current;
-        viewer.select({ screenPath: "pane/second" });
         await viewer.scrollToInstance(instance);
         await viewer.highlightInstance(instance);
       },

@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
-import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
+import { test } from "./browser_test.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
@@ -33,9 +34,9 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       else {
         await page.goto(fixture.host.url);
         await page.evaluate(async (json) => {
-          const usage = JSON.parse(json) as ComponentViewRecord;
+          const usage = JSON.parse(json) as BrowserUsage;
           const { sameOriginAdapter } = (await import(
-            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof LocalAdapter;
           const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
           frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
@@ -47,7 +48,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
                   "/static/mokly-generated/home/index.mobile.html",
                   location.origin,
                 ),
-                usage: { status: "ready", ...usage },
+                usage: usage,
               },
             );
         }, JSON.stringify(fixture.usage));
@@ -107,12 +108,12 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
             const { localInspection } = (await import(
-              `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+              `${location.origin}/test-adapters.js`
             )) as typeof LocalAdapter;
             return localInspection(
               document.querySelector<HTMLIFrameElement>("#frame")!,
               "home/index.mobile.html",
-              JSON.parse(usageJson) as ComponentViewRecord,
+              JSON.parse(usageJson) as BrowserUsage,
             )!.measure(new Set([key]));
           },
           { usageJson: JSON.stringify(fixture.usage), key },

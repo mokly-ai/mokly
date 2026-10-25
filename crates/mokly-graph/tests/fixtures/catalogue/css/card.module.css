@@ -1,0 +1,17 @@
+.base {
+  color: red;
+}
+.card {
+  composes: base;
+  animation: pulse 1s;
+}
+:global(.global) .local {
+  grid-area: main;
+  --token: blue;
+  container-name: card;
+}
+@keyframes pulse {
+  to {
+    opacity: 0.5;
+  }
+}

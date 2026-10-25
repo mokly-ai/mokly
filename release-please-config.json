@@ -1,40 +1,139 @@
 {
-  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.6.0/schemas/config.json",
   "bootstrap-sha": "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
-  "plugins": [{ "type": "node-workspace", "updateAllPackages": true }],
   "packages": {
     ".": {
-      "changelog-path": "CHANGELOG.md",
-      "include-v-in-tag": true,
       "release-type": "node",
-      "bump-minor-pre-major": true,
+      "component": "mokly",
+      "changelog-path": "/CHANGELOG.md",
       "include-component-in-tag": false,
-      "extra-files": [
-        {
-          "type": "generic",
-          "path": "docs/guides/start/install.md"
-        },
-        {
-          "type": "generic",
-          "path": "docs/guides/ci/github-action.md"
-        }
-      ]
-    },
-    "packages/viewer": {
-      "release-type": "node",
-      "component": "viewer",
-      "initial-version": "0.1.0",
-      "changelog-path": "CHANGELOG.md",
-      "include-component-in-tag": true,
       "include-v-in-tag": true,
       "bump-minor-pre-major": true,
       "extra-files": [
         {
           "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
           "path": "/package-lock.json",
-          "jsonpath": "$['packages']['']['dependencies']['@mokly/viewer']"
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package.json",
+          "jsonpath": "$['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/viewer/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['devDependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/viewer']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['optionalDependencies'][*]"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['optionalDependencies'][*]"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-darwin-arm64/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-darwin-arm64']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-darwin-x64/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-darwin-x64']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-linux-arm64-gnu/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-linux-arm64-gnu']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-linux-x64-gnu/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-linux-x64-gnu']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-win32-x64-msvc/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-win32-x64-msvc']['version']"
+        },
+        {
+          "type": "generic",
+          "path": "/docs/guides/start/install.md"
+        },
+        {
+          "type": "generic",
+          "path": "/docs/guides/ci/github-action.md"
+        },
+        {
+          "type": "generic",
+          "path": "/packages/viewer/CHANGELOG.md"
         }
-      ]
+      ],
+      "package-name": "@mokly/mokly"
     }
   }
 }

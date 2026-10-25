@@ -1,20 +1,6 @@
 # Registered Components In Mokly's Design Catalogue
 
-## Delivery Status
-
-Uniform CSS attribution in the acceptance table is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
-of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The basic consumer records shared instances without changing existing design
-screens. Registered entries live under Components → Design → Shared components,
-beside Example Action and Toolbar. The generated manifest owns all counts;
-the library and its consuming screens use paths.
-
-The remaining contract is implemented.
-
-This contract and the [library inventory](./mokly-design-component-library.md)
-define delivery; [shell design](./mokly-shell-design.md) and
-[design links](./mokly-design-links.md) retain presentation/navigation authority.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Outcome And Scope
 
@@ -26,11 +12,11 @@ edit appears at its component entry; consuming artboards are affected unless
 they also have independent changes.
 
 This is adoption under `examples/basic/specs/design`, the repository's owning
-mockup catalogue. It does not replace the package's actual browser/server shell
+mockup catalogue. It does not replace the package's actual browser shell
 with example code or move consumer fixtures into package runtime code. Existing
 Example Action/Toolbar components, miniature subject screens and pictured usage
-fixtures keep their separate roles. New usage in the outer inspector comes from
-the real generated manifest, not from those pictured fixtures.
+fixtures keep their separate roles. Usage in the outer inspector comes from
+the entry detail Mokly records, not from those pictured fixtures.
 
 Preserve existing entries, relationships, both artboard sizes, copy, links and
 supported controls. Each screen uses the shared Details inspector and viewport
@@ -66,8 +52,9 @@ For inventory group `G` and slug `S`:
 - Public stylesheet: `design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
 - Variant entry slugs and exposed props are defined by the inventory. Each
-  variant entry renders in both actual viewport contexts; the parent's page
-  shows its first variant entry.
+  variant entry renders in both viewports; the parent's own `props` equal its
+  first variant's props, so the parent's page shows that example first, then
+  each variant.
 
 Gallery-only folder indexes need no additional canonical artboard. Any
 later screen-spec sub-page must retain the canonical-screen and five-screen
@@ -90,7 +77,7 @@ Browse and Changes share the same bounded preview/inspector layout as component
 designs. Desktop keeps the divider resize grip; mobile uses the same icon strip
 and compact/expanded sheet. Only panel content and the preview scroll. Opening
 and closing Details acts locally through its icon; its canonical owning artboard
-remains in the catalogue. Preserve descriptions, metadata, tags and comparison
+stays in the catalogue. Preserve descriptions, metadata, tags and comparison
 evidence when moving the previous disclosure content into its Details slot.
 
 Selected-screen view options appear once in the header: a viewport dropdown
@@ -100,7 +87,7 @@ authored light/dark link pair. Unsupported transitions stay disabled. Viewport c
 mobile/desktop previews without scrolling the whole page. Simultaneous previews
 reserve their intrinsic minimum width and wrap when needed; full-size phone
 frames must never overlap adjacent desktop content. Comparison mode
-segments remain comparison controls and are not removed by this normalization.
+segments stay comparison controls.
 
 Every owning screen keeps its separate desktop/mobile React components. Flows
 continue to compose their owning screen components, with links back to those
@@ -127,8 +114,8 @@ navigation behind a fixture-name prop resolved inside a registered component.
 
 Navigation context must not be an unrecorded input. Adapt the existing explicit
 navigation-state tables into plain destination records supplied to registered
-components. `DesignLink`/`MockLink` remain the link boundary; absent destinations
-retain the existing non-link behavior. Shared components must render outside an
+components. `DesignLink`/`MockLink` stay the link boundary; absent destinations
+keep the existing non-link behavior. Shared components must render outside an
 owning artboard without depending on a missing `DesignNavigation` provider.
 
 Callbacks, React nodes in nested data objects and arbitrary style objects are
@@ -170,25 +157,25 @@ tokens, resets, cross-component selectors and screen layout in configured
 sheets. All these files use the same kept own-page match rule; none has an owner
 record that decides attribution.
 
-Declare each component's public CSS in its `stylesheets` array for linking.
-Different components can share one file. Retain their declaring paths only as
-inserted-link provenance. Shared fixtures, navigation tables, icons and mixed helpers
+Declare each component's local CSS in its `stylesheets` array for bundled delivery.
+Different components can share one file. A declaring path only says which
+component inserted a link. Shared fixtures, navigation tables, icons and mixed helpers
 do not establish path-based ownership or evidence. Only rendered resources,
 CSS analysis, reviewable metadata and usage determine Changes.
 
 Registration, variant fixtures and controls metadata are compared as entry
-metadata, not exclusive implementation files. Their imports remain observed by
-the build graph. Keep render transformations in the view module; registration only forwards
+metadata, not exclusive implementation files. Their imports stay observed by
+the render graph. Keep render transformations in the view module; registration only forwards
 validated props and the actual viewport to that renderer. Test real source
 edits to saved variants and control labels as well as implementation source edits.
 
-Each registered component declares its exclusive public sheet through
+Each registered component declares its exclusive local stylesheet through
 `libraryMetadata`. Route rules select only required mixed/global stylesheets;
-place `componentStylesheets` between shared base CSS and context/layout
+place `$componentStylesheets` between shared base CSS and context/layout
 overrides. Mokly inserts actual rendered component links in first-render,
 authored-file order; there is no per-render React style collector, candidate
-pool, `useDesignStyle` call, or renderer-side link synthesis. The renderer emits
-`input.stylesheets` directly. This applies equally to transient prop renders;
+pool, `useDesignStyle` call, or renderer-side link synthesis. The Rust core
+writes the links into each document head. This applies equally to transient prop renders;
 see [component stylesheets](./mokly-component-stylesheets.md).
 
 An unused child's stylesheet must not be linked merely because another saved
@@ -197,7 +184,7 @@ resource in the current view. Test a closed Top bar picker and an empty Tag pick
 alongside their populated variants so nested CSS edits do not become parent or
 screen changes through unused stylesheet links. No shared global sheet is filtered
 out as a substitute for matching changed rules to component output.
-Observe new public CSS through the existing watch configuration/resource graph;
+Observe declared CSS inputs through the existing watch configuration/resource graph;
 do not copy the same rules into standalone stories and screen stylesheets.
 
 Keep descendant and state selectors working in situ and in the minimal host,
@@ -205,17 +192,17 @@ including `:has()` viewport/theme state, inspector sizing, popovers and focus
 rings. Cross-component state remains explicit or a documented shared context;
 class proximity is not proof of exclusive ownership.
 
-Acceptance after a registered baseline exists is defined by
+Acceptance once the base commit has the registered components is defined by
 [design component attribution](./mokly-design-component-attribution.md),
 including each CSS delivery path and the unchanged input/slot rules.
 
 ## Verification And Completion
 
-Freeze the existing entry inventory before migration and assert it remains a
+Freeze the existing entry inventory before migration and assert it stays a
 subset of the finished catalogue. Every existing design screen must record its
 actual shared components in both views. Every inventory component must have a
 page, the specified saved variants, and real screen consumers (directly or through
-composition); expected relationships are asserted against generated usage.
+composition); expected relationships are asserted against recorded usage.
 
 Tests must cover props/slot ownership, repeated/nested identity, standalone vs
 in-screen geometry, working and intentionally inactive links, real usage and
@@ -223,9 +210,9 @@ highlighting, editable/reset and published read-only controls, and the attributi
 matrix. Preserve comparison-bar eligibility/backgrounds, icons/carets, desktop
 divider alignment, mobile sheets and bounded scrolling across the full inventory.
 
-Build/check derived output deterministically, open every changed HTML fragment
-directly from disk, smoke-test actual Serve and an exported catalogue, and verify
-that no consumer scripts or fake usage data were introduced. Measure the expanded
-catalogue's plain `npm run dev` startup and assert bounded baseline Git batching
-by command count rather than relaxing readiness deadlines. Run the complete
-repository gate before implementation delivery, then commit, push and review.
+Run the browser suite against `mokly serve` of the example under the
+[CI verification contract](./ci-verification.md), inspect every changed design
+page in the served Browse frames, smoke-test the `mokly build` output, and
+verify that no consumer scripts or fake usage data were introduced. Assert
+bounded base-side Git batching by command count rather than relaxing readiness
+deadlines. Run the complete gate before delivery, then commit, push and review.

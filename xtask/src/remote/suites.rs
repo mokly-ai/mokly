@@ -1,4 +1,4 @@
-//! Concurrent suite execution, progress logs and nine-report downloads.
+//! Concurrent suite execution, progress logs and five-report downloads.
 
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -27,7 +27,7 @@ pub(super) struct Completion {
 }
 
 impl DefaultRemoteRunner {
-    /// Execute all eleven commands concurrently while keeping each stream separate.
+    /// Execute all seven commands concurrently while keeping each stream separate.
     pub(super) fn execute(
         &self,
         boxes: &[String],

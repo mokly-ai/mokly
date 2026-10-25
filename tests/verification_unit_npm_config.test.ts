@@ -5,9 +5,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { defaultReportPath } from "../scripts/verification/evidence.mjs";
-import { parseUnitSelection } from "../scripts/verification/unit-selection.mjs";
+import { parseViewerSelection } from "../scripts/verification/viewer-selection.mjs";
 
-import { repositoryRoot } from "./helpers/fixture.js";
 import { runNpm } from "./helpers/npm.js";
 import { createSelectedHarness } from "./helpers/verification_unit_selected.js";
 import {
@@ -17,7 +16,7 @@ import {
 
 const consumedFlags = [
   ["npm_config_test_name_pattern", "npm test -- --test-name-pattern=<regex>"],
-  ["npm_config_shard", "npm run test:prepared -- --shard INDEX/TOTAL"],
+  ["npm_config_shard", "cargo xtask check --suite viewer"],
 ] as const;
 
 for (const [variable, command] of consumedFlags) {
@@ -26,7 +25,7 @@ for (const [variable, command] of consumedFlags) {
     async () => {
       for (const value of ["lockfile", "true", "false", "0", " "]) {
         await assert.rejects(
-          parseUnitSelection(
+          parseViewerSelection(
             path.join(os.tmpdir(), "missing-unit-repository"),
             ["--unknown"],
             { [variable]: value },
@@ -47,15 +46,17 @@ for (const [variable, command] of consumedFlags) {
     async (context) => {
       const harness = await createSelectedHarness(context);
       const report = path.join(harness.root, "override-report.json");
-      const defaultPath = defaultReportPath(harness.root, "unit", undefined);
+      const defaultPath = defaultReportPath(harness.root);
       const sentinel = "existing complete report\n";
       for (const target of [report, report + ".events", defaultPath]) {
         await fs.mkdir(path.dirname(target), { recursive: true });
         await fs.writeFile(target, sentinel);
       }
-      await fs.rm(path.join(harness.root, "dist"), { recursive: true });
+      await fs.rm(path.join(harness.root, "packages/viewer/dist"), {
+        recursive: true,
+      });
       await assert.rejects(
-        runWrapper(harness.root, "run-unit-dev.mjs", {
+        runWrapper(harness.root, "run-viewer.mjs", {
           report,
           environment: { [variable]: "true" },
         }),
@@ -74,7 +75,7 @@ for (const [variable, command] of consumedFlags) {
 }
 
 test("empty and unrelated npm configuration do not select or reject tests", async () => {
-  const selection = await parseUnitSelection(
+  const selection = await parseViewerSelection(
     path.join(os.tmpdir(), "missing-unit-repository"),
     [],
     {
@@ -90,9 +91,6 @@ test("empty and unrelated npm configuration do not select or reject tests", asyn
 
 test("npm omissions of -- fail instead of launching or widening unit tests", async (context) => {
   const harness = await createSelectedHarness(context);
-  const { scripts } = JSON.parse(
-    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
-  );
   await writeHarnessFile(
     harness.root,
     "package.json",
@@ -100,10 +98,8 @@ test("npm omissions of -- fail instead of launching or widening unit tests", asy
       name: "mokly-npm-consumed-flags",
       private: true,
       scripts: {
-        test: scripts.test,
-        "test:unit": scripts["test:unit"],
-        "prepare:verification": 'node -e ""',
-        "prepare:unit": 'node -e ""',
+        test: "npm run -s build && node scripts/verification/run-viewer.mjs",
+        build: 'node -e ""',
       },
     }),
   );

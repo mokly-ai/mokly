@@ -62,7 +62,8 @@ establish any of those package-specific settings.
 The shared GitHub environment remains the main-only OIDC boundary for both
 packages, with no required reviewer. Merging a combined Release Please PR
 authorizes automatic publication; a manual dispatch from `main` may only retry
-an existing immutable tag pair through the same byte and source guards. No npm
+an existing immutable CLI tag and any newly released viewer tag through the
+same byte and source guards. Every retry includes the matching viewer tag. No npm
 write token belongs in GitHub Actions.
 
 ## Reviewed Source And Archive
@@ -143,11 +144,32 @@ release-managed version state. Before the next release:
 
 ## Development Evidence
 
-`tests/release_bootstrap.test.ts` uses real isolated Git/npm fixtures to prove
-dirty/ref/name/version rejection, scoped archive naming with the unchanged
-`mokly` executable, exclusion of stale ignored output, source/hash
-evidence, destination preservation, symlinked temporary roots, partial source
-clones with missing historical blobs, and rejection of lifecycle input mutations.
-Run it with `node --import tsx --test tests/release_bootstrap.test.ts`.
-`tests/release_bootstrap_viewer.test.ts` additionally proves the isolated viewer
-first-publish identity, version restriction and lifecycle mutation rejection.
+`tests/release_bootstrap_viewer.test.ts` uses isolated Git/npm fixtures to prove
+viewer first-publish identity, the version restriction, and rejection of
+lifecycle input mutations. Run it with
+`node --import tsx --test tests/release_bootstrap_viewer.test.ts`.
+
+## Native Package Registration
+
+For each native package, run the bootstrap command on its target operating
+system and architecture. Supply the reviewed full commit and that package name:
+
+```sh
+node scripts/release/bootstrap.mjs {reviewed-full-commit-sha} .context/native-bootstrap/linux-x64-gnu @mokly/native-linux-x64-gnu
+```
+
+Use a distinct `.context/native-bootstrap/{target}` destination for every
+target. Prepare Linux's pinned Zig and cargo-zigbuild tools first. The isolated
+checkout installs npm dependencies with lifecycle scripts disabled and builds
+the native binary. It uses the release runtime floors and records the same
+library dependency inspection as a coordinated build.
+
+Native registration always packs version `0.0.0`. No coordinated CLI release
+publishes this version. Its binary embeds the reviewed source's CLI version,
+which the report records as `binaryVersion`. The staging manifest changes the
+registration version without modifying the reviewed checkout. The report binds
+the source commit and tree to the exact archive; `tls-dependencies.txt` records
+the native runtime check. Register interactively with the `bootstrap` dist-tag
+only after review. Configure each package's own trusted publisher before the
+first coordinated release. The command prepares bytes and never publishes.
+Do not use registration bytes as a coordinated release or retry artifact.

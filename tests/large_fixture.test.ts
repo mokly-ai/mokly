@@ -3,21 +3,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { loadConfig } from "../dist/config/load.js";
-import {
-  runWithTimings,
-  type TimingEvent,
-} from "../dist/diagnostics/timings.js";
-import { prepareRegistry } from "../dist/registry/prepare.js";
-import { analyzeHierarchy, viewRoute } from "../packages/viewer/dist/data.js";
+import { options } from "../scripts/large/options.js";
 
+import {
+  areaPaths,
+  counts,
+  stylesheetRules,
+} from "./fixtures/large/dimensions.js";
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
-import { textOutput } from "./helpers/generated_text.js";
 
-test("large fixture validates dimensions and defaults to high-scale routes", () => {
+test("large fixture validates dimensions and retains default route scale", () => {
   assert.deepEqual(largeSize({}), {
     areas: 30,
     screens: 40,
@@ -25,8 +21,10 @@ test("large fixture validates dimensions and defaults to high-scale routes", () 
     stylesheets: 4,
     stylesheetShare: 0.5,
   });
-  for (const value of [0, -1, 1.5, NaN, Infinity])
-    assert.throws(() => largeSize({ areas: value }), /positive integer/);
+  assert.deepEqual(counts(largeSize({})), { routes: 1620, documents: 5850 });
+  for (const field of ["areas", "screens", "rows"])
+    for (const value of [0, -1, 1.5, NaN, Infinity])
+      assert.throws(() => largeSize({ [field]: value }), /positive integer/);
   assert.throws(() => largeSize({ screens: 1 }), /at least two/);
   for (const value of [-1, 1.5, NaN, Infinity])
     assert.throws(
@@ -38,121 +36,128 @@ test("large fixture validates dimensions and defaults to high-scale routes", () 
       () => largeSize({ stylesheetShare: value }),
       /between 0 and 1/,
     );
-  assert.equal(largeSize({ stylesheets: 0 }).stylesheets, 0);
-  assert.equal(largeSize({ stylesheetShare: 0 }).stylesheetShare, 0);
-  assert.equal(largeSize({ stylesheetShare: 1 }).stylesheetShare, 1);
+  for (const args of [
+    ["--stylesheets", "-1"],
+    ["--stylesheets", "1.5"],
+    ["--stylesheets"],
+    ["--stylesheet-share", "1.1"],
+    ["--stylesheet-share", "-0.1"],
+    ["--stylesheet-share"],
+  ])
+    assert.throws(
+      () => options(["generate", ...args]),
+      /needs a value|non-negative integer|between 0 and 1/,
+    );
 });
 
-for (const screens of [10, 11, 20, 21]) {
-  test(`large fixture keeps folder membership unique at ${screens} screens`, async (t) => {
+test("folder membership and flow tails remain valid at each group boundary", () => {
+  for (const count of [10, 11, 20, 21]) {
+    const { screens, flows } = areaPaths("area-1", count);
+    assert.equal(new Set(screens).size, count);
+    assert.equal(flows.length, Math.ceil(count / 10));
+    assert.ok(
+      flows.every(
+        (group) =>
+          group.length >= 2 && group.every((entry) => screens.includes(entry)),
+      ),
+    );
+    assert.equal(screens[0], "area-1/screens/activity-group-1/screen-1");
+    if (count > 10)
+      assert.equal(screens[10], "area-1/screens/activity-group-2/screen-11");
+    if (count % 10 === 1)
+      assert.deepEqual(flows.at(-1), [screens.at(-1), screens[0]]);
+  }
+});
+
+test("stylesheet selection includes only the configured leading share", () => {
+  for (const dimensions of [
+    { stylesheets: 0 },
+    { stylesheetShare: 0 },
+    { stylesheetShare: 1 },
+    { stylesheetShare: 0.34 },
+  ]) {
+    const size = largeSize({ areas: 1, screens: 3, ...dimensions });
+    const rules = stylesheetRules(size);
+    const shared = rules
+      .flatMap((rule) => rule.stylesheets)
+      .filter((file) => file.includes("shared-"));
+    assert.equal(
+      shared.length,
+      size.stylesheets * size.stylesheetShare === 0 ? 0 : size.stylesheets,
+    );
+    if (shared.length) {
+      const numbers = rules[0]!.match
+        .match(/screen-\{(.*?)\}/)![1]!
+        .split(",")
+        .map(Number);
+      assert.deepEqual(
+        numbers,
+        Array.from(
+          { length: Math.ceil(3 * size.stylesheetShare) },
+          (_, i) => i + 1,
+        ),
+      );
+    }
+  }
+});
+
+test("both generators protect existing files and emit individual definitions", async (t) => {
+  for (const variant of ["html", "react"] as const) {
     const root = await fs.mkdtemp(
-      path.join(repositoryRoot, ".context/large-test-"),
+      path.join(repositoryRoot, ".context/large-generator-"),
     );
     t.after(() => fs.rm(root, { recursive: true, force: true }));
-    await generateLargeFixture(root, { areas: 1, screens, rows: 1 });
-    const config = await loadConfig(root);
-    const graph = await loadConsumerGraph(config);
-    const registry = prepareRegistry(graph.definitions, {
-      ...config,
-      entryModules: graph.entrySources,
-      sourceFiles: graph.sourceFiles,
-    });
+    const fixture = await generateLargeFixture(
+      root,
+      { areas: 1, screens: 3, rows: 1 },
+      variant,
+    );
+    assert.deepEqual(
+      { routes: fixture.routes, documents: fixture.documents },
+      { routes: 14, documents: 47 },
+    );
+    const config = JSON.parse(await fs.readFile(fixture.configPath, "utf8"));
     assert.equal(
-      registry.entries.filter((entry) => entry.kind === "screen").length,
-      screens,
+      config.renderer,
+      variant === "react" ? "renderer.tsx" : undefined,
     );
-    assert.ok(
-      registry.entries
-        .filter((entry) => entry.kind === "use-case")
-        .every((entry) => entry.steps.length >= 2),
+    assert.equal(
+      (await fs.readdir(path.join(root, "assets"))).filter((name) =>
+        name.startsWith("shared-"),
+      ).length,
+      4,
     );
-    const hierarchy = analyzeHierarchy(
-      registry.entries,
-      registry.folders,
-    ).hierarchy;
-    assert.deepEqual(
-      hierarchy.ancestorsByPath.get("area-1/screens/activity-group-1/screen-1"),
-      ["Area 1", "Screens", "Activity group 1"],
-    );
-    assert.deepEqual(hierarchy.ancestorsByPath.get("area-1/flows/flow-1"), [
-      "Area 1",
-      "Flows",
-    ]);
-    assert.deepEqual(
-      hierarchy.ancestorsByPath.get("area-1/components/action"),
-      ["Area 1", "Components"],
-    );
-    if (screens > 10)
-      assert.deepEqual(
-        hierarchy.ancestorsByPath.get(
-          "area-1/screens/activity-group-2/screen-11",
-        ),
-        ["Area 1", "Screens", "Activity group 2"],
+    if (variant === "react") {
+      const module = await fs.readFile(
+        path.join(root, "specs/area-1/catalogue.mockup.tsx"),
+        "utf8",
       );
-  });
-}
+      assert.equal(module.match(/export const /g)?.length, 7);
+      assert.ok(!module.includes("export const mockups"));
+    }
+    const before = await fs.readFile(fixture.configPath);
+    await assert.rejects(generateLargeFixture(root, {}), /empty directory/);
+    assert.deepEqual(await fs.readFile(fixture.configPath), before);
+  }
+});
 
-test("scaled consumer exercises the same render, hierarchy, resource and component paths", async (t) => {
+test("zero shared stylesheets creates no files or shared selections", async (t) => {
   const root = await fs.mkdtemp(
-    path.join(repositoryRoot, ".context/large-test-"),
+    path.join(repositoryRoot, ".context/large-zero-styles-"),
   );
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const fixture = await generateLargeFixture(root, {
-    areas: 2,
-    screens: 4,
-    rows: 3,
+    areas: 1,
+    screens: 2,
+    rows: 1,
+    stylesheets: 0,
   });
-  const events: TimingEvent[] = [];
-  const config = await loadConfig(root);
-  const compilation = await runWithTimings(
-    true,
-    "test",
-    () => compileCatalogue(config),
-    {
-      write: (event) => events.push(event),
-    },
-  );
-  assert.equal(fixture.routes, 28);
-  assert.equal(fixture.documents, 82);
-  assert.equal(compilation.outputs.size, fixture.documents + 1);
-  assert.equal(compilation.manifest.entries.length, fixture.routes);
-  assert.ok(
-    compilation.manifest.entries.some((entry) => entry.kind === "page"),
-  );
-  assert.ok(
-    compilation.manifest.entries.some((entry) => entry.kind === "use-case"),
-  );
-  const screen = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen",
-  );
-  assert.ok(screen && screen.componentViews?.length === 4);
-  assert.ok(
-    screen.componentViews.every(
-      (view) => view.instances.length >= 4 && view.slots.length > 0,
-    ),
-  );
-  const html = textOutput(
-    compilation.outputs,
-    viewRoute(screen.path, "desktop", "light"),
-  )!;
-  assert.match(html, /react-native-stylesheet/);
-  assert.match(html, /data-mokly-link/);
-  assert.match(html, /assets\/mark.svg/);
-  assert.ok(
-    compilation.manifest.sourceFiles.some((file) =>
-      file.endsWith("screens.tsx"),
-    ),
-  );
   assert.deepEqual(
-    (await compileCatalogue(config)).outputs,
-    compilation.outputs,
-  );
-  assert.ok(
-    events.some(
-      (event) =>
-        event.stage === "output" &&
-        event.counts?.files === fixture.documents + 1,
+    (await fs.readdir(path.join(root, "assets"))).filter((name) =>
+      name.startsWith("shared-"),
     ),
+    [],
   );
-  await assert.rejects(generateLargeFixture(root, {}), /empty directory/);
+  const config = await fs.readFile(fixture.configPath, "utf8");
+  assert.ok(!config.includes("shared-"));
 });

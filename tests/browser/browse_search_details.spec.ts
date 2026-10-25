@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   accentFill,
@@ -10,6 +10,7 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
+import { test } from "./browser_test.js";
 
 test("search matches authored entry paths", async ({ page }) => {
   await page.goto("/");
@@ -48,6 +49,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
 }) => {
   await page.goto("/");
   const screensGroup = 'details[data-nav-folder="folder:example/screens"]';
+  await expect(page.locator(screensGroup)).toBeAttached();
   await page.evaluate((selector) => {
     document.querySelector<HTMLDetailsElement>(selector)!.open = false;
   }, screensGroup);
@@ -99,4 +101,59 @@ test("details tag chips enter, keep, and clear their term", async ({
   await expect(page.locator(formsChip)).not.toHaveClass(/active/);
   await expect(page.locator(tourRow)).toBeVisible();
   expect(await hasMarker(page)).toBe(true);
+});
+
+for (const failure of ["refuses writes", "getter throws"]) {
+  test(`Details stays usable when preference storage ${failure}`, async ({
+    page,
+  }) => {
+    await page.addInitScript((failure) => {
+      const refused = () => {
+        throw new Error("fixture storage refused");
+      };
+      if (failure === "getter throws")
+        Object.defineProperty(window, "localStorage", { get: refused });
+      else Storage.prototype.setItem = refused;
+    }, failure);
+    await page.goto("/view/example/screens/welcome/");
+    const tab = page.getByRole("tab", { name: "Details", exact: true });
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "false");
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+    await page
+      .locator('a[data-nav-row][data-entry-id="example/screens/details"]')
+      .click();
+    await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+  });
+}
+
+test("direct entry loads disclose saved-closed active ancestry", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "mokly:nav-disclosure:v4",
+      JSON.stringify({
+        "section:specs": false,
+        "folder:specs:example": false,
+        "folder:specs:example/screens": false,
+      }),
+    ),
+  );
+  await page.goto("/view/example/screens/welcome/");
+  await expect(
+    page.locator(
+      '[data-nav-section="specs"] details[data-nav-folder="folder:example"]',
+    ),
+  ).toHaveAttribute("open", "");
+  await expect(
+    page.locator('details[data-nav-folder="folder:example/screens"]'),
+  ).toHaveAttribute("open", "");
+  await expect(
+    page.locator('a[data-nav-row][data-entry-id="example/screens/welcome"]'),
+  ).toBeVisible();
 });

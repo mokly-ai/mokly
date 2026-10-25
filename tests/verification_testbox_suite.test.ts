@@ -13,29 +13,21 @@ import {
   testboxHarness,
 } from "./helpers/testbox_suite.js";
 
-const commands: Array<{ suite: string; name: string; shard?: string }> = [
-  { suite: "repository", name: "repository" },
-  { suite: "package", name: "package" },
-  ...["unit", "browser"].flatMap((suite) =>
-    Array.from({ length: 4 }, (_, offset) => ({
-      suite,
-      name: `${suite}-${offset + 1}-of-4`,
-      shard: `${offset + 1}/4`,
-    })),
-  ),
-  { suite: "hydration", name: "hydration" },
+const commands = [
+  { suite: "repository", name: "repository", shard: undefined },
+  { suite: "viewer", name: "viewer", shard: undefined },
+  ...[1, 2, 3, 4].map((index) => ({
+    suite: "browser",
+    name: `browser-${index}-of-4`,
+    shard: `${index}/4`,
+  })),
 ];
 
-test("the 11 commands derive exact cargo arguments, report names and streamed output", async () => {
+test("six commands derive exact cargo arguments, report names and streamed output", async () => {
   for (const { suite, name, shard } of commands) {
     const harness = testboxHarness();
-    const args = [
-      "--expect",
-      TESTBOX_FINGERPRINT,
-      "--suite",
-      suite,
-      ...(shard ? ["--shard", shard] : []),
-    ];
+    const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", suite];
+    if (shard) args.push("--shard", shard);
     assert.equal(parseTestboxArguments(args).commandName, name);
     assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
     assert.deepEqual(
@@ -66,7 +58,7 @@ test("the 11 commands derive exact cargo arguments, report names and streamed ou
         },
       ],
     );
-    const cargo = harness.commands.at(-1)!;
+    const cargo = harness.commands.find((command) => command.file === "cargo")!;
     assert.equal(cargo.cwd, "/repo");
     assert.equal(
       cargo.env.MOKLY_VERIFICATION_REPORT,
@@ -75,6 +67,20 @@ test("the 11 commands derive exact cargo arguments, report names and streamed ou
     assert.equal(cargo.env.PATH, "/tools");
     assert.deepEqual(harness.writes, []);
   }
+});
+
+test("static delivery builds and runs in an independent Testbox command", async () => {
+  const harness = testboxHarness();
+  const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", "static-delivery"];
+  assert.equal(parseTestboxArguments(args).commandName, "static-delivery");
+  assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
+  assert.deepEqual(
+    harness.commands.slice(2).map(({ file, args }) => [file, ...args]),
+    [
+      ["npm", "run", "build"],
+      ["npm", "run", "test:delivery:prepared"],
+    ],
+  );
 });
 
 const REPOSITORY = ["--expect", TESTBOX_FINGERPRINT, "--suite", "repository"];
@@ -102,20 +108,20 @@ test("arguments fail before any read or subprocess", async () => {
   for (const args of [
     [],
     ["--expect", TESTBOX_FINGERPRINT],
-    ["--suite", "unit"],
-    ["--expect", "bad", "--suite", "unit"],
-    ["--expect", `${TESTBOX_FINGERPRINT}\n`, "--suite", "unit"],
+    ["--suite", "viewer"],
+    ["--expect", "bad", "--suite", "viewer"],
+    ["--expect", `${TESTBOX_FINGERPRINT}\n`, "--suite", "viewer"],
     [...TESTBOX_ARGUMENTS, "--unknown"],
     [...TESTBOX_ARGUMENTS, "--suite", "browser"],
     ["--expect", TESTBOX_FINGERPRINT, "--suite", "invalid"],
-    ["--expect", TESTBOX_FINGERPRINT, "--suite", "unit", "--shard"],
-    ["--expect", TESTBOX_FINGERPRINT, "--suite", "unit", "--shard", "0/4"],
-    ["--expect", TESTBOX_FINGERPRINT, "--suite", "unit", "--shard", "5/4"],
+    ["--expect", TESTBOX_FINGERPRINT, "--suite", "viewer", "--shard"],
+    ["--expect", TESTBOX_FINGERPRINT, "--suite", "viewer", "--shard", "0/4"],
+    ["--expect", TESTBOX_FINGERPRINT, "--suite", "viewer", "--shard", "5/4"],
     [
       "--expect",
       TESTBOX_FINGERPRINT,
       "--suite",
-      "unit",
+      "viewer",
       "--shard",
       "1/9007199254740992",
     ],
@@ -142,7 +148,7 @@ test("arguments fail before any read or subprocess", async () => {
       "--expect",
       TESTBOX_FINGERPRINT,
       "--suite",
-      "unit",
+      "viewer",
       "--dependency-audit",
       "strict",
     ],
@@ -202,39 +208,29 @@ test("shallow history is restored before checking the lockfile or starting cargo
 });
 
 for (const state of ["changed", "missing"]) {
-  test(`a ${state} lockfile stamp triggers install, Chromium and a new stamp`, async () => {
+  test(`a ${state} lockfile stamp triggers install and a new stamp`, async () => {
     const harness = testboxHarness();
     if (state === "missing") harness.files.delete(harness.stamp);
     else harness.files.set(harness.stamp, Buffer.from("old-digest\n"));
     await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies);
     assert.deepEqual(
-      harness.commands.slice(2, 4).map(({ file, args, captureOutput }) => ({
+      harness.commands.slice(2, 3).map(({ file, args, captureOutput }) => ({
         file,
         args,
         captureOutput,
       })),
-      [
-        { file: "npm", args: ["ci"], captureOutput: false },
-        {
-          file: "npx",
-          args: ["playwright", "install", "chromium"],
-          captureOutput: false,
-        },
-      ],
+      [{ file: "npm", args: ["ci"], captureOutput: false }],
     );
     assert.deepEqual(harness.writes, [
       { file: harness.stamp, contents: `${harness.digest}\n` },
     ]);
     const order = harness.events;
     assert.ok(
-      order.indexOf("npx playwright install chromium") <
-        order.indexOf(`write:${harness.stamp}`),
+      order.indexOf("npm ci") < order.indexOf(`write:${harness.stamp}`),
     );
     assert.ok(
       order.indexOf(`write:${harness.stamp}`) <
-        order.indexOf(
-          "cargo xtask check --executor local --suite unit --shard 1/4",
-        ),
+        order.indexOf("cargo xtask check --executor local --suite viewer"),
     );
   });
 }
@@ -274,16 +270,29 @@ test("secrets and GitHub identity variables do not enter child commands", async 
 
 test("the wrapper returns the exact cargo exit code", async () => {
   const harness = testboxHarness();
-  harness.outcomes.set(
-    "cargo xtask check --executor local --suite unit --shard 1/4",
-    {
-      exitCode: 7,
-      stdout: "",
-      stderr: "",
-    },
-  );
+  harness.outcomes.set("cargo xtask check --executor local --suite viewer", {
+    exitCode: 7,
+    stdout: "",
+    stderr: "",
+  });
   assert.equal(
     await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
     7,
   );
+});
+
+test("only browser accepts shard requests", () => {
+  for (const suite of ["viewer", "repository", "static-delivery"])
+    assert.throws(
+      () =>
+        parseTestboxArguments([
+          "--expect",
+          TESTBOX_FINGERPRINT,
+          "--suite",
+          suite,
+          "--shard",
+          "1/4",
+        ]),
+      { message: "only browser supports --shard" },
+    );
 });

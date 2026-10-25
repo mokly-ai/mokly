@@ -1,6 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
+
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -10,7 +13,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 
 test.beforeEach(async ({ page }) => {

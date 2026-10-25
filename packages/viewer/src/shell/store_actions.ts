@@ -7,10 +7,10 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import {
-  decodeDisclosureMap,
   disclosureStorageKey,
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
+import { NARROW_SHELL } from "./layout_breakpoint.js";
 import { navigationFiltering } from "./nav_model.js";
 import {
   folderRevealPath,
@@ -22,7 +22,6 @@ import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
 import type { ShellBrowserActions } from "./store_browser.js";
 import type { ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
-import { captureScrolls } from "./store_scroll.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
 const detailsStorageKey = "mokly:details-disclosure";
@@ -87,10 +86,11 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       );
       if (!input.embedded) persist(widthStorageKey, String(width));
     },
-    recoverySnapshot() {
-      return shellRecoverySnapshot(
-        input.stateRef.current,
-        input.interactive && !input.embedded,
+    releaseExpandedFrame(key) {
+      input.setState((current) =>
+        current.expandedFrame === key
+          ? { ...current, expandedFrame: undefined }
+          : current,
       );
     },
     revealFolder(section, path) {
@@ -192,6 +192,13 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         tagPickerOpen: open,
       }));
     },
+    settleComparisonIntent(installation) {
+      input.setState((current) =>
+        current.comparisonIntent && current.routeInstallation === installation
+          ? { ...current, comparisonIntent: false }
+          : current,
+      );
+    },
     setView(value) {
       updateSelection({ view: value });
     },
@@ -208,33 +215,8 @@ export function shellStore(input: StoreActionsInput): ShellStore {
   };
 }
 
-/** Capture reload state without assuming that this shell owns the document. */
-export function shellRecoverySnapshot(
-  state: ShellState,
-  interactive: boolean,
-): ReturnType<ShellStore["recoverySnapshot"]> {
-  const regionScrolls =
-    interactive && typeof document !== "undefined"
-      ? captureScrolls(document)
-      : state.regionScrolls;
-  return {
-    ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    disclosures: decodeDisclosureMap(state.disclosures),
-    colorScheme: state.selection.colorScheme,
-    detailsOpen: state.detailsOpen,
-    drawerOpen: state.drawerOpen,
-    filterBaselineDisclosures: state.filterBaseline
-      ? decodeDisclosureMap(state.filterBaseline)
-      : null,
-    navScroll: state.navScroll,
-    query: state.query,
-    regionScrolls,
-    view: state.selection.view,
-    viewport: state.selection.viewport,
-  };
-}
-
-function persistDisclosures(
+/** Persist the disclosure map a standalone shell adopted, unless filtering. */
+export function persistDisclosures(
   selection: ViewerSelection,
   disclosures: Readonly<Record<string, boolean>>,
   standalone: boolean,
@@ -254,8 +236,7 @@ function persistDisclosures(
 /** Whether the catalogue is a closed drawer at the current width. */
 function navigationDrawerShown(): boolean {
   return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 56.25rem)").matches
+    typeof window !== "undefined" && window.matchMedia(NARROW_SHELL).matches
   );
 }
 

@@ -28,17 +28,9 @@ test("the directory rule inventory includes every production root and syntax ext
     );
   assert.ok(
     directoryProbes.some(
-      (file) => file.startsWith("src/") && file.endsWith(".tsx"),
-    ),
-  );
-  assert.ok(
-    directoryProbes.some(
       (file) =>
         file.startsWith("packages/viewer/src/") && file.endsWith(".tsx"),
     ),
-  );
-  assert.ok(
-    directoryProbes.includes("scripts/preview/lint-coverage/nested/probe.mjs"),
   );
 });
 
@@ -96,7 +88,7 @@ test("only the directory definition module is exempt for both names", async () =
   assert.deepEqual((await lintProbe(source, owner)).messages, []);
   for (const file of [
     "packages/viewer/src/catalogue/lint-coverage-probe.ts",
-    "src/catalogue/delivery_paths.ts",
+    "packages/viewer/src/client/delivery_paths.ts",
   ]) {
     await requireLintRule(file, rule);
     assert.deepEqual(
@@ -112,7 +104,7 @@ test("only the directory definition module is exempt for both names", async () =
 test("the real Git-ignore and generated-output ignores remain active", async () => {
   for (const file of [
     ".context/lint-coverage-probe.ts",
-    "src/.mokly-cache/lint-coverage-probe.ts",
+    "packages/viewer/src/.mokly-cache/lint-coverage-probe.ts",
     "packages/viewer/src/.context/lint-coverage-probe.tsx",
     "examples/basic/mokly-generated/lint-coverage-probe.ts",
     "dist/lint-coverage-probe.js",

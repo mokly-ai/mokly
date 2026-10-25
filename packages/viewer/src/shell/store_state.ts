@@ -1,45 +1,17 @@
-/** Value state owned by one mounted hydrated shell. */
+/** Value state owned by one mounted shell. */
 
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { LiveChangesStatus } from "./metadata.js";
 import type { ShellRoute } from "./routes.js";
-import type { ViewMarks } from "./view_marks.js";
-import type { EntryStatus } from "./view_status.js";
 
-/** Server-rendered workspace metadata adopted for the first hydration render. */
-export interface WorkspaceHydrationState {
-  status: EntryStatus | undefined;
-  comparisonEligible: boolean;
-  marks: ViewMarks;
-}
-
-/** Browser state captured for one automatic watched reload. */
-export interface ShellRecoverySnapshot {
-  changesStatus?: LiveChangesStatus;
-  disclosures: Readonly<Record<string, boolean>> | null;
-  colorScheme: ViewerSelection["colorScheme"];
-  detailsOpen: boolean;
-  drawerOpen: boolean;
-  filterBaselineDisclosures: Readonly<Record<string, boolean>> | null;
-  navScroll: number;
-  query: string;
-  regionScrolls: Readonly<Record<string, number>>;
-  view: ViewerSelection["view"];
-  viewport: ViewerSelection["viewport"];
-}
-
-/** Optional browser values applied before React begins hydration. */
+/** Stored browser preferences the standalone bundle reads before its first render. */
 export interface ShellInitialState {
-  workspace?: WorkspaceHydrationState;
   colorScheme?: ViewerSelection["colorScheme"];
   detailsOpen?: boolean;
   disclosures?: Readonly<Record<string, boolean>>;
-  earlyDetailsOpen?: boolean;
-  earlyDisclosures?: Readonly<Record<string, boolean>>;
   navigationMaximum?: number;
   navigationWidth?: number;
-  recovery?: ShellRecoverySnapshot;
 }
 
 /** Complete interaction state for one standalone shell mount. */
@@ -65,6 +37,17 @@ export interface ShellState {
    */
   revealedFolder: { key: string; selection: ViewerSelection } | undefined;
   route: ShellRoute;
+  /**
+   * Counts route installations: the first route, each navigation, and each
+   * history step. A publication that rebinds the route keeps the count.
+   */
+  routeInstallation: number;
+  /**
+   * The installed route still holds its comparison intent, a shell-owned
+   * link's request for Side by side. The routed workspace settles it once;
+   * only a new route installation sets it again.
+   */
+  comparisonIntent: boolean;
   selection: ViewerSelection;
   tagPickerIndex: number;
   tagPickerOpen: boolean;

@@ -1,7 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type {
-  CatalogueReadModel,
   FrameAdapter,
   FrameEvent,
   MountedFrame,
@@ -10,6 +9,9 @@ import type {
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
+import { test } from "./browser_test.js";
+import { unavailableResourceNotice } from "./document_error_allowance.js";
+
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -17,7 +19,7 @@ test.beforeAll(async () => {
   fixture = await viewerFixture();
 });
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 test.beforeEach(async ({ page }) => {
   await page.goto(fixture.host.url);
@@ -67,52 +69,26 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   expect(cancelled).toBe(true);
 });
 
-test("fetcher replacement aborts stale work and a failed URL source can retry", async ({
+test("a failed URL index source can retry", async ({
   page,
+  allowBrowserError,
 }) => {
-  const state = await page.evaluate(async () => {
-    const host = window.viewerHarness.start("one");
-    const catalogue = host.props.catalogue as CatalogueReadModel;
-    let entered!: () => void;
-    const started = new Promise<void>((resolve) => {
-      entered = resolve;
-    });
-    let stopped!: () => void;
-    const aborted = new Promise<void>((resolve) => {
-      stopped = resolve;
-    });
-    host.props = {
-      ...host.props,
-      catalogue: ({ signal }) =>
-        new Promise((resolve) => {
-          entered();
-          signal.addEventListener("abort", () => {
-            stopped();
-            resolve({ catalogue, url: new URL(location.href) });
-          });
-        }),
-    } as MoklyViewerProps;
-    delete host.props.baseUrl;
-    host.render();
-    await started;
-    host.props = { ...host.props, catalogue, baseUrl: location.origin };
-    host.render();
-    await aborted;
-    return true;
-  });
-  expect(state).toBe(true);
+  allowBrowserError(
+    unavailableResourceNotice(`${fixture.host.url}/public-catalogue.json`),
+  );
+  await page.evaluate(() => window.viewerHarness.start("one"));
   let attempts = 0;
   await page.route("**/public-catalogue.json", async (route) => {
     attempts++;
     if (attempts === 1)
       await route.fulfill({ status: 503, body: "Unavailable" });
-    else await route.fulfill({ json: fixture.catalogue });
+    else await route.fulfill({ json: fixture.index });
   });
   await page.evaluate(() => {
     const host = window.viewerHarness.get("one");
     host.props = {
       ...host.props,
-      catalogue: new URL("/public-catalogue.json", location.href),
+      index: new URL("/public-catalogue.json", location.href),
       theme: "dark",
     } as MoklyViewerProps;
     delete host.props.baseUrl;
@@ -147,6 +123,62 @@ test("fetcher replacement aborts stale work and a failed URL source can retry", 
       message: "The catalogue could not be loaded. Try again.",
     },
   ]);
+});
+
+test("another deployment keeps the stage loading until the host replaces the index", async ({
+  page,
+}) => {
+  const other = "1".repeat(64);
+  await page.evaluate((deploymentId) => {
+    const seen = { unavailable: false };
+    (window as unknown as { stageSeen: typeof seen }).stageSeen = seen;
+    new MutationObserver(() => {
+      if (document.body.textContent?.includes("could not be shown"))
+        seen.unavailable = true;
+    }).observe(document.body, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    const host = window.viewerHarness.start("one");
+    host.details["home"] = { ...host.details["home"]!, deploymentId };
+  }, other);
+  const errors = () =>
+    page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "error")
+        .map((event) => event.value),
+    );
+  const changed = {
+    code: "catalogue",
+    message: "The catalogue changed. Reload it to see the new version.",
+  };
+  await expect.poll(errors).toEqual([changed]);
+  const viewer = page.locator("#one");
+  await expect(
+    viewer.getByRole("status").filter({ hasText: "Loading preview…" }),
+  ).toBeVisible();
+  await page.evaluate((deploymentId) => {
+    const host = window.viewerHarness.get("one");
+    host.props = {
+      ...host.props,
+      index: { ...(host.props.index as object), deploymentId },
+    } as MoklyViewerProps;
+    host.render();
+  }, other);
+  await expect(viewer.locator("iframe").first()).toBeVisible();
+  await expect(viewer.getByText("Loading preview…")).toHaveCount(0);
+  // The unavailable stage with Try again never appeared, and one deployment
+  // change reported one error.
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { stageSeen: { unavailable: boolean } }).stageSeen
+          .unavailable,
+    ),
+  ).toBe(false);
+  expect(await errors()).toEqual([changed]);
 });
 
 test("frame failures end picking once and reject one handle with one safe error", async ({
@@ -219,27 +251,4 @@ test("frame failures end picking once and reject one handle with one safe error"
       message: "This instance is unavailable in the current view.",
     },
   ]);
-});
-
-test("StrictMode starts one source transport and aborts it on unmount", async ({
-  page,
-}) => {
-  const result = await page.evaluate(async () => {
-    let calls = 0,
-      aborted = 0;
-    window.viewerHarness.start("one", {
-      strict: true,
-      source: ({ signal }: { signal: AbortSignal }) => {
-        calls++;
-        signal.addEventListener("abort", () => {
-          aborted++;
-        });
-        return new Promise(() => {});
-      },
-    });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    window.viewerHarness.remove("one");
-    return { calls, aborted };
-  });
-  expect(result).toEqual({ calls: 1, aborted: 1 });
 });

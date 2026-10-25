@@ -5,12 +5,12 @@ import path from "node:path";
 import test from "node:test";
 import type { TestContext } from "node:test";
 
-import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
+import { discoverNodeFiles } from "../scripts/verification/evidence.mjs";
 import { ExpectedFailure } from "../scripts/verification/expected-failure.mjs";
 import {
-  parseUnitSelection,
-  selectUnitFiles,
-} from "../scripts/verification/unit-selection.mjs";
+  parseViewerSelection,
+  selectViewerFiles,
+} from "../scripts/verification/viewer-selection.mjs";
 
 const inventory = [
   "packages/viewer/tests/viewer.test.tsx",
@@ -36,11 +36,11 @@ async function fixture(context: TestContext): Promise<string> {
 
 test("developer selection discovers fixture files and keeps no-argument runs complete", async (context) => {
   const root = await fixture(context);
-  const selection = await parseUnitSelection(root, []);
+  const selection = await parseViewerSelection(root, []);
   assert.equal(selection.selected, false);
   assert.deepEqual(selection.patterns, []);
-  assert.deepEqual(await discoverUnitFiles(root), inventory);
-  assert.deepEqual(selectUnitFiles(selection, inventory), inventory);
+  assert.deepEqual(await discoverNodeFiles(root), inventory);
+  assert.deepEqual(selectViewerFiles(selection, inventory), inventory);
 });
 
 test("developer selection accepts normalized and absolute file arguments once", async (context) => {
@@ -55,12 +55,12 @@ test("developer selection accepts normalized and absolute file arguments once", 
     path.join(root, "tests/alpha.test.ts"),
     "tests\\alpha.test.ts",
   ];
-  const selection = await parseUnitSelection(root, [
+  const selection = await parseViewerSelection(root, [
     ...argumentsForAlpha,
     "packages/viewer/tests/viewer.test.tsx",
   ]);
   assert.equal(selection.selected, true);
-  assert.deepEqual(selectUnitFiles(selection, inventory), [
+  assert.deepEqual(selectViewerFiles(selection, inventory), [
     "tests/alpha.test.ts",
     "packages/viewer/tests/viewer.test.tsx",
   ]);
@@ -81,11 +81,11 @@ test("developer selection accepts absolute paths through a linked repository ali
   const file = "tests/alpha.test.ts";
   const argumentsForFile = [path.join(alias, file), path.join(root, file)];
   for (const repositoryRoot of [root, alias]) {
-    const selection = await parseUnitSelection(
+    const selection = await parseViewerSelection(
       repositoryRoot,
       argumentsForFile,
     );
-    assert.deepEqual(selectUnitFiles(selection, inventory), [file]);
+    assert.deepEqual(selectViewerFiles(selection, inventory), [file]);
   }
 });
 
@@ -100,13 +100,15 @@ for (const argument of [
     async (context) => {
       const root = await fixture(context);
       await assert.rejects(
-        parseUnitSelection(root, [argument]),
+        parseViewerSelection(root, [argument]),
         (error: Error) => {
           assert.ok(error instanceof ExpectedFailure);
           assert.ok(error.message.includes(argument));
           if (argument.endsWith(".spec.ts"))
             assert.ok(
-              error.message.includes("npm run test:browser -- " + argument),
+              error.message.includes(
+                "browser verification is not available for " + argument,
+              ),
             );
           return true;
         },
@@ -118,18 +120,21 @@ for (const argument of [
 test("developer selection rejects absolute paths outside the repository", async (context) => {
   const root = await fixture(context);
   const argument = path.join(path.dirname(root), "outside.test.ts");
-  await assert.rejects(parseUnitSelection(root, [argument]), (error: Error) => {
-    assert.ok(error.message.includes(argument));
-    return true;
-  });
+  await assert.rejects(
+    parseViewerSelection(root, [argument]),
+    (error: Error) => {
+      assert.ok(error.message.includes(argument));
+      return true;
+    },
+  );
 });
 
 test("developer selection rejects inventory misses and names the original argument", async (context) => {
   const root = await fixture(context);
   const argument = "./tests/../helper.test.ts";
-  const selection = await parseUnitSelection(root, [argument]);
+  const selection = await parseViewerSelection(root, [argument]);
   assert.throws(
-    () => selectUnitFiles(selection, inventory),
+    () => selectViewerFiles(selection, inventory),
     (error: Error) => {
       assert.ok(error instanceof ExpectedFailure);
       assert.ok(error.message.includes(argument));
@@ -141,7 +146,7 @@ test("developer selection rejects inventory misses and names the original argume
 test("developer selection retains both pattern forms and repeats in order", async (context) => {
   const root = await fixture(context);
   const patterns = ["one (two|three)$", "four.*", "/^FIVE$/i"];
-  const selection = await parseUnitSelection(root, [
+  const selection = await parseViewerSelection(root, [
     "--test-name-pattern=" + patterns[0],
     "tests/alpha.test.ts",
     "--test-name-pattern",
@@ -150,24 +155,24 @@ test("developer selection retains both pattern forms and repeats in order", asyn
   ]);
   assert.equal(selection.selected, true);
   assert.deepEqual(selection.patterns, patterns);
-  assert.deepEqual(selectUnitFiles(selection, inventory), [
+  assert.deepEqual(selectViewerFiles(selection, inventory), [
     "tests/alpha.test.ts",
   ]);
 });
 
 test("a pattern alone selects the complete inventory under the selected policy", async (context) => {
   const root = await fixture(context);
-  const selection = await parseUnitSelection(root, [
+  const selection = await parseViewerSelection(root, [
     "--test-name-pattern=alpha",
   ]);
   assert.equal(selection.selected, true);
   assert.deepEqual(selection.files, []);
-  assert.deepEqual(selectUnitFiles(selection, inventory), inventory);
+  assert.deepEqual(selectViewerFiles(selection, inventory), inventory);
 });
 
 test("non-empty pattern values are forwarded literally in either form", async (context) => {
   const root = await fixture(context);
-  const selection = await parseUnitSelection(root, [
+  const selection = await parseViewerSelection(root, [
     "--test-name-pattern",
     "-literal pattern",
     "--test-name-pattern=--literal",
@@ -190,10 +195,9 @@ for (const args of [
     "developer selection prints usage for " + JSON.stringify(args),
     async (context) => {
       const root = await fixture(context);
-      await assert.rejects(parseUnitSelection(root, args), (error: Error) => {
+      await assert.rejects(parseViewerSelection(root, args), (error: Error) => {
         assert.ok(error instanceof ExpectedFailure);
         assert.match(error.message, /usage: npm test --/u);
-        assert.match(error.message, /npm run test:unit --/u);
         assert.match(error.message, /--test-name-pattern=<regex>/u);
         assert.match(error.message, /--test-name-pattern <regex>/u);
         return true;
@@ -207,9 +211,8 @@ for (const args of [["--shard"], ["--shard", "1/4"], ["--shard=1/4"]]) {
     "developer selection rejects shards: " + JSON.stringify(args),
     async (context) => {
       const root = await fixture(context);
-      await assert.rejects(parseUnitSelection(root, args), (error: Error) => {
-        assert.match(error.message, /npm run test:prepared/u);
-        assert.match(error.message, /cargo xtask check --suite unit --shard/u);
+      await assert.rejects(parseViewerSelection(root, args), (error: Error) => {
+        assert.match(error.message, /does not accept --shard/u);
         return true;
       });
     },
@@ -218,6 +221,6 @@ for (const args of [["--shard"], ["--shard", "1/4"], ["--shard=1/4"]]) {
 
 test("developer selection fails when discovery is empty", async (context) => {
   const root = await fixture(context);
-  const selection = await parseUnitSelection(root, []);
-  assert.throws(() => selectUnitFiles(selection, []), /discovery was empty/u);
+  const selection = await parseViewerSelection(root, []);
+  assert.throws(() => selectViewerFiles(selection, []), /discovery was empty/u);
 });

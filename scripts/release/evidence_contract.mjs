@@ -1,9 +1,9 @@
 const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
 export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
-export const VERIFICATION_REPORT_COUNT = 18;
+export const VERIFICATION_REPORT_COUNT = 10;
 export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
-  "node-22.14.0",
+  "node-22.15.0",
   "node-24",
 ]);
 
@@ -131,30 +131,31 @@ export function classifyEvidence(input, validateReports) {
       identity.commit,
     );
   }
-  const liveInventory = sorted(input.liveUnitFiles);
+  const liveInventory = sorted(input.liveNodeFiles);
   const mismatched = input.reports
-    .filter((report) => report.suite === "unit")
+    .filter((report) => report.suite === "viewer")
     .some(
       (report) =>
         sorted(report.fullFiles).join("\n") !== liveInventory.join("\n"),
     );
   if (mismatched)
     return invalid(
-      "unit report inventory does not match the release checkout",
+      "viewer report inventory does not match the release checkout",
       input.reports.length,
       identity.commit,
     );
-  const liveBrowserInventory = sorted(input.liveBrowserFiles);
-  const browserMismatch = input.reports
-    .filter((report) => ["browser", "hydration"].includes(report.suite))
-    .some(
-      (report) =>
-        sorted(report.playwrightFiles).join("\n") !==
-        liveBrowserInventory.join("\n"),
-    );
-  if (browserMismatch)
+  const browserInventory = sorted(input.liveBrowserFiles);
+  if (
+    input.reports
+      .filter((report) => report.suite === "browser")
+      .some(
+        (report) =>
+          sorted(report.playwrightFiles).join("\n") !==
+          browserInventory.join("\n"),
+      )
+  )
     return invalid(
-      "Playwright report inventory does not match the release checkout",
+      "browser report inventory does not match the release checkout",
       input.reports.length,
       identity.commit,
     );

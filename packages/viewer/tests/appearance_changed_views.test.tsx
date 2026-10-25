@@ -1,65 +1,41 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
+import {
+  detailPairs,
+  indexFixture,
+  rawDetailFixtures,
+} from "./catalogue_v7_fixture.js";
+import { withDarkViews } from "./presentation_v7_helpers.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestScreen, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
-import type { ShellInitialState } from "../src/shell/store_state.js";
-import { StandaloneShellDocument } from "../src/standalone/document.js";
+const SCREEN = "product/browse/home";
 
-const screen = {
-  colorSchemes: ["light", "dark"],
-  description: "Welcome screen",
-  path: "welcome",
-  kind: "screen",
-
-  relatedDocs: [],
-  sourcePath: "entries/welcome.mockup.tsx",
-  title: "Welcome",
-  useCasePaths: [],
-} satisfies ManifestScreen;
-const manifest: ManifestV10 = currentManifest({
-  entries: [screen],
-  generatedBy: "mokly",
-  schemaVersion: 10,
-  folders: [],
-  sourceFiles: [screen.sourcePath],
+/** Home offers Dark, and only its mobile dark view changed since the branch point. */
+const index = indexFixture((model) => {
+  const screen = model.screens.find((entry) => entry.path === SCREEN)!;
+  screen.colorSchemes = ["light", "dark"];
+  screen.changes = { status: "ready", kind: "changed", included: true };
+  screen.views = withDarkViews(screen.views).map((view) => ({
+    ...view,
+    comparison:
+      view.viewport === "mobile" && view.colorScheme === "dark"
+        ? { status: "ready", kind: "changed", eligible: true }
+        : { status: "ready", kind: "unmodified", eligible: false },
+  }));
 });
+const fixtures = rawDetailFixtures();
+const detail = fixtures.current[SCREEN]!;
+detail.views = withDarkViews(detail.views);
+const details = detailPairs(undefined, fixtures);
 
 function render(colorScheme: "light" | "dark", home = false): string {
-  const initialState: ShellInitialState = {
-    colorScheme,
-  };
-  return renderToStaticMarkup(
-    <StandaloneShellDocument
-      catalogue={createCatalogue(manifest)}
-      context={{
-        base: "main",
-        updateVersion: 1,
-        changesStatus: "ready",
-        changedEntries: [screen.path],
-        componentChanges: {
-          baseline: manifest,
-          screenViews: [
-            {
-              path: screen.path,
-              views: [
-                { viewport: "mobile", colorScheme: "dark", state: "changed" },
-              ],
-            },
-          ],
-        },
-      }}
-      initialState={initialState}
-      view={
-        home
-          ? { kind: "home" }
-          : { kind: "target", target: { kind: "entry", entry: screen } }
-      }
-    />,
-  );
+  return standaloneMarkup({
+    index,
+    details,
+    initialState: { colorScheme },
+    path: home ? "/" : `/view/${SCREEN}/`,
+  });
 }
 
 test("standalone Appearance retains hidden-view change evidence", () => {

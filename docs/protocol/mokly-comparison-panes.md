@@ -1,22 +1,6 @@
 # Comparison Pane Presentation
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of the presentation below: the existing design references,
-generation-confined snapshot loader, and device-sized pane runtime. Its
-[scrolling contract](./mokly-comparison-scrolling.md) records the implemented
-page scroller and inner-region mirroring. The
-[region pairing](./mokly-comparison-region-pairing.md) and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts are also
-implemented and depicted in the design catalogue. This contract governs the
-Before and Current panes that
-[Changes and screen comparisons](./mokly-changes.md) offer for changed screens
-and eligible component variants in Side by side, Overlay and Difference. It
-changes nothing about comparison eligibility, capture, generation, publishing,
-current previews, or [removed previews](./mokly-removed-previews.md) beyond the
-shared pipeline named here. Snapshot addresses below derive from paths under
-the [artifact path contract](./mokly-artifact-paths.md) and review v7.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Behavior
 
@@ -29,13 +13,13 @@ full-height sections, fixed bars, and sticky headers look as they do in
 Current. Links and forms do nothing, anchors and scroll keys reach inner
 regions before the page, and text stays selectable. Readers compare a linked
 screen through the catalogue, where every screen has its own comparison.
-Loading, failed, refreshed, and renewed comparisons keep the existing product
-copy, and Try again repeats the request. Individual browser expansion stays
+Loading, failed, refreshed, and renewed comparisons keep the product copy,
+and Try again repeats the request. Individual browser expansion stays
 available only in Current. No pixel counts or percentages are ever shown.
 
 ## Presentation
 
-Serve, static export, and embedded viewers with either adapter use one
+Serve, the static build, and embedded viewers with either adapter use one
 presentation path for every pane document. After the comparison JSON validates,
 the viewer fetches every document the selected viewport and scheme need, for
 both viewports when both are shown, before reporting ready. Each address must
@@ -46,7 +30,7 @@ pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v7 addresses panes by entry identity, view axes, and state. The viewer derives
+Review v8 addresses panes by entry identity, view axes, and state. The viewer derives
 each side's `snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's path,
 `previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
 or snapshot path travels in comparison JSON.
@@ -90,8 +74,8 @@ sizing, page spacers and measurement, instant writes, shorter-document
 translation, value-based echoes, inner-region mirroring, keys, and anchors; the
 [region pairing contract](./mokly-comparison-region-pairing.md) owns how regions
 pair, and the [Scroll together contract](./mokly-comparison-scroll-together.md)
-owns the reader preference. Sizing a frame to its document remains rejected:
-it distorted viewport units, fixed bars, and sticky headers and could feed a
+owns the reader preference. Sizing a frame to its document is rejected: it
+distorts viewport units, fixed bars, and sticky headers and can feed a
 document's height back into itself without converging.
 
 ## Layout
@@ -117,9 +101,15 @@ always match. With Scroll together on, their page offsets and paired inner
 regions mirror in both directions. With it off, each pane scrolls independently.
 Narrow layouts keep the existing single-column responsive rules.
 
-A pane whose document is missing, such as the current side of a removed
-component variant, keeps the existing explicit missing-pane message and the
-comparison falls back to Side by side, as it does today.
+A pane whose document is missing keeps an explicit message under its Before
+or Current label, and the comparison falls back to Side by side. A missing
+Before side reads “This screen did not exist before.”, and a missing Current
+side, such as the current side of a removed component variant, reads “This
+screen has been removed.”. A component comparison says “variant” in place of
+“screen”: “This variant did not exist before.” and “This variant has been
+removed.”. The `missing-before` and `missing-current` variants of
+`design/library/preview/comparison-pane` and the removed Compact variant of
+the component explorer depict this copy.
 
 An app shell may keep a zero-range page while its panels scroll. Those inner
 regions pair and mirror by authored name, id, role and accessible name, or a
@@ -166,7 +156,7 @@ An embedded viewer may fetch, on the source origin, every path beneath the
 advertised generation's `snapshots/before/` and `snapshots/after/` directories
 once a comparison is selected, under the existing CORS, `credentials: "omit"`,
 `nosniff`, and `text/html` rules of the
-[export delivery contract](./mokly-export-delivery.md). The documented host
+[static delivery contract](./mokly-export-delivery.md). The documented host
 CORS requirement already covers `mokly-viewer/diffs/generations/**`, so pane
 documents need no new hosting rule. A `srcdoc` document inherits the embedding
 document's Content Security Policy; an embedded host must allow the artifact
@@ -178,21 +168,22 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove the page items below in live Serve through the selected
-comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static export and an embedded
-viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
-stacked wheel alignment, frame attributes, inert links and anchors, and export
-Side by side mirroring; the pane failure path runs embedded. The region, key,
-anchor, and Scroll together items are proved by the five
-`tests/browser/comparison_regions*.spec.ts` suites, which the scrolling,
-region pairing, and Scroll together contracts name case by case. Unit tests
-under `packages/viewer/tests/` cover the controllers.
+Browser regressions, listed in the
+[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites),
+prove every item below in a static build. Live Serve, through the selected
+comparison path, proves the wheel, Side by side, page key, anchor,
+shorter-document, inner-region, and frame-attribute items, and Try again and
+Refresh. It also proves presentation and renewal after a watched edit. A static build and an embedded viewer through both frame adapters
+prove stack alignment, frame attributes, and inert links and anchors. The
+static build also proves Side by side mirroring. The static build and the
+cross-origin adapter prove the pane failure path. The scrolling, region
+pairing, and Scroll together contracts name their acceptance cases. Unit tests
+cover the controllers and the loader.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
   rectangles, for desktop, mobile, both viewports at once, and a component
-  comparison; the same spec failed before the implementation landed.
+  comparison.
 - With the default control on, scrolling one Side by side viewport moves the
   other to the same offset in both directions, and an anchor in either pane
   moves both.
@@ -219,8 +210,8 @@ under `packages/viewer/tests/` cover the controllers.
   generation; no pane loads a snapshot as its `src`.
 - A document or host that asks for smooth scrolling still moves with the
   shared offset at once, in a stack and in Side by side.
-- Links and forms inside a pane stay inert in Serve, a static export and an
-  embedded viewer, including while a slow resource holds back its load.
+- Links and forms inside a pane stay inert, including while a slow resource
+  holds back its load.
 - Ready waits for every selected document; a pane document that cannot be
   presented renders the failure copy, reaches an embedded host's error event,
   and recovers with Try again; Refresh presents the documents again; the

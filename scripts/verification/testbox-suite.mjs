@@ -4,17 +4,12 @@ import { constants } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { parseShardArgument } from "./evidence.mjs";
+import { parseShardArgument } from "./browser-shard.mjs";
+import { childEnvironment } from "./child-environment.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
 import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
-const SUITES = new Set([
-  "repository",
-  "package",
-  "unit",
-  "browser",
-  "hydration",
-]);
+const SUITES = new Set(["repository", "viewer", "browser", "static-delivery"]);
 const AUDIT_MODES = new Set(["baseline", "strict"]);
 const USAGE =
   "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
@@ -44,11 +39,6 @@ export function parseTestboxArguments(args) {
   }
   const suite = values.get("--suite");
   if (!SUITES.has(suite)) throw new Error(`invalid suite; ${USAGE}`);
-  const shard = parseShardArgument(
-    values.has("--shard") ? ["--shard", values.get("--shard")] : [],
-  );
-  if (shard && suite !== "unit" && suite !== "browser")
-    throw new Error("shard is valid only for unit or browser suites");
   const dependencyAudit = values.get("--dependency-audit");
   if (dependencyAudit !== undefined && !AUDIT_MODES.has(dependencyAudit))
     throw new Error(`invalid dependency audit mode; ${USAGE}`);
@@ -56,10 +46,20 @@ export function parseTestboxArguments(args) {
     throw new Error(
       "dependency audit mode is valid only for the repository suite",
     );
+  let shard;
+  try {
+    shard = parseShardArgument(
+      values.has("--shard") ? ["--shard", values.get("--shard")] : [],
+    );
+  } catch (error) {
+    throw new Error(`${error.message}; ${USAGE}`, { cause: error });
+  }
+  if (shard && suite !== "browser")
+    throw new Error("only browser supports --shard");
   return {
     expected,
-    suite,
     ...(shard ? { shard } : {}),
+    suite,
     ...(dependencyAudit ? { dependencyAudit } : {}),
     commandName: shard ? `${suite}-${shard.index}-of-${shard.total}` : suite,
   };
@@ -72,7 +72,7 @@ export async function runTestboxSuite(args, dependencies) {
     dependencies;
   if (!environment.HOME)
     throw new Error("HOME is required for the Testbox lockfile stamp");
-  const env = { ...environment };
+  const env = childEnvironment(environment);
   for (const name of [
     "BLACKSMITH_ORG_TOKEN",
     "GITHUB_SHA",
@@ -130,6 +130,14 @@ export async function runTestboxSuite(args, dependencies) {
       "Chromium install",
     );
     await writeFile(stampFile, `${digest}\n`);
+  }
+
+  if (request.suite === "static-delivery") {
+    const build = outcomeExitCode(await command("npm", ["run", "build"]));
+    if (build !== 0) return build;
+    return outcomeExitCode(
+      await command("npm", ["run", "test:delivery:prepared"]),
+    );
   }
 
   const suiteArgs = [

@@ -1,0 +1,22 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nprops: {enabled: yes}\n---\n<h1 mokly-if=\"$enabled\">Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "html-props",
+      "message": "mokly-if \"$enabled\" must name a declared boolean prop",
+      "path": "specs/home.screen.html",
+      "line": 5,
+      "column": 5
+    }
+  ],
+  "warnings": [
+    {
+      "code": "html-unused-props",
+      "subject": "entry \"home\"",
+      "message": "prop \"enabled\" is not read by the body"
+    }
+  ]
+}

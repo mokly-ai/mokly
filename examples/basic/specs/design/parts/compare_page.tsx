@@ -6,6 +6,7 @@ import type { AppearanceChoice } from "./appearance.js";
 import { ComparisonStage } from "./compare.js";
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
+import { ReasonSentences, type ChangeReasonKind } from "./reason_sentences.js";
 import { ReviewNav, type ReviewState } from "./review.js";
 import { ScreenHead, Shell, ViewSwitch, type Crumb } from "./shell.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
@@ -21,7 +22,14 @@ interface ComparePageProps {
   crumbs?: readonly Crumb[] | undefined;
   /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
-  /** Secondary comparison evidence; the branch-point line alone when omitted. */
+  /**
+   * Where the earlier side comes from, after the branch-point sentence; a
+   * moved entry names its previous path.
+   */
+  source?: ReactNode;
+  /** The compared entry's direct reasons, one sentence each in Details. */
+  reasons: readonly ChangeReasonKind[];
+  /** Further comparison evidence after the reasons, such as changed files. */
   evidence?: ReactNode;
   /** Desktop navigation column; the Changes catalogue when omitted. */
   nav?: ReactNode;
@@ -41,6 +49,8 @@ export function ComparePage({
   crumbs,
   evidence,
   nav,
+  reasons,
+  source,
   subject,
   render,
   path,
@@ -74,7 +84,13 @@ export function ComparePage({
         inspector={
           <DetailsPanel
             subject={subject}
-            comparisonEvidence={evidence ?? true}
+            comparisonEvidence={
+              <>
+                {source}
+                <ReasonSentences reasons={reasons} />
+                {evidence}
+              </>
+            }
             open
           />
         }

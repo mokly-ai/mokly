@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {},
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "roots[0].dir: root is not an existing directory: specs",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

@@ -8,6 +8,7 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::clients::outcome::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
+use crate::remote::plan::COMMAND_COUNT;
 use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
@@ -22,11 +23,11 @@ impl DefaultRemoteRunner {
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let results = thread::scope(|scope| {
-            let workers: Vec<_> = (0..11)
+            let workers: Vec<_> = (0..COMMAND_COUNT)
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {
-                            return Err(Error::Interrupted { cleanup: 0 });
+                            return Err(Error::Cancelled);
                         }
                         let output = dependencies.blacksmith.warmup(reference)?;
                         let text = output.combined();
@@ -78,7 +79,7 @@ impl DefaultRemoteRunner {
             }
         }
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         match failure {
             Some(error) => Err(error),
@@ -133,7 +134,7 @@ impl DefaultRemoteRunner {
                 .collect::<Vec<_>>()
         });
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         for result in results {
             result?;

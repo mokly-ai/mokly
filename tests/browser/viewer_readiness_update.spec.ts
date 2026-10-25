@@ -1,11 +1,13 @@
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { build } from "esbuild";
 
 import type { CatalogueReadModel } from "../../packages/viewer/src/catalogue/types.js";
+
 import type {} from "../../packages/viewer/tests/readiness_entry.js";
 
+import { test } from "./browser_test.js";
 import { crossOriginFixture } from "./frame_adapter_fixture.js";
 
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
@@ -33,15 +35,22 @@ for (const cross of [false, true]) {
       await page.goto(fixture.host.url);
       await page.addScriptTag({ url: `${fixture.host.url}/readiness.js` });
       await page.evaluate(
-        ({ model, origin, cross, status }) =>
+        ({ model, details, origin, cross, status }) =>
           window.startReadiness(
             JSON.parse(model) as CatalogueReadModel,
+            JSON.parse(details),
             origin,
             cross,
             status,
           ),
         {
-          model: JSON.stringify(fixture.catalogue),
+          model: JSON.stringify(fixture.index),
+          details: JSON.stringify(
+            Object.entries(fixture.details.current).map(([path, detail]) => [
+              { path },
+              detail,
+            ]),
+          ),
           origin: fixture.frames.url,
           cross,
           status,

@@ -2,6 +2,8 @@
 
 import { useEffect, type RefObject } from "react";
 
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 /** Install scoped pointer, keyboard, and resize behavior for one inspector. */
 export function useInspectorResize(
   root: RefObject<HTMLElement | null>,
@@ -30,7 +32,7 @@ export function useInspectorResize(
       | { pointer: number; y: number; height: number; moved: boolean }
       | undefined;
     let suppressClick = false;
-    const narrow = () => win.matchMedia("(max-width: 56.25rem)").matches;
+    const narrow = () => win.matchMedia(NARROW_SHELL).matches;
     const bounds = () => ({
       min: Math.min(160, panes.clientHeight - 100),
       max: Math.max(46, panes.clientHeight - 100),

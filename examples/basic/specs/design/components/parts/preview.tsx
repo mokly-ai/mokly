@@ -37,26 +37,33 @@ export function ActionExample({
   );
 }
 
-export function ToolbarExample() {
+/** The Toolbar's prompt and its Action, as the branch point or the head renders them. */
+export function ToolbarExample({ before = false }: { before?: boolean }) {
   return (
     <div className="ce-toolbar-example">
       <span>{toolbarPrompt}</span>
-      <ActionExample />
+      <ActionExample before={before} />
     </div>
   );
 }
 
-/** The bordered component frame: a context caption above its viewport. */
+/**
+ * The bordered component frame: a context caption above its viewport. The
+ * current canvas keeps the shell's fixed layout width; a comparison pane's
+ * frame fills its pane.
+ */
 function ComponentFrame({
   children,
+  current = false,
   viewport,
 }: {
   children: ReactNode;
+  current?: boolean;
   viewport: ArtboardViewport;
 }) {
   return (
     <section
-      className={`ce-canvas ce-canvas--${viewport}`}
+      className={`ce-canvas ce-canvas--${viewport}${current ? " ce-canvas--current" : ""}`}
       aria-label={`${viewport === "mobile" ? "Mobile" : "Desktop"} component preview`}
     >
       <span className="ce-canvas-label">
@@ -76,7 +83,7 @@ export function ComponentCanvas({
   viewport: ArtboardViewport;
 }) {
   return (
-    <ComponentFrame viewport={viewport}>
+    <ComponentFrame current viewport={viewport}>
       <div className="ce-canvas-content">{children}</div>
     </ComponentFrame>
   );

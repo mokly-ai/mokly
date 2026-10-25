@@ -1,20 +1,12 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import { comparisonRegionsFixture } from "../helpers/comparison_regions_fixture.js";
-
-import { loadComparison } from "./comparison_actions.js";
-import { scrollTogether } from "./comparison_regions_helpers.js";
+import { scrollTogether } from "./comparison_scroll.js";
+import { comparisonPaths, test } from "./comparison_test.js";
+import { comparisonIndex, modeButton } from "./comparison_ui.js";
+import { responseFailure } from "./shell_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 
-let fixture: Awaited<ReturnType<typeof comparisonRegionsFixture>>;
-test.describe.configure({ timeout: 90_000 });
-test.beforeAll(async () => {
-  test.setTimeout(120_000);
-  fixture = await comparisonRegionsFixture();
-});
-test.afterAll(async () => {
-  await fixture?.close();
-});
+const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
 
 type Box = { bottom: number; left: number; right: number; top: number };
 
@@ -96,7 +88,7 @@ function band(page: Page) {
 
 async function open(page: Page, width: number): Promise<void> {
   await page.setViewportSize({ width, height: 1000 });
-  await page.goto(`${fixture.url}/view/shell/`);
+  await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseViewport(page, "desktop");
 }
 
@@ -105,15 +97,15 @@ test("Current shows no switch; every diff mode shows it on, after the modes", as
 }) => {
   await open(page, 1600);
   await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  await expect(scrollTogether(page)).toHaveCount(0);
+  await expect(scrollTogether(page)).toBeHidden();
   await expect(page.locator(".mbk-diff-sync")).toBeHidden();
-  await loadComparison(page, "Side by side");
-  for (const mode of ["Side by side", "Overlay", "Difference"]) {
-    await page.getByRole("button", { name: mode, exact: true }).click();
+  for (const mode of ["Side by side", "Overlay", "Difference"] as const) {
+    await modeButton(page, mode).click();
     const toggle = scrollTogether(page);
     await expect(toggle, mode).toBeVisible();
     await expect(toggle, mode).toBeChecked();
     await expect(toggle, mode).toHaveAttribute("type", "checkbox");
+    await expect(page.locator(".mbk-diff-refresh")).toBeVisible();
     const facts = await band(page);
     expect(facts.order, mode).toEqual([
       "mbk-seg",
@@ -127,15 +119,16 @@ test("Current shows no switch; every diff mode shows it on, after the modes", as
       0.5,
     );
   }
-  await page.getByRole("button", { name: "Current", exact: true }).click();
-  await expect(scrollTogether(page)).toHaveCount(0);
+  await modeButton(page, "Current").click();
+  await expect(scrollTogether(page)).toBeHidden();
 });
 
 test("the switch is drawn as designed, on, off and focused", async ({
   page,
 }) => {
   await open(page, 1600);
-  await loadComparison(page, "Overlay");
+  await modeButton(page, "Overlay").click();
+  await expect(scrollTogether(page)).toBeChecked();
   const on = await band(page);
   expect(on.text).toEqual({
     colour: on.tokens.ink,
@@ -152,13 +145,14 @@ test("the switch is drawn as designed, on, off and focused", async ({
     top: "2px",
   });
   await scrollTogether(page).click();
+  await expect(scrollTogether(page)).not.toBeChecked();
   const off = await band(page);
   expect(off.track.background).toBe(off.tokens.bg);
   expect(off.track.border).toBe(off.tokens.edge);
   expect(off.track.knob.colour).toBe(off.tokens.edge);
   expect(off.track.knob.left).toBe("2px");
   expect(off.track.outline[0]).toBe("none");
-  await page.getByRole("button", { name: "Difference", exact: true }).focus();
+  await modeButton(page, "Difference").focus();
   await page.keyboard.press("Tab");
   await expect(scrollTogether(page)).toBeFocused();
   const focused = await band(page);
@@ -175,6 +169,7 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const forcedOn = await band(page);
   expect(forcedOn.track.knob.colour).not.toBe(forcedOn.track.background);
   await scrollTogether(page).click();
+  await expect(scrollTogether(page)).not.toBeChecked();
   const forcedOff = await band(page);
   expect(forcedOff.track.knob.colour).not.toBe(forcedOff.track.background);
   expect([forcedOn.track.knob.left, forcedOff.track.knob.left]).toEqual([
@@ -187,7 +182,8 @@ test("a narrow band gives the modes the first row and the switch the second", as
   page,
 }) => {
   await open(page, 800);
-  await loadComparison(page, "Overlay");
+  await modeButton(page, "Overlay").click();
+  await expect(page.locator(".mbk-diff-refresh")).toBeVisible();
   const facts = await band(page);
   expect([
     facts.modes.left - facts.content.left,
@@ -201,17 +197,22 @@ test("a narrow band gives the modes the first row and the switch the second", as
 
 test("the switch stays while a comparison loads and after it fails", async ({
   page,
+  request,
+  baseURL,
+  allowBrowserError,
 }) => {
+  const index = await comparisonIndex(request, baseURL);
+  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 500));
   let release = (): void => undefined;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/mokly-viewer/diffs/review.json*", async (route) => {
+  await page.route(REVIEW, async (route) => {
     await held;
     await route.fulfill({ status: 500, body: "unavailable" });
   });
   await open(page, 1600);
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
+  await modeButton(page, "Overlay").click();
   const stage = page.locator("[data-diff-stage]");
   await expect(stage).toContainText("Loading comparison");
   await expect(scrollTogether(page)).toBeVisible();

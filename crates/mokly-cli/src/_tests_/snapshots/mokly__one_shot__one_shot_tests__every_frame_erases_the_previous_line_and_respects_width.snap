@@ -1,0 +1,5 @@
+---
+source: crates/mokly-cli/src/_tests_/one_shot_tests.rs
+expression: text
+---
+[2K  - Writing static outp…

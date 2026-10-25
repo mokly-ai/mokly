@@ -27,18 +27,18 @@ The catalogue service does not support this Mokly version. Update the service an
 | Retryable status after five attempts                                            | 408, 429, 500, 502–504 | `upload-failed`                   |
 | Other non-2xx or 2xx, redirect, or invalid response                             | any other              | `upload-failed`                   |
 | Command cancellation classified under Accounting And Output                     | local                  | cancellation `upload-failed`      |
-| Any non-cancellation local error, including an export recovery failure          | local                  | its existing category and message |
+| Any non-cancellation local error, including a build recovery failure            | local                  | its existing category and message |
 
-Local validation uses the same categories. Other local typed failures remain
-unchanged, and no request follows export failure. Unexpected preparation is
-`upload-failed` with fixed product copy. Failed publication leaves the complete
-local export in place.
+Local validation uses the same categories. Other local typed failures keep
+their categories, and no request follows a build failure. Unexpected
+preparation is `upload-failed` with fixed product copy. Failed publication
+leaves the complete built directory in place.
 
 ## Export Files And Limits
 
 The marker and verified blobs reconstruct every public artifact, including the
-manifest, shells, static assets and enabled comparisons. Source
-`mokly-manifest.json` stays private. CLI and receiver enforce these binary-unit
+upload manifest, the shell stub, the catalogue index and entry details, static
+assets and enabled comparisons. CLI and receiver enforce these binary-unit
 v2 ceilings; receivers may impose lower quotas and return 413.
 
 | Limit                                                    | Maximum           |
@@ -46,7 +46,7 @@ v2 ceilings; receivers may impose lower quotas and return 413.
 | Plan request body, compressed                            | 100 MiB           |
 | Plan archive decompressed, including headers and padding | 512 MiB           |
 | One regular file, Blob or ownership marker               | 64 MiB            |
-| Regular files, including manifest and marker             | 20,000            |
+| Regular files, including upload manifest and marker      | 20,000            |
 | Upload manifest                                          | 16 KiB            |
 | Relative path                                            | 1,024 UTF-8 bytes |
 | Plan or Complete response body read by the CLI           | 16 MiB            |
@@ -74,15 +74,16 @@ over 1,024 UTF-8 bytes is too large (413). A negative, fractional or nonnumeric
 size and every other path-grammar violation is malformed (400/422).
 
 Require entries for `index.html`, `404.html` and `mokly-upload.json`. Archived
-manifest/review bytes match their entries; review path and base metadata match
-the manifest and [comparison format](./README.md#supported-formats).
-Current-only uploads contain no comparison files.
+upload manifest and review bytes match their entries; the review path and base
+metadata match the upload manifest and the
+[comparison format](./README.md#supported-formats). Current-only uploads
+contain no comparison files.
 
 Answer `missing` from every verified blob stored for the same project,
 including a blob received for an unfinished or expired earlier upload. Never
 expose another project's content membership. Verify every Blob digest and size
 before storing it. Unless the identity is already published, Complete only
 when every marker digest is stored; otherwise answer 409. Authorize the
-repository and hosting policy before exposing a catalogue. Exported HTML and
-assets remain consumer-authored content; the envelope is not a sanitization or
+repository and hosting policy before exposing a catalogue. Built HTML and
+assets are consumer-authored content; the envelope is not a sanitization or
 sandboxing boundary.

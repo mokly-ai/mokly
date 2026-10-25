@@ -4,10 +4,15 @@ import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import { screenComparison } from "./comparison_fixtures.js";
 import { INSPECTION_PAGES } from "./destinations.js";
+import type { PropsLimit } from "./limit.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
 import { ScreenDetails } from "./screen_details.js";
-import { ConsumerFrame, type ScreenPageState } from "./screen_preview.js";
+import {
+  AffectedComparison,
+  ConsumerFrame,
+  type ScreenPageState,
+} from "./screen_preview.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
@@ -17,9 +22,11 @@ import { PreviewWorkspace } from "./workspace.js";
  * the way back to the component that lists it.
  */
 export function ScreenPage({
+  limit,
   state,
   viewport,
 }: {
+  limit?: PropsLimit;
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
@@ -30,14 +37,19 @@ export function ScreenPage({
       ? "screen"
       : state === "style-outside"
         ? "styles-outside"
-        : "all";
+        : state === "affected-screen"
+          ? "styles-all"
+          : "all";
   const comparison = screenComparison(state);
   const identity = screenIdentity(state);
   const { title, path } = SCREENS[identity];
   const highlighting = state === "highlight" || state === "nested";
+  // Changed components affect this screen, so it compares while Unmodified.
+  const affected = comparison !== undefined && "affected" in comparison;
+  const comparisonMode = affected ? "side-by-side" : "current";
   return (
     <ExplorerShell
-      design={INSPECTION_PAGES[state]}
+      design={limit?.design ?? INSPECTION_PAGES[state]}
       active={identity}
       scenario={scenario}
       viewport={viewport}
@@ -47,32 +59,40 @@ export function ScreenPage({
         title={title}
         crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
         path={path}
-        comparisonMode="current"
-        comparisons={comparison?.status === "changed"}
+        comparisonMode={comparisonMode}
+        comparisons={comparison?.status === "changed" || affected}
         status={comparison?.status ?? "unmodified"}
         action={
           <ViewControls
             viewport={viewport}
             highlight={{
               active: highlighting,
-              unavailable: removed
-                ? "removed"
-                : state === "inspection-loading"
-                  ? "loading"
-                  : state === "unavailable" || state === "empty"
-                    ? state
-                    : undefined,
+              // Every mode but Current is a comparison, which cannot highlight.
+              unavailable:
+                comparisonMode !== "current"
+                  ? "comparison"
+                  : removed
+                    ? "removed"
+                    : state === "inspection-loading"
+                      ? "loading"
+                      : state === "unavailable" || state === "empty"
+                        ? state
+                        : undefined,
             }}
           />
         }
       />
       {removed ? <PreviousVersionLabel /> : null}
       <PreviewWorkspace
-        inspector={<ScreenDetails state={state} />}
+        inspector={<ScreenDetails state={state} props={limit?.panel} />}
         viewport={viewport}
-        render={(previewViewport) => (
-          <ConsumerFrame state={state} viewport={previewViewport} />
-        )}
+        render={(previewViewport) =>
+          affected ? (
+            <AffectedComparison viewport={previewViewport} />
+          ) : (
+            <ConsumerFrame state={state} viewport={previewViewport} />
+          )
+        }
       />
     </ExplorerShell>
   );

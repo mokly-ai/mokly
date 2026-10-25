@@ -20,7 +20,7 @@ import {
 import { normalizedHtmlPath } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
-/** Current-document capability used by the synchronous, SSR-enhanced local shell. */
+/** Current-document capability used by the synchronous local shell. */
 export function localInspection(
   frame: HTMLIFrameElement,
   path: string,

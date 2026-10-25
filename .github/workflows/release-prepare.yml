@@ -1,0 +1,126 @@
+name: Prepare Release
+on:
+  workflow_call:
+    inputs:
+      publish_ref:
+        required: true
+        type: string
+      verification:
+        required: true
+        type: string
+      artifact_run_id:
+        required: true
+        type: string
+    outputs:
+      artifact_run_id:
+        value: ${{ jobs.prepare.outputs.artifact_run_id }}
+      artifact_name:
+        value: ${{ jobs.prepare.outputs.artifact_name }}
+      node_version:
+        value: ${{ jobs.prepare.outputs.node_version }}
+permissions:
+  actions: read
+  contents: read
+jobs:
+  prepare:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    outputs:
+      artifact_run_id: ${{ steps.publish_artifacts.outputs.artifact_run_id || github.run_id }}
+      artifact_name: ${{ steps.publish_artifacts.outputs.artifact_name || format('mokly-release-{0}', steps.package.outputs.mokly_version) }}
+      node_version: ${{ steps.node-version.outputs.value }}
+    env:
+      PUBLISH_REF: ${{ inputs.publish_ref }}
+      RELEASE_VERIFICATION: ${{ inputs.verification }}
+      CARGO_BUILD_JOBS: 4
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_INCREMENTAL: 0
+    steps:
+      - name: Check out immutable release tag
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.publish_ref }}
+          persist-credentials: false
+      - name: Set up preparation runtime
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Capture exact Node.js version
+        id: node-version
+        run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Verify immutable tags
+        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF"
+      - name: Resolve checked archives for publication
+        id: publish_artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_EVENT: ${{ github.event_name }}
+          ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
+        run: node scripts/release/select-artifacts.mjs
+      - name: Download first-run checked release archives
+        if: steps.publish_artifacts.outputs.artifact_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ steps.publish_artifacts.outputs.artifact_name }}
+          run-id: ${{ steps.publish_artifacts.outputs.artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: .context
+      - name: Install dependencies
+        run: npm ci
+      - name: Audit workspace dependencies
+        run: npm run dependencies:check
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Audit Rust dependencies
+        run: npm run dependencies:check:rust
+      - name: Select verification evidence
+        id: evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/evidence.mjs
+      - name: Install Chromium for verification and smoke
+        run: npx playwright install --with-deps chromium
+      # A manual retry dispatches from main, whose head can be newer than the
+      # checked-out tag; the suite runners require GITHUB_SHA to match HEAD.
+      - name: Run complete verification
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
+        if: steps.evidence.outputs.mode != 'evidence'
+        run: GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict
+      - name: Download native release archives
+        if: steps.publish_artifacts.outputs.artifact_run_id == ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-native-*
+          path: .context/release-artifact
+          merge-multiple: true
+      - name: Prepare exact publish artifacts
+        id: package
+        env:
+          ARTIFACT_RUN_ID: ${{ steps.publish_artifacts.outputs.artifact_run_id }}
+        run: |
+          if [ -n "$ARTIFACT_RUN_ID" ]; then
+            node scripts/release/pack.mjs .context/release-artifact --reuse
+          else
+            node scripts/release/verify-fresh.mjs
+            node scripts/release/pack.mjs .context/release-artifact
+          fi
+      - name: Smoke-test exact publish artifacts
+        run: node scripts/release/smoke.mjs .context/release-artifact
+      - name: Recheck immutable tags and source
+        run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" --artifacts .context/release-artifact
+      - name: Preserve checked artifacts
+        if: steps.publish_artifacts.outputs.artifact_run_id == ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mokly-release-${{ steps.package.outputs.mokly_version }}
+          path: |
+            .context/release-artifact/
+            .context/release-evidence/record.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 90
+          overwrite: true

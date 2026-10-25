@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\npropSchema:\n  type: object\n  additionalProperties: false\n  required: [label]\n  properties: {label: {type: string}}\nprops: {label: Save}\nslots: [children]\n---\n<button>{{label}}<slot></slot></button>\n",
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<ui-button label=\"$missing\"></ui-button>\n"
+  },
+  "errors": [
+    {
+      "code": "html-props",
+      "message": "undeclared prop reference missing",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 12
+    }
+  ]
+}

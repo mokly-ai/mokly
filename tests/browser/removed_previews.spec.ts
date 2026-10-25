@@ -1,94 +1,72 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, type Request } from "@playwright/test";
 
+import { comparisonPaths, test } from "./comparison_test.js";
 import {
-  documentRequests,
-  historical,
-  previewFrame,
-  settlement,
-  stage,
-} from "./removed_preview_assertions.js";
-import {
-  startServedPreviews,
-  type RemovedPreviewHost,
-} from "./removed_preview_fixture.js";
+  chooseFilter,
+  comparisonIndex,
+  navRow,
+  snapshotOf,
+  type ComparisonIndex,
+} from "./comparison_ui.js";
+import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { responseFailure } from "./shell_error_allowances.js";
+import { chooseViewport } from "./workspace_actions.js";
 
-let host: RemovedPreviewHost;
+const PREVIEW = "iframe[data-mokly-preview-frame]";
+const SCREEN_PREVIEW = "[data-mokly-preview] .mbk-frame-desktop iframe";
 
-test.beforeAll(async () => {
-  test.setTimeout(240_000);
-  host = await startServedPreviews();
-});
-
-test.afterAll(async () => {
-  await host?.close();
-});
-
-for (const width of [390, 1280]) {
-  test(`a removed document shows its previous version at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${host.url}/view/removed-page/`);
-    await expect(page.locator(".mbk-previous")).toHaveText(
-      "Showing previous version",
-    );
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
-    await expect(page.locator("#mb-main")).not.toContainText(
-      "This page was removed",
-    );
-    await expect(
-      page.locator("[data-diff-screen], [data-diff-mode], [data-diff-refresh]"),
-    ).toHaveCount(0);
-    const document = page.frameLocator(previewFrame);
-    await expect(document.locator("h1")).toHaveText("Previous page");
-    await expect(document.locator("body")).toHaveCSS(
-      "background-color",
-      "rgb(244, 239, 228)",
-    );
+/** Every navigation the page or a frame starts after this call. */
+function documentRequests(page: Page): string[] {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    if (request.isNavigationRequest()) requested.push(request.url());
   });
-
-  test(`a removed screen shows its previous frames at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${host.url}/view/removed-screen/`);
-    await expect(page.locator(".mbk-previous")).toHaveText(
-      "Showing previous version",
-    );
-    await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-    await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
-    await expect(page.locator(`${stage} .phone-frame`)).toHaveCount(1);
-    await expect(page.locator(`${stage} .browser-frame`)).toHaveCount(1);
-    await expect(
-      page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-    ).toHaveText("Previous desktop screen");
-    await expect(
-      page.frameLocator(`${stage} .mbk-frame-mobile iframe`).locator("h1"),
-    ).toHaveText("Previous mobile screen");
-    await page.locator("[data-workspace-viewport]").selectOption("mobile");
-    await expect(page.locator(`${stage} .browser-frame`)).toHaveCount(0);
-    await expect(
-      page.frameLocator(`${stage} .mbk-frame-mobile iframe`).locator("h1"),
-    ).toHaveText("Previous mobile screen");
-    await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();
-    await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
-  });
+  return requested;
 }
 
-test("a previous version reads but never acts", async ({ page }) => {
-  await page.goto(`${host.url}/view/removed-page/`);
-  const preview = page.frameLocator(previewFrame);
-  await expect(preview.locator("h1")).toHaveText("Previous page");
+/** Open the removed page's previous version and wait for its body. */
+async function openRetiredPage(page: Page, snapshot: string): Promise<void> {
+  await page.goto(`/view/${comparisonPaths.removedPage}/?snapshot=${snapshot}`);
+  await expect(
+    page
+      .frameLocator(PREVIEW)
+      .getByRole("heading", { name: "Historical page" }),
+  ).toBeVisible();
+}
+
+/** The site path of the removed page's previous document. */
+function retiredPageDocument(index: ComparisonIndex): string {
+  const generation = index.comparisonUrl.replace(/review\.json$/, "");
+  return `/${generation}snapshots/before/mokly-generated/${comparisonPaths.removedPage}/index.html`;
+}
+
+test("a previous version reads but never acts", async ({
+  page,
+  request,
+  baseURL,
+  allowBrowserError,
+}) => {
+  // The sandbox reports the one form submission it blocks.
+  allowBrowserError({
+    kind: "console",
+    message:
+      /^Blocked form submission to 'https:\/\/example\.com\/form' because the form's frame is sandboxed and the 'allow-forms' permission is not set\.$/u,
+    url: /^about:srcdoc$/u,
+  });
+  const snapshot = snapshotOf(
+    await comparisonIndex(request, baseURL),
+    comparisonPaths.removedPage,
+  );
+  await openRetiredPage(page, snapshot);
+  const preview = page.frameLocator(PREVIEW);
   const address = page.url();
-  const historicalFrame = await historical(page);
   const opened = await page
-    .locator(previewFrame)
+    .locator(PREVIEW)
     .getAttribute("data-mokly-preview-source");
   expect(opened).not.toBeNull();
   const documents = documentRequests(page);
   for (const label of [
     "Marked catalogue link",
-    "Relative link",
     "External link",
     "Download link",
     "SVG link",
@@ -97,36 +75,12 @@ test("a previous version reads but never acts", async ({ page }) => {
   await preview.getByRole("button", { name: "Send" }).click();
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Enter");
+  // A same-document anchor still moves the previous version to its target.
   await preview.getByText("Jump to the end").focus();
   await page.keyboard.press("Enter");
   await expect
     .poll(() =>
-      historicalFrame.evaluate(() => {
-        const foot = document.querySelector("#foot");
-        if (!foot) return false;
-        const bounds = foot.getBoundingClientRect();
-        return bounds.top < window.innerHeight && bounds.bottom > 0;
-      }),
-    )
-    .toBe(true);
-  await historicalFrame.evaluate(() => {
-    window.scrollTo(0, 0);
-    const link = document.createElement("a");
-    link.href = "#named-foot";
-    link.textContent = "Jump to the named end";
-    document.body.prepend(link);
-    const target = document.createElement("a");
-    target.name = "named-foot";
-    target.textContent = "Named end";
-    document.body.append(target);
-  });
-  await preview.getByText("Jump to the named end").focus();
-  await page.keyboard.press("Enter");
-  await expect
-    .poll(() =>
-      historicalFrame.evaluate(() => {
-        const foot = document.querySelector('a[name="named-foot"]');
-        if (!foot) return false;
+      preview.locator("#foot").evaluate((foot) => {
         const bounds = foot.getBoundingClientRect();
         return bounds.top < window.innerHeight && bounds.bottom > 0;
       }),
@@ -134,25 +88,30 @@ test("a previous version reads but never acts", async ({ page }) => {
     .toBe(true);
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
-  await expect(page.locator(previewFrame)).toHaveAttribute(
+  await expect(page.locator(PREVIEW)).toHaveAttribute(
     "data-mokly-preview-source",
     opened!,
   );
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Retired page");
 });
 
 test("Space scrolls a previous version while a link holds focus", async ({
   page,
+  request,
+  baseURL,
 }) => {
-  await page.goto(`${host.url}/view/removed-page/`);
-  const preview = page.frameLocator(previewFrame);
-  await expect(preview.locator("h1")).toHaveText("Previous page");
+  const snapshot = snapshotOf(
+    await comparisonIndex(request, baseURL),
+    comparisonPaths.removedPage,
+  );
+  await openRetiredPage(page, snapshot);
+  const preview = page.frameLocator(PREVIEW);
   const address = page.url();
   const documents = documentRequests(page);
-  const historicalFrame = await historical(page);
   const offset = () =>
-    historicalFrame.evaluate(
-      () => document.documentElement.scrollTop || document.body.scrollTop,
-    );
+    preview
+      .locator("html")
+      .evaluate((root) => root.ownerDocument.scrollingElement!.scrollTop);
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Space");
   await expect.poll(offset).toBeGreaterThan(0);
@@ -162,132 +121,142 @@ test("Space scrolls a previous version while a link holds focus", async ({
   expect(page.url()).toBe(address);
 });
 
-test("a later frame navigation restores the accepted presentation", async ({
+test("browsing current entries requests no historical bytes", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/removed-page/`);
-  const frame = page.locator(previewFrame);
-  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
-    "Previous page",
+  const requests: string[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  await page.goto(`/view/${comparisonPaths.changed}/`);
+  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+  await chooseFilter(page, "changed");
+  await chooseFilter(page, "all");
+  await chooseViewport(page, "mobile");
+  await expect(
+    page
+      .frameLocator('iframe[data-workspace-frame="mobile"]')
+      .getByRole("heading", { name: "After screen" }),
+  ).toBeVisible();
+  await navRow(page, comparisonPaths.component).click();
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Card");
+  expect(
+    requests.filter((url) => url.includes("/mokly-viewer/diffs/")),
+  ).toEqual([]);
+});
+
+test("a later frame navigation restores the accepted presentation", async ({
+  page,
+  request,
+  baseURL,
+}) => {
+  const snapshot = snapshotOf(
+    await comparisonIndex(request, baseURL),
+    comparisonPaths.removedPage,
   );
+  await openRetiredPage(page, snapshot);
+  const frame = page.locator(PREVIEW);
   const source = await frame.getAttribute("data-mokly-preview-source");
   expect(source).not.toBeNull();
-  await frame.evaluate((element) => {
-    const preview = element as HTMLIFrameElement;
-    if (preview.contentWindow)
-      preview.contentWindow.location.href = "/view/current/";
-  });
-  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
-    "Previous page",
+  const away = "/static/mokly-generated/screens/stable/index.desktop.html";
+  const navigated = page.waitForEvent("framenavigated", (target) =>
+    target.url().endsWith(away),
   );
+  await frame.evaluate((element: HTMLIFrameElement, url) => {
+    if (element.contentWindow) element.contentWindow.location.href = url;
+  }, away);
+  await navigated;
+  await expect
+    .poll(() =>
+      frame.evaluate(
+        (element: HTMLIFrameElement) => element.contentDocument?.URL,
+      ),
+    )
+    .toBe("about:srcdoc");
+  await expect(
+    page
+      .frameLocator(PREVIEW)
+      .getByRole("heading", { name: "Historical page" }),
+  ).toBeVisible();
   await expect(frame).toHaveAttribute("data-mokly-preview-source", source!);
   await expect(frame).not.toHaveAttribute("src", /.+/);
 });
 
 test("a preview that cannot be loaded offers another attempt", async ({
   page,
+  request,
+  baseURL,
+  allowBrowserError,
 }) => {
+  const index = await comparisonIndex(request, baseURL);
+  const snapshot = snapshotOf(index, comparisonPaths.removedPage);
+  const document = retiredPageDocument(index);
+  allowBrowserError(responseFailure(baseURL!, document, 503));
   let fail = true;
-  await page.route(
-    "**/mokly-viewer/diffs/review.json?page=*",
-    async (route) => {
-      if (!fail) return route.continue();
-      await route.fulfill({ status: 503, body: "{}" });
-    },
+  await page.route(`**${document}`, (route) =>
+    fail ? route.fulfill({ status: 503, body: "" }) : route.continue(),
   );
-  await page.goto(`${host.url}/view/removed-page/`);
-  await expect(page.locator(`${stage} h2`)).toHaveText(
-    "Previous version unavailable",
-  );
-  await expect(page.locator(`${stage} [data-mokly-preview-retry]`)).toHaveText(
-    "Retry",
-  );
-  await page.locator('[data-filter="changed"]').click();
+  await page.goto(`/view/${comparisonPaths.removedPage}/?snapshot=${snapshot}`);
   await expect(
-    page.locator('a[data-route="removed-screen/index.html"]'),
+    page.getByRole("heading", { name: "Previous version unavailable" }),
   ).toBeVisible();
+  const retry = page.locator("[data-mokly-preview-retry]");
+  await expect(retry).toHaveText("Retry");
+  await chooseFilter(page, "changed");
+  await expect(navRow(page, comparisonPaths.removedScreen)).toBeVisible();
   fail = false;
-  await page.locator("[data-mokly-preview-retry]").click();
-  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
-    "Previous page",
-  );
+  await retry.click();
+  await expect(
+    page
+      .frameLocator(PREVIEW)
+      .getByRole("heading", { name: "Historical page" }),
+  ).toBeVisible();
 });
 
 test("navigation fences a late response and keeps history usable", async ({
   page,
+  request,
+  baseURL,
 }) => {
+  const document = retiredPageDocument(await comparisonIndex(request, baseURL));
   let release = (): void => undefined;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  let handled = false;
-  await page.route(
-    "**/mokly-viewer/diffs/review.json?page=*",
-    async (route) => {
-      await held;
-      await route.continue().catch(() => undefined);
-      handled = true;
-    },
-  );
-  const settled = settlement(page, "review.json?page=");
-  await page.goto(`${host.url}/view/current/`);
-  await page.locator('[data-filter="changed"]').click();
-  await page.locator('a[data-route="removed-page/index.html"]').click();
+  const heldRequests: Request[] = [];
+  await page.route(`**${document}`, async (route) => {
+    heldRequests.push(route.request());
+    await held;
+    await route.continue().catch(() => undefined);
+  });
+  const ended = endedRequests(page);
+  await page.goto(`/view/${comparisonPaths.changed}/`);
+  await chooseFilter(page, "changed");
+  await navRow(page, comparisonPaths.removedPage).click();
   await expect(page.locator(".mbk-preview-status")).toHaveText(
     "Loading previous version…",
   );
-  await page.locator('a[data-route="removed-screen/index.html"]').click();
-  const desktop = page.frameLocator(`${stage} .mbk-frame-desktop iframe`);
-  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
+  // Move on only once the shell holds a request for the page document.
+  await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
+  await navRow(page, comparisonPaths.removedScreen).click();
+  const screen = page
+    .frameLocator(SCREEN_PREVIEW)
+    .getByRole("heading", { name: "Historical screen" });
+  await expect(screen).toBeVisible();
+  // Release the held document, wait until the browser ends that request
+  // (the shell cancels it when the reader moves on), then let the shell
+  // handle the outcome.
   release();
-  await expect.poll(() => handled && settled()).toBe(true);
+  await expect
+    .poll(() => heldRequests.every((held) => ended.has(held)))
+    .toBe(true);
+  await passRenderingUpdates(page);
   await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
-  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
+  await expect(screen).toBeVisible();
   await page.goBack();
-  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
-    "Previous page",
-  );
-  await page.goForward();
-  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
-});
-
-test("browsing current entries requests no historical bytes", async ({
-  page,
-}) => {
-  const requests: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
-  await page.goto(`${host.url}/view/current/`);
-  await expect(page.locator("[data-workspace-status]")).toBeVisible();
-  await page.locator('[data-filter="changed"]').click();
-  await page.locator('[data-filter="all"]').click();
-  await page.locator("[data-workspace-viewport]").selectOption("mobile");
   await expect(
-    page.frameLocator('iframe[data-workspace-frame="mobile"]').locator("main"),
-  ).toHaveText("Current mobile");
-  expect(
-    requests.filter((url) => url.includes("/mokly-viewer/diffs/")),
-  ).toEqual([]);
-});
-
-test.describe("without its browser client", () => {
-  test.use({ javaScriptEnabled: false });
-
-  test("a served stage never claims a request is in flight", async ({
-    page,
-  }) => {
-    await page.goto(`${host.url}/view/removed-page/`);
-    await expect(page.locator(".mbk-previous")).toHaveText(
-      "Showing previous version",
-    );
-    await expect(page.locator(`${stage} h2`)).toHaveText(
-      "Previous version unavailable",
-    );
-    await expect(page.locator("#mb-main")).not.toContainText(
-      "Loading previous version",
-    );
-    await expect(
-      page.locator(`${stage} [data-mokly-preview-retry]`),
-    ).toHaveCount(0);
-    await expect(page.locator(previewFrame)).toHaveCount(0);
-  });
+    page
+      .frameLocator(PREVIEW)
+      .getByRole("heading", { name: "Historical page" }),
+  ).toBeVisible();
+  await page.goForward();
+  await expect(screen).toBeVisible();
 });

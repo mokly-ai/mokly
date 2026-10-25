@@ -7,7 +7,7 @@ use crate::command::{CommandRunner, CommandSpec};
 use crate::error::Result;
 use crate::rust_file_length::RustFileLengthAuditor;
 
-use super::commands::commands_for;
+use super::commands::{browser_test_command, commands_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 
 /// Runs complete or selected repository verification.
@@ -75,8 +75,13 @@ impl CheckRunner for DefaultCheckRunner {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard, request.dependency_audit);
         }
-        for suite in VerificationSuite::ALL {
-            self.run_suite(suite, None, request.dependency_audit)?;
+        for suite in VerificationSuite::LOCAL {
+            if suite == VerificationSuite::Browser {
+                self.run_command(browser_test_command(None))?;
+                self.run_command(CommandSpec::new("npm").args(["run", "test:delivery:prepared"]))?;
+            } else {
+                self.run_suite(suite, None, request.dependency_audit)?;
+            }
         }
         Ok(())
     }

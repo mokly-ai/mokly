@@ -1,0 +1,41 @@
+[package]
+name = "mokly-catalogue"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+
+[dependencies]
+cap-fs-ext = "4.0.3"
+cap-std = "4.0.3"
+dunce = "1.0.5"
+globset = "0.4.20"
+html5gum = "0.8.4"
+jsonschema = { version = "0.58.6", default-features = false }
+mokly-model = { workspace = true }
+mokly-source-interface = { workspace = true }
+pulldown-cmark = "0.13.4"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
+yaml-rust2 = "0.13.0"
+
+[features]
+mock = ["dep:unimock", "mokly-source-interface/mock"]
+
+[dev-dependencies]
+insta = "1.49.0"
+tempfile = "3.27.0"
+mokly-source-interface = { workspace = true, features = ["mock"] }
+unimock = "0.6.8"
+
+[target."cfg(unix)".dependencies]
+libc = "0.2.190"
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }

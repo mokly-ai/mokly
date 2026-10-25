@@ -1,0 +1,8 @@
+{
+  "config": {},
+  "files": {
+    "specs/release.notes.md": "# Release",
+    "specs/index.draft.md": "# Draft"
+  },
+  "paths": ["index", "release"]
+}

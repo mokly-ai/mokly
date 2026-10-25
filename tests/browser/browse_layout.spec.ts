@@ -1,10 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   computedStyle,
   openScreensGroup,
   welcomeRow,
 } from "./browse_assertions.js";
+import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 
 test("desktop catalogue navigation resizes and remembers its width", async ({
   page,
@@ -70,6 +72,20 @@ test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
 });
 
+test("navigation stays a column at 900px and is a drawer below it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 900 });
+  await page.goto("/");
+  await expect(page.locator("[data-mokly-nav]")).toBeVisible();
+  await expect(page.locator("[data-mokly-nav-resize]")).toBeVisible();
+  await expect(page.locator("[data-mokly-menu]")).toBeHidden();
+  await page.setViewportSize({ height: 900, width: 899 });
+  await expect(page.locator("[data-mokly-nav]")).toBeHidden();
+  await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
+  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+});
+
 test("the narrow search bar drops the name and fits its controls", async ({
   page,
 }) => {
@@ -102,18 +118,25 @@ test("the narrow search bar drops the name and fits its controls", async ({
   await expect(page.locator(".mbk-brand .mbk-name")).toBeVisible();
 });
 
-test("the removed Review route keeps a usable not-found shell", async ({
+test("the explicit not-found document keeps a usable shell", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
-  const response = await page.goto("/review");
-  expect(response?.status()).toBe(404);
+  const response = await page.goto("/404.html");
+  expect(response?.status()).toBe(200);
   await expect(page.locator("[data-mokly-search]")).toBeVisible();
   await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
 });
 
-test("missing routes keep the catalogue available", async ({ page }) => {
-  await page.goto("/view/unknown.html");
+test("missing routes keep the catalogue available", async ({
+  page,
+  baseURL,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    missingResourceNotice(new URL("/view/unknown/", baseURL).href),
+  );
+  await page.goto("/view/unknown/");
   await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();
   await openScreensGroup(page);
@@ -123,6 +146,7 @@ test("missing routes keep the catalogue available", async ({ page }) => {
 
 test("the shell is keyboard navigable with a skip link", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".mbk-skip-link")).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.locator(".mbk-skip-link")).toBeFocused();
   await page.keyboard.press("Enter");
@@ -132,23 +156,4 @@ test("the shell is keyboard navigable with a skip link", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator("#mb-main")).toBeFocused();
-});
-
-test("the shell works without JavaScript", async ({ baseURL, browser }) => {
-  if (!baseURL) throw new Error("Playwright baseURL is required");
-  const context = await browser.newContext({
-    baseURL,
-    javaScriptEnabled: false,
-  });
-  const page = await context.newPage();
-  await page.goto("/");
-  await page
-    .locator('details[data-nav-folder="folder:example/screens"] summary')
-    .click();
-  await page.click(welcomeRow);
-  await expect(page).toHaveURL(/welcome\/$/);
-  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
-  await expect(page.locator(".mbk-frame-desktop")).toBeVisible();
-  await context.close();
 });

@@ -4,6 +4,7 @@ import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
+  LIMIT_PAGES,
   type ComponentDesignDestination,
 } from "./destinations.js";
 
@@ -17,17 +18,25 @@ export const actionModes = {
 
 /** Shared shell controls do not inherit unrelated Browse transitions. */
 export const COMPONENT_NAVIGATION_STATES = {
+  [CONTROLS_PAGES["parent"]]: {},
   [CONTROLS_PAGES["default"]]: {},
   [CONTROLS_PAGES["edited"]]: {},
   [CONTROLS_PAGES["unset"]]: {},
   [CONTROLS_PAGES["variant"]]: {},
   [CONTROLS_PAGES["reset"]]: {},
   [CONTROLS_PAGES["pending"]]: {},
+  [CONTROLS_PAGES["preparing"]]: {},
+  [CONTROLS_PAGES["preparing-failed"]]: {},
   [CONTROLS_PAGES["invalid"]]: {},
   [CONTROLS_PAGES["error"]]: {},
   [CONTROLS_PAGES["comparison"]]: {},
   [CONTROLS_PAGES["readonly"]]: {},
   [CONTROLS_PAGES["readonly-variant"]]: {},
+  [CONTROLS_PAGES["invalid-together"]]: {},
+  [CONTROLS_PAGES["expired"]]: {},
+  [LIMIT_PAGES["removed"]]: {},
+  [LIMIT_PAGES["read-only"]]: {},
+  [LIMIT_PAGES["no-props"]]: {},
   [COMPONENT_PAGES.closed]: {},
   [INSPECTION_PAGES.closed]: {},
   [COMPONENT_PAGES.default]: {},
@@ -44,6 +53,8 @@ export const COMPONENT_NAVIGATION_STATES = {
   [COMPONENT_PAGES.removed]: {},
   [COMPONENT_PAGES["usage-loading"]]: {},
   [COMPONENT_PAGES["usage-failed"]]: {},
+  [COMPONENT_PAGES["props-loading"]]: {},
+  [COMPONENT_PAGES["props-failed"]]: {},
   [COMPONENT_PAGES["shared-impact"]]: {},
   [COMPONENT_PAGES["style-changed"]]: {},
   [INSPECTION_PAGES.details]: {},
@@ -58,4 +69,6 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES["inspection-loading"]]: {},
   [INSPECTION_PAGES["removed-consumer"]]: {},
   [INSPECTION_PAGES["style-outside"]]: {},
+  [INSPECTION_PAGES["affected-screen"]]: {},
+  [INSPECTION_PAGES["screen-props"]]: {},
 } satisfies Record<ComponentDesignDestination, NavigationState>;

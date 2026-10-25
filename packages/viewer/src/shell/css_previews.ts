@@ -1,4 +1,7 @@
 /** Package-owned styling for previous versions of removed entries. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const SHELL_PREVIEW_CSS = `
 .mbk-previous {
   flex-shrink: 0;
@@ -109,7 +112,7 @@ body[data-mokly-color-scheme="dark"]
   }
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-workspace .mbk-previous {
     padding: 8px 12px;
   }

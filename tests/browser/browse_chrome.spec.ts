@@ -1,6 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { detailsRow } from "./browse_assertions.js";
+import { test } from "./browser_test.js";
 
 test("path chips copy their path without navigating", async ({ page }) => {
   await page.addInitScript(() => {

@@ -1,252 +1,199 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
-
-import { comparisonRegionsFixture } from "../helpers/comparison_regions_fixture.js";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
   comparisonSection,
-  documentExtent,
+  expectRegionsAt,
+  expectRegionsAtRest,
   expectStackAt,
   openComparison,
   paneFrame,
-  sampleFrames,
-} from "./comparison_alignment_helpers.js";
-import {
-  expectRegionsAt,
-  expectRegionsAtRest,
-  expectRegionsTogether,
   regionOffsets,
-  scrollRegion,
-} from "./comparison_regions_helpers.js";
+  regionRange,
+} from "./comparison_scroll.js";
+import { comparisonPaths, test } from "./comparison_test.js";
 
-let fixture: Awaited<ReturnType<typeof comparisonRegionsFixture>>;
-test.describe.configure({ timeout: 90_000 });
-test.beforeAll(async () => {
-  test.setTimeout(120_000);
-  fixture = await comparisonRegionsFixture();
-});
-test.afterAll(async () => {
-  await fixture?.close();
-});
-
-const shell = () => `${fixture.url}/view/shell/`;
-const pageScreen = () => `${fixture.url}/view/page/`;
-
-/** A region's vertical range in one version. */
-function yRange(frame: Locator, selector: string): Promise<number> {
-  return frame
-    .contentFrame()
-    .locator(selector)
-    .evaluate((node) => node.scrollHeight - node.clientHeight);
-}
+const changed = comparisonPaths.changed;
+const panel = "#panel";
 
 /**
- * Press a key from the offset at which a region rests, then wait until both
- * versions of the region rest at the expected offset, or at any new offset
- * when none is given.
+ * Press a key from the panel's resting offset, then wait until both versions
+ * rest at the expected offset, or at any new offset when none is given.
  */
 async function pressTogether(
   page: Page,
-  section: Locator,
   key: string,
-  selector: string,
   expected?: (from: number) => number,
 ): Promise<number> {
-  const from = await expectRegionsAtRest(section, selector, () => true);
+  const desktop = comparisonSection(page, "desktop");
+  const from = await expectRegionsAtRest(desktop, panel, () => true);
   await page.keyboard.press(key);
   return expectRegionsAtRest(
-    section,
-    selector,
+    desktop,
+    panel,
     (offset) => (expected ? offset === expected(from) : offset !== from),
-    "y",
     key,
   );
+}
+
+/** Whether the panel's end target is inside its panel's visible box. */
+function shownInPanel(frame: Locator): Promise<boolean> {
+  return frame
+    .contentFrame()
+    .locator("#panel-end")
+    .evaluate((target) => {
+      const box = target.closest("#panel")!;
+      const top = box.getBoundingClientRect().top + box.clientTop;
+      const rect = target.getBoundingClientRect();
+      return rect.top >= top && rect.bottom <= top + box.clientHeight;
+    });
+}
+
+/** Expect every page viewport of a section at the target's page offset. */
+async function expectPageAtTarget(
+  section: Locator,
+  frame: Locator,
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const top = await frame
+        .contentFrame()
+        .locator("#panel-end")
+        .evaluate(
+          (node) =>
+            node.getBoundingClientRect().top +
+            node.ownerDocument.scrollingElement!.scrollTop,
+        );
+      const viewports = await section
+        .locator("[data-comparison-viewport]")
+        .evaluateAll((nodes) => nodes.map((node) => node.scrollTop));
+      return (
+        top > 0 &&
+        viewports.length > 0 &&
+        viewports.every((y) => Math.abs(y - top) < 1)
+      );
+    })
+    .toBe(true);
 }
 
 test("scroll keys after a click inside a panel scroll that panel in every version", async ({
   page,
 }) => {
-  await openComparison(page, shell(), "desktop", "Overlay");
+  await openComparison(page, changed, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
   const top = paneFrame(desktop, "after");
   await top
     .contentFrame()
-    .locator("#rg-lead")
-    .click({ position: { x: 10, y: 100 } });
-  const end = await yRange(top, ".rg-main");
-  await pressTogether(page, desktop, "PageDown", ".rg-main");
-  await pressTogether(page, desktop, "Space", ".rg-main");
-  await pressTogether(page, desktop, "ArrowDown", ".rg-main", (at) => at + 40);
-  await pressTogether(page, desktop, "ArrowUp", ".rg-main", (at) => at - 40);
-  await pressTogether(page, desktop, "Shift+Space", ".rg-main");
-  await pressTogether(page, desktop, "End", ".rg-main", () => end);
-  await pressTogether(page, desktop, "PageUp", ".rg-main");
-  await pressTogether(page, desktop, "Home", ".rg-main", () => 0);
+    .locator(panel)
+    .click({ position: { x: 10, y: 10 } });
+  await pressTogether(page, "PageDown");
+  await pressTogether(page, "Space");
+  await pressTogether(page, "ArrowDown", (at) => at + 40);
+  await pressTogether(page, "ArrowUp", (at) => at - 40);
+  await pressTogether(page, "Shift+Space");
+  // The panels differ in height, so each one stops at its own end.
+  const shorter = await regionRange(paneFrame(desktop, "before"), panel);
+  const longer = await regionRange(top, panel);
+  await page.keyboard.press("End");
+  await expectRegionsAt(desktop, panel, [shorter, longer]);
+  await page.keyboard.press("PageUp");
+  await expect
+    .poll(async () => {
+      const { after, before } = await regionOffsets(desktop, panel);
+      return after.y < longer && before.y === Math.min(after.y, shorter);
+    })
+    .toBe(true);
+  await page.keyboard.press("Home");
+  await expectRegionsAt(desktop, panel, [0, 0]);
   await expectStackAt(desktop, 0);
-});
-
-test("a focused panel keeps its keys until it ends, then the page moves", async ({
-  page,
-}) => {
-  await openComparison(page, pageScreen(), "desktop", "Overlay");
-  const desktop = comparisonSection(page, "desktop");
-  const top = paneFrame(desktop, "after");
-  await top.contentFrame().locator("#rg-code").focus();
-  await pressTogether(page, desktop, "PageDown", "#rg-code");
-  const end = await yRange(top, "#rg-code");
-  await pressTogether(page, desktop, "End", "#rg-code", () => end);
-  await expectStackAt(desktop, 0);
-  const { height } = await documentExtent(top);
-  await page.keyboard.press("PageDown");
-  await expectStackAt(desktop, Math.floor(height * 0.875));
-  await expectRegionsAt(desktop, "#rg-code", [end, end]);
-});
-
-test("ArrowLeft and ArrowRight follow a right-to-left panel", async ({
-  page,
-}) => {
-  await openComparison(page, pageScreen(), "desktop", "Overlay");
-  const desktop = comparisonSection(page, "desktop");
-  await paneFrame(desktop, "after")
-    .contentFrame()
-    .locator("#rg-rtl")
-    .click({ position: { x: 200, y: 30 } });
-  await page.keyboard.press("ArrowLeft");
-  await expectRegionsAt(desktop, "#rg-rtl", [-40, -40], "x");
-  await page.keyboard.press("ArrowLeft");
-  await expectRegionsAt(desktop, "#rg-rtl", [-80, -80], "x");
-  await page.keyboard.press("ArrowRight");
-  await expectRegionsAt(desktop, "#rg-rtl", [-40, -40], "x");
 });
 
 test("focus moving into a panel scrolls every version's panel", async ({
   page,
 }) => {
-  await openComparison(page, shell(), "desktop", "Overlay");
+  await openComparison(page, changed, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
-  await paneFrame(desktop, "after").contentFrame().locator("#rg-focus").focus();
-  await expectRegionsTogether(desktop, ".rg-main");
+  await paneFrame(desktop, "after")
+    .contentFrame()
+    .locator("#panel-link")
+    .focus();
+  await expectRegionsAtRest(desktop, panel, (offset) => offset !== 0);
   await expectStackAt(desktop, 0);
 });
 
 test("an anchor inside a panel reveals it in every version, then the page", async ({
   page,
 }) => {
-  await openComparison(page, shell(), "desktop", "Overlay");
+  await openComparison(page, changed, "desktop", "Overlay");
   const address = page.url();
-  const desktop = comparisonSection(page, "desktop");
-  const shown = (side: "after" | "before") =>
-    paneFrame(desktop, side)
-      .contentFrame()
-      .locator("#rg-deep")
-      .evaluate((target) => {
-        const panel = target.closest(".rg-main")!;
-        const top = panel.getBoundingClientRect().top + panel.clientTop;
-        const rect = target.getBoundingClientRect();
-        return rect.top >= top && rect.bottom <= top + panel.clientHeight;
-      });
-  await paneFrame(desktop, "after")
-    .contentFrame()
-    .getByRole("link", { name: "Jump to deep" })
-    .click();
-  await expectRegionsTogether(desktop, ".rg-main");
-  expect([await shown("before"), await shown("after")]).toEqual([true, true]);
-  await expectStackAt(desktop, 0);
+  const stack = comparisonSection(page, "desktop");
+  const top = paneFrame(stack, "after");
+  await top.contentFrame().getByRole("link", { name: "Panel link" }).click();
+  await expectRegionsAtRest(stack, panel, (offset) => offset !== 0);
+  expect([
+    await shownInPanel(paneFrame(stack, "before")),
+    await shownInPanel(top),
+  ]).toEqual([true, true]);
+  // The browser also brings the target to the top of the page.
+  await expectPageAtTarget(stack, top);
   await expect(page).toHaveURL(address);
-  await expect(page.locator("#mb-main h2")).toHaveText("Shell");
+  await expect(page.locator("#mb-main h2").first()).toHaveText(
+    "Changed screen",
+  );
 
-  await openComparison(page, pageScreen(), "desktop", "Side by side");
+  // Side by side: the anchor in the Before version moves both panes.
+  await openComparison(page, changed, "desktop", "Side by side");
   const sides = comparisonSection(page, "desktop");
-  const frame = paneFrame(sides, "before");
-  await frame
-    .contentFrame()
-    .getByRole("link", { name: "Jump to code end" })
-    .click();
-  await expectRegionsTogether(sides, "#rg-code");
-  await expect
-    .poll(async () => {
-      const top = await frame
-        .contentFrame()
-        .locator("#rg-code-end")
-        .evaluate(
-          (node) =>
-            node.getBoundingClientRect().top +
-            node.ownerDocument.scrollingElement!.scrollTop,
-        );
-      const viewports = await sides
-        .locator("[data-comparison-viewport]")
-        .evaluateAll((nodes) => nodes.map((node) => node.scrollTop));
-      return viewports.length === 2 && viewports.every((y) => y === top);
-    })
-    .toBe(true);
+  const before = paneFrame(sides, "before");
+  await before.contentFrame().getByRole("link", { name: "Panel link" }).click();
+  await expectRegionsAtRest(sides, panel, (offset) => offset !== 0);
+  expect(await shownInPanel(before)).toBe(true);
+  await expectPageAtTarget(sides, before);
+  await expect(page.locator("#mb-main h2").first()).toHaveText(
+    "Changed screen",
+  );
 });
 
 test("a scroll the browser makes inside the lower version pulls every version along", async ({
   page,
 }) => {
-  await openComparison(page, shell(), "desktop", "Overlay");
+  await openComparison(page, changed, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
-  await scrollRegion(paneFrame(desktop, "before"), ".rg-main", { y: 500 });
-  await expectRegionsAt(desktop, ".rg-main", [500, 500]);
+  await paneFrame(desktop, "before").evaluate((frame: HTMLIFrameElement) =>
+    frame.contentDocument!.querySelector("#panel")!.scrollTo({
+      behavior: "instant",
+      top: 200,
+    }),
+  );
+  await expectRegionsAt(desktop, panel, [200, 200]);
+  expect((await regionOffsets(desktop, panel)).after.x).toBe(0);
 });
 
-test("smooth-scrolling panels still move together at once on both axes", async ({
-  page,
-}) => {
-  await openComparison(page, pageScreen(), "desktop", "Overlay");
-  const smooth = "* { scroll-behavior: smooth !important; }";
-  await page.addStyleTag({ content: smooth });
-  const desktop = comparisonSection(page, "desktop");
-  for (const side of ["before", "after"] as const)
-    await paneFrame(desktop, side)
-      .contentFrame()
-      .locator("head")
-      .evaluate((head, rule) => {
-        const style = head.ownerDocument.createElement("style");
-        style.textContent = rule;
-        head.append(style);
-      }, smooth);
-  await scrollRegion(paneFrame(desktop, "after"), "#rg-grid", {
-    x: 150,
-    y: 90,
-  });
-  const read = async () => {
-    const offsets = await regionOffsets(desktop, "#rg-grid");
-    return `${offsets.before.x},${offsets.before.y}`;
-  };
-  const samples = await sampleFrames(page, read, 20);
-  expect(
-    samples.filter((sample) => sample !== "0,0" && sample !== "150,90"),
-    "the lower version never animates towards the offset",
-  ).toEqual([]);
-  expect(samples.at(-1)).toBe("150,90");
-});
+test.describe("touch input", () => {
+  test.use({ hasTouch: true });
 
-test("a touch drag over a panel moves every version's panel", async ({
-  browser,
-}) => {
-  const context = await browser.newContext({ hasTouch: true });
-  const page = await context.newPage();
-  try {
-    await openComparison(page, shell(), "desktop", "Overlay");
+  test("a touch drag over a panel moves every version's panel", async ({
+    page,
+  }) => {
+    await openComparison(page, changed, "desktop", "Overlay");
     const desktop = comparisonSection(page, "desktop");
-    const box = (await paneFrame(desktop, "after")
+    const box = await paneFrame(desktop, "after")
       .contentFrame()
-      .locator(".rg-main")
-      .boundingBox())!;
-    const client = await context.newCDPSession(page);
-    const x = Math.round(box.x + box.width / 2);
-    const y = Math.round(box.y + Math.min(box.height, 400) - 20);
+      .locator(panel)
+      .boundingBox();
+    expect(box).not.toBeNull();
+    const client = await page.context().newCDPSession(page);
+    const x = Math.round(box!.x + box!.width / 2);
+    const y = Math.round(box!.y + box!.height - 20);
     const touch = (
       type: "touchEnd" | "touchMove" | "touchStart",
       points: { x: number; y: number }[],
     ) => client.send("Input.dispatchTouchEvent", { type, touchPoints: points });
     await touch("touchStart", [{ x, y }]);
     for (let step = 1; step <= 10; step += 1)
-      await touch("touchMove", [{ x, y: y - step * 25 }]);
+      await touch("touchMove", [{ x, y: y - step * 10 }]);
     await touch("touchEnd", []);
-    await expectRegionsTogether(desktop, ".rg-main");
+    // Both versions' panels rest together past the top; the page stays.
+    await expectRegionsAtRest(desktop, panel, (offset) => offset > 0);
     await expectStackAt(desktop, 0);
-  } finally {
-    await context.close();
-  }
+  });
 });

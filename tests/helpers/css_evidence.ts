@@ -1,9 +1,9 @@
+import { cssAnalysis } from "../../packages/viewer/dist/review/css/evidence.js";
 import type {
   CssRuleAttribution,
   DependencyAnalysis,
   DependencyReason,
-} from "../../packages/viewer/dist/data.js";
-import { cssAnalysis } from "../../packages/viewer/dist/review/css/evidence.js";
+} from "../../packages/viewer/dist/review/types.js";
 
 /** Synthetic wire evidence for reader and presentation fixtures, never product data. */
 export function fixtureCssAnalysis(
@@ -30,20 +30,6 @@ export function fixtureCssAnalysis(
       ...(status === "unresolved" ? { unresolved: true } : {}),
     },
   };
-}
-
-/** Existing summary assertions remain separate from the rule-proof regression suites. */
-export function cssSummary(analysis: DependencyAnalysis | undefined) {
-  return analysis && { status: analysis.status, selectors: analysis.selectors };
-}
-
-export function resourceReasonSummaries(
-  reasons: readonly DependencyReason[] | undefined,
-) {
-  return reasons?.map((reason) => ({
-    ...reason,
-    ...(reason.analysis ? { analysis: cssSummary(reason.analysis) } : {}),
-  }));
 }
 
 /** One synthetic changed rule; omitted arrays are empty and the key is fixed. */

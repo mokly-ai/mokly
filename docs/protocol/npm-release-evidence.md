@@ -1,5 +1,7 @@
 # Npm Release Verification Evidence
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Verification Modes
 
 The npm release workflow has two verification modes. A release push and a manual
@@ -11,7 +13,8 @@ sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
 `main`, whose head can be newer than the tag, and the suite runners require
 reports to name the checked-out commit.
 
-Both modes run the live workspace dependency audit after `npm ci`. Evidence mode
+Both modes run the live npm and Rust audits in read-only preparation after
+dependency installation. Evidence mode
 does not treat an earlier audit as current security evidence. Complete mode then
 runs the complete gate, whose first operation repeats that audit by design.
 
@@ -24,7 +27,7 @@ treated as proof. The client uses these endpoints:
 - `actions/workflows/ci.yml/runs` for successful push and pull-request runs;
 - `commits/{sha}/pulls` for merged pull requests associated with the tag commit;
 - `actions/runs/{id}/jobs` for the exact `Required CI` job result;
-- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the 18
+- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the ten
   dual-runtime Release Please `verification-*` reports; and
 - `git/commits/{sha}` for the tree named by an evidence commit.
 
@@ -39,18 +42,18 @@ workflows, other events, or unsuccessful runs are excluded. Candidate order is:
 Each candidate must also contain exactly one successful job named `Required CI`.
 An absent or unsuccessful job makes that candidate unavailable. An unavailable
 candidate is skipped so an older valid run for the same tree can still apply.
-Ordinary `main` push CI contains only the nine-report Node 22.14 profile, so its
+Ordinary `main` push CI contains only the five-report Node 22.15 profile, so its
 otherwise successful tag-commit run is unavailable for publishing. The usual
 applicable candidate is the associated Release Please pull-request run, whose
-trusted same-repository profile adds Node 24 and produces all 18 reports.
+trusted same-repository profile adds Node 24 and produces all ten reports.
 
 ## Identity And Completeness Proof
 
 The release checkout supplies the tagged commit with `git rev-parse HEAD` and
 the tagged tree with `git rev-parse HEAD^{tree}`. The downloaded artifact names
-must match the CI verification namespace, be unexpired, and yield exactly 18
-reports across `node-22.14.0` and `node-24`. All reports must name one full
-commit SHA. The ordinary nine-report profile is complete ordinary CI evidence,
+must match the CI verification namespace, be unexpired, and yield exactly ten
+reports across `node-22.15.0` and `node-24`. All reports must name one full
+commit SHA. The ordinary five-report profile is complete ordinary CI evidence,
 but it is not release evidence and therefore classifies as absent here.
 
 The evidence commit is applicable when it is the tagged commit or when
@@ -63,11 +66,11 @@ release identity.
 After identity is established, `validateCiReports` revalidates every runtime,
 suite, shard, assignment, observed result, exit outcome, and complete inventory
 defined by the [CI verification contract](./ci-verification.md). In addition,
-the unit reports' complete inventory must equal `discoverUnitFiles` on the tag
-checkout, and every browser/hydration report's all-project inventory must equal
-the tag checkout's `tests/browser/**/*.spec.ts` inventory. CI names the spec
-that loaded each test, including a test defined in a shared helper module, so
-both inventories list spec files. These comparisons prevent reports from
+the viewer report's complete inventory must equal the Node test inventory
+discovered on the tag checkout, and every browser report's spec inventory must
+equal the tag checkout's `tests/browser/**/*.spec.ts` inventory. CI names the
+spec that loaded each test, including a test defined in a shared helper module,
+so both inventories list spec files. These comparisons prevent reports from
 proving only the test files present in another tree.
 
 ## Outcomes And Failure Semantics
@@ -75,9 +78,9 @@ proving only the test files present in another tree.
 Evidence selection produces one of three outcomes:
 
 - `applicable`: a candidate passes the job, artifact, identity, aggregate, and
-  live unit and Playwright inventory checks. The publish job skips Rust,
-  Chromium, and `cargo xtask check --dependency-audit strict` and continues with
-  exact-artifact checks.
+  live Node test and Playwright inventory checks. Preparation skips the complete
+  gate and continues with exact-artifact checks. It still runs the fresh Rust
+  audit and installs Chromium for the packed viewer smoke.
 - `absent`: no candidate exists, a listing or download has a transport failure,
   the required job is unavailable, artifacts are missing or expired, the
   evidence commit cannot be resolved, or its tree differs from the tag. The
@@ -113,17 +116,23 @@ preserved beside the packed release artifacts. The JSON object contains:
 The workflow output `mode=evidence` is written only for `applicable`; every
 non-error fallback writes `mode=complete`. The explicit complete mode performs
 no GitHub evidence requests. The record is diagnostic evidence, while the
-workflow step result remains the authority for whether publishing may continue.
+workflow step result is the authority for whether publishing may continue.
 
 ## Publish Boundary And Timing
 
-Verification selection does not replace release-specific checks. Both modes
-verify immutable local and remote tags, run the live audit, pack and inspect the
-exact viewer and CLI archives, smoke-test clean consumers, recheck source and
-tags, guard existing registry versions, publish with trusted provenance, and
-verify registry bytes and attestations.
+Read-only preparation owns audits, verification, package builds, and consumer
+smokes. Publication requires successful preparation and rechecks its saved
+archives before it uses npm publication credentials. Publication installs no
+dependency lifecycle scripts and performs no build or smoke fallback.
 
-The v0.12.0 release measured about 54 minutes when complete verification was
-repeated in the publish job. Evidence mode is expected to take about 10 minutes,
-including the unchanged release-specific work. Artifact retention is 14 days, so
-older releases normally take the complete fallback.
+Verification selection does not replace release-specific checks. Both modes
+verify immutable local and remote tags, run the live audit, download the
+platform archives from the build matrix, pack and inspect the exact viewer and
+CLI archives, smoke-test clean consumers, recheck source and tags, guard
+existing registry versions, publish with trusted provenance in the
+[publication order](./npm-release.md#release-build-matrix-and-publication-order),
+and verify registry bytes and attestations.
+
+Evidence mode removes the complete gate from preparation, so a release
+costs the release-specific work alone. Artifact retention is 14 days, so older
+releases take the complete fallback.

@@ -1,8 +1,10 @@
 import fs from "node:fs/promises";
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { SHELL_CSS } from "../../packages/viewer/dist/shell/css.js";
+
+import { test } from "./browser_test.js";
 
 const layouts = [
   '<div class="phone-screen"><iframe class="mbk-frag"></iframe></div>',

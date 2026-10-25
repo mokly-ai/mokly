@@ -161,12 +161,12 @@ test("live host routing carries exact history and announces its entry", () => {
   const navigations: unknown[] = [];
   announceNavigation(
     {
-      model,
       events: () => ({
         onScreenNavigate: (event: ScreenNavigateEvent) =>
           navigations.push(event),
       }),
     } as never,
+    catalogue,
     selection,
     route.fragment,
     undefined,

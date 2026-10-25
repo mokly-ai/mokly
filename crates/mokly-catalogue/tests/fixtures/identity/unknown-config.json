@@ -1,0 +1,17 @@
+{
+  "config": {
+    "output": "bad"
+  },
+  "files": {
+    "specs/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "unknown configuration field: output",
+      "path": "mokly.config.json",
+      "line": 1,
+      "column": 2
+    }
+  ]
+}

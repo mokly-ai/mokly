@@ -34,6 +34,7 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
         Case::Head,
         Case::Fingerprint,
         Case::Suite,
+        Case::Delivery,
         Case::Download,
         Case::Aggregate,
         Case::ChangedTree,
@@ -98,13 +99,13 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
                 "{case:?}"
             );
         }
-        if case == Case::Suite {
+        if matches!(case, Case::Suite | Case::Delivery) {
             assert_eq!(
                 events
                     .iter()
                     .filter(|event| event.starts_with("download:"))
                     .count(),
-                9
+                5
             );
         }
     }
@@ -149,6 +150,7 @@ fn preparation_failures_are_unavailable_and_later_failures_are_terminal() {
         (Case::Warmup, true),
         (Case::Probe, true),
         (Case::Suite, false),
+        (Case::Delivery, false),
         (Case::Download, false),
         (Case::Aggregate, false),
         (Case::ChangedTree, false),

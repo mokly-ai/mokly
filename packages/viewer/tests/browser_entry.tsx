@@ -9,6 +9,7 @@ import {
 } from "@mokly/viewer";
 import type {
   CatalogueReadModel,
+  EntryDetailV2,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -16,6 +17,7 @@ import type {
   ViewerTheme,
 } from "@mokly/viewer";
 
+import { browserDetails } from "./browser_details.js";
 import { installFrameHookHarness } from "./frame_hook_harness.js";
 
 interface HostOptions {
@@ -24,7 +26,7 @@ interface HostOptions {
   strict?: boolean;
   cross?: boolean;
   slots?: boolean;
-  source?: MoklyViewerProps["catalogue"];
+  source?: MoklyViewerProps["index"];
   defaultSelection?: Partial<ViewerSelection>;
   responsive?: boolean;
   topBarSlots?: boolean;
@@ -32,6 +34,7 @@ interface HostOptions {
 interface Host {
   root: Root;
   props: MoklyViewerProps;
+  details: Record<string, EntryDetailV2>;
   ref: { current: MoklyViewerHandle | null };
   events: { name: string; value: unknown }[];
   render(): void;
@@ -43,7 +46,14 @@ interface Host {
 const hosts = new Map<string, Host>();
 const data = (
   window as unknown as {
-    fixture: { catalogue: CatalogueReadModel; baseUrl: string };
+    fixture: {
+      index: CatalogueReadModel;
+      details: {
+        current: Record<string, EntryDetailV2>;
+        removed: Record<string, EntryDetailV2>;
+      };
+      baseUrl: string;
+    };
   }
 ).fixture;
 const start = (id: string, options: HostOptions = {}) => {
@@ -74,7 +84,14 @@ const start = (id: string, options: HostOptions = {}) => {
     ref,
     events,
     props: {} as MoklyViewerProps,
+    details: structuredClone(data.details.current),
     render() {
+      if (
+        typeof host.props.index === "object" &&
+        !(host.props.index instanceof URL) &&
+        host.props.index.schemaVersion === 7
+      )
+        host.details = browserDetails(host.props.index, host.details);
       const node = <MoklyViewer {...host.props} ref={ref} />;
       host.root.render(options.strict ? <StrictMode>{node}</StrictMode> : node);
     },
@@ -113,8 +130,11 @@ const start = (id: string, options: HostOptions = {}) => {
     options.source === undefined ||
     (typeof options.source === "object" && !(options.source instanceof URL));
   host.props = {
-    viewerId: id,
-    catalogue: options.source ?? data.catalogue,
+    index: options.source ?? data.index,
+    detail: (path: string, snapshotId?: string) =>
+      snapshotId === undefined
+        ? host.details[path]!
+        : data.details.removed[snapshotId]!,
     ...(sourceNeedsBaseUrl
       ? { baseUrl: options.cross ? data.baseUrl : location.origin }
       : {}),

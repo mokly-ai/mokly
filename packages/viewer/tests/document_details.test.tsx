@@ -1,34 +1,31 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
-import type { ManifestEntry } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
+import type { CatalogueNode } from "../src/catalogue/types.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+
+import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import {
+  publishedCatalogue,
+  publishedDocument,
+  publishedScreen,
+  removedEntry,
+} from "./published_entries_fixture.js";
 
 /** The public fixture, with a screen that names the overview document. */
 function catalogue() {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
+  return catalogueFixture(
+    indexFixture((model) => {
+      const details = model.screens.find(
+        (entry) => entry.path === "product/browse/details",
+      );
+      assert.ok(details);
+      details.details.relatedDocs = ["mock:product", "docs/notes.md"];
+      model.documents[0]!.tags = ["guide"];
+    }),
   );
-  const details = model.screens.find(
-    (entry: { path: string }) => entry.path === "product/browse/details",
-  );
-  details.details.relatedDocs = ["mock:product", "docs/notes.md"];
-  const document = model.documents[0];
-  document.tags = ["guide"];
-  return viewerCatalogue(readCatalogue(model));
 }
 
 function details(path: string): string {
@@ -67,47 +64,31 @@ test("a document's Details show its description, tags, and Markdown source", () 
   assert.doesNotMatch(html, /Why this document/u);
 });
 
-const manifestEntry = (
-  kind: "document" | "screen",
-  path: string,
-  title: string,
-  relatedDocs: readonly string[] = [],
-): ManifestEntry =>
-  ({
-    colorSchemes: ["light"],
-    description: title,
-    kind,
-    path,
-    relatedDocs,
-    sourcePath: `specs/${path}.${kind === "document" ? "md" : "mockup.tsx"}`,
-    title,
-    ...(kind === "screen" ? { useCasePaths: [] } : { resources: [] }),
-  }) as unknown as ManifestEntry;
+/** The Guide folder, which holds the current Payment terms document. */
+const GUIDE: CatalogueNode = {
+  children: [{ kind: "entry", path: "guide/terms" }],
+  kind: "folder",
+  path: "guide",
+  title: "Guide",
+};
 
 test("the served manifest's source path links its current document", () => {
   const related = ["specs/guide/terms.md", "specs/guide/old.md", "x.md"];
-  const shell = createCatalogue(
-    currentManifest({
-      entries: [
-        manifestEntry("screen", "billing", "Billing", related),
-        manifestEntry("document", "guide/terms", "Payment terms"),
-      ],
-      folders: [],
-      generatedBy: "mokly",
-      schemaVersion: 10,
-      sourceFiles: [],
-    }),
-    [
-      {
-        entry: manifestEntry("document", "guide/old", "Old terms"),
-        folderTitles: ["Guide"],
-      },
-      {
-        entry: manifestEntry("screen", "invoices", "Invoices", related),
-        folderTitles: [],
-      },
+  const billing = publishedScreen("billing", "Billing");
+  billing.details.relatedDocs = [...related];
+  const invoices = publishedScreen("invoices", "Invoices", "removed");
+  invoices.details.relatedDocs = [...related];
+  const shell = publishedCatalogue({
+    documents: [publishedDocument("guide/terms", "Payment terms")],
+    removedEntries: [
+      removedEntry(publishedDocument("guide/old", "Old terms", "removed"), [
+        "Guide",
+      ]),
+      removedEntry(invoices, []),
     ],
-  );
+    screens: [billing],
+    tree: [{ kind: "entry", path: "billing" }, GUIDE],
+  });
   const render = (path: string) => {
     const entry = shell.byPath.get(path);
     assert.ok(entry, path);
@@ -129,19 +110,17 @@ test("the served manifest's source path links its current document", () => {
 });
 
 test("a served document shows its source without the removed dependency list", () => {
+  const shell = publishedCatalogue({
+    documents: [publishedDocument("guide/terms", "Payment terms")],
+    tree: [GUIDE],
+  });
+  const published = shell.byPath.get("guide/terms");
+  assert.ok(published);
+  // An older manifest's document also named its resources.
   const document = {
-    ...manifestEntry("document", "guide/terms", "Payment terms"),
+    ...published,
     resources: ["specs/guide/terms.svg"],
-  } as ManifestEntry;
-  const shell = createCatalogue(
-    currentManifest({
-      entries: [document],
-      folders: [],
-      generatedBy: "mokly",
-      schemaVersion: 10,
-      sourceFiles: [],
-    }),
-  );
+  } as typeof published;
   const markup = renderToStaticMarkup(
     <EntryDetailsBody catalogue={shell} entry={document} />,
   );

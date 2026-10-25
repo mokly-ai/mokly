@@ -3,95 +3,262 @@ import test from "node:test";
 
 import type { FullConfig } from "@playwright/test";
 
-import browserConfig from "../playwright.config.js";
+import config from "../playwright.config.js";
 
-import {
-  exampleServerPorts,
-  ownExampleServerPort,
-} from "./browser/example_servers.js";
+import { exampleReady } from "./browser/example_readiness.js";
+import { ownExampleServerUrl } from "./browser/example_servers.js";
+import { startExampleHosts } from "./browser/example_setup.js";
 import setup from "./browser/setup.js";
+import {
+  EXAMPLE_BASE,
+  validateExampleDiagnostics,
+} from "./helpers/example_base.js";
+import { repositoryRoot } from "./helpers/fixture.js";
 
-test("each Playwright worker gets one example server on consecutive ports", () => {
-  assert.deepEqual(
-    exampleServerPorts({ MOKLY_PLAYWRIGHT_WORKERS: "3" }),
-    [4517, 4518, 4519],
-  );
-  assert.deepEqual(
-    exampleServerPorts({
-      MOKLY_PLAYWRIGHT_PORT: "5000",
-      MOKLY_PLAYWRIGHT_WORKERS: "2",
-    }),
-    [5000, 5001],
-  );
-  assert.deepEqual(
-    exampleServerPorts({
-      MOKLY_PLAYWRIGHT_PORT: "65535",
-      MOKLY_PLAYWRIGHT_WORKERS: "1",
-    }),
-    [65_535],
-  );
+test("Playwright config owns the startup hook and complete worker configuration", () => {
+  assert.equal(config.globalSetup, "./tests/browser/setup.ts");
+  assert.equal(config.fullyParallel, false);
+  assert.equal(config.retries, 0);
+  assert.deepEqual(config.projects, [{ name: "chromium" }]);
 });
-
-test("the example port range must fit the TCP port space", () => {
-  for (const [port, workers] of [
-    ["65535", "2"],
-    ["0", "1"],
-    ["-1", "1"],
-    ["1.5", "1"],
-    ["http", "1"],
-  ] as const)
-    assert.throws(
-      () =>
-        exampleServerPorts({
-          MOKLY_PLAYWRIGHT_PORT: port,
-          MOKLY_PLAYWRIGHT_WORKERS: workers,
-        }),
-      {
-        message: `MOKLY_PLAYWRIGHT_PORT must start ${workers} consecutive available TCP port(s); received ${port}`,
-      },
-    );
-});
-
-test("a worker uses the server at its parallel index", () => {
-  const ports = [5000, 5001, 5002];
-  assert.equal(ownExampleServerPort(ports, {}), 5000);
-  assert.equal(ownExampleServerPort(ports, { TEST_PARALLEL_INDEX: "0" }), 5000);
-  assert.equal(ownExampleServerPort(ports, { TEST_PARALLEL_INDEX: "2" }), 5002);
+test("worker addresses select their parallel index and reject missing servers", () => {
+  const env = {
+    MOKLY_PLAYWRIGHT_URLS: JSON.stringify([
+      "http://127.0.0.1:1234",
+      "http://127.0.0.1:5678",
+    ]),
+  };
+  assert.equal(ownExampleServerUrl(env), "http://127.0.0.1:1234");
+  assert.equal(
+    ownExampleServerUrl({ ...env, TEST_PARALLEL_INDEX: "1" }),
+    "http://127.0.0.1:5678",
+  );
   assert.throws(
-    () => ownExampleServerPort(ports, { TEST_PARALLEL_INDEX: "3" }),
-    {
-      message:
-        "Playwright worker 3 has no example server; set MOKLY_PLAYWRIGHT_WORKERS instead of passing --workers",
-    },
+    () => ownExampleServerUrl({ ...env, TEST_PARALLEL_INDEX: "2" }),
+    { message: "Playwright worker 2 has no example server" },
   );
 });
-
-test("the Playwright config starts one example server per worker", () => {
-  const ports = exampleServerPorts();
-  assert.equal(browserConfig.workers, ports.length);
-  assert.equal(browserConfig.use?.baseURL, `http://127.0.0.1:${ports[0]}`);
-  const servers = browserConfig.webServer;
-  assert.ok(Array.isArray(servers));
+test("every worker starts through the exact shim command before readiness settles", async () => {
+  const started: string[] = [];
+  const ready: string[] = [];
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const pending = startExampleHosts(
+    2,
+    new AbortController().signal,
+    async (args, cwd) => {
+      assert.equal(cwd, repositoryRoot);
+      assert.deepEqual(args, [
+        "packages/mokly/bin/mokly.mjs",
+        "serve",
+        "--config",
+        "examples/basic/mokly.config.json",
+        "--base",
+        EXAMPLE_BASE,
+        "--port",
+        "0",
+        "--no-watch",
+        "--sidecars",
+        "1",
+      ]);
+      const url = `http://worker-${started.length}`;
+      started.push(url);
+      return { url, close: async () => undefined };
+    },
+    async (url) => {
+      ready.push(url);
+      if (ready.length === 2) release();
+      await held;
+    },
+  );
+  const hosts = await pending;
+  assert.deepEqual(started, ["http://worker-0", "http://worker-1"]);
+  assert.deepEqual(ready, started);
   assert.deepEqual(
-    servers.map((server) => server.url),
-    ports.map((port) => `http://127.0.0.1:${port}/`),
+    hosts.map((host) => host.url),
+    started,
   );
-  for (const [offset, server] of servers.entries()) {
-    assert.equal(
-      server.command,
-      `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port ${ports[offset]} --no-watch`,
+});
+for (const mode of ["ready", "pending", "unavailable", "ended"] as const) {
+  test(`example readiness handles ${mode} through stream state`, async () => {
+    let reads = 0;
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        if (mode === "ended") controller.close();
+        else controller.enqueue(new TextEncoder().encode("data: ready\n\n"));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const request = (async (url: string | URL | Request) => {
+      if (String(url).endsWith("events")) return new Response(stream);
+      if (String(url).endsWith("index.json")) {
+        reads++;
+        return Response.json({
+          revision: 1,
+          changesStatus:
+            reads === 1 && mode === "pending" ? "pending" : "unavailable",
+          screens: [{ path: "home" }],
+          components: [],
+        });
+      }
+      const status =
+        mode === "unavailable"
+          ? "unavailable"
+          : mode === "ended" || (mode === "pending" && reads === 1)
+            ? "pending"
+            : "ready";
+      return Response.json({ revision: 1, views: [{ usage: { status } }] });
+    }) as typeof fetch;
+    const result = exampleReady(
+      "http://fixture",
+      new AbortController().signal,
+      request,
     );
-    assert.equal(server.reuseExistingServer, false);
-  }
+    if (mode === "unavailable")
+      await assert.rejects(result, {
+        message: "Example render unavailable: home",
+      });
+    else if (mode === "ended")
+      await assert.rejects(result, {
+        message: "Example publication stream ended before readiness",
+      });
+    else await result;
+    assert.equal(reads, mode === "pending" ? 2 : 1);
+    if (mode !== "ended") assert.equal(cancelled, true);
+  });
+}
+
+test("the configured setup publishes each prepared worker and restores its environment", async (context) => {
+  const previous = process.env["MOKLY_PLAYWRIGHT_WORKERS"];
+  const previousUrls = process.env["MOKLY_PLAYWRIGHT_URLS"];
+  process.env["MOKLY_PLAYWRIGHT_WORKERS"] = "2";
+  context.after(() => {
+    if (previous === undefined) delete process.env["MOKLY_PLAYWRIGHT_WORKERS"];
+    else process.env["MOKLY_PLAYWRIGHT_WORKERS"] = previous;
+  });
+  const closed: number[] = [];
+  const copiedBefore = process.env["MOKLY_PLAYWRIGHT_COPIED_URL"];
+  const close = await setup({ workers: 2 } as FullConfig, {
+    start: async (count) => {
+      assert.equal(count, 2);
+      return [0, 1].map((index) => ({
+        url: `http://worker-${index}`,
+        close: async () => {
+          closed.push(index);
+        },
+      }));
+    },
+    comparisonHost: async () => ({
+      directory: "/comparison",
+      url: "http://comparison",
+      close: async () => {
+        closed.push(3);
+      },
+    }),
+    staticHost: async () => ({
+      directory: "/copied",
+      url: "http://static",
+      close: async () => {
+        closed.push(2);
+      },
+    }),
+    host: async () => {
+      throw new Error("Serve setup must start worker servers");
+    },
+  });
+  assert.equal(
+    process.env["MOKLY_PLAYWRIGHT_URLS"],
+    '["http://worker-0","http://worker-1"]',
+  );
+  assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], "http://static");
+  await close();
+  assert.deepEqual(closed.sort(), [0, 1, 2, 3]);
+  assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], copiedBefore);
+  assert.equal(process.env["MOKLY_PLAYWRIGHT_URLS"], previousUrls);
+});
+test("a failed worker drains successful siblings before setup rejects", async () => {
+  const failure = new Error("fixture startup refused");
+  let count = 0;
+  let closed = false;
+  await assert.rejects(
+    startExampleHosts(
+      2,
+      new AbortController().signal,
+      async () => {
+        if (count++ === 1) throw failure;
+        return {
+          url: "http://first",
+          close: async () => {
+            closed = true;
+          },
+        };
+      },
+      async () => {},
+    ),
+    (error) => {
+      assert.ok(error instanceof AggregateError);
+      assert.equal(error.message, "Example worker setup failed");
+      assert.deepEqual(error.errors, [failure]);
+      assert.equal(closed, true);
+      return true;
+    },
+  );
 });
 
-test("global setup rejects workers without a prepared example server", async () => {
-  const ports = exampleServerPorts();
-  const workers = ports.length + 1;
+test("the shared example requires exactly one Git diagnostic", () => {
+  validateExampleDiagnostics(
+    "[mokly/git-failed] Missing reserved base\nChanges unavailable\n",
+  );
+  assert.throws(() => validateExampleDiagnostics("Changes ready\n"));
+  assert.throws(() =>
+    validateExampleDiagnostics(
+      "[mokly/git-failed] one\n[mokly/git-failed] two\n",
+    ),
+  );
+});
+
+test("a copied-output setup failure drains Serve hosts and restores both URL channels", async () => {
+  const expected = new Error("copied build failed");
+  const before = [
+    process.env["MOKLY_PLAYWRIGHT_URLS"],
+    process.env["MOKLY_PLAYWRIGHT_COPIED_URL"],
+  ];
+  let closed = false;
   await assert.rejects(
-    setup({ projects: [], workers } as unknown as FullConfig),
-    {
-      message: `Playwright runs ${workers} workers but starts ${ports.length} example server(s); set MOKLY_PLAYWRIGHT_WORKERS=${workers} instead of passing --workers`,
-    },
+    setup({ workers: 1 } as FullConfig, {
+      start: async () => [
+        {
+          url: "http://serve",
+          close: async () => {
+            closed = true;
+          },
+        },
+      ],
+      host: async () => {
+        throw new Error("not a manual static run");
+      },
+      comparisonHost: async () => ({
+        directory: "/comparison",
+        url: "http://comparison",
+        close: async () => {},
+      }),
+      staticHost: async () => {
+        throw expected;
+      },
+    }),
+    (error) => error === expected,
+  );
+  assert.equal(closed, true);
+  assert.deepEqual(
+    [
+      process.env["MOKLY_PLAYWRIGHT_URLS"],
+      process.env["MOKLY_PLAYWRIGHT_COPIED_URL"],
+    ],
+    before,
   );
 });

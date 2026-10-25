@@ -1,0 +1,211 @@
+import assert from "node:assert/strict";
+import { execFile, spawn } from "node:child_process";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
+
+import { commandProcess } from "../../scripts/verification/serve-process.mjs";
+
+const exec = promisify(execFile);
+export const workspace = path.resolve(import.meta.dirname, "../..");
+
+export async function publicationFixture(
+  javascript = false,
+  objectFormat: "sha1" | "sha256" = "sha1",
+) {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-static-publish-"),
+  );
+  await fs.mkdir(path.join(root, "specs"));
+  await fs.writeFile(path.join(root, "mokly.config.json"), "{}");
+  await fs.writeFile(
+    path.join(root, ".gitignore"),
+    "node_modules/\n.context/\nmokly-static/\n",
+  );
+  await fs.writeFile(path.join(root, "signal.txt"), "original");
+  await fs.writeFile(
+    path.join(
+      root,
+      "specs",
+      javascript ? "home.mockup.ts" : "home.screen.html",
+    ),
+    javascript
+      ? `import fs from 'node:fs'; import {definePage} from '@mokly/mokly'; export default definePage({title:'Home',description:'',relatedDocs:[],render(){fs.appendFileSync('specs/home.mockup.ts','\\n// changed');return '<!doctype html><html><head><title>Home</title></head><body><h1>Home</h1></body></html>'}});`
+      : "---\ntitle: Home\n---\n<h1>Home</h1>",
+  );
+  if (javascript)
+    await fs.symlink(
+      path.join(workspace, "node_modules"),
+      path.join(root, "node_modules"),
+      "junction",
+    );
+  for (const args of [
+    ["init", "-q", `--object-format=${objectFormat}`],
+    ["config", "user.name", "Mokly Test"],
+    ["config", "user.email", "test@example.com"],
+    ["add", "."],
+    ["commit", "-qm", "fixture"],
+  ]) {
+    await exec("git", args, { cwd: root });
+  }
+  return root;
+}
+
+export function publish(
+  root: string,
+  endpoint: string,
+  mode = "plain",
+  options: {
+    args?: string[];
+    env?: NodeJS.ProcessEnv;
+    environmentCredentials?: boolean;
+    signal?: AbortSignal;
+  } = {},
+) {
+  return command(
+    root,
+    "publish",
+    publishArguments(endpoint, options.environmentCredentials, options.args),
+    mode,
+    {
+      ...(options.environmentCredentials
+        ? { MOKLY_ENDPOINT: endpoint, MOKLY_TOKEN: "private/a==" }
+        : {}),
+      ...options.env,
+    },
+    options.signal,
+  );
+}
+
+export function publishArguments(
+  endpoint: string,
+  environmentCredentials = false,
+  args: string[] = [],
+) {
+  return [
+    "--no-changes",
+    "--repository=example.com/team/site",
+    "--sidecars=1",
+    ...(environmentCredentials
+      ? []
+      : [`--endpoint=${endpoint}`, "--token=private/a=="]),
+    ...args,
+  ];
+}
+
+function commandEnvironment(mode: string, extra: NodeJS.ProcessEnv) {
+  return {
+    ...process.env,
+    MOKLY_OUTPUT: mode,
+    MOKLY_PACKAGE_ROOT: path.join(workspace, "packages/mokly"),
+    MOKLY_VIEWER_DIST: path.join(workspace, "packages/viewer/dist"),
+    ...extra,
+  };
+}
+
+/** Register the process group before starting the shim and drain before return. */
+export async function registeredCommand(
+  root: string,
+  verb: "build" | "publish",
+  args: string[],
+  mode: string,
+  extra: NodeJS.ProcessEnv,
+) {
+  const managed = await commandProcess(
+    [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
+    root,
+    commandEnvironment(mode, extra),
+  );
+  let drained = false;
+  const running = captureCommand(managed.child, undefined, async () => {
+    await managed.drain();
+    drained = true;
+  });
+  try {
+    await managed.start();
+    return {
+      ...running,
+      signal: (value: NodeJS.Signals) => {
+        if (!drained) managed.signal(value);
+      },
+    };
+  } catch (error) {
+    managed.signal("SIGKILL");
+    await running.result;
+    throw error;
+  }
+}
+
+export function command(
+  root: string,
+  verb: "build" | "publish",
+  args: string[],
+  mode = "plain",
+  extra: NodeJS.ProcessEnv = {},
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
+  const child = spawn(
+    process.execPath,
+    [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
+    {
+      cwd: root,
+      env: commandEnvironment(mode, extra),
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  return captureCommand(child, signal);
+}
+
+function captureCommand(
+  child: Awaited<ReturnType<typeof commandProcess>>["child"],
+  signal?: AbortSignal,
+  drain?: () => Promise<void>,
+) {
+  let stdout = "";
+  let stderr = "";
+  let directoryReady!: (directory: string) => void;
+  const buildDirectory = new Promise<string>((resolve) => {
+    directoryReady = resolve;
+  });
+  child.stdout.on("data", (chunk) => {
+    stdout += String(chunk);
+    const match = /^Mokly publish build: ([^\r\n]+)\r?$/m.exec(stdout);
+    if (match && stdout.includes(`${match[0]}\n`)) directoryReady(match[1]!);
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += String(chunk);
+  });
+  const result = new Promise<{
+    code: number | null;
+    stdout: string;
+    stderr: string;
+  }>((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", (code) => resolve({ code, stdout, stderr }));
+  }).finally(drain);
+  const stop = () => {
+    if (process.platform === "win32" && child.pid !== undefined)
+      execFile("taskkill", ["/PID", String(child.pid), "/T", "/F"], () => {});
+    else child.kill("SIGTERM");
+  };
+  signal?.addEventListener("abort", stop, { once: true });
+  child.once("close", () => signal?.removeEventListener("abort", stop));
+  return { child, result, buildDirectory };
+}
+
+export function directory(stdout: string): string {
+  const lines = stdout
+    .split("\n")
+    .filter((line) => line.startsWith("Mokly publish build: "));
+  assert.equal(lines.length, 1);
+  const line = lines[0];
+  assert.ok(line);
+  return line.slice("Mokly publish build: ".length);
+}
+export async function removeOutput(output: string) {
+  assert.equal(path.basename(output), "site");
+  assert.match(path.basename(path.dirname(output)), /^mokly-publish-/);
+  await fs.rm(path.dirname(output), { recursive: true, force: true });
+}

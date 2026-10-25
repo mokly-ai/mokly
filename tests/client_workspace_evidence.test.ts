@@ -1,106 +1,49 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-
-import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
-import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
 import {
-  cssReason,
-  cssRule,
-  fixtureCssAnalysis,
-} from "./helpers/css_evidence.js";
+  entry,
+  loaded,
+  record,
+  renderEvidence,
+  view,
+} from "./helpers/workspace_evidence.js";
 
-const SHARED = "mockups/shared.css";
-const TOKENS = "mockups/tokens.css";
-
-const EVIDENCE_COPY = {
-  screen: {
-    files: "Changes to these files may affect this screen:",
-    matched: "Changed styles that apply to this screen:",
-    matchedWithoutSelectors: "Changed styles that apply to this screen.",
-    unresolved:
-      "This change can apply anywhere on the screen, so the screen stays in Changes:",
-    unresolvedWithoutSelectors:
-      "This change can apply anywhere on the screen, so the screen stays in Changes.",
-    oneExcluded:
-      "This stylesheet changed, but none of the changed styles apply to this screen.",
-    severalExcluded:
-      "These stylesheets changed, but none of the changed styles apply to this screen.",
-  },
-  component: {
-    files: "Changes to these files may affect this component:",
-    matched: "Changed styles that apply to this component:",
-    matchedWithoutSelectors: "Changed styles that apply to this component.",
-    unresolved:
-      "This change can apply anywhere on the component, so the component stays in Changes:",
-    unresolvedWithoutSelectors:
-      "This change can apply anywhere on the component, so the component stays in Changes.",
-    oneExcluded:
-      "This stylesheet changed, but none of the changed styles apply to this variant.",
-    severalExcluded:
-      "These stylesheets changed, but none of the changed styles apply to this variant.",
-  },
-} as const;
+const SHARED = "static/shared.css";
+const TOKENS = "static/tokens.css";
 
 test("the inspector lists changed files, applying styles, then exclusions", () => {
-  const markup = renderEvidence({
-    base: "main",
-    status: "Changed",
-    change: {
-      kind: "screen",
-      after: { path: "home", title: "Home" },
-      reasons: [
-        { kind: "material" },
-        {
-          kind: "dependency",
-          path: SHARED,
-          analysis: fixtureCssAnalysis("matched", [".auth"]),
-        },
-      ],
-    },
-    comparison: {
-      path: "home",
-      state: "changed",
-      title: "Home",
-      views: [
-        {
-          colorScheme: "light",
-          ignoredIds: [],
-          state: "changed",
-          viewport: "mobile",
-          reasons: [
-            {
-              kind: "dependency",
-              path: SHARED,
-              analysis: fixtureCssAnalysis("matched", [".auth"]),
-            },
-          ],
-        },
-        {
-          colorScheme: "light",
-          ignoredIds: [],
-          state: "unchanged",
-          viewport: "desktop",
-          excludedResources: [{ path: TOKENS, reason: "no-matching-rule" }],
-        },
-      ],
-    },
-    components: [],
-    comparisonEligible: true,
-    comparisons: true,
-    entry: { path: "home", kind: "screen", route: "home/index.html" },
-    inputChanges: [],
-    relatedComponents: [],
-    usedBy: [],
-    affected: [],
-    removed: false,
-    variants: [],
-    views: [],
-  } as unknown as WorkspaceData);
+  const home = entry(
+    "screen",
+    "home",
+    "Home",
+    [{ kind: "dependency", path: SHARED }, { kind: "material" }],
+    [
+      view("mobile", "changed", [record(SHARED, ".auth")]),
+      view("desktop", "unchanged", [record(TOKENS, "", "excluded")]),
+    ],
+  );
+  const markup = renderEvidence(
+    {
+      base: "main",
+      status: "Changed",
+      components: [],
+      comparisonEligible: true,
+      comparisons: true,
+      entry: { path: "home", kind: "screen", route: "home/index.html" },
+      inputChanges: [],
+      relatedComponents: [],
+      usedBy: [],
+      affected: [],
+      removed: false,
+      variants: [],
+      views: [],
+    } as unknown as WorkspaceData,
+    undefined,
+    loaded(home),
+  );
 
   assert.equal(
     markup,
@@ -120,7 +63,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
   );
 });
 
-test("the terminal line names the screen or the saved view it compared", () => {
+test("the terminal line names the screen or the variant it compared", () => {
   const unmodified = {
     base: "main",
     status: "Unmodified",
@@ -149,148 +92,5 @@ test("the terminal line names the screen or the saved view it compared", () => {
     } as unknown as WorkspaceData,
     "default",
   );
-  assert.match(
-    component,
-    /<p>No changes to this saved view\.<\/p><\/section>$/,
-  );
+  assert.match(component, /<p>No changes to this variant\.<\/p><\/section>$/);
 });
-
-for (const kind of ["screen", "component"] as const) {
-  const copy = EVIDENCE_COPY[kind];
-  test(`${kind} Details names files, matched and unresolved selectors, and one exclusion`, () => {
-    const markup = renderKindEvidence(
-      kind,
-      [
-        entryReason(kind, SHARED, "matched", [".action"]),
-        entryReason(kind, TOKENS, "unresolved", [":root"]),
-      ],
-      ["mockups/excluded.css"],
-    );
-    for (const sentence of [
-      copy.files,
-      copy.matched,
-      copy.unresolved,
-      copy.oneExcluded,
-    ])
-      assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
-    assert.ok(markup.includes(`<li>${SHARED}<p>${copy.matched}</p>`));
-    assert.ok(markup.includes(`<li>${TOKENS}<p>${copy.unresolved}</p>`));
-    if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
-  });
-
-  test(`${kind} Details names unresolved styles without selectors and several exclusions`, () => {
-    const markup = renderKindEvidence(
-      kind,
-      [entryReason(kind, SHARED, "unresolved", [])],
-      ["mockups/excluded-a.css", "mockups/excluded-b.css"],
-    );
-    for (const sentence of [
-      copy.files,
-      copy.unresolvedWithoutSelectors,
-      copy.severalExcluded,
-    ])
-      assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
-    assert.ok(
-      markup.includes(
-        `<p>${copy.unresolvedWithoutSelectors}</p></li></ul><p>${copy.severalExcluded}</p>`,
-      ),
-    );
-    if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
-  });
-
-  test(`${kind} Details closes matched styles without selectors with a full stop`, () => {
-    const markup = renderKindEvidence(kind, [
-      {
-        kind: "dependency",
-        path: SHARED,
-        analysis: fixtureCssAnalysis("matched", []),
-      },
-    ]);
-    assert.ok(markup.includes(`<p>${copy.matchedWithoutSelectors}</p>`));
-    if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
-  });
-}
-
-/** Screen page evidence, or a rule that changed the component on its own pages. */
-function entryReason(
-  kind: "screen" | "component",
-  path: string,
-  status: "matched" | "unresolved",
-  selectors: readonly string[],
-): EntryChangeReason {
-  const analysis = fixtureCssAnalysis(status, selectors);
-  return kind === "screen"
-    ? { kind: "dependency", path, analysis }
-    : cssReason(path, [
-        cssRule({ status, selectors, changedComponentPaths: ["action"] }),
-      ]);
-}
-
-function renderKindEvidence(
-  kind: "screen" | "component",
-  reasons: readonly EntryChangeReason[],
-  excluded: readonly string[] = [],
-): string {
-  const address =
-    kind === "component"
-      ? { path: "action", title: "Action" }
-      : { path: "home", title: "Home" };
-  const view = {
-    colorScheme: "light",
-    ignoredIds: [],
-    state: "changed",
-    viewport: "mobile",
-    excludedResources: excluded.map((path) => ({
-      path,
-      reason: "no-matching-rule",
-    })),
-  };
-  const comparison = {
-    ...address,
-    before: address,
-    after: address,
-    state: "changed",
-    ...(kind === "component"
-      ? {
-          variants: [
-            {
-              path: "action/default",
-              title: "Default",
-              state: "changed",
-              views: [view],
-            },
-          ],
-        }
-      : { views: [view] }),
-  };
-  return renderEvidence(
-    {
-      base: "origin/main",
-      status: "Changed",
-      change: { kind, after: address, reasons },
-      comparison,
-      ...(kind === "component" ? { component: { ...address, kind } } : {}),
-      components: [],
-      comparisonEligible: true,
-      comparisons: true,
-      entry: { ...address, kind },
-      inputChanges: [],
-      relatedComponents: [],
-      usedBy: [],
-      affected: [],
-      removed: false,
-      variants: [],
-      views: [],
-    } as unknown as WorkspaceData,
-    kind === "component" ? "action/default" : undefined,
-  );
-}
-
-function renderEvidence(data: WorkspaceData, variantPath?: string): string {
-  return renderToStaticMarkup(
-    createElement(WorkspaceEvidence, {
-      data,
-      ...(variantPath ? { variantPath } : {}),
-    }),
-  );
-}

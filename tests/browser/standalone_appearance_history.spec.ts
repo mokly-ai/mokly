@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 const welcome = "/view/example/screens/welcome/";
@@ -44,10 +45,7 @@ for (const choice of ["light", "auto"] as const) {
   }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto(`${welcome}?scheme=dark`);
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-hydrated",
-      "",
-    );
+    await expect(page.locator("[data-mokly-search]")).toBeVisible();
     await page.evaluate(() => {
       document.documentElement.dataset["historyProbe"] = "same";
     });
@@ -82,7 +80,7 @@ test("in-shell pins update the whole appearance without saving a preference", as
   page,
 }) => {
   await page.goto(`${welcome}?scheme=light`);
-  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect(page.locator("[data-mokly-search]")).toBeVisible();
   await navigate(page, `${details}?scheme=dark`);
   await expectAppearance(page, "dark");
   await navigate(page, welcome);

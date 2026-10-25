@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import {
   appearance,
@@ -8,6 +8,7 @@ import {
   select,
   store,
 } from "./appearance_assertions.js";
+import { test } from "./browser_test.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 test("a saved appearance outranks the system and the pin outranks it", async ({
@@ -128,7 +129,18 @@ test("a restored dark appearance swaps each frame at most once", async ({
     page.locator(desktopFrame),
     /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
-  await page.waitForTimeout(500);
+  await page.locator("iframe").evaluateAll((frames) =>
+    Promise.all(
+      frames.map((frame) => {
+        const document = (frame as HTMLIFrameElement).contentDocument;
+        return document?.readyState === "complete"
+          ? Promise.resolve()
+          : new Promise((resolve) =>
+              frame.addEventListener("load", resolve, { once: true }),
+            );
+      }),
+    ),
+  );
 
   for (const viewport of ["mobile", "desktop"]) {
     const dark = requests.filter((path) =>

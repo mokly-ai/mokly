@@ -8,7 +8,6 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { Box } from "../client/frame_adapter.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
 import {
@@ -30,6 +29,11 @@ export type ViewerInspectionPresentation =
     }
   | { kind: "pick" };
 
+/** The component records whose titles label inspected instances. */
+interface InspectionTitles {
+  components: readonly { path: string; title: string }[];
+}
+
 interface InspectionLabel {
   boxes: readonly Box[];
   id: string;
@@ -48,7 +52,7 @@ export function ViewerInspectionLayer({
   presentation,
   registry,
 }: {
-  model: CatalogueReadModel;
+  model: InspectionTitles;
   onError(error: unknown): void;
   onSelect(
     session: ShellFrameSession,
@@ -166,7 +170,7 @@ function sessionKeys(
 }
 
 function inspectionLabels(
-  model: CatalogueReadModel,
+  model: InspectionTitles,
   layer: HTMLElement,
   measured: readonly {
     keys: readonly string[];

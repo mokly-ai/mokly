@@ -1,0 +1,52 @@
+---
+source: crates/mokly-cli/src/_tests_/grammar_tests.rs
+expression: "Cli::command().render_long_help().to_string()"
+---
+Build and browse static mockup catalogues
+
+Usage: mokly [OPTIONS]
+       mokly <COMMAND>
+
+Commands:
+  serve    Serve the catalogue and comparisons; watch by default
+  build    Validate, render every view, and write the static site
+  publish  Build into a private directory and upload
+
+Options:
+  -v, --version
+          Show the installed package version
+
+      --config <CONFIG>
+          Configuration JSON path; otherwise search upward
+
+      --base <BASE>
+          Comparison base ref; overrides review.base (default origin/main)
+
+      --base-install-scripts
+          Run lifecycle scripts during base dependency installation
+
+      --no-base-install-scripts
+          Keep lifecycle scripts disabled during base dependency installation
+
+      --sidecars <SIDECARS>
+          Sidecar count; defaults to MOKLY_SIDECARS or the core count
+
+      --debug-timings
+          Write timing JSON to stderr and select plain output
+
+      --port <PORT>
+          Starting port, 0 through 65535 (default 4173)
+
+      --watch
+          Watch source files (the default)
+
+      --no-watch
+          Serve one snapshot without watching files
+
+      --open
+          Open the catalogue after its URL is ready
+
+  -h, --help
+          Print help
+
+Configuration: search upward for mokly.config.json, or pass --config PATH.

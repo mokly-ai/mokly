@@ -1,22 +1,36 @@
 import type { ReactNode } from "react";
 
+import { useRenderedAppearance } from "../../parts/appearance.js";
 import { CopyIcon, ExpandIcon } from "../../parts/icons.js";
 
 import type { DeviceFrameProps } from "./device-frame.js";
 
 interface FrameLabelProps {
   lightOnly?: boolean | undefined;
+  scheme?: boolean | undefined;
   text?: string | undefined;
 }
 
-/** Uppercase caption above a device chrome, with its color-scheme state. */
-function FrameLabel({ lightOnly, text }: FrameLabelProps) {
+/**
+ * Uppercase caption above a device chrome, with its color-scheme state. With
+ * `scheme` it also names the scheme the artboard renders.
+ */
+function FrameLabel({ lightOnly, scheme, text }: FrameLabelProps) {
+  const appearance = useRenderedAppearance();
   if (text === undefined) {
     return null;
   }
   return (
     <p className="mbk-frame-label">
       {text}
+      {scheme ? (
+        <>
+          {" · "}
+          <span className="ce-scheme">
+            {appearance === "dark" ? "Dark" : "Light"}
+          </span>
+        </>
+      ) : null}
       {lightOnly ? (
         <span className="mbk-frame-scheme-note">{" — Light only"}</span>
       ) : null}
@@ -29,6 +43,7 @@ interface PhoneFrameProps {
   dark?: boolean | undefined;
   label?: string;
   lightOnly?: boolean;
+  scheme?: boolean;
   small?: boolean;
 }
 
@@ -85,11 +100,12 @@ function PhoneFrame({
   dark,
   label,
   lightOnly,
+  scheme,
   small,
 }: PhoneFrameProps) {
   return (
     <div className="mbk-frame-wrap mbk-frame-mobile">
-      <FrameLabel lightOnly={lightOnly} text={label} />
+      <FrameLabel lightOnly={lightOnly} scheme={scheme} text={label} />
       <div className={small ? "phone-frame phone-frame--sm" : "phone-frame"}>
         <div className="phone-notch" aria-hidden="true" />
         <div className={dark ? "phone-screen mbk-screen-dark" : "phone-screen"}>
@@ -109,6 +125,7 @@ interface BrowserFrameProps {
   expandable?: boolean;
   label?: string;
   lightOnly?: boolean;
+  scheme?: boolean;
 }
 
 /** Browser chrome with traffic lights, address, and expand control. */
@@ -119,10 +136,11 @@ function BrowserFrame({
   expandable = true,
   label,
   lightOnly,
+  scheme,
 }: BrowserFrameProps) {
   return (
     <div className="mbk-frame-wrap mbk-frame-desktop">
-      <FrameLabel lightOnly={lightOnly} text={label} />
+      <FrameLabel lightOnly={lightOnly} scheme={scheme} text={label} />
       <div className="browser-frame">
         <div className="browser-bar">
           <span className="lights" aria-hidden="true">

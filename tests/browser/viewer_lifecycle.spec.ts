@@ -1,8 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { MoklyViewerProps } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -12,7 +14,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 
 test.beforeEach(async ({ page }) => {
@@ -52,7 +54,7 @@ test("callback exceptions preserve identity and are not viewer failures", async 
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  const result = await page.evaluate(async () => {
+  const callbackError = await page.evaluateHandle(() => {
     const host = window.viewerHarness.get("one");
     const error = new Error("Host callback failed");
     host.props.onPickStart = () => {
@@ -60,23 +62,33 @@ test("callback exceptions preserve identity and are not viewer failures", async 
     };
     host.props.slots = { topBarStart: "Callbacks installed" };
     host.render();
-    while (
-      document.querySelector('[data-mokly-slot="topBarStart"]')?.textContent !==
-      "Callbacks installed"
-    )
-      await new Promise(requestAnimationFrame);
-    try {
-      await host.ref.current.startPick();
-    } catch (caught) {
-      host.ref.current.cancelPick();
-      return {
-        same: caught === error,
-        errors: host.events.filter((event) => event.name === "error"),
-      };
-    }
-    return null;
+    return error;
   });
-  expect(result).toEqual({ same: true, errors: [] });
+  try {
+    await page.waitForFunction(
+      () =>
+        document.querySelector('[data-mokly-slot="topBarStart"]')
+          ?.textContent === "Callbacks installed",
+      undefined,
+      { timeout: 15_000 },
+    );
+    const result = await callbackError.evaluate(async (error) => {
+      const host = window.viewerHarness.get("one");
+      try {
+        await host.ref.current.startPick();
+      } catch (caught) {
+        host.ref.current.cancelPick();
+        return {
+          same: caught === error,
+          errors: host.events.filter((event) => event.name === "error"),
+        };
+      }
+      return null;
+    });
+    expect(result).toEqual({ same: true, errors: [] });
+  } finally {
+    await callbackError.dispose();
+  }
 });
 
 test("slot changes keep selection and overlay excludes shell controls", async ({
@@ -152,7 +164,7 @@ test("source and adapter replacement end pick and remount; unmount is silent", a
     await host.ref.current.startPick();
     host.props = {
       ...host.props,
-      catalogue: structuredClone(host.props.catalogue),
+      index: structuredClone(host.props.index),
     } as MoklyViewerProps;
     host.render();
   });

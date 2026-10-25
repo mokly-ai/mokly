@@ -21,6 +21,7 @@ pub(crate) mod runtime;
 pub(crate) mod scripts;
 pub(crate) mod snapshot;
 mod suites;
+mod verdict;
 
 #[cfg(test)]
 #[path = "_tests_/adapter_support.rs"]

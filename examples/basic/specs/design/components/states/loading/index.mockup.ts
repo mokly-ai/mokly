@@ -1,1 +1,7 @@
-export { loadingStateDesigns } from "./screens.js";
+export {
+  usageLoadingScreen,
+  inspectionLoadingScreen,
+  usageFailedScreen,
+  propsLoadingScreen,
+  propsFailedScreen,
+} from "./screens.js";

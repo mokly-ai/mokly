@@ -1,0 +1,10 @@
+---
+source: crates/mokly-cli/src/_tests_/serve_output_tests.rs
+expression: shortcuts()
+---
+  o  Open the catalogue
+  r  Rebuild the catalogue
+  c  Clear the terminal
+  h  Show shortcuts
+  q  Close Serve
+  Ctrl+C  Close Serve

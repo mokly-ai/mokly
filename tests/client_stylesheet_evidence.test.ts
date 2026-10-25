@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
+import type { ChangeReason } from "../packages/viewer/dist/review/types.js";
 import { stylesheetEvidence } from "../packages/viewer/dist/shell/workspace_stylesheet_evidence.js";
 
 import { cssReason, cssRule } from "./helpers/css_evidence.js";
@@ -22,13 +22,13 @@ const COPY = {
   componentStyles: "Changed styles that apply to this component:",
   componentUnresolved:
     "This change can apply anywhere on the component, so the component stays in Changes:",
-  viewStyles: "Changed styles that apply to this saved view:",
+  viewStyles: "Changed styles that apply to this variant:",
   viewOutside:
-    "These changed styles also apply outside the changed components in this saved view:",
+    "These changed styles also apply outside the changed components in this variant:",
   viewUnresolved:
-    "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
+    "This change can apply anywhere on the variant, so the variant stays in Changes:",
   viewUnnamed:
-    "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
+    "This change can apply anywhere on the variant, so the variant stays in Changes.",
 } as const;
 
 /** `.action, .heading` changes Action and also styles the screen's heading. */
@@ -153,7 +153,7 @@ test("a component rule that also styles the wrapper keeps both facts", () => {
   );
 });
 
-test("a saved view's unresolved page reason uses saved-view wording", () => {
+test("a variant's unresolved page reason uses variant wording", () => {
   const unnamed = cssRule({ status: "unresolved", selectors: [] });
   delete (unnamed as { ruleKey?: string }).ruleKey;
   assert.deepEqual(
@@ -206,7 +206,7 @@ test("a rule matched on one view and unresolved on another keeps both paragraphs
 });
 
 test("each file appears once in path order and other evidence is a path alone", () => {
-  const reasons: readonly EntryChangeReason[] = [
+  const reasons: readonly ChangeReason[] = [
     { kind: "material" },
     { kind: "dependency", path: "mockups/logo.svg" },
     cssReason("mockups/z.css", [headingRule]),

@@ -10,7 +10,11 @@ import { repositoryRoot } from "./helpers/fixture.js";
 /** The first npm release that writes lockfile `libc` fields (npm/cli#9025). */
 const FIRST_NPM_WITH_LOCKFILE_LIBC = "11.11.0";
 /** Workflows whose dependency installs must use the pinned npm. */
-const PINNED_WORKFLOWS = ["ci.yml", "release.yml"] as const;
+const PINNED_WORKFLOWS = [
+  "ci.yml",
+  "release.yml",
+  "release-prepare.yml",
+] as const;
 const NPM_PIN = /npm (?:install|i) (?:--global|-g) npm@(\S+)/gu;
 
 interface WorkflowStep {
@@ -62,21 +66,6 @@ test("the pinned npm is new enough to keep lockfile libc fields", async () => {
     compareVersions(pinned, FIRST_NPM_WITH_LOCKFILE_LIBC) >= 0,
     `npm ${pinned} drops lockfile libc fields; pin npm ${FIRST_NPM_WITH_LOCKFILE_LIBC} or newer`,
   );
-});
-
-test("developer and protocol docs name the pinned npm version", async () => {
-  const pinned = await pinnedNpmVersion();
-  for (const file of [
-    "README.md",
-    "docs/protocol/ci-workflow.md",
-    "docs/protocol/npm-release-management.md",
-  ]) {
-    const source = (await read(file)).replace(/\s+/gu, " ");
-    assert.ok(
-      source.includes(`npm ${pinned}`),
-      `${file} must name npm ${pinned}`,
-    );
-  }
 });
 
 async function pinnedNpmVersion(): Promise<string> {

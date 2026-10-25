@@ -1,89 +1,130 @@
+import path from "node:path";
+
 import type { FullConfig } from "@playwright/test";
 
+import { browserWorkerCount } from "../../scripts/verification/concurrency.mjs";
 import {
-  VERIFICATION_OWNER_ID_ENV,
-  VERIFICATION_PROCESS_REGISTRY_ENV,
-  VERIFICATION_RESOURCE_ROOT_ENV,
-} from "../../dist/baseline/process_owner.js";
-import { reportBrowserStartup } from "../helpers/browser_timing.js";
-import { SHARED_EXAMPLE_DESCRIPTOR_ENV } from "../helpers/example_descriptor.js";
-import { timeFixturePhase } from "../helpers/fixture_timing.js";
-import {
-  prepareSharedExample,
-  sharedExampleEnvironment,
-} from "../helpers/shared_example.js";
-import type { SharedExample } from "../helpers/shared_example.js";
-import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
+  timeFixturePhase,
+  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
+} from "../helpers/fixture_timing.js";
 
-import { exampleServerPorts } from "./example_servers.js";
+import { startComparisonStaticHost } from "./comparison_static_setup.js";
+import { startCopiedStaticHost } from "./copied_static_setup.js";
+import { startExampleHosts } from "./example_setup.js";
+import { browserHost, type BrowserHost } from "./hosts.js";
 
-const environmentKeys = [
-  VERIFICATION_OWNER_ID_ENV,
-  VERIFICATION_PROCESS_REGISTRY_ENV,
-  VERIFICATION_RESOURCE_ROOT_ENV,
-  SHARED_EXAMPLE_DESCRIPTOR_ENV,
-] as const;
-
-/** One prepared baseline per invocation, published only after real validation and drainage. */
+/** Start one isolated example server per parallel worker, without fixed ports. */
 export default async function setup(
   config: FullConfig,
-): Promise<() => Promise<void>> {
-  const ports = exampleServerPorts();
-  if (config.workers > ports.length)
-    throw new Error(
-      `Playwright runs ${config.workers} workers but starts ${ports.length} example server(s); set MOKLY_PLAYWRIGHT_WORKERS=${config.workers} instead of passing --workers`,
-    );
-  const previous = new Map(
-    environmentKeys.map((key) => [key, process.env[key]]),
-  );
-  const restore = () => {
-    for (const [key, value] of previous) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
-    }
-  };
-  let shared: SharedExample | undefined;
-  try {
-    await timeFixturePhase("browser-suite", "global-setup", false, async () => {
-      await timeFixturePhase("browser-suite", "serve-readiness", false, () =>
-        Promise.all(
-          ports.map((port) =>
-            waitForInitialChanges(`http://127.0.0.1:${port}`, 180_000),
-          ),
-        ),
+  dependencies = {
+    start: startExampleHosts,
+    host: browserHost,
+    staticHost: startCopiedStaticHost,
+    comparisonHost: startComparisonStaticHost,
+  },
+) {
+  const count = browserWorkerCount();
+  if (config.workers > count)
+    throw new Error("Set MOKLY_PLAYWRIGHT_WORKERS instead of --workers");
+  const hosts: BrowserHost[] = [];
+  const previous = process.env["MOKLY_PLAYWRIGHT_URLS"];
+  const staticNames = [
+    "MOKLY_PLAYWRIGHT_COPIED_URL",
+    "MOKLY_PLAYWRIGHT_COPIED_DIR",
+    "MOKLY_PLAYWRIGHT_COMPARISON_URL",
+    "MOKLY_PLAYWRIGHT_COMPARISON_DIR",
+  ] as const;
+  const previousStatic = staticNames.map((name) => process.env[name]);
+  let closing: Promise<void> | undefined;
+  const close = () =>
+    (closing ??= (async () => {
+      const results = await Promise.allSettled(
+        hosts.reverse().map((host) => host.close()),
       );
-      shared = await prepareSharedExample();
-      shared.signal.throwIfAborted();
-      const environment = sharedExampleEnvironment(shared);
-      for (const key of environmentKeys) process.env[key] = environment[key]!;
-    });
-    reportBrowserStartup();
-  } catch (error) {
-    const failures: unknown[] = [error];
-    await shared?.close().catch((cleanup: unknown) => {
-      failures.push(cleanup);
-    });
-    restore();
-    if (failures.length > 1)
-      throw new AggregateError(failures, "Browser setup and cleanup failed", {
-        cause: error,
+      if (previous === undefined) delete process.env["MOKLY_PLAYWRIGHT_URLS"];
+      else process.env["MOKLY_PLAYWRIGHT_URLS"] = previous;
+      staticNames.forEach((name, index) => {
+        if (previousStatic[index] === undefined) delete process.env[name];
+        else process.env[name] = previousStatic[index];
       });
+      const errors = results
+        .filter((result) => result.status === "rejected")
+        .map((result) => result.reason);
+      if (errors.length)
+        throw new AggregateError(errors, "Browser host cleanup failed");
+    })());
+  try {
+    const abort = new AbortController();
+    const signal = AbortSignal.any([
+      AbortSignal.timeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS),
+      abort.signal,
+    ]);
+    const own = async <T>(start: () => Promise<T>): Promise<T> => {
+      try {
+        return await start();
+      } catch (error) {
+        abort.abort(error);
+        throw error;
+      }
+    };
+    const serve = own(() =>
+      timeFixturePhase("browser-suite", "serve-readiness", false, async () => {
+        const directory =
+          process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
+          process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
+        const ready = directory
+          ? [
+              await dependencies.host({
+                kind: "static",
+                directory: path.resolve(directory),
+              }),
+            ]
+          : await dependencies.start(count, signal);
+        hosts.push(...ready);
+        return directory
+          ? Array.from({ length: count }, () => ready[0]!.url)
+          : ready.map((host) => host.url);
+      }),
+    );
+    const copy = own(async () => {
+      const host = await dependencies.staticHost(signal);
+      hosts.push(host);
+      return host;
+    });
+    const comparison = own(async () => {
+      const host = await dependencies.comparisonHost(signal);
+      hosts.push(host);
+      return host;
+    });
+    // Failure cancels siblings, but every task settles before any host is removed.
+    const results = await Promise.allSettled([serve, copy, comparison]);
+    const errors = results
+      .filter((result) => result.status === "rejected")
+      .map((result) => result.reason);
+    if (errors.length === 1) throw errors[0];
+    if (errors.length)
+      throw new AggregateError(errors, "Browser host setup failed");
+    const [urls, copied, compared] = await Promise.all([
+      serve,
+      copy,
+      comparison,
+    ]);
+    process.env["MOKLY_PLAYWRIGHT_COPIED_URL"] = copied.url;
+    process.env["MOKLY_PLAYWRIGHT_COPIED_DIR"] = copied.directory;
+    process.env["MOKLY_PLAYWRIGHT_COMPARISON_URL"] = compared.url;
+    process.env["MOKLY_PLAYWRIGHT_COMPARISON_DIR"] = compared.directory;
+    process.env["MOKLY_PLAYWRIGHT_URLS"] = JSON.stringify(urls);
+    return close;
+  } catch (error) {
+    try {
+      await close();
+    } catch (cleanup) {
+      throw new AggregateError(
+        [error, cleanup],
+        "Browser setup and cleanup failed",
+        { cause: cleanup },
+      );
+    }
     throw error;
   }
-  let closing: Promise<void> | undefined;
-  return () => {
-    closing ??= timeFixturePhase(
-      "browser-suite",
-      "global-teardown",
-      false,
-      async () => {
-        try {
-          await shared!.close();
-        } finally {
-          restore();
-        }
-      },
-    );
-    return closing;
-  };
 }

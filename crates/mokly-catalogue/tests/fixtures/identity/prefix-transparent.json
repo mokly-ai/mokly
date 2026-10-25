@@ -1,0 +1,15 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "src",
+        "path": "account",
+        "transparent": ["__mockups__"]
+      }
+    ]
+  },
+  "files": {
+    "src/billing/__mockups__/invoice.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n"
+  },
+  "paths": ["account/billing/invoice"]
+}

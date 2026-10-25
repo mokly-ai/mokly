@@ -1,24 +1,34 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { destination, text } from "../schemas.js";
+import { destination, text, type LibraryProps } from "../schemas.js";
 
 import { deviceFrame } from "./device-frame.js";
 import { FlowStepView } from "./flow-step.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["number", "title", "description", "screenTitle", "screenPath"],
   properties: {
-    number: { schema: { kind: "number", minimum: 1, integer: true } },
+    number: { type: "integer", minimum: 1 },
     title: text,
     description: text,
-    screenPath: { ...destination, optional: false },
+    screenTitle: text,
+    screenPath: destination,
   },
 } as const;
 const slots = ["children"] as const;
-export type FlowStepProps = ComponentProps<typeof propSchema, typeof slots>;
+export type FlowStepProps = LibraryProps<typeof propSchema, typeof slots>;
+const first = {
+  number: 1,
+  title: "Welcome",
+  description: "The tour starts on the landing screen.",
+  screenTitle: "Welcome",
+  screenPath: DESTINATIONS.welcome,
+} as const;
 export const flowStep = defineComponent({
   ...libraryMetadata(
     "preview",
@@ -27,22 +37,21 @@ export const flowStep = defineComponent({
     "A numbered step with a reference to its owning screen.",
   ),
   propSchema,
+  props: first,
   slots,
   controls: {
     number: { kind: "number", label: "Step", minimum: 1, step: 1 },
     title: { kind: "text", label: "Title" },
     description: { kind: "text", label: "Description" },
+    screenTitle: { kind: "text", label: "Screen title" },
   },
   render: FlowStepView,
   variants: [
     {
       slug: "first",
       title: "First step",
-      props: {
-        number: 1,
-        title: "Welcome",
-        description: "The tour starts on the landing screen.",
-        screenPath: DESTINATIONS.welcome,
+      props: first,
+      slots: {
         children: (
           <deviceFrame.Component
             device="phone"
@@ -64,7 +73,10 @@ export const flowStep = defineComponent({
         number: 2,
         title: "Details",
         description: "The tour ends on the details screen.",
+        screenTitle: "Details",
         screenPath: DESTINATIONS.details,
+      },
+      slots: {
         children: (
           <deviceFrame.Component
             device="phone"

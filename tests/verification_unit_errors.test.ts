@@ -46,15 +46,12 @@ for (const [args, message] of [
   [["../outside.test.ts"], /^Test file argument is outside the repository:/u],
   [
     ["tests/browser/passing.spec.ts"],
-    /use npm run test:browser -- tests\/browser\/passing\.spec\.ts/u,
+    /browser verification is not available for tests\/browser\/passing\.spec\.ts/u,
   ],
-  [
-    ["--shard", "1/4"],
-    /use npm run test:prepared or cargo xtask check --suite unit --shard/u,
-  ],
+  [["--shard", "1/4"], /does not accept --shard/u],
   [
     ["helper.test.ts"],
-    /^Test file argument is outside the unit inventory: helper\.test\.ts\n$/u,
+    /^Test file argument is outside the viewer inventory: helper\.test\.ts\n$/u,
   ],
 ] as const) {
   test(
@@ -195,11 +192,11 @@ test("empty inventory remains an internal error in the developer runner", async 
   await fs.rm(path.join(harness.root, "tests"), { recursive: true });
   await fs.mkdir(path.join(harness.root, "tests"));
   await assert.rejects(
-    runWrapper(harness.root, "run-unit-dev.mjs", {
+    runWrapper(harness.root, "run-viewer.mjs", {
       args: ["--test-name-pattern=any"],
     }),
     (error: FailedChild) => {
-      assert.match(error.stderr, /unit test discovery was empty/u);
+      assert.match(error.stderr, /viewer test discovery was empty/u);
       assert.match(error.stderr, / {4}at /u);
       return true;
     },

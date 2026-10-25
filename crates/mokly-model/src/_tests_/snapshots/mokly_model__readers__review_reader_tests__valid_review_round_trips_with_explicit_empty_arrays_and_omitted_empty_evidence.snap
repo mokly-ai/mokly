@@ -1,0 +1,123 @@
+---
+source: crates/mokly-model/src/_tests_/review_reader_tests.rs
+expression: bytes
+---
+{
+  "affected": [
+    {
+      "changedComponentId": "card",
+      "consumer": {
+        "kind": "screen",
+        "path": "home"
+      },
+      "evidence": [
+        {
+          "context": {
+            "colorScheme": "light",
+            "entry": {
+              "path": "home",
+              "props": {},
+              "title": "Home"
+            },
+            "kind": "screen",
+            "viewport": "mobile"
+          },
+          "side": "before",
+          "via": [
+            {
+              "componentId": "card",
+              "instanceKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "baseCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "diagnostics": [],
+  "entries": [
+    {
+      "after": {
+        "path": "card",
+        "props": {},
+        "suppliedSlots": [],
+        "title": "Card"
+      },
+      "before": {
+        "path": "card",
+        "props": {},
+        "suppliedSlots": [],
+        "title": "Card"
+      },
+      "included": true,
+      "kind": "component",
+      "path": "card",
+      "reasons": [
+        {
+          "kind": "dependency",
+          "path": "static/theme.css"
+        }
+      ],
+      "state": "changed",
+      "title": "Card",
+      "variants": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "ignoredIds": [],
+          "rules": [
+            {
+              "owner": {
+                "kind": "component",
+                "path": "card"
+              },
+              "selector": ".card",
+              "status": "matched",
+              "stylesheet": "static/theme.css"
+            }
+          ],
+          "state": "changed",
+          "viewport": "mobile"
+        }
+      ]
+    },
+    {
+      "after": {
+        "path": "home",
+        "props": {},
+        "title": "Home"
+      },
+      "before": {
+        "path": "home",
+        "props": {},
+        "title": "Home"
+      },
+      "included": false,
+      "kind": "screen",
+      "path": "home",
+      "reasons": [],
+      "state": "unchanged",
+      "title": "Home",
+      "views": [
+        {
+          "colorScheme": "light",
+          "ignoredIds": [],
+          "rules": [
+            {
+              "owner": {
+                "kind": "component",
+                "path": "card"
+              },
+              "selector": ".card",
+              "status": "matched",
+              "stylesheet": "static/theme.css"
+            }
+          ],
+          "state": "unchanged",
+          "viewport": "mobile"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 8
+}

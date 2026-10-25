@@ -1,5 +1,4 @@
-import type { ScreenVariantInput } from "@mokly/mokly";
-
+import type { ArtboardVariant } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
 
@@ -32,4 +31,4 @@ export const onboardingPickerVariant = {
   slug: "tag-onboarding-picker",
   mobile: <OnboardingPickerMobile />,
   title: "Onboarding tag picker",
-} satisfies ScreenVariantInput;
+} satisfies ArtboardVariant;

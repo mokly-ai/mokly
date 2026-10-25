@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\npropSchema:\n  type: object\n  additionalProperties: false\n  required: [label]\n  properties: {label: {type: string}}\nprops: {label: Save}\nslots: [children]\nvariants:\n  - {slug: invalid, title: Invalid, props: {label: 3}}\n---\n<button>{{label}}<slot></slot></button>\n"
+  },
+  "errors": [
+    {
+      "code": "html-attribute",
+      "message": "variant invalid at \"/label\": 3 is not of type \"string\"",
+      "path": "specs/components/button.component.html",
+      "line": 12,
+      "column": 45
+    }
+  ]
+}

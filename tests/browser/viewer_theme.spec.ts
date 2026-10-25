@@ -1,6 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -8,15 +10,15 @@ let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 let dualFixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
   fixture = await viewerFixture();
-  dualFixture = await viewerFixture('colorSchemes: ["light", "dark"],', {
+  dualFixture = await viewerFixture({
     actionRender:
       '(props, context) => <div style={{ colorScheme: context.colorScheme }}><input data-native-control="" type="date" /><button>{props.label}</button></div>',
     body: '<action.Component label="Visible" />',
   });
 });
 test.afterAll(async () => {
-  await fixture.close();
-  await dualFixture.close();
+  await fixture?.close();
+  await dualFixture?.close();
 });
 test.beforeEach(async ({ page }) => {
   await page.goto(fixture.host.url);
@@ -203,7 +205,7 @@ test("an appearance change preserves everything the reader is doing", async ({
 
   await page.evaluate(() => window.viewerHarness.get("one").setTheme("dark"));
   await expect(page.locator(ROOT)).toHaveAttribute("data-mokly-theme", "dark");
-  await page.waitForTimeout(250);
+  await page.evaluate(() => new Promise(requestAnimationFrame));
 
   const after = await page.evaluate(() => {
     const frame = document.querySelector<HTMLIFrameElement>("#one .mbk-frag")!;

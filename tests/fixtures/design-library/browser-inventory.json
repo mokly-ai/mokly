@@ -1,0 +1,1154 @@
+[
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/overview",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/states/auto",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/states/light-only",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/states/light-only-current",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/states/light-only-document",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/status/error",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/status/flow",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/status/home",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/status/loading",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/status/unavailable",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/workspaces/difference",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/workspaces/drawer",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/workspaces/instance",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/workspaces/props",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/appearance/workspaces/side-by-side",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/index-entries/member",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/index-entries/member-changes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/index-entries/screen",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/index-entries/screen-changes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/loading/catalogue-failed",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/loading/catalogue-loading",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/loading/preview-loading",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/loading/viewer-version",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/details",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/document",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/navigation",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/previous-version/loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/previous-version/long",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/previous-version/unavailable",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/removed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/pages/view",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/publication/catalogue",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/publication/changes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/states/details",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/states/missing-route",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/states/navigation",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/states/tag-filter",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/variants/changed-views",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/variants/variant-changes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/variants/variant-removed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/variants/variant-reparented",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/variants/variant-selected",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/details-screen",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/folder-overview",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/home",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/dark-scheme",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/light-only",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/tag-forms",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/tag-onboarding",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/tag-onboarding-picker",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/screen/tag-picker",
+    "colorSchemes": ["light"],
+    "variantOf": "design/browse/views/screen"
+  },
+  {
+    "kind": "screen",
+    "path": "design/browse/views/use-case",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/availability/preparing",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/availability/unavailable",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/diff-controls/current",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/diff-controls/overlay",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/diff-controls/overlay-long",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/diff-controls/overlay-panel",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/diff-controls/side-by-side-apart",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/empty",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/ignored-only",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/matched-excluded/excluded",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/matched-excluded/excluded-only",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/matched-excluded/matched",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/page",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/unresolved-unnamed/unnamed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/impact/styles/unresolved-unnamed/unresolved",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/added",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/changed",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/difference",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/moved",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/previous-version/loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/previous-version/long",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/previous-version/no-view",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/previous-version/unavailable",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/changes/outcomes/removed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/controls",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/controls/default",
+    "colorSchemes": ["light"],
+    "variantOf": "design/components/controls/controls"
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/editing/edited",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/editing/reset",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/editing/screen",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/editing/unset",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/editing/variant",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/limits/expired",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/limits/invalid-together",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/limits/no-props",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/limits/read-only",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/limits/removed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/published/readonly",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/published/readonly-variant",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/comparison",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/error",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/invalid",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/pending",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/preparing",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/controls/states/preparing/failed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/components/controls/states/preparing"
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/inspection-consumer",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/inspection-details",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/inspection-direct-change",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/inspection-highlight",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/inspection-nested",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/selection/inspection-help",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspection/selection/inspection-toolbar",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspector/inspector-closed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/inspector/screen-inspector-closed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/overview",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/affected",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/comparison",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/help",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/stacked/difference",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/stacked/overlay",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/stacked/overlay-tall",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/toolbar",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/pages/variants",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/additions/added",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/empty",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/inspection-loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/props-failed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/props-loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/usage-failed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/loading/usage-loading",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/removed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/removed-consumer",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/shared-impact/affected-screen",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/shared-impact/shared-impact",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/shared-impact/style-changed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/shared-impact/style-outside",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/unavailable",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/unused",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/appearance-selector",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/appearance-selector/auto",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/appearance-selector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/appearance-selector/compact",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/appearance-selector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/appearance-selector/dark",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/appearance-selector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/appearance-selector/light",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/appearance-selector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/all",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/changed-member",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/changed-variants",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/changes",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/drawer",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/empty",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/folder-screen",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/loading",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/preparing",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/unavailable",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/catalogue-navigation/variants",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/catalogue-navigation"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/screen-header",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/screen-header/changed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/screen-header"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/screen-header/component",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/screen-header"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/screen-header/removed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/screen-header"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/screen-header/screen",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/chrome/screen-header"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar/auto-appearance",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/top-bar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar/default",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/top-bar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar/drawer-open",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/top-bar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar/search",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/top-bar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/chrome/top-bar/tag-picker",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/library/chrome/top-bar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/change-status",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/change-status/added",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/change-status"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/change-status/changed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/change-status"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/change-status/removed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/change-status"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/change-status/unmodified",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/change-status"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar/current",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/comparison-toolbar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar/difference",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/comparison-toolbar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar/overlay",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/comparison-toolbar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar/side-by-side",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/comparison-toolbar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/comparison-toolbar/side-by-side-apart",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/comparison-toolbar"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-chip",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-chip/default",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-chip"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-chip/inactive",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-chip"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-chip/selected",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-chip"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-picker",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-picker/all",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-picker"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-picker/empty",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-picker"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/tag-picker/selected",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/tag-picker"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls/both",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls/changed-views",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls/default",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls/highlighted",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/controls/view-controls/unavailable",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/controls/view-controls"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/inspector",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/inspector/closed",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/inspector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/inspector/details",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/inspector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/inspector/props",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/inspector"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/metadata-row",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/metadata-row/code",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/metadata-row"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/metadata-row/linked",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/metadata-row"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/metadata-row/tags",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/metadata-row"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/metadata-row/text",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/metadata-row"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field/boolean",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field/invalid-number",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field/optional-unset",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field/select",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/inspector/prop-field/text",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/inspector/prop-field"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/comparison-pane",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/comparison-pane/before",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/comparison-pane"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/comparison-pane/current",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/comparison-pane"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/comparison-pane/missing-before",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/comparison-pane"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/comparison-pane/missing-current",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/comparison-pane"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/device-frame",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/device-frame/browser",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/device-frame"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/device-frame/dark",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/device-frame"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/device-frame/light-only",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/device-frame"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/device-frame/phone",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/device-frame"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/empty-state",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/empty-state/home",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/empty-state"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/empty-state/missing-route",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/empty-state"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/empty-state/no-changes",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/empty-state"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/flow-step",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/flow-step/first",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/flow-step"
+  },
+  {
+    "kind": "component",
+    "path": "design/library/preview/flow-step/second",
+    "colorSchemes": ["light"],
+    "variantOf": "design/library/preview/flow-step"
+  }
+]

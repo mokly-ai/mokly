@@ -1,9 +1,16 @@
-import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+
+import {
+  captureProcessGroups,
+  signalProcessGroup,
+  liveProcessGroups,
+  processGroupExists,
+} from "./process-groups.mjs";
+import { validateRegistrySnapshot } from "./process-owner-snapshot.mjs";
 
 const DRAIN_TIMEOUT_MS = 5_000;
 const OWNER_FILE = /^owner-([0-9a-f-]{36})\.json$/;
@@ -71,7 +78,10 @@ export async function writeOwnerRecord(registry, ownerId, parentId) {
 }
 
 export async function terminateOwnedProcesses(registry, ownerId, signal) {
-  const records = await ownedProcessRecords(registry, ownerId);
+  const records = captureProcessGroups(
+    registry,
+    await ownedProcessRecords(registry, ownerId),
+  );
   const failures = [];
   for (const record of records) {
     if (!(await exists(record.file))) continue;
@@ -92,10 +102,14 @@ export async function drainOwnedProcesses(registry, ownerId) {
   const deadline = Date.now() + DRAIN_TIMEOUT_MS;
   const signalled = new Set();
   while (true) {
-    const records = await ownedProcessRecords(registry, ownerId);
+    const records = captureProcessGroups(
+      registry,
+      await ownedProcessRecords(registry, ownerId),
+    );
     const running = [];
+    const liveGroups = liveProcessGroups();
     for (const record of records) {
-      if (!processGroupExists(record.processGroupId)) {
+      if (!processGroupExists(record.processGroupId, liveGroups)) {
         await fs.rm(record.file, { force: true });
         continue;
       }
@@ -174,19 +188,7 @@ async function readRegistry(registry) {
     if (ownerMatch) owners.push(parseOwnerRecord(value, ownerMatch[1], file));
     else processes.push(parseProcessRecord(value, file));
   }
-  const ownerIds = new Set(owners.map((record) => record.ownerId));
-  for (const owner of owners) {
-    if (owner.parentId !== null && !ownerIds.has(owner.parentId))
-      throw new Error(`Verification owner ${owner.ownerId} has no parent`);
-  }
-  for (const record of processes) {
-    if (!ownerIds.has(record.ownerId))
-      throw new Error(
-        `Verification process ${record.processGroupId} has no owner`,
-      );
-  }
-  for (const owner of owners) ownerDepth(owners, owner.ownerId);
-  return { owners, processes };
+  return validateRegistrySnapshot(owners, processes);
 }
 
 function parseOwnerRecord(value, filenameId, file) {
@@ -260,34 +262,6 @@ function ownerDepth(owners, ownerId) {
 
 function closingFile(registry, ownerId) {
   return path.join(registry, `closing-${ownerId}`);
-}
-
-function signalProcessGroup(processGroupId, signal) {
-  if (process.platform === "win32") {
-    spawnSync("taskkill", ["/pid", String(processGroupId), "/T", "/F"], {
-      stdio: "ignore",
-    });
-    return;
-  }
-  try {
-    process.kill(-processGroupId, signal);
-  } catch (error) {
-    if (error?.code !== "ESRCH") throw error;
-  }
-}
-
-function processGroupExists(processGroupId) {
-  try {
-    process.kill(
-      process.platform === "win32" ? processGroupId : -processGroupId,
-      0,
-    );
-    return true;
-  } catch (error) {
-    if (error?.code === "ESRCH") return false;
-    if (error?.code === "EPERM") return true;
-    throw error;
-  }
 }
 
 async function exists(file) {

@@ -1,23 +1,22 @@
-import fs from "node:fs";
 import path from "node:path";
 
-import { packPackagePair } from "../package/pair.mjs";
-
 import { writeWorkflowOutput } from "./context.mjs";
+import { inspectReleaseSet, packReleaseSet } from "./package_set.mjs";
 
-const repositoryRoot = path.resolve(import.meta.dirname, "../..");
+const root = path.resolve(import.meta.dirname, "../..");
 const destination = path.resolve(
-  repositoryRoot,
+  root,
   process.argv[2] ?? ".context/release-artifact",
 );
-const pair = await packPackagePair(repositoryRoot, destination);
-for (const name of ["viewer", "cli"]) {
-  const { archivePath, report } = pair[name];
-  await fs.promises.writeFile(
-    path.join(destination, name, "pack-report.json"),
-    `${JSON.stringify(report, null, 2)}\n`,
-  );
-  writeWorkflowOutput(`${name}_archive_path`, archivePath);
-  writeWorkflowOutput(`${name}_version`, report.version);
+const reuse = process.argv[3] === "--reuse";
+if (process.argv.length > 4 || (process.argv[3] !== undefined && !reuse))
+  throw new Error("usage: pack.mjs {directory} [--reuse]");
+const packages = reuse
+  ? await inspectReleaseSet(root, destination)
+  : await packReleaseSet(root, destination);
+for (const { archivePath, report } of packages) {
+  const prefix = report.name.replace("@mokly/", "").replaceAll("-", "_");
+  writeWorkflowOutput(`${prefix}_archive_path`, archivePath);
+  writeWorkflowOutput(`${prefix}_version`, report.version);
   process.stdout.write(`Prepared ${archivePath} (${report.integrity}).\n`);
 }

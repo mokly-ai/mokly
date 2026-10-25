@@ -51,6 +51,7 @@ fn application(
         Unimock::new(())
     });
     Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(if suite.is_none() && mode != Executor::Local {
             Unimock::new(
                 SelectorSelectMock
@@ -93,7 +94,7 @@ fn auto_and_selected_suites_keep_local_behavior() {
         (None, None),
         (Some("auto"), None),
         (Some("local"), None),
-        (None, Some(VerificationSuite::Package)),
+        (None, Some(VerificationSuite::Viewer)),
     ] {
         application(mode, suite, false, None)
             .run(Command::Check {
@@ -128,6 +129,7 @@ fn flags_override_environment_and_inherited_remote_runs_the_runner() {
 fn rejecting_application(environment: Arc<Unimock>, interrupt: Arc<Unimock>) -> Application {
     let unused = Arc::new(Unimock::new(()));
     Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: unused.clone(),
         check_runner: unused.clone(),
         remote_runner: unused.clone(),
@@ -157,7 +159,7 @@ fn remote_with_suite_and_invalid_environment_fail_before_any_work() {
         });
         let app = rejecting_application(environment, Arc::new(Unimock::new(())));
         let result = app.run(Command::Check {
-            suite: Some(VerificationSuite::Package),
+            suite: Some(VerificationSuite::Viewer),
             shard: None,
             dependency_audit: None,
             executor: flag,
@@ -218,6 +220,7 @@ fn default_auto_runs_remote_when_selection_is_available() {
 #[test]
 fn strict_audit_mode_reaches_the_remote_runner() {
     let app = Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(Unimock::new(
             SelectorSelectMock
                 .next_call(matching!(Executor::Auto))

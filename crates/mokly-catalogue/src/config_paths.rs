@@ -1,0 +1,226 @@
+//! Physical confinement for configuration filesystem fields.
+
+use std::path::{Component, Path, PathBuf};
+
+use mokly_source_interface::tree::{FileKind, SourceTree};
+
+use crate::config::{invalid_path_text, normalize, relative};
+use crate::config_postcss;
+use crate::config_types::ResolvedConfig;
+use crate::config_validation::invalid;
+use crate::error::Result;
+
+impl ResolvedConfig {
+    /// Package roots as repository-relative POSIX paths without `.` or `..`
+    /// segments, in authored order. The repository root itself is empty.
+    /// Every consumer reads this form; loading confines each root inside
+    /// `repo_root`.
+    pub fn package_roots(&self) -> Vec<String> {
+        self.authored_package_roots()
+            .map(|root| relative(&self.local_path(root), &self.repo_root))
+            .collect()
+    }
+
+    /// Authored package-root spellings that contain `..`, joined to the
+    /// configuration directory. A symbolic link before `..` can lead such a
+    /// spelling to another physical directory. Consumers only project these
+    /// paths, so that directory stays protected as before normalization.
+    pub fn package_root_aliases(&self) -> Vec<PathBuf> {
+        self.authored_package_roots()
+            .filter(|root| {
+                Path::new(root)
+                    .components()
+                    .any(|part| part == Component::ParentDir)
+            })
+            .map(|root| self.spelling(root))
+            .collect()
+    }
+
+    fn authored_package_roots(&self) -> impl Iterator<Item = &String> {
+        self.input
+            .module_resolution
+            .iter()
+            .flat_map(|module| module.package_roots.iter().flatten())
+    }
+
+    fn spelling(&self, value: &str) -> PathBuf {
+        self.file.parent().unwrap_or(&self.repo_root).join(value)
+    }
+
+    fn local_path(&self, value: &str) -> PathBuf {
+        normalize(&self.spelling(value))
+    }
+}
+
+/// Keep the selected filename while resolving aliases above the repository.
+pub(crate) fn configuration_alias(
+    tree: &dyn SourceTree,
+    lexical: &Path,
+    config: &ResolvedConfig,
+) -> Result<Option<PathBuf>> {
+    if lexical == config.file {
+        return Ok(None);
+    }
+    let alias = if lexical.starts_with(&config.repo_root) {
+        lexical.to_owned()
+    } else if let Some(parent) = lexical.parent() {
+        match tree.project(parent) {
+            Ok(Some(node)) if node.identity.starts_with(&config.repo_root) => {
+                node.identity.join(lexical.file_name().unwrap_or_default())
+            }
+            Ok(_) => return Ok(None),
+            Err(error) => {
+                return Err(invalid(format!(
+                    "{}: {}",
+                    relative(parent, &config.repo_root),
+                    error.code()
+                )));
+            }
+        }
+    } else {
+        return Ok(None);
+    };
+    Ok((alias != config.file).then_some(alias))
+}
+
+pub(crate) fn validate_inputs(
+    tree: &dyn SourceTree,
+    config: &ResolvedConfig,
+) -> Result<Vec<PathBuf>> {
+    let mut sources = config_postcss::validate(tree, config)?;
+    if let Some(path) = &config.input.renderer {
+        sources.extend(confined(tree, config, "renderer", path, false)?);
+    }
+    for (index, rule) in config.input.stylesheets.iter().flatten().enumerate() {
+        for list in [
+            &rule.stylesheets,
+            rule.light_stylesheets.as_ref().unwrap_or(&Vec::new()),
+            rule.dark_stylesheets.as_ref().unwrap_or(&Vec::new()),
+        ] {
+            for path in list {
+                if !path.starts_with('$')
+                    && !path.starts_with("https://")
+                    && !path.starts_with("http://")
+                {
+                    sources.extend(confined(
+                        tree,
+                        config,
+                        &format!("stylesheets[{index}]"),
+                        path,
+                        false,
+                    )?);
+                }
+            }
+        }
+    }
+    for (index, path) in config.authored_package_roots().enumerate() {
+        confined(
+            tree,
+            config,
+            &format!("moduleResolution.packageRoots[{index}]"),
+            path,
+            true,
+        )?;
+        if !has_manifest(tree, config, path) {
+            return Err(invalid(format!(
+                "moduleResolution.packageRoots[{index}]: {path} must contain package.json"
+            )));
+        }
+    }
+    for path in config
+        .input
+        .watch
+        .iter()
+        .flat_map(|watch| watch.rules.iter().flatten())
+        .flat_map(|rule| &rule.paths)
+    {
+        let prefix: String = path
+            .chars()
+            .take_while(|c| !matches!(c, '*' | '?' | '[' | '{'))
+            .collect();
+        let mut candidate = config.repo_root.join(prefix);
+        loop {
+            match tree.project(&candidate) {
+                Ok(Some(node)) => {
+                    if !node.identity.starts_with(&config.repo_root) {
+                        return Err(invalid(format!(
+                            "watch.rules.paths: {path} cannot be classified safely outside repoRoot"
+                        )));
+                    }
+                    break;
+                }
+                Ok(None) => {
+                    if !candidate.pop() {
+                        break;
+                    }
+                }
+                Err(error) => {
+                    return Err(invalid(format!(
+                        "watch.rules.paths: {path}: {}",
+                        error.code()
+                    )));
+                }
+            }
+        }
+    }
+    Ok(sources)
+}
+
+fn confined(
+    tree: &dyn SourceTree,
+    config: &ResolvedConfig,
+    setting: &str,
+    value: &str,
+    directory: bool,
+) -> Result<Vec<PathBuf>> {
+    if invalid_path_text(value) || value.contains(':') {
+        return Err(invalid(format!(
+            "{setting}: path traversal or invalid path {value}"
+        )));
+    }
+    let path = config.local_path(value);
+    let node = match tree.project(&path) {
+        Ok(node) => node,
+        Err(error) => return Err(invalid(format!("{setting}: {value}: {}", error.code()))),
+    };
+    let Some(node) = node else {
+        return Err(invalid(format!("{setting}: {value} does not exist")));
+    };
+    let expected = if directory {
+        FileKind::Directory
+    } else {
+        FileKind::File
+    };
+    if !node.identity.starts_with(&config.repo_root) || !path.starts_with(&config.repo_root) {
+        return Err(invalid(format!("{setting}: {value} is outside repoRoot")));
+    }
+    if node.kind != expected {
+        return Err(invalid(format!(
+            "{setting}: {value} must be a {}",
+            if directory {
+                "directory"
+            } else {
+                "regular file"
+            }
+        )));
+    }
+    Ok(vec![path, node.identity])
+}
+
+/// The normalized root needs `package.json`. The authored spelling's target
+/// also counts, so a root spelled through a symbolic link before `..` keeps
+/// the acceptance that the unnormalized check gave it.
+fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> bool {
+    [config.local_path(value), config.spelling(value)]
+        .iter()
+        .any(|directory| {
+            matches!(
+                tree.project(&directory.join("package.json")),
+                Ok(Some(node)) if node.kind == FileKind::File
+            )
+        })
+}
+
+#[cfg(test)]
+#[path = "_tests_/package_roots_tests.rs"]
+mod package_roots_tests;

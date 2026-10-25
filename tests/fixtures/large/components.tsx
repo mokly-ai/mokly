@@ -15,13 +15,16 @@ export function createComponents(area: string) {
     title: "Action",
     description: "A reusable action.",
     propSchema: {
-      kind: "object",
+      type: "object",
+      additionalProperties: false,
+      required: ["label"],
       properties: {
-        label: { schema: { kind: "string" } },
-        disabled: { schema: { kind: "boolean" }, optional: true },
-        secondary: { schema: { kind: "boolean" }, optional: true },
+        label: { type: "string" },
+        disabled: { type: "boolean" },
+        secondary: { type: "boolean" },
       },
     },
+    props: { label: "Continue" },
     controls: {
       label: { kind: "text" },
       disabled: { kind: "boolean" },
@@ -57,9 +60,12 @@ export function createComponents(area: string) {
     title: "Panel",
     description: "A summary with caller-owned content.",
     propSchema: {
-      kind: "object",
-      properties: { title: { schema: { kind: "string" } } },
+      type: "object",
+      additionalProperties: false,
+      required: ["title"],
+      properties: { title: { type: "string" } },
     },
+    props: { title: "Overview" },
     slots: ["children"],
     controls: { title: { kind: "text" } },
     render: (props) => (
@@ -73,21 +79,20 @@ export function createComponents(area: string) {
       {
         slug: "default",
         title: "Default",
-        props: {
-          title: "Overview",
-          children: <p>Review your recent activity.</p>,
-        },
+        props: { title: "Overview" },
+        slots: { children: <p>Review your recent activity.</p> },
       },
       {
         slug: "empty",
         title: "Empty",
-        props: { title: "Overview", children: <p>No activity yet.</p> },
+        props: { title: "Overview" },
+        slots: { children: <p>No activity yet.</p> },
       },
       {
         slug: "detailed",
         title: "Detailed",
-        props: {
-          title: "Overview",
+        props: { title: "Overview" },
+        slots: {
           children: (
             <ul>
               <li>Review progress</li>

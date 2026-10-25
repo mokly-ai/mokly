@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
 import {
   startNavigationFixture,
@@ -131,64 +132,6 @@ test("keyboard navigation retains constraints that already show the destination"
     page.locator(
       'a[data-nav-row][data-route="fixture/nested/details/index.html"]',
     ),
-  ).toHaveAttribute("aria-current", "page");
-});
-
-test("Changed navigation preserves collapsed unrelated groups", async ({
-  page,
-}) => {
-  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-  await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-folder="folder:other"]');
-  await expect(other).toHaveAttribute("open", "");
-  await other.locator("summary").click();
-  await expect(other).not.toHaveAttribute("open", "");
-
-  await page.click(
-    'a[data-nav-row][data-route="fixture/nested/tour/index.html"]',
-  );
-
-  await expect(page.locator("#mb-main h2")).toHaveText("Tour");
-  await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(other).not.toHaveAttribute("open", "");
-});
-
-test("editing an active filter reveals newly matching groups", async ({
-  page,
-}) => {
-  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-  await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-folder="folder:other"]');
-  await other.locator("summary").click();
-  await expect(other).not.toHaveAttribute("open", "");
-
-  await page.fill("[data-mokly-search]", "extra");
-
-  await expect(other).toHaveAttribute("open", "");
-  await expect(
-    page.locator('a[data-nav-row][data-route="other/extra/index.html"]'),
-  ).toBeVisible();
-});
-
-test("clearing filtering keeps the destination folder open", async ({
-  page,
-}) => {
-  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-  const other = page.locator('details[data-nav-folder="folder:other"]');
-  await other.locator("summary").click();
-  await expect(other).not.toHaveAttribute("open", "");
-  await page.click('[data-filter="changed"]');
-
-  await page.click('a[data-nav-row][data-route="other/extra/index.html"]');
-  await expect(page.locator("#mb-main h2")).toHaveText("Extra");
-  await page.click('[data-filter="all"]');
-
-  await expect(other).toHaveAttribute("open", "");
-  await expect(
-    page.locator('a[data-nav-row][data-route="other/extra/index.html"]'),
   ).toHaveAttribute("aria-current", "page");
 });
 

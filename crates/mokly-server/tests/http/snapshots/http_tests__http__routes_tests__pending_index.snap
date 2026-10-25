@@ -1,0 +1,711 @@
+---
+source: crates/mokly-server/tests/http/routes_tests.rs
+expression: bytes
+---
+{
+  "changesStatus": "pending",
+  "comparisonUrl": null,
+  "components": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "pending"
+      },
+      "controls": {
+        "count": {
+          "kind": "number",
+          "step": 1
+        },
+        "disabled": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/button.component.html"
+      },
+      "kind": "component",
+      "path": "components/button",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "New"
+              ]
+            ]
+          ]
+        ],
+        "count": [
+          "number",
+          "2"
+        ],
+        "disabled": [
+          "boolean",
+          false
+        ],
+        "label": [
+          "string",
+          "Save"
+        ]
+      },
+      "slots": [
+        "children",
+        "trailing"
+      ],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Button",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "826923078c2226259f986dbe18bc1f4f4d39f5799c02422b9f34553b212f42c7",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "1fd744d01447cc62ef161128fab73bc26a1077a60cdc9cdb3d3db6811ec908a2",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "f8bb2e355e4a0dfa50160772d03b1750942063dc87097b0935e4274e3a8f0cb9",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "38c3033c60a2c437f5098fbc8e932e80d774adad282732e70cd2aeaa473b408c",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "pending"
+      },
+      "controls": {
+        "count": {
+          "kind": "number",
+          "step": 1
+        },
+        "disabled": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/button.component.html"
+      },
+      "kind": "component",
+      "path": "components/button/disabled",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "New"
+              ]
+            ]
+          ]
+        ],
+        "count": [
+          "number",
+          "2"
+        ],
+        "disabled": [
+          "boolean",
+          true
+        ],
+        "label": [
+          "string",
+          "Save"
+        ]
+      },
+      "slots": [
+        "children",
+        "trailing"
+      ],
+      "suppliedSlots": [
+        "children"
+      ],
+      "tags": [],
+      "title": "Disabled",
+      "variantOf": "components/button",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "86ada231a0d5b2dd18b3e25d09f96efb0f19a15bdfadc5dceb779b7707d89c82",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "dee6e88df2b63d075102fac39b002fea2333f3280f4a9a11055447ca8a8d7b96",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "ada7a30eecc82e7d2e63d54b1abf33a63813764b77c003d13ad2cd27883109fe",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "6e9d173ff50cfa173cba6771e718c9de1ebd44fbc3ae12d7d889a1f66a0669e7",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "pending"
+      },
+      "controls": {
+        "ignored": {
+          "kind": "boolean"
+        },
+        "title": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/card.component.html"
+      },
+      "kind": "component",
+      "path": "components/card",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ignored": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "ignored": [
+          "boolean",
+          false
+        ],
+        "title": [
+          "string",
+          "Card"
+        ]
+      },
+      "slots": [
+        "children",
+        "header"
+      ],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Card",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "66711836c60847071f74aa9460349eedff68fc4bbf1b14c5c9c1b8a4ead20748",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "b22e6b6b69e628f8ed1fec06f7df1ad3d25c4e3c68380e8e6510593a5714ae5b",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "ae9ecb65808e71f4453567074a0eef9314b885050034b6fe9664ae18af49a7dd",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "9948981a052134ea10a03e6d820b83756be67a81cc3496967d2cb5d1b25e6dfe",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/guide.md"
+      },
+      "documentKeys": [
+        {
+          "colorScheme": "light",
+          "documentKey": "573a65209f832b3333aff7c4669abd046b36ec102678ef6d953cf8f43b615590"
+        },
+        {
+          "colorScheme": "dark",
+          "documentKey": "c3b0f904b50ea887509a73c64d2e4b1d88c52821da64fc6cd0737ef3d7aae72f"
+        }
+      ],
+      "kind": "document",
+      "path": "guide",
+      "tags": [],
+      "title": "Guide"
+    }
+  ],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "f96fa1fb832cf7bf59fff63888a460823197fd11d1be5fbb5838c944781b2885"
+  },
+  "pages": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/page.page.html"
+      },
+      "documentKey": "ad2a077f77d0a23a76b0928a26233d8a962ff92b80afeeb3c72ed23d97976966",
+      "kind": "page",
+      "path": "page",
+      "tags": [],
+      "title": "Statement"
+    }
+  ],
+  "removedEntries": [],
+  "revision": 1,
+  "schemaVersion": 7,
+  "screens": [
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "resource": {
+          "kind": "text"
+        },
+        "visible": {
+          "kind": "boolean"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "label": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "badge",
+          "label",
+          "resource",
+          "visible"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "Ready"
+              ]
+            ]
+          ]
+        ],
+        "label": [
+          "string",
+          "<Save & \"go\">"
+        ],
+        "resource": [
+          "string",
+          "../../specs/assets/public.svg"
+        ],
+        "visible": [
+          "boolean",
+          true
+        ]
+      },
+      "tags": [],
+      "title": "Home & account",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "dfc017772d304c7e6b1765067c5dde436b6c6baed6b2c1947618bd540a559822",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "b026f9e263dca7a8f70e557937a187c9a93ca6b17c79081a2f81fecb8d163824",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "2079e008a9cf2a57c2195a7fedd7d99f366d7eb9df067f40fc2dd429280a7e57",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "2167df3d343f6796af000b55770e821c2167a2d096e4c71a8e7f6d2e712e713b",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "pending"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "resource": {
+          "kind": "text"
+        },
+        "visible": {
+          "kind": "boolean"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home/hidden",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "label": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "badge",
+          "label",
+          "resource",
+          "visible"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "Ready"
+              ]
+            ]
+          ]
+        ],
+        "label": [
+          "string",
+          "<Save & \"go\">"
+        ],
+        "resource": [
+          "string",
+          "../../../specs/assets/public.svg"
+        ],
+        "visible": [
+          "boolean",
+          false
+        ]
+      },
+      "tags": [],
+      "title": "Hidden",
+      "useCasePaths": [],
+      "variantOf": "home",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "a5e4ef91df75b77a05d75174ca4ef721c76f83fc3170533bb41aca3dfe46c36c",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "d8fbbf1197c7dd1d531e6a7364d5b822966dc9e1aee10c3d0ba2c88b2bad4b57",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "fefef2ef13a887ecd520cbdb7a18650182ab7de4ecb47328aeeaaab5a78fe249",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "pending"
+          },
+          "documentKey": "b94fb7446509d64bb50396c6f3fe2bf6251d8471c5a256caa12ba53d0f85f97b",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "kind": "entry",
+              "path": "components/button/disabled"
+            }
+          ],
+          "kind": "entry",
+          "path": "components/button"
+        },
+        {
+          "kind": "entry",
+          "path": "components/card"
+        }
+      ],
+      "kind": "folder",
+      "path": "components",
+      "title": "Components"
+    },
+    {
+      "kind": "entry",
+      "path": "guide"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "home/hidden"
+        }
+      ],
+      "kind": "entry",
+      "path": "home"
+    },
+    {
+      "kind": "entry",
+      "path": "page"
+    }
+  ],
+  "useCases": []
+}

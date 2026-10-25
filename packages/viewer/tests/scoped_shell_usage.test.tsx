@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
 import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
 import { WorkspaceInstances } from "../src/shell/workspace_instances.js";
@@ -12,9 +11,19 @@ import { WorkspaceUsage } from "../src/shell/workspace_usage.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
-import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
+import {
+  heldDetails,
+  rawDetailFixtures,
+  shellModelFixture,
+} from "./catalogue_v7_fixture.js";
 
-const complete = scopedCatalogueFixture();
+const COMPONENT = ["components/action", "components/action/default"];
+
+/** The working model while the shell holds only the given entries' details. */
+function holding(paths: readonly string[]) {
+  const model = shellModelFixture(undefined, heldDetails(paths));
+  return { catalogue: viewerCatalogue(model), model };
+}
 
 test("omitted usage becomes pending instead of unavailable in frames", () => {
   assert.deepEqual(shellFrameUsage({ status: "omitted" }), {
@@ -25,19 +34,16 @@ test("omitted usage becomes pending instead of unavailable in frames", () => {
   });
 });
 
-test("a partial fallback derives no cross-route Usage or false empty state", () => {
-  const component = complete.components.find(
-    (entry) => entry.path === "components/action" && !("variantOf" in entry),
-  )!;
-  const scoped = projectScopedCatalogue(complete, {
-    kind: "target",
-    entryPath: component.path,
-    entryKind: component.kind,
-  });
-  const catalogue = viewerCatalogue(scoped);
-  const entry = catalogue.byPath.get(component.path);
+test("a workspace without its held detail derives no cross-route Usage or false empty state", () => {
+  // Every other entry's detail is held; the routed component's is not.
+  const { catalogue, model } = holding(
+    Object.keys(rawDetailFixtures().current).filter(
+      (path) => !COMPONENT.includes(path),
+    ),
+  );
+  const entry = catalogue.byPath.get("components/action");
   assert.ok(entry?.kind === "component");
-  const data = publicWorkspace(catalogue, scoped, entry);
+  const data = publicWorkspace(catalogue, model, entry);
   assert.deepEqual(data.usedBy, []);
   assert.deepEqual(data.affected, []);
 
@@ -47,6 +53,10 @@ test("a partial fallback derives no cross-route Usage or false empty state", () 
   assert.match(loading, /Loading usage…/);
   assert.doesNotMatch(loading, /No recorded consumers/);
   assert.doesNotMatch(loading, /Used by/);
+  const replaced = renderToStaticMarkup(
+    <WorkspaceUsage data={data} delivery={{ status: "replaced" }} />,
+  );
+  assert.equal(replaced, loading);
 
   let retries = 0;
   const failed = renderToStaticMarkup(
@@ -61,19 +71,11 @@ test("a partial fallback derives no cross-route Usage or false empty state", () 
   assert.equal(retries, 0);
 });
 
-test("an out-of-scope workspace shows the mockup's inspection waiting copy", () => {
-  const component = complete.components.find(
-    (entry) => entry.path === "components/action" && !("variantOf" in entry),
-  )!;
-  const scoped = projectScopedCatalogue(complete, {
-    kind: "target",
-    entryPath: component.path,
-    entryKind: component.kind,
-  });
-  const catalogue = viewerCatalogue(scoped);
+test("a workspace whose detail is not held shows the mockup's inspection waiting copy", () => {
+  const { catalogue, model } = holding(COMPONENT);
   const entry = catalogue.byPath.get("product/browse/home");
   assert.ok(entry?.kind === "screen");
-  const data = publicWorkspace(catalogue, scoped, entry);
+  const data = publicWorkspace(catalogue, model, entry);
   assert.equal(data.viewUsagePending, true);
   const views = data.views.filter(({ colorScheme }) => colorScheme === "light");
 
@@ -105,5 +107,27 @@ test("an out-of-scope workspace shows the mockup's inspection waiting copy", () 
       [],
     ).reason,
     "Waiting for the component preview.",
+  );
+});
+
+test("a selected comparison says so and names where highlighting works", () => {
+  const { catalogue, model } = holding(COMPONENT);
+  const entry = catalogue.byPath.get("components/action");
+  assert.ok(entry?.kind === "component");
+  const data = publicWorkspace(catalogue, model, entry);
+  assert.deepEqual(
+    inspectionAvailability(
+      {
+        comparisonActive: true,
+        data,
+        invalidSelection: false,
+        views: data.views,
+      },
+      [],
+    ),
+    {
+      available: false,
+      reason: "A comparison is selected. Highlighting is available in Current.",
+    },
   );
 });

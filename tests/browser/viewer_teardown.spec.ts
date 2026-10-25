@@ -1,8 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { FrameEvent, MoklyViewerProps } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
+
+import { test } from "./browser_test.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -33,7 +35,12 @@ for (const cross of [false, true]) {
   for (const replacement of ["source", "adapter"] as const) {
     test(`${cross ? "postMessage" : "same-origin"} throwing pick-end cannot interrupt ${replacement} teardown`, async ({
       page,
+      allowBrowserError,
     }) => {
+      allowBrowserError({
+        kind: "pageerror",
+        message: /^Host pick-end failure$/u,
+      });
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(fixture.host.url);
@@ -113,7 +120,7 @@ for (const cross of [false, true]) {
         if (replacement === "source")
           host.props = {
             ...host.props,
-            catalogue: structuredClone(host.props.catalogue),
+            index: structuredClone(host.props.index),
           } as MoklyViewerProps;
         else host.props.frameAdapter = { ...host.props.frameAdapter! };
         host.render();

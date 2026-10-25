@@ -1,13 +1,18 @@
 /** Moved comparisons, run against one host. */
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import { loadComparison } from "./comparison_actions.js";
-import type {
-  MovedChangesHost,
-  MovedHostKind,
-} from "./moved_changes_fixture.js";
-import { ACTION, INVOICE, showDetails } from "./moved_rows.js";
+import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
+
+import type { test as baseTest } from "./browser_test.js";
+import { modeButton } from "./comparison_ui.js";
+import {
+  INVOICE,
+  PREVIOUS,
+  showDetails,
+  type MovedHost,
+} from "./moved_rows.js";
+import { loadComparison } from "./serve_comparison_ui.js";
 
 /** The comparison panes for one side, named by the snapshot path they show. */
 function panes(page: Page, side: "after" | "before", path: string) {
@@ -35,58 +40,60 @@ async function expectBothSides(
 }
 
 /**
- * Choose Side by side. Serve generates the comparison on demand; an export
- * and the viewer over it read the published one.
+ * Choose Side by side. Serve captures the comparison on demand; a copy reads
+ * its published generation.
  */
-async function sideBySide(page: Page, kind: MovedHostKind): Promise<void> {
-  if (kind === "serve") return loadComparison(page, "Side by side");
-  await page
-    .getByRole("group", { name: "Comparison mode" })
-    .getByRole("button", { name: "Side by side", exact: true })
-    .click();
+async function sideBySide(page: Page, host: MovedHost): Promise<void> {
+  if (host.comparisons === "on demand")
+    return loadComparison(page, "Side by side");
+  await modeButton(page, "Side by side").click();
 }
 
-/** Register the comparison cases for the host `current` returns. */
-export function movedComparisonCases(
-  kind: MovedHostKind,
-  current: () => MovedChangesHost,
+/**
+ * Register the moved screen and moved component variant comparisons on
+ * `host`, which `test` serves.
+ */
+export function registerMovedComparisonCases(
+  test: typeof baseTest,
+  host: MovedHost,
 ): void {
   test("a moved screen compares with the version at its previous path in every mode", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await current().open(page, INVOICE);
+    await host.open(page, INVOICE);
     await expect(page.locator(".mbk-entry-status")).toHaveText("Changed");
-    const modes = page.getByRole("group", { name: "Comparison mode" });
-    await expect(
-      modes.getByRole("button", { name: "Current" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(modeButton(page, "Current")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await expect(
       page.locator("iframe[data-mokly-comparison-frame]"),
     ).toHaveCount(0);
     await expect(
-      page.frameLocator(".mbk-frame-mobile iframe").locator("#due"),
+      page.frameLocator('[data-workspace-frame="mobile"]').locator("p"),
     ).toHaveText("Due on 14 March");
     const sides = [
-      ["billing/invoice", INVOICE],
+      [`${PREVIOUS}/invoice`, INVOICE],
       [/Due in 14 days/u, /Due on 14 March/u],
     ] as const;
-    await sideBySide(page, kind);
+    await sideBySide(page, host);
     await expectBothSides(page, ...sides);
     for (const mode of ["Overlay", "Difference"] as const) {
-      await modes.getByRole("button", { name: mode, exact: true }).click();
-      await expect(
-        modes.getByRole("button", { name: mode, exact: true }),
-      ).toHaveAttribute("aria-pressed", "true");
+      await modeButton(page, mode).click();
+      await expect(modeButton(page, mode)).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
       await expectBothSides(page, ...sides);
     }
-    await modes.getByRole("button", { name: "Current", exact: true }).click();
+    await modeButton(page, "Current").click();
     await expect(
       page.locator("iframe[data-mokly-comparison-frame]"),
     ).toHaveCount(0);
     await showDetails(page);
     await expect(page.locator("[data-workspace-evidence]")).toContainText(
-      "The previous version is at billing/invoice, where it was before the move.",
+      `The previous version is at ${PREVIOUS}/invoice, where it was before the move.`,
     );
   });
 
@@ -94,11 +101,11 @@ export function movedComparisonCases(
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await current().open(page, `${ACTION}/iconic`);
-    await sideBySide(page, kind);
+    await host.open(page, moves.nestedMovedVariant);
+    await sideBySide(page, host);
     await expectBothSides(
       page,
-      ["components/action/iconic", `${ACTION}/iconic`],
+      [`${PREVIOUS}/action/iconic`, moves.nestedMovedVariant],
       [/>arrow</u, />chevron</u],
     );
   });

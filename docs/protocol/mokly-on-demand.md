@@ -1,190 +1,138 @@
 # On-demand Serve
 
-## Delivery Status
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-CSS owner removal, root output boundaries and uniform rule evidence are
-implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+## Startup And Completeness
 
-On-demand startup, rendering and evidence completion are implemented. The
-route-evidence loading and failed Usage states are implemented by the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Serve validates the configuration, the catalogue model, the routes, the
+hierarchy, the prop schemas, and the [source inventory](./mokly-source-protection.md#complete-source-inventory) before it listens.
+Validation creates one immutable route set from the model's identities; a
+request for a route outside that set is 404, and a new catalogue state
+creates a new set. Serve does not render every document, classify Git
+changes, or write anything before Browse is available. This applies with and
+without watch.
 
-Generation-tagged background and preview-process warnings are implemented in
-[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-
-## Startup and completeness
-
-Serve loads one consumer graph and validates its catalogue metadata, routes,
-hierarchy, schemas, source inventory and output confinement before listening.
-Output collision and confinement checks create one immutable in-memory route
-set from validated identities and retained generated resources. Private runtime
-transfer preserves that set. Demand and background workers reject undeclared
-routes; they never scan disk output or acquire its writer lock. A new generation
-creates a new checked set under the [route-set contract](./mokly-generation-routes.md).
-It does not render every document, write output, classify Git changes or transfer
-generated HTML as a prerequisite for Browse. This applies with and without watch.
-
-The live catalogue index is a distinct internal format, not a schema-v10 manifest.
-It describes available views, not completed rendering or usage evidence. A v10
-manifest still requires every view's validated records. Build, Check and Export
-remain exhaustive and produce the same portable artifacts regardless of
-Git tracking; only explicit Build and `serve --build` write them to disk, and
-neither reads head tracking. Check consults the current Git index. CLI publish
-separately checks the checkout under the [upload contract](./mokly-upload.md).
+The catalogue index describes the available views, not completed rendering.
+A view's usage in its entry detail is `pending` until that view has rendered,
+`ready` after it, and `unavailable` when its render failed; the shell never
+shows a pending view as zero consumers. `build` is exhaustive: it renders
+every view before it writes, so a built detail never carries a `pending`
+view.
 
 The scale target is command start to searchable navigation and a real selected
-preview visible in under five seconds, cold and warm on the default large fixture.
-A listening socket or empty shell does not satisfy that target. Fixture creation,
-package compilation and Git-baseline preparation are explicit setup operations,
-reported separately and never repeated during ordinary large-fixture startup.
+preview visible in under five seconds, cold and warm, on the large fixture of
+the [timings contract](./mokly-timings.md). A listening socket or an empty
+stub does not satisfy that target. No validation is skipped to meet it.
 
-## Foreground documents
+## Foreground Documents
 
-Generated `/static/mokly-generated/` routes render the requested page, document, or
-screen/component variant, viewport and scheme through the retained consumer
-graph. Rendering runs outside
-the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
-same view share work. Only validated results enter the generation-local bounded
-cache. A renderer failure cannot make unrelated routes or shutdown unavailable.
+A request for `/static/mokly-generated/<route>` renders the document on first
+request through the render graph: the entry's source node, the fragment and
+HTML component nodes it composes, the stylesheet bundle, and the composed
+document, each computed only when its key is new. A JavaScript fragment
+renders through the [sidecar](./mokly-sidecar.md) under its deadlines; an
+HTML screen or component renders in Rust. The finished document enters the
+render cache and stays there until an input changes or the byte bound evicts
+it; the next request for an evicted document renders it again.
 
-Under [imported-CSS delivery](./mokly-imported-styles.md), reserved stylesheet
-and asset routes use the accepted generation's compilation bytes for GET/HEAD
-with CSS/image/font content types, never a stale disk file. Resource validation
-accepts pending generated routes; transient Props previews use the same
-generation's byte-safe closure. Ordinary authored assets retain confined
-static delivery. Inventory-only startup freshness runs the CSS/PostCSS
-dependency pass without rendering every view.
-Every `/static/mokly-generated/**` request is generation-owned: if the route
-is absent from that accepted generation, return 404 even when a stale file
-exists on disk. Apply this to watched and no-watch Serve,
-on-demand dispatch, and transient controls; never delegate a reserved route
-to the ordinary static filesystem fallback. Valid routes return exactly the
-accepted bytes with the route's MIME type, including `%40` npm scopes.
-The retained runtime carries the accepted CSS and asset bytes. Internal
-full-compilation hosts supply accepted generated outputs explicitly; no host
-snapshots generated disk files as a fallback.
+Concurrent requests for one document share one render. Foreground requests
+take priority over background work: a background render yields between
+documents, and a foreground render that needs a sidecar does not wait behind
+queued background renders. A failed render answers 500, enters no cache,
+and makes no other route unavailable. Its typed diagnostic goes to the
+selected CLI reporter on stderr; the HTTP response carries the safe error envelope. A render
+that passes its deadline fails the same way after the sidecar contract's one
+retry.
 
-The foreground service admits one active document and 32 queued distinct routes,
-with a ten-second deadline, a 256 MiB worker heap limit and a 64 MiB result cache.
-Its worker has a separate 32 MiB prepared-document cache. Failed workers terminate
-before replacements start. Exhaustive background work uses one worker with a
-1 GiB heap limit and yields between documents and major validation phases.
+Stylesheet and asset routes answer from the same graph: a bundled stylesheet
+from the stylesheet bundle node with its CSS content type, an imported asset
+under the [imported styles contract](./mokly-imported-styles.md), and an
+authored asset from the roots under the
+[public closure policy](./mokly-public-closure.md). Resource validation
+accepts a route whose node has not rendered yet. A document carries its
+[build warnings](./mokly-build-warnings.md) beside its HTML. Serve reports
+new warnings under the [attempt-scoped reporting rule](./mokly-build-warnings.md#watched-serve-generations),
+including a view first rendered on demand. Repeated requests repeat no warning.
 
-The single-document compiler reuses exhaustive Build's validation primitives: rendering,
-stylesheet selection, logical links, component ranges,
-props, style/resource metadata, ignore markers, output confinement, and resource
-validation. It records final spans only for links that Mokly inserted and
-forwards render warnings to the Serve parent with
-the generation captured from the document or transient Props render inputs.
-The child warning message includes that generation. A render still using older
-inputs cannot print warnings after a newer watched attempt starts, even while
-it continues serving after a failed candidate. The
-[warning contract](./mokly-build-warnings.md#watched-serve-generations) defines
-the message, generation fence and deduplication scope.
-Navigation without anchors needs the destination's registered entry,
-not its rendered HTML. Anchors require the actual destination document; logical
-anchors require every applicable destination view. Embedded local resources and
-CSS imports are validated transitively. Protected sources and manifests remain
-private even through aliases. No validation is skipped to meet the time target.
+Live prop edits of the [controls contract](./mokly-component-controls.md)
+render through this same path with the edited props. Their temporary documents
+and resources stay in a separate memory store. Temporary documents never enter
+the saved document cache or catalogue model. Their content-addressed fragments
+may enter the bounded fragment cache.
 
-Entry indexes and parsed resource metadata are reused within the generation.
-An on-demand document carries its [build warnings](./mokly-build-warnings.md)
-beside its HTML; Serve reports warnings once per generation from the exhaustive
-compilation, never per foreground request.
-The inspector loads usage for displayed views on demand. Uncomputed catalogue-wide
-usage is explicitly unavailable, never displayed as zero consumers. Live All/Changes
-controls are always present. While a calculation is pending, a spinner replaces the
-Changes count in a fixed-width slot. Selecting Changes replaces navigation rows with
-“Checking for changes…” and a spinner; All remains searchable and usable. Complete
-evidence replaces the spinner with its real count, including zero. Failed rendering,
-output adoption or classification ends loading with “Changes are unavailable. You
-can still browse All.” and a dash instead of a count. Status and evidence share the
-same version/generation fences. A superseded job cannot change either.
-The selected filter survives loading updates and their completion, even if the
-current preview is unchanged or there are zero Changes. Neither the tabs nor the
-navigation content's top edge moves when the count replaces the loader. Reduced
-motion disables rotation. Static exports without Changes still omit these controls.
-Evidence completion updates the mounted shell and retains navigation and preview
-documents. It cannot clear search, open a collapsed current folder or interrupt
-temporary props. The [live evidence contract](./mokly-live-evidence.md) defines
-revision fences, navigation races, usage ownership and reload fallback.
+## Background Work And Replacement
 
-After in-shell navigation, a route-scoped bootstrap can intentionally omit the
-destination's usage until its paired private workspace arrives. During that
-delivery gap, the Usage panel says `Loading usage…` and shows no consumer
-counts, empty state, `Used by`, or `Affected` rows. A failed or rejected current
-evidence read says `Usage couldn’t be loaded.` and provides a `Try again`
-button. Retry repeats the fenced route-evidence read without replacing preview
-frames. Omitted displayed-view usage is pending, so screen inspection keeps
-`Waiting for the component preview.` until real route usage is adopted in
-place. It must never flash the validated-empty copy.
+After readiness, Serve renders every view in the background in catalogue
+order, which fills the render cache and the usage of every detail, then
+classifies Changes, which renders the base side under the
+[comparison contract](./mokly-comparison.md#sides). A completion that changes
+the index or a detail publishes one revision under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve): the
+index and the details are replaced in one step, the shell updates its
+navigation, counts, and details in place, and the frames keep their
+documents. Background work is bounded, yields to foreground renders, and
+cannot publish after its state is superseded by a watched change; a
+superseded result is discarded. `--no-watch` runs this work once.
 
-The existing mobile/desktop Inspection unavailable designs cover genuinely
-unavailable catalogue usage: “Usage is unavailable until the catalogue has
-been checked.” That state is distinct from route delivery failure. It does not
-add an environment label or replace a real zero-consumer result.
+Sidecar admission preserves foreground priority for each whole HTTP render.
+Queued base calls wait until those requests finish their sidecar work. With
+one worker, a foreground burst needs at most one switch to the head root and
+one switch back.
+Active calls finish under their existing deadlines. Both sides share the
+configured worker bound, including when the pool has one worker. Replacement
+and shutdown wake queued calls to check cancellation before pool admission.
 
-Props requests validate and capture only the edited view and its resource closure.
-They never clone a full rendered manifest or validate unrelated documents. Existing
-origin/token checks, cancellation, last-valid previews and memory/time limits apply.
+The event stream sends a comment after 15 seconds without a publication to
+keep idle connections active during background work. These comments carry no
+revision or data field. EventSource clients ignore comments under the
+[SSE format](https://html.spec.whatwg.org/multipage/server-sent-events.html#authoring-notes).
+Shutdown ends the stream before its next comment.
 
-Explicit live diffs reuse completed background evidence and capture only the selected
-screen or component variant entry plus its assets. They do not repeat compilation or catalogue
-classification. The [selected comparison contract](./mokly-selected-comparisons.md)
-defines request scope, checked-input digests, immutable snapshots and cancellation.
+A source or configuration change replaces the catalogue model and the moved
+graph nodes together under the [watch contract](./mokly-watch.md); a failed
+candidate keeps the last-good state. Replacement invalidates the cached
+documents whose keys moved, every detail, and the comparison evidence; a
+resource edit invalidates the documents that reference it. Git commands run
+outside the HTTP event loop with their own cancellation; replacement and
+shutdown cancel active commands and wait for their process and pipe closure
+before cleanup completes.
 
-## Background work and replacement
+## Comparison Snapshots
 
-Watched and no-watch Serve complete generated output and Changes in background work.
-Background work is bounded, gives foreground rendering priority and cannot publish
-after its source generation is superseded. Source/config replacement accepts a new
-validated index and rendering graph together; failed candidates retain the previous
-working generation. Replacements invalidate cached documents, usage and comparisons.
-Resource edits invalidate cached resource evidence. Shutdown cancels outstanding work.
-HTTP shutdown stops accepting connections, ends live-update streams, and closes
-all remaining client connections, including incomplete requests and responses.
-It drains every owned service even if another service fails to close; it never
-waits for a browser to finish sending a request or reading a preview.
+No comparison generation is assembled until the reader selects a diff or opens a
+removed entry. For a current screen or component, the shell requests
+`/mokly-viewer/diffs/review.json?path=<path>`, with `refresh=1` for an explicit
+retry, under the [selected comparison contract](./mokly-selected-comparisons.md).
+Removed component parents and variants use the advertised generation URL.
+Historical screens, pages, and documents use that generation under the
+[removed previews contract](./mokly-removed-previews.md). The selected endpoint
+takes the current entry's base views from the bounded capture or pinned-source
+fallback and its head views from the bounded render cache. It renders evicted
+head views again from the same inputs, treats missing or pending evidence as the
+retryable failure, writes the review result v8 and the two snapshot trees into one
+immutable in-memory generation, and redirects to
+`/mokly-viewer/diffs/generations/<generation>/review.json`. Snapshot files
+are the real bytes of both sides. Generation files are served with
+`Cache-Control: no-store` and `X-Content-Type-Options: nosniff` and resolve
+only from the generation's own file map.
 
-Background classification runs in the worker, but Git commands run through a private
-request/reply channel owned by the parent. Source replacement, shutdown and worker
-failure stop command admission, cancel all active Git processes and wait for their
-process/pipe closure before completing cleanup. This does not depend on the worker
-handling a shutdown message or yielding its CPU. On POSIX, cancellable Git commands
-have dedicated process groups so cancellation also stops their ordinary helpers.
-SIGTERM escalates to SIGKILL after one second; Windows terminates the direct child.
-Concurrent Git-service cleanup callers share the same drain. Late replies cannot publish stale
-classification. Git output remains capped at 64 MiB per stream; classification and
-its parsing/comparison work remain outside the HTTP event loop.
-
-Background generation uses the ordinary exhaustive Build pipeline and render order,
-with checkpoints between documents and major validation phases. Forward-anchor
-validation cannot render a destination ahead of that order. Stateful style registries
-can include different unused CSS in on-demand previews; the exhaustive background
-artifacts retain Build's bytes and do not create artificial Changes.
-
-Background warnings carry the producing generation through the worker and
-parent. Stream branch producers once into the shared diagnostic sink; completion
-combines `compilation.diagnostics` without replay before Catalogue ready. A watched rebuild or reconfiguration starts a fresh warning generation
-before candidate work, regardless of whether that candidate succeeds. Late
-warnings from superseded work are discarded. Unwatched Serve keeps its
-lifetime warning scope, and one-shot commands keep their existing scopes.
-
-Full generated output stays in memory unless the parent is running
-`serve --build`; only after a complete successful compilation and ready
-resource watches does the parent transactionally replace `mokly-generated/`.
-The child and HTTP requests never write. Complete output never substitutes
-for demand rendering of the current generation. Git-only baseline changes
-and per-commit baseline rebuilds are observed off the HTTP request path. Ref observation
-must support worktrees and packed refs. Publication and offline consumers accept
-only exhaustive, validated artifacts, never the live index.
+Identical pending selections coalesce; different selections serialize, with
+at most 32 pending requests and a ten-second admission-to-completion
+deadline. A generation lives for 60 seconds after its last request; at most
+64 generations and 128 MiB of snapshots are kept, each artifact at most
+64 MiB, and a capture that exceeds the capacity is rejected rather than
+evicting a generation inside its window. A watched change or a Changes
+refresh changes the cache epoch, so stale work cannot publish, and an open
+comparison returns to Current. The static output of `build` carries one
+complete generation instead, under the
+[comparison serving contract](./mokly-comparison-serving.md).
 
 ## Verification
 
-Regression tests cover cold start with an unrelated failing renderer, identical
-exhaustive/demand output, cache coalescing, worker failure/timeout, source and resource
-confinement, anchor checks, partial evidence, Props isolation, source replacement,
-stale background results and shutdown. Real-process regressions prove Git is gone
-after shutdown/replacement, ignored termination is escalated, and worker failure or
-an unresponsive worker cannot orphan parent-owned Git. The full-sized browser benchmark checks real
-frame content, search, themes/viewports and a successful Props edit, cold and warm.
+Tests cover cold start with an unrelated failing render, identical bytes for
+on-demand and background renders of one document, request coalescing,
+sidecar failure and timeout, source and resource confinement, pending usage,
+live prop isolation, replacement, superseded background results, comparison
+generation retention, and shutdown with real processes. The large-fixture
+browser benchmark checks real frame content, search, viewport and scheme
+switches, a live prop edit, and Changes, cold and warm.

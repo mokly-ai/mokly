@@ -1,0 +1,12 @@
+---
+source: crates/mokly-css/src/_tests_/modules_tests.rs
+expression: css
+---
+/* keep */
+.mokly_e5d3ce03eda7_base{color:red}
+.mokly_e5d3ce03eda7_card {  opacity:.5; animation: mokly_e5d3ce03eda7_pulse 2s linear !important; --value: 1.00; }
+@scope (.mokly_e5d3ce03eda7_outer) to (.stop) { .mokly_e5d3ce03eda7_inner { color:var(--value); } }
+ .app  .mokly_e5d3ce03eda7_local { grid-area:main }
+@keyframes mokly_e5d3ce03eda7_pulse { to { opacity:0 } }
+@keyframes "mokly_e5d3ce03eda7_quoted" { to { opacity:0 } }
+.mokly_e5d3ce03eda7_quoted {animation-name: "mokly_e5d3ce03eda7_quoted" !important}

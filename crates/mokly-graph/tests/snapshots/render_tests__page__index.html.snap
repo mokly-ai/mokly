@@ -1,0 +1,17 @@
+---
+source: crates/mokly-graph/tests/render_tests.rs
+expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
+---
+<!doctype html><html lang="en"><head>
+    <title>Statement</title>
+  </head>
+  <body>
+    <h1 id="summary">Statement</h1>
+    <a href="../home/index.desktop.html#home" data-mokly-link="home#home">Home</a><!--mokly-instance:start id="r-0" path="components/button" instance="5a8b8723b3c98defbb6917dd85182f53e68be17eb5a2d7a9b2165ad697cf2932" props="44890b58b70b5f69e7e8f433571f53aa2d013e34e712ef91b42e6f6a9ea1438f"-->
+<button class="button" aria-label="Done">
+  Done <i></i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-0"-->
+  
+
+</body></html>

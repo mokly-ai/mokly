@@ -1,0 +1,14 @@
+/* Dark views of the example's React screens and components. The @firna/ui
+   dark theme styles the components; these rules colour the plain HTML. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: #121514;
+  color: #eef1ef;
+}
+
+main a {
+  color: #7fae95;
+}

@@ -1,1 +1,1 @@
-export { publicationScreens } from "../../publication_screens.js";
+export { catalogueScreen, changesScreen } from "../../publication_screens.js";

@@ -1,19 +1,8 @@
 # Comparison Pane Design References
 
-## Delivery Status
-
-Implemented and depicted in the design catalogue under
-`examples/basic/specs/design`, as the
-[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records. This document inventories the depictions of the
-[comparison pane presentation contract](./mokly-comparison-panes.md); the
-[shell design](./mokly-shell-design.md) and
-[component design](./mokly-component-design.md) contracts own the complete
-design tables and the behavior of every depicted control.
-
 ## Depicted States
 
-The implemented design mockups depict the pane contract in both viewports, the
+The design mockups depict the pane contract in both viewports, the
 screen comparisons in both schemes and component comparisons in Light.
 `design/changes/diff-controls/overlay` depicts a short Overlay and
 `design/changes/diff-controls/overlay-long` a long screen part-way down its shared chrome, with

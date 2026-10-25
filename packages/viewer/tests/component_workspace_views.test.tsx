@@ -17,7 +17,7 @@ const { catalogue, source } = componentWorkspaceFixture();
 
 test("workspace view selection uses exact contexts and light fallback", () => {
   const data = {
-    ...workspaceData(catalogue, { base: "main", updateVersion: 0 }, source),
+    ...workspaceData(catalogue, { base: "main" }, source),
     views: [
       {
         viewport: "mobile",

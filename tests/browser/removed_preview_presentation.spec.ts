@@ -2,11 +2,14 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
 
-import type {} from "./removed_preview_presentation_entry.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+
+import { test } from "./browser_test.js";
+
+import type {} from "./removed_preview_presentation_entry.js";
 
 let fixture: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root = "";
@@ -15,7 +18,7 @@ test.beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-presentation-"));
   await fs.writeFile(
     path.join(root, "index.html"),
-    "<!doctype html><title>Presentation</title>",
+    '<!doctype html><link rel="icon" href="data:,"><title>Presentation</title>',
   );
   await build({
     bundle: true,

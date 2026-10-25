@@ -1,7 +1,7 @@
 # Previous versions of removed entries
 
 These modules turn a removed page, Markdown document or screen into the version from the pinned
-Changes baseline, for the served shell, a static export and an embedded
+Changes baseline, for the shell of Serve, of a static build and of an embedded
 `@mokly/viewer` alike. They implement the
 [removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
 
@@ -12,14 +12,14 @@ nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
 [`request.ts`](./request.ts) resolves that descriptor to one metadata address.
-Development uses the stable selected endpoint (`path=` for a screen or component
-variant, `page=` for a page or document); static delivery uses `comparisonUrl` for a screen
-and `previewMetadataPath(path)` for a page, confined to that comparison
-generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
+Serve, static delivery, and embedded hosts use the catalogue's advertised
+`comparisonUrl` for a screen and `previewMetadataPath(path)` for a page or
+document. Every address stays inside that comparison generation. A missing
+advertisement makes the preview unavailable without a request. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v7 carries no stored before/after paths.
+review state is `removed`; review v8 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.
@@ -31,8 +31,7 @@ comparison generation's `snapshots/before/` and `snapshots/after/` directories
 in `prefixes` through the shared `snapshotSidePath` builder. This internal
 helper has no runtime consumer: it models the
 documented embedded fetch set for tests, while each presentation loader enforces
-its own generation and side boundaries. Page-preview metadata files are
-unchanged.
+its own generation and side boundaries. Page and document preview metadata uses version 3.
 
 `presentation.ts` owns the shared snapshot-presentation loader.
 `createSnapshotPresentationLoader(generationAddress, sides, delivery,
@@ -52,8 +51,8 @@ serializes the preserved doctype and other nodes for `srcdoc`. These edits
 affect only the in-memory presentation; snapshot and comparison bytes do not
 change.
 
-[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook shared by the
-server render and hydrated shell. [`shell/previews.tsx`](../shell/previews.tsx)
+[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook of the shell.
+[`shell/previews.tsx`](../shell/previews.tsx)
 owns loading, retry and loaded states,
 using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
@@ -70,21 +69,20 @@ through the caller's `reveal` hook, which comparison panes use to reveal inner
 regions and then their page viewport), preserves Space for scrolling, and
 reapplies the accepted `srcdoc` if the frame navigates away.
 [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
-route-owned controller: its first effect replaces the honest server-rendered
-unavailable state with loading, requests on selection, fetches every document
+route-owned controller: it starts in the loading state, requests on selection,
+fetches every document
 needed for that viewport and scheme before reporting ready, renews before
 reusing a live presentation, and discards work after route replacement or
 unmount.
 
-The controller and typed review validators are bundled once into the shared
-`react-shell.js` hydration entry. Serve, static export and application-owned
-`@mokly/viewer` roots therefore use the same React lifecycle without a second
-Browse runtime.
+The controller and typed review validators are bundled once into the
+standalone shell, `dist/browser/shell.js`. Serve, `build` and
+application-owned `@mokly/viewer` roots therefore use the same React lifecycle
+without a second Browse runtime.
 
 ```bash
 npm run build
-npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell.test.ts
-npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_preview_views.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
+cargo xtask check --suite viewer
 ```
 
 The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
@@ -100,9 +98,3 @@ Related boundaries: [the Browse client](../client/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),
 and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
-
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
-delivered the shared loader and documented fetch set in Milestone 3 and the
-aligned panes in Milestone 4.

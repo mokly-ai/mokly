@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import {
   defaultSelection,
   mergeSelection,
@@ -11,18 +9,10 @@ import {
   sameSelection,
 } from "../src/viewer/selection.js";
 
+import { shellModelFixture } from "./catalogue_v7_fixture.js";
+
 const noTitles = (): readonly string[] => [];
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
+const fixture = shellModelFixture();
 
 test("selection normalizes mixed tag terms without mutating host values", () => {
   const supplied = {

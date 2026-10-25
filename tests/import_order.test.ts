@@ -18,14 +18,14 @@ test("import ordering puts every parent depth before siblings and is idempotent"
       .join("\n") +
     "\nexport const values = [value0, value1, value2, value3];\n";
   const [result] = await eslint.lintText(input, {
-    filePath: "src/server/demand/import_fixture.ts",
+    filePath: "packages/viewer/src/client/import_fixture.ts",
   });
   const output = result!.output ?? input;
   assert.equal(result!.errorCount, 0);
   for (const parent of ["../parent", "../../middle", "../../../deep"])
     assert.ok(output.indexOf(parent) < output.indexOf("./sibling"), output);
   const [again] = await eslint.lintText(output, {
-    filePath: "src/server/demand/import_fixture.ts",
+    filePath: "packages/viewer/src/client/import_fixture.ts",
   });
   assert.equal(again!.output, undefined);
 });

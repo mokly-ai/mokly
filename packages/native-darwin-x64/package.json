@@ -1,0 +1,24 @@
+{
+  "name": "@mokly/native-darwin-x64",
+  "version": "0.15.0",
+  "description": "Mokly native CLI for darwin-x64.",
+  "license": "MIT",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/mokly"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/native-darwin-x64"
+  }
+}

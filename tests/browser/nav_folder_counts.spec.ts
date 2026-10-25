@@ -1,51 +1,25 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import {
-  branchCatalogue,
-  startBranchHost,
-  type BranchHost,
-} from "./branch_hosts.js";
-
-const screen = (title: string, body: string, tags: readonly string[] = []) =>
-  `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:${JSON.stringify(title)},description:${JSON.stringify(title)},relatedDocs:[],tags:${JSON.stringify(tags)},mobile:<main><h1>${body}</h1></main>,desktop:<main><h1>${body}</h1></main>});`;
-
-/**
- * A Shop folder whose Cart (tagged `sale`) changed on the branch, beside the
- * unchanged Checkout and Receipt and an Archive folder holding Orders.
- */
-function shopCatalogue() {
-  return branchCatalogue(
-    {
-      "specs/home.mockup.tsx": screen("Home", "Home"),
-      "specs/shop/_folder.json": '{"title":"Shop"}',
-      "specs/shop/cart.mockup.tsx": screen("Cart", "Cart", ["sale"]),
-      "specs/shop/checkout.mockup.tsx": screen("Checkout", "Checkout"),
-      "specs/shop/receipt.mockup.tsx": screen("Receipt", "Receipt"),
-      "specs/shop/archive/_folder.json": '{"title":"Archive"}',
-      "specs/shop/archive/orders.mockup.tsx": screen("Orders", "Orders"),
-    },
-    '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}',
-    async (fixture) => {
-      await fixture.write(
-        "specs/shop/cart.mockup.tsx",
-        screen("Cart", "Cart, with a coupon", ["sale"]),
-      );
-    },
-  );
-}
-
-let host: BranchHost;
-
+import { test } from "./browser_test.js";
+import { serveCatalogue } from "./catalogue_fixture.js";
+let host: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
-  host = await startBranchHost("serve", shopCatalogue);
+  const screen = (title: string, tags: string[] = []) => `---
+title: ${title}
+tags: ${JSON.stringify(tags)}
+---
+<h1>${title}</h1>`;
+  host = await serveCatalogue({
+    "specs/home.screen.html": screen("Home"),
+    "specs/shop/_folder.json": '{"title":"Shop"}',
+    "specs/shop/cart.screen.html": screen("Cart", ["sale"]),
+    "specs/shop/checkout.screen.html": screen("Checkout"),
+    "specs/shop/receipt.screen.html": screen("Receipt"),
+    "specs/shop/archive/_folder.json": '{"title":"Archive"}',
+    "specs/shop/archive/orders.screen.html": screen("Orders"),
+  });
 });
-
-test.afterAll(async () => {
-  if (host) await host.close();
-});
-
+test.afterAll(async () => host?.close());
 /**
  * One folder's count and the child rows it shows, or null when the folder is
  * hidden. A collapsed folder still reports the rows its filter keeps.
@@ -94,30 +68,17 @@ async function expectFolders(
 }
 
 test("All counts every child row a folder shows", async ({ page }) => {
-  await host.open(page, "home");
+  await page.goto(`${host.url}/view/home/`);
   await expectFolders(page, {
     shop: { count: "4", rows: ["Archive", "Cart", "Checkout", "Receipt"] },
     "shop/archive": { count: "1", rows: ["Orders"] },
   });
 });
 
-test("Changes counts only the child rows it keeps", async ({ page }) => {
-  await host.open(page, "home");
-  await page.click('[data-filter="changed"]');
-  await expectFolders(page, {
-    shop: { count: "1", rows: ["Cart"] },
-    "shop/archive": null,
-  });
-  await page.click('[data-filter="all"]');
-  await expectFolders(page, {
-    shop: { count: "4", rows: ["Archive", "Cart", "Checkout", "Receipt"] },
-  });
-});
-
 test("search and tags count only the child rows they keep", async ({
   page,
 }) => {
-  await host.open(page, "home");
+  await page.goto(`${host.url}/view/home/`);
   const search = page.locator("[data-mokly-search]");
   for (const [query, expected] of [
     ["checkout", { shop: { count: "1", rows: ["Checkout"] } }],

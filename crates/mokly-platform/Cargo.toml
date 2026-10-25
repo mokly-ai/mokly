@@ -1,0 +1,25 @@
+[package]
+name = "mokly-platform"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+thiserror = "2.0.21"
+tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
+
+[target."cfg(unix)".dependencies]
+libc = "0.2.190"
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_System_JobObjects", "Win32_System_Threading", "Win32_Storage_FileSystem", "Win32_Security", "Win32_System_Console", "Win32_System_Diagnostics_ToolHelp"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+unimock = "0.6.8"
+
+[features]
+mock = ["dep:unimock"]

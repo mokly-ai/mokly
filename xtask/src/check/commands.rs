@@ -4,8 +4,6 @@ use crate::command::CommandSpec;
 
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 
-const PACKAGE_ARTIFACTS: &str = ".context/verification/package-artifacts";
-
 /// Commands in dependency order for one validated suite.
 pub(super) fn commands_for(
     suite: VerificationSuite,
@@ -14,15 +12,30 @@ pub(super) fn commands_for(
 ) -> Vec<CommandSpec> {
     match suite {
         VerificationSuite::Repository => repository_commands(dependency_audit),
-        VerificationSuite::Package => package_commands(),
-        VerificationSuite::Unit => prepared_suite("prepare:unit", "test:prepared", shard),
-        VerificationSuite::Browser => {
-            prepared_suite("prepare:verification", "test:browser:prepared", shard)
-        }
-        VerificationSuite::Hydration => {
-            prepared_suite("prepare:verification", "test:hydration:prepared", shard)
-        }
+        VerificationSuite::Viewer => vec![
+            npm(&["run", "build"]),
+            npm(&["run", "typecheck"]),
+            npm(&["run", "test:viewer:prepared"]),
+        ],
+        VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
+        VerificationSuite::Native => vec![
+            cargo(&["xtask", "build-native"]),
+            cargo(&["fmt", "--all", "--", "--check"]),
+            rust_clippy(),
+            npm(&["run", "build", "--workspace", "@mokly/viewer"]),
+            npm(&["run", "build", "--workspace", "@mokly/mokly"]),
+            cargo(&["test", "--workspace", "--no-fail-fast"]),
+        ],
     }
+}
+
+/// Run the already-built browser suite, optionally selecting one shard.
+pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
+    let mut test = npm(&["run", "test:browser:prepared"]);
+    if let Some(shard) = shard {
+        test = test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]);
+    }
+    test
 }
 
 fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
@@ -32,54 +45,29 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
     };
     vec![
         audit,
+        npm(&["run", "dependencies:check:rust"]),
+        cargo(&["xtask", "check-generated-types"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
         CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
-        cargo(&[
-            "clippy",
-            "--workspace",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings",
-        ]),
+        rust_clippy(),
+        npm(&["run", "build", "--workspace", "@mokly/viewer"]),
+        npm(&["run", "build", "--workspace", "@mokly/mokly"]),
         cargo(&["test", "--workspace"]),
     ]
 }
 
-fn package_commands() -> Vec<CommandSpec> {
-    vec![
-        npm(&["run", "prepare:verification"]),
-        npm(&["run", "typecheck:prepared"]),
-        npm(&["run", "example:check"]),
-        npm(&["run", "package:artifacts", "--", "--out", PACKAGE_ARTIFACTS]),
-        npm(&[
-            "run",
-            "package:check:prepared",
-            "--",
-            "--artifacts",
-            PACKAGE_ARTIFACTS,
-        ]),
-        npm(&[
-            "run",
-            "package:smoke:prepared",
-            "--",
-            "--artifacts",
-            PACKAGE_ARTIFACTS,
-        ]),
-    ]
-}
-
-/// Prepare once with `preparation`, then run the prepared `script`. Only the
-/// unit suite's preparation adds the example compilation snapshot.
-fn prepared_suite(preparation: &str, script: &str, shard: Option<Shard>) -> Vec<CommandSpec> {
-    let mut command = npm(&["run", script]);
-    if let Some(shard) = shard {
-        command = command.args(["--", "--shard", &shard.to_string()]);
-    }
-    vec![npm(&["run", preparation]), command]
+fn rust_clippy() -> CommandSpec {
+    cargo(&[
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings",
+    ])
 }
 
 fn npm(args: &[&str]) -> CommandSpec {

@@ -14,6 +14,7 @@ pub(super) fn client(
     case: Case,
     events: Arc<Mutex<Vec<String>>>,
     interrupted: Arc<AtomicBool>,
+    stuck: bool,
 ) -> Unimock {
     let warmups = Arc::new(AtomicUsize::new(0));
     let probes = Arc::new(AtomicUsize::new(0));
@@ -115,14 +116,14 @@ pub(super) fn client(
                 }
                 return Ok(result);
             }
-            assert_eq!(probes.load(Ordering::SeqCst), 11);
+            assert_eq!(probes.load(Ordering::SeqCst), 7);
             assert!(
                 log.unwrap()
                     .to_string_lossy()
                     .contains("20261006T120000Z-42")
             );
             run_events.lock().unwrap().push(format!("suite:{id}"));
-            if case == Case::PanicSuites && id == "tbx_0" {
+            if case == Case::PanicSuites && command.contains("--suite repository") {
                 panic!("suite dependency failed");
             }
             if matches!(case, Case::InterruptSuites | Case::InterruptCleanupSuites) {
@@ -134,6 +135,7 @@ pub(super) fn client(
                     case,
                     Case::Suite | Case::LogUnavailable | Case::CleanupFailedSuite
                 ) && command.contains("--suite repository")
+                    || case == Case::Delivery && command.contains("--suite static-delivery")
                 {
                     1
                 } else {
@@ -149,7 +151,7 @@ pub(super) fn client(
                 .unwrap()
                 .push(format!("download:{id}"));
             assert!(target.to_string_lossy().contains("20261006T120000Z-42"));
-            if case == Case::Download && source.ends_with("unit-1-of-4.json") {
+            if case == Case::Download && source.ends_with("viewer.json") {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
@@ -197,15 +199,17 @@ pub(super) fn client(
                 0
             };
             if id == "tbx_0"
-                && (matches!(
-                    case,
-                    Case::CleanupWarmup
-                        | Case::CompletedOnFinal
-                        | Case::CleanupSuites
-                        | Case::CleanupFailedSuite
-                        | Case::InterruptCleanupWarmup
-                        | Case::InterruptCleanupSuites
-                ) || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))
+                && (stuck
+                    || matches!(
+                        case,
+                        Case::CleanupWarmup
+                            | Case::CompletedOnFinal
+                            | Case::CleanupSuites
+                            | Case::CleanupFailedSuite
+                            | Case::InterruptCleanupWarmup
+                            | Case::InterruptCleanupSuites
+                    )
+                    || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))
             {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,

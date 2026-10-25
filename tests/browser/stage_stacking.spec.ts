@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+
+import { test } from "./browser_test.js";
 
 test("stacked frames on a narrow stage start at its top so the first frame stays reachable", async ({
   page,

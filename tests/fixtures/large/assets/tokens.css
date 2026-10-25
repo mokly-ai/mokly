@@ -4,10 +4,3 @@
   --line: #d5dfd8;
   --accent: #326c51;
 }
-[data-color-scheme="dark"] {
-  color-scheme: dark;
-  --surface: #18251f;
-  --ink: #e6eee8;
-  --line: #40564a;
-  --accent: #9bd4b3;
-}

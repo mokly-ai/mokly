@@ -1,18 +1,10 @@
 # Export Ownership v3
 
-## Delivery Status
-
-Schema 3 is implemented by the exporter and every local ownership reader.
-[Delta Publishing](../../plans/delta-publishing.md) records the completed
-exporter, CLI and receiver-side compatibility work. Receivers built against
-this document accept only schema 3. Schemas 1 and 2 are unsupported. Version 3
-retains v2 digests and limits while gating the new `mokly-viewer/` paths.
-
 ## Boundary
 
-Every complete [export](./mokly-export.md) contains a regular root file named
-`.mokly-export-artifact`. This public inventory is independent of the source
-catalogue manifest, the upload envelope and the comparison result. Receivers
+Every complete [static build](./mokly-export.md) contains a regular root file
+named `.mokly-export-artifact`. This public inventory is independent of the
+catalogue index, the upload envelope and the comparison result. Receivers
 read it without importing Mokly's internal modules. In the
 [upload exchange](./mokly-upload-exchange.md#upload-exchange) it is the content
 address list: a receiver learns every file's digest from the marker before any
@@ -20,7 +12,7 @@ catalogue bytes are sent and asks only for the digests it does not hold.
 
 ## File Contract
 
-The exporter writes UTF-8 JSON without a BOM, with these two fields:
+`build` writes UTF-8 JSON without a BOM, with these two fields:
 
 ```json
 {
@@ -55,7 +47,7 @@ including string `"3"`, is an unsupported version; readers classify it before
 inspecting `files`. For version 3, `files` is an array containing only entry
 objects. Each entry requires all three fields:
 
-- `path` is nonempty, slash-separated and relative to the export root, with at
+- `path` is nonempty, slash-separated and relative to the output root, with at
   most 1,024 UTF-8 bytes. It must be well-formed Unicode: encoding as UTF-8 and
   decoding must preserve the same string. Reject Unicode category Cc
   characters (U+0000–U+001F and U+007F–U+009F), a leading `/`, backslashes,
@@ -86,11 +78,11 @@ Classification order is deterministic. Check a present root version before
 `files`. For version 3, require each field's documented primitive type, then
 classify an integer size above 64 MiB or a string path above 1,024 UTF-8 bytes
 as too large before applying the remaining entry grammar. Wrong field types,
-including a nonnumeric size or non-string path, remain invalid.
+including a nonnumeric size or non-string path, are invalid.
 
 ## Complete Artifact And Upload Validation
 
-`files` lists every regular file in the completed export except the marker
+`files` lists every regular file in the completed output except the marker
 itself, including package assets and `mokly-upload.json` when publishing. The
 upload envelope is therefore written and hashed before the marker. Directories
 are implicit and are not inventory entries. A complete artifact has exactly the
@@ -98,13 +90,13 @@ inventory plus the root marker; compare case-sensitive paths as sets after
 checking duplicates. File/directory prefix collisions are invalid, including
 collisions with the root marker. Inventory order is not significant.
 
-The marker describes generated files; it is not proof of origin or permission
-to delete, overwrite, extract, or serve them. Local export recovery can tolerate
-missing owned files but rejects unexpected files. The exporter accepts only
-schema 3 in an existing output directory. A regular marker that parses as
+The marker describes the files `build` wrote; it is not proof of origin or
+permission to delete, overwrite, extract, or serve them. The build's recovery
+can tolerate missing owned files but rejects unexpected files. `build` accepts
+only schema 3 in an existing output directory. A regular marker that parses as
 invalid, too large or unsupported, including an earlier version, fails with
 `[mokly/export-invalid] Invalid export ownership inventory: <output>.` Missing ownership
-and unsafe filesystem entries retain their separate errors. There is no
+and unsafe filesystem entries keep their separate errors. There is no
 version-specific local recovery path. Before clearing a destination manually,
 move any files that must be kept. Upload acceptance requires the complete inventory with
 neither missing nor unexpected files and every stored blob matching its entry.
@@ -124,7 +116,7 @@ Receivers validate the marker before answering a plan request:
 
 [Upload limits](./mokly-upload-validation.md#export-files-and-limits) also apply to
 every inventory path and file: at most 20,000 regular files including this
-marker and the per-file, path and manifest ceilings. The marker uses the
+marker and the per-file, path and upload manifest ceilings. The marker uses the
 regular-file limit (64 MiB), not the upload envelope's 16 KiB limit. An empty
 inventory is a valid marker shape but cannot be a valid upload: `index.html`,
 `404.html` and `mokly-upload.json` are required.
@@ -153,9 +145,9 @@ U+0085 and other category Cc characters; a multibyte path over 1,024 bytes;
 and every other path grammar rule.
 They test marker shape, not gzip/tar parsing, raw JSON decoding, archive
 completeness, digest verification, authorization or all upload limits. The
-packed-consumer smoke checks these installed fixtures with an independent
-reader, then verifies an actual published inventory against the extracted bytes.
+verification gate checks these installed fixtures with an independent reader,
+then verifies an actual published inventory against the extracted bytes.
 
-The approved [refusal contract](./mokly-boundary-results.md#export-refusals)
-names the output folder in every refusal and lists unexpected files when known.
-It adds no adoption or upgrade path and preserves every existing file.
+`build` implements the refusal contract: it names the output folder in every
+refusal, lists unexpected files when known, adds no adoption or upgrade path,
+and preserves every existing file.

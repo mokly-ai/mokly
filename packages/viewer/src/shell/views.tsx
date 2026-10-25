@@ -71,11 +71,7 @@ function TargetView(props: {
     : undefined;
   const page =
     target.entry.kind === "page" && !removed
-      ? pageComparisonEvidence(
-          props.catalogue,
-          props.context,
-          target.entry.path,
-        )
+      ? pageComparisonEvidence(props.catalogue, target.entry.path)
       : undefined;
   const status = removed ? "Removed" : page?.status;
   const stage = preview ? (
@@ -140,13 +136,7 @@ function MissingView(props: { requested: string }) {
   return (
     <EmptyStage heading="Item not found">
       <p>
-        Nothing in the catalogue matches <code>{props.requested}</code>. It may
-        have been renamed or removed — choose another item from the navigation
-        instead.
-      </p>
-      <p className="mbk-empty-note">
-        If this item was just added, rebuild the catalogue with{" "}
-        <code>mokly build</code>.
+        Nothing in the catalogue matches <code>{props.requested}</code>
       </p>
       <a className="mbk-empty-link" href="/">
         Go to the catalogue home
@@ -161,17 +151,6 @@ function activeIdForView(view: ShellView): string | undefined {
     return undefined;
   }
   return view.target.entry.path;
-}
-
-/** The browser document title for a shell view. */
-export function viewTitle(catalogue: Catalogue, view: ShellView): string {
-  if (view.kind === "home") {
-    return "Mokly";
-  }
-  if (view.kind === "missing") {
-    return "Not found · Mokly";
-  }
-  return `${targetHead(catalogue, view.target).title} · Mokly`;
 }
 
 /** Render the only region replaced by client-side Browse navigation. */

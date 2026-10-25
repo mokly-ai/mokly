@@ -7,15 +7,15 @@ order: 1
 
 ## Keep the checkout clean
 
-Publish requires a clean checkout before export and again before upload.
-Git-ignored files, this run's output directory, and Mokly's own caches and
-temporary files never count. Committed generated files count and must match the
-build. Derived generated output must be ignored by Git.
+Publish requires committed HEAD and a clean checkout before the build and again
+before upload. Commit source changes before the job runs. Keep build products
+ignored by Git. Mokly builds in a private directory outside the checkout and
+prints its location before rendering. Ignored files and operation-owned
+reservations do not count as uncommitted changes.
 
-A build step that changes tracked files or leaves files that Git does not ignore
-stops the publish. Commit generated changes before the job runs. Add build
-products to `.gitignore`. Use `npm ci` to install from the committed lockfile
-without changing it.
+Use `npm ci` to install the committed dependency lockfile. A job that changes
+tracked sources or creates non-ignored files must resolve those changes before
+it publishes.
 
 ## What the action does
 
@@ -59,7 +59,7 @@ jobs:
           version: ${{ vars.MOKLY_VERSION }}
           endpoint: ${{ vars.MOKLY_ENDPOINT }}
           token: ${{ secrets.MOKLY_TOKEN }}
-          config: mokly.config.ts
+          config: mokly.config.json
           base: origin/main
 ```
 
@@ -80,7 +80,7 @@ choosing, and replace `COMMIT_SHA` with the action commit you reviewed.
 ## What it leaves to you
 
 The action uses the tested Node 24.21 lane and runs the command. Published Mokly
-releases support Node.js 22.14 or newer except Node 24.14 through 24.18; 24.21
+releases support Node.js 22.15 or newer except Node 23 and Node 24.14 through 24.18; 24.21
 is a tested representative, not the lower bound. Checking out your repository,
 installing its dependencies, fetching enough history for the comparison, and
 any comment you want on the pull request are yours. The action has no input

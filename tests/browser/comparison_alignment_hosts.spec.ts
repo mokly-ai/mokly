@@ -1,9 +1,21 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+/**
+ * Comparison panes outside Serve, under the comparison panes contract. On the
+ * copied comparison output and in an embedded viewer through both frame
+ * adapters, an Overlay stack scrolls as one, each pane frame carries the
+ * contract's attributes and presents its version as a script-free `srcdoc`
+ * document, links and forms do nothing, and the anchor moves the shared
+ * viewports. On the copied output, Side by side also mirrors. A pane document
+ * that cannot be presented fails the comparison with Try again, and Try again
+ * presents it, on the copied output and through the cross-origin adapter,
+ * which also reports the failure to its host.
+ */
 
-import { comparisonAlignmentExport } from "../helpers/comparison_alignment_fixture.js";
-import { serveStaticFiles } from "../helpers/static_server.js";
+import { expect, type Locator, type Page } from "@playwright/test";
 
-import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
+import {
+  expectPaneFrameAttributes,
+  generationAddress,
+} from "./comparison_frames.js";
 import {
   comparisonSection,
   expectCoincidentLayers,
@@ -14,27 +26,24 @@ import {
   sharedViewports,
   viewportOffset,
   wheelOver,
-} from "./comparison_alignment_helpers.js";
-import { hostExportedViewer, type HostedViewer } from "./viewer_host.js";
+} from "./comparison_scroll.js";
+import { comparisonPaths, test } from "./comparison_test.js";
+import { comparisonIndex, modeButton } from "./comparison_ui.js";
+import {
+  comparisonViewerHost,
+  openEmbeddedComparison,
+  type ComparisonViewerHost,
+} from "./comparison_viewer_host.js";
+import {
+  blockedFormSubmission,
+  responseFailure,
+} from "./shell_error_allowances.js";
+import { chooseViewport } from "./workspace_actions.js";
 
-let exported: Awaited<ReturnType<typeof comparisonAlignmentExport>>;
-let site: Awaited<ReturnType<typeof serveStaticFiles>>;
-let viewer: HostedViewer;
+const changed = comparisonPaths.changed;
+const DOCUMENT = `/snapshots/after/mokly-generated/${changed}/index.desktop.html`;
 
-test.describe.configure({ timeout: 90_000 });
-test.beforeAll(async () => {
-  test.setTimeout(240_000);
-  exported = await comparisonAlignmentExport();
-  site = await serveStaticFiles(exported.output);
-  viewer = await hostExportedViewer(exported.output);
-});
-test.afterAll(async () => {
-  await viewer?.close();
-  await site?.close();
-  await exported?.close();
-});
-
-/** Both versions and every shared viewport of a section at one offset. */
+/** Both versions and both shared viewports of Side by side at one offset. */
 async function expectMirroredAt(section: Locator, y: number): Promise<void> {
   await expect
     .poll(async () => {
@@ -46,48 +55,56 @@ async function expectMirroredAt(section: Locator, y: number): Promise<void> {
     await expect.poll(async () => (await viewportOffset(viewport)).y).toBe(y);
 }
 
-/** Links and forms stay inert and an anchor moves every version. */
+/** Links and forms do nothing; the anchor moves every shared viewport. */
 async function expectReadOnly(page: Page, section: Locator): Promise<void> {
   const address = page.url();
   const frame = paneFrame(section, "after");
-  const source = await frame.getAttribute(PANE_SOURCE);
+  const source = await frame.getAttribute("data-mokly-preview-source");
   const content = frame.contentFrame();
-  await content.getByRole("link", { name: "Open short" }).click();
-  await expect(content.locator("h1")).toHaveText("Current tall");
-  await expect(frame).toHaveAttribute(PANE_SOURCE, source!);
+  await content
+    .getByRole("link", { name: "Open the stable screen", exact: true })
+    .click();
+  await content.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(content.locator("h1")).toHaveText("After screen");
+  await expect(frame).toHaveAttribute("data-mokly-preview-source", source!);
   expect(page.url()).toBe(address);
   const target = await content
-    .locator("#al-target")
+    .locator("#end")
     .evaluate(
       (node) =>
         node.getBoundingClientRect().top +
         node.ownerDocument.scrollingElement!.scrollTop,
     );
-  await content.getByRole("link", { name: "Jump to target" }).click();
-  await expectMirroredAt(section, target);
+  await content
+    .getByRole("link", { name: "Jump to the end", exact: true })
+    .click();
+  for (const viewport of await sharedViewports(section).all())
+    await expect
+      .poll(async () => (await viewportOffset(viewport)).y)
+      .toBeCloseTo(target, 0);
   expect(page.url()).toBe(address);
 }
 
 test("a static export aligns stacks, mirrors Side by side and stays read-only", async ({
   page,
+  request,
+  baseURL,
+  allowBrowserError,
 }) => {
-  await openComparison(
-    page,
-    `${site.url}/view/tall/`,
-    "desktop",
-    "Overlay",
-    "static",
-  );
+  allowBrowserError(blockedFormSubmission);
+  const index = await comparisonIndex(request, baseURL);
+  await openComparison(page, changed, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
-  for (const side of ["before", "after"] as const)
-    await expectPresentedPane(
-      paneFrame(desktop, side),
-      /\/mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/snapshots\//,
-    );
+  await expectPaneFrameAttributes(
+    desktop,
+    generationAddress(baseURL!, index.comparisonUrl),
+    changed,
+    "desktop",
+  );
   await wheelOver(page, paneFrame(desktop, "after"), 400);
   await expectStackAt(desktop, 400);
   await expectCoincidentLayers(desktop);
-  await page.getByRole("button", { name: "Side by side", exact: true }).click();
+  await modeButton(page, "Side by side").click();
   await expect(sharedViewports(desktop)).toHaveCount(2);
   await wheelOver(page, paneFrame(desktop, "before"), 300);
   await expectMirroredAt(desktop, 300);
@@ -96,69 +113,134 @@ test("a static export aligns stacks, mirrors Side by side and stays read-only", 
   await expectReadOnly(page, desktop);
 });
 
-for (const adapter of ["same-origin", "cross"] as const)
-  test(`an embedded viewer aligns comparisons through the ${adapter} adapter`, async ({
-    page,
-  }) => {
-    await openComparison(
-      page,
-      `${viewer.url}/viewer.html?adapter=${adapter}&entry=tall`,
-      "desktop",
-      "Overlay",
-      "static",
-    );
-    const desktop = comparisonSection(page, "desktop");
-    await expectPresentedPane(paneFrame(desktop, "after"));
-    await wheelOver(page, paneFrame(desktop, "after"), 400);
-    await expectStackAt(desktop, 400);
-    await expectCoincidentLayers(desktop);
-    await wheelOver(page, paneFrame(desktop, "after"), -400);
-    await expectStackAt(desktop, 0);
-    await expectReadOnly(page, desktop);
-  });
-
 test("a pane document that cannot be presented fails and recovers with Try again", async ({
   page,
+  request,
+  baseURL,
+  allowBrowserError,
 }) => {
+  const index = await comparisonIndex(request, baseURL);
+  const generation = index.comparisonUrl.replace(/review\.json$/u, "");
+  const document = `/${generation}${DOCUMENT.slice(1)}`;
+  // The host answers the current version's pane document with 404 once.
+  allowBrowserError(responseFailure(baseURL!, document, 404));
   let failing = true;
-  await page.route(
-    "**/snapshots/after/mokly-generated/tall/index.desktop.html",
-    (route) =>
-      failing
-        ? route.fulfill({
-            status: 404,
-            contentType: "text/plain",
-            body: "gone",
-          })
-        : route.continue(),
+  await page.route(`**${document}`, (route) =>
+    failing
+      ? route.fulfill({ status: 404, contentType: "text/plain", body: "gone" })
+      : route.continue(),
   );
-  await page.setViewportSize({ width: 1600, height: 1000 });
-  await page.goto(`${viewer.url}/viewer.html?adapter=cross&entry=tall`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
+  await page.goto(`/view/${changed}/`);
+  await chooseViewport(page, "desktop");
+  await modeButton(page, "Overlay").click();
+  await expectFailedThenPresented(page, () => {
+    failing = false;
+  });
+});
+
+/** The failure state, then Try again presents both versions. */
+async function expectFailedThenPresented(page: Page, recover: () => void) {
   const stage = page.locator("[data-diff-stage]");
   await expect(stage).toContainText("The comparison could not be loaded.");
   await expect(stage.locator("[data-comparison-failure] p")).toHaveText(
     "The comparison is unavailable.",
   );
   await expect(stage.locator("iframe")).toHaveCount(0);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          (window as unknown as { viewerErrors: { code: string }[] })
-            .viewerErrors,
-      ),
-    )
-    .toContainEqual({
-      code: "comparison",
-      message: "The comparison could not be loaded. Try again.",
-    });
-  failing = false;
-  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(modeButton(page, "Overlay")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  recover();
+  await stage.getByRole("button", { name: "Try again", exact: true }).click();
   const desktop = comparisonSection(page, "desktop");
   await expect(
     paneFrame(desktop, "after").contentFrame().locator("h1"),
-  ).toHaveText("Current tall");
+  ).toHaveText("After screen");
+  await expect(
+    paneFrame(desktop, "before").contentFrame().locator("h1"),
+  ).toHaveText("Before screen");
   await expect(stage).not.toHaveAttribute("aria-busy", "true");
+  await expect(stage.locator("[data-comparison-failure]")).toHaveCount(0);
+}
+
+test.describe("embedded viewer", () => {
+  let host: ComparisonViewerHost;
+  test.beforeAll(async () => {
+    host = await comparisonViewerHost();
+  });
+  test.afterAll(async () => {
+    await host?.close();
+  });
+
+  for (const adapter of ["same-origin", "cross"] as const)
+    test(`an embedded viewer aligns comparisons through the ${adapter} adapter`, async ({
+      page,
+      request,
+      baseURL,
+      allowBrowserError,
+    }) => {
+      allowBrowserError(blockedFormSubmission);
+      // The host serves a copy of the same output, with the same generation.
+      const index = await comparisonIndex(request, baseURL);
+      await openEmbeddedComparison(
+        page,
+        `${host.url}/viewer.html?adapter=${adapter}&entry=${changed}`,
+        "desktop",
+        "Overlay",
+      );
+      const desktop = comparisonSection(page, "desktop");
+      await expectPaneFrameAttributes(
+        desktop,
+        generationAddress(
+          adapter === "cross" ? host.frameOrigin : host.url,
+          index.comparisonUrl,
+        ),
+        changed,
+        "desktop",
+      );
+      await wheelOver(page, paneFrame(desktop, "after"), 400);
+      await expectStackAt(desktop, 400);
+      await expectCoincidentLayers(desktop);
+      await wheelOver(page, paneFrame(desktop, "after"), -400);
+      await expectStackAt(desktop, 0);
+      await expectReadOnly(page, desktop);
+    });
+
+  test("an embedded pane document that cannot be presented fails, reports, and recovers", async ({
+    page,
+    allowBrowserError,
+  }) => {
+    let failing = true;
+    await page.route(`**/generations/*${DOCUMENT}`, async (route) => {
+      if (!failing) return route.continue();
+      allowBrowserError(
+        responseFailure(
+          host.frameOrigin,
+          new URL(route.request().url()).pathname,
+          404,
+        ),
+      );
+      return route.fulfill({
+        status: 404,
+        contentType: "text/plain",
+        body: "gone",
+      });
+    });
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto(`${host.url}/viewer.html?adapter=cross&entry=${changed}`);
+    await chooseViewport(page, "desktop");
+    await modeButton(page, "Overlay").click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as unknown as { viewerErrors: { code: string }[] })
+              .viewerErrors,
+        ),
+      )
+      .toContainEqual(expect.objectContaining({ code: "comparison" }));
+    await expectFailedThenPresented(page, () => {
+      failing = false;
+    });
+  });
 });

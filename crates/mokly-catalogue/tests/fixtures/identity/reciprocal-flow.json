@@ -1,0 +1,8 @@
+{
+  "config": {},
+  "files": {
+    "specs/account/home.screen.html": "---\ntitle: Home\nuseCasePaths: [./flow]\nvariants:\n  - {slug: empty, title: Empty, props: {}, useCasePaths: [./flow]}\n---\n<h1>Home</h1>\n",
+    "specs/account/flow.use-case.yaml": "title: Flow\nsteps: [{screenPath: ./home}, {screenPath: ./home/empty}]\n"
+  },
+  "paths": ["account/home", "account/home/empty", "account/flow"]
+}

@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/invalid dir/a.b.screen.html": "---\ntitle: Home\npath: safe/home\n---\n<h1>Home</h1>\n"
+  },
+  "paths": ["safe/home"]
+}

@@ -1,25 +1,13 @@
 # Component Usage Records
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Implemented for manifest v10. Root output ranges, non-CSS-only resource records and independent
-stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md), within v10.
-
-The rule for comments with the former spelling is implemented in
-[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
-Implemented for manifest v10, including strict admission of baseline usage
-records. `componentId` names a component parent by its path.
-
-This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v10](./mokly-component-manifest.md).
-Stable instance-key behavior is defined separately by
-[Component Instance Identity](./mokly-instances.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Record Shapes
+
+Usage records derive from the ownership regions of the composed trees under
+the [comparison contract](./mokly-comparison.md#tree-model). A view's usage travels as the `usage` of that view in the
+[entry detail](./mokly-shell-delivery.md#entry-detail) and feeds the
+[comparison records](./mokly-component-comparison-records.md).
 
 ```ts
 type ComponentInputOwner =
@@ -62,150 +50,104 @@ interface ComponentRangeRecord {
   parentId?: string;
 }
 
-interface ComponentStyleOwnership {
-  startOffset: number;
-  endOffset: number;
-  componentIds: readonly string[];
-}
-
-interface ComponentResourceOwnership {
-  path: string;
-  componentIds: readonly string[];
-}
-
-interface ComponentViewRecord {
-  viewport: Viewport;
-  colorScheme: ColorScheme;
+interface ComponentViewUsage {
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
-  resources: readonly ComponentResourceOwnership[];
-  insertedStylesheets: readonly InsertedComponentStylesheet[];
-}
-
-interface InsertedComponentStylesheet {
-  startOffset: number;
-  endOffset: number;
-  path: string;
-  componentPaths: readonly string[];
 }
 ```
 
-References are local to one view except `componentId`, which names a registered
-component parent by its path. An entry owner is the containing screen or component variant.
-The component root rendered for its own variant is the entry owner and is not a
-used instance.
+References are local to one view except `componentId`, which names a
+registered component parent by its path. The entry owner is the screen or
+component entry whose view is recorded. The root component of a component
+entry's own view is the entry owner and is not a used instance.
 
 Instance and slot keys are lowercase 64-hex SHA-256 digests of UTF-8 JSON,
 without a final LF. Their preimages are
-`["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
-and `["mokabook-slot-v1", instanceKey, name]`. Those domain strings are frozen
+`["mokly-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
+and `["mokly-slot-v1", instanceKey, name]`. Those domain strings are permanent
 protocol identifiers. Readers recompute keys and reject mismatches or
-conflicting duplicates. Keys are not entry paths, selectors, or file
-names.
+conflicting duplicates. Keys are not entry paths, selectors, or file names.
+
+`id` is the instance id of the [instance contract](./mokly-instances.md),
+which an HTML screen declares with `mokly-instance` and a React render with
+`moklyInstance`. `props` holds the instance's data props and `propsKey` their
+canonical digest. `source` is the optional invocation location: the component
+element's file, line, and column for an HTML screen, or the location the
+sidecar reports for a React render. It is secondary metadata and never enters
+keys, props digests, or Changes.
 
 ## Ownership And Ordering
 
-`owner` identifies whose inputs are compared. `slotKey` identifies the original
-receiving slot. A forwarded slot names its previous record in `sourceSlotKey`
-and preserves the original owner; that chain must terminate. Owner,
-slot-source, and range-parent graphs are acyclic and complete.
+`owner` identifies whose inputs are compared: the entry for an instance that
+the entry's own body renders, the enclosing instance for an instance that a
+component renders. `slotKey` identifies the receiving slot. A forwarded slot
+names its earlier record in `sourceSlotKey` and keeps the original owner; that
+chain must end. Owner, slot-source, and range-parent graphs are acyclic and
+complete.
 
 Instances sort by key. `order` separately records contiguous zero-based
-encounter order within each `(owner, slotKey)` scope. Local ids are unique in a
-scope. Replaying a captured slot may place one logical instance several times,
-but every placement agrees on props and owner. Slots sort by key and remain
-recorded when supplied but not rendered.
+encounter order within each `(owner, slotKey)` scope. Local ids are unique in
+a scope. Replaying a slot may place one logical instance several times, but
+every placement agrees on props and owner. Slots sort by key and stay recorded
+when supplied but not rendered.
 
-Ranges sort in DOM start-marker order and receive ids `r-0`, `r-1`, and so on.
-Each has one matched boundary pair; `parentId` is its nearest enclosing
-registered range. Multi-root or text output has one enclosing range. A null
-component has an empty range. Repeated placements use separate range ids
-without creating extra logical instance keys.
+Ranges are the regions of the composed tree: an instance region, a slot
+region, or the root region. They sort in tree start order and take the ids
+`r-0`, `r-1`, and so on. `parentId` is the nearest enclosing region.
+Multi-root or text output is one region. A null render is an empty region.
+Repeated placements use separate range ids without extra logical instance
+keys.
 
-On both baseline and current sides, a comment with the former `mokabook-`
-spelling is ordinary page content. Mokly never reads it as a marker or removes
-it as one. The comment alone is not a validation error. It creates no component
-range, Review-ignore region or material marker. Required baseline ranges that
-its document cannot prove follow
-[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
-Historical marker translation is not supported. The frozen instance and slot
-key domain strings above are unchanged.
-
-Range ids, physical parents, style offsets, and placement counts are inspection
-coordinates, not input identity. Moving or duplicating unchanged slot material
-does not by itself mark a caller changed. Logical id, order, props, and owner
-changes remain material under the
+Range ids, physical parents, and placement counts are inspection coordinates,
+not input identity. Moving or duplicating unchanged slot material does not by
+itself mark a caller changed. Logical id, order, props, and owner changes are
+material under the
 [component attribution contract](./mokly-component-changes.md).
 
 ## Root Output Boundary
 
-Every accepted component saved-view document has exactly one range whose target is
-`{ kind: "root" }`. It uses the existing layout-neutral component start/end
-comment grammar and `r-N` allocation. It has no `parentId`; its component id is
-the variant entry's `variantOf`. The paired markers wrap only the root render
-result, including empty or multiple-root output, before the renderer wraps
-`input.node`. Nested ranges name it as their nearest physical parent where
-applicable. Renderer wrappers and head content remain outside it.
+Every view of a component entry has exactly one range whose target is
+`{ kind: "root" }`. It is the region `r-0` that the core attaches to the root
+component itself when it composes the page, with no marker. It has no
+`parentId`; its component id is the entry's component path: the entry's own
+path for a parent, `variantOf` for a variant. It wraps only the root render
+result, including empty or multi-root output; the renderer's wrappers and head
+content lie outside it, and nested regions name it as their parent.
 
-The root is not an instance, slot, prop owner or Used by occurrence. Preserve
-existing instance keys, caller ownership and inspection behavior. Strip its
-markers as package markers for document comparison, so the new marker pair
-alone is not material. Keep it when validating containment for CSS. Rebase
-coordinates through package link edits, provenance projection and Review-ignore using
-the same validated range policy as other boundaries; never infer its output
-from a body element or a common selector.
+The root is not an instance, slot, prop owner, or Used by occurrence. It is
+containment proof for the [CSS rule contract](./mokly-css-attribution-rules.md)
+and nothing else: it does not change which Review-ignore regions are allowed,
+and an ignore region around the root output that encloses no instance or slot
+region stays valid. Screens have no root range. A root range on a screen, or a
+component view without one, is invalid data; the core never guesses a root
+around the document. An absent view on one side of an added or removed entry
+is valid and supplies no tree.
 
-The root pair is containment proof only. It does not change which manual
-Review-ignore regions are allowed. A previously valid region around root output
-with no instance or caller-slot boundaries stays valid. Normalized-away elements
-supply no CSS matches, including when that region removes all root output.
-
-Screens have no root range. Current and baseline component views require one; duplicates,
-unpaired markers or a root on a screen fail normal component-range validation.
-Missing required root bounds are invalid data. They do not become page evidence
-or trigger a guessed root around the document. An absent view on one side of an
-added or removed entry is still valid and supplies no document or matches.
-
-Catalogue v6 usage ranges carry this target. Readers and inspection
-accept it as a boundary without presenting it as a nested component or adding
-an instance count. Public evidence carries no range offsets or DOM elements.
+Readers accept the root target as a boundary without presenting it as a
+nested component or adding an instance count. Public usage carries no DOM
+elements.
 
 ## Style And Resource Ownership
 
-Style offsets are nonnegative safe integers delimiting a nonempty half-open
-UTF-16 range within a parsed final style element. The builder rebases renderer
-offsets through transformations and validates final ownership. Ranges do not
-overlap and sort by start offset.
-
-Resource paths are exact mockups-root-relative public files and sort lexically,
-one record per path. Every owner list is nonempty, sorted, duplicate-free, and
-names components that actually render in the view, including the component root
-when applicable. These records own only non-stylesheet files. Renderer CSS
-records are ignored with a warning; Mokly derives no CSS resource records.
-Current and baseline v10 records reject CSS owners. Renderer `styles`
-remain exact document ranges. CSS rule membership uses element containment,
-not these assertions.
-
-`insertedStylesheets` records final-document full-link UTF-16 spans, decoded
-public paths and rendered declaring paths. It is private provenance, not file
-ownership. Each persisted v10 usage record must contain this array, even when
-empty. A missing array is invalid data; readers never guess provenance or
-normalize its absence to an empty array. Public inspection still omits this
-private field. It needs no corresponding `resources` record. The
-[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md)
-defines final-link validation and the root-link comparison exception.
+Usage records carry no style ranges, no resource tables, and no stylesheet
+provenance. Styles a [sidecar](./mokly-sidecar.md) render returned belong to
+the rendered component by construction, and every other rule is attributed
+through the [style ownership](./mokly-comparison.md#style-ownership) rule. A
+resource reference takes the owner of the referencing element under the
+[resources](./mokly-comparison.md#resources) rule, and resource owners exclude
+CSS. The public form of a view's resource evidence is the `resourceEvidence`
+of the entry detail.
 
 ## Validation
 
-When components are registered, every current screen and component variant has one `ComponentViewRecord` for
-each effective view, ordered mobile/light, mobile/dark, desktop/light,
-desktop/dark. A view with no instances still has an explicit empty record;
-missing usage is never normalized to empty.
+Every screen and component entry has one usage record per view, in the order
+mobile/light, mobile/dark, desktop/light, desktop/dark. A view with no
+instances has an explicit empty record. In the entry detail a view's `usage`
+is `ready`, `pending`, or `unavailable` and never omitted.
 
-Readers reject unknown fields, invalid hashes, missing references, cycles,
-incorrect ordering, duplicate records, invalid source locations, unsafe
-resource paths, overlapping styles, and owners absent from the view. Optional
-invocation source is secondary metadata and never enters keys, props hashes, or
-Changes projections.
+The core's readers reject unknown fields, invalid hashes, missing
+references, cycles, incorrect ordering, duplicate records, invalid source
+locations, and owners absent from the view. The viewer's readers apply the
+same rules but ignore unknown fields, under the
+[serialization contract](./mokly-catalogue-serialization.md#versions).

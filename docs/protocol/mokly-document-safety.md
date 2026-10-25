@@ -1,14 +1,18 @@
 # Document Rendering Safety
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This continues [Markdown Documents](./mokly-documents.md#rendering).
+The structural allowlist applies to Markdown documents. The URL policy also
+applies to composed HTML screens, components, and pages.
 
 ## Structural Validation
 
-After logical-link rewriting, parse each final
-document with parse5. Validate its parsed body independently of the Markdown
-renderer. Validate outer wrappers too, so an injected HTML/body start tag cannot
-hide an event attribute by merging it onto an existing wrapper. Build, Check,
-on-demand rendering and export use this same boundary before accepting output.
+After logical-link rewriting, validate the composed document tree
+independently of the Markdown renderer. Validate outer wrappers too, so an
+injected HTML/body start tag cannot hide an event attribute by merging it
+onto an existing wrapper. `build`, Serve, and the base side of a comparison
+use this same boundary before a document is accepted.
 
 Only HTML-namespace elements in this table are allowed in the rendered body:
 
@@ -26,13 +30,8 @@ Only HTML-namespace elements in this table are allowed in the rendered body:
 The template additionally owns its direct-body `main` wrapper with no attributes.
 Every other body element or attribute is rejected, including `script`, `style`,
 `iframe`, `object`, `embed`, `svg`, `math`, `form`, any `on*` attribute and any
-body `style` attribute. Comments are inert and may retain validated Review-ignore
-authored markers.
-
-`href` and `src` permit only `http:`, `https:` and `mailto:` schemes, or portable
-relative/fragment URLs. Reject other schemes, controls, backslashes, leading or
-trailing whitespace, root-absolute URLs and protocol-relative URLs. Shared link
-and resource validation still checks targets, fragments and confinement.
+body `style` attribute. Comments are inert; the only comments Mokly writes are the instance and slot
+markers of the [comparison contract](./mokly-comparison.md).
 
 The outer `html` permits only `lang="en"` and the template's exact
 `style="color-scheme: light"` or `style="color-scheme: dark"`. `head` and `body`
@@ -46,22 +45,42 @@ Failure is `build-invalid` with
 
 - `element <tag> is not allowed`;
 - `attribute <name> on <tag> is not allowed`;
-- `<attribute> on <tag> is not an allowed URL`;
+- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`;
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 
-Reject unsafe output rather than silently removing markup. Failed candidates
-retain the same transactional and last-good behavior as other build failures.
+Reject unsafe output rather than silently removing markup. A rejected document
+fails `build`; Serve keeps the last good generation, as for every other render
+failure.
+
+## URL Policy
+
+After logical-link rewriting, `href` and `src` permit only `http:`, `https:`
+and `mailto:` schemes, or portable relative, query, and fragment URLs.
+A scheme starts with an ASCII letter and continues with ASCII letters,
+digits, `+`, `-`, or `.` before `:`. It must precede the first `/`, `?`, or
+`#`. A colon in a path, query, or fragment does not establish a scheme;
+`#x:y` and `?t=10:30` pass this check.
+
+Reject other schemes, including `data:`, controls, backslashes, leading or
+trailing whitespace, root-absolute URLs and protocol-relative `//` URLs.
+Shared link and resource validation still checks portable paths, targets,
+fragments and confinement. URL failures use the diagnostic above.
+
+This attribute allowlist covers `href` and `src`. HTML `srcset` and `poster`
+use the resource URL rules of the [public closure](./mokly-public-closure.md):
+local references are checked, and external and data references are not copied.
+They are resource inputs outside the Markdown attribute allowlist.
 
 ## Script Policy
 
-The generated document template contains no script. It does not add a
-`script-src 'none'` CSP meta: Serve and exported frames add Mokly's bounded
+The document template contains no script. It does not add a
+`script-src 'none'` CSP meta: the static build adds Mokly's bounded
 inspector script for authenticated link and frame behavior. That CSP would block
-the package's instrumentation too. Raw Markdown remains literal text, and the
+the package's instrumentation too. Raw Markdown is literal text, and the
 independent final allowlist prevents a renderer error from introducing executable
 elements or attributes. Historical frames keep their existing script-disabled
-sandbox under the [removed-preview contract](./mokly-removed-preview-frames.md).
+sandbox under the [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle).
 
 ## Verification
 
@@ -70,4 +89,5 @@ case and attribute variations. Preserve later prose, paragraphs, headings, lists
 blockquotes, tables, links and emphasis as text. Inject unsafe final markup after
 the renderer to prove the independent boundary rejects it. Cover element,
 attribute, checkbox and URL rules, plus events merged onto the outer wrapper.
-Keep valid CommonMark/GFM output, both schemes, Serve links and export working.
+Keep valid CommonMark/GFM output, both schemes, Serve links and the static
+output working.

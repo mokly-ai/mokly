@@ -1,6 +1,5 @@
 /** Resolve and fetch one removed entry's previous version. */
 
-import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
@@ -10,7 +9,6 @@ import type { RemovedPreviewData } from "../shell/previews.js";
 
 import { pageContent, screenContent } from "./content.js";
 
-const STABLE_ENDPOINT = `/${VIEWER_DIRECTORY}/diffs/review.json`;
 const REVIEW_FILE = "review.json";
 
 /** One historical screen view rendered in its own device frame. */
@@ -77,17 +75,8 @@ export function previewEndpoint(
   data: RemovedPreviewData,
   delivery: PreviewDelivery | undefined,
   base: string,
-  refresh: boolean,
 ): PreviewRequest | undefined {
-  if (!delivery) {
-    const endpoint = new URL(STABLE_ENDPOINT, base);
-    endpoint.searchParams.set(
-      data.kind === "screen" ? "path" : "page",
-      data.path,
-    );
-    if (refresh) endpoint.searchParams.set("refresh", "1");
-    return { endpoint };
-  }
+  if (!delivery) return undefined;
   const comparisonUrl = delivery.comparisonUrl;
   const advertised = data.published;
   if (comparisonUrl === null || !advertised) return undefined;
@@ -139,49 +128,16 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
-function generationFromUrl(value: string | URL): string | undefined {
-  const path = new URL(value).pathname;
-  return new RegExp(
-    `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/`,
-  ).exec(path)?.[1];
-}
-
 function snapshotMatches(
   data: RemovedPreviewData,
-  request: PreviewRequest,
-  responseUrl: string,
   baseCommit: string,
 ): boolean {
   if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
     return true;
   if (!data.snapshotId || !data.catalogueIdentity) return false;
-  if (
-    historicalSnapshotId(
-      data.catalogueIdentity,
-      { kind: "baseline", identity: baseCommit },
-      data,
-    ) === data.snapshotId
-  )
-    return true;
-  const response = new URL(responseUrl);
-  if (response.origin !== request.endpoint.origin) return false;
-  const requestedGeneration = generationFromUrl(
-    request.generation ?? request.endpoint,
-  );
-  const responseGeneration = generationFromUrl(response);
-  if (
-    requestedGeneration !== undefined &&
-    responseGeneration !== requestedGeneration
-  )
-    return false;
-  const generation = requestedGeneration ?? responseGeneration;
   return (
-    generation !== undefined &&
-    historicalSnapshotId(
-      data.catalogueIdentity,
-      { kind: "generation", identity: generation },
-      data,
-    ) === data.snapshotId
+    historicalSnapshotId(data.catalogueIdentity, baseCommit, data) ===
+    data.snapshotId
   );
 }
 
@@ -203,8 +159,7 @@ export async function requestPreview(
     data.kind === "screen"
       ? screenContent(data, payload, base)
       : pageContent(data, payload, base);
-  if (!snapshotMatches(data, request, response.url, parsed.baseCommit))
-    unavailable();
+  if (!snapshotMatches(data, parsed.baseCommit)) unavailable();
   return {
     content: parsed.content,
     generation: new URL(".", base).href,

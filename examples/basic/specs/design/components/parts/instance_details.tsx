@@ -1,5 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
+import { useCurrentPage } from "../../parts/design_navigation.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 
 import { footerLabelChange } from "./comparison_fixtures.js";
@@ -13,6 +14,10 @@ export function InstanceDetails({ state }: { state: ScreenPageState }) {
   const help = state === "help-selection";
   const nested = state === "nested";
   const consumer = state === "consumer";
+  const current = useCurrentPage();
+  const highlight = nested
+    ? "design/components/inspection/inspection-nested"
+    : "design/components/inspection/inspection-highlight";
   const title = toolbar ? "Toolbar" : help ? "Help hint" : "Action";
   const label = toolbar
     ? "Main"
@@ -64,13 +69,7 @@ export function InstanceDetails({ state }: { state: ScreenPageState }) {
             Highlight on screen
           </button>
         ) : (
-          <MockLink
-            to={
-              nested
-                ? "design/components/inspection/inspection-nested"
-                : "design/components/inspection/inspection-highlight"
-            }
-          >
+          <MockLink to={highlight} aria-current={current(highlight)}>
             Highlight on screen
           </MockLink>
         )}

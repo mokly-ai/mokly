@@ -36,7 +36,6 @@ const context: ShellContext = {
   base: "main",
   changedEntries: [],
   changesStatus: "ready",
-  updateVersion: 1,
 };
 
 function sections(

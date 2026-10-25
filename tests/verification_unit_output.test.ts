@@ -87,7 +87,7 @@ for (const source of [
         /warning: no test ran in tests\/passing\.test\.ts\nselected files: 1; tests run: 0;/u,
       );
       await assert.rejects(
-        runWrapper(harness.root, "run-unit.mjs", { args: ["--shard", "2/2"] }),
+        runWrapper(harness.root, "run-viewer.mjs", { args: ["--strict"] }),
         /unobserved|executed file|inventory|assigned/u,
       );
     },

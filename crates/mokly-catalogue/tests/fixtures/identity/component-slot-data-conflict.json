@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\npropSchema:\n  type: object\n  additionalProperties: false\n  required: [label]\n  properties: {label: {type: string}}\nprops: {label: Save}\nslots: [label]\n---\n<button>{{label}}<slot></slot></button>\n"
+  },
+  "errors": [
+    {
+      "code": "html-slot",
+      "message": "invalid or conflicting slot name label",
+      "path": "specs/components/button.component.html",
+      "line": 10,
+      "column": 1
+    }
+  ]
+}

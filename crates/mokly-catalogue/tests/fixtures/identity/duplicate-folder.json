@@ -1,0 +1,26 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "specs",
+        "path": "top",
+        "transparent": ["a", "b"]
+      }
+    ]
+  },
+  "files": {
+    "specs/a/_folder.json": "{}",
+    "specs/b/_folder.json": "{}",
+    "specs/a/x.md": "# X",
+    "specs/b/y.md": "# Y"
+  },
+  "errors": [
+    {
+      "code": "duplicate-folder",
+      "message": "folder top is defined twice:\n  specs/a/_folder.json\n  specs/b/_folder.json",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

@@ -1,16 +1,13 @@
 # Navigation Disclosure Persistence
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This contract owns navigation disclosure keys, storage, defaults, restoration,
 and reconciliation. Tree structure, folder rows, and sibling order come from
 the [folder contract](./mokly-folders.md#order). The
 [runtime](./mokly-runtime.md) owns Browse interaction; the
-[watch contract](./mokly-watch.md) owns the reload lifecycle.
-
-## Delivery Status
-
-The v4 storage format, the Specs and Components keys, early activation capture,
-active-route reveal, breadcrumb folder reveal, filtered-recovery fallback, and
-in-place reconciliation are implemented.
+[shell delivery contract](./mokly-shell-delivery.md) owns Serve publications,
+which update the navigation in place and never reload the page.
 
 ## Keys
 
@@ -44,7 +41,7 @@ or renamed folder disappears from the next saved map. Do not write while
 search or the Changes filter constrains the tree. A failed or unavailable
 storage write does not discard the current in-memory choice.
 
-The server default opens each present section and each top-level folder. A
+The shell default opens each present section and each top-level folder. A
 deeper folder is open only if it contains the active route. A parent entry's
 variant list is open when the active route is that parent, one of its
 variants, or within a folder member the list holds; other variant lists are
@@ -64,40 +61,27 @@ migration; there is no list of former key forms. Ignore a stored value that
 is not a JSON object as a whole; ignore invalid keys and non-boolean values
 individually.
 
-| Source of values                                                         | Fallback for a current key missing from the map |
-| ------------------------------------------------------------------------ | ----------------------------------------------- |
-| Browser storage                                                          | Server default                                  |
-| Unfiltered watched-reload `disclosures`                                  | Server default                                  |
-| Watched-reload `filterBaselineDisclosures`                               | Server default                                  |
-| Watched-reload `disclosures` while search or Changes filtering is active | Open                                            |
+| Source of values | Fallback for a current key missing from the map |
+| ---------------- | ----------------------------------------------- |
+| Browser storage  | Shell default                                   |
 
-Each user filter edit opens every disclosure to reveal matches. During a
-filtered watched reload, a newly introduced folder has not been collapsed by
-the user, so it must open; a key explicitly saved as closed remains closed.
-The pre-filter baseline always uses server defaults for missing keys so
-clearing the filter restores ordinary navigation state. Apply active-route
+Each user filter edit opens every disclosure to reveal matches. The
+pre-filter baseline always uses shell defaults for missing keys so clearing
+the filter restores ordinary navigation state. Apply active-route
 reveal after restoration, including to the baseline when it exists.
 
 Whenever navigation changes in place without a page load, reconcile the
 current disclosure map **and** any pre-filter baseline to exactly the current
 keys. Retain values of surviving keys and drop keys that disappeared. Give
-new keys the same fallback: open for the current map while filtering, server
-default for the current map otherwise, and server default for the baseline.
-Accepted comparison evidence adding or removing a Removed variant row and
-its `variants:` key is one such change. In-place reconciliation preserves every
-surviving value and does not re-run active-route reveal; background evidence
-cannot reopen a folder the user collapsed.
+new keys the same fallback: open for the current map while filtering, shell
+default for the current map otherwise, and shell default for the baseline. A
+Serve publication that adds, removes or renames a folder, a variant list, or
+a Removed variant row is one such change: a folder the user has not collapsed
+opens, and a key saved as closed stays closed. In-place reconciliation
+preserves every surviving value and does not re-run active-route reveal; a
+publication cannot reopen a folder the user collapsed.
 
-## Recovery And Versioning
-
-Watched-reload recovery stores `disclosures` and
-`filterBaselineDisclosures` as explicit maps or `null`, and requires
-`changesStatus` to be `preparing`, `pending`, `ready` or `unavailable`.
-Missing or undefined values for either field invalidate the complete snapshot.
-Reject a snapshot containing `closedFolderKeys`,
-`closedCollectionIds`, or `filterBaselineClosedFolderKeys` in full. A non-null
-baseline without active filtering is invalid. The recovery parser remains
-strict for its other fields as defined by the [watch contract](./mokly-watch.md).
+## Versioning
 
 Read and write only the current v4 disclosure key. Do not inspect, migrate or
 remove keys from previous versions. Any change to the persisted disclosure key format or

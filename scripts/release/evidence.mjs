@@ -5,8 +5,8 @@ import { promisify } from "node:util";
 
 import { validateCiReports, readReports } from "../verification/aggregate.mjs";
 import {
+  discoverNodeFiles,
   discoverBrowserFiles,
-  discoverUnitFiles,
 } from "../verification/evidence.mjs";
 
 import {
@@ -90,7 +90,7 @@ export async function runReleaseEvidence(options = {}) {
       repositoryRoot,
       validateReports: options.validateReports ?? validateCiReports,
       read: options.readReports ?? readReports,
-      discoverUnit: options.discoverUnitFiles ?? discoverUnitFiles,
+      discoverNode: options.discoverNodeFiles ?? discoverNodeFiles,
       discoverBrowser: options.discoverBrowserFiles ?? discoverBrowserFiles,
     });
     if (result.outcome === "applicable") {
@@ -180,10 +180,7 @@ async function evaluateCandidate(input) {
     if (tree.outcome !== "applicable") return tree;
     evidenceTree = tree.value;
   }
-  const [liveUnitFiles, liveBrowserFiles] = await Promise.all([
-    input.discoverUnit(input.repositoryRoot),
-    input.discoverBrowser(input.repositoryRoot),
-  ]);
+  const liveNodeFiles = await input.discoverNode(input.repositoryRoot);
   return classifyEvidence(
     {
       run: input.run,
@@ -193,8 +190,8 @@ async function evaluateCandidate(input) {
       taggedCommit: input.identity.taggedCommit,
       taggedTree: input.identity.taggedTree,
       evidenceTree,
-      liveUnitFiles,
-      liveBrowserFiles,
+      liveNodeFiles,
+      liveBrowserFiles: await input.discoverBrowser(input.repositoryRoot),
     },
     input.validateReports,
   );

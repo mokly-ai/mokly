@@ -1,14 +1,16 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
+import { test } from "./browser_test.js";
+
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
-  fixture = await viewerFixture("", {
+  fixture = await viewerFixture({
     body: '<action.Component label="Visible" /><MockLink to="action">Open Action</MockLink>',
   });
 });
@@ -28,11 +30,11 @@ for (const cross of [false, true]) {
             defaultSelection: { viewport: "both" },
           });
           const catalogue = structuredClone(
-            host.props.catalogue,
+            host.props.index,
           ) as CatalogueReadModel;
-          for (const view of catalogue.screens[0]!.views)
+          for (const view of host.details["home"]!.views)
             if (view.viewport === "desktop") view.usage = { status };
-          host.props.catalogue = catalogue;
+          host.props.index = catalogue;
           host.render();
         },
         { cross, status },
@@ -42,8 +44,7 @@ for (const cross of [false, true]) {
       );
       await page.evaluate(async () => {
         const host = window.viewerHarness.get("one");
-        const catalogue = host.props.catalogue as CatalogueReadModel;
-        const usage = catalogue.screens[0]!.views.find(
+        const usage = host.details["home"]!.views.find(
           (view) => view.viewport === "mobile",
         )!.usage;
         if (usage.status !== "ready") throw new Error("Expected ready usage");

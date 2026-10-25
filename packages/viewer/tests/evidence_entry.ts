@@ -1,4 +1,8 @@
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { DetailRequest } from "../src/catalogue/detail_fences.js";
+import type {
+  CatalogueReadModel,
+  EntryDetailV2,
+} from "../src/catalogue/types.js";
 
 import {
   startEvidenceHarness,
@@ -9,7 +13,8 @@ declare global {
   interface Window {
     evidence: EvidenceProbe;
     startEvidence(
-      model: CatalogueReadModel,
+      index: CatalogueReadModel,
+      details: readonly (readonly [DetailRequest, EntryDetailV2])[],
       origin: string,
       cross: boolean,
       sibling: "ready" | "pending" | "unavailable",
@@ -17,6 +22,12 @@ declare global {
   }
 }
 
-window.startEvidence = (model, origin, cross, sibling) => {
-  window.evidence = startEvidenceHarness(model, origin, cross, sibling);
+window.startEvidence = (index, details, origin, cross, sibling) => {
+  window.evidence = startEvidenceHarness(
+    index,
+    details,
+    origin,
+    cross,
+    sibling,
+  );
 };

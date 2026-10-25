@@ -3,80 +3,51 @@ import path from "node:path";
 
 import { readReport } from "./evidence.mjs";
 import {
-  validatePlaywrightPartition,
-  validateShardReports,
   validateUnshardedReport,
+  validateShardReports,
 } from "./report-validation.mjs";
 
-const RUNTIME_PROFILES = [["node-22.14.0"], ["node-22.14.0", "node-24"]];
-const SHARDED_SUITES = ["unit", "browser"];
-const SUITES = [...SHARDED_SUITES, "hydration"];
-const SHARDS = 4;
-const REPORTS_PER_RUNTIME = SHARDED_SUITES.length * SHARDS + 1;
-
+const RUNTIME_PROFILES = [["node-22.15.0"], ["node-22.15.0", "node-24"]];
 export function validateCiReports(reports, commit, runtimes) {
   if (!/^[a-f0-9]{40}$/.test(commit))
     throw new Error("expected commit must be a full lowercase Git SHA");
   validateRuntimeProfile(runtimes);
-  const expectedKeys = new Set(
-    SUITES.flatMap((suite) => runtimes.map((runtime) => `${suite}:${runtime}`)),
-  );
-  const expectedReports = runtimes.length * REPORTS_PER_RUNTIME;
-  if (reports.length !== expectedReports)
+  if (reports.length !== runtimes.length * 5)
     throw new Error(
-      `missing or extra CI evidence: expected ${expectedReports} reports`,
+      `missing or extra CI evidence: expected ${runtimes.length * 5} reports`,
     );
-  for (const report of reports) {
-    const key = `${report.suite}:${report.runtime}`;
-    if (!expectedKeys.has(key))
-      throw new Error(`unexpected CI evidence group ${key}`);
-  }
-  for (const suite of SHARDED_SUITES) {
-    for (const runtime of runtimes) {
-      const group = reports.filter(
-        (report) => report.suite === suite && report.runtime === runtime,
-      );
-      try {
-        validateShardReports(group, {
-          commit,
-          runtime,
-          suite,
-          total: SHARDS,
-        });
-      } catch (error) {
-        throw new Error(
-          `${suite} ${runtime} evidence failed: ${error.message}`,
-          {
-            cause: error,
-          },
-        );
-      }
-    }
-  }
+  for (const report of reports)
+    if (
+      !["viewer", "browser"].includes(report.suite) ||
+      !runtimes.includes(report.runtime)
+    )
+      throw new Error("unexpected CI evidence group");
   for (const runtime of runtimes) {
-    const browser = reports.filter(
-      (report) => report.suite === "browser" && report.runtime === runtime,
+    const group = reports.filter(
+      (report) => report.runtime === runtime && report.suite === "viewer",
     );
-    const hydration = reports.filter(
-      (report) => report.suite === "hydration" && report.runtime === runtime,
-    );
-    if (hydration.length !== 1)
+    if (group.length !== 1)
       throw new Error(
-        `hydration ${runtime} evidence failed: expected exactly one report`,
+        `viewer ${runtime} evidence failed: expected exactly one report`,
       );
+    validateUnshardedReport(group[0], { commit, runtime, suite: "viewer" });
+    const browser = reports.filter(
+      (report) => report.runtime === runtime && report.suite === "browser",
+    );
     try {
-      validateUnshardedReport(hydration[0], {
+      validateShardReports(browser, {
         commit,
         runtime,
-        suite: "hydration",
+        suite: "browser",
+        total: 4,
       });
-      validatePlaywrightPartition(browser, hydration[0]);
     } catch (error) {
-      throw new Error(
-        `hydration ${runtime} evidence failed: ${error.message}`,
-        { cause: error },
-      );
+      throw new Error(`browser ${runtime} evidence failed: ${error.message}`, {
+        cause: error,
+      });
     }
+    if (browser.some((report) => report.nodeVersion !== group[0].nodeVersion))
+      throw new Error("suites used different Node versions");
   }
 }
 
@@ -90,7 +61,7 @@ function validateRuntimeProfile(runtimes) {
     );
   if (!supported)
     throw new Error(
-      "unsupported CI runtime profile; expected node-22.14.0 or node-22.14.0,node-24",
+      "unsupported CI runtime profile; expected node-22.15.0 or node-22.15.0,node-24",
     );
 }
 

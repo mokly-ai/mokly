@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use unimock::{MockFn, Unimock};
+use unimock::{MockFn, Unimock, matching};
 
 use crate::command::CommandRunnerRunMock;
 use crate::error::Error;
@@ -49,12 +49,7 @@ fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
 
 #[test]
 fn explicit_audit_modes_require_complete_or_repository_checks() {
-    for suite in [
-        VerificationSuite::Package,
-        VerificationSuite::Unit,
-        VerificationSuite::Browser,
-        VerificationSuite::Hydration,
-    ] {
+    for suite in [VerificationSuite::Viewer, VerificationSuite::Native] {
         assert!(CheckRequest::new(Some(suite), None, None).is_ok());
         for mode in [DependencyAudit::Baseline, DependencyAudit::Strict] {
             let error = CheckRequest::new(Some(suite), None, Some(mode))
@@ -70,5 +65,41 @@ fn explicit_audit_modes_require_complete_or_repository_checks() {
                 Error::UnsupportedDependencyAudit { suite: rejected } if rejected == suite
             ));
         }
+    }
+}
+
+#[test]
+fn rust_advisory_failure_stops_both_audit_modes_before_other_checks() {
+    for mode in [DependencyAudit::Baseline, DependencyAudit::Strict] {
+        let npm_audit = match mode {
+            DependencyAudit::Baseline => "npm run dependencies:check -- --baseline",
+            DependencyAudit::Strict => "npm run dependencies:check",
+        };
+        let command_runner = Arc::new(Unimock::new((
+            CommandRunnerRunMock
+                .next_call(&|matching| {
+                    matching.func(move |command, _| command.display() == npm_audit);
+                })
+                .returns(Ok(())),
+            CommandRunnerRunMock
+                .next_call(
+                    matching!((command) if command.display() == "npm run dependencies:check:rust"),
+                )
+                .returns(Err(Error::CommandFailed {
+                    command: "npm run dependencies:check:rust".to_owned(),
+                    status: "1".to_owned(),
+                })),
+        )));
+        let runner = DefaultCheckRunner::new(
+            command_runner,
+            Arc::new(Unimock::new(())),
+            PathBuf::from("/workspace"),
+        );
+        let request = CheckRequest::new(Some(VerificationSuite::Repository), None, Some(mode))
+            .expect("valid audit mode");
+        assert!(matches!(
+            runner.run(request),
+            Err(Error::CommandFailed { command, .. }) if command == "npm run dependencies:check:rust"
+        ));
     }
 }

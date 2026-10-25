@@ -1,0 +1,77 @@
+{
+  "name": "@mokly/mokly",
+  "version": "0.15.0",
+  "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mokly",
+  "homepage": "https://github.com/mokly-ai/mokly#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/mokly"
+  },
+  "bugs": {
+    "url": "https://github.com/mokly-ai/mokly/issues"
+  },
+  "engines": {
+    "node": ">=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0"
+  },
+  "bin": {
+    "mokly": "./bin/mokly.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "config.schema.json",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "docs/guides",
+    "docs/protocol"
+  ],
+  "dependencies": {
+    "@babel/parser": "^7.29.9",
+    "@babel/traverse": "^7.29.10",
+    "@mokly/viewer": "0.6.0",
+    "esbuild": "^0.28.2",
+    "json-schema-to-ts": "^3.1.1",
+    "parse5": "^8.0.1",
+    "postcss": "^8.5.30"
+  },
+  "optionalDependencies": {
+    "@mokly/native-darwin-arm64": "0.15.0",
+    "@mokly/native-darwin-x64": "0.15.0",
+    "@mokly/native-linux-arm64-gnu": "0.15.0",
+    "@mokly/native-linux-x64-gnu": "0.15.0",
+    "@mokly/native-win32-x64-msvc": "0.15.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "node scripts/prepack.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts"
+}

@@ -4,7 +4,30 @@ import test from "node:test";
 
 import { runTestboxSuite } from "../scripts/verification/testbox-suite.mjs";
 
-import { TESTBOX_ARGUMENTS, testboxHarness } from "./helpers/testbox_suite.js";
+import {
+  TESTBOX_ARGUMENTS,
+  TESTBOX_FINGERPRINT,
+  testboxHarness,
+} from "./helpers/testbox_suite.js";
+
+test("delivery build and mode failures propagate from their own command", async () => {
+  const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", "static-delivery"];
+  for (const failure of ["build", "test:delivery:prepared"]) {
+    const harness = testboxHarness();
+    harness.outcomes.set(`npm run ${failure}`, {
+      exitCode: 7,
+      stdout: "",
+      stderr: "failed",
+    });
+    assert.equal(await runTestboxSuite(args, harness.dependencies), 7);
+    assert.equal(
+      harness.commands.some(({ args }) =>
+        args.includes("test:delivery:prepared"),
+      ),
+      failure === "test:delivery:prepared",
+    );
+  }
+});
 
 test("every failed preparation command stops before cargo and stamp updates", async () => {
   for (const failure of [
@@ -92,28 +115,22 @@ test("signals and interrupted commands cannot turn into success", async () => {
     ["SIGTERM", 143],
   ] as const) {
     const harness = testboxHarness();
-    harness.outcomes.set(
-      "cargo xtask check --executor local --suite unit --shard 1/4",
-      {
-        exitCode: null,
-        signal,
-        stdout: "",
-        stderr: "",
-      },
-    );
+    harness.outcomes.set("cargo xtask check --executor local --suite viewer", {
+      exitCode: null,
+      signal,
+      stdout: "",
+      stderr: "",
+    });
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,
     );
-    harness.outcomes.set(
-      "cargo xtask check --executor local --suite unit --shard 1/4",
-      {
-        exitCode: 0,
-        interrupted: signal,
-        stdout: "",
-        stderr: "",
-      },
-    );
+    harness.outcomes.set("cargo xtask check --executor local --suite viewer", {
+      exitCode: 0,
+      interrupted: signal,
+      stdout: "",
+      stderr: "",
+    });
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,

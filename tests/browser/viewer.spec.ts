@@ -1,16 +1,18 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import type { MoklyViewerHandle, ViewerSelection } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
+import { test } from "./browser_test.js";
+
 import type {} from "./viewer_harness.js";
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
-  fixture = await viewerFixture('colorSchemes: ["light", "dark"],');
+  fixture = await viewerFixture();
 });
 test.afterAll(async () => {
-  await fixture.close();
+  await fixture?.close();
 });
 test.beforeEach(async ({ page }) => {
   await page.goto(fixture.host.url);

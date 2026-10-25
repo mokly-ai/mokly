@@ -39,7 +39,7 @@ fn closed_stderr_preserves_information_and_error_exit_statuses() {
             "local: BLACKSMITH_ORG_TOKEN is empty or unset\n",
         ),
         (
-            vec!["check", "--executor", "remote", "--suite", "unit"],
+            vec!["check", "--executor", "remote", "--suite", "viewer"],
             1,
             "",
         ),

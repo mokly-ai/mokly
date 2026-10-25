@@ -1,8 +1,9 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { CatalogueReadModel, ViewerSelection } from "@mokly/viewer";
 
+import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
 import { screenVariantCatalogue } from "./viewer_variant_catalogue.js";
@@ -10,13 +11,15 @@ import { screenVariantCatalogue } from "./viewer_variant_catalogue.js";
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 
 test.beforeAll(async () => {
-  fixture = await followupFixture();
+  fixture = await followupFixture(
+    '[ {slug: "error", title: "Save failed", props: {}} ]',
+  );
 });
 
 test.afterAll(async () => fixture?.close());
 
 async function openScreenVariantViewer(page: Page, controlled: boolean) {
-  const catalogue = JSON.stringify(screenVariantCatalogue(fixture.catalogue));
+  const catalogue = JSON.stringify(screenVariantCatalogue(fixture.index));
   await page.goto(fixture.host.url);
   await page.waitForFunction(() => Boolean(window.viewerHarness));
   await page.evaluate(

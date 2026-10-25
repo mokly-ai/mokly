@@ -1,108 +1,85 @@
 # Removed Content Previews
 
-## Delivery Status
-
-The [removed content previews plan](../../plans/removed-content-previews.md)
-delivered typed capture, the Serve generation lifecycle, consumer export,
-repository preview, upload packaging, and the shared shell and viewer. The
-[viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
-defines the host-independent presentation. Preview names derive from paths.
-Document previews, their `Light only` note, and suppression for paired moves
-are implemented. Nothing here changes ordinary
-browsing, Added entries, changed-screen comparisons, or removed component
-variants.
-
-The note for a selected viewport with no captured historical view is fixed
-here and depicted by the design catalogue's
-[no-captured-view screen](./mokly-shell-design-inventory.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Behavior
 
-Opening a removed screen, page, or document shows the version from the pinned
-Changes baseline: the same branch-point commit that produced its Changes row,
-whether the commit has complete generated blobs or needs a
-[rebuilt baseline](./mokly-derived-baselines.md). The heading keeps
-its Removed badge, breadcrumbs keep the textual baseline ancestry, and Details
-keeps its historical metadata. A quiet label above the stage reads “Showing
-previous version.” No Current selector, comparison band, refresh control, Props
-editing, current inspector bindings, or current usage/comment markers appear.
+Opening a removed screen, page, or document shows its previous version: the
+entry's views rendered from the base commit's sources under
+[Sides](./mokly-comparison.md#sides), the same commit that produced its
+Changes row. The heading keeps its Removed badge, breadcrumbs keep the textual
+base ancestry, and Details keeps its historical metadata. A quiet label above
+the stage reads “Showing previous version.” No Current selector, comparison
+band, refresh control, Props editing, current inspector bindings, or current
+usage or comment markers appear.
 
 A removed page or document renders its historical document in the plain
 document pane; a document's Light and Dark choices follow the historical
 schemes that exist, and a page is light only. A removed document without a
 historical dark version keeps its light version under Dark, and its label
 reads `Showing previous version — Light only` when the catalogue has a dark
-axis. A removed screen renders its
-historical mobile and desktop frames; Light and Dark choices follow the
-historical views that exist. A saved scheme without a historical view falls
-back to Light with the existing light-only note. Removed screens stay outside
-comparison modes; incoming comparison URLs are declined as today. Removed
-component variants keep their existing comparison behavior. An entry the
-[move contract](./mokly-moves.md) pairs with a baseline entry is not removed
+axis. A removed screen renders its historical mobile and desktop frames; Light
+and Dark choices follow the historical views that exist. A saved scheme
+without a historical view falls back to Light with the light-only note.
+Removed screens stay outside comparison modes; an incoming comparison URL
+opens the preview instead. A removed component entry has no preview: it
+stays eligible for comparison with an explicit missing current side under
+[variant navigation](./mokly-variant-navigation.md#changes-rows). An entry
+the [move contract](./mokly-moves.md) pairs with a base entry is not removed
 and has no preview; where its kind has a comparison, that comparison uses the
-paired baseline entry as its before side.
+paired base entry as its before side.
 
-A selected viewport with no captured historical view shows a note where its
-frame would be, never a blank stage. The note reads “No previous mobile version
-was captured. Switch to Desktop to see it.”, exchanging the two viewport names
-for the desktop case. A preview carrying no views at all is unavailable
-instead, so the viewport the note names always holds a view. Selecting both
-viewports already puts that view on the stage beside the note, so only the
-first sentence is shown there. The note carries the `mbk-preview-note` class and
-its closing sentence the `mbk-preview-switch` class, the classes the design
-catalogue's stage stylesheet owns, and the second sentence is hidden rather
-than rewritten while both viewports are selected.
+A selected viewport with no historical view shows a note where its frame
+would be, never a blank stage. The note reads “No previous mobile version was
+captured. Switch to Desktop to see it.”, exchanging the two viewport names
+for the desktop case. A preview with no views at all is unavailable instead,
+so the viewport the note names always holds a view. Selecting both viewports
+puts that view on the stage beside the note, so only the first sentence is
+shown there. The note carries the `mbk-preview-note` class and its closing
+sentence the `mbk-preview-switch` class, the classes the design catalogue's
+stage stylesheet owns, and the second sentence is hidden rather than
+rewritten while both viewports are selected.
 
 Historical content is read-only in every host, including a viewer embedded
-across origins. Scrolling, text selection, and same-document anchors work, but
-the guard scrolls to anchors without changing the document URL, so `:target`
-styling does not apply. Forms cannot submit, and every link is inert: marked
-catalogue links, portable relative links, and external links do nothing, so old
-links cannot open current content or leave the preview. Historical documents
-keep the script-disabled sandbox and existing external-resource policy;
-external HTTP(S) resources load as they did, without offline copies.
+across origins. Scrolling, text selection, and same-document anchors work,
+but the guard scrolls to anchors without changing the document URL, so
+`:target` styling does not apply. Forms cannot submit, and every link is
+inert: marked catalogue links, portable relative links, and external links do
+nothing, so old links cannot open current content or leave the preview.
+Historical documents keep the script-disabled sandbox and the external
+resource policy of current documents; external HTTP(S) resources load as they
+did, without offline copies.
 
-The preview is requested when the removed entry is selected, in development and
-in static delivery alike. Ordinary browsing, All/Changes filtering, search,
-navigation, and evidence updates never request historical bytes. A served or
-packaged shell arrives holding “Previous version unavailable” without a Retry
-control, because a shell whose browser client never runs cannot honour that
-action. The client's first update replaces that with “Loading previous
-version…” and then with the previous version. A client-side failure returns to
-“Previous version unavailable” with Retry while the catalogue stays usable.
-Current bytes, current fragments, or invented content never stand in for
-missing history. Catalogues published without Changes have no removed entries
-and therefore no previews.
+The shell requests the preview when the removed entry is selected, in Serve
+and in a static build alike. Ordinary browsing, All/Changes filtering,
+search, navigation, and revision updates never request historical bytes.
+While the request runs the stage reads “Loading previous version…”; a failure
+shows “Previous version unavailable” with Retry while the catalogue stays
+usable. Current bytes, current fragments, or invented content never stand in
+for missing history. A build without Changes has no removed entries and
+therefore no previews.
 
-## Screens Reuse The Comparison
+## Delivery
 
-A removed screen's previous views are the `before` views of its existing
-comparison. The comparison engine captures every baseline view at
-`snapshotViewPath("before", ...)`, with its transitive
-resources; the selected endpoint accepts a before-only entry, and
-Changes-enabled exports package those files under the generation root. The
-shell requests the selected comparison exactly as for a changed screen, using
-the stable endpoint in development and `comparisonUrl` in static delivery, then
-renders each `removed` view from `snapshotViewPath("before", ...)`.
-Only views whose `state` is `removed` render; a response whose views carry an
-`after` side for that entry is a stale or reused generation and is treated as
-unavailable.
-Review JSON, snapshot bytes, retention, renewal by HEAD, coalescing, capacity,
-cancellation, invalidation, and shutdown follow the
-[selected comparison contract](./mokly-selected-comparisons.md) unchanged.
+A removed entry's previous version is rendered from the base commit into the
+comparison generation that the index's `comparisonUrl` names, and it is
+delivered under the generation routes of the
+[shell delivery contract](./mokly-shell-delivery.md#routes) together with the
+removed entry's [detail](./mokly-shell-delivery.md#entry-detail) at
+`mokly-viewer/diffs/generations/<generation>/entries/<path>.json`. That
+detail carries `generation` and `snapshotId`, and its `views` list the
+historical views that exist. Each historical document sits under the
+generation's before side at the address the
+[comparison pane contract](./mokly-comparison-panes.md) derives from the
+entry path and the view axes: one document per historical view for a screen,
+the light document for a page, and one document per scheme in the removed
+record's `colorSchemes` for a document.
 
-## Page And Document Previews
-
-Pages and documents have no comparison records, so a removed page or document
-adds a page selection to the same generation lifecycle. The stable request is
-`/mokly-viewer/diffs/review.json?page=<path>`, naming the removed page's or
-document's path, optionally with `refresh=1`. `page` is exclusive with `path`;
-combining them, repeating it, or naming a path that is not a selected removed
-page or document fails with the existing malformed-request or
-missing-selection responses. The response redirects to
-`/mokly-viewer/diffs/generations/selected-<uuid>/preview.json`, an immutable
-generation served with `no-store` and `nosniff`, GET/HEAD parity, and the
-existing file-map confinement:
+A removed screen's historical views are the `removed` views of its entry in
+the generation's review result v8. Pages and documents have no comparison
+record; their documents are delivered the same way. A removed page or
+document also carries the removed preview metadata v3 at
+`previews/<path>/index.json` inside the generation:
 
 ```ts
 interface RemovedPagePreview {
@@ -113,115 +90,143 @@ interface RemovedPagePreview {
 }
 ```
 
-The preview carries only the entry's path and serves pages and documents
-alike. `snapshotDocumentPath("before", path, colorScheme)` names each
-captured document below the generation root: the directory of the redirected
-`preview.json` in development, or the directory of `comparisonUrl` in static
-delivery. A page has its light document only; a document has one document per
-scheme in the removed record's `colorSchemes`. Readers accept only version 3.
+It names the entry's path and the base commit of the generation; readers
+accept only version 3.
 
-Capture reads the historical documents and its local closure through the pinned
-`BaselineReader`, with the same Git, regular-file, batch, source-exclusion,
-reserved-file and size rules as screen snapshots. The
-[resource URL rule](./mokly-changes-serving.md#resource-url-classification)
-keeps CSS `//` external and rejects non-portable HTML URLs; current files never
-replace historical bytes. The entry must belong to the accepted
-removed-entry snapshot of the generation being served; a snapshot from another
-generation is rejected before capture. No baseline is rebuilt during an HTTP
-request; unprepared derived evidence returns the existing retryable failure.
-Page generations share the selected queue, 32-request bound, ten-second
-deadline, 60-second idle retention, 64 MiB artifact and 128 MiB capacity bounds,
-epoch invalidation, and shutdown draining.
-
-Changes-enabled export, publish packaging, and repository preview capture every
-removed page and document preview from the single pinned historical-root baseline descriptor before
-installation and write it beside the comparison:
-
-```text
-mokly-viewer/diffs/generations/<generation>/review.json
-mokly-viewer/diffs/generations/<generation>/previews/<path>/index.json
-mokly-viewer/diffs/generations/<generation>/snapshots/before/mokly-generated/<path>/index.html
-mokly-viewer/diffs/generations/<generation>/snapshots/before/mokly-generated/<path>/index.dark.html
-```
-
-The dark document exists only for a document with a historical dark scheme.
-The file at `previewMetadataPath(path)` contains the same `RemovedPagePreview`
-shape. Its files enter the generation content identity, ownership inventory,
-reference validation, deployment hash, finalized ownership marker, and
-content-addressed upload. A preview whose closure is incomplete fails the
-export transactionally, as an incomplete screen snapshot does. Current-only
-delivery writes no historical files and removes a previous artifact's
-historical files when replacing it. Repository preview validates these files
-with the same typed descriptor builder as consumer export, then adds the
-resulting descriptor only to its captured static shell metadata. The
-development server it captured remains unchanged.
+Serve answers the generation's before-side routes for a removed entry from
+the bounded base capture or pinned-source fallback from the background
+classification. Uncaptured views render again from the same base inputs.
+The generation's routes answer with `no-store`, `nosniff`, and GET/HEAD
+parity. `build` writes every
+removed entry's detail, documents, and preview metadata into the generation,
+with the documents' transitive resource closure under the
+[resources](./mokly-comparison.md#resources) rule, before installation. Those
+files enter the deployment identity and the ownership inventory, and a
+preview whose closure is incomplete fails the build. A build without Changes
+writes no historical files and removes an installed artifact's historical
+files when it replaces it. External HTTP(S) and data URLs stay external;
+current files never replace historical bytes.
 
 ## Public Descriptor
 
-Catalogue v6 carries the optional preview descriptor on each removed entry:
+The removed record of the [catalogue index](./mokly-catalogue.md) carries
+`snapshotId` and the optional `preview` descriptor:
 
 ```ts
 interface RemovedEntry {
   entry: CatalogueRecord;
   folderTitles: readonly string[];
+  parentTitle?: string;
   snapshotId?: string;
   preview?: { kind: "screen" } | { kind: "page" } | { kind: "document" };
 }
 ```
 
-`snapshotId` is the opaque baseline/generation identity defined by the
-[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions).
-It selects the exact removed record and baseline generation. It is a selection
-key, not an authorization capability, and grants no access to preview bytes.
-
-`preview.kind: "screen"` states that the removed screen's comparison `before`
-views are its preview; the viewer derives them from `comparisonUrl` with
-`snapshotViewPath`. `preview.kind: "page"` and `preview.kind: "document"`
-state that the entry's metadata uses `previewMetadataPath(path)` inside the
-same generation directory as `comparisonUrl`, so the viewer derives that
-location from the generation and the entry's path. Serve leaves `preview`
-absent for pages and documents, because live page generations are selected
-through the stable endpoint rather than a catalogue-wide pointer, and the
-local shell keeps its private data.
+`snapshotId` is the opaque identity the
+[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions)
+defines. It selects the exact removed record and generation, and the removed
+entry's detail repeats it. It is a selection key, not an authorization
+capability, and grants no access to preview bytes. `preview.kind` states the
+entry's kind for the preview; Serve and `build` both emit it when a
+generation exists, and a removed component entry carries none.
 
 Removed entries have no current files and no route field; their URL is
-`/view/<path>/`, and historical HTML is never disguised as current output. The
-descriptor contains no baseline metadata, source paths, or commit identifiers
-beyond those already public in review JSON. Readers validate each published
-`snapshotId` as a unique lowercase 64-hex identity. Every removed record requires
+`/view/<path>/`, and historical HTML is never disguised as current output.
+The descriptor contains no base metadata, source paths, or commit identifiers
+beyond those public in the review JSON. Readers validate each `snapshotId` as
+a unique lowercase 64-hex identity. Every removed record requires
 `snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
-identity. With a null comparison URL, the field may be absent. A published
-baseline-backed identity remains valid before a generation exists.
+identity. With a null comparison URL, the field may be absent. Readers
+validate `preview.kind`, tolerate an absent `preview`, and reject a preview on
+a current entry or when `comparisonUrl` is null.
 
-Preview validation is separate: readers validate `preview.kind`, tolerate
-`preview` being absent, and reject a preview on current entries or when
-`comparisonUrl` is null; the derived preview metadata path stays confined to
-the advertised generation beneath `mokly-viewer/diffs/generations/**` by
-construction. The shipped [v6 fixture](./fixtures/catalogue-v6.json) exercises
-these descriptors.
-
-The embedded viewer first resolves the selected snapshot and historical entry,
-then loads preview metadata only from the advertised generation:
-`comparisonUrl` for screens and `previewMetadataPath(path)` for pages and
-documents, resolved against the source origin root for object and URL sources.
-Validated
-metadata may then name a historical document only on that source origin beneath
-the advertised generation's `snapshots/before/` directory. It never discovers
-`/mokly-viewer/diffs/review.json`, runs Git, or fetches a removed entry's path as
-current output. A catalogue without the field, or with `comparisonUrl: null`,
-shows the unavailable state without a request. Neither frame adapter mounts a
-preview frame. Previews are viewer-owned documents, so no adapter handshake or
-inspection, marker, or navigation message exists for them.
-
-Serve and static artifacts include the preview controller and comparison
-validator once in `mokly-viewer/client/react-shell.js`. Application-owned
-`@mokly/viewer` roots use the same React components and request lifecycle.
+The viewer first resolves the selected snapshot and removed record from the
+index, then fetches the removed entry's detail only from the advertised
+generation, resolved against the source origin root for object and URL
+sources, and accepts it under the
+[fences](./mokly-shell-delivery.md#fetch-and-fences) of the shell delivery
+contract. Validated views may then name a historical document only on that
+source origin beneath the advertised generation's before-side directory. The
+viewer never discovers the selected comparison endpoint, runs Git, or fetches
+a removed entry's path as current output. A catalogue with
+`comparisonUrl: null` shows the unavailable state without a request. Neither
+frame adapter mounts a preview frame: previews are viewer-owned documents, so
+no adapter handshake or inspection, marker, or navigation message exists for
+them. Serve and the static build include the preview controller once in the
+shell bundle; `@mokly/viewer` hosts use the same React components and request
+lifecycle.
 
 ## Frames And Lifecycle
 
-The fetch, acceptance, parsing, `srcdoc` presentation, link guard, and
-late-response rules for a historical document follow the separate
-[removed preview frame contract](./mokly-removed-preview-frames.md).
+Serve, the static build, and embedded viewers with either adapter use one
+presentation path. After the removed entry's detail validates, the viewer
+fetches every historical document needed by the selected viewport and scheme
+before reporting ready. Its URL must be on the configured source origin
+beneath the before-side directory of the generation that the index's
+`comparisonUrl` names and the detail's `generation` confirms. The GET carries
+the mount's abort signal and the credential rule of the
+[comparison pane contract](./mokly-comparison-panes.md). Comparison loaders
+also accept the after side; removed previews never do.
+
+Accept a response only when its final URL is the requested document address
+or that address with only its final `.html` suffix removed. An `index.html`
+document also accepts its containing directory with or without a trailing
+slash. These provider-normalized forms keep the same origin and no query or
+fragment; the status must be OK; its `Content-Type` MIME essence is
+`text/html`; and the body exposed by Fetch is at most 64 MiB (67,108,864
+bytes). MIME parameters are allowed. Count the body instead of trusting
+`Content-Length`; cancellation stops that read. Any other redirect or an
+origin change fails the URL check. A fetch, validation, read, parse, or
+presentation failure renders the “Previous version unavailable” state with
+Retry. Cancellation after unmount or replacement is silent, and late work
+cannot change the replacement stage.
+
+Parse the body as an inert HTML document. Preserve document-level comments
+before and after the document element in their parsed order. Resolve the
+first `<base href>` in document order against the document address, falling
+back to that address when there is no such element or its value is
+unresolvable. Remove every consumer `<base>` and every `<meta>` whose
+`http-equiv`, after trimming ASCII whitespace, equals `refresh` under ASCII
+case-insensitive comparison. Prepend exactly one `<base href>` for the
+effective base as `head`'s first child, including for an implicit head.
+Serialize the source doctype's name, public identifier, and system identifier
+before the document element, or preserve its absence, so the markup stays
+faithful. A `srcdoc` document always renders in no-quirks mode, so a version
+that relied on quirks or limited-quirks rendering may differ from its original
+presentation; this is accepted. Otherwise serialize parsed nodes without
+mutation; do not rewrite resource attributes, links, text, or styles.
+
+The viewer assigns that serialization to `srcdoc`, never `src`, on a frame
+with exactly `sandbox="allow-same-origin"`. The presented document therefore
+has the viewer origin while scripts, forms, popups, downloads, and top
+navigation stay disabled. The frame carries `data-mokly-preview-source` with
+the requested document address, which is also the fallback effective base
+regardless of any provider-normalized final URL. A `srcdoc` document inherits
+the embedding document's Content Security Policy; an embedded host must allow
+the artifact origin and historical inline styles for resources the document
+needs.
+
+From document commit, and again after replacement and load, the parent
+installs the guard before slow resources can leave links active. It finds
+links through the event's composed path; cancels every click, auxiliary
+click, and Enter activation regardless of target or download attributes; and
+cancels form submission. When a link has a nonempty fragment and its resolved
+URL without that fragment equals the document address, the guard scrolls the
+matching target into view. Navigation stays cancelled, so `:target` does not
+apply. Space keeps its scrolling default. If a later load is not the recorded
+presentation document, the parent reapplies the accepted `srcdoc` and guard.
+
+These edits exist only in memory; the generation's bytes stay identical.
+
+Navigation, revision or source replacement, unmount, and viewport or scheme
+changes fence late responses exactly as comparisons do: a preview response
+can never replace another entry's stage. Back/Forward, direct removed-entry
+URLs, stale or unknown snapshot ids, a replaced generation, embedded
+controlled selection, and several viewers on one page follow the
+[fences](./mokly-shell-delivery.md#fetch-and-fences) of the shell delivery
+contract and the pane [lifecycle](./mokly-comparison-panes.md#lifecycle).
+Saved viewport and scheme choices are revalidated against the historical
+views without inventing views.
 
 ## Acceptance
 

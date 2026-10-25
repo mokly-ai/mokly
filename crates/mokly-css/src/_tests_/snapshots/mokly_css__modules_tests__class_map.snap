@@ -1,0 +1,11 @@
+---
+source: crates/mokly-css/src/_tests_/modules_tests.rs
+expression: "serde_json::to_string_pretty(&exports).unwrap()"
+---
+{
+  "base": "mokly_295de5f6a611_base",
+  "card": "mokly_295de5f6a611_card mokly_295de5f6a611_base",
+  "item": "mokly_295de5f6a611_item",
+  "local": "mokly_295de5f6a611_local",
+  "pulse": "mokly_295de5f6a611_pulse"
+}

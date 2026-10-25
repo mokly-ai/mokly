@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { test } from "./browser_test.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {

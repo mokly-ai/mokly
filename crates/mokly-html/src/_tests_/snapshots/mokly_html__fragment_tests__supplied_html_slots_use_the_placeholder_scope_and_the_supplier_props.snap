@@ -1,0 +1,5 @@
+---
+source: crates/mokly-html/src/_tests_/fragment_tests.rs
+expression: html
+---
+<!doctype html><html style="color-scheme: light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home</title></head><body><!--mokly-instance:start id="r-0" path="components/js" instance="030700872af7b5723bc167691cdd9330fe35fdb2e73c74328f4a3a6a370a994a" props="eada168256c586de1db5b70a8b44f8496af5babc58439cd89108b8d10dff5dd1"--><section><!--mokly-slot:start id="r-1" instance="r-0" name="children"--><b>Supplier</b><!--mokly-slot:end id="r-1"--></section><!--mokly-instance:end id="r-0"--></body></html>

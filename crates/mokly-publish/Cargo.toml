@@ -1,0 +1,43 @@
+[package]
+name = "mokly-publish"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+async-trait = "0.1.92"
+bytes = "1.12.1"
+chrono = { version = "0.4.45", default-features = false, features = ["std", "clock"] }
+flate2 = "1.1.10"
+futures-util = "0.3.34"
+mokly-git = { workspace = true }
+mokly-model = { workspace = true }
+rand = "0.10.3"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["raw_value"] }
+tar = "0.4.46"
+thiserror = "2.0.21"
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "time", "sync", "signal"] }
+tokio-util = { version = "0.7.20", features = ["rt"] }
+tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
+url = "2.5.8"
+webpki-root-certs = "1.0.10"
+
+[features]
+mock = ["dep:unimock", "mokly-git/mock"]
+
+[dev-dependencies]
+insta = "1.49.0"
+tempfile = "3.27.0"
+unimock = "0.6.8"
+
+[dev-dependencies.mokly-git]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-platform]
+workspace = true

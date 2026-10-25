@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nuseCasePaths: [missing]\n---\n<h1>Home</h1>\n",
+    "specs/tour.use-case.yaml": "title: Tour\nsteps: [{screenPath: home}]\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-metadata",
+      "message": "specs/home.screen.html: home target missing does not name a current use-case",
+      "path": "specs/home.screen.html",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

@@ -1,190 +1,143 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { readCatalogue } from "@mokly/viewer";
+import { comparisonPaths, test } from "./comparison_test.js";
+import { staticRequests } from "./static_delivery_assertions.js";
+import { chooseScheme } from "./workspace_actions.js";
 
-import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
-import { startStaticFixture } from "./static_fixture.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
-
-let site: Awaited<ReturnType<typeof startStaticFixture>>;
-test.beforeAll(async () => {
-  site = await startStaticFixture({
-    comparisons: true,
-  });
-});
-test.afterAll(async () => {
-  await site.close();
-});
-
-test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", async ({
-  page,
-}) => {
-  const requests: string[] = [];
-  const renewals: string[] = [];
-  const failures: string[] = [];
-  page.on("request", (request) => {
-    requests.push(request.url());
-    if (request.method() === "HEAD") renewals.push(request.url());
-  });
-  page.on("response", (response) => {
-    if (response.status() >= 400) failures.push(response.url());
-  });
-  await page.goto(`${site.url}/view/home/`);
-  await expect(page.locator('[data-view-changed="scheme"]')).toBeVisible();
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await expect(page.locator("[data-workspace-changed-views]")).toContainText(
-    "Mobile · Light, Mobile · Dark, Desktop · Light, Desktop · Dark",
-  );
-  expect(requests.some((url) => /\/diffs\/|\/events/.test(url))).toBe(false);
-  const modes = page.getByRole("group", { name: "Comparison mode" });
-  for (const width of [1280, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    for (const viewport of ["mobile", "desktop", "both"] as const) {
-      await chooseViewport(page, viewport);
-      for (const scheme of ["light", "dark"] as const) {
+for (const viewport of ["mobile", "desktop", "both"] as const) {
+  for (const scheme of ["light", "dark"] as const) {
+    for (const [mode, label] of [
+      ["side", "Side by side"],
+      ["overlay", "Overlay"],
+      ["difference", "Difference"],
+    ] as const) {
+      test(`${viewport}/${scheme}: a copied native comparison presents ${label}`, async ({
+        page,
+        request,
+        baseURL,
+      }) => {
+        const index = await (
+          await request.get(`${baseURL}/mokly-viewer/index.json`)
+        ).json();
+        expect(index.changesStatus).toBe("ready");
+        expect(index.comparisonUrl).toMatch(
+          /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/,
+        );
+        expect(index).not.toHaveProperty("live");
+        const requests = staticRequests(page);
+        await page.goto(
+          `/view/${comparisonPaths.changed}/?viewport=${viewport}`,
+        );
+        await expect(page.locator("#mb-main h2").first()).toHaveText(
+          "Changed screen",
+        );
         await chooseScheme(page, scheme);
-        for (const mode of ["Side by side", "Overlay", "Difference"]) {
-          await modes.getByRole("button", { name: mode, exact: true }).click();
-          const frames = page.locator("[data-diff-stage] iframe");
-          await expect(frames).toHaveCount(viewport === "both" ? 4 : 2);
-          await expect(
-            page.frameLocator("[data-diff-stage] iframe").first().locator("h1"),
-          ).toHaveText("Previous home");
-          await expect(
-            page.frameLocator("[data-diff-stage] iframe").last().locator("h1"),
-          ).toHaveText("Current home");
-          for (const frame of await frames.all()) {
-            await expect(frame).toHaveCSS("color-scheme", scheme);
-            await expectPresentedPane(
-              frame,
-              /\/diffs\/generations\/[a-f0-9]{64}\/snapshots\//,
+        await page.getByRole("button", { name: label, exact: true }).click();
+        const viewports =
+          viewport === "both" ? ["mobile", "desktop"] : [viewport];
+        await expect(
+          page.locator("iframe[data-mokly-comparison-frame]"),
+        ).toHaveCount(viewports.length * 2);
+        for (const paneViewport of viewports) {
+          const panes = page.locator(
+            `[data-diff-viewport="${paneViewport}"] [data-compare-mode]`,
+          );
+          await expect(panes).toHaveAttribute("data-compare-mode", mode);
+          const frames = panes.locator("iframe[data-mokly-comparison-frame]");
+          await expect(frames).toHaveCount(2);
+          const generation = new URL(index.comparisonUrl, baseURL).href.replace(
+            /review\.json$/,
+            "",
+          );
+          const file = `index.${paneViewport}${scheme === "dark" ? ".dark" : ""}.html`;
+          for (const [side, title, text] of [
+            ["before", "Before", "Before screen"],
+            ["after", "Current", "After screen"],
+          ] as const) {
+            const frame = panes.locator(
+              `iframe[title="${title} — ${paneViewport} — ${scheme}"]`,
             );
+            await expect(frame).toHaveAttribute(
+              "data-mokly-preview-source",
+              `${generation}snapshots/${side}/mokly-generated/${comparisonPaths.changed}/${file}`,
+            );
+            await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
+            await expect(frame).not.toHaveAttribute("src");
+            await expect(
+              frame
+                .contentFrame()
+                .getByRole("heading", { name: text, exact: true }),
+            ).toBeVisible();
           }
+          await expect(
+            panes.locator(".browser-frame, .phone-frame"),
+          ).toHaveCount(mode === "side" ? 2 : 1);
+          if (mode === "overlay")
+            await expect(panes.locator(".mb-pane--after")).toHaveCSS(
+              "opacity",
+              "0.5",
+            );
+          if (mode === "difference")
+            await expect(panes.locator(".mb-pane--after")).toHaveCSS(
+              "mix-blend-mode",
+              "difference",
+            );
         }
-      }
-    }
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-  }
-  await page.getByRole("button", { name: "Refresh comparison" }).click();
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(4);
-  await modes.getByRole("button", { name: "Current", exact: true }).click();
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
-  const json = requests.filter((url) => url.includes("review.json"));
-  expect(json).toHaveLength(2);
-  expect(renewals).toEqual([]);
-  expect(new Set(json.map((url) => url.split("?")[0])).size).toBe(1);
-  expect(json.some((url) => url.endsWith("?refresh=1"))).toBe(true);
-  expect(requests.some((url) => url.includes("/mokly-viewer/events"))).toBe(
-    false,
-  );
-  expect(failures).toEqual([]);
-});
-
-test("added and removed screens stay current while light-only comparisons retain their sides", async ({
-  page,
-}) => {
-  await page.goto(`${site.url}/view/added/`);
-  await chooseViewport(page, "mobile");
-  await expect(page).toHaveURL(`${site.url}/view/added/`);
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(
-    page.frameLocator('[data-workspace-frame="mobile"]').locator("main"),
-  ).toHaveText("added");
-
-  await page.goto(`${site.url}/view/removed/`);
-  await chooseViewport(page, "mobile");
-  const catalogue = readCatalogue(
-    JSON.parse(site.files.get("mokly-viewer/catalogue.json")!.toString()),
-  );
-  const removed = catalogue.removedEntries.find(
-    ({ entry }) => entry.path === "removed",
-  );
-  expect(removed?.snapshotId).toMatch(/^[a-f0-9]{64}$/);
-  await expect(page).toHaveURL(
-    `${site.url}/view/removed/?snapshot=${removed!.snapshotId}`,
-  );
-  await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
-  await expect(page.locator(".mbk-previous")).toHaveText(
-    "Showing previous version",
-  );
-  await expect(
-    page
-      .frameLocator("[data-mokly-preview] .mbk-frame-mobile iframe")
-      .locator("main"),
-  ).toHaveText("removed");
-  await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
-  await page.goto(`${site.url}/view/details/`);
-  await chooseScheme(page, "dark");
-  await expect(page.locator('[data-view-changed="scheme"]')).toBeHidden();
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expect(page.locator("[data-diff-viewport] h3").first()).toContainText(
-    "Light only",
-  );
-  for (const frame of await page.locator("[data-diff-stage] iframe").all()) {
-    await expect(frame).not.toHaveAttribute(PANE_SOURCE, /\.dark\.html$/);
-    await expect(frame).toHaveCSS("color-scheme", "light");
-  }
-});
-
-test("static failures retry the same generation and abandoned requests stay cancelled", async ({
-  page,
-}) => {
-  await page.goto(`${site.url}/view/home/`);
-  await chooseViewport(page, "mobile");
-  let fail = true;
-  await page.route("**/review.json*", async (route) => {
-    if (fail)
-      await route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: "{}",
+        await expect(
+          page.getByRole("button", { name: label, exact: true }),
+        ).toHaveAttribute("aria-pressed", "true");
+        requests.assert();
       });
-    else await route.continue();
-  });
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
-  fail = false;
-  await page.getByRole("button", { name: "Try again" }).click();
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(2);
-  await page.unroute("**/review.json*");
-  let release: (() => void) | undefined;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route("**/review.json*", async (route) => {
-    await gate;
-    await route.continue().catch(() => undefined);
-  });
-  await page.getByRole("button", { name: "Current", exact: true }).click();
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expect(page.locator("[data-diff-stage]")).toHaveAttribute(
-    "aria-busy",
-    "true",
-  );
-  await page.locator('[data-route="details/index.html"]').click();
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  release?.();
-  await expect(
-    page.getByRole("button", { name: "Current", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
-});
+    }
+  }
+}
 
-test("malformed static metadata never falls back to a live comparison endpoint", async ({
+test("a copied comparison reload keeps its non-null generation URL and loads the same snapshots", async ({
   page,
+  request,
+  baseURL,
 }) => {
-  const requests: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
-  await page.goto(`${site.url}/view/home/`);
-  await page
-    .locator("html")
-    .evaluate((root) => root.removeAttribute("data-mokly-delivery"));
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
-  expect(requests.some((url) => url.includes("review.json"))).toBe(false);
+  const indexUrl = `${baseURL}/mokly-viewer/index.json`;
+  const before = await (await request.get(indexUrl)).json();
+  expect(before.comparisonUrl).not.toBeNull();
+  const requests = staticRequests(page);
+  await page.goto(
+    `/view/${comparisonPaths.changed}/?viewport=desktop&comparison=side`,
+  );
+  await expect(
+    page.locator(
+      '[data-compare-mode="side"] iframe[data-mokly-comparison-frame]',
+    ),
+  ).toHaveCount(2);
+  const source = await page
+    .locator("iframe[data-mokly-comparison-frame]")
+    .evaluateAll((frames) =>
+      frames.map((frame) => frame.getAttribute("data-mokly-preview-source")),
+    );
+  await page.reload();
+  await expect(
+    page.locator(
+      '[data-compare-mode="side"] iframe[data-mokly-comparison-frame]',
+    ),
+  ).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page
+        .locator("iframe[data-mokly-comparison-frame]")
+        .evaluateAll((frames) =>
+          frames.map((frame) =>
+            frame.getAttribute("data-mokly-preview-source"),
+          ),
+        ),
+    )
+    .toEqual(source);
+  const after = await (await request.get(indexUrl)).json();
+  expect(after.comparisonUrl).toBe(before.comparisonUrl);
+  expect(after.deploymentId).toBe(before.deploymentId);
+  expect(
+    requests.urls.filter(
+      (url) => url === new URL(before.comparisonUrl, baseURL).href,
+    ),
+  ).toHaveLength(2);
+  requests.assert();
 });

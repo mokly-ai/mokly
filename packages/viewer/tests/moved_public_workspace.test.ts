@@ -35,7 +35,9 @@ const rows = (data: WorkspaceData) =>
     status,
     removed,
   ]);
+/** The parent leads its own variant bar, then its current and removed variants. */
 const ROWS = [
+  ["ui/action", "Unmodified", false],
   ["ui/action/primary", "Unmodified", false],
   ["ui/action/ghost", "Changed", false],
   ["components/action/secondary", "Removed", true],

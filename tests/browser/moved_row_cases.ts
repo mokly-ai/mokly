@@ -1,57 +1,54 @@
 /** Moved rows, their marks, and their Details, run against one host. */
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import type {
-  MovedChangesHost,
-  MovedHostKind,
-} from "./moved_changes_fixture.js";
+import { comparisonPaths } from "../helpers/comparison_catalogue.js";
+import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
+
+import type { test as baseTest } from "./browser_test.js";
+import { awaitRoutedDetail, chooseFilter } from "./comparison_ui.js";
 import {
   ACTION,
-  INVOICE,
-  consoleErrors,
   dot,
   expectMarks,
+  INVOICE,
+  movedIndex,
+  PREVIOUS,
   row,
   showCatalogue,
   showDetails,
+  type MovedHost,
 } from "./moved_rows.js";
 
-const MOVED_ROWS = [
-  [INVOICE, "Invoice"],
-  [`${INVOICE}/overdue`, "Overdue"],
-  ["account/billing/receipt", "Receipt"],
-  ["account/billing/payment-terms", "Payment terms"],
-  [ACTION, "Action"],
-  [`${ACTION}/primary`, "Primary"],
-  [`${ACTION}/ghost`, "Ghost"],
-  [`${ACTION}/iconic`, "Iconic"],
-  ["ui/icon", "Icon"],
-  ["ui/icon/arrow", "Arrow"],
-] as const;
-
-/** Register the row and Details cases for the host `current` returns. */
-export function movedRowCases(
-  kind: MovedHostKind,
-  current: () => MovedChangesHost,
+/** Register the row and Details cases on `host`, which `test` serves. */
+export function registerMovedRowCases(
+  test: typeof baseTest,
+  host: MovedHost,
 ): void {
-  for (const width of kind === "viewer" ? [1280] : [390, 1280])
+  for (const width of host.widths)
     test(`${width}px: Changes keeps one Moved row per paired entry, with no changed mark`, async ({
       page,
+      request,
+      baseURL,
     }) => {
       await page.setViewportSize({ width, height: 900 });
-      const errors = consoleErrors(page);
-      await current().open(page, "home");
+      const { count, moved } = await movedIndex(request, baseURL);
+      expect(moved.map(([path]) => path)).toEqual(
+        expect.arrayContaining([INVOICE, ACTION, moves.pureMovedScreen]),
+      );
+      await host.open(page, comparisonPaths.unchanged);
       await showCatalogue(page);
       await expect(row(page, INVOICE)).not.toContainText("Moved");
       for (const removed of [
-        "billing/invoice/paid",
-        `components/action/secondary`,
+        moves.removedInvoiceVariant,
+        moves.removedActionVariant,
       ])
         await expect(row(page, removed)).toBeHidden();
-      await page.click('[data-filter="changed"]');
-      await expect(page.locator('[data-filter="changed"]')).toContainText("12");
-      for (const [entry, title] of MOVED_ROWS) {
+      await chooseFilter(page, "changed");
+      await expect(page.locator('[data-filter="changed"]')).toContainText(
+        String(count),
+      );
+      for (const [entry, title] of moved) {
         await expect(row(page, entry)).toHaveAccessibleName(`${title} · Moved`);
         expect(await dot(page, entry)).toBe("none");
       }
@@ -72,51 +69,42 @@ export function movedRowCases(
             .locator(`[data-nav-disclosure="variants:${parent}"]`)
             .locator("a[data-nav-row]"),
         ).toHaveText(labels, { useInnerText: true });
-      await expect(row(page, "home")).toBeHidden();
-      for (const previous of ["billing/", "components/"])
-        await expect(
-          page.locator(
-            `nav.mbk-nav a[data-nav-row][data-entry-id^="${previous}"]`,
-          ),
-        ).toHaveCount(1);
-      await page.click('[data-filter="all"]');
+      await expect(row(page, comparisonPaths.unchanged)).toBeHidden();
+      // A paired base path keeps no row; only its removed variants remain.
+      await expect(
+        page.locator(
+          `nav.mbk-nav a[data-nav-row][data-entry-id^="${PREVIOUS}/"]`,
+        ),
+      ).toHaveCount(2);
+      await chooseFilter(page, "all");
       await expect(row(page, INVOICE)).not.toContainText("Moved");
-      expect(errors).toEqual([]);
     });
 
   test("All marks a moved row only when its entry changed beyond the move", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const errors = consoleErrors(page);
     for (const [entry, rows] of [
       [
-        `${INVOICE}/overdue`,
+        moves.keptInvoiceVariant,
         [
           [INVOICE, "Invoice", true],
-          [`${INVOICE}/overdue`, "Overdue", false],
-          ["account/billing/receipt", "Receipt", false],
-          ["account/billing/payment-terms", "Payment terms", false],
+          [moves.keptInvoiceVariant, "Overdue", false],
+          [moves.pureMovedScreen, "Receipt", false],
+          [moves.movedPage, "Payment guide", false],
         ],
       ],
       [
-        `${ACTION}/primary`,
+        moves.unchangedMovedVariant,
         [
           [ACTION, "Action", true],
-          [`${ACTION}/primary`, "Primary", false],
-          [`${ACTION}/ghost`, "Ghost", true],
-          [`${ACTION}/iconic`, "Iconic", true],
-        ],
-      ],
-      [
-        "ui/icon/arrow",
-        [
-          ["ui/icon", "Icon", false],
-          ["ui/icon/arrow", "Arrow", false],
+          [moves.unchangedMovedVariant, "Primary", false],
+          [moves.metadataMovedVariant, "Ghost", true],
+          [moves.nestedMovedVariant, "Iconic", true],
         ],
       ],
     ] as const) {
-      await current().open(page, entry);
+      await host.open(page, entry);
       await expectMarks(page, rows);
     }
     await expect(row(page, ACTION)).not.toHaveAttribute("data-changed", /./u);
@@ -124,19 +112,17 @@ export function movedRowCases(
       "data-changed-variants",
       "true",
     );
-    expect(errors).toEqual([]);
   });
 
   test("Details name the path each moved entry came from", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const errors = consoleErrors(page);
     for (const [entry, previous, open] of [
-      [INVOICE, "billing/invoice", "tab"],
-      [`${INVOICE}/overdue`, "billing/invoice/overdue", "tab"],
-      ["account/billing/payment-terms", "billing/payment-terms", "summary"],
-      [`${ACTION}/ghost`, "components/action/ghost", "tab"],
+      [INVOICE, `${PREVIOUS}/invoice`, "tab"],
+      [moves.keptInvoiceVariant, `${PREVIOUS}/invoice/overdue`, "tab"],
+      [moves.movedPage, `${PREVIOUS}/guide`, "summary"],
+      [moves.metadataMovedVariant, `${PREVIOUS}/action/ghost`, "tab"],
     ] as const) {
-      await current().open(page, entry);
+      await host.open(page, entry);
       if (open === "tab") await showDetails(page);
       else await page.locator("[data-mokly-details] summary").click();
       const moved = page.locator(".mbk-meta-row", {
@@ -147,35 +133,33 @@ export function movedRowCases(
         moved.locator("xpath=preceding-sibling::*[1]"),
       ).toContainText("Source");
     }
-    expect(errors).toEqual([]);
   });
 
   test("a pure move opens Unmodified and its comparison details name its previous path", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const errors = consoleErrors(page);
-    await current().open(page, "account/billing/receipt");
+    await host.open(page, moves.pureMovedScreen);
     await expect(page.locator(".mbk-entry-status")).toHaveText("Unmodified");
+    await awaitRoutedDetail(page, moves.pureMovedScreen);
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),
     ).toHaveCount(0);
     await showDetails(page);
     const evidence = page.locator("[data-workspace-evidence]");
     await expect(evidence).toContainText(
-      "The previous version is at billing/receipt, where it was before the move.",
+      `The previous version is at ${PREVIOUS}/receipt, where it was before the move.`,
     );
     await expect(evidence).toContainText("No changes to this screen.");
     await page.reload();
     await expect(evidence).toContainText("No changes to this screen.");
-    expect(errors).toEqual([]);
   });
 
   test("a variant removed from a moved screen opens with links to that screen", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await current().open(page, "billing/invoice/paid");
+    await host.open(page, moves.removedInvoiceVariant);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );
