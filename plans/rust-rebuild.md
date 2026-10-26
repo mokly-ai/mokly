@@ -5466,19 +5466,31 @@ check passes on this commit.
   - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
     98 B post-merge. The source identity work landed in `dc4d8127`. The
     one-tokenizer boundary decision remains open. No default has been applied.
+  - The user's decision B on the one-tokenizer item (2026-10-26) completed
+    that part in `3c90b1e1`: the catalogue checks and the tree read the tokens
+    of one driver, and the tree builder chooses every text mode. Still open
+    under 98 B: serialization still predicts the plaintext point and keeps the
+    escaped-text retry, instead of option B's escaped first pass that finds
+    the HTML `plaintext` element by its repair id.
 
-- [ ] Split the public HTML parser into an authored parse and a
+- [x] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
       The entry points are complete in `6219b4a4`. Item 115's remaining work
       is the shared catalogue boundary, which remains open under the
       one-tokenizer decision.
+  - Completed on 2026-10-26: typed parse inputs under the user's decision B
+    on the graph key scan item in `940486d5`, and the shared boundary under
+    the user's decision B on the one-tokenizer item in `3c90b1e1`.
 
-- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
+- [x] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
       option A merged as `033e5059`. The catalogue token types are complete in
       `dc4d8127`. Item 116's remaining work is the tree adapter, which remains
       a second html5gum user while the one-tokenizer boundary decision is open.
+  - Completed on 2026-10-26 under the user's decision B on the one-tokenizer
+    item, in `3c90b1e1`: the tree adapter moved into the catalogue boundary,
+    and `mokly-html` no longer depends on html5gum.
 
 - [ ] HTML pipeline phase 2 review 1, finding 1: the differential harness
       reads repository HTML from disk, compares only bytes, and does not assert
@@ -5487,22 +5499,25 @@ check passes on this commit.
       assert position tables, and add each phase 2 review case, Small; B, also
       run an html5lib tree-construction corpus, Medium. Recommended: B.
       Apply no option.
-- [ ] HTML pipeline phase 2 review 1, finding 2: graph key scans use delivered
+- [x] HTML pipeline phase 2 review 1, finding 2: graph key scans use delivered
       parsing for authored bodies. Severity Low, effort Medium, category
       performance. Options: A, use the authored parse without positions,
       Medium; B, give every parse purpose its own input type, Large.
       Recommended: A. Apply no option.
+  - User decision (2026-10-26): B. Done in `940486d5` with key tests for
+    wrapper references, wrapper links, and saved slots.
 - [x] E2b finding 1: a Markdown link under `plans/` changed one document's
       two scheme keys and the deployment identity when its text changed.
       Severity Low, effort Medium, category performance. User decision 1
       (2026-10-26): A, exclude planning Markdown from document identity.
       Fixed in `735c7d2e` with a regression test and the document contract.
-- Outside phase 2 review 1, resolved by user decision 4 B (2026-10-26): the
-  token pass in `html_token_conversion.rs` kept its own integration point
-  list without SVG `desc` or encoded MathML `annotation-xml`. The file is
-  gone, and the token checks now read the tree builder's text modes.
+- Outside phase 2 review 1, resolved by the one-tokenizer decision B
+  (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
+  kept its own integration point list without SVG `desc` or encoded MathML
+  `annotation-xml`. The file is gone, and the token checks now read the tree
+  builder's text modes.
 
-- [ ] One tokenizer run for the checks and the tree, covering decisions 98 B
+- [x] One tokenizer run for the checks and the tree, covering decisions 98 B
       and 116 C. Severity Medium, effort Large. The checks still run their own
       html5gum pass and guess text modes. The tree adapter is a second html5gum
       user. The catalogue cannot depend on `mokly-html` without a cycle.
@@ -5514,6 +5529,7 @@ check passes on this commit.
       implement the trait in `mokly-html`, and inject it into catalogue
       preparation, Large; D, move the shared boundary into a new lower-level
       crate, Large. Recommended: B. No option is applied.
+  - User decision (2026-10-26): B. Done in `3c90b1e1`.
 - [ ] Fix-round commits that do not build. Severity Medium, effort Medium,
       category process. The affected commits are `b9dad262`, `e877ca04`,
       `a5e7461b`, `62e1e3f7`, and `fd3fccba`. Options: A, record the commit map
@@ -5526,9 +5542,21 @@ check passes on this commit.
       A, call the catalogue rule and reserved-navigation check from
       `filter_attributes`, and correct its module doc, Small; B, keep both
       lists, Small. Recommended: A. No option is applied.
-- Outside phase 2 review 1, resolved by user decision 4 B (2026-10-26): the
-  production `unreachable!()` and `unwrap()` calls left with
-  `html_token_conversion.rs`.
+  - User decision (2026-10-26): A. Composition uses the catalogue rule
+    since `d0627104`. The reserved navigation part of A is not applied: it
+    makes composition evaluate those values, so a saved-slot `mokly-ignore`
+    with `data-mokly-link='{{missing}}'` fails with `html-props`. Open
+    decision, severity Low, effort Small. Options: A, keep dropping reserved
+    navigation names in composition, Small; B, keep them and accept the new
+    failure, Small; C, reject them in saved slots as in templates, Small.
+    Recommended: A.
+- Outside phase 2 review 1, resolved by the one-tokenizer decision B
+  (2026-10-26) in `3c90b1e1`: the production `unreachable!()` and `unwrap()`
+  calls left with `html_token_conversion.rs`.
+- Outside the 2026-10-26 decision work:
+  `crates/mokly-catalogue/src/templates.rs` at lines 163-172 fails standard
+  hyphenated SVG and MathML names, such as `annotation-xml`, as unknown
+  elements. Separate branch.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
@@ -5777,7 +5805,7 @@ does not ask the user before the merge.
   - Saved slots skip the forbidden and unknown element checks, because a
     new build error needs the user's yes (item 128 is open).
 
-- [ ] Resolve user item 129 (F21 review finding 5): the empty-slot
+- [x] Resolve user item 129 (F21 review finding 5): the empty-slot
       regression test no longer tests its fix. After `22657ea0`, both
       wrappers in the plaintext-repair test have positions, so the test
       passes with the old code. Severity Low, test, effort Small. Options:
@@ -5788,6 +5816,9 @@ does not ask the user before the merge.
   - The source-identity redesign replaced the old located parser helper. No
     option of item 129 was applied. The empty-slot regression decision remains
     open.
+  - User decision 129 (2026-10-26): D, rewrite the test so that the repair
+    moves positions past an empty slot. Done in `75ec1ad4`. The test fails
+    when the repair skips empty slots and when it copies no positions.
 
 - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
       commits that do not build. `mokly-catalogue` does not compile from
