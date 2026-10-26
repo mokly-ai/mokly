@@ -82,10 +82,11 @@ types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
 The authored HTML sink removes ordinary unknown ignore-wrapper attributes when
-it creates elements. The delivered sink keeps those attributes so resource
-closure and callback documents see the same bytes as the browser. The token
-pipeline gives authored elements their source locations before HTML table
-repair. Diagnostic identities do not expose discarded values.
+it creates elements. The delivered sink keeps those attributes until
+composition filters them before it evaluates conditions. Callback documents
+use the delivered parser, but the browser does not receive the wrapper nodes.
+The token pipeline gives authored elements their source locations before HTML
+table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
 and attribute. Their values are not evaluated. Strict builds fail on these
 warnings. Reserved navigation metadata and duplicate-navigation failures

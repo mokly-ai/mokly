@@ -5464,33 +5464,35 @@ check passes on this commit.
     Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
     request.
   - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
-    98 B post-merge. The source identity work landed in `dc4d8127`. CR5
-    fallback leaves the catalogue checks on their existing token boundary.
-    A new decision is required before the one-pipeline boundary changes.
+    98 B post-merge. The source identity work landed in `dc4d8127`. The
+    one-tokenizer boundary decision remains open. No default has been applied.
 
 - [ ] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
-      The entry points are complete in `6219b4a4`, but CR5 leaves the shared
-      catalogue boundary open.
+      The entry points are complete in `6219b4a4`. The shared catalogue
+      boundary remains open under the one-tokenizer decision.
 
 - [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
       option A merged as `033e5059`. The catalogue token types are complete in
-      `dc4d8127`, but CR5 leaves the tree adapter as a second html5gum user.
+      `dc4d8127`. The tree adapter remains a second html5gum user while the
+      one-tokenizer boundary decision is open.
 
-- [ ] CR11 review item: the differential harness reads repository HTML from
-      disk, compares only bytes, and does not assert source positions. Severity
-      Medium, test. Options: A, use tracked fixtures, compare trees with
-      positions removed, assert position tables, and add each CR1-CR10 case,
-      Small; B, also run an html5lib tree-construction corpus, Medium.
-      Recommended: B. Apply no option in CR1.
-- [ ] CR11 review item: graph key scans use delivered parsing for authored
-      bodies. Severity Low, performance. Options: A, use the authored parse
-      without positions, Medium; B, give every parse purpose its own input
-      type, Large. Recommended: A. Apply no option in CR1.
-- Outside CR1 scope: `crates/mokly-catalogue/src/html_tokens.rs` does not
-  model SVG `desc` or encoded MathML `annotation-xml` integration points.
+- [ ] HTML pipeline phase 2 review 1, finding 1: the differential harness
+      reads repository HTML from disk, compares only bytes, and does not assert
+      source positions. Severity Medium, effort Medium, category test.
+      Options: A, use tracked fixtures, compare trees with positions removed,
+      assert position tables, and add each phase 2 review case, Small; B, also
+      run an html5lib tree-construction corpus, Medium. Recommended: B.
+      Apply no option.
+- [ ] HTML pipeline phase 2 review 1, finding 2: graph key scans use delivered
+      parsing for authored bodies. Severity Low, effort Medium, category
+      performance. Options: A, use the authored parse without positions,
+      Medium; B, give every parse purpose its own input type, Large.
+      Recommended: A. Apply no option.
+- Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
+  does not model SVG `desc` or encoded MathML `annotation-xml` integration points.
   Separate branch.
 
 - [ ] CR5 decision: one tree-driven token run must also serve catalogue checks.
@@ -5499,8 +5501,8 @@ check passes on this commit.
       token/tree boundary into a new lower-level crate and route catalogue and
       HTML through it, Large; B, keep the two boundaries and revise decisions
       98 B and 116 C, Large. Recommended: A. No default is applied.
-- Outside CR1 scope: `crates/mokly-catalogue/src/html_tokens.rs` retains
-  production `unreachable!()` and `unwrap()` calls. Separate branch.
+- Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
+  retains production `unreachable!()` and `unwrap()` calls. Separate branch.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
@@ -5757,9 +5759,9 @@ does not ask the user before the merge.
       positioned wrapper, and assert that the other has no position, Small;
       B, the source-identity redesign of the HTML pipeline, user decision
       98 B, Large. Recommended: A until phase 2 of 98 B lands.
-  - Phase 2 removed `parse::located` with the source-identity redesign. No
-    option of item 129 was applied. The old empty-slot fix is obsolete and
-    remains open only as a recorded review decision.
+  - The source-identity redesign replaced the old located parser helper. No
+    option of item 129 was applied. The empty-slot regression decision remains
+    open.
 
 - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
       commits that do not build. `mokly-catalogue` does not compile from

@@ -122,7 +122,8 @@ entry bodies except for forbidden and unknown element checks while plan item
 checks during this interim rule.
 The HTML token boundary returns Mokly-owned token and span types. Catalogue
 consumers of authored HTML call `html_tokens::parse`. The tree-building adapter
-has a separate html5gum integration until CR5 is decided.
+has a separate html5gum integration while the one-tokenizer boundary decision
+remains open.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
@@ -205,7 +206,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
-- [HTML token boundary](./src/html_tokens.rs) owns spans, tokens, and ignore-wrapper filtering before token consumers run.
+- [HTML token boundary](./src/html_tokens.rs) and its conversion helper own spans, tokens, and ignore-wrapper filtering before token consumers run.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).
 

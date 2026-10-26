@@ -10,7 +10,7 @@ pub use crate::html_token_types::{
 };
 use crate::template_types::ignore_attribute_allowed;
 
-/// One token and the diagnostics that must survive attribute normalization.
+/// One authored token and the diagnostics retained at the token boundary.
 pub struct ParsedToken {
     /// The token visible to template, link, and source-location consumers.
     pub token: Token,
