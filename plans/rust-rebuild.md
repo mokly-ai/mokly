@@ -5511,6 +5511,32 @@ check passes on this commit.
     worker now registers it after consumer preloads. Option B also removes
     this class.
 
+- [ ] Resolve 117 C port review 2 finding 1 (docs or spec): the loader-flag
+      fix in `6ce66aec` drops one hook module path. Under a loader flag, the
+      worker now registers the asynchronous observer after consumer
+      preloads. So a hook module that a preload registers and that the
+      loader hooks supply gets no path, although the protocol says that
+      such modules keep their paths. Main never records hook module paths.
+      Severity Low, docs or spec, effort Small for B. Options: A, state the
+      gap in the protocol and the README, Small; B, under a loader flag,
+      also register the observer just before the first consumer
+      `module.register` call, and add a hook-path case, Small; C, decide it
+      with the 117 C port finding, whose option B removes the asynchronous
+      observer and needs A in a wider form, Medium. Recommended: B. No
+      option is applied.
+
+- [ ] Resolve 117 C port review 2 finding 2 (test): the release inventory
+      check does not require `dist/sidecar/postcss-async-loader.mjs`, which
+      the preload loads by path through `module.register`. A build that
+      drops it still passes the release check, and PostCSS then fails for
+      consumers with module hooks or a loader flag. Severity Low, test,
+      effort Small for A. Options: A, require the bundle in
+      `scripts/release/package_reports.mjs` and add it to the missing-file
+      cases of `tests/release_native.test.ts`, Small; B, one shared list of
+      the separate sidecar bundles for the build and the release check,
+      Large. Both options add a release rejection. Recommended: A. No
+      option is applied.
+
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
       the Details end with the terminal line "No changes to this screen.",
@@ -6219,3 +6245,7 @@ does not ask the user before the merge.
 - Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
   the Loading and recovery designs show the preview in the stage, but the
   product shows "Loading preview…". Separate branch.
+- Outside the 117 C port review scope: `scripts/release/package_reports.mjs`:
+  the required CLI file list does not name `dist/sidecar/parent-watchdog.js`,
+  which `packages/mokly/src/sidecar/parent-input.ts` loads by path. Separate
+  branch.
