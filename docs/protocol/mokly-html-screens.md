@@ -68,23 +68,22 @@ when true and removes it when false; an absent optional prop substitutes the
 empty string in text and removes such an attribute; `{{…}}` naming an
 undeclared prop, an array, or an object without a path fails with
 `html-props`; `{{` that does not close is ordinary text. Every other attribute
-is ordinary HTML and is never interpreted. A component body uses this same
-template language with its own props and adds slot placeholders under the
-[HTML components contract](./mokly-html-components.md#body). One parser and
-one renderer serve both.
+is ordinary HTML and is never interpreted. One parser and renderer serve both.
 
 Authored screens, components, and pages use the authored parser. It removes
-unknown wrapper attributes before composition and attaches source locations.
-Delivered documents, sidecar pages, and `srcdoc` values use the delivered
-parser. It keeps authored attributes for resource and style checks.
+unknown wrapper attributes and attaches source locations. Delivered documents,
+sidecar pages, and `srcdoc` values use the delivered parser, which keeps
+authored attributes for resource and style checks.
+
 Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
 `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
-A hyphenated element name resolves against the component registry. The name can
-belong to an HTML component or a JavaScript component registered with `element`.
-An unknown name fails with `html-element`. Every `mokly-` name is reserved for
-Mokly. `mokly-ignore` and `mokly-ignore-scope` are defined below, `mokly-slot`
-belongs to the [render sidecar](./mokly-sidecar.md), and other names fail.
+A hyphenated element name resolves against the component registry. The sidecar
+`describe` call reports JavaScript component names. An unknown hyphenated name
+fails with `html-element`, because plain rendering would lose the component.
+Every `mokly-` name is reserved. `mokly-ignore` and `mokly-ignore-scope` are
+defined below, `mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md),
+and other names fail with `html-element`.
 
 ## Component Elements
 

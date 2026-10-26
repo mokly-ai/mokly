@@ -29,7 +29,7 @@ has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
 The authored parser and delivered-document parser use one token-driven HTML5
-pipeline. Authored parses remove unknown ignore-wrapper attributes and attach
+pipeline with scripting disabled. Authored parses remove unknown ignore-wrapper attributes and attach
 source locations. Delivered parses keep every authored attribute. Composition
 re-parses its output with the delivered parser. Usage and comparison use that
 browser tree. Split instance, slot, and ignore regions lose their regions.
