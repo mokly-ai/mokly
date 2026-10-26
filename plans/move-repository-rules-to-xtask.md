@@ -38,8 +38,7 @@ stacked on this one; the end-to-end tests of the binary, which user decision
 1 B ports under `port-cli-tests-to-rust.md`; and the rebuild comparison
 tooling, which user decision 4 B deletes in another workspace.
 
-Baseline on 2026-10-26: the 18 Node files run 45 cases and 20 sub-cases, 65
-tests in all, in 1.4 seconds. Evidence:
+The Node baseline of 2026-10-26 is in
 `.context/move-repository-rules-to-xtask/node-baseline.log` and
 `node-inventory.txt`.
 
@@ -183,5 +182,17 @@ Evidence: `case-map.md` and `fault-injection.md` in
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 of 2026-10-26 fixed findings 1 and 3. Report:
+    `.context/move-repository-rules-to-xtask/review-1.md`.
+  - 2. Two publish action checks became stricter. Severity Low, effort
+       Small. Recommended: A, keep the standard-error check and confirm it
+       with the user.
+  - Outside the review scope: `docs/protocol/ci-workflow.md:220`: the page
+    says the policy test requires full-history checkouts in CI and preview
+    jobs, but the check covers `ci.yml` only. Separate branch.
+  - Outside the review scope: `docs/protocol/mokly-guides.md:171`: the page
+    says root tests never match prose with regular expressions, but the
+    guide copy and version tests match phrases in guide prose. Separate
+    branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.

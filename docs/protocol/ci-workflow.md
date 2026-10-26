@@ -115,7 +115,7 @@ Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
 or newer: older versions drop the lockfile's `libc` fields, which select the
 glibc or musl build of a native package
 ([npm/cli#9025](https://github.com/npm/cli/pull/9025)), and the
-`@mokly/native-<target>` packages depend on that selection. A tooling test
+`@mokly/native-<target>` packages depend on that selection. A repository test
 keeps every workflow npm pin equal to `packageManager`, requires CI and release
 jobs to set up that npm before `npm ci`, and rejects pins older than npm
 11.11.0.
@@ -127,7 +127,7 @@ available tier, which is 6 vCPUs. The publishing exception is any job that publi
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
-self-hosted runner such as Blacksmith. A tooling test enforces both rules.
+self-hosted runner such as Blacksmith. A repository test enforces both rules.
 A second, narrow exception permits only the `darwin-x64` row of the release,
 release-check, and native bootstrap build matrices on GitHub-hosted
 `macos-26-intel`, with `actions/checkout`. Blacksmith's
@@ -213,8 +213,8 @@ workflow. The hosted CI graph and its release profile keep their required jobs.
 
 ## Workflow Verification
 
-Tooling tests under `tests/` verify workflow files by their properties and by
-running their scripts. The policy test requires every `uses:` revision across
+Repository tests verify workflow files by their properties and by running their
+scripts. The policy test requires every `uses:` revision across
 the workflows and composite actions to be a 40-character lowercase commit. It
 forbids untrusted pull request fields in `ci.yml` `run:` steps and `${{` in
 Dependency Audit and native bootstrap `run:` steps. It requires a full-history
