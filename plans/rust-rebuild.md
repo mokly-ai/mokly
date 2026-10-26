@@ -6117,7 +6117,7 @@ does not ask the user before the merge.
       limit for local gates in the delegate rules to 3 hours; B, find the
       slowest suite and reduce its cost. Recommended: B.
 
-- [ ] Resolve user item 189 (product, the wider fix of 187): a comparison
+- [x] Resolve user item 189 (product, the wider fix of 187): a comparison
       `review.json` grows with every rule record of every added or changed
       view, and each record repeats the full stylesheet path. A static host
       with a per-file limit, such as Cloudflare Pages with 25 MiB, then
@@ -6127,6 +6127,14 @@ does not ask the user before the merge.
       reference (a new review format version; Large); C, split
       `review.json` into files per entry (a new format version; Large).
       Recommended: B.
+  - The 2026-10-26 discussion added two options. D keeps a small
+    `review.json` summary for receivers only. E removes `review.json`: the
+    index and the entry details carry its data, and the Plan request sends
+    the index. Mokly Cloud reads `review.json` on its server but still
+    parses review v6 only, so it must change in either case.
+  - User decision 189 (2026-10-26): E. The
+    [remove the review file plan](./remove-review-json.md) carries out the
+    work, including the Mokly Cloud change.
 
 - [x] Resolve user item 190 (PR #200 strict audit): three `undici`
       advisories and a stale `braces` exception failed the strict
