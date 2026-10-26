@@ -44,7 +44,9 @@ Create `mokly.config.json` in your repository root:
 ```
 
 Mokly searches upward for `mokly.config.json`, or reads the file that
-`--config` names. Paths resolve from the configuration file. Without `roots`,
+`--config` names. Filesystem paths, such as each root's `dir`, resolve from the
+configuration file. Each root's `files` globs resolve from that root, and
+`watch.rules` paths resolve from the repository root. Without `roots`,
 Mokly reads the `specs` directory beside the file. `$schema` gives your editor
 validation and completion from the schema that this package ships. The
 [configuration guide](../../docs/guides/authoring/config.md) describes every

@@ -1,6 +1,9 @@
 //! Allowlisted current catalogue projection for Serve and static output.
-//! Each public field is copied by name. No model entry, record, or evidence value is
-//! serialized whole, so a new private field cannot reach public JSON.
+//! Entry, metadata, content, and visual fields are copied by name, so a new private field
+//! of `ModelEntry`, `EntryMetadata`, `EntryContent`, or `VisualEntry` cannot reach public
+//! JSON. Use-case steps, prop schemas, and controls are cloned whole, because the public
+//! records reuse the model types `UseCaseStep`, `PropSchema`, and `ComponentControl`.
+//! Every field of those three types is public.
 
 use std::collections::BTreeMap;
 

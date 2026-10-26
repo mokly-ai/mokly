@@ -89,7 +89,10 @@ and neither of the other two, so a generation's files never change.
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
 present only while Changes is `ready` under
 [CSS attribution membership](./mokly-css-attribution-membership.md);
-`CatalogueUsage` and `ComponentWireProps` are the catalogue contract's shapes.
+`CatalogueUsage` has the shape of the
+[usage records](./mokly-component-usage-records.md#record-shapes).
+`ComponentWireProps` has the shape of the
+[canonical wire props](./mokly-component-props.md#canonical-wire-props).
 `reasons` carries classification reasons in the review v8 `EntryChangeReason` shape and sorted unique order, under the same reason policy.
 Pages and documents have no review record. Their details carry the classification's direct reasons under this policy.
 Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field.

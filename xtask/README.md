@@ -52,12 +52,12 @@ Arguments remain separate from the program name.
 
 ### Suites
 
-| Suite      | Content                                                                                                                                                                                                                                                                      |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository | The dependency audits, the generated-type check, Prettier, ESLint, the length audits, the four repository ratchets, the Rust checks, the package builds, and the Rust tests, in the order of the [Repository gate contract](../docs/protocol/ci-verification-repository.md). |
-| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                                                         |
-| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded.                                    |
-| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                                        |
+| Suite      | Content                                                                                                                                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                       |
+| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                      |
+| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded. |
+| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                     |
 
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run

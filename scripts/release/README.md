@@ -12,7 +12,9 @@ defines version selection and publication requirements.
 - `inspect-native.mjs` checks packed native manifests and TLS dependencies.
 - `build-native.mjs` builds, or takes, one target's binary and packs its
   native package archive with a report.
-- `bootstrap.mjs` packs one native registration archive from a reviewed commit.
+- `bootstrap.mjs` packs one registration archive from a reviewed commit:
+  `@mokly/viewer` by default, or a named `@mokly/native-{target}` package on a
+  host of that target.
 
 ## Preparation and publication
 

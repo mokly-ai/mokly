@@ -30,14 +30,23 @@ the comparison build.
 ## Browser errors and waits
 
 - The automatic error fixture in `browser_test.ts` applies the console rule of
-  `console_notices.ts`. Add an allowance with `allowBrowserError` or
-  `expectedBrowserErrors`, with the exact message and URL.
-- The allowed cases are: the own-origin root favicon in portable documents,
-  the HTTP-only inspector URL in manual file delivery, declared sandbox
-  denials, and data favicons in host documents.
-- To let the page settle without wall-clock waits, wait two animation frames,
-  pause the shared context clock, including for new pages, or make one protocol
-  round trip without JavaScript.
+  `console_notices.ts`. A test that causes another error declares its kind and
+  exact message pattern with `allowBrowserError` or `expectedBrowserErrors`.
+  Console resource failures also need the exact resource URL. Sandbox denials,
+  synthetic console sentinels, and page errors can omit the URL when their
+  location is unstable or absent; their exact message must identify the
+  expected failure.
+- Portable-document cases allow the absent root favicon on their own origin.
+  Manual file delivery also allows the fixed HTTP-only inspector URL to be
+  absent on disk. Private sandbox fixtures declare their exact denial notices.
+  Test-owned host documents declare a favicon that loads, so they need no
+  allowance: a `data:` favicon, or a served same-origin icon where a strict
+  content security policy blocks data URLs.
+- The fixture settles each open page before a context closes and before its
+  error check, without wall-clock waits: two animation frames, or one protocol
+  round trip when JavaScript is disabled. It tracks pauses on the shared
+  context clock, including for new pages, and advances a paused clock by 32 ms
+  instead of waiting for frames. No sleep synchronizes an assertion.
 - An assertion that depends on a navigated preview's layout waits for the
   expected frame URL and the complete document state together. The outer Browse
   URL or an iframe `src` attribute alone is not enough.

@@ -21,7 +21,10 @@ export async function parseViewerSelection(
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--shard" || argument.startsWith("--shard="))
-      throw new ExpectedFailure("The viewer suite does not accept --shard.");
+      throw new ExpectedFailure(
+        "The viewer suite does not accept --shard: Node tests have no shards. " +
+          "The only sharded suite is cargo xtask check --suite browser --shard.",
+      );
     if (argument === patternFlag) {
       patterns.push(requirePattern(argv[++index]));
     } else if (argument.startsWith(patternFlag + "=")) {
@@ -45,7 +48,7 @@ export async function parseViewerSelection(
       throw new ExpectedFailure(
         "Browser spec argument " +
           argument +
-          "; browser verification is not available for " +
+          "; run it with npm run test:browser -- " +
           argument,
       );
     const parent = path.dirname(absolute);

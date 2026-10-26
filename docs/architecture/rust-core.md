@@ -21,10 +21,11 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
   CLI package version, and runs the binary with inherited standard streams.
   It never falls back to a JavaScript implementation.
 - The binary owns the terminal, every command, and every file write. No
-  command writes into the repository except `build` into its output
-  directory. The binary starts sidecars only when a catalogue needs
-  JavaScript: a `.mockup.tsx` entry, a registered JavaScript component, a
-  Storybook story, or a consumer PostCSS module.
+  command writes into the repository except `build`, which writes its output
+  directory and the `.mokly-export-reservations/` directory beside it. The
+  binary starts sidecars only when a catalogue needs JavaScript: a
+  `.mockup.tsx` entry, a registered JavaScript component, a Storybook story, a
+  configured renderer, or a consumer PostCSS module.
 - A sidecar renders what it is asked to render and returns text. It keeps no
   catalogue state beyond the loaded bundle generation. The
   [sidecar contract](../protocol/mokly-sidecar.md) owns the protocol.
@@ -93,7 +94,9 @@ composed documents, one per view, kept in the render cache
 
 1. The [configuration](../protocol/mokly-configuration.md) names the roots,
    the renderer module, the stylesheets, the module resolution settings, and
-   the comparison base. Every path is relative to the configuration file.
+   the comparison base. Its filesystem paths are relative to the
+   configuration file, and the configuration contract gives the base of each
+   glob.
 2. Discovery walks each root once. A file's suffix gives its kind, and its
    place in the root gives its [path](../protocol/mokly-paths.md). The core
    parses HTML, YAML, and Markdown. The sidecar bundles the JavaScript inputs
@@ -178,7 +181,8 @@ Comparison works on trees, never on text offsets. The
 
 Every persisted or exchanged format carries a version number, and readers
 reject any other number before they interpret a field. The
-[format inventory](../protocol/mokly-format-versions.md) lists the versions.
+[format inventory](../protocol/mokly-format-versions.md) lists the versions
+and says when a number changes.
 The render graph keeps generations in memory, so there is no private IPC
 format.
 

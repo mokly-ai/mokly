@@ -57,7 +57,7 @@ The development shell requests a comparison on demand at
 removed page's or document's preview under the
 [removed previews contract](./mokly-removed-previews.md). Removed component
 parents and variants request the index's advertised generation in every host.
-They renew that same URL before loading another view or mode.
+In Serve, they renew that same URL before loading another view or mode.
 The selected endpoint response redirects to an immutable generation named
 `selected-<uuid>`. Its snapshots hold the base and head bytes of the
 classification that it projects. Snapshot URLs resolve relative to that

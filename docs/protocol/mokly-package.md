@@ -238,6 +238,7 @@ The shim also passes `MOKLY_VIEWER_DIST`, the directory of the
 serves exactly that build's browser inventory, stylesheet, and font, so the
 consumer's working directory never selects the viewer.
 
-The binary's version is the `@mokly/mokly` package version. The binary sends
-that version in the sidecar hello. Cargo crate versions do not determine the
-published Mokly package version.
+The binary's version is the `@mokly/mokly` package version. The sidecar
+reports its own version in the [hello response](./mokly-sidecar.md#lifecycle),
+and the binary compares that version with its own. Cargo crate versions do not
+determine the published Mokly package version.

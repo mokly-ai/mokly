@@ -47,12 +47,12 @@ target's dark document wherever one exists. A design link to its own entry marks
 itself as the current page with `aria-current`, except the top bar's brand
 link. No design link sits inside another focus stop or holds one. A depicted
 control without a destination has no `href`, no mock-link marker, and no
-keyboard stop. An inactive control never becomes a link. The selected state
-stays visibly identified. Native inspector tabs and viewport selections
-operate in place without navigation. Each depicted state is reachable from
-its owning screen or flow, or from catalogue navigation when only a runtime
-transition reaches it. Design documents carry no scripts. The design mockups
-build without warnings.
+misleading keyboard stop. An inactive control never becomes a link. The
+selected state stays visibly identified. Native inspector tabs and viewport
+selections operate in place without navigation. Each depicted state is
+reachable from its owning screen or flow, or from catalogue navigation when
+only a runtime transition reaches it. Design documents carry no consumer
+scripts. The design mockups build without warnings.
 
 ## Canonical Destination Inventory
 

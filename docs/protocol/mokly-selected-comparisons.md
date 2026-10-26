@@ -21,7 +21,8 @@ that the index's `comparisonUrl` names, under
 requests comparison documents; a static build uses its packaged
 `comparisonUrl` without parameters. Removed component parents and variants
 also request the advertised generation URL in every host, including Serve.
-Their HEAD renewal and retry use that same URL.
+Their retry uses that same URL in every host, and their HEAD renewal in Serve
+uses it too.
 
 The response redirects to
 `/mokly-viewer/diffs/generations/selected-<uuid>/review.json`, an immutable
@@ -30,16 +31,22 @@ Its documents resolve relative to that response URL and only from that
 generation; unknown paths, traversal, encoded separators, and private data
 are unavailable through this route. No comparison directory is written.
 
-Changing viewport or colour scheme inside a comparison, or switching between
-diff modes, first renews the loaded generation with a non-cached HEAD request
-to its `review.json` URL. A successful response at that same URL extends the
-server's retention and lets the shell reuse its loaded JSON before it
-displays the requested panes. If the generation is missing or the response
-resolves to a different generation, the shell fetches the stable endpoint
-again, without `refresh=1`, and renders only after the replacement result is
-ready. A removed component parent or variant reacquires its advertised URL
-instead of the selected endpoint. It never reuses old document URLs after a failed renewal and never
-depends on matching browser and server clocks.
+Serve uses live delivery, and a static build and a React host use pinned
+delivery. In live delivery, changing viewport or colour scheme inside a
+comparison, or switching between diff modes, first renews the loaded
+generation with a non-cached HEAD request to its `review.json` URL. A
+successful response at that same URL extends the server's retention and lets
+the shell reuse its loaded JSON before it displays the requested panes. If
+the generation is missing or the response resolves to a different generation,
+the shell fetches the stable endpoint again, without `refresh=1`, and renders
+only after the replacement result is ready. A removed component parent or
+variant reacquires its advertised URL instead of the selected endpoint. It
+never reuses old document URLs after a failed renewal and never depends on
+matching browser and server clocks.
+
+Only live delivery renews a generation. Pinned delivery reads a fixed
+generation that no server expires, so it sends no renewal request for a
+comparison or a removed preview.
 
 Repeated view or mode switches share pending work and apply the latest axes
 and mode when it completes. Navigating to a sibling entry keeps that mode,

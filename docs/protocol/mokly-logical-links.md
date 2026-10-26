@@ -8,8 +8,8 @@ This page defines what the core writes while it composes a document.
 
 While it composes a document, the core must:
 
-- validate the destination path and optional fragment before the document
-  enters the render cache;
+- validate the destination path and optional fragment before the document is
+  served or written;
 - rewrite the actual `href` and `data-nav-href` to the relative document URL
   of the destination for the source viewport and colour scheme, with light
   fallback;

@@ -2,7 +2,8 @@
 
 ## Public Interface
 
-The viewer exports these types; `CatalogueUsage` follows the [read model](./mokly-catalogue.md).
+The viewer exports these types. `CatalogueUsage` is the generated type of the
+[usage records](./mokly-component-usage-records.md).
 
 ```ts
 interface Box {

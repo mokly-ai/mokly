@@ -33,10 +33,12 @@ dash, and never names a command, path, or reason; a completed empty result
 shows `0` and “No changes found.” The filter and tree origin keep their
 positions throughout, and All stays selectable in every state.
 Reduced-motion settings disable rotation.
-The drawer below the breakpoint shows the same body. A static build without
-Changes keeps the filter-free layout. The catalogue-navigation component's
-`loading`, `preparing`, and `unavailable` variants are the mobile/desktop
-owning mockups for the three non-ready states.
+The drawer below the
+[layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior) shows
+the same body. A static build without Changes keeps the filter-free layout.
+The catalogue-navigation component's `loading`, `preparing`, and
+`unavailable` variants are the mobile/desktop owning mockups for the three
+non-ready states.
 `design/changes/availability/preparing` and `design/changes/availability/unavailable` additionally own
 the preparing and failed states inside the complete shell, where Changes is
 selected and the chosen screen stays available. The preparing state exists only

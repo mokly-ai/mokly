@@ -529,17 +529,6 @@ an earlier main base still succeeds with Changes unavailable. Only the explicit
 writers take the output lock; immutable in-memory route snapshots replace disk
 capture and reject undeclared worker routes.
 
-#### Publish Checkout
-
-`mokly publish` requires a clean checkout before export and before upload.
-Commit, stash or ignore uncommitted files. Git-ignored files, this run's `--out`
-directory, and Mokly caches and temporary files are excluded. Committed generated
-files must match the build; rebuild and commit them when stale. Derived output
-must be ignored by Git. Failures use `git-uncommitted` or `build-stale`.
-`--no-changes` still needs a committed HEAD but needs no comparison history.
-See the [upload contract](https://github.com/mokly-ai/mokly/blob/66e1ba6a/docs/protocol/mokly-upload.md). Local export and repository preview
-capture keep their existing checkout rules.
-
 ## [0.14.0](https://github.com/mokly-ai/mokly/compare/v0.13.0...v0.14.0) (2026-10-08)
 
 
@@ -595,6 +584,17 @@ capture keep their existing checkout rules.
     * @mokly/viewer bumped from 0.4.0 to 0.5.0
 
 ### Upgrade Notes
+
+#### Publish Checkout
+
+`mokly publish` requires a clean checkout before export and before upload.
+Commit, stash or ignore uncommitted files. Git-ignored files, this run's `--out`
+directory, and Mokly caches and temporary files are excluded. Committed generated
+files must match the build; rebuild and commit them when stale. Derived output
+must be ignored by Git. Failures use `git-uncommitted` or `build-stale`.
+`--no-changes` still needs a committed HEAD but needs no comparison history.
+See the [upload contract](https://github.com/mokly-ai/mokly/blob/66e1ba6a/docs/protocol/mokly-upload.md). Local export and repository preview
+capture keep their existing checkout rules.
 
 #### Removed Options
 

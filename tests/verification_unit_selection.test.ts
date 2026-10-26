@@ -107,7 +107,7 @@ for (const argument of [
           if (argument.endsWith(".spec.ts"))
             assert.ok(
               error.message.includes(
-                "browser verification is not available for " + argument,
+                "run it with npm run test:browser -- " + argument,
               ),
             );
           return true;
@@ -212,7 +212,10 @@ for (const args of [["--shard"], ["--shard", "1/4"], ["--shard=1/4"]]) {
     async (context) => {
       const root = await fixture(context);
       await assert.rejects(parseViewerSelection(root, args), (error: Error) => {
-        assert.match(error.message, /does not accept --shard/u);
+        assert.match(
+          error.message,
+          /does not accept --shard.*cargo xtask check --suite browser --shard/u,
+        );
         return true;
       });
     },

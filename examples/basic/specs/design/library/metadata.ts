@@ -13,11 +13,12 @@ export const DUAL_SCHEME_SAMPLES = new Set<LibraryStyle>([
 
 /**
  * Registration metadata identifies the component's own public stylesheet.
- * `{group}/{slug}.tsx` holds the registration, schema and variants and only
- * forwards props and the viewport to `{slug}.view.tsx`, so registration and
- * fixture edits are metadata changes and view edits implementation changes.
- * No library module imports a screen registry or forms a circular variant
- * import.
+ * `{group}/{slug}.tsx` holds the registration, schema and variants. Its
+ * `render` forwards the props to `{slug}.view.tsx` and, where the view needs
+ * them, the render context's viewport and colour scheme; the top bar passes
+ * the scheme as its default `appearance`. So registration and fixture edits
+ * are metadata changes and view edits implementation changes. No library
+ * module imports a screen registry or forms a circular variant import.
  */
 export function libraryMetadata(
   group: LibraryGroup,

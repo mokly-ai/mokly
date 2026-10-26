@@ -20,6 +20,10 @@
 | Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                               |
 | Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                    |
 
+A format number changes only when the shape or the interpretation of its
+format changes. Package 1.0.0 is the first release with a stable format
+promise; before it, any release can change a number.
+
 The catalogue model has no version, because Mokly never writes it. The index
 carries the deployment id, the revision, and the comparison URL. A page embeds
 no state. Both sides of a comparison render from sources.

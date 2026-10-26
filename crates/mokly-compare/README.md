@@ -216,8 +216,10 @@ development dependencies, and no test uses the internet.
 - [`src/inputs.rs`](./src/inputs.rs) and
   [`src/working_inputs.rs`](./src/working_inputs.rs) define `InputReader` and
   `WorkingInputs`, the base and working dependency identities.
-- [`src/manager_plan.rs`](./src/manager_plan.rs) plans one package-manager
-  install. The other `manager_*.rs` files hold the per-manager rules.
+- [`src/manager_plan.rs`](./src/manager_plan.rs) selects every locked install
+  root among the configuration directory, the package roots, and their
+  ancestors, and returns each root with its package manager. The other
+  `manager_*.rs` files hold the per-manager rules.
 - [`src/lookup.rs`](./src/lookup.rs) and [`src/moves.rs`](./src/moves.rs)
   define `Lookup` and the move `Detector`.
 - [`src/projection_index.rs`](./src/projection_index.rs),

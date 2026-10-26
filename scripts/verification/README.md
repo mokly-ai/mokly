@@ -23,7 +23,6 @@ Public test commands and strict evidence rules live in the
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
-- [`aggregate.mjs`](./aggregate.mjs) checks the complete set of CI reports.
 - [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
   Testbox.
 

@@ -8,11 +8,18 @@ release-please state to recreate a version.
 
 ## Registered Packages
 
-`@mokly/mokly` and `@mokly/viewer` are registered. The `bootstrap` dist-tag
-stays on each registration version: `@mokly/mokly` 0.8.0 and `@mokly/viewer`
-0.1.0. Reviewed releases advance `latest`. Never repeat a registration,
+`@mokly/mokly`, `@mokly/viewer`, and the five `@mokly/native-{target}`
+packages are registered. The `bootstrap` dist-tag stays on each registration
+version: `@mokly/mokly` 0.8.0, `@mokly/viewer` 0.1.0, and each native package
+0.0.0. Reviewed releases advance `latest`. Never repeat a registration,
 republish a registration version, remove `latest`, or unpublish a package to
 undo a registration.
+
+Every registered package has its own trusted publisher: repository
+`mokly-ai/mokly`, workflow `release.yml`, environment `npm`, and direct
+`npm publish`. Every registered package also has `mokly:developers` access,
+public access, required 2FA, and disabled token bypass. The trust
+configuration of one package is not evidence for another.
 
 A registration is an interactive maintainer publication, not an OIDC
 publication. Its evidence is the reviewed source, the inventory, the hashes,
@@ -100,12 +107,9 @@ meets these requirements:
    npm can also set `latest` to the first version. The first coordinated
    release moves it.
 
-4. The package has its own trusted publisher: repository `mokly-ai/mokly`,
-   workflow `release.yml`, environment `npm`, and direct `npm publish`. It
-   also has `mokly:developers` access, public access, required 2FA, and
-   disabled token bypass. The maintainer reads back the CLI and viewer
-   publishers too. The trust configuration of one package is not evidence for
-   another.
+4. The package has its own trusted publisher and the access settings of
+   [every registered package](#registered-packages). The maintainer reads
+   back the CLI and viewer publishers too.
 
 Then the coordinated release, or a retry under the
 [release recovery rules](./npm-release-management.md#release-recovery),

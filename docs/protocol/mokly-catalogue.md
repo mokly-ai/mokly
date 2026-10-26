@@ -60,7 +60,8 @@ the children each section shows.
 ## Projection And Privacy
 
 The [projection contract](./mokly-catalogue-delivery.md#projection-and-privacy)
-owns the allowlist, evidence, source metadata and removed-entry rules.
+owns the rule that public JSON carries only the fields of the shell delivery
+contract. It also owns the evidence, source metadata and removed-entry rules.
 
 ## Serialization, Identity And Versions
 

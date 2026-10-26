@@ -31,9 +31,10 @@ pub trait Transaction: Send + Sync {
     fn stage(&self, artifact: &Artifact, cancellation: &dyn Cancellation) -> Result<()>;
     /// Commit the prepared stage; all recovery is settled before returning.
     ///
-    /// Installation rechecks the inputs and checks cancellation before it moves
-    /// the old output to `backup`, and again after it validates that backup. The
-    /// commit rename and the cleanup after it never consult cancellation.
+    /// Installation rechecks the output location and its ownership, then checks
+    /// cancellation, before it moves the old output to `backup`. It checks
+    /// cancellation again after it validates that backup. The commit rename and
+    /// the cleanup after it never consult cancellation.
     fn install(&self, cancellation: &dyn Cancellation) -> Result<()>;
     /// Abandon a pre-installation operation and clean its stage exactly once.
     fn abandon(&self) -> Result<()>;

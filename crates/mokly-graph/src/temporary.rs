@@ -14,6 +14,7 @@ use crate::closure::{Closure, ClosureBuilder};
 use crate::document_composition;
 use crate::error::{GraphError, InternalError, Result, invalid};
 use crate::session::Session;
+use crate::session_render::with_closure_warnings;
 use crate::types::TemporaryDocument;
 use crate::validation;
 use crate::workers::ArtifactWorker;
@@ -29,6 +30,7 @@ pub(crate) fn render(session: &Session, route: &str, props: &Props) -> Result<Te
         artifact: artifact.clone(),
     };
     let closure = session.state.workers.closure(route, &rendered)?;
+    let artifact = with_closure_warnings(artifact, &closure);
     Ok(TemporaryDocument { artifact, closure })
 }
 

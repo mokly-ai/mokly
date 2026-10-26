@@ -94,8 +94,8 @@ highlight's mask and label scope; such a click leaves an idle highlight intact
 and ends inspection only while a pick is active. A detail update refreshes the
 usage of mounted frames without reloading a frame whose `documentKey` is
 unchanged. Inspection ownership, evidence invalidation, multi-frame
-highlighting, marker positioning and the shared geometry scheduler are the
-marker contract.
+highlighting, marker positioning and boundary refreshes belong to the
+[marker contract](./mokly-viewer-markers.md).
 
 `highlightInstance`, `highlightInstances` and `scrollToInstance` operate on
 exact current views and reject missing or unavailable instances without

@@ -4,10 +4,11 @@
 
 This document defines how links authored in mockup documents behave when a
 composed document is opened on its own, in served Browse, and in the static
-build, and how the Browse shell keeps its route identity and catalogue tree
-aligned after every navigation. The shell routes, the catalogue index and the
-entry details that the shell navigates with are the
-[shell delivery contract](./mokly-shell-delivery.md).
+build. The
+[active catalogue visibility rules](./mokly-viewer-selection.md#active-catalogue-visibility)
+keep the shell's route and catalogue tree aligned after every navigation. The
+shell routes, the catalogue index and the entry details that the shell
+navigates with are the [shell delivery contract](./mokly-shell-delivery.md).
 
 Mokly owns navigation between catalogue entries. Consumers own their product's
 application routes and the behaviour of ordinary document, asset, external,

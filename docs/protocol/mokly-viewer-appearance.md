@@ -170,8 +170,8 @@ Provide Light and Dark values for these responsibilities:
 
 Theme-dependent colours in the shell stylesheets and in package-owned overlay
 and control creation use semantic roles, not a dark-mode override sheet. A
-colour literal appears only in a palette definition, including the roles of
-fixed device artwork.
+theme-dependent colour literal appears only in a palette definition, including
+the roles of fixed device artwork.
 
 Keep the public overrides `--mokly-accent`, `--mokly-accent-contrast` and
 `--mokly-accent-soft`. Unset overrides receive the current theme's defaults;

@@ -24,7 +24,9 @@ with no JavaScript fallback.
 - Use `publish` to build a private site and upload it. `publish` has no
   `--out`, and it requires a clean, committed checkout.
 - `check`, `export`, and `review` are removed. To validate, run
-  `mokly build --strict --out {temporary-directory}`.
+  `mokly build --strict --out {directory}`. Use a directory inside the
+  repository that Git ignores, because `build` writes only inside the
+  repository.
 - The `--watch` option of `build` and the `--build` option of `serve` are
   removed. Use `serve` for development.
 - `serve`, `build`, and `publish` accept `--base`. `build` and `publish`
@@ -36,7 +38,9 @@ with no JavaScript fallback.
   and JavaScript configuration and `defineConfig` are removed. `--config`
   names another JSON file.
 - Point `$schema` at the shipped `config.schema.json` for editor checks.
-- Write every path relative to the configuration file.
+- Write filesystem paths, such as root directories and the renderer, relative
+  to the configuration file. Write root `files` globs relative to their root,
+  and `watch.rules` paths relative to the repository root.
 - Replace the `componentStylesheets` export with the `$componentStylesheets`
   token in the `stylesheets` list.
 - Replace extglob stylesheet matches such as `@(a|b)` with brace alternatives
@@ -70,8 +74,13 @@ operating system's cache directory.
 - Write prop schemas in the strict JSON Schema profile of
   [props and variants](/docs/authoring/props-and-variants/). Close each object
   schema with `additionalProperties: false`.
+- When you render a component's `Component` wrapper, omit each optional data
+  prop that has no value, also inside nested objects. Do not pass `undefined`.
 - Keep instance names separate from entry paths. `moklyInstance` uses
   lowercase kebab-case and has no path separators.
+- In screens, components, and pages, rewrite each relative URL to an authored
+  file, such as an image, so that it resolves from the rendered document's
+  route to `static/{repository path}`.
 - Keep fixture data in your own source tree. Do not import fixture files from
   the installed package.
 
@@ -98,17 +107,32 @@ as unavailable with the diagnostics.
 - Use the `@mokly/viewer` root, `@mokly/viewer/browser`,
   `@mokly/viewer/data`, and `@mokly/viewer/styles.css`. The `server` and
   `runtime` entries are removed.
-- Give `MoklyViewer` an `index` source and a `detail` source. Read them with
-  `readCatalogueIndex` and `readEntryDetail`.
+- `@mokly/viewer/browser` mounts the standalone shell. `hydrateMoklyShell` is
+  removed.
+- Give `MoklyViewer` an `index` source and a `detail` source. `MoklyViewer`
+  has no `viewerId`. Read the sources with `readCatalogueIndex` and
+  `readEntryDetail`, which replace `readCatalogue`.
+- Type the sources with `IndexSource` and `DetailSource`, and the result of a
+  detail source with `DetailResult`. These `@mokly/viewer` types replace
+  `CatalogueSource` and `CatalogueFetcher`.
+- Use the `PropSchema` type from `@mokly/viewer` and `validatePropSchema` from
+  `@mokly/viewer/data`. They replace `ObjectPropSchema`, `DataPropSchema`,
+  `DataPropField`, `InferProp`, and `ControlFor`.
 - Import `resolveInstance` and `InstanceResolution` from `@mokly/viewer`, not
   from `@mokly/mokly`.
 - Import `ColorScheme`, `Viewport`, and `MoklyVersionError` from
   `@mokly/viewer`.
+- Import `ComponentControl`, `ComponentControlLabel`,
+  `ComponentInstanceRecord`, `ComponentPropsData`,
+  `ComponentResourceOwnership`, `ComponentSourceLocation`,
+  `ComponentStyleOwnership`, `InsertedComponentStylesheet`, `PropPrimitive`,
+  and `PropValue` from `@mokly/viewer`.
 - `@mokly/viewer/data` exports only the path functions, the directory names,
-  the path and link grammar, and the prop schema validators. The other
+  the path and link grammar, and the prop schema validators. Its other
   removed exports have no public replacement.
 
-The [changelog](/changelog/) lists every removed export of each release.
+The [changelog](/changelog/) entry of the Rust core release lists every export
+that the release removes.
 
 ## Republish hosted catalogues
 

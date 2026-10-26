@@ -153,13 +153,13 @@ maintainer setup, and the evidence each release keeps.
 `cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, and
 Rust commands from the workspace root and include:
 
-- the [repository suite](./ci-verification-repository.md#repository-boundary):
-  the live dependency audits, formatting, lint, the length audits, the
-  repository ratchets, the Rust checks, and the Rust tests of every crate,
-  which cover discovery, rendering, comparison, Serve, the static build, and
-  publish against fixtures and the captured reference scenarios;
-- the viewer typecheck and the Node tests of the viewer and the tooling, with a
-  100% pass rate; and
+- every check of the
+  [repository suite list](./ci-verification-repository.md#repository-boundary),
+  in the listed order; its Rust tests cover discovery, rendering, comparison,
+  Serve, the static build, and publish against fixtures and the captured
+  reference scenarios;
+- the TypeScript typecheck of every project and the Node tests of the viewer
+  and the tooling, with a 100% pass rate; and
 - Playwright Browse and Review regressions in Chromium against `mokly serve` of
   the example catalogue, with zero retries.
 

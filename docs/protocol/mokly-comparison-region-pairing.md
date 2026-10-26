@@ -40,10 +40,10 @@ scroll on every axis the source scrolls on. Otherwise apply:
    match.
 
 Duplicate and uniqueness counts include every region with the identity, even
-one that is off, axis-incompatible, or already reserved. The selected element
-must separately be eligible; otherwise skip that rule. This conservative rule
-follows the invariant that a wrong pair is worse than no pair. Class names and
-DOM-tree positions are never matching inputs.
+one that is off, axis-incompatible, or already paired with another source. The
+selected element must separately be eligible; otherwise skip that rule. This
+conservative rule follows the invariant that a wrong pair is worse than no
+pair. Class names and DOM-tree positions are never matching inputs.
 
 ## Role And Accessible Name
 
@@ -90,11 +90,11 @@ either side of an element boundary can form one token; both versions read their
 markup the same way. `text` is the Jaccard index, intersection size divided by
 union size; two empty sets score zero.
 
-A score or a lead that equals the minimum or the margin in exact arithmetic
-qualifies, even when binary floating point computes it slightly lower. For
-example, a lead of `0.45 - 0.30` counts as the full `0.15`.
+The minimum and the margin each allow a `1e-9` tolerance: a score or a lead
+that is at most `1e-9` below its limit qualifies. So a lead of `0.45 - 0.30`
+counts as the full `0.15` despite binary floating point.
 
 Because every eligible candidate is scored, a region whose identity would pair
 it with another source by rules 1 to 3 still competes in a source's fallback
-until it is reserved; the minimum and margin keep such a competitor from being
+until it is paired; the minimum and margin keep such a competitor from being
 selected unless it clearly wins.
