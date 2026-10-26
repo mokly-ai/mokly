@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 
-import { observeAsyncModuleLoads } from "./postcss-async-registration.js";
 import {
   observeModuleLoads,
   shareReadEvidence,
@@ -25,7 +24,6 @@ if (isMainThread) {
   observeFileReads();
   observeDescriptors();
   observeDescriptorSharing();
-  observeAsyncModuleLoads();
   observeModuleLoads();
   observeModulePaths();
   shareReadEvidence();

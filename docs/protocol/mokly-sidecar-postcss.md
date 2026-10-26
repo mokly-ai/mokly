@@ -84,6 +84,13 @@ opaque without raw provenance.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
+Modules that Node loads in its asynchronous loader thread, such as the modules
+that define asynchronous hooks, have no module path. They have no late baseline
+unless another input report names their paths. Decision: Mokly observes module
+paths only on the main thread. A loader-thread observer was rejected, because
+main-thread observation already reports every module that PostCSS code loads,
+and a loader-thread observer adds work to each module resolution.
+
 Untracked descriptors, unknown offsets, overlapping sequential operations, and
 exotic read options retain native behavior without a guessed range witness.
 Sharing a descriptor with a helper or worker makes its implicit cursor opaque.

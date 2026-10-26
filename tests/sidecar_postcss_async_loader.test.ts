@@ -4,32 +4,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
-import { MessageChannel, receiveMessageOnPort } from "node:worker_threads";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
-import {
-  initialize,
-  resolve as resolveAsyncModule,
-} from "../packages/mokly/src/sidecar/postcss-async-loader.js";
 
 import { cssParams, startSidecar } from "./helpers/sidecar.js";
 import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 import { command, publicationFixture } from "./helpers/static_publication.js";
-
-test("async loader paths queue before resolve returns", async (context) => {
-  const { port1, port2 } = new MessageChannel();
-  context.after(() => {
-    port1.close();
-    port2.close();
-  });
-  initialize({ paths: port1 });
-  const resolved = { url: "file:///module.mjs", format: "module" };
-  const pending = resolveAsyncModule("module", {}, async () => resolved);
-  assert.equal(receiveMessageOnPort(port2), undefined);
-  assert.equal(await pending, resolved);
-  assert.deepEqual(receiveMessageOnPort(port2), { message: resolved.url });
-  assert.equal(receiveMessageOnPort(port2), undefined);
-});
 
 for (const flag of ["--loader", "--experimental-loader"])
   test(`${flag} keeps the range witness of a consumer preload descriptor read`, async (context) => {

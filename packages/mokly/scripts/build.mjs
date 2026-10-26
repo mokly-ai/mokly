@@ -34,18 +34,6 @@ await build({
     js: "const __moklyPreloadUrl = require('node:url').pathToFileURL(__filename).href;",
   },
 });
-await build({
-  entryPoints: [
-    fileURLToPath(new URL("src/sidecar/postcss-async-loader.ts", root)),
-  ],
-  outfile: fileURLToPath(
-    new URL("dist/sidecar/postcss-async-loader.mjs", root),
-  ),
-  bundle: true,
-  platform: "node",
-  format: "esm",
-  target: "node22.15",
-});
 for (const directory of ["guides", "protocol"]) {
   await fs.cp(
     new URL(`../../../docs/${directory}`, import.meta.url),
