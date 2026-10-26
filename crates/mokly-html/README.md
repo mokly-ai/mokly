@@ -85,8 +85,8 @@ their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
 The authored HTML sink removes ordinary unknown ignore-wrapper attributes when
 it creates elements. The delivered sink keeps those attributes until
-composition filters them with the same catalogue rule before it evaluates
-conditions. Callback documents
+composition filters them, with the same rule, directly after it parses callback
+HTML and before any other step reads them. Callback documents
 use the delivered parser, but the browser does not receive the wrapper nodes.
 The shared driver gives authored elements their source locations before HTML
 table repair. Diagnostic identities do not expose discarded values.

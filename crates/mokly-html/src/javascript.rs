@@ -20,7 +20,10 @@ use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{FragmentRequest, RenderKind};
 use crate::tree::Node;
-use crate::{fragment_rebase, fragment_validation, markers, parse, relative_links, source_checks};
+use crate::{
+    fragment_rebase, fragment_validation, ignore_checks, markers, parse, relative_links,
+    source_checks,
+};
 
 impl Engine<'_> {
     pub(crate) fn javascript_expansion(
@@ -111,7 +114,8 @@ impl Engine<'_> {
             source_checks::page(html)?;
         }
         source_checks::validate(html, true)?;
-        let nodes = parse::html(html);
+        let mut nodes = parse::html(html);
+        ignore_checks::filter_tree(&mut nodes);
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
             && effective.metadata.path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(
