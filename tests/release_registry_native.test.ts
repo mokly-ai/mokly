@@ -140,7 +140,7 @@ test("npm installs a native package of another platform with the verification ar
     { cwd: source },
   );
   assert.equal(packed.code, 0, packed.stderr);
-  const [{ filename }] = JSON.parse(packed.stdout) as { filename: string }[];
+  const [{ filename }] = JSON.parse(packed.stdout) as [{ filename: string }];
   let installed = false;
   await verifyNative(t, target.name, async (file, args, options) => {
     const result = await runCommandResult(
