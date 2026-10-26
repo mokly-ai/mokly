@@ -120,9 +120,9 @@ Token checks follow markup contexts inside `noscript` and foreign `style` or
 entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
-The HTML token boundary returns Mokly-owned token and span types. Every
-consumer of authored-HTML tokens must call `html_tokens::parse`. Direct
-construction of an `html5gum::Tokenizer` is outside the catalogue boundary.
+The HTML token boundary returns Mokly-owned token and span types. Catalogue
+consumers of authored HTML call `html_tokens::parse`. The tree-building adapter
+has a separate html5gum integration until CR5 is decided.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried

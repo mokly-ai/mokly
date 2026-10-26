@@ -4362,7 +4362,7 @@ check passes on this commit.
   - [x] Phase 1 implementation: add the new pipeline module behind a crate-internal switch. Keep the current parser entry points and protected modules unchanged. Evidence: `.context/html-pipeline-tests-final.log`.
   - [x] Phase 1 differential harness: run repository HTML inputs, fixtures, generated divergence cases, CRLF, and character references. Classify tree, serialization, and position differences. Result: 24 inputs, 24 equivalent serializations, 203 source identities, and zero new defects. Evidence: `.context/html-pipeline-differential-final.log`.
   - [x] Phase 1 escaped script-data boundary: map html5ever escaped and double-escaped requests to html5gum's public script-data state, then compare marker splits, `</script` prefixes, and `srcdoc` content. Result: 54 inputs, 54 equivalent serializations, 233 source identities, and zero new defects. Evidence: `.context/html-pipeline-escaped-script-data.log` and `.context/html-pipeline-feasibility.md`.
-  - [x] Phase 2 after `rebuild/defaults-engine`, `rebuild/followups-f21-fix1`, and `rebuild/followups-f22` merge: make the new pipeline the selected path, remove text-mode prediction and signature queues, and update 115 C to use one parse entry point per purpose and 116 C to make the token boundary the only html5gum user. Keep this work parallel and non-blocking. Completed by `dc4d8127`; the delivered-document escaped-text retry remains as the safety option recorded under item 98.
+  - [ ] Phase 2 after `rebuild/defaults-engine`, `rebuild/followups-f21-fix1`, and `rebuild/followups-f22` merge: make the new pipeline the selected path, remove text-mode prediction and signature queues, and update 115 C to use one parse entry point per purpose and 116 C to make the token boundary the only html5gum user. Keep this work parallel and non-blocking. The parser split and source identity work are complete. The one-pipeline boundary for catalogue checks remains open under CR5.
   - User decision 98 (2026-10-21): B, in parallel and non-blocking.
 
   - [x] F19 review findings 1 and 2: count warning names once per shared body
@@ -5453,7 +5453,7 @@ check passes on this commit.
 - [ ] Port the empty-test assertion guard of the closed #153, which fails
       a unit test that makes no assertion. User decision 66 A, 2026-10-21.
 
-- [x] Resolve user item 98 (engine review 2 finding 2, option C, a class
+- [ ] Resolve user item 98 (engine review 2 finding 2, option C, a class
       decision): let the parser choose the plaintext point. Four cases of
       serializer-versus-parser divergence so far: hub review 1 finding 2,
       `b0842cad`, and review 2 findings 2 and 4. Severity Low, effort Large
@@ -5472,18 +5472,43 @@ check passes on this commit.
     Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
     request.
   - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
-    98 B post-merge. The selected token pipeline and source identity work
-    landed in `dc4d8127`; the delivered-document escaped-text retry remains
-    as the safety option described above.
+    98 B post-merge. The source identity work landed in `dc4d8127`. CR5
+    fallback leaves the catalogue checks on their existing token boundary.
+    A new decision is required before the one-pipeline boundary changes.
 
-- [x] Split the public HTML parser into an authored parse and a
+- [ ] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
-      Completed in `dc4d8127`.
+      The entry points are complete in `6219b4a4`, but CR5 leaves the shared
+      catalogue boundary open.
 
-- [x] Make the HTML token boundary the only html5gum user, with Mokly-owned
+- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
-      option A merged as `033e5059`. Completed in `dc4d8127`.
+      option A merged as `033e5059`. The catalogue token types are complete in
+      `dc4d8127`, but CR5 leaves the tree adapter as a second html5gum user.
+
+- [ ] CR11 review item: the differential harness reads repository HTML from
+      disk, compares only bytes, and does not assert source positions. Severity
+      Medium, test. Options: A, use tracked fixtures, compare trees with
+      positions removed, assert position tables, and add each CR1-CR10 case,
+      Small; B, also run an html5lib tree-construction corpus, Medium.
+      Recommended: B. Apply no option in CR1.
+- [ ] CR11 review item: graph key scans use delivered parsing for authored
+      bodies. Severity Low, performance. Options: A, use the authored parse
+      without positions, Medium; B, give every parse purpose its own input
+      type, Large. Recommended: A. Apply no option in CR1.
+- Outside CR1 scope: `crates/mokly-catalogue/src/html_tokens.rs` does not
+  model SVG `desc` or encoded MathML `annotation-xml` integration points.
+  Separate branch.
+
+- [ ] CR5 decision: one tree-driven token run must also serve catalogue checks.
+      Severity Medium, effort Large. The catalogue crate cannot depend on the
+      HTML arena crate without a dependency cycle. Options: A, move the shared
+      token/tree boundary into a new lower-level crate and route catalogue and
+      HTML through it, Large; B, keep the two boundaries and revise decisions
+      98 B and 116 C, Large. Recommended: A. No default is applied.
+- Outside CR1 scope: `crates/mokly-catalogue/src/html_tokens.rs` retains
+  production `unreachable!()` and `unwrap()` calls. Separate branch.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
