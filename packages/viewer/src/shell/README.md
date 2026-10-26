@@ -158,9 +158,11 @@ views changed compare as an affected-only entry does.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
-Numeric review version failures retain `MoklyVersionError` through the request
-and comparison controller. The failure surface shows the shared compatible-viewer
-message and separate version details; Current remains available.
+`comparison_request.ts` establishes a comparison's generation root: a
+pinned catalogue's advertised root without a request, or the root that
+Serve's selection endpoint redirects to, which a HEAD request renews. A failed
+request shows the comparison failure with Try again; Current remains
+available.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
@@ -301,13 +303,11 @@ design places, and the no-changes line follow, in that order.
 `entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
-detail's related components, a component-owned record on a shown view, or the
-loaded review's `affected` evidence. The same facts give an unchanged view in
-`comparison_selection.ts` its "Components this screen uses changed" pane
-heading, and so does a view whose usage holds a changed component that the
-detail names: `workspace_context.tsx` collects those views with
-`viewsUsingComponents`, because a selected comparison in Serve carries no
-`affected` records. The heading names
+detail's related components or a component-owned record on a shown view. The
+same facts give an unchanged view in `comparison_selection.ts` its
+"Components this screen uses changed" pane heading, and so does a view whose
+usage holds a changed component that the detail names: `workspace_context.tsx`
+collects those views with `viewsUsingComponents`. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its

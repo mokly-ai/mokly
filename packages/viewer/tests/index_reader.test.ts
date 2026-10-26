@@ -34,7 +34,7 @@ function screens(raw: Record<string, unknown>) {
   >[];
 }
 
-test("the index reader accepts the v7 fixture field for field", () => {
+test("the index reader accepts the protocol fixture field for field", () => {
   const raw = rawIndexFixture();
   const index = readCatalogueIndex(structuredClone(raw));
   assert.equal(index.schemaVersion, 8);

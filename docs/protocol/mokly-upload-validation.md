@@ -1,4 +1,4 @@
-# Catalogue Upload Validation v2
+# Catalogue Upload Validation v3
 
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
@@ -39,7 +39,7 @@ leaves the complete built directory in place.
 The marker and verified blobs reconstruct every public artifact, including the
 upload manifest, the shell stub, the catalogue index and entry details, static
 assets and enabled comparisons. CLI and receiver enforce these binary-unit
-v2 ceilings; receivers may impose lower quotas and return 413.
+v3 ceilings; receivers may impose lower quotas and return 413.
 
 | Limit                                                    | Maximum           |
 | -------------------------------------------------------- | ----------------- |
@@ -73,11 +73,12 @@ before remaining entry grammar: an integer size over 64 MiB or a string path
 over 1,024 UTF-8 bytes is too large (413). A negative, fractional or nonnumeric
 size and every other path-grammar violation is malformed (400/422).
 
-Require entries for `index.html`, `404.html` and `mokly-upload.json`. Archived
-upload manifest and review bytes match their entries; the review path and base
-metadata match the upload manifest and the
-[comparison format](./README.md#supported-formats). Current-only uploads
-contain no comparison files.
+Require entries for `index.html`, `404.html`, `mokly-upload.json` and
+`mokly-viewer/index.json`. The archived upload manifest and catalogue index
+bytes match their entries. The index's `baseCommit` equals the manifest's
+`baseSha`, and with a comparison its `base` equals `baseRef`, under the
+[index format](./README.md#supported-formats). Current-only uploads contain no
+comparison files.
 
 Answer `missing` from every verified blob stored for the same project,
 including a blob received for an unfinished or expired earlier upload. Never

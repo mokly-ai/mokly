@@ -159,12 +159,27 @@ envelope.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+  - Evidence: `.context/remove-review-json/gate3.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1: `.context/remove-review-json/review-1.md`. Findings 1, 2, 3,
+    5, 7, 8, and 9 were fixed.
+  - 4. Root GET of a selection ends aborted. Severity Low, effort Small.
+       Recommended: B, answer 200 with an empty body once a browser check
+       proves that it ends the abort.
+  - 6. Parity test skips the published evidence. Severity Low, effort Small.
+       Recommended: A, compare each view's `resourceEvidence` too.
+  - 10. Version error type still allows review. Severity Low, effort Small.
+        Recommended: A, remove `"review"` and name it in the release note.
+  - 11. Decision: the viewer no longer rejects a non-public evidence path
+        that a loaded review carried. Severity Low, effort Small. Recommended:
+        A, keep the producer's check only.
+  - `tests/browser/large_watch.spec.ts`: the React journey timed out once
+    after 300 s in remote shard 1 of 4 and passed on rerun. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 

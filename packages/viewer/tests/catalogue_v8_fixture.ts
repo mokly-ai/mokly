@@ -1,4 +1,4 @@
-/** The protocol's index v7 and entry detail v2 fixtures as the shell reads them. */
+/** The protocol's catalogue index and entry detail fixtures as the shell reads them. */
 
 import fs from "node:fs";
 

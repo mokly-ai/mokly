@@ -64,13 +64,10 @@ label.
 A view says “Components this screen uses changed”, or “Components this variant
 uses changed” for a component variant, when its state is `unchanged` and
 changed components affect it: the view keeps a `matched` or `unresolved` rule
-or a resource that a component owns, its usage holds an instance of a changed
-component that the entry detail's `relatedComponents` names, or an `affected`
-evidence item of the loaded review names it by side, entry path, viewport, and
-colour scheme, so a moved entry's before side matches its previous path. A
-selected comparison in Serve carries no `affected` records, so a component's
-markup change reaches the heading through usage there. Every other `unchanged`
-view keeps the ordinary label below.
+or a resource that a component owns, or its usage holds an instance of a
+changed component that the entry detail's `relatedComponents` names, so a
+component's markup change reaches the heading through usage. Every other
+`unchanged` view keeps the ordinary label below.
 
 | View state     | Screen                          | Component                       |
 | -------------- | ------------------------------- | ------------------------------- |
@@ -217,11 +214,10 @@ in a component workspace. It names the kind as the terminal line does, so it
 never calls a screen or a variant a page. It appears
 when the routed entry's index record is ready and not `included` and changed
 components affect it: its detail's `relatedComponents` names a changed
-component, which the review's `affected` records give for the entry whose views
-they name, a shown view keeps a
-`matched` or `unresolved` rule or a resource that a component owns, or the
-loaded review's `affected` evidence names the entry. It shows in Current and
-in a loaded comparison alike. A variant whose rules are all owned by the
+component, which the comparison's affected consumers give for the entry whose
+views they name, or a shown view keeps a `matched` or `unresolved` rule or a
+resource that a component owns. It shows in Current and in a loaded
+comparison alike. A variant whose rules are all owned by the
 entry gains no sentence from those rules.
 
 A whole-document page may use component elements

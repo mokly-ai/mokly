@@ -1,13 +1,37 @@
-import type { CatalogueReadModel } from "../../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
 import type { EntryChangeReason } from "../../packages/viewer/src/generated/catalogue/EntryChangeReason.js";
 import type { EntryDetailV2 } from "../../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { ResourceEvidence } from "../../packages/viewer/src/generated/catalogue/ResourceEvidence.js";
 import type { ReviewEntryAddress } from "../../packages/viewer/src/generated/catalogue/ReviewEntryAddress.js";
 import type { ReviewState } from "../../packages/viewer/src/generated/catalogue/ReviewState.js";
 import type { RuleEvidence } from "../../packages/viewer/src/generated/catalogue/RuleEvidence.js";
+import type { ViewEvidence } from "../../packages/viewer/src/generated/catalogue/ViewEvidence.js";
 
 import type { BehaviourRecords } from "./behaviour-table.mjs";
 import type { LegacyScenario } from "./legacy-adapter.mjs";
+
+/** One current or removed entry record of a captured catalogue index v7. */
+export interface RustCatalogueEntry {
+  kind: string;
+  path: string;
+  previousPath?: string;
+  changes?: { status: string; kind?: string; included?: boolean };
+  views?: {
+    viewport: "mobile" | "desktop";
+    colorScheme: "light" | "dark";
+    resourceEvidence?: ViewEvidence;
+  }[];
+}
+
+/** A catalogue index v7 that the Rust core wrote before index v8. */
+export interface RustCatalogueCapture {
+  schemaVersion: 7;
+  screens: RustCatalogueEntry[];
+  components: RustCatalogueEntry[];
+  pages: RustCatalogueEntry[];
+  documents: RustCatalogueEntry[];
+  useCases: RustCatalogueEntry[];
+  removedEntries: { entry: RustCatalogueEntry }[];
+}
 
 /** One view of a captured review v8 entry. */
 export interface RustReviewView {
@@ -60,7 +84,7 @@ export interface RustReviewCapture {
 }
 
 export interface RustScenario {
-  catalogue?: CatalogueReadModel;
+  catalogue?: RustCatalogueCapture;
   details?: EntryDetailV2[];
   review?: RustReviewCapture;
   inventory?: LegacyScenario["inventory"];

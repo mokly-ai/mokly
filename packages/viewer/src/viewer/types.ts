@@ -108,7 +108,7 @@ export type SelectionProps =
       onSelectionChange?: (selection: ViewerSelection) => void;
     };
 /**
- * The catalogue index v7 as an object with its artifact origin, or its
+ * The catalogue index v8 as an object with its artifact origin, or its
  * absolute HTTP(S) URL; and the detail source of every entry.
  */
 export type SourceProps = { detail: DetailSource } & (

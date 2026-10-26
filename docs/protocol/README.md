@@ -138,7 +138,7 @@ The static output of `build`, its safety and ownership rules, publication, and t
 
 - [Catalogue Upload Exchange v1](./mokly-upload-exchange.md)
 - [Catalogue Upload v3](./mokly-upload.md)
-- [Catalogue Upload Validation v2](./mokly-upload-validation.md)
+- [Catalogue Upload Validation v3](./mokly-upload-validation.md)
 - [Export Ownership v3](./mokly-export-ownership.md)
 - [Optional Changes In Published Catalogues](./mokly-publication.md)
 - [Static Build](./mokly-export.md)

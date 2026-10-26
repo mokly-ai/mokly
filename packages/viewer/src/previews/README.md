@@ -11,17 +11,20 @@ descriptor advertises
 nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
-[`request.ts`](./request.ts) resolves that descriptor to one metadata address.
-Serve, static delivery, and embedded hosts use the catalogue's advertised
-`comparisonUrl` for a screen and `previewMetadataPath(path)` for a page or
-document. Every address stays inside that comparison generation. A missing
+[`request.ts`](./request.ts) resolves that descriptor to one metadata address
+inside the comparison generation that the catalogue's `comparisonUrl` names:
+the removed entry's detail, `entries/{path}.json`, for a screen, and
+`previewMetadataPath(path)` for a page or document. Serve, static delivery,
+and embedded hosts use the same addresses. A missing
 advertisement makes the preview unavailable without a request. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
-Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v8 carries no stored before/after paths.
-Before accepting either kind, the request recomputes the selected historical
-identity from the metadata's baseline commit. A generation-backed selection
+Screen documents use `snapshotViewPath("before", ...)` only for the removed
+detail's views whose state is `removed`; the detail carries no stored
+before/after paths. Before accepting a screen, the request compares the
+detail's `snapshotId` with the selected one. Before accepting a page or
+document, it recomputes the selected historical identity from the metadata's
+baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.
 This keeps a late response or Retry from replacing an open historical record
 after the baseline changes. `renewPreview`
@@ -75,8 +78,8 @@ needed for that viewport and scheme before reporting ready, renews before
 reusing a live presentation, and discards work after route replacement or
 unmount.
 
-The controller and typed review validators are bundled once into the
-standalone shell, `dist/browser/shell.js`. Serve, `build` and
+The controller and the typed detail and metadata readers are bundled once into
+the standalone shell, `dist/browser/shell.js`. Serve, `build` and
 application-owned `@mokly/viewer` roots therefore use the same React lifecycle
 without a second Browse runtime.
 

@@ -194,8 +194,8 @@ pairs it with the base commit in the catalogue change snapshot v4. Both stay
 in memory: no host writes, serves, or uploads them. The
 [catalogue index](./mokly-catalogue.md) and the
 [entry details](./mokly-shell-delivery.md#entry-detail) are the only public
-comparison records. A catalogue-wide comparison file is rejected: it repeated
-the details' evidence and outgrew the per-file limits of static hosts.
+comparison records. A catalogue-wide comparison file is rejected: it would
+repeat the details' evidence and outgrow the per-file limits of static hosts.
 
 ```ts
 interface ReviewResultV8 {
