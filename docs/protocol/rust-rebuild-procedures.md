@@ -29,12 +29,7 @@ Scenarios, one directory each:
 For each scenario keep the review artifact, the catalogue read model, the
 export inventory, and the terminal output of build, check, serve startup, and
 export; the previous manifest and generated tree are not kept, because the
-Rust core writes neither. Then run
-the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
-rebuild branch, over the saved outputs. The JSON table contains `availability`
-fields for captured inputs, entries by kind and path, listed changes with
-states and reasons, affected consumers, kept rules and excluded stylesheets
-per view, `exportedResources` paths and sides, and resource closures per view.
+Rust core writes neither.
 
 ## Gap Sweep
 
@@ -52,13 +47,8 @@ old test names, not a port.
    reason: adopt, adopt with a change, or drop.
 4. Write the adopted and changed rules into the new spec page in the same
    change. Dropped rules need no record beyond the sweep file.
-5. Produce the behaviour table from the Rust core for every captured scenario
-   and compare it with the reference table. Put each difference into one bin:
-   an improvement the spec already states, a spec gap to close before the
-   milestone closes, or a regression to fix.
-6. Save the sweep and the comparison under
-   `.context/rust-rebuild/sweeps/<milestone>.md` and name that file in one
-   line under the milestone in the plan.
+5. Save the sweep under `.context/rust-rebuild/sweeps/<milestone>.md` and name
+   that file in one line under the milestone in the plan.
 
 Each sweep override lists the old checks that its port does not prove.
 If a delegate drops a duplicate row, the delegate moves those checks into
