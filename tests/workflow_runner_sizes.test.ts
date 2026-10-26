@@ -23,6 +23,14 @@ interface Workflow {
 
 /** npm trusted publishing creates provenance only on GitHub-hosted runners. */
 const PROVENANCE_PUBLISH_RUNNER = "ubuntu-24.04";
+/** CI's Windows native job compiles and tests the whole Rust workspace. */
+const CI_WINDOWS_NATIVE_RUNNER = "blacksmith-8vcpu-windows-2025";
+/** Workflows whose native build matrix may run `darwin-x64` on Intel macOS. */
+const INTEL_MACOS_WORKFLOWS = [
+  "release.yml",
+  "release-check.yml",
+  "native-bootstrap.yml",
+];
 
 test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub-hosted runners", async () => {
   const workflowsDirectory = path.join(repositoryRoot, ".github", "workflows");
@@ -78,8 +86,7 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
       for (const value of values) {
         assert.ok(typeof value === "string", `${context} runner matrix value`);
         if (
-          (workflowName === "release.yml" ||
-            workflowName === "release-check.yml") &&
+          INTEL_MACOS_WORKFLOWS.includes(workflowName) &&
           jobName === "build-native" &&
           value === "macos-26-intel"
         ) {
@@ -91,6 +98,11 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
             rows.filter((row) => row[key] === value).map((row) => row.target),
             ["darwin-x64"],
           );
+        } else if (
+          context === "ci.yml:native" &&
+          value.endsWith("-windows-2025")
+        ) {
+          assert.equal(value, CI_WINDOWS_NATIVE_RUNNER);
         } else assertMinimumRunner(value, context);
       }
     }

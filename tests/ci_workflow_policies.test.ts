@@ -23,6 +23,11 @@ const CHECKOUT_ACTIONS = ["useblacksmith/checkout@", "actions/checkout@"];
 const PINNED_REVISION = /@[a-f0-9]{40}$/u;
 const UNTRUSTED_PULL_REQUEST_FIELD =
   /\$\{\{[^}]*github\.event\.pull_request\.(?:head\.ref|labels)/u;
+/** Workflows whose run steps receive every expression through env. */
+const ENV_ONLY_WORKFLOWS = [
+  ".github/workflows/dependency-audit.yml",
+  ".github/workflows/native-bootstrap.yml",
+];
 
 interface AutomationStep {
   readonly name?: string;
@@ -60,22 +65,23 @@ test("external actions pin commits and local workflows use the caller revision",
   );
 });
 
-test("run steps never interpolate untrusted pull request input", async () => {
+test("run steps never interpolate untrusted input", async () => {
   const ci = runScripts((await readDocument(CI_WORKFLOW)).document);
-  const audit = runScripts(
-    (await readDocument(".github/workflows/dependency-audit.yml")).document,
-  );
-  assert.ok(ci.length > 0 && audit.length > 0, "both workflows run scripts");
+  assert.ok(ci.length > 0, "ci.yml runs scripts");
   assert.deepEqual(
     ci.filter((run) => UNTRUSTED_PULL_REQUEST_FIELD.test(run)),
     [],
     "pass pull request head refs and labels to ci.yml run steps through env",
   );
-  assert.deepEqual(
-    audit.filter((run) => run.includes("${{")),
-    [],
-    "pass every expression to dependency-audit.yml run steps through env",
-  );
+  for (const file of ENV_ONLY_WORKFLOWS) {
+    const runs = runScripts((await readDocument(file)).document);
+    assert.ok(runs.length > 0, `${file} runs scripts`);
+    assert.deepEqual(
+      runs.filter((run) => run.includes("${{")),
+      [],
+      `pass every expression to ${file} run steps through env`,
+    );
+  }
 });
 
 test("CI jobs that install dependencies check out full history", async () => {

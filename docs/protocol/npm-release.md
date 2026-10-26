@@ -115,6 +115,13 @@ native TLS dependencies, packs all seven packages, rechecks the archives, and
 smoke-tests clean consumers. It has contents-read permission only and cannot
 publish, use the npm environment, request OIDC, or read secrets.
 
+The native bootstrap workflow accepts only a manual dispatch with a reviewed
+full commit SHA. It builds the five `0.0.0` native registration archives from
+that commit with the release native build matrix and uploads each archive with
+its source report. It has the same read-only limits as the release-check
+workflow. The [bootstrap contract](./npm-bootstrap.md#native-package-registration)
+defines its procedure.
+
 Publication order is the platform packages, then the viewer, then the CLI. Each
 publication completes its registry verification before the next starts, so an
 installable CLI always resolves published platform packages and a published

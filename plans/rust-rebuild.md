@@ -6279,6 +6279,99 @@ does not ask the user before the merge.
 - [x] Resolve user item 195 (merge): PR #202, the fix of user item 159.
   - User decision 195 (2026-10-25): A. PR #202 merged as `6d9705aa`.
 
+- [ ] Resolve user item 196 (Medium, test; open):
+      `crates/mokly-cli/src/_tests_/serve_trace_tests.rs` and
+      `crates/mokly-graph/tests/routing_work_tests.rs` capture spans with
+      scoped subscribers, as the sidecar trace capture did before the fix of
+      user item 193. A span can then be lost while parallel tests register
+      and drop their subscribers. Options (estimate): A install the same
+      once-per-process interest guard in both captures (Small); B leave
+      them until one of them flakes. Recommended: A, in a separate branch.
+
+- [ ] Resolve user item 197 (Low, process; open): the shared-version
+      check in `scripts/release/versions.mjs` still accepts CLI 0.15.0 with
+      viewer 0.6.0, the pair before the lockstep migration. No release can
+      return to that pair after 0.16.0. Options (estimate): A remove the
+      exception, so that the check requires one shared version (Small); B
+      keep it. Recommended: A. Removal needs the user's approval, because
+      the check is release functionality.
+
+- [x] Resolve user item 200 (release): release run 40254485539 failed at
+      `npm publish` with a 404 for `@mokly/native-linux-x64-gnu`. The five
+      `@mokly/native-{target}` packages do not exist on npm, and trusted
+      publishing needs an existing package. Nothing was published.
+  - User decision 200 (2026-10-26): B. A one-off read-only workflow,
+    `.github/workflows/native-bootstrap.yml`, runs the bootstrap command for
+    the five targets on the hosted runners and uploads each registration
+    archive with its source reports. Branch
+    `rebuild/native-bootstrap-workflow` (`83dfb875`); this record merges
+    with its pull request. Local `linux-x64-gnu` proof:
+    `.context/native-bootstrap-proof/`.
+
+- [x] Maintainer steps of user decision 200, after its pull request merges:
+      dispatch the native bootstrap workflow for a reviewed commit, publish
+      the five registration archives, configure the five trusted publishers
+      and verify the two existing ones, then rerun the failed publish job of
+      release run 40254485539.
+  - Done on 2026-10-26. Bootstrap run 40307321788 built the five archives
+    from `c84be6c4`. They were published as `0.0.0` under `bootstrap`, and
+    each new package also shows npm's `0.0.0-stage` staged-publishing
+    placeholder. The five trusted publishers name `mokly-ai/mokly`,
+    `release.yml`, and environment `npm`, and the CLI and viewer publishers
+    read back the same. Each native package requires 2FA and disallows
+    tokens. The rerun published two native packages, then stopped at the
+    registry verifier: user item 205.
+
+- [x] Resolve user item 201 (Low, process): the native bootstrap workflow
+      accepts any well-formed 40-character commit SHA, also one that `main`
+      does not contain. Options (estimate): A keep the format check,
+      because the maintainer compares `sourceCommit` in each report with the
+      reviewed commit; B add a containment check, a new rejection.
+      Recommended: A.
+  - User decision 201 (2026-10-26): A. The workflow keeps its format check
+    only, and the code does not change.
+
+- [x] Resolve user item 202 (test): the nightly Design Attribution Matrix
+      failed on `main` (schedule run 40295914111 on `c84be6c4`) with
+      compile error E0061. `crates/mokly-cli/tests/design_support/native.rs`
+      passed seven arguments to `changes_runtime::service`, which takes
+      eight since #199. The repository suite linted the workspace without
+      the `design-matrix` feature, so no gate compiled the target.
+  - User decision 202 (2026-10-26): B. The design support passes
+    `common.base_install_scripts_override()` (`439f2601`), and the
+    repository suite also runs
+    `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`
+    (`21876714`). Branch `rebuild/design-matrix-compile`. The full matrix
+    passed on the branch in run 40312840294.
+
+- [x] Resolve user item 205 (release): the rerun of the 0.16.0 publish job
+      published `@mokly/native-linux-x64-gnu@0.16.0` and
+      `@mokly/native-linux-arm64-gnu@0.16.0`, then stopped. The registry
+      verifier installed the arm64 package on the x64 publish runner, and
+      npm rejected it with `EBADPLATFORM`, because npm applies `--os` and
+      `--cpu` only to optional dependencies. Every retry of 0.16.0 runs the
+      scripts of the `v0.16.0` tag.
+  - User decision 205 (2026-10-26): A. The verifier installs a native
+    package as an optional dependency with its os, cpu, and libc
+    selectors, in branch `rebuild/native-verify-platform` (`1fd02a4a`).
+    0.16.1 replaces 0.16.0, which stays incomplete on npm. The rejected
+    option B finished 0.16.0 from its retained archives through a
+    temporary workflow setting.
+
+- [x] Release steps of user decision 205, after its pull request merges:
+      merge the 0.16.1 release pull request when its checks pass, then
+      verify all seven packages at 0.16.1 on npm.
+  - Done on 2026-10-26. PR #207 merged as `66e1ba6a`, and release PR #208
+    merged as `713f9b38`. Release run 40364686121 published all seven
+    packages at 0.16.1 under `latest`, with the tags `v0.16.1` and
+    `viewer-v0.16.1`.
+
+- [x] Resolve user item 206 (plan): the plan still showed the 0.16.1
+      release steps as open, and user items 196 and 197 were not in the
+      plan.
+  - User decision 206 (2026-10-26): A. This plan-only change ticks the
+    release steps and records items 196 and 197.
+
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
       mutex. A test that fails while it holds the lock poisons the mutex, and
@@ -6293,6 +6386,11 @@ does not ask the user before the merge.
 - Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
   the Loading and recovery designs show the preview in the stage, but the
   product shows "Loading preview…". Separate branch.
+- Outside the 200 B scope: `tests/npm_pin.test.ts:48` matches only an exact
+  `npm ci` command, so it skips `npm ci --ignore-scripts`. Separate branch.
+- Outside the 200 B scope: `docs/protocol/npm-bootstrap.md:145`: the older
+  sections name a test file and describe how the code works, against the
+  documentation rules. Separate branch.
 - Outside the 117 C port review scope: `scripts/release/package_reports.mjs`:
   the required CLI file list does not name `dist/sidecar/parent-watchdog.js`,
   which `packages/mokly/src/sidecar/parent-input.ts` loads by path. Separate

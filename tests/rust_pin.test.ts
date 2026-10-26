@@ -15,6 +15,7 @@ const RUST_WORKFLOWS = [
   "release.yml",
   "release-prepare.yml",
   "blacksmith-testbox.yml",
+  "native-bootstrap.yml",
 ] as const;
 /** A rustup command that selects a toolchain outside `rust-toolchain.toml`. */
 const VERSION_SELECTION =

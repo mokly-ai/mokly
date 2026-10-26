@@ -1,0 +1,101 @@
+name: Native bootstrap
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Reviewed full 40-character commit SHA to pack for npm registration
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: native-bootstrap
+  cancel-in-progress: false
+jobs:
+  validate-commit:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    env:
+      COMMIT: ${{ inputs.commit }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Require a full commit SHA
+        run: |
+          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::commit must be a full 40-character lowercase commit SHA"
+            exit 1
+          fi
+  build-native:
+    needs: [validate-commit]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64-gnu
+            triple: x86_64-unknown-linux-gnu
+            runner: blacksmith-2vcpu-ubuntu-2404
+          - target: linux-arm64-gnu
+            triple: aarch64-unknown-linux-gnu
+            runner: blacksmith-2vcpu-ubuntu-2404-arm
+          - target: darwin-arm64
+            triple: aarch64-apple-darwin
+            runner: blacksmith-6vcpu-macos-26
+          - target: win32-x64-msvc
+            triple: x86_64-pc-windows-msvc
+            runner: blacksmith-2vcpu-windows-2025
+          - target: darwin-x64
+            triple: x86_64-apple-darwin
+            runner: macos-26-intel
+    env:
+      COMMIT: ${{ inputs.commit }}
+      RELEASE_TARGET: ${{ matrix.target }}
+      RUST_TARGET: ${{ matrix.triple }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out reviewed commit
+        if: matrix.target != 'darwin-x64'
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - name: Check out reviewed commit on Intel macOS
+        if: matrix.target == 'darwin-x64'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install target
+        run: rustup target add "$RUST_TARGET"
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Set up Linux release tools
+        if: startsWith(matrix.target, 'linux-')
+        run: node scripts/release/setup-linux.mjs
+      - name: Pack registration archive
+        run: node scripts/release/bootstrap.mjs "$COMMIT" ".context/native-bootstrap/$RELEASE_TARGET" "@mokly/native-$RELEASE_TARGET"
+      - name: Preserve registration archive and source report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-bootstrap-${{ matrix.target }}
+          path: .context/native-bootstrap/${{ matrix.target }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
