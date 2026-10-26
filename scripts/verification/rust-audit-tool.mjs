@@ -8,6 +8,11 @@ import { x as extractTar } from "tar";
 
 import { runInherited } from "./process.mjs";
 
+/** Installed tools, one directory per identity. CI caches this directory. */
+export const RUST_AUDIT_TOOL_DIRECTORY = ".context/rust-audit-tool";
+/** The reviewed dependency lock that every tool build uses. */
+export const RUST_AUDIT_TOOL_LOCK = ".cargo/audit-tool/Cargo.lock";
+
 const release = {
   version: "0.22.2",
   checksum: "700c2b240f7fd330c24b675fe429f73a5b676531fcc6300400b2b67f155ba12a",
@@ -19,12 +24,12 @@ export async function ensureRustAuditTool(
   pin = release,
   io = dependencies(root),
 ) {
-  const lock = await io.read(path.join(root, ".cargo/audit-tool/Cargo.lock"));
+  const lock = await io.read(path.join(root, RUST_AUDIT_TOOL_LOCK));
   const identity = createHash("sha256")
     .update(`${io.target}:${pin.version}:${pin.checksum}:`)
     .update(lock)
     .digest("hex");
-  const installation = path.join(root, ".context/rust-audit-tool", identity);
+  const installation = path.join(root, RUST_AUDIT_TOOL_DIRECTORY, identity);
   const binary = path.join(installation, "bin", io.executable);
   const stamp = path.join(installation, "complete");
   if (

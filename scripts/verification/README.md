@@ -54,6 +54,13 @@ Failed or interrupted installs cannot become cache hits. It removes the
 temporary source tree after installation. Compiled dependencies use
 `target/rust-audit-tool/`. Both locations stay ignored.
 
+In CI, the Repository job's Rust build cache restores
+`.context/rust-audit-tool/`, so most runs reuse the installed tool. The cache
+key hashes the tool lockfile and this installer. A new pin or lock therefore
+misses the cache, and the next `main` run saves the new tool.
+`tests/ci_rust_cache.test.ts` imports the directory and lockfile paths from
+the installer to keep the workflow aligned.
+
 The installer returns the exact installed executable. The wrapper runs the
 live workspace advisory query with it on every invocation, including cache
 hits. The installer does not change the wrapper's advisory policy. The daily

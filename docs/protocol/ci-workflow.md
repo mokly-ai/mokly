@@ -103,12 +103,12 @@ Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
-caches only npm downloads. Every cached CI job keys npm's download cache from
-the checked-out `package-lock.json`. Only the repository audit reads a
-comparison-commit lockfile, for baseline evaluation rather than a cache key. The
+caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
+download cache from the checked-out `package-lock.json`. Only the repository
+audit reads a comparison-commit lockfile, for baseline evaluation rather than a
+cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
-and
-[cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
+and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
 Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
