@@ -53,6 +53,7 @@ unimock = "0.6.8"
 libc = "0.2.190"
 mokly-test-support = { workspace = true }
 regex = "1.13.1"
+fancy-regex = "0.19.2"
 
 [[bin]]
 name = "mokly"

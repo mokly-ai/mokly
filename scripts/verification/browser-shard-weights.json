@@ -56,7 +56,6 @@
   "tests/browser/component_workspace.spec.ts": 505.818,
   "tests/browser/css_module_parity.spec.ts": 186.75,
   "tests/browser/css_screen_evidence.spec.ts": 514,
-  "tests/browser/design_adoption.spec.ts": 38.2,
   "tests/browser/design_appearance_toggle.spec.ts": 1698.8,
   "tests/browser/design_comparison_eligibility.spec.ts": 354.172,
   "tests/browser/design_comparison_eligibility_2.spec.ts": 358.297,

@@ -19,6 +19,8 @@ receiver.
   upload metadata v2, ownership v3, and the complete inventory.
 - Read `--debug-timings` records, and recompute the comparison generation and
   the deployment identity of an output.
+- Copy the example catalogue, with the documents that its entries link, into a
+  temporary directory.
 
 ## What This Crate Does
 
@@ -64,12 +66,14 @@ Tests that run the binary with JavaScript entries need the built viewer and
 
 ### Key Code
 
-- [Binary invocations](./src/process.rs): `Mokly`, `Running`, and `Finished`.
+- [Binary invocations](./src/process/mod.rs): `Mokly`, `Running`, and `Finished`.
 - [Publication fixtures](./src/publication.rs) and [Git helpers](./src/git.rs).
 - [Loopback server](./src/server.rs) and the
   [fake receiver](./src/receiver/exchange.rs).
 - [Upload metadata](./src/upload.rs) and [ownership](./src/inventory.rs) readers.
 - [Timing records](./src/timings.rs) and [output identities](./src/identity.rs).
+- [Example copy](./src/example.rs): the example catalogue in a temporary
+  directory that a test can build or change.
 
 ### Related Docs
 

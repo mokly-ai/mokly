@@ -5,6 +5,7 @@
 pub mod archive;
 pub mod changes;
 pub mod consumer;
+pub mod example;
 pub mod files;
 pub mod git;
 pub mod http;

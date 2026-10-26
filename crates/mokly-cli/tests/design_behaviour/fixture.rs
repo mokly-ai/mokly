@@ -2,13 +2,9 @@
 
 use std::env;
 use std::fs;
-#[cfg(unix)]
-use std::os::unix::fs::symlink;
-#[cfg(windows)]
-use std::os::windows::fs::symlink_dir;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
+use mokly_test_support::example;
 use tempfile::TempDir;
 
 use super::records;
@@ -20,49 +16,7 @@ pub(super) fn workspace() -> PathBuf {
 
 /// Isolate actual sources and make the optional defect injection local to one run.
 pub(super) fn copy() -> TempDir {
-    let directory = TempDir::new().unwrap();
-    let workspace = workspace();
-    let files = Command::new("git")
-        .args([
-            "ls-files",
-            "-z",
-            "--",
-            ".gitignore",
-            "examples",
-            "docs/protocol",
-            "plans/rust-rebuild.md",
-        ])
-        .current_dir(&workspace)
-        .output()
-        .unwrap();
-    assert!(files.status.success());
-    for name in files
-        .stdout
-        .split(|byte| *byte == 0)
-        .filter(|name| !name.is_empty())
-    {
-        let name = str::from_utf8(name).unwrap();
-        let target = directory.path().join(name);
-        fs::create_dir_all(target.parent().unwrap()).unwrap();
-        fs::copy(workspace.join(name), target).unwrap();
-    }
-    fs::write(
-        directory.path().join("package.json"),
-        r#"{"private":true,"type":"module"}"#,
-    )
-    .unwrap();
-    #[cfg(unix)]
-    symlink(
-        workspace.join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
-    #[cfg(windows)]
-    symlink_dir(
-        workspace.join("node_modules"),
-        directory.path().join("node_modules"),
-    )
-    .unwrap();
+    let directory = example::copy();
     fs::write(
         directory
             .path()

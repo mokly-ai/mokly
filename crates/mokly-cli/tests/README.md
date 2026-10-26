@@ -8,17 +8,24 @@ tests under `tests/` cover TypeScript code and Node tooling only. Each
 end-to-end area has one test binary with a module folder, and uses the shared
 fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
 
-| Binary                    | Area                                                                                                         |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `publication_tests`       | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup.                         |
-| `changes_output_tests`    | Changes classification, comparison contents, evidence, timings, and Serve parity.                            |
-| `recovery_tests`          | Install and rollback failures, signals, cancellation, input boundaries, and static resources.                |
-| `base_tiers_tests`        | Base dependency tiers with real package managers, a local registry, mirrors, and secrets (Unix).             |
-| `sidecar_rendering_tests` | JavaScript rendering through the sidecar: callbacks, PostCSS evidence, timings, live props, and generations. |
-| `controls_tests`          | Control bounds and order, and numbers outside the JavaScript safe integer range.                             |
+| Binary                    | Area                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `publication_tests`       | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup.                              |
+| `changes_output_tests`    | Changes classification, comparison contents, evidence, timings, and Serve parity.                                 |
+| `recovery_tests`          | Install and rollback failures, signals, cancellation, input boundaries, and static resources.                     |
+| `base_tiers_tests`        | Base dependency tiers with real package managers, a local registry, mirrors, and secrets (Unix).                  |
+| `sidecar_rendering_tests` | JavaScript rendering through the sidecar: callbacks, PostCSS evidence, timings, live props, and generations.      |
+| `controls_tests`          | Control bounds and order, and numbers outside the JavaScript safe integer range.                                  |
+| `design_catalogue_tests`  | The example design catalogue: inventory, shared library, adoption, stylesheets, scripts, links, and reachability. |
 
 Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
 packages: run `npm run build` before a raw `cargo test`.
+
+`design_catalogue_tests` builds a copy of the example once with `--strict`,
+because a build writes only below the example's `repoRoot`. One test runs every
+contract check against that build, and its failure lists each failed check with
+its violations. The static build adds the published inspector script to each
+document, so the script check accepts that one script and no consumer script.
 
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including

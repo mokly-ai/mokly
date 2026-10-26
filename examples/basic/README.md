@@ -167,9 +167,10 @@ Props tab's controls, and the Read-only and recovery gallery under
 `specs/design/components/controls/limits/` draws the states without editing
 and the recovery states that keep the edits.
 
-`tests/design_catalogue.test.ts` serves this configuration once with
-`--base HEAD` and checks the design catalogue against the verification and
-adoption sections of those contracts. `tests/fixtures/design/` holds the frozen
+The `design_catalogue_tests` binary of the
+[CLI tests](../../crates/mokly-cli/tests/README.md) builds a copy of this
+configuration once with `--strict` and checks the design catalogue against the
+verification and adoption sections of those contracts. `tests/fixtures/design/` holds the frozen
 screen inventory with the screens that only the catalogue tree reaches, the
 family parts of the adoption table, and the link expectations. The test also
 checks the shared components each design screen records, the stylesheets each

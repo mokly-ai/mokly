@@ -184,7 +184,8 @@ From the repository root:
 npm run build
 npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example
 npm run typecheck
-npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts tests/design_catalogue.test.ts
+npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts
+cargo test -p mokly-cli --test design_catalogue_tests
 cargo xtask check
 ```
 
@@ -193,7 +194,7 @@ fails on any error or warning. `tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
 pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
 and control edges stay visible and that only palette sources name colours.
-`tests/design_catalogue.test.ts` serves the example and checks that every
+`design_catalogue_tests` builds a copy of the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that
 each design screen records the shared components of its family.

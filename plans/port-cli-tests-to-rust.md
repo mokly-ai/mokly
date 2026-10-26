@@ -163,8 +163,17 @@ Evidence: `.context/port-cli-tests-to-rust/controls.md`.
 
 ## Milestone 9: Example design catalogue
 
-- [ ] Port `design_catalogue` and the browser spec `design_adoption`, which
+Evidence: `.context/port-cli-tests-to-rust/design.md`.
+
+- [x] Port `design_catalogue` and the browser spec `design_adoption`, which
       reads JSON only.
+- [x] Build a copy of the example once with `--strict` instead of serving it.
+      The checks read the catalogue content, which Serve and the static build
+      share. The browser example servers keep the Serve checks of the example.
+      The script check accepts the published inspector script that the static
+      build adds to each document.
+- [x] Share the example copy of `design_behaviour_tests` through
+      `mokly-test-support`.
 
 ## Milestone 10: Unused Node harness
 
