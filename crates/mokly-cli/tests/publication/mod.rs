@@ -9,6 +9,7 @@ mod checkout_tests;
 mod comparison_tests;
 mod diagnostics_tests;
 mod directory_tests;
+mod receiver_tests;
 mod replan_tests;
 mod retry_tests;
 mod support;

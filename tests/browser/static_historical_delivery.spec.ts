@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { files } from "../helpers/static_faults.js";
+import { files } from "../helpers/directory_files.js";
 
 import {
   copiedBytes,

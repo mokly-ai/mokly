@@ -177,10 +177,17 @@ Evidence: `.context/port-cli-tests-to-rust/design.md`.
 
 ## Milestone 10: Unused Node harness
 
-- [ ] Delete each Node harness test and helper that no remaining test uses,
+Evidence: `.context/port-cli-tests-to-rust/harness.md`.
+
+- [x] Delete each Node harness test and helper that no remaining test uses,
       such as the publication, signal, and Serve helpers and their own
       tests. Record the search that proves each one dead.
-- [ ] Update the docs and READMEs that name them.
+- [x] Port the real publication case of `installed_receiver_fixtures`, the
+      last user of the publication exchange helpers, to `publication_tests`.
+      Its packed fixture case stays in Node.
+- [x] Keep the Serve helpers and their own tests: the TypeScript sidecar
+      tests and the browser setup still use them.
+- [x] Update the docs and READMEs that name them.
 
 ## Milestone 11: Verification, commit, review, and pull request
 
