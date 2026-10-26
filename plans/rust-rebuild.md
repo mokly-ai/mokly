@@ -5531,6 +5531,42 @@ check passes on this commit.
 - Outside the decision work review: `crates/mokly-catalogue/src/templates.rs`
   at line 217 reports a `{{...}}` failure in an attribute value at the
   attribute name start, also on `origin/main`. Separate branch.
+- Decision work review round 2:
+  `.context/html-pipeline-2-decisions/review-round2-f87efa6b.md`. Findings 1
+  and 2 are fixed in `e24a8270` and `05caa536`.
+- [ ] Decision work review round 2, finding 3: four commits on
+      `rebuild/html-pipeline-2` name HTML tags in their messages: `75ec1ad4`,
+      `3c90b1e1`, `558e580b`, and `f38cb325`. Release Please parses changelog
+      text as HTML. Severity Low, effort Small, category repository rule.
+      Options: A, write the squash message and the pull request description
+      without HTML tags, Small; B, reword the commits and force-push, which
+      rewrites pushed history, Small; C, add a check that rejects tag-like
+      text in commit messages and pull request descriptions, Medium.
+      Recommended: A. No option is applied.
+- [ ] Source offset maps for diagnostics (wider fix of round 1 finding 1 and
+      round 2 finding 1). Give each text token and attribute value a map
+      from value offsets to source offsets, so that every `{{...}}` failure
+      points at its own characters. Severity Low, effort Large, category
+      product bug. It also covers the attribute value and character
+      reference locations of the outside-scope lines around it. Options: A,
+      keep the targeted span fixes,
+      Small; B, the offset maps, Large. Recommended: B. No option is applied.
+- Outside the decision work review round 2:
+  `crates/mokly-catalogue/src/templates.rs` at line 71 reports a `{{...}}`
+  failure after a character reference too early, also on `origin/main`.
+  Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-catalogue/src/html_tokens.rs` at lines 93-96 says that
+  reserved metadata on a wrapper "is rejected", but a saved slot with a
+  literal value builds, also on `origin/main`. Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-html/src/elements.rs` at lines 30-47 evaluates a reserved
+  name on a saved-slot `mokly-ignore` but not on a `mokly-ignore-scope`,
+  also on `origin/main`. Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-html/src/source_checks.rs` at lines 21-36 fails any
+  duplicate attribute in callback output as a duplicate navigation
+  attribute, also on `origin/main`. Separate branch.
 - Outside phase 2 review 1, resolved by the one-tokenizer decision B
   (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
   kept its own integration point list without SVG `desc` or encoded MathML
