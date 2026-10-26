@@ -65,7 +65,7 @@ result.messages.push({type:'dependency',plugin:'token',file:${JSON.stringify(tok
             : [read.kind],
         ),
       [[0, 10, createHash("sha256").update("tokenvalue").digest("hex")]],
-      "Mokly's own loader observer must not hide earlier preload ranges",
+      "a module.register call by Mokly must not hide earlier preload ranges",
     );
     assert.equal(result.readEvidence.coverage, "incomplete");
     await sidecar.call("shutdown");

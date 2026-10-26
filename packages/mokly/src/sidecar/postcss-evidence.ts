@@ -30,12 +30,15 @@ const generationKey = Symbol.for("mokly.postcss.readEvidenceGeneration");
 const generationInitKey = Symbol.for(
   "mokly.postcss.readEvidenceGenerationInit",
 );
-const modulePathKey = Symbol.for("mokly.postcss.modulePath");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
-/** A shared generation reset, generation start, or module path recorder. */
-type SharedRecorder = (value: string) => void;
+type GenerationReset = (generation: string) => void;
+type GenerationInit = (generation: string) => void;
 
-function isSharedRecorder(value: unknown): value is SharedRecorder {
+function isGenerationReset(value: unknown): value is GenerationReset {
+  return typeof value === "function";
+}
+
+function isGenerationInit(value: unknown): value is GenerationInit {
   return typeof value === "function";
 }
 
@@ -57,13 +60,12 @@ export function shareReadEvidence(): void {
   Object.defineProperty(globalThis, generationInitKey, {
     value: initializeReadEvidenceGeneration,
   });
-  Object.defineProperty(globalThis, modulePathKey, { value: recordModulePath });
 }
 
 /** Keep only witnesses observed after the current generation starts. */
 export function beginReadEvidenceGeneration(generation: string): void {
   const value: unknown = Reflect.get(globalThis, generationKey);
-  if (isSharedRecorder(value)) {
+  if (isGenerationReset(value)) {
     value(generation);
     return;
   }
@@ -82,7 +84,7 @@ function resetReadEvidence(generation: string): void {
 /** Mark the worker's first generation without dropping preload observations. */
 export function initializeReadEvidenceGeneration(generation: string): void {
   const value: unknown = Reflect.get(globalThis, generationInitKey);
-  if (isSharedRecorder(value) && value !== initializeReadEvidenceGeneration) {
+  if (isGenerationInit(value) && value !== initializeReadEvidenceGeneration) {
     value(generation);
     return;
   }
@@ -92,11 +94,6 @@ export function initializeReadEvidenceGeneration(generation: string): void {
 /** Add a resolved file URL to the current module inventory. */
 export function recordModulePath(url: string): void {
   if (!url.startsWith("file:")) return;
-  const recorder: unknown = Reflect.get(globalThis, modulePathKey);
-  if (isSharedRecorder(recorder) && recorder !== recordModulePath) {
-    recorder(url);
-    return;
-  }
   try {
     modules.add(fileURLToPath(url));
   } catch {

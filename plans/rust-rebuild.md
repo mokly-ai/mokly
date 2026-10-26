@@ -5549,6 +5549,25 @@ check passes on this commit.
   - User decision (2026-10-26): closed with no work by B of the 117 C port
     finding. The package has no such bundle since `07893644`.
 
+- [ ] Resolve 117 C port review 3 finding 2 (test): an assertion in
+      `tests/sidecar_postcss_async_loader.test.ts` says that asynchronous
+      loaders keep supplied module paths. It passes without the path
+      observer, because Mokly resolves each configured plugin itself.
+      Severity Low, test, effort Small for A. Options: A, assert the path of
+      a helper module that Mokly does not resolve and that the loader
+      changes, Small; B, change only the assertion message, Small.
+      Recommended: A. No option is applied.
+
+- [ ] Resolve the shared-ledger follow-up (code structure), the wider fix of
+      117 C port review 3 finding 1: the preload and the worker share each
+      evidence function through its own global symbol key. A key that loses
+      its caller stays behind, as the module path key did after `07893644`.
+      Severity Low, code structure, effort Medium for B. Options: A, keep
+      one key for each shared function, Small; B, share one ledger object
+      under one global key, Medium. Previous examples: `flushKey` and
+      `loaderFlagKey`, removed in `07893644`. Recommended: B. No option is
+      applied.
+
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
       the Details end with the terminal line "No changes to this screen.",
