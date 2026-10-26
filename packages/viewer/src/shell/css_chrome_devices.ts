@@ -9,6 +9,8 @@ export const CSS_CHROME_DEVICES = `
   background: var(--mbk-device-body);
 }
 
+/* The decorative notch and home pill let pointers through to the document;
+   the screen itself keeps pointer events, so links under the pill work. */
 .phone-notch,
 .phone-home {
   pointer-events: none;

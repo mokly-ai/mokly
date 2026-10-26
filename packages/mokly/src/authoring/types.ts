@@ -16,6 +16,11 @@ export type ReadonlyData<T> = T extends readonly unknown[]
   : T extends object
     ? { [K in keyof T]: ReadonlyData<T[K]> }
     : T;
+/**
+ * The props type `json-schema-to-ts` derives from a literal (`as const`)
+ * schema, deeply readonly. A widened `PropSchema` derives nothing, so its
+ * props stay `Record<string, unknown>`.
+ */
 export type SchemaProps<S extends PropSchema> = PropSchema extends S
   ? Record<string, unknown>
   : ReadonlyData<FromSchema<S>>;

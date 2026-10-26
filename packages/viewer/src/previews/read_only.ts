@@ -33,6 +33,11 @@ function accessible(frame: HTMLIFrameElement): Document | undefined {
   }
 }
 
+/**
+ * The link an activation went through. The composed path also holds nodes in
+ * open shadow roots, which `event.target` hides from a document listener, so
+ * a link inside a declarative shadow root is still found.
+ */
 function activated(event: Event, doc: Document): Element | undefined {
   const view = doc.defaultView;
   if (!view) return;

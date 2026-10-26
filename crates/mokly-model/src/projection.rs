@@ -1,4 +1,6 @@
 //! Allowlisted current catalogue projection for Serve and static output.
+//! Each public field is copied by name. No model entry, record, or evidence value is
+//! serialized whole, so a new private field cannot reach public JSON.
 
 use std::collections::BTreeMap;
 

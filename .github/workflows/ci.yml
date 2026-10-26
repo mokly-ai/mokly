@@ -52,6 +52,8 @@ jobs:
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
+      # actions/setup-node has no installed-version output, so read the exact
+      # floating Node 24 version here; every later Node 24 job requests it.
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"

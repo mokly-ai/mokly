@@ -54,6 +54,11 @@ pub(crate) fn read_receipt(entry: &Path) -> Result<Option<Receipt>> {
     }))
 }
 
+/// Writes the receipt under a temporary name, then renames it into place. A
+/// durable write flushes the receipt with `sync_all`, which is the drive-cache
+/// barrier on macOS, and flushes the entry directory before and after the
+/// rename. Windows has no directory flush and renames with write-through. A
+/// hit's access update passes `durable: false` and flushes nothing.
 pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt, durable: bool) -> Result<()> {
     let stored = StoredReceipt {
         schema_version: 1,
@@ -90,6 +95,9 @@ pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt, durable: bool) ->
     }
 }
 
+/// Flushes a built entry before its receipt is published. Linux flushes the
+/// whole filesystem once. Elsewhere it flushes each regular file, then each
+/// directory after its children, then the parent, and skips links.
 pub(crate) fn sync_tree(
     root: &Path,
     cancellation: &dyn Cancellation,

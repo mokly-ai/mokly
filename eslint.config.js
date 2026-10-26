@@ -76,6 +76,10 @@ export default tseslint.config(
       ],
     },
   },
+  // Tests must not assert elapsed time. The selectors reject a clock call
+  // minus a non-literal and a clock call plus a literal below 10,000 ms;
+  // variable deadlines and indirect clock calls pass both.
+  // tests/test_timing_lint.test.ts checks each form with `ESLint.lintText`.
   {
     files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
     ignores: ["tests/helpers/durations.ts"],
@@ -114,6 +118,10 @@ export default tseslint.config(
       "mokly/no-directory-literals": "error",
     },
   },
+  // Comparison artifact paths come only from the shared builders in
+  // packages/viewer/src/navigation/routes.ts, which the Rust core mirrors in
+  // crates/mokly-model/src/routes.rs. The rule covers the viewer source,
+  // scripts and examples, and exempts the builders and test directories.
   {
     files: [
       "packages/viewer/src/**/*.{ts,tsx}",

@@ -20,6 +20,8 @@ use signal_hook::{
     low_level::unregister,
 };
 
+/// Signal registration for one `build` or `publish` command. Each command creates it
+/// before configuration loading, so every covered step can observe a signal.
 pub(super) struct Interrupts {
     #[cfg(all(debug_assertions, unix))]
     /// Weak test observation cannot keep a signal registration alive.
@@ -36,6 +38,8 @@ pub(super) struct Interrupts {
 }
 
 /// The OS handler sets pending before the listener is scheduled.
+/// `requested` reads that flag, so a signal counts from its delivery, even when a
+/// child's failure reaches the core before the listener thread runs.
 struct Observed {
     pending: Arc<AtomicBool>,
     inner: Arc<dyn Cancellation>,

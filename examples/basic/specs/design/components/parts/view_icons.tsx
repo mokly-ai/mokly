@@ -47,6 +47,10 @@ const paths: Record<ViewIconKind, ReactNode> = {
   ),
 };
 
+/**
+ * A toolbar glyph. The menu and the dropdown chevron are SVGs too, centered
+ * in fixed control boxes, so no text baseline can offset them.
+ */
 export function ViewIcon({
   kind,
   size = 18,

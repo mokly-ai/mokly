@@ -55,6 +55,8 @@ pub struct Runtime {
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
+    /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
+    /// descriptions never interleave their bundle registry checks and sidecar calls.
     pub(crate) describing: Arc<Mutex<()>>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,

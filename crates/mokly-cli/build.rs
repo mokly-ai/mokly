@@ -30,6 +30,8 @@ fn main() -> Result<(), Error> {
 }
 
 /// Emit target-specific linker settings and the public package version.
+/// A Windows MSVC binary reserves an 8 MiB main-thread stack to match the usual Linux
+/// and macOS main-thread stack, because the MSVC default is 1 MiB.
 pub(crate) fn emit(target_os: &str, target_env: &str, output: &mut dyn Write) -> Result<(), Error> {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly/package.json");
     let mut options = format!("cargo:rerun-if-changed={}\n", manifest.display());

@@ -132,6 +132,8 @@ export async function benchmark(
       const browser =
         options.browser ??
         (await chromium.launch({
+          // At most two renderer processes and no GPU acceleration bound the
+          // browser's share of the sampled harness RSS.
           args: ["--renderer-process-limit=2", "--disable-gpu"],
           channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
         }));

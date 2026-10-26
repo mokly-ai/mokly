@@ -8,6 +8,12 @@ import {
 } from "./report-validation.mjs";
 
 const RUNTIME_PROFILES = [["node-22.15.0"], ["node-22.15.0", "node-24"]];
+/**
+ * Validate one commit's complete CI evidence: per runtime, exactly one viewer
+ * report and four browser shards on one Node version. CI aggregation runs it,
+ * and the release evidence check reruns it once the reports match the tagged
+ * tree, before it compares their inventories with the tag checkout.
+ */
 export function validateCiReports(reports, commit, runtimes) {
   if (!/^[a-f0-9]{40}$/.test(commit))
     throw new Error("expected commit must be a full lowercase Git SHA");

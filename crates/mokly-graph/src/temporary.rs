@@ -18,6 +18,9 @@ use crate::types::TemporaryDocument;
 use crate::validation;
 use crate::workers::ArtifactWorker;
 
+/// Render one view with validated transient props through the catalogue's document
+/// pipeline. Its fragments use the shared memo cache under the normal fragment key, and
+/// saved props reuse the cached saved document, so a repeat render costs a cache hit.
 pub(crate) fn render(session: &Session, route: &str, props: &Props) -> Result<TemporaryDocument> {
     let job = PropsJob { session, props };
     let artifact = session.state.workers.document(route, &job)?;

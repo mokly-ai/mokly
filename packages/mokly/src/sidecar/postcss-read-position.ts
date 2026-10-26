@@ -83,6 +83,12 @@ export function opaqueDescriptorAccess(): void {
   for (const fd of descriptors.keys()) invalidate(fd);
 }
 
+/**
+ * Start one read. An untracked descriptor, such as one opened before the
+ * preload, records nothing. A sequential read starts at the known cursor and
+ * records nothing once that cursor is unknown; a read at an explicit position
+ * records its range even then.
+ */
 export function begin(fd: number, position: unknown): Ticket | undefined {
   const descriptor = descriptors.get(fd);
   if (!descriptor) return;

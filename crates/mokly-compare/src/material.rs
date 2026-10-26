@@ -1,4 +1,8 @@
 //! Canonical owned trees with paired ignores, component boundaries, and logical links.
+//!
+//! Comparison reads only these parsed trees. It never reads recorded text
+//! offsets and never splices document text, so the result depends on the
+//! parsed structure alone.
 
 use std::collections::{BTreeMap, BTreeSet};
 
