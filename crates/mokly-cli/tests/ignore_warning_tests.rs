@@ -54,6 +54,31 @@ fn unknown_ignore_attributes_warn_once_and_strict_preserves_output() {
 }
 
 #[test]
+fn saved_slot_ignore_attributes_are_not_evaluated() {
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join("specs")).unwrap();
+    fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+    fs::write(
+        root.path().join("specs/panel.component.html"),
+        "---\ntitle: Panel\nelement: ui-panel\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {}\n    slots:\n      children: \"<mokly-ignore id='saved' extra='{{missing}}'><b>Saved</b></mokly-ignore>\"\n---\n<slot></slot>",
+    )
+    .unwrap();
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "---\ntitle: Home\n---\n<ui-panel></ui-panel>",
+    )
+    .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
+        .args(["build", "--no-changes", "--out", "site"])
+        .current_dir(root.path())
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(output.status.success(), "{stderr}");
+    assert!(stderr.contains("unknown attribute extra on <mokly-ignore> is ignored"));
+}
+
+#[test]
 fn unknown_ignore_href_does_not_validate_a_logical_link() {
     check_ignored_attribute("href='mock:missing'", "href");
 }

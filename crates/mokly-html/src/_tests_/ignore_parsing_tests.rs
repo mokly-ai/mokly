@@ -63,6 +63,19 @@ fn delivered_documents_keep_unknown_ignore_attributes() {
 }
 
 #[test]
+fn delivered_page_ignore_attributes_are_not_evaluated_by_composition() {
+    let source = "<!doctype html><html><head></head><body><mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore></body></html>";
+    let nodes = parse::delivered_document(source);
+    let wrapper = tree::walk(&nodes)
+        .find_map(|node| match node {
+            Node::Element(element) if element.name == "mokly-ignore" => Some(element),
+            _ => None,
+        })
+        .expect("page wrapper");
+    assert_eq!(wrapper.get("data-x"), Some("{{missing}}"));
+}
+
+#[test]
 fn screen_component_and_page_locations_survive_attribute_removal() {
     for (path, page) in [
         ("specs/home.screen.html", false),

@@ -34,7 +34,7 @@ fn body_location(template: &Template) -> (usize, usize) {
 }
 
 pub(crate) fn slot(body: &str, entry: &str, name: &str) -> Vec<Node> {
-    let mut nodes = parse::delivered_fragment(body);
+    let mut nodes = parse::authored_fragment_unlocated(body);
     let mut next = 0;
     slot_origins(&mut nodes, &format!("saved-slot:{entry}:{name}"), &mut next);
     nodes

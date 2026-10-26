@@ -23,8 +23,14 @@ pub(crate) struct Entry {
 
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
-    active_source: RefCell<Option<(String, SourceLocation)>>,
+    active_source: RefCell<Option<ActiveSource>>,
     authored: bool,
+}
+
+struct ActiveSource {
+    name: String,
+    source: SourceLocation,
+    candidates: Vec<Handle>,
 }
 
 impl Default for Arena {
@@ -71,25 +77,35 @@ impl Arena {
     }
 
     pub(crate) fn set_active_source(&self, name: String, source: SourceLocation) {
-        *self.active_source.borrow_mut() = Some((name, source));
+        *self.active_source.borrow_mut() = Some(ActiveSource {
+            name,
+            source,
+            candidates: Vec::new(),
+        });
     }
 
-    pub(crate) fn clear_active_source(&self) {
-        self.active_source.borrow_mut().take();
+    pub(crate) fn finish_active_source(&self) {
+        let Some(active) = self.active_source.borrow_mut().take() else {
+            return;
+        };
+        let Some(handle) = active.candidates.last() else {
+            return;
+        };
+        if let Some(Node::Element(element)) = &mut self.entries.borrow_mut()[handle.index].node {
+            element.origin = Some(format!(
+                "{}:{}:{}",
+                active.source.path, active.source.line, active.source.column
+            ));
+            element.source = Some(active.source);
+        }
     }
 
-    pub(crate) fn take_active_source(&self, name: &str) -> Option<SourceLocation> {
-        let matches = self
-            .active_source
-            .borrow()
-            .as_ref()
-            .is_some_and(|(pending, _)| pending.eq_ignore_ascii_case(name));
-        matches.then(|| {
-            self.active_source
-                .borrow_mut()
-                .take()
-                .map(|(_, source)| source)
-        })?
+    pub(crate) fn record_active_candidate(&self, handle: &Handle) {
+        if let Some(active) = &mut *self.active_source.borrow_mut()
+            && active.name.eq_ignore_ascii_case(handle.name.local.as_ref())
+        {
+            active.candidates.push(handle.clone());
+        }
     }
 
     pub(crate) fn create(&self, node: Option<Node>, name: Option<QualName>) -> Handle {

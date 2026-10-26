@@ -77,3 +77,43 @@ fn token_pipeline_keeps_tree_bytes_and_source_identity() {
         }
     }
 }
+
+#[test]
+fn formatting_clones_do_not_take_a_later_start_tag_position() {
+    let source = "<p><b class=one>1</p><p><b class=two>2</b></p>";
+    let nodes = crate::parse::authored_document(source, "fixture.html");
+    let positions: Vec<_> = tree::walk(&nodes)
+        .filter_map(|node| match node {
+            crate::tree::Node::Element(element) if element.name == "b" => element
+                .source
+                .as_ref()
+                .map(|source| (element.get("class"), source.column)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(positions, vec![(Some("one"), 4), (Some("two"), 25)]);
+}
+
+#[test]
+fn reconstruction_positions_follow_each_authored_start_tag() {
+    for (source, name) in [
+        ("<p><a href=one>one</p><p><a href=two>two</a></p>", "a"),
+        ("<p><nobr>one</p><p><nobr>two</nobr></p>", "nobr"),
+        ("<table><b class=one>one</table><b class=two>two", "b"),
+    ] {
+        let nodes = crate::parse::authored_fragment(source, "fixture.html");
+        let positions: Vec<_> = tree::walk(&nodes)
+            .filter_map(|node| match node {
+                crate::tree::Node::Element(element) if element.name == name => {
+                    element.source.as_ref().map(|source| source.column)
+                }
+                _ => None,
+            })
+            .collect();
+        let expected = source
+            .match_indices(&format!("<{name}"))
+            .map(|(index, _)| index + 1)
+            .collect::<Vec<_>>();
+        assert_eq!(positions, expected, "{source}");
+    }
+}

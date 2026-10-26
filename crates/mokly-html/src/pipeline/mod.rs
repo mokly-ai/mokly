@@ -54,7 +54,7 @@ impl<'a> CallbackSink<'a> {
         let result = self
             .builder
             .process_token(token, self.line_number(self.start_offset));
-        self.builder.sink.clear_active_source();
+        self.builder.sink.finish_active_source();
         self.result(result)
     }
 
@@ -290,6 +290,10 @@ pub(crate) fn authored_fragment(
     base_column: usize,
 ) -> Vec<Node> {
     runner::run(source, true, true, Some(path), base_line, base_column)
+}
+
+pub(crate) fn authored_fragment_unlocated(source: &str) -> Vec<Node> {
+    runner::run(source, true, true, None, 1, 1)
 }
 
 pub(crate) fn delivered_fragment(source: &str) -> Vec<Node> {

@@ -156,7 +156,10 @@ pub(crate) fn authored_document_at(
     base_line: usize,
     base_column: usize,
 ) -> Vec<Node> {
-    pipeline::authored_document(source, path, base_line, base_column)
+    let nodes = pipeline::authored_document(source, path, base_line, base_column);
+    repair_authored(nodes, |serialized| {
+        pipeline::authored_document(serialized, path, 1, 1)
+    })
 }
 
 /// Parse an authored HTML fragment and attach source locations to its elements.
@@ -171,5 +174,49 @@ pub(crate) fn authored_fragment_at(
     base_line: usize,
     base_column: usize,
 ) -> Vec<Node> {
-    pipeline::authored_fragment(source, path, base_line, base_column)
+    let nodes = pipeline::authored_fragment(source, path, base_line, base_column);
+    repair_authored(nodes, |serialized| {
+        pipeline::authored_fragment(serialized, path, 1, 1)
+    })
+}
+
+pub(crate) fn authored_fragment_unlocated(source: &str) -> Vec<Node> {
+    pipeline::authored_fragment_unlocated(source)
+}
+
+fn repair_authored(nodes: Vec<Node>, reparsed: impl FnOnce(&str) -> Vec<Node>) -> Vec<Node> {
+    if !terminal_text(&nodes) {
+        return nodes;
+    }
+    let mut positions = Vec::new();
+    for node in tree::walk(&nodes) {
+        let Node::Element(element) = node else {
+            continue;
+        };
+        let plaintext = element.is_html() && element.name == "plaintext";
+        positions.push((element.source.clone(), element.origin.clone()));
+        if plaintext {
+            break;
+        }
+    }
+    let mut repaired = reparsed(&serialize::html(&nodes));
+    let mut pending: Vec<_> = repaired.iter_mut().rev().collect();
+    let mut index = 0;
+    while let Some(node) = pending.pop() {
+        if let Node::Element(element) = node {
+            if let Some((source, origin)) = positions.get(index) {
+                element.source = source.clone();
+                element.origin = origin.clone();
+            }
+            let stop = element.is_html() && element.name == "plaintext";
+            index += 1;
+            if stop {
+                break;
+            }
+        }
+        if let Some(children) = node.children_mut() {
+            pending.extend(children.iter_mut().rev());
+        }
+    }
+    repaired
 }

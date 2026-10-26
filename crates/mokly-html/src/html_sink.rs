@@ -32,15 +32,12 @@ impl TreeSink for Arena {
 
     fn create_element(&self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Handle {
         let attributes: Vec<_> = attrs.into_iter().map(attribute).collect();
-        let source = self.take_active_source(name.local.as_ref());
         let node = Node::Element(Element {
             style_owners: None,
             style_attribution: None,
-            origin: source
-                .as_ref()
-                .map(|source| format!("{}:{}:{}", source.path, source.line, source.column)),
+            origin: None,
             navigation: None,
-            source,
+            source: None,
             name: name.local.to_string(),
             namespace: name.ns.to_string(),
             attributes: attributes
@@ -53,6 +50,7 @@ impl TreeSink for Arena {
             children: Vec::new(),
         });
         let handle = self.create(Some(node), Some(name));
+        self.record_active_candidate(&handle);
         let template = flags.template.then(|| self.create(None, None));
         let mut entries = self.entries.borrow_mut();
         entries[handle.index].template = template;
