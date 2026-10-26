@@ -6228,10 +6228,27 @@ does not ask the user before the merge.
   - User decision (2026-10-26): B, done in the same commit as this record.
     The protocol page and the crate README state the one rule, give the
     `;` boundary as an example, and keep its reason.
+  - Correction: only the protocol page gives the reason for the `;`
+    boundary. The crate README gives the boundary as an example only.
 - Outside the `rebuild/port-111c` review scope:
   `crates/mokly-css/src/token_grammar.rs:68`: the scanners read an
   `@-moz-document` block outside a style rule as a style block, but
   lightningcss parses it as an `@media` block. Separate branch.
+
+- [ ] Decide finding 1 of the review of `3066e47a` on `rebuild/port-111c`
+      (report: `.context/port-111c/review/review-5.md`). Finding 2 (Low: the
+      plan record said that the README keeps the `;` reason) is fixed with
+      option A in the same commit as this record.
+  - Finding 1: the parity rule is false for descriptor blocks. The scoper
+    ends a non-custom `@font-face` or `@property` statement at its first
+    `{}` block, as postcss does, but the bundler keeps the text up to `;`.
+    Severity Low, effort Small. Recommended: A, name the descriptor case in
+    both docs.
+- Outside the `rebuild/port-111c` review scope:
+  `crates/mokly-css/src/token_sections.rs:59`: the `Statement` doc says that
+  a statement reads as lightningcss reads the block that holds it, but the
+  section reader reads an `@font-face` descriptor with a `{}` block as a
+  rule. Separate branch.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
