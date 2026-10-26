@@ -4357,14 +4357,6 @@ check passes on this commit.
         Remove the replaced consumer filters and keep their regressions.
         This completes the wider fix for CLI defaults review finding 1.
         Evidence: `.context/f19/` and `.context/defaults-cli/review-1.md`.
-- [ ] HTML pipeline decision 98 B, approved 2026-10-21: run in parallel and do not block the rebuild merge. Build one html5gum-to-html5ever pipeline with token-driven states and exact element source identities. Phase 1 keeps the current pipeline behind a crate-internal switch and proves parity. Phase 2 removes prediction and signature queues after the three follow-up branches merge.
-  - [x] Phase 1 feasibility: html5gum 0.8.4 exposes the emitter state-switch and foreign-content hooks, and html5ever 0.39 exposes the token sink results and tree-builder state request. Evidence: `.context/html-pipeline-feasibility.md`.
-  - [x] Phase 1 implementation: add the new pipeline module behind a crate-internal switch. Keep the current parser entry points and protected modules unchanged. Evidence: `.context/html-pipeline-tests-final.log`.
-  - [x] Phase 1 differential harness: run repository HTML inputs, fixtures, generated divergence cases, CRLF, and character references. Classify tree, serialization, and position differences. Result: 24 inputs, 24 equivalent serializations, 203 source identities, and zero new defects. Evidence: `.context/html-pipeline-differential-final.log`.
-  - [x] Phase 1 escaped script-data boundary: map html5ever escaped and double-escaped requests to html5gum's public script-data state, then compare marker splits, `</script` prefixes, and `srcdoc` content. Result: 54 inputs, 54 equivalent serializations, 233 source identities, and zero new defects. Evidence: `.context/html-pipeline-escaped-script-data.log` and `.context/html-pipeline-feasibility.md`.
-  - [ ] Phase 2 after `rebuild/defaults-engine`, `rebuild/followups-f21-fix1`, and `rebuild/followups-f22` merge: make the new pipeline the selected path, remove text-mode prediction and signature queues, and update 115 C to use one parse entry point per purpose and 116 C to make the token boundary the only html5gum user. Keep this work parallel and non-blocking. The parser split and source identity work are complete. The one-pipeline boundary for catalogue checks remains open under CR5.
-  - User decision 98 (2026-10-21): B, in parallel and non-blocking.
-
   - [x] F19 review findings 1 and 2: count warning names once per shared body
         across both wrapper kinds. Preserve wrapper source positions through
         filtering, HTML table repair, and plaintext reparsing with opaque
