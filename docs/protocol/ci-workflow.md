@@ -122,8 +122,8 @@ jobs to set up that npm before `npm ci`, and rejects pins older than npm
 
 Linux and Windows jobs across the CI, preview, release, native bootstrap, and
 Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
-matrix below and the CI Windows native job. That job uses 8 vCPUs, because on
-2 vCPUs its complete Rust build and test run is usually the slowest CI job.
+matrix below and the CI jobs that compile Rust. Those use 8 vCPUs on Linux and
+16 vCPUs on Windows, because fast CI results are worth their higher cost.
 macOS jobs use the provider's smallest available tier, which is 6 vCPUs. The
 publishing exception is any job that publishes to npm with trusted publishing,
 the release `publish` job: it runs on GitHub-hosted `ubuntu-24.04` with

@@ -69,8 +69,8 @@ startup behavior.
 runs at most half of `os.availableParallelism()` test files at once, and never
 fewer than two. Playwright uses one worker unless `MOKLY_PLAYWRIGHT_WORKERS` is
 set. Each spec file runs in one worker because `fullyParallel` stays `false`.
-The 2-vCPU hosted runners therefore run two Node test files and one Playwright
-worker, and an eight-CPU workstation runs four Node test files.
+A 2-vCPU runner therefore runs two Node test files and one Playwright worker,
+and an 8-vCPU CI runner or an eight-CPU workstation runs four Node test files.
 
 Browser specs keep one worker by default. The viewer gives a same-origin
 preview five seconds to load, as the

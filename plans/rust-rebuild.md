@@ -6271,6 +6271,14 @@ does not ask the user before the merge.
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
 
+- [ ] Follow-up (Low, cost, not a user item): move the CI jobs that compile
+      Rust back to smaller runner tiers. On 2026-10-26 the user raised them
+      for a limited time, until the Rust build cache of #215 and the other CI
+      speed work land: the Linux jobs from 2 to 8 vCPUs, and the Windows
+      native job from 8 to 16 vCPUs. Measure the cached job times on the
+      smaller tiers first. Update `docs/protocol/ci-workflow.md`, the runner
+      size test, and the actionlint labels in the same change.
+
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
   branch.
