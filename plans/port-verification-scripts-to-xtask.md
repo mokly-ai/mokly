@@ -153,5 +153,20 @@ runs the title check with Node only and has a five-minute limit.
     findings 1 and 2, which restore assertions that the port had dropped
     and that decision 3 B requires. Report:
     `.context/port-verification-scripts-to-xtask/review-1.md`.
+  - Review 2 of the fix fixed its findings 1 and 2: a line that continues
+    the expression no longer ends the legacy table, and the cap ratchet
+    helpers are private. Report:
+    `.context/port-verification-scripts-to-xtask/review-2.md`.
+  - Decision for the user: remove the legacy cap table path, the wider fix
+    of review 1 finding 5 and review 2 finding 1. Effort Large.
+  - Decision for the user: run every suite step through one injected step
+    boundary, the wider fix of review 1 finding 2. Effort Medium.
+  - Outside the review scope: `docs/protocol/verification-ratchets.md:53`:
+    the page says that a comparison commit without the JSON cap table takes
+    its caps from line counts, but the ratchet first reads the legacy table,
+    as the Node code on `origin/main` does. Separate branch.
+  - Outside the review scope: `xtask/src/check/runner.rs`: no ordered test
+    pins the Rust file-length audit after `cargo test --workspace`, as on
+    `origin/main`. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.

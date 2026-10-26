@@ -43,7 +43,7 @@ impl ProtocolCapAuditor for SystemProtocolCapAuditor {
 /// The lines that the ratchet prints for an audit result, and its outcome:
 /// a pass, a failure that lists every finding, or an audit that could not
 /// run.
-pub(crate) fn ratchet_outcome(result: Result<(Vec<String>, String)>) -> (Vec<String>, Result<()>) {
+fn ratchet_outcome(result: Result<(Vec<String>, String)>) -> (Vec<String>, Result<()>) {
     match result {
         Err(error) => (
             vec![format!("{NAME} ratchet could not run: {error}")],
@@ -61,7 +61,7 @@ pub(crate) fn ratchet_outcome(result: Result<(Vec<String>, String)>) -> (Vec<Str
 }
 
 /// The findings and the passing summary of the cap ratchet.
-pub(crate) fn audit_protocol_caps(workspace: &Path) -> Result<(Vec<String>, String)> {
+fn audit_protocol_caps(workspace: &Path) -> Result<(Vec<String>, String)> {
     let git = GitWorkspace::open(workspace)?;
     let root = git.root().to_path_buf();
     let mut inputs = CapInputs {

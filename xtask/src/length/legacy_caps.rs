@@ -108,11 +108,15 @@ impl<'a> Cursor<'a> {
     }
 
     /// Whether the statement ends here: at `;`, the end of the text, or a
-    /// newline before the next token.
+    /// line terminator before a token that cannot continue the expression.
     fn at_statement_end(&self) -> bool {
         let next = self.token_start();
-        matches!(self.text[next..].chars().next(), None | Some(';'))
-            || self.text[self.index..next].contains('\n')
+        let rest = &self.text[next..];
+        if matches!(rest.chars().next(), None | Some(';')) {
+            return true;
+        }
+        let terminators = ['\n', '\r', '\u{2028}', '\u{2029}'];
+        self.text[self.index..next].contains(terminators) && !continues_expression(rest)
     }
 
     /// Skip `: Type`, balancing brackets, up to the `=` of the initializer.
@@ -232,6 +236,29 @@ impl<'a> Cursor<'a> {
         self.index = start + length;
         Some(value)
     }
+}
+
+/// Whether a line that starts with `rest` continues the expression before
+/// it, so that JavaScript inserts no semicolon at the line break: a member,
+/// call, index, template, conditional, comma, or binary operator, or `in`
+/// and `instanceof`. `++`, `--`, and a lone `!` start a new statement.
+fn continues_expression(rest: &str) -> bool {
+    if rest.starts_with("++") || rest.starts_with("--") {
+        return false;
+    }
+    if let Some(after) = rest.strip_prefix('!') {
+        return after.starts_with('=');
+    }
+    if rest.starts_with([
+        '.', '(', '[', '`', '?', ',', '+', '-', '*', '/', '%', '<', '>', '=', '&', '|', '^',
+    ]) {
+        return true;
+    }
+    ["instanceof", "in"].into_iter().any(|keyword| {
+        rest.strip_prefix(keyword).is_some_and(|after| {
+            !after.starts_with(|next: char| next.is_alphanumeric() || next == '_' || next == '$')
+        })
+    })
 }
 
 #[cfg(test)]

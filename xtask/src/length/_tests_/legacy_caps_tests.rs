@@ -72,6 +72,10 @@ fn literal_tables_parse_through_parentheses_assertions_and_comments() {
         "const oversizedCaps = ({ \"long.md\": 260 } as const);\n",
         "const oversizedCaps = { \"long.md\": 260 }\nexport default oversizedCaps;\n",
         "const oversizedCaps = { \"long.md\": 260 } as const\nexport default oversizedCaps;\n",
+        "const oversizedCaps = { \"long.md\": 260 }\n++count;\n",
+        "const oversizedCaps = { \"long.md\": 260 }\n!flag;\n",
+        "const oversizedCaps = { \"long.md\": 260 }\r\nexport default oversizedCaps;\r\n",
+        "const oversizedCaps = { \"long.md\": 260 }\u{2028}export default oversizedCaps;\n",
     ] {
         assert_eq!(parse(source).unwrap(), expected, "{source}");
     }
@@ -80,6 +84,26 @@ fn literal_tables_parse_through_parentheses_assertions_and_comments() {
 
 #[test]
 fn non_literal_tables_and_entries_fail_with_the_file_label() {
+    let continued = [
+        "|| {};",
+        ".valueOf();",
+        "(other);",
+        "[0];",
+        "+ 1;",
+        "? a : b;",
+        "instanceof Object;",
+        "`tag`;",
+        "in other;",
+        "!= other;",
+    ];
+    for line in continued {
+        let source = format!("const oversizedCaps = {{ \"a.md\": 260 }}\n{line}\n");
+        let message = parse(&source).unwrap_err().to_string();
+        assert!(
+            message.contains(&format!("{LABEL} has an invalid oversizedCaps table")),
+            "{source}: {message}"
+        );
+    }
     for (source, expected) in [
         (
             "const oversizedCaps = caps;\n",
