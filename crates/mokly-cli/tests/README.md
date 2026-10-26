@@ -8,9 +8,10 @@ tests under `tests/` cover TypeScript code and Node tooling only. Each
 end-to-end area has one test binary with a module folder, and uses the shared
 fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
 
-| Binary              | Area                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------ |
-| `publication_tests` | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup. |
+| Binary                 | Area                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `publication_tests`    | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup. |
+| `changes_output_tests` | Changes classification, comparison contents, evidence, timings, and Serve parity.    |
 
 Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
 packages: run `npm run build` before a raw `cargo test`.

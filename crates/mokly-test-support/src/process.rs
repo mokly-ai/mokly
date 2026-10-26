@@ -192,7 +192,7 @@ impl Running {
             }
             if started.elapsed() > HANG_GUARD {
                 let _ = self.child.kill();
-                panic!("mokly did not exit; stderr: {}", self.stderr_text());
+                panic!("mokly did not exit; stderr: {}", self.stderr());
             }
             thread::sleep(Duration::from_millis(10));
         };
@@ -202,11 +202,12 @@ impl Running {
         Finished {
             code: status.code(),
             stdout: self.stdout(),
-            stderr: self.stderr_text(),
+            stderr: self.stderr(),
         }
     }
 
-    fn stderr_text(&self) -> String {
+    /// Standard error so far.
+    pub fn stderr(&self) -> String {
         String::from_utf8_lossy(&self.stderr.lock().unwrap()).into_owned()
     }
 }

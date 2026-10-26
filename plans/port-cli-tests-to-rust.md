@@ -97,7 +97,9 @@ Evidence: `.context/port-cli-tests-to-rust/publish.md`.
 
 ## Milestone 4: Changes and comparison output
 
-- [ ] Port `static_changes_capture`, `static_changes_classification`,
+Evidence: `.context/port-cli-tests-to-rust/changes.md`.
+
+- [x] Port `static_changes_capture`, `static_changes_classification`,
       `static_changes_contents`, `static_changes_inputs`,
       `static_changes_reference`, `static_changes_removed_component`,
       `static_changes_state`, `static_changes_styles`,
@@ -106,6 +108,9 @@ Evidence: `.context/port-cli-tests-to-rust/publish.md`.
       `static_capture_timing`.
 - [ ] Port the browser specs `static_comparison_output` and
       `static_moved_fixture`, which read JSON only.
+  - Blocked: both check the shared comparison fixtures of the browser UI
+    specs, about 1,000 lines of TypeScript sources. A Rust port needs a second
+    copy of those fixtures. Open decision for the user.
 
 ## Milestone 5: Recovery, signals, and input safety
 
