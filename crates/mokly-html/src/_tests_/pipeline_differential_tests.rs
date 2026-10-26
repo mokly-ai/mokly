@@ -92,7 +92,7 @@ fn source_count(nodes: &[crate::tree::Node]) -> usize {
 
 fn compare(report: &mut Report, name: &str, source: &str) {
     report.inputs += 1;
-    let old = crate::parse::legacy_authored_document(source);
+    let old = crate::support::legacy_authored_document(source);
     let new = pipeline::authored_document(source, name, 1, 1);
     if serialize::html(&old) != serialize::html(&new) {
         report.new_defects.push(name.into());
@@ -114,7 +114,7 @@ fn compare_srcdoc(report: &mut Report, name: &str, source: &str) {
     let wrapper = format!("<iframe srcdoc=\"{}\"></iframe>", escaped_srcdoc(source));
     compare(report, &format!("{name}-wrapper"), &wrapper);
 
-    let wrapper_tree = crate::parse::legacy_authored_document(&wrapper);
+    let wrapper_tree = crate::support::legacy_authored_document(&wrapper);
     let content = tree::walk(&wrapper_tree).find_map(|node| match node {
         crate::tree::Node::Element(element) if element.name == "iframe" => {
             element.get("srcdoc").map(str::to_owned)

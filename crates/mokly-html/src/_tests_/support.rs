@@ -4,6 +4,9 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use html5ever::tendril::TendrilSink;
+use html5ever::tree_builder::TreeBuilderOpts;
+use html5ever::{ParseOpts, parse_document};
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::definition_provider::{
     DefinitionProvider, DefinitionProviderMock, Definitions, ProvidedDefinition,
@@ -17,6 +20,49 @@ use mokly_source_interface::tree::SourceTreeMock;
 use mokly_source_interface::tree::{Child, FileKind, Node};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
+
+use crate::html_arena::Arena;
+use crate::serialize;
+use crate::tree::{self, Node as HtmlNode};
+
+fn terminal_text(nodes: &[HtmlNode]) -> bool {
+    tree::walk(nodes).any(|node| {
+        matches!(node, HtmlNode::Element(element) if element.is_html() && element.name == "plaintext")
+    })
+}
+
+pub(crate) fn legacy_authored_document(source: &str) -> Vec<HtmlNode> {
+    legacy_document_with_mode(source, true)
+}
+
+fn legacy_document_with_mode(source: &str, authored: bool) -> Vec<HtmlNode> {
+    let nodes = parse_document(
+        Arena::new(authored),
+        ParseOpts {
+            tree_builder: TreeBuilderOpts {
+                scripting_enabled: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .one(source);
+    if terminal_text(&nodes) {
+        parse_document(
+            Arena::new(authored),
+            ParseOpts {
+                tree_builder: TreeBuilderOpts {
+                    scripting_enabled: false,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )
+        .one(serialize::html(&nodes))
+    } else {
+        nodes
+    }
+}
 
 pub(super) fn prepared(body: &str) -> PreparedCatalogue {
     let files = BTreeMap::from([

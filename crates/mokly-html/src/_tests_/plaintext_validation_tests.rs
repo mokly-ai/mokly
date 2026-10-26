@@ -14,7 +14,7 @@ fn authored_plaintext_repair_matches_the_browser_tree() {
         "<table><tr><td>one</td></tr><plaintext>Raw",
     ] {
         let actual = parse::authored_document(source, "fixture.html");
-        let expected = parse::legacy_authored_document(source);
+        let expected = crate::support::legacy_authored_document(source);
         assert_eq!(
             serialize::html(&actual),
             serialize::html(&expected),
