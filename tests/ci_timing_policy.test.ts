@@ -23,6 +23,7 @@ test("CI job limits keep the measured three-times timing contract", async () => 
     ]),
   );
   assert.deepEqual(limits, {
+    profile: 30,
     repository: 75,
     viewer: 40,
     browser: 60,
