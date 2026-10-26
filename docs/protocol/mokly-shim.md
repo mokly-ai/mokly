@@ -1,7 +1,5 @@
 # Mokly Shim And Native Runtime Inputs
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 The [package contract](./mokly-package.md) defines the packages and the
 supported Node range. This page defines what the `mokly` Node shim passes to
 the native binary, and how the binary finds its Node inputs.
@@ -20,7 +18,7 @@ walks invocation-directory and executable ancestors for
 These inputs do not select a consumer React runtime; consumer resolution
 follows the configuration and base dependency contracts.
 
-The native CLI embeds the npm package version from `packages/mokly/package.json`.
+The native CLI carries the version of its `@mokly/mokly` package.
 It supplies that same version to sidecar hello and graph configuration keys.
 Cargo crate versions do not determine the published Mokly package version.
 
@@ -28,8 +26,9 @@ Cargo crate versions do not determine the published Mokly package version.
 
 The shim resolves `@mokly/viewer/browser` from its own package installation
 and passes the directory of that entry to the binary as `MOKLY_VIEWER_DIST`.
-The binary serves exactly that directory's browser inventory, stylesheet, and
-font. The consumer's working-directory layout does not select the viewer.
+The binary serves exactly that directory's browser inventory, shell
+stylesheet, brand icon, and font. The consumer's working-directory layout does
+not select the viewer.
 
 ## Signals
 

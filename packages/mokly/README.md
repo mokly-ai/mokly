@@ -10,8 +10,8 @@
 
 Mokly turns your product screens into a searchable catalogue. Write a screen
 as an HTML file, a React component, or a Storybook story. Mokly renders each
-screen at mobile and desktop sizes, in light and dark, and shows which screens
-changed between two Git commits.
+screen at mobile and desktop sizes, in each color scheme that you configure,
+and shows which screens changed between two Git commits.
 
 `@mokly/mokly` gives you the `mokly` command and the authoring API.
 
