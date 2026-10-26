@@ -5492,6 +5492,11 @@ check passes on this commit.
       performance. Options: A, use the authored parse without positions,
       Medium; B, give every parse purpose its own input type, Large.
       Recommended: A. Apply no option.
+- [x] E2b finding 1: a Markdown link under `plans/` changed one document's
+      two scheme keys and the deployment identity when its text changed.
+      Severity Low, effort Medium, category performance. User decision 1
+      (2026-10-26): A, exclude planning Markdown from document identity.
+      Fixed in `735c7d2e` with a regression test and the document contract.
 - Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
   at lines 87, 153, and 213-218 does not model SVG `desc` or encoded MathML
   `annotation-xml` integration points.
