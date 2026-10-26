@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/mokly-ai/mokly/compare/v0.16.0...v0.16.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **release:** verify native packages of other platforms ([#207](https://github.com/mokly-ai/mokly/issues/207)) ([66e1ba6](https://github.com/mokly-ai/mokly/commit/66e1ba6afa936d01689a33fd6f1e2d69f983eb47))
+
 ## [0.16.0](https://github.com/mokly-ai/mokly/compare/v0.15.0...v0.16.0) (2026-10-25)
 
 
