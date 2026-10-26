@@ -3,11 +3,10 @@
 use std::borrow::Cow;
 
 use html5gum::{DefaultEmitter, Tokenizer};
-use html5gum::{HtmlString, Span, Spanned};
 
-use crate::html_token_types::{Doctype, EndTag, Error, ErrorToken, StartTag, Token};
+use crate::html_token_types::{Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token};
 
-pub(crate) fn own_token(token: html5gum::Token<usize>) -> crate::html_token_types::Token {
+pub(crate) fn own_token(token: html5gum::Token<usize>) -> Token {
     match token {
         html5gum::Token::StartTag(tag) => Token::StartTag(StartTag {
             name: tag.name.0,
@@ -245,15 +244,15 @@ fn shift_span(span: html5gum::Span<usize>, offset: isize) -> html5gum::Span<usiz
     }
 }
 
-fn own_span(span: Span<usize>) -> crate::html_token_types::Span {
-    crate::html_token_types::Span {
+fn own_span(span: html5gum::Span<usize>) -> Span {
+    Span {
         start: span.start,
         end: span.end,
     }
 }
 
-fn own_spanned(value: Spanned<HtmlString, usize>) -> crate::html_token_types::Spanned {
-    crate::html_token_types::Spanned {
+fn own_spanned(value: html5gum::Spanned<html5gum::HtmlString, usize>) -> Spanned {
+    Spanned {
         value: value.value.0,
         span: own_span(value.span),
     }
