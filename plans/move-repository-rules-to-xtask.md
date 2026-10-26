@@ -1,7 +1,7 @@
 # Move the Repository File Rules to xtask
 
-Status: Active. On branch `conductor/move-tooling-tests-to-xtask`, no pull
-request yet. The plan closes when its PR merges.
+Status: Active. [PR #212](https://github.com/mokly-ai/mokly/pull/212) is
+open. The plan closes when its PR merges.
 
 Eighteen Node tests under `tests/` check repository files only: the GitHub
 workflows and the publish action, the npm and Rust pins, the guides, the
@@ -178,7 +178,7 @@ Evidence: `case-map.md` and `fault-injection.md` in
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -197,5 +197,5 @@ Evidence: `case-map.md` and `fault-injection.md` in
     says root tests never match prose with regular expressions, but the
     guide copy and version tests match phrases in guide prose. Separate
     branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
