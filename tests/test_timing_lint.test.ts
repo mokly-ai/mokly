@@ -56,7 +56,7 @@ for (const filePath of testPaths) {
 for (const filePath of [
   "tests/helpers/durations.ts",
   "packages/viewer/src/example.ts",
-  "scripts/rebuild/example.mjs",
+  "scripts/verification/example.mjs",
 ]) {
   test(`timing lint allows clock subtraction outside its scope in ${filePath}`, async () => {
     for (const expression of elapsedExpressions) {
