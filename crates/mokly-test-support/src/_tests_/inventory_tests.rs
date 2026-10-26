@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::json;
 
-use crate::inventory::{MARKER, digest, verify};
+use crate::inventory::{MARKER, digest, ownership, verify};
 use crate::upload::Rejection;
 
 fn inventory(extra: &[(&str, &[u8])]) -> BTreeMap<String, Vec<u8>> {
@@ -53,4 +53,13 @@ fn a_complete_inventory_passes_and_each_broken_rule_is_rejected() {
     assert_eq!(verify(&folded).map(|_| ()), Err(Rejection::Invalid));
     let diffs = inventory(&[("mokly-viewer/diffs/review.json", b"{}")]);
     assert_eq!(verify(&diffs).map(|_| ()), Err(Rejection::Invalid));
+}
+
+#[test]
+fn an_ownership_marker_without_files_is_invalid_without_a_panic() {
+    let marker = json!({ "schemaVersion": 3 }).to_string();
+    assert_eq!(
+        ownership(marker.as_bytes()).map(|_| ()),
+        Err(Rejection::Invalid)
+    );
 }

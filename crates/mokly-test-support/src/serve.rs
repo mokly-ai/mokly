@@ -13,6 +13,9 @@ use crate::process::{Finished, Invocation, Mokly, Running};
 /// How long a test waits for an expected Serve state.
 const STATE_WAIT: Duration = Duration::from_secs(30);
 
+/// How long a test waits for a published catalogue to settle.
+const SETTLE_WAIT: Duration = Duration::from_secs(300);
+
 /// A running `mokly serve --no-watch --port 0 --sidecars 1`.
 pub struct Serve {
     running: Option<Running>,
@@ -128,7 +131,13 @@ impl Serve {
 /// Returns the index and the entry detail of the same revision.
 pub fn completed(origin: &str, path: &str) -> (Value, Value) {
     let mut events = Events::open(origin, "/mokly-viewer/events");
+    let started = Instant::now();
     loop {
+        // The stream sends a keep-alive line, so the deadline is checked at least that often.
+        assert!(
+            started.elapsed() < SETTLE_WAIT,
+            "the catalogue never settled for {path}"
+        );
         let index: Value =
             serde_json::from_slice(&http::get(origin, "/mokly-viewer/index.json").body).unwrap();
         let detail: Value = serde_json::from_slice(

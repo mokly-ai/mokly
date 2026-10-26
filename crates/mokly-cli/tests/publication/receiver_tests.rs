@@ -35,16 +35,20 @@ fn the_independent_receiver_checks_a_real_publication_and_rejects_missing_extra_
     upload::metadata(metadata).unwrap();
     let size = artifact["index.html"].len();
     for files in [
-        altered(&artifact, |files| drop(files.remove(MARKER))),
-        altered(&artifact, |files| drop(files.remove("index.html"))),
         altered(&artifact, |files| {
-            drop(files.insert("extra".to_owned(), b"x".to_vec()))
+            files.remove(MARKER);
         }),
         altered(&artifact, |files| {
-            drop(files.insert("index.html".to_owned(), b"corrupt".to_vec()))
+            files.remove("index.html");
         }),
         altered(&artifact, |files| {
-            drop(files.insert("index.html".to_owned(), vec![b'?'; size]))
+            files.insert("extra".to_owned(), b"x".to_vec());
+        }),
+        altered(&artifact, |files| {
+            files.insert("index.html".to_owned(), b"corrupt".to_vec());
+        }),
+        altered(&artifact, |files| {
+            files.insert("index.html".to_owned(), vec![b'?'; size]);
         }),
     ] {
         assert_eq!(

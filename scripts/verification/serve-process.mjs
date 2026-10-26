@@ -10,7 +10,7 @@ import { assertOwnerOpen } from "./process-owner-records.mjs";
 import { createVerificationProcessOwner } from "./process-owner.mjs";
 
 /** A suspended Node command registered before its worker is released. */
-export async function commandProcess(args, cwd, environment = process.env) {
+async function commandProcess(args, cwd, environment = process.env) {
   const owner = await createVerificationProcessOwner({ cwd, env: environment });
   const env = owner.environment(childEnvironment(environment));
   const child = spawn(

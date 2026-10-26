@@ -9,7 +9,7 @@ use mokly_test_support::receiver::{Exchange, Options};
 
 use super::support::{missing, mokly, reservations};
 
-/// Removes private roots that a test leaves behind, including renamed ones.
+/// Removes checked private roots that a test leaves behind, including renamed ones.
 #[derive(Default)]
 struct Leftovers(Vec<PathBuf>);
 
@@ -40,7 +40,7 @@ fn publish_removes_its_whole_private_directory_after_success_and_after_already_p
             let directory = running.build_directory();
             let observed = directory.clone();
             receiver.before_complete(Box::new(move |_| {
-                let private_root = observed.wait().parent().unwrap().to_path_buf();
+                let private_root = publication::private_root(&observed.wait());
                 reservations(&private_root);
                 fs::write(
                     private_root.join("private-note"),
@@ -48,7 +48,7 @@ fn publish_removes_its_whole_private_directory_after_success_and_after_already_p
                 )
                 .unwrap();
             }));
-            let private_root = directory.wait().parent().unwrap().to_path_buf();
+            let private_root = publication::private_root(&directory.wait());
             leftovers.0.push(private_root.clone());
             let result = running.wait();
             assert_eq!(result.code, Some(0), "{}", result.stderr);
@@ -80,7 +80,7 @@ fn publish_failure_retains_the_complete_private_directory_and_reservations() {
     )
     .spawn();
     let output = running.build_directory().wait();
-    let private_root = output.parent().unwrap().to_path_buf();
+    let private_root = publication::private_root(&output);
     let _leftovers = Leftovers(vec![private_root.clone()]);
     let result = running.wait();
     assert_eq!(result.code, Some(1));
@@ -106,11 +106,11 @@ fn publish_removes_a_private_sibling_symlink_and_preserves_its_target() {
     let observed = directory.clone();
     let target = repository.path().to_path_buf();
     receiver.before_complete(Box::new(move |_| {
-        let private_root = observed.wait().parent().unwrap().to_path_buf();
+        let private_root = publication::private_root(&observed.wait());
         reservations(&private_root);
         link_directory(&target, &private_root.join("external"));
     }));
-    let private_root = directory.wait().parent().unwrap().to_path_buf();
+    let private_root = publication::private_root(&directory.wait());
     let _leftovers = Leftovers(vec![private_root.clone()]);
     let result = running.wait();
     assert_eq!(result.code, Some(0), "{}", result.stderr);
@@ -137,12 +137,12 @@ fn publish_cleanup_failure_warns_with_its_stored_private_root_and_keeps_success(
     let directory = running.build_directory();
     let observed = directory.clone();
     receiver.before_complete(Box::new(move |_| {
-        let private_root = observed.wait().parent().unwrap().to_path_buf();
+        let private_root = publication::private_root(&observed.wait());
         let retained = retained(&private_root);
         fs::rename(&private_root, &retained).unwrap();
         fs::write(&private_root, "replacement blocks directory removal").unwrap();
     }));
-    let private_root = directory.wait().parent().unwrap().to_path_buf();
+    let private_root = publication::private_root(&directory.wait());
     let retained = retained(&private_root);
     let _leftovers = Leftovers(vec![private_root.clone(), retained.clone()]);
     let result = running.wait();

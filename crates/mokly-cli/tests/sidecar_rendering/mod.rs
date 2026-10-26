@@ -9,3 +9,4 @@ mod stderr_tests;
 mod support;
 mod timings_tests;
 mod viewer_assets_tests;
+mod wrapper;

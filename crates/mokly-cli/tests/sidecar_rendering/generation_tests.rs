@@ -14,7 +14,8 @@ use mokly_test_support::serve::{Serve, Stream};
 use regex::Regex;
 use serde_json::json;
 
-use super::support::{mokly, node, wrapped_sidecar};
+use super::support::{mokly, node};
+use super::wrapper::wrapped_sidecar;
 
 fn screen(label: &str) -> String {
     format!(

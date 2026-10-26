@@ -7,10 +7,7 @@ import { promisify } from "node:util";
 const exec = promisify(execFile);
 export const workspace = path.resolve(import.meta.dirname, "../..");
 
-export async function publicationFixture(
-  javascript = false,
-  objectFormat: "sha1" | "sha256" = "sha1",
-) {
+export async function publicationFixture() {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-static-publish-"),
   );
@@ -22,23 +19,11 @@ export async function publicationFixture(
   );
   await fs.writeFile(path.join(root, "signal.txt"), "original");
   await fs.writeFile(
-    path.join(
-      root,
-      "specs",
-      javascript ? "home.mockup.ts" : "home.screen.html",
-    ),
-    javascript
-      ? `import fs from 'node:fs'; import {definePage} from '@mokly/mokly'; export default definePage({title:'Home',description:'',relatedDocs:[],render(){fs.appendFileSync('specs/home.mockup.ts','\\n// changed');return '<!doctype html><html><head><title>Home</title></head><body><h1>Home</h1></body></html>'}});`
-      : "---\ntitle: Home\n---\n<h1>Home</h1>",
+    path.join(root, "specs", "home.screen.html"),
+    "---\ntitle: Home\n---\n<h1>Home</h1>",
   );
-  if (javascript)
-    await fs.symlink(
-      path.join(workspace, "node_modules"),
-      path.join(root, "node_modules"),
-      "junction",
-    );
   for (const args of [
-    ["init", "-q", `--object-format=${objectFormat}`],
+    ["init", "-q", "--object-format=sha1"],
     ["config", "user.name", "Mokly Test"],
     ["config", "user.email", "test@example.com"],
     ["add", "."],
@@ -61,7 +46,7 @@ function commandEnvironment(mode: string, extra: NodeJS.ProcessEnv) {
 
 export function command(
   root: string,
-  verb: "build" | "publish",
+  verb: "build",
   args: string[],
   mode = "plain",
   extra: NodeJS.ProcessEnv = {},

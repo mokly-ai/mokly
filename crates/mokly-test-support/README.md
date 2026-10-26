@@ -28,7 +28,9 @@ receiver.
 environment without its `MOKLY_` variables, then gets the package root, the
 viewer bundle, and the output mode. Threads capture both streams while the
 child runs, so that a receiver can wait for the private build directory that
-`mokly publish` reports. A hang guard stops a child that never exits.
+`mokly publish` reports. A hang guard stops a child that never exits. A child
+that leads its own process group is stopped with its whole group, because a
+process in the group keeps the captured streams open.
 
 `receiver::Exchange` answers Plan, Blob, and Complete on a concurrent
 `server::Server`. A handler failure answers 500 and fails `Exchange::close`.

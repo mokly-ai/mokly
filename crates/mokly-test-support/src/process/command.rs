@@ -60,13 +60,18 @@ impl Mokly {
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        Invocation { command }
+        Invocation {
+            command,
+            group: false,
+        }
     }
 }
 
 /// One prepared invocation that a test can adjust before it starts.
 pub struct Invocation {
     command: Command,
+    /// Whether the child leads a new process group.
+    group: bool,
 }
 
 impl Invocation {
@@ -83,15 +88,19 @@ impl Invocation {
     }
 
     /// Start the child as the leader of a new process group.
+    ///
+    /// The runner's hang guard and its drop then kill the whole group, because a process in
+    /// the group keeps the captured output streams open.
     #[cfg(unix)]
     pub fn process_group(mut self) -> Self {
         self.command.process_group(0);
+        self.group = true;
         self
     }
 
     /// Start the child and the threads that capture its output.
     pub fn spawn(self) -> Running {
-        Running::start(self.command)
+        Running::start(self.command, self.group)
     }
 
     /// Run the child to completion.

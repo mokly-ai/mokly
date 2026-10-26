@@ -1,12 +1,9 @@
-//! The test fault module disappears from release builds, and signal sessions release their handlers.
+//! The test fault module disappears from release builds.
 
 use std::fs;
 use std::process::Command;
 
-use mokly_test_support::publication;
 use mokly_test_support::workspace;
-
-use super::support::mokly;
 
 #[test]
 fn the_fault_module_erases_itself_without_debug_assertions() {
@@ -49,17 +46,4 @@ fn the_fault_module_erases_itself_without_debug_assertions() {
         message.contains("E0433") && message.contains("faults"),
         "{message}"
     );
-}
-
-#[cfg(unix)]
-#[test]
-fn build_and_publish_signal_sessions_release_registrations_when_dropped() {
-    let root = publication::fixture(false, "sha1");
-    let result = mokly()
-        .command(root.path(), &["build", "--no-changes"], "plain")
-        .env("MOKLY_TEST_STATIC_FAULTS", "handlers")
-        .run();
-    assert_eq!(result.code, Some(0), "{}", result.stderr);
-    assert_eq!(result.stdout, "signal-handlers-released\n");
-    assert_eq!(result.stderr, "");
 }

@@ -1,15 +1,12 @@
 //! The recovery fixture, fault-injected commands, and recovery assertions.
 
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::thread;
-use std::time::{Duration, Instant};
 
 use mokly_test_support::files::{tree, write};
 use mokly_test_support::git::git;
-use mokly_test_support::process::{Finished, Invocation, Mokly};
-use mokly_test_support::publication;
+use mokly_test_support::process::{Invocation, Mokly};
+use mokly_test_support::publication::{self, Outputs};
 use regex::Regex;
 use serde_json::Value;
 use tempfile::TempDir;
@@ -65,29 +62,44 @@ pub(super) fn fault_command(
         .env("MOKLY_TEST_STATIC_READY", root.join(".context/ready"))
 }
 
+/// `base` joined with the `/`-separated relative `path` one part at a time, so that the result
+/// uses the separator that the binary prints.
+pub(super) fn joined(base: &Path, path: &str) -> PathBuf {
+    path.split('/')
+        .fold(base.to_path_buf(), |joined, part| joined.join(part))
+}
+
 /// The output folder of `verb`: the reported private build, or `.context/site`.
 pub(super) fn output_directory(root: &Path, verb: &str, stdout: &str) -> PathBuf {
     if verb == "publish" {
         publication::directory(stdout)
     } else {
-        root.join(".context/site")
+        joined(root, ".context/site")
     }
 }
 
 /// The reservation folder that holds the recovery files of `output`.
 pub(super) fn reservation(output: &Path) -> PathBuf {
-    output
-        .parent()
-        .unwrap()
-        .join(".mokly-export-reservations/locks")
+    joined(output.parent().unwrap(), ".mokly-export-reservations/locks")
         .join(output.file_name().unwrap())
 }
 
-/// Remove the private publish root of `output`.
-pub(super) fn remove_private(verb: &str, output: &Path) {
+/// A guard that removes the checked private publish root of `output` when it drops, also
+/// after a failed assertion. A build output needs no guard.
+pub(super) fn private_outputs(verb: &str, output: &Path) -> Outputs {
+    let mut outputs = Outputs::default();
     if verb == "publish" {
-        let _ = fs::remove_dir_all(output.parent().unwrap());
+        outputs.push(output.to_path_buf());
     }
+    outputs
+}
+
+/// Check the end of a report that a snapshot ignores: exactly one final newline.
+pub(super) fn one_final_newline(report: &str) {
+    assert!(
+        report.ends_with('\n') && !report.ends_with("\n\n"),
+        "{report:?}"
+    );
 }
 
 /// Check that the only error category is `[mokly/export-invalid]`.
@@ -167,26 +179,4 @@ pub(super) fn installed_bytes(root: &Path, output: &Path, verb: &str) {
         actual == expected,
         "the installed bytes differ from a fresh build"
     );
-}
-
-/// Run `verb` with `fault`, send SIGINT at the fault's signal gate, and wait.
-pub(super) fn signal_fault(root: &Path, verb: &str, mode: &str, fault: &str) -> Finished {
-    let expected = fault.split(',').next().unwrap();
-    let ready = root.join(".context/ready");
-    let mut running = fault_command(root, verb, fault, mode, ".context/site").spawn();
-    let started = Instant::now();
-    while fs::read_to_string(&ready).ok().as_deref() != Some(expected) {
-        assert!(
-            !running.has_exited(),
-            "No fault readiness: {}",
-            running.stderr()
-        );
-        assert!(
-            started.elapsed() < Duration::from_secs(120),
-            "the fault gate never became ready"
-        );
-        thread::sleep(Duration::from_millis(10));
-    }
-    running.signal("INT");
-    running.wait()
 }

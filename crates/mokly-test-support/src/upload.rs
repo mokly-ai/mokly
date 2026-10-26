@@ -2,7 +2,7 @@
 
 use std::sync::LazyLock;
 
-use chrono::{DateTime, SecondsFormat, Utc};
+use chrono::{DateTime, SecondsFormat, Timelike, Utc};
 use regex::Regex;
 use serde_json::{Map, Value};
 
@@ -34,8 +34,9 @@ const FIELDS: [&str; 11] = [
     "schemaVersion",
 ];
 
-static TIMESTAMP: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$").unwrap());
+static TIMESTAMP: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$").unwrap()
+});
 static COMMIT: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(?:[a-f0-9]{40}|[a-f0-9]{64})$").unwrap());
 static HOST_LABEL: LazyLock<Regex> =
@@ -46,7 +47,7 @@ static COMPARISON: LazyLock<Regex> = LazyLock::new(|| {
 });
 static VERSION: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$",
+        r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$",
     )
     .unwrap()
 });
@@ -65,18 +66,18 @@ pub fn metadata(bytes: &[u8]) -> Result<Map<String, Value>, Rejection> {
     }
     let mut keys: Vec<_> = value.keys().map(String::as_str).collect();
     keys.sort_unstable();
-    let version = value["moklyVersion"].as_str();
-    let pull_request = &value["pullRequest"];
+    let version = field(&value, "moklyVersion").as_str();
+    let pull_request = field(&value, "pullRequest");
     let valid = keys == FIELDS
-        && text(&value["moklyVersion"], 255)
+        && text(field(&value, "moklyVersion"), 255)
         && version.is_some_and(semantic_version)
-        && repository(&value["repository"])
-        && text(&value["branch"], 255)
-        && commit(&value["headSha"])
-        && value["configPath"]
+        && repository(field(&value, "repository"))
+        && text(field(&value, "branch"), 255)
+        && commit(field(&value, "headSha"))
+        && field(&value, "configPath")
             .as_str()
             .is_some_and(|path| portable(path) && path.len() <= 1024)
-        && value["exportedAt"].as_str().is_some_and(timestamp)
+        && field(&value, "exportedAt").as_str().is_some_and(timestamp)
         && (pull_request.is_null() || pull_request.as_f64().is_some_and(safe_positive))
         && comparison(&value);
     if valid {
@@ -84,6 +85,12 @@ pub fn metadata(bytes: &[u8]) -> Result<Map<String, Value>, Rejection> {
     } else {
         Err(Rejection::Invalid)
     }
+}
+
+/// The field `name` of `object`, or null when it is absent, so that no rule panics on a
+/// missing field.
+pub(crate) fn field<'a>(object: &'a Map<String, Value>, name: &str) -> &'a Value {
+    object.get(name).unwrap_or(&Value::Null)
 }
 
 /// The JSON object in `value`, or an invalid rejection.
@@ -128,10 +135,11 @@ fn safe_positive(value: f64) -> bool {
 fn timestamp(value: &str) -> bool {
     TIMESTAMP.is_match(value)
         && DateTime::parse_from_rfc3339(value).is_ok_and(|parsed| {
-            parsed
-                .with_timezone(&Utc)
-                .to_rfc3339_opts(SecondsFormat::Millis, true)
-                == value
+            parsed.nanosecond() < 1_000_000_000
+                && parsed
+                    .with_timezone(&Utc)
+                    .to_rfc3339_opts(SecondsFormat::Millis, true)
+                    == value
         })
 }
 
@@ -156,13 +164,13 @@ fn repository(value: &Value) -> bool {
     let mut keys: Vec<_> = repository.keys().map(String::as_str).collect();
     keys.sort_unstable();
     keys == ["host", "name", "owner"]
-        && text(&repository["host"], 253)
-        && repository["host"]
+        && text(field(repository, "host"), 253)
+        && field(repository, "host")
             .as_str()
             .is_some_and(|host| host.split('.').all(|label| HOST_LABEL.is_match(label)))
         && [("owner", true), ("name", false)]
             .into_iter()
-            .all(|(key, nested)| name(&repository[key], nested))
+            .all(|(key, nested)| name(field(repository, key), nested))
 }
 
 fn name(value: &Value, nested: bool) -> bool {
@@ -176,12 +184,12 @@ fn name(value: &Value, nested: bool) -> bool {
 }
 
 fn comparison(value: &Map<String, Value>) -> bool {
-    if value["comparisonPath"].is_null() {
-        value["baseRef"].is_null() && value["baseSha"].is_null()
+    if field(value, "comparisonPath").is_null() {
+        field(value, "baseRef").is_null() && field(value, "baseSha").is_null()
     } else {
-        text(&value["baseRef"], 255)
-            && commit(&value["baseSha"])
-            && value["comparisonPath"]
+        text(field(value, "baseRef"), 255)
+            && commit(field(value, "baseSha"))
+            && field(value, "comparisonPath")
                 .as_str()
                 .is_some_and(|path| COMPARISON.is_match(path))
     }

@@ -3,6 +3,7 @@
 #![cfg(unix)]
 
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 use mokly_test_support::consumer;
 use mokly_test_support::process::{self, Mokly};
@@ -11,6 +12,20 @@ use mokly_test_support::shim;
 use regex::Regex;
 
 const HUNG: &str = "process.stderr.write('sidecar-ready:'+process.pid+'\\n');while(true){}";
+
+/// Kills the reported hung sidecar when a failed test leaves it running.
+struct Sidecar(Option<u32>);
+
+impl Drop for Sidecar {
+    fn drop(&mut self) {
+        if let Some(pid) = self.0 {
+            let _ = Command::new("kill")
+                .args(["-s", "KILL", &pid.to_string()])
+                .stderr(Stdio::null())
+                .status();
+        }
+    }
+}
 
 fn hung_stage_cancels(stage: &str) {
     let source = if stage == "render" {
@@ -32,10 +47,12 @@ fn hung_stage_cancels(stage: &str) {
     let stderr = running.wait(Stream::Stderr, &ready);
     let pid: u32 = ready.captures(&stderr).unwrap()[1].parse().unwrap();
     assert!(pid > 0);
+    let mut sidecar = Sidecar(Some(pid));
     process::signal_group(running.pid(), "INT");
     let finished = running.finish();
     assert_eq!(finished.code, Some(0), "{}", finished.stderr);
     assert!(!process::alive(pid), "the hung sidecar {pid} still runs");
+    sidecar.0 = None;
     assert!(!finished.stderr.contains("[mokly/"), "{}", finished.stderr);
 }
 

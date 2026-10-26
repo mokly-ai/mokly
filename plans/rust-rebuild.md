@@ -5700,7 +5700,10 @@ does not ask the user before the merge.
       test requires to be absent, Medium. Recommended: B.
   - Fix round 2 finding 5 joins it: the marker fixtures in
     `tests/static_base_managers.test.ts` and
-    `tests/helpers/base_manager_fixture.ts` look in the wrong place.
+    `tests/helpers/base_manager_fixture.ts` look in the wrong place. The
+    [CLI test port](./port-cli-tests-to-rust.md) moved both to Rust: the
+    marker script in `crates/mokly-cli/tests/base_tiers/cold.rs` and the
+    checks in `crates/mokly-cli/tests/base_tiers/install_tests.rs`.
 
 - [ ] Resolve user item 123 (wider fix of pnpm and Yarn review findings 3
       and 4): one typed lockfile model. Parse pnpm and Yarn lockfiles into
@@ -6146,7 +6149,9 @@ does not ask the user before the merge.
 
 - [ ] Resolve user item 192 (test):
       `tests/static_base_manager_mirror.test.ts`, "a cold Yarn Classic base
-      installs ordinary versions from its committed offline mirror", fell
+      installs ordinary versions from its committed offline mirror" (now
+      `classic_tests::a_cold_yarn_classic_base_installs_ordinary_versions_from_its_committed_offline_mirror`
+      in `crates/mokly-cli/tests/base_tiers`), fell
       back to tier 3 instead of tier 2 once on hosted CI (PR #200 run
       40194214551, attempt 1) and passed on the rerun. Severity Low, test,
       effort not recorded. Options (estimate): A, find the cause from a

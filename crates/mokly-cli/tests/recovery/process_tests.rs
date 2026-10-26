@@ -7,8 +7,8 @@ use std::path::Path;
 use mokly_test_support::files::tree;
 
 use super::support::{
-    causes, export_category, fault_command, installed_bytes, normalized, output_directory,
-    recovery_fixture, recovery_path, remove_private, reservation, unsafe_entry,
+    causes, export_category, fault_command, installed_bytes, joined, normalized, one_final_newline,
+    output_directory, private_outputs, recovery_fixture, recovery_path, reservation, unsafe_entry,
 };
 
 const FAULTS: [&str; 6] = [
@@ -31,6 +31,7 @@ fn failures_report_their_causes(verb: &str, mode: &str) {
         let previous = tree(&path.join(".context/previous"));
         let result = fault_command(path, verb, fault, mode, ".context/site").run();
         let output = output_directory(path, verb, &result.stdout);
+        let _private = private_outputs(verb, &output);
         let recovery = reservation(&output);
         assert_eq!(result.code, Some(1), "{}", result.stderr);
         assert!(!result.stdout.contains("Built Mokly to"));
@@ -89,7 +90,7 @@ fn failures_report_their_causes(verb: &str, mode: &str) {
                 };
                 causes(
                     &result.stderr,
-                    &unsafe_entry(&recovery.join(entry)),
+                    &unsafe_entry(&joined(&recovery, entry)),
                     &format!("Recovery failed: {}", unsafe_entry(&recovery.join("stage"))),
                 );
                 assert!(tree(&output) == previous);
@@ -117,9 +118,9 @@ fn failures_report_their_causes(verb: &str, mode: &str) {
         assert_eq!(removals, if kept { 0 } else { 1 });
         if mode == "plain" {
             let name = format!("{verb}_plain_{}", fault.replace([',', '-'], "_"));
+            one_final_newline(&result.stderr);
             insta::assert_snapshot!(name, normalized(&result.stderr, path, &output, verb));
         }
-        remove_private(verb, &output);
     }
 }
 

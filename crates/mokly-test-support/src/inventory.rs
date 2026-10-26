@@ -45,7 +45,9 @@ pub fn ownership(bytes: &[u8]) -> Result<Vec<Owned>, Rejection> {
         Some(version) if version != 3 => return Err(Rejection::UnsupportedVersion),
         Some(_) => {}
     }
-    let files = root["files"].as_array().ok_or(Rejection::Invalid)?;
+    let files = upload::field(&root, "files")
+        .as_array()
+        .ok_or(Rejection::Invalid)?;
     let mut names = BTreeSet::from([MARKER.to_owned()]);
     files.iter().map(|item| owned(item, &mut names)).collect()
 }

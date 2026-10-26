@@ -1,4 +1,4 @@
-//! Install the `@mokly/mokly` shim with a native package that links to a test binary.
+//! Install the `@mokly/mokly` shim with a native package that links to a test binary (Unix).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,7 +20,6 @@ const SHIM_FILES: [&str; 7] = [
 /// Install `@mokly/mokly` and every native package below `root/installation`.
 ///
 /// Each native package runs `binary`. Returns the installed `bin/mokly.mjs`.
-#[cfg(unix)]
 pub fn install(root: &Path, binary: &Path) -> PathBuf {
     let checkout = workspace::root();
     let scope = root.join("installation/node_modules/@mokly");

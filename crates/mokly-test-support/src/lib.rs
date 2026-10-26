@@ -18,6 +18,7 @@ pub mod readers;
 pub mod receiver;
 pub mod serve;
 pub mod server;
+#[cfg(unix)]
 pub mod shim;
 pub mod strict_json;
 pub mod timings;

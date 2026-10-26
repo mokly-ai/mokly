@@ -59,3 +59,20 @@ fn valid_metadata_passes_and_each_broken_rule_is_rejected() {
         Err(Rejection::TooLarge)
     );
 }
+
+#[test]
+fn missing_fields_unicode_digits_and_leap_seconds_are_invalid_without_a_panic() {
+    for field in ["moklyVersion", "pullRequest"] {
+        let mut missing = valid();
+        missing.as_object_mut().unwrap().remove(field);
+        assert_eq!(read(&missing), Err(Rejection::Invalid), "{field}");
+    }
+    assert_eq!(
+        read(&with("moklyVersion", json!("1\u{663}.2.3"))),
+        Err(Rejection::Invalid)
+    );
+    assert_eq!(
+        read(&with("exportedAt", json!("2026-12-31T23:59:60.000Z"))),
+        Err(Rejection::Invalid)
+    );
+}

@@ -6,7 +6,7 @@ use std::path::Path;
 use mokly_test_support::publication::temporary_root;
 
 use super::support::{
-    fault_command, output_directory, recovery_fixture, remove_private, reservation,
+    fault_command, joined, output_directory, private_outputs, recovery_fixture, reservation,
 };
 
 fn rich_paths_remain_complete(verb: &str, fault: &str) {
@@ -25,10 +25,11 @@ fn rich_paths_remain_complete(verb: &str, fault: &str) {
         .env("TEMP", &temporary_root)
         .run();
     let output = if verb == "build" {
-        path.join(&requested)
+        joined(path, &requested)
     } else {
         output_directory(path, verb, &result.stdout)
     };
+    let _private = private_outputs(verb, &output);
     assert_eq!(result.code, Some(1), "{}", result.stderr);
     let retained = if fault == "install,restore" {
         reservation(&output).join("backup")
@@ -64,7 +65,6 @@ fn rich_paths_remain_complete(verb: &str, fault: &str) {
                 .contains(&format!("Recovery path: {}", path.display()))
         );
     }
-    remove_private(verb, &output);
 }
 
 #[test]

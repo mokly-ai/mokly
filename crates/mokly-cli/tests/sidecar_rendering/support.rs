@@ -1,13 +1,7 @@
-//! The binary under test, callback consumers, and a wrapped sidecar package.
-
-use std::fs;
-use std::path::{Path, PathBuf};
+//! The binary under test, the test Node, and callback consumers.
 
 use mokly_test_support::consumer;
-use mokly_test_support::files::write;
 use mokly_test_support::process::Mokly;
-use mokly_test_support::workspace;
-use serde_json::json;
 use tempfile::TempDir;
 
 /// The entry module of every callback consumer.
@@ -43,21 +37,4 @@ pub(super) fn callback_consumer(source: &str, files: &[(&str, &str)]) -> TempDir
     ];
     all.extend_from_slice(files);
     consumer::project(&all)
-}
-
-/// Turns a module of the built sidecar into a quoted `file:` URL.
-pub(super) type ModuleUrl<'a> = &'a dyn Fn(&str) -> String;
-
-/// A package root whose `dist/sidecar.js` runs `wrapper` before it imports the real sidecar.
-///
-/// `wrapper` can import the sidecar's own modules through `module(name)` URLs.
-pub(super) fn wrapped_sidecar(root: &Path, wrapper: &dyn Fn(ModuleUrl) -> String) -> PathBuf {
-    let package = root.join(".context/package");
-    write(&package, "package.json", r#"{"type":"module"}"#);
-    let dist = workspace::root().join("packages/mokly/dist");
-    let module = |name: &str| json!(format!("file://{}", dist.join(name).display())).to_string();
-    let mut source = wrapper(&module);
-    source.push_str(&format!("\nawait import({});\n", module("sidecar.js")));
-    write(&package, "dist/sidecar.js", source);
-    fs::canonicalize(package).unwrap()
 }

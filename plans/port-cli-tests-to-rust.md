@@ -191,8 +191,10 @@ Evidence: `.context/port-cli-tests-to-rust/harness.md`.
 
 ## Milestone 11: Verification, commit, review, and pull request
 
-- [ ] Record the Rust test duration of `mokly-cli` before and after the port
+- [x] Record the Rust test duration of `mokly-cli` before and after the port
       under `.context/port-cli-tests-to-rust/`.
+  - Evidence: `.context/port-cli-tests-to-rust/durations.md`. The seven new
+    binaries take 146 s of the 281 s run on 8 CPUs.
 - [ ] Run a manual CI run of the branch and check that both native jobs pass
       within their limits.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.

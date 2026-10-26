@@ -14,7 +14,8 @@ use mokly_test_support::serve;
 use regex::Regex;
 use serde_json::json;
 
-use super::support::{ModuleUrl, mokly, node, wrapped_sidecar};
+use super::support::{mokly, node};
+use super::wrapper::{ModuleUrl, wrapped_sidecar};
 
 /// The wrapper that writes 40 lines of 65,537 bytes, one 2 MiB piece, and in Serve a tail.
 fn noisy(verb: &str) -> impl Fn(ModuleUrl) -> String {
@@ -164,14 +165,16 @@ fn drains_sidecar_stderr(verb: &str) {
         pieces.iter().filter(|piece| git_failure(piece)).count(),
         usize::from(verb == "serve")
     );
-    for piece in pieces.iter().filter(|piece| !git_failure(piece)) {
+    for piece in &pieces {
         assert!(
             piece.len() <= 65_536,
             "oversized diagnostic: {}",
             piece.len()
         );
-        let first = piece.as_bytes()[0];
-        assert!(b"LRST".contains(&first) && piece.bytes().all(|byte| byte == first));
+        if !git_failure(piece) {
+            let first = piece.as_bytes()[0];
+            assert!(b"LRST".contains(&first) && piece.bytes().all(|byte| byte == first));
+        }
     }
     let total = |marker: u8| -> usize {
         pieces

@@ -69,11 +69,13 @@ pub(super) fn component_sheet_violations(catalogue: &Catalogue) -> Vec<String> {
         if view.kind == "component" {
             ids.insert(view.path.split('/').take(4).collect::<Vec<_>>().join("/"));
         }
-        let expected: Vec<String> = ids
+        // Sort the file names, not the ids: "tag-chip.css" sorts before "tag.css".
+        let mut expected: Vec<String> = ids
             .iter()
             .filter_map(|id| id.strip_prefix("design/library/"))
             .map(|id| format!("design-library/{id}.css"))
             .collect();
+        expected.sort();
         let links = stylesheets(view);
         let mut own: Vec<&String> = links
             .iter()

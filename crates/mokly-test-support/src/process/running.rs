@@ -2,7 +2,7 @@
 
 use std::io::Read;
 use std::path::PathBuf;
-use std::process::{Child, ChildStderr, ChildStdout, Command};
+use std::process::{Child, ChildStderr, ChildStdout, Command, Stdio};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -64,6 +64,8 @@ impl ChildId {
 /// A started child whose threads capture standard output and standard error.
 pub struct Running {
     child: Child,
+    /// Whether the child leads its own process group.
+    group: bool,
     stdout: Arc<Mutex<Vec<u8>>>,
     stderr: Arc<Mutex<Vec<u8>>>,
     readers: Vec<JoinHandle<()>>,
@@ -72,7 +74,9 @@ pub struct Running {
 
 impl Running {
     /// Start `command` and the threads that capture both of its output streams.
-    pub(super) fn start(mut command: Command) -> Self {
+    ///
+    /// `group` says that the child leads its own process group.
+    pub(super) fn start(mut command: Command, group: bool) -> Self {
         let mut child = command.spawn().expect("mokly starts");
         let stdout = Arc::new(Mutex::new(Vec::new()));
         let stderr = Arc::new(Mutex::new(Vec::new()));
@@ -87,11 +91,23 @@ impl Running {
         ];
         Self {
             child,
+            group,
             stdout,
             stderr,
             readers,
             directory,
         }
+    }
+
+    /// Kill the child, and first its whole process group when it leads one.
+    fn kill(&mut self) {
+        if self.group {
+            let _ = Command::new("kill")
+                .args(["-s", "KILL", "--", &format!("-{}", self.child.id())])
+                .stderr(Stdio::null())
+                .status();
+        }
+        let _ = self.child.kill();
     }
 
     /// The process id of the child.
@@ -127,7 +143,7 @@ impl Running {
                 break status;
             }
             if started.elapsed() > HANG_GUARD {
-                let _ = self.child.kill();
+                self.kill();
                 panic!("mokly did not exit; stderr: {}", self.stderr());
             }
             thread::sleep(Duration::from_millis(10));
@@ -150,7 +166,7 @@ impl Running {
 
 impl Drop for Running {
     fn drop(&mut self) {
-        let _ = self.child.kill();
+        self.kill();
         let _ = self.child.wait();
         for reader in self.readers.drain(..) {
             let _ = reader.join();

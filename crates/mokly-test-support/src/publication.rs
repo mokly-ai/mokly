@@ -116,7 +116,19 @@ pub fn directory(stdout: &str) -> PathBuf {
     PathBuf::from(lines[0].trim_end_matches('\r'))
 }
 
-/// The private publish builds of a test, which the guard removes when it drops.
+/// The private `mokly-publish-` root of a reported `site` build folder.
+///
+/// Panics unless `output` is a `site` folder directly in a `mokly-publish-` folder, so that a
+/// test never removes a folder that the binary did not create.
+pub fn private_root(output: &Path) -> PathBuf {
+    assert_eq!(output.file_name().unwrap(), "site", "{}", output.display());
+    let root = output.parent().unwrap();
+    let name = root.file_name().unwrap().to_string_lossy();
+    assert!(name.starts_with("mokly-publish-"), "{}", output.display());
+    root.to_path_buf()
+}
+
+/// The private publish roots of a test, which the guard removes when it drops.
 #[derive(Default)]
 pub struct Outputs(Vec<PathBuf>);
 
@@ -124,19 +136,14 @@ impl Outputs {
     /// Check that `output` is a `site` folder in a private `mokly-publish-` root,
     /// and remove that root when the guard drops.
     pub fn push(&mut self, output: PathBuf) {
-        assert_eq!(output.file_name().unwrap(), "site");
-        let root = output.parent().unwrap().file_name().unwrap();
-        assert!(root.to_string_lossy().starts_with("mokly-publish-"));
-        self.0.push(output);
+        self.0.push(private_root(&output));
     }
 }
 
 impl Drop for Outputs {
     fn drop(&mut self) {
-        for output in &self.0 {
-            if let Some(root) = output.parent() {
-                let _ = fs::remove_dir_all(root);
-            }
+        for root in &self.0 {
+            let _ = fs::remove_dir_all(root);
         }
     }
 }
