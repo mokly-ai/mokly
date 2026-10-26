@@ -11,7 +11,7 @@ import {
 import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
 
 const GENERATION = "b".repeat(64);
-const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
+const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/`;
 const BASE = "https://catalogue.test/view/archive/removed/";
 
 const delivery: PreviewDelivery = { comparisonUrl: COMPARISON };
@@ -29,6 +29,9 @@ const removedScreen: RemovedPreviewData = {
 };
 
 const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
+
+/** A removed screen's preview reads its removed detail inside the generation. */
+const screenPath = `mokly-viewer/diffs/generations/${GENERATION}/entries/removed-screen.json`;
 
 test("development stages never discover an unadvertised preview endpoint", () => {
   assert.equal(
@@ -61,7 +64,7 @@ test("every delivery loads only what the catalogue advertises", () => {
       delivery,
       BASE,
     )?.endpoint.href,
-    `https://catalogue.test${COMPARISON}`,
+    `https://catalogue.test/${screenPath}`,
   );
   assert.equal(
     previewEndpoint(
@@ -144,7 +147,7 @@ test("the documented embedded fetch set advertises comparison snapshots", () => 
     ],
   } as unknown as CatalogueReadModel;
   assert.deepEqual(advertisedPreviewPaths(model), {
-    files: [COMPARISON.slice(1), pagePath],
+    files: [screenPath, pagePath],
     prefixes: [
       `mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/`,
       `mokly-viewer/diffs/generations/${GENERATION}/snapshots/after/`,

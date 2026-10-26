@@ -20,10 +20,11 @@ single marker writer. The static builder installs its exact immutable bytes.
 The CLI adapter constructs `Finalized` once and retains both the artifact and
 its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
 metadata, hashes, and the compressed Plan body. No directory walk occurs.
-Review identity validation streams through the review JSON and rejects nested
-duplicate keys without constructing its full value tree. It checks review v8's
-`baseCommit` against the upload's `baseSha`. The static writer derives `baseRef`
-from the retained change snapshot v4; review v8 has no base-ref field.
+Index identity validation streams through the catalogue index and rejects
+nested duplicate keys without constructing its full value tree. It checks the
+index's `baseCommit` against the upload's `baseSha` and its `base` against
+`baseRef`. The Plan archive carries the envelope, the ownership marker, and the
+index, so a receiver reads Changes from the index without another request.
 The installed index and every generation file enter the same upload inventory.
 Disabled or unavailable Changes has no generation and null comparison metadata.
 The index still records unavailable Changes and its selected base ref.
@@ -81,7 +82,8 @@ trait mocks to downstream tests.
 ### Key Code
 
 - [Shared output model](../mokly-model/src/output/mod.rs) and
-  [prepared output](./src/snapshot.rs).
+  [prepared output](./src/snapshot.rs), with the
+  [index identity check](./src/index_identity.rs).
 - [Exchange](./src/exchange.rs), [retry policy](./src/retry.rs), and
   [HTTP adapter](./src/http.rs).
 - [Secret redaction](./src/redaction.rs) matches literal and percent-encoded

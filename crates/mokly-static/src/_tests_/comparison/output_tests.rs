@@ -57,12 +57,13 @@ fn small_generation() -> (CatalogueReadModel, Vec<File>) {
 fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
     let (index, files) = small_generation();
     assert_eq!(index.removed_entries.len(), 1);
+    let root = index.comparison_url.as_ref().unwrap();
+    assert!(root.starts_with("mokly-viewer/diffs/generations/") && root.ends_with('/'));
     assert!(
-        index
-            .comparison_url
-            .as_ref()
-            .unwrap()
-            .ends_with("/review.json")
+        files
+            .iter()
+            .filter(|file| file.path.starts_with("mokly-viewer/diffs/"))
+            .all(|file| file.path.starts_with(root.as_str()))
     );
     let historical = files
         .iter()
@@ -84,8 +85,9 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
 }
 
 #[test]
-fn the_generation_review_is_compact_and_its_removed_detail_keeps_two_space_indentation() {
+fn the_generation_holds_no_review_file_and_its_removed_detail_keeps_two_space_indentation() {
     let (_, files) = small_generation();
+    assert!(!files.iter().any(|file| file.path.ends_with("/review.json")));
     let text = |suffix: &str| {
         let file = files
             .iter()
@@ -93,13 +95,6 @@ fn the_generation_review_is_compact_and_its_removed_detail_keeps_two_space_inden
             .unwrap();
         String::from_utf8(file.bytes.to_vec()).unwrap()
     };
-    assert_eq!(
-        text("/review.json"),
-        format!(
-            "{{\"affected\":[],\"baseCommit\":\"{}\",\"diagnostics\":[],\"entries\":[],\"schemaVersion\":8}}\n",
-            "b".repeat(40)
-        )
-    );
     let detail = text("/entries/old.json");
     assert!(detail.starts_with("{\n  \""), "{detail}");
     assert_eq!(

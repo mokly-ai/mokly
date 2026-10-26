@@ -8,7 +8,7 @@ import {
   VERSION_ERROR_MESSAGE,
 } from "../src/catalogue/version_error.js";
 
-import { rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawIndexFixture } from "./catalogue_v8_fixture.js";
 
 const HASH = "a".repeat(64);
 
@@ -37,7 +37,7 @@ function screens(raw: Record<string, unknown>) {
 test("the index reader accepts the v7 fixture field for field", () => {
   const raw = rawIndexFixture();
   const index = readCatalogueIndex(structuredClone(raw));
-  assert.equal(index.schemaVersion, 7);
+  assert.equal(index.schemaVersion, 8);
   assert.deepEqual(index.identity, raw.identity);
   assert.equal(index.deploymentId, raw.deploymentId);
   assert.equal(index.revision, 0);
@@ -60,13 +60,13 @@ test("the version gate runs before any other field is read", () => {
   for (const value of [
     undefined,
     null,
-    "7",
+    "8",
     7,
     [],
     {},
     { schemaVersion: 6 },
-    { schemaVersion: 8, tree: "not a tree" },
-    { schemaVersion: "7" },
+    { schemaVersion: 9, tree: "not a tree" },
+    { schemaVersion: "8" },
     { ...rawIndexFixture(), schemaVersion: 6 },
   ])
     assert.throws(
@@ -74,7 +74,7 @@ test("the version gate runs before any other field is read", () => {
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "catalogue" &&
-        error.supported === 7 &&
+        error.supported === 8 &&
         error.code === "unsupported-mokly-version",
     );
   assert.equal(
@@ -163,6 +163,7 @@ test("removed records pin their snapshot and preview while a comparison is publi
   }, /preview kind must match entry/);
   rejects((raw) => {
     raw.changesStatus = "unavailable";
+    delete raw.baseCommit;
     raw.removedEntries = [];
     for (const field of [
       "screens",
@@ -207,4 +208,23 @@ test("the comparison URL is a generation path, or null without previews", () => 
   unpublished.comparisonUrl = null;
   for (const removed of unpublished.removedEntries) delete removed.preview;
   assert.equal(readCatalogueIndex(unpublished).comparisonUrl, null);
+});
+
+test("the base commit belongs exactly to ready Changes and the comparison names a root", () => {
+  assert.equal(
+    readCatalogueIndex(rawIndexFixture()).baseCommit,
+    "b".repeat(40),
+  );
+  rejects((raw) => {
+    delete raw.baseCommit;
+  }, /baseCommit belongs exactly to ready Changes/);
+  rejects((raw) => {
+    raw.baseCommit = "B".repeat(40);
+  }, /invalid base commit/);
+  rejects((raw) => {
+    raw.changesStatus = "pending";
+  }, /baseCommit belongs exactly to ready Changes/);
+  rejects((raw) => {
+    raw.comparisonUrl = `${String(raw.comparisonUrl)}review.json`;
+  }, /invalid comparison path/);
 });

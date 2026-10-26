@@ -33,11 +33,13 @@ const IMPLEMENTATION = "Rendered content changed where this component is used.";
 /** The shared stylesheet changed too, but none of its changed styles apply. */
 const EXCLUDED = [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD];
 
-/** Count the selected comparison's review requests from the page's start. */
-function reviewRequests(page: Page): { count: number } {
-  const seen = { count: 0 };
+/** The comparison snapshot documents that the page requests from its start. */
+function snapshotDocuments(page: Page): string[] {
+  const seen: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname.endsWith("/review.json")) seen.count++;
+    const path = new URL(request.url()).pathname;
+    if (/\/diffs\/generations\/[^/]+\/snapshots\/.+\.html$/u.test(path))
+      seen.push(path);
   });
   return seen;
 }
@@ -63,7 +65,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     page,
   }) => {
     await page.setViewportSize(size);
-    const requests = reviewRequests(page);
+    const documents = snapshotDocuments(page);
     await page.goto(`/view/${paths.component}/`);
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     // Its own saved views are unchanged, so it offers no comparison.
@@ -74,7 +76,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       .poll(() => sentences(evidence))
       .toEqual([BASE, IMPLEMENTATION, ...EXCLUDED]);
     await expect(evidence).not.toContainText("Rendered content changed.");
-    expect(requests.count).toBe(0);
+    expect(documents).toEqual([]);
 
     await inspectorTab(page, "Usage");
     const affected = page.locator("[data-usage-section='affected'] a");
@@ -102,5 +104,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     ).toHaveAttribute("href", `/view/${paths.component}/`);
     await expect(evidence).not.toContainText(IMPLEMENTATION);
     // Only the screen's comparison loads; Chip's Details needed none.
-    expect(requests.count).toBe(1);
+    expect(documents.length).toBeGreaterThan(0);
+    for (const document of documents)
+      expect(document).toMatch(
+        new RegExp(
+          `/snapshots/(?:before|after)/mokly-generated/${paths.consumer}/`,
+        ),
+      );
   });

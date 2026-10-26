@@ -1,4 +1,4 @@
-//! Streaming duplicate-key checks for review fields that are not retained.
+//! Streaming duplicate-key checks for index fields that are not retained.
 
 use std::collections::BTreeSet;
 use std::fmt;

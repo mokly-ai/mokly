@@ -20,13 +20,8 @@ test("the native comparison copy remains usable after its two-commit source repo
   ).json();
   expect(index.changesStatus).toBe("ready");
   expect(index.base).toBe("fixture-base");
-  expect(index.comparisonUrl).toMatch(
-    /\/generations\/[a-f0-9]{64}\/review\.json$/,
-  );
-  const review = await (
-    await request.get(new URL(index.comparisonUrl, baseURL).href)
-  ).json();
-  expect(review.baseCommit).toMatch(/^[a-f0-9]{40}$/);
+  expect(index.comparisonUrl).toMatch(/\/generations\/[a-f0-9]{64}\/$/);
+  expect(index.baseCommit).toMatch(/^[a-f0-9]{40}$/);
   expect(
     index.screens.find(
       (entry: { path: string }) => entry.path === comparisonPaths.unchanged,

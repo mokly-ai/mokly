@@ -1,17 +1,15 @@
-/** Comparison metadata requests shared by the shell's comparison controller. */
+/** Comparison generation requests shared by the shell's comparison controller. */
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
-import { parseReviewResult } from "../review/result_validation.js";
-import type { ReviewResult } from "../review/types.js";
 
 import type {
   ComparisonDelivery,
   ComparisonEnvironment,
 } from "./comparison_context.js";
 
-/** One validated result and the immutable URL that owns its snapshots. */
+/** The immutable generation root that owns a comparison's snapshots. */
 export interface LoadedComparison {
-  result: ReviewResult;
+  /** The absolute URL of the generation root, ending with `/`. */
   url: string;
 }
 
@@ -22,7 +20,13 @@ export interface ComparisonScope {
   comparisonUrl?: string | null;
 }
 
-/** Request current metadata, scoped only for live on-demand generation. */
+const SELECTION = `/${VIEWER_DIRECTORY}/diffs/selection`;
+
+/**
+ * Establish the generation of one comparison. A pinned catalogue resolves its
+ * advertised root without a request; Serve redirects a selection, or confirms
+ * an advertised root, before any pane document loads.
+ */
 export async function requestComparison(
   environment: ComparisonEnvironment,
   scope: ComparisonScope,
@@ -31,24 +35,27 @@ export async function requestComparison(
 ): Promise<LoadedComparison> {
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
-  const endpoint = comparisonEndpoint(baseUrl, delivery, scope, refresh);
+  const advertised = advertisedRoot(baseUrl, delivery, scope);
+  if (advertised && delivery.kind === "pinned") return { url: advertised.href };
+  const endpoint = advertised ?? new URL(SELECTION, baseUrl);
+  if (!advertised) {
+    endpoint.searchParams.set("path", scope.id);
+    if (refresh) endpoint.searchParams.set("refresh", "1");
+  }
   const response = await environment.fetch(endpoint, {
     signal,
-    credentials: delivery.kind === "pinned" ? "omit" : "same-origin",
-    headers: { accept: "application/json" },
+    cache: "no-store",
+    credentials: "same-origin",
   });
-  validateResponse(
-    baseUrl,
-    delivery,
-    endpoint,
-    response.url,
-    scope.comparisonUrl !== undefined,
-  );
   if (!response.ok) throw new Error(await failureDetails(response));
-  return {
-    result: parseReviewResult(await response.json()),
-    url: response.url,
-  };
+  const root = safeUrl(response.url);
+  if (
+    !root ||
+    !isLiveGeneration(baseUrl, root) ||
+    (advertised !== undefined && root.href !== advertised.href)
+  )
+    throw new Error("The comparison is unavailable.");
+  return { url: root.href };
 }
 
 /** Renew a live generation before changing panes; pinned generations persist. */
@@ -60,23 +67,17 @@ export async function renewComparison(
 ): Promise<LoadedComparison> {
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
+  const current = safeUrl(loaded.url);
+  const advertised = advertisedRoot(baseUrl, delivery, scope);
   if (delivery.kind === "pinned") {
-    const expected = comparisonEndpoint(baseUrl, delivery, scope, false);
-    const current = safeUrl(loaded.url);
-    if (
-      !current ||
-      current.origin !== expected.origin ||
-      current.pathname !== expected.pathname
-    )
+    if (!current || current.href !== advertised?.href)
       throw new Error("The comparison is unavailable.");
     return loaded;
   }
-  const current = safeUrl(loaded.url);
-  if (!current || !isLiveGeneration(baseUrl, current))
-    throw new Error("The comparison is unavailable.");
   if (
-    scope.comparisonUrl !== undefined &&
-    current.href !== comparisonEndpoint(baseUrl, delivery, scope, false).href
+    !current ||
+    !isLiveGeneration(baseUrl, current) ||
+    (advertised !== undefined && current.href !== advertised.href)
   )
     throw new Error("The comparison is unavailable.");
   const response = await environment.fetch(current, {
@@ -92,12 +93,16 @@ export async function renewComparison(
   return requestComparison(environment, scope, false, signal);
 }
 
-function comparisonEndpoint(
+/**
+ * The generation root that the catalogue advertises for this scope: a removed
+ * entry's classification in every host, or a pinned catalogue's comparison.
+ * `undefined` asks Serve for a selection.
+ */
+function advertisedRoot(
   baseUrl: URL,
   delivery: ComparisonDelivery,
   scope: ComparisonScope,
-  refresh: boolean,
-): URL {
+): URL | undefined {
   const advertised =
     scope.comparisonUrl !== undefined
       ? scope.comparisonUrl
@@ -106,42 +111,11 @@ function comparisonEndpoint(
         : undefined;
   if (advertised === null)
     throw new Error("Comparisons are unavailable in this catalogue.");
-  const endpoint = new URL(
-    advertised === undefined
-      ? `/${VIEWER_DIRECTORY}/diffs/review.json`
-      : `/${advertised}`.replace(/^\/\//, "/"),
-    baseUrl,
-  );
-  if (!sameOrigin(baseUrl, endpoint))
+  if (advertised === undefined) return undefined;
+  const root = new URL(`/${advertised}`.replace(/^\/\//, "/"), baseUrl);
+  if (!sameOrigin(baseUrl, root) || !root.pathname.endsWith("/"))
     throw new Error("The comparison is unavailable.");
-  if (advertised === undefined) {
-    endpoint.searchParams.set("path", scope.id);
-    if (refresh) endpoint.searchParams.set("refresh", "1");
-  }
-  return endpoint;
-}
-
-function validateResponse(
-  baseUrl: URL,
-  delivery: ComparisonDelivery,
-  endpoint: URL,
-  responseUrl: string,
-  advertised: boolean,
-): void {
-  const response = safeUrl(responseUrl);
-  if (!response || !sameOrigin(baseUrl, response))
-    throw new Error("The comparison is unavailable.");
-  if (delivery.kind === "pinned" || advertised) {
-    if (
-      response.pathname !== endpoint.pathname ||
-      response.search !== endpoint.search
-    )
-      throw new Error("The comparison is unavailable.");
-  } else if (
-    response.pathname !== `/${VIEWER_DIRECTORY}/diffs/review.json` &&
-    !isLiveGeneration(baseUrl, response)
-  )
-    throw new Error("The comparison is unavailable.");
+  return root;
 }
 
 function comparisonBaseUrl(value: string | URL): URL {
@@ -159,10 +133,10 @@ function isLiveGeneration(baseUrl: URL, value: URL): boolean {
   return (
     sameOrigin(baseUrl, value) &&
     new RegExp(
-      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/(?:generations\\/[^/]+\\/)?review\\.json$`,
+      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[^/]+\\/$`,
     ).test(value.pathname) &&
-    !value.username &&
-    !value.password
+    !value.search &&
+    !value.hash
   );
 }
 

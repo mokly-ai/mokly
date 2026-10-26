@@ -30,7 +30,7 @@ use crate::serve_warnings::{ServeWarnings, WarningScopes};
 
 pub(super) fn initial() -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     index.revision = 1;

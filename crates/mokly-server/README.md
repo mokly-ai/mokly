@@ -70,9 +70,11 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 
 `ChangesPass` continues after current usage settles. It runs the command's
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
-all current details together. Ready state installs the review pointer, Changes
-membership, moved paths, removed records, and per-view evidence in one revision.
-Included details carry classification reasons in the review v8 shape even without a workspace.
+all current details together. Ready state installs the generation root, the
+base commit, Changes membership, moved paths, removed records, and per-view
+states, ignore ids, and evidence in one revision. Included details carry
+classification reasons in the review v8 shape and their base side even
+without a workspace.
 Non-ready publications remove those reasons with the other comparison evidence.
 Capacity is checked before ready-state projection and again at installation.
 A full store therefore retries without repeating that projection.
@@ -86,10 +88,11 @@ shares those leases with base-side sidecar admission. Cancellation listeners
 wake blocked admission without changing the process pool's size or deadlines.
 
 `MemoryComparisons` implements `dyn Comparisons`. Classification generations
-start with review v8 and removed details. Selected captures project that review
-onto one screen or component entry and copy only its view closures. A variant
-selection retains its component parent in review JSON for evidence ownership.
-It captures only the selected variant's documents. Historical routes capture
+start with the removed details. Selected captures find one screen, component,
+or variant in the retained review and copy only its view closures; they hold
+no JSON. A variant selection captures only the selected variant's documents.
+The selection route redirects to the root of the captured generation, and a
+GET or HEAD of a retained root renews its idle window with 204. Historical routes capture
 the removed entry from the same pinned base. Captures preserve
 original document bytes. `FrozenResources` retains document and resource hashes.
 It rejects changed public bytes or an inconsistent document after cache eviction

@@ -110,6 +110,9 @@ pub enum ContractViolation {
     /// Invalid comparison generation URL.
     #[error("invalid comparison generation URL")]
     ComparisonUrl,
+    /// The base commit is a full commit id present exactly while Changes is ready.
+    #[error("baseCommit must be a full commit id exactly while Changes is ready")]
+    BaseCommit,
     /// Removed entry must have removed changes.
     #[error("removed entry must have removed changes")]
     RemovedChanges,
@@ -146,6 +149,11 @@ pub enum ContractViolation {
     /// Root resource evidence belongs only to pages.
     #[error("root resource evidence belongs only to pages")]
     DetailEvidence,
+    /// View state and ignore ids travel with view evidence; `before` only on current visual entries.
+    #[error(
+        "view state and ignore ids travel with view evidence; before only on current visual entries"
+    )]
+    DetailComparison,
     /// Detail review reasons must use the review's sorted unique order.
     #[error("detail review reasons must use the review's sorted unique order")]
     DetailReasons,

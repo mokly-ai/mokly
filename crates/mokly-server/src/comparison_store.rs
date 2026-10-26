@@ -34,6 +34,8 @@ pub trait Comparisons: Send + Sync {
     async fn selected(&self, accepted: Arc<Accepted>, path: String, refresh: bool) -> Outcome;
     /// Read an immutable generation, capturing a removed document only on demand.
     async fn file(&self, generation: &str, path: &str) -> Result<Option<File>>;
+    /// Renew a retained generation's idle window; false when it is gone.
+    fn renew(&self, generation: &str) -> bool;
     /// Collect idle generations and cancel captures from replaced classifications.
     fn collect(&self);
     /// Stop admission, cancel captures, and wait for every worker before releasing bytes.

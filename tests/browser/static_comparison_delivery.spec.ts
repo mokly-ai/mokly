@@ -22,7 +22,7 @@ for (const width of [390, 1280]) {
   }) => {
     const directory = copiedComparisonDirectory();
     const before = await files(directory);
-    const { reviewUrl, generation } = await deliveryIndex(request, baseURL!);
+    const { generation } = await deliveryIndex(request, baseURL!);
     const traffic = deliveryRequests(page);
     const expectSelection = async (
       viewport: "mobile" | "desktop" | "both",
@@ -49,16 +49,25 @@ for (const width of [390, 1280]) {
           ["after", "After screen"],
         ] as const) {
           const frame = panes.locator(`.mb-pane--${side} iframe`);
+          const document = `${generation}snapshots/${side}/mokly-generated/${comparisonPaths.changed}/${file}`;
           await expect(frame).toHaveAttribute(
             "data-mokly-preview-source",
-            `${generation}snapshots/${side}/mokly-generated/${comparisonPaths.changed}/${file}`,
+            document,
           );
           await expect(frame.contentFrame().locator("h1")).toHaveText(text);
+          await expect
+            .poll(() => traffic.urls.filter((url) => url === document).length)
+            .toBe(reads);
         }
       }
-      expect(traffic.urls.filter((url) => url === reviewUrl)).toHaveLength(
-        reads,
-      );
+      // A pinned generation's root is never requested; panes read snapshots.
+      expect(
+        traffic.urls.filter(
+          (url) =>
+            url.startsWith(generation) &&
+            !url.startsWith(`${generation}snapshots/`),
+        ),
+      ).toEqual([]);
     };
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
@@ -83,18 +92,10 @@ for (const width of [390, 1280]) {
     await expectSelection("desktop", "dark", "difference");
     await chooseViewport(page, "both");
     await expectSelection("both", "dark", "difference");
-    const response = page.waitForResponse((value) =>
-      value.url().startsWith(reviewUrl),
-    );
+    // Refresh presents the same immutable generation again, so each shown
+    // document is read a second time.
     await page.getByRole("button", { name: "Refresh comparison" }).click();
-    const refreshed = await response;
-    expect(refreshed.url()).toBe(reviewUrl);
-    expect(refreshed.ok()).toBe(true);
     await expectSelection("both", "dark", "difference", 2);
-    expect(traffic.urls.filter((url) => url.includes("review.json"))).toEqual([
-      reviewUrl,
-      reviewUrl,
-    ]);
     for (const address of new Set(
       traffic.urls.filter((url) => url.includes("/diffs/generations/")),
     ))

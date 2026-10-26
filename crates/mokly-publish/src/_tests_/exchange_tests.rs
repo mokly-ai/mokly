@@ -109,7 +109,7 @@ async fn empty_missing_has_no_progress_and_complete_200_keeps_first_copy() {
         )
         .await
         .unwrap();
-    assert_eq!(result.uploaded, 1);
+    assert_eq!(result.uploaded, 2);
     assert_eq!(result.unchanged, 5);
     assert_eq!(
         result.summary(),
@@ -160,7 +160,7 @@ async fn blobs_and_complete_share_one_replan_and_accumulate_attempted_digests() 
             )
             .await
             .unwrap();
-        assert_eq!(result.uploaded, 3);
+        assert_eq!(result.uploaded, 4);
         assert_eq!(result.unchanged, 3);
     }
     let initial = plan([digest(b"one")].into());

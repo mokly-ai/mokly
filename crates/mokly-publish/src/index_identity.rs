@@ -1,22 +1,24 @@
-//! Retain only pinned review identity while checking all JSON keys in a stream.
+//! Retain only the catalogue index's comparison identity while checking all JSON keys in a stream.
 
 use std::collections::BTreeSet;
 use std::fmt;
 
-use mokly_model::versions::REVIEW_RESULT;
+use mokly_model::versions::CATALOGUE_INDEX;
 use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 
 use crate::error::{Error, Result};
-use crate::review_json::Skip;
+use crate::json_skip::Skip;
 
-/// The only review fields needed by the byte-carrying upload exchange.
-pub(crate) struct ReviewIdentity {
-    /// Full pinned merge-base object id.
-    pub base_commit: String,
+/// The only index fields that the byte-carrying upload exchange checks.
+pub(crate) struct IndexIdentity {
+    /// Effective base ref, present when Changes is configured.
+    pub base: Option<String>,
+    /// Full pinned merge-base object id, present exactly while Changes is ready.
+    pub base_commit: Option<String>,
 }
 
-impl ReviewIdentity {
-    /// Validate the entire JSON stream and retain only the identity.
+impl IndexIdentity {
+    /// Validate the entire JSON stream and retain only the comparison identity.
     pub(crate) fn parse(bytes: &[u8]) -> Result<Self> {
         match serde_json::from_slice(bytes) {
             Ok(identity) => Ok(identity),
@@ -25,7 +27,7 @@ impl ReviewIdentity {
     }
 }
 
-impl<'de> Deserialize<'de> for ReviewIdentity {
+impl<'de> Deserialize<'de> for IndexIdentity {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
         deserializer.deserialize_map(IdentityVisitor)
     }
@@ -34,16 +36,17 @@ impl<'de> Deserialize<'de> for ReviewIdentity {
 struct IdentityVisitor;
 
 impl<'de> Visitor<'de> for IdentityVisitor {
-    type Value = ReviewIdentity;
+    type Value = IndexIdentity;
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("a review object with pinned base identity")
+        formatter.write_str("a catalogue index object with its comparison identity")
     }
     fn visit_map<A: MapAccess<'de>>(
         self,
         mut object: A,
-    ) -> std::result::Result<ReviewIdentity, A::Error> {
+    ) -> std::result::Result<IndexIdentity, A::Error> {
         let mut keys = BTreeSet::new();
         let mut version = None;
+        let mut base = None;
         let mut base_commit = None;
         while let Some(key) = object.next_key::<String>()? {
             if !keys.insert(key.clone()) {
@@ -51,17 +54,16 @@ impl<'de> Visitor<'de> for IdentityVisitor {
             }
             match key.as_str() {
                 "schemaVersion" => version = Some(object.next_value::<f64>()?),
+                "base" => base = Some(object.next_value::<String>()?),
                 "baseCommit" => base_commit = Some(object.next_value::<String>()?),
                 _ => {
                     object.next_value::<Skip>()?;
                 }
             }
         }
-        if version != Some(f64::from(REVIEW_RESULT)) {
-            return Err(de::Error::custom("unsupported review version"));
+        if version != Some(f64::from(CATALOGUE_INDEX)) {
+            return Err(de::Error::custom("unsupported catalogue index version"));
         }
-        Ok(ReviewIdentity {
-            base_commit: base_commit.ok_or_else(|| de::Error::missing_field("baseCommit"))?,
-        })
+        Ok(IndexIdentity { base, base_commit })
     }
 }

@@ -1,0 +1,105 @@
+/**
+ * One comparison publishes the same records in a static build and in Serve:
+ * the index's base commit, each compared entry's comparison facts, and the
+ * removed entries' details in two-space JSON, byte for byte apart from the
+ * name of the generation that holds them.
+ */
+
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import test, { type TestContext } from "node:test";
+
+import type { CatalogueReadModel } from "../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
+
+import { completed, serve } from "./helpers/mokly_serve.js";
+import { build, fixture } from "./helpers/static_changes.js";
+
+/** The comparison facts of one current detail, without its deployment fences. */
+function facts(detail: EntryDetailV2) {
+  return {
+    before: detail.before,
+    reasons: detail.reasons,
+    views: detail.views.map((view) => ({
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+      state: view.state,
+      ignoredIds: view.ignoredIds,
+    })),
+  };
+}
+
+/** Serve the fixture until its comparison is ready and read its records. */
+async function served(context: TestContext, root: string) {
+  const running = await serve(context, root);
+  try {
+    const url = await running.ready();
+    const { index, detail } = (await completed(
+      url,
+      context.signal,
+      "home",
+    )) as { index: CatalogueReadModel; detail: EntryDetailV2 };
+    assert.equal(index.changesStatus, "ready");
+    const removed: Record<string, string> = {};
+    for (const { entry } of index.removedEntries) {
+      const response = await fetch(
+        new URL(`${index.comparisonUrl}entries/${entry.path}.json`, `${url}/`),
+        { signal: context.signal },
+      );
+      assert.equal(response.status, 200);
+      removed[entry.path] = await response.text();
+    }
+    return { index, detail, removed };
+  } finally {
+    await running.close();
+  }
+}
+
+test(
+  "build and Serve publish the same comparison records for one comparison",
+  { timeout: 120_000 },
+  async (context) => {
+    const { root, base } = await fixture();
+    try {
+      const live = await served(context, root);
+      const built = await build(root, [], "plain", context.signal);
+      const comparison = built.index.comparisonUrl;
+      assert.ok(comparison);
+      assert.equal(built.index.baseCommit, base);
+      assert.equal(live.index.baseCommit, base);
+      const home = JSON.parse(
+        await fs.readFile(
+          path.join(built.output, "mokly-viewer/entries/home.json"),
+          "utf8",
+        ),
+      ) as EntryDetailV2;
+      assert.equal(home.before?.path, "home");
+      assert.ok(home.views.every((view) => view.state === "changed"));
+      assert.deepEqual(facts(live.detail), facts(home));
+      assert.deepEqual(
+        Object.keys(live.removed).sort(),
+        built.index.removedEntries.map(({ entry }) => entry.path).sort(),
+      );
+      const generation = (url: string | null) => url!.split("/").at(-2)!;
+      for (const [entry, text] of Object.entries(live.removed)) {
+        const file: string = await fs.readFile(
+          path.join(built.output, comparison, "entries", `${entry}.json`),
+          "utf8",
+        );
+        assert.ok(file.startsWith('{\n  "'), file.slice(0, 40));
+        // Serve's classification generation holds no snapshot, so only its name differs.
+        assert.equal(
+          text.replace(
+            generation(live.index.comparisonUrl),
+            generation(comparison),
+          ),
+          file,
+          entry,
+        );
+      }
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  },
+);

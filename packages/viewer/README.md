@@ -251,9 +251,13 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
   [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
   routed workspace data and its projection from the index and entry detail
-- [`src/review/result_validation.ts`](./src/review/result_validation.ts) and
-  [`src/review/result_order.ts`](./src/review/result_order.ts) — the strict
-  review result v8 reader and the canonical record order it requires
+- [`src/shell/comparison_request.ts`](./src/shell/comparison_request.ts) — the
+  generation root of a comparison: the pinned root a static catalogue names,
+  or the root that Serve's selection redirects to and its renewal
+- [`src/catalogue/detail_comparison.ts`](./src/catalogue/detail_comparison.ts)
+  and [`src/viewer/public_compared.ts`](./src/viewer/public_compared.ts) — the
+  detail's view states, ignore ids, and base side, and the routed entry's
+  comparison facts that the panes and Details read from them
 - [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
   [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
   entry detail's `reasons` and the reason order it shares with review v8

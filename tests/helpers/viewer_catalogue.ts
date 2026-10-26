@@ -30,7 +30,7 @@ function fixtureJson(name: string): unknown {
   );
 }
 
-const index = readCatalogueIndex(fixtureJson("catalogue-v7.json"));
+const index = readCatalogueIndex(fixtureJson("catalogue-v8.json"));
 const detailFixtures = fixtureJson("entry-details-v2.json") as {
   current: Record<string, unknown>;
   removed: Record<string, unknown>;

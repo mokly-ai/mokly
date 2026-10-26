@@ -139,7 +139,8 @@ The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
 | `await changes.moveBase("head" \| "base" \| commit)`             | Switch the private ref to a fixture alias or commit and wait for its merge base       |
 | `await changes.close()`                                          | Drain Serve before removing the repository; safe to repeat                            |
 
-`expectedBase` is the expected pinned merge-base commit in `review.json`.
+`expectedBase` is the expected pinned merge-base commit, the index's
+`baseCommit`.
 A `predicate` receives the accepted index and can return a boolean or a
 promise. `ready` and `edit` wait for both a higher revision and that state.
 Use a changed title, membership, or document key for the semantic condition.
@@ -187,9 +188,11 @@ keep its browser page and focused link mounted during both publications.
 `serve_usage_focus.spec.ts` follows this recipe.
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
-unresolved root rule, and native component usage. Read `comparisonUrl` from
-the index for removed records. Use `/mokly-viewer/diffs/review.json?path={path}`
-for live selected comparisons, and add `&refresh=1` for an explicit refresh.
+unresolved root rule, and native component usage. Read `comparisonUrl`, the
+generation root, from the index for removed records. Use
+`/mokly-viewer/diffs/selection?path={path}` for live selected comparisons, and
+add `&refresh=1` for an explicit refresh. The selection redirects to the root
+of its generation, which answers 204.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
 
@@ -208,13 +211,14 @@ preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
 publication, and Serve keeps no test seam. `serve_generation_removal.ts`
 makes a generation gone once the documents of the given frames have loaded:
-its first renewal answers 404, and every other request for its files answers
-404 and is refused. For a selected generation this emulates Serve's collection
-of an idle generation, and the comparison then gets a new generation. Serve
-keeps an advertised classification generation's `review.json` and recaptures
-its snapshots, so for that generation the failure only exercises the shell's
-reacquire, and the generation returns when the shell reacquires its
-`review.json` after the renewal. Specs that run the same comparison checks on
+its first renewal, at the root of a comparison or the removed detail of a
+preview, answers 404, and every other request for its files answers 404 and
+is refused. For a selected generation this emulates Serve's collection of an
+idle generation, and the comparison then gets a new generation. Serve keeps
+an advertised classification generation's details and recaptures its
+snapshots, so for that generation the failure only exercises the shell's
+reacquire, and the generation returns when the shell requests the renewal
+address again. Specs that run the same comparison checks on
 the copied output and on Serve register them from a `*_cases.ts` module. The
 copied output registers the alignment, input, and Scroll together memory cases
 in `comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and

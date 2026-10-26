@@ -5,14 +5,13 @@ use std::sync::Arc;
 
 use mokly_graph::types::RenderGeneration;
 use mokly_model::axes::EntryKind;
-use mokly_model::review::{ReviewEntry, ReviewKind, ReviewResultV8};
+use mokly_model::review::{ReviewEntry, ReviewKind};
 use mokly_model::review_affected::ReviewSide;
-use mokly_model::{namespace, readers, routes};
+use mokly_model::{namespace, routes};
 
 use crate::assets::{File, content_type};
 use crate::changes::{Accepted, ChangeCancellation};
-use crate::error::{InternalError, Result, ServerError};
-use crate::snapshot::encode_review;
+use crate::error::{Result, ServerError};
 
 /// Maximum bytes in one immutable comparison generation.
 pub const MAX_BYTES: usize = 64 * 1024 * 1024;
@@ -57,9 +56,9 @@ impl Capturer for SnapshotCapture {
                 return Err(ServerError::ChangesUnavailable);
             }
         } else {
-            let (parent, selected) = find(&result.review.entries, path, true)
+            let selected = find(&result.review.entries, path, true)
                 .or_else(|| find(&result.review.entries, path, false))
-                .filter(|(_, entry)| match entry.kind {
+                .filter(|entry| match entry.kind {
                     ReviewKind::Component => true,
                     ReviewKind::Screen => entry.after.is_some(),
                     ReviewKind::UseCase => false,
@@ -70,20 +69,6 @@ impl Capturer for SnapshotCapture {
                 ReviewKind::Component => EntryKind::Component,
                 ReviewKind::UseCase => EntryKind::UseCase,
             });
-            let mut projected = parent.clone();
-            projected.variants = (parent.path != selected.path).then(|| vec![selected.clone()]);
-            let review = ReviewResultV8 {
-                schema_version: 8,
-                base_commit: result.review.base_commit.clone(),
-                entries: vec![projected],
-                affected: Vec::new(),
-                diagnostics: Vec::new(),
-            };
-            let file = encode_review(&review)?;
-            if let Err(source) = readers::review(&String::from_utf8_lossy(&file.bytes)) {
-                return Err(InternalError::Read { source }.into());
-            }
-            files.insert("review.json".into(), file);
         }
         let (before, after) = if historical {
             let routes = result
@@ -121,8 +106,7 @@ impl Capturer for SnapshotCapture {
                     .collect(),
             )
         };
-        let mut remaining =
-            MAX_BYTES.saturating_sub(files.values().map(|file| file.bytes.len()).sum());
+        let mut remaining = MAX_BYTES;
         capture_side(
             &mut files,
             &mut remaining,
@@ -146,20 +130,16 @@ impl Capturer for SnapshotCapture {
     }
 }
 
-/// Find the selection and retain its parent as the owner of variant evidence.
-fn find<'a>(
-    entries: &'a [ReviewEntry],
-    path: &str,
-    current_only: bool,
-) -> Option<(&'a ReviewEntry, &'a ReviewEntry)> {
+/// Find the selected screen, component, or variant record.
+fn find<'a>(entries: &'a [ReviewEntry], path: &str, current_only: bool) -> Option<&'a ReviewEntry> {
     for entry in entries {
         if entry.path == path && (!current_only || entry.after.is_some()) {
-            return Some((entry, entry));
+            return Some(entry);
         }
         if let Some(variants) = &entry.variants
-            && let Some((_, selected)) = find(variants, path, current_only)
+            && let Some(selected) = find(variants, path, current_only)
         {
-            return Some((entry, selected));
+            return Some(selected);
         }
     }
     None

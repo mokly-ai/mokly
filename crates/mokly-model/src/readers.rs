@@ -170,6 +170,10 @@ pub fn change_snapshot(text: &str) -> Result<CatalogueChangeSnapshotV4, ReadErro
 mod review_reader_tests;
 
 #[cfg(test)]
+#[path = "_tests_/review_rule_tests.rs"]
+mod review_rule_tests;
+
+#[cfg(test)]
 #[path = "_tests_/snapshot_reader_tests.rs"]
 mod snapshot_reader_tests;
 

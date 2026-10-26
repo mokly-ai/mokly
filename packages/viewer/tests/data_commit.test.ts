@@ -19,7 +19,7 @@ import {
   detailFixture,
   detailPairs,
   indexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const OTHER = "f".repeat(64);
 const RETIRED =
@@ -106,7 +106,7 @@ test("removed details stay only while their comparison stays", () => {
     held,
     indexFixture((raw) => {
       raw.revision = 1;
-      raw.comparisonUrl = `mokly-viewer/diffs/generations/${OTHER}/review.json`;
+      raw.comparisonUrl = `mokly-viewer/diffs/generations/${OTHER}/`;
     }),
     [],
   );

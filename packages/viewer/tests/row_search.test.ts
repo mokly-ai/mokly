@@ -21,7 +21,7 @@ import type { ShellRoute } from "../src/shell/routes.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 
-import { shellModelFixture } from "./catalogue_v7_fixture.js";
+import { shellModelFixture } from "./catalogue_v8_fixture.js";
 import {
   publishedScreen,
   publishedModel,

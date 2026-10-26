@@ -4,7 +4,6 @@ import path from "node:path";
 import test from "node:test";
 
 import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
-import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";
@@ -123,15 +122,8 @@ test(
           ),
         ),
       );
-      const review = await json<ReviewResultV8>(
-        built.output,
-        built.index.comparisonUrl!,
-      );
-      assert.equal(
-        review.entries.find((entry) => entry.path === "home")!.state,
-        "changed",
-      );
-      const prefix = path.posix.dirname(built.index.comparisonUrl!);
+      assert.ok(detail.views.some((view) => view.state === "changed"));
+      const prefix = built.index.comparisonUrl!.slice(0, -1);
       const output = await files(built.output);
       for (const side of ["before", "after"]) {
         const asset = [...output].find(

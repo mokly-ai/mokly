@@ -104,43 +104,58 @@ Mokly Cloud must adopt index v8 and envelope v3 in its own repository. Its
 contract crate pins released Mokly versions and regenerates fixtures from
 them, so it finishes after the release.
 
-- [ ] Create a Conductor workspace in `mokly-ai/mokly-cloud` whose agent
+- [x] Create a Conductor workspace in `mokly-ai/mokly-cloud` whose agent
       plans and implements the receiver change against the protocol docs of
       this branch: parse the envelope v3 and the index v8 from the Plan
       archive, take change counts, entries, moves, and screens from the index,
       and retire the review v6 parser. Record the workspace here.
+  - Created on 2026-10-26: workspace "Adopt Mokly without review.json"
+    (`conductor://workspace?id=1b603283-dbbe-448f-a720-705e5b13bc8e`), one
+    Claude session with the brief in
+    `.context/remove-review-json/cloud-brief.md`. Its plan adopts the release
+    that carries this change, including the 0.16 Rust core formats, and it
+    keeps the pins and fixtures until that release is on npm.
 
 ## Milestone 3: Comparisons from the index and the entry details
 
 Write and read index v8 and the new detail fields, stop writing the review file,
-and compare from the index and the details in every host.
+and compare from the index and the details in every host. Milestones 3 and 4
+landed in one commit, because the publish check reads the index that
+Milestone 3 changes.
 
-- [ ] Model: index v8 and detail field shapes, validation, readers, and
+- [x] Model: index v8 and detail field shapes, validation, readers, and
       versions; the generation root route; no public review reader or
       generated review type.
-- [ ] Comparison projections: fill `baseCommit`, view `state` and
+- [x] Comparison projections: fill `baseCommit`, view `state` and
       `ignoredIds`, and `before` in current and removed details.
-- [ ] Static build: write no review file and advertise the generation root.
-- [ ] Serve: classification and selected generations without the review
+- [x] Static build: write no review file and advertise the generation root.
+- [x] Serve: classification and selected generations without the review
       file, the selection endpoint, and the generation root route.
-- [ ] Viewer: the index v8 reader and the new detail fields; comparisons,
+- [x] Viewer: the index v8 reader and the new detail fields; comparisons,
       Details, and removed previews from the index and the details; no
       review reader.
-- [ ] Regenerate the TypeScript types and the protocol fixtures.
-- [ ] Update the Rust, Node, viewer, and browser tests and their fixtures.
-- [ ] Update `scripts/large` and `scripts/rebuild`.
-- [ ] Update the crate, viewer, and test READMEs.
-- [ ] Run the mockup check and smoke-test Serve and a static build.
+- [x] Regenerate the TypeScript types and the protocol fixtures.
+- [x] Update the Rust, Node, viewer, and browser tests and their fixtures.
+  - The viewer-side rule evidence cases of the removed review reader moved
+    to the Rust review validation tests.
+  - Evidence: `.context/remove-review-json/browser-tests-run1.log` and
+    `browser-rerun2.log` to `browser-rerun4.log`.
+- [x] Update `scripts/large` and `scripts/rebuild`.
+  - The rebuild adapter keeps reading the earlier Rust captures of index v7
+    and review v8; its declaration no longer imports a removed type.
+- [x] Update the crate, viewer, and test READMEs.
+- [x] Run the mockup check and smoke-test Serve and a static build.
+  - Evidence: `.context/remove-review-json/smoke-results.md`.
 
 ## Milestone 4: Upload envelope v3
 
 Send the index in the Plan request and drop the review path from the
 envelope.
 
-- [ ] Write and read envelope v3 without `comparisonPath`.
-- [ ] Put `mokly-viewer/index.json` third in the Plan archive. Check the
+- [x] Write and read envelope v3 without `comparisonPath`.
+- [x] Put `mokly-viewer/index.json` third in the Plan archive. Check the
       index's `base` and `baseCommit` against `baseRef` and `baseSha`.
-- [ ] Update the receiver helpers, tests, and fixtures.
+- [x] Update the receiver helpers, tests, and fixtures.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

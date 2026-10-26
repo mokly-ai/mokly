@@ -21,11 +21,13 @@ on the upload client.
 `CatalogueAssembler` implements `dyn Assembler`. It consumes a render generation
 and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the inspector wire boundary.
 Other ranges and links stay inspectable. Inspector failures carry a typed reason
-and the document route. It builds canonical index v7 and detail
-v1 files with revision zero and no live capability. The shared model writer
+and the document route. It builds canonical index v8 and detail
+v2 files with revision zero and no live capability. The shared model writer
 adds publication metadata when requested and writes the ownership marker last.
-Ready Changes supplies review v8, detail-root reasons, view evidence, workspace lists,
-and removed records from the same comparison result. Snapshot v4 stays private. Both pinned graph sides
+Ready Changes supplies the base commit, the generation root, detail-root
+reasons, each view's state, ignore ids, and evidence, the base side, workspace
+lists, and removed records from the same comparison result. The review result
+and snapshot v4 stay private; no generation file holds them. Both pinned graph sides
 supply immutable documents and resources. Removed details carry their historical
 snapshot ID and generation; removed page and document previews carry metadata v3.
 `mokly-compare::projection_removed` owns these records, details, and metadata.
@@ -34,7 +36,7 @@ before applying the comparison workspace projection.
 The comparison inventory is finalized before deployment identity. Disabled or
 unavailable Changes writes no generation; both states remain explicit in the index.
 The strict index reader runs before installation and retains its diagnostic on failure.
-Publication takes its base ref, commit, and comparison path from that same result.
+Publication takes its base ref and commit from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and
 `mokly-platform::Rename` boundaries. It accepts missing, empty, or owned output.

@@ -232,10 +232,13 @@ for both sides, sharing its render cache, sidecar pool, and cancellation.
 Historical runtime failures follow the typed policy in base preparation.
 `mokly-static` consumes the retained result and both graph handles to publish
 one complete comparison. `projection_index::apply` projects the retained
-classification onto current or historical public records. The index must be
-from the same retained catalogue state, with every published record classified.
-`projection_detail::apply_evidence` supplies included entry reasons and resource
-evidence independently of workspace readiness for current and removed details.
+classification onto current or historical public records and names the base
+commit. The index must be from the same retained catalogue state, with every
+published record classified. `projection_detail::apply_evidence` supplies
+included entry reasons, each view's state, ignore ids, and resource evidence,
+and a current screen's or component's base side, independently of workspace
+readiness for current and removed details. These records carry every public
+fact of the review result, which no file holds.
 `projection_workspace::apply` joins ready usage with indexed affected links
 and caller-owned input changes. Both Serve and static output use these
 functions; neither changes the render bytes. An absent workspace stays absent

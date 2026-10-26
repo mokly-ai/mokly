@@ -8,7 +8,7 @@ use flate2::read::GzDecoder;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
-use mokly_model::output::validation::{MANIFEST, MARKER, digest};
+use mokly_model::output::validation::{INDEX, MANIFEST, MARKER, digest};
 use serde_json::Value;
 
 pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
@@ -22,10 +22,6 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
     let comparison = comparison.then(|| Comparison {
         base_ref: "origin/main".to_owned(),
         base_sha: "b".repeat(40),
-        path: format!(
-            "mokly-viewer/diffs/generations/{}/review.json",
-            "c".repeat(64)
-        ),
     });
     let mut files = vec![
         File {
@@ -45,16 +41,17 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
             bytes: b"\0\xff\x80shared".as_slice().into(),
         },
     ];
-    if let Some(comparison) = &comparison {
-        files.push(File {
-            path: comparison.path.clone(),
-            bytes: format!(
-                "{{\"schemaVersion\":8,\"baseCommit\":\"{}\"}}",
-                "b".repeat(40)
-            )
-            .into(),
-        });
-    }
+    files.push(File {
+        path: INDEX.to_owned(),
+        bytes: match &comparison {
+            Some(comparison) => format!(
+                "{{\"schemaVersion\":8,\"base\":\"{}\",\"baseCommit\":\"{}\"}}",
+                comparison.base_ref, comparison.base_sha
+            ),
+            None => "{\"schemaVersion\":8}".to_owned(),
+        }
+        .into(),
+    });
     Artifact::finalize(
         directory,
         files,
@@ -95,14 +92,10 @@ pub fn validate_plan(body: &[u8], output: &Artifact) -> BTreeMap<String, Vec<u8>
     }
     let manifest: Value = serde_json::from_slice(&files[MANIFEST]).unwrap();
     let marker: Value = serde_json::from_slice(&files[MARKER]).unwrap();
-    assert_eq!(manifest["schemaVersion"], 2);
-    assert_eq!(manifest.as_object().unwrap().len(), 11);
+    assert_eq!(manifest["schemaVersion"], 3);
+    assert_eq!(manifest.as_object().unwrap().len(), 10);
     assert_eq!(marker["schemaVersion"], 3);
-    let mut expected = vec![MANIFEST.to_owned(), MARKER.to_owned()];
-    if let Some(review) = manifest["comparisonPath"].as_str() {
-        expected.push(review.to_owned());
-    }
-    assert_eq!(order, expected);
+    assert_eq!(order, [MANIFEST, MARKER, INDEX]);
     for entry in marker["files"].as_array().unwrap() {
         let path = entry["path"].as_str().unwrap();
         let actual = output.files.iter().find(|file| file.path == path).unwrap();

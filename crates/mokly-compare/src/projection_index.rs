@@ -25,6 +25,7 @@ use crate::projection_context::Context;
 pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
     index.changes_status = ChangesStatus::Ready;
     index.base = Some(result.snapshot.base_ref.clone());
+    index.base_commit = Some(result.review.base_commit.clone());
     let context = Context::new(result);
     let entries: BTreeMap<_, _> = result
         .entries

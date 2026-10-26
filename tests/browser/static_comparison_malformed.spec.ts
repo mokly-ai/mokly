@@ -13,9 +13,11 @@ import {
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 
-test("malformed copied review metadata never falls back to a live comparison endpoint", async ({
+test("a copied comparison without a pane document never falls back to a live comparison endpoint", async ({
   page,
+  allowBrowserError,
 }) => {
   const root = await fs.mkdtemp(
     path.join(
@@ -37,19 +39,27 @@ test("malformed copied review metadata never falls back to a live comparison end
     const index = JSON.parse(
       await fs.readFile(path.join(root, "mokly-viewer/index.json"), "utf8"),
     );
-    const review = path.join(root, index.comparisonUrl);
-    await fs.writeFile(review, '{"schemaVersion":8,"entries":"malformed"}');
+    // The copy lost the current side of the changed screen's mobile view.
+    const document = `${index.comparisonUrl}snapshots/after/mokly-generated/${comparisonPaths.changed}/index.mobile.html`;
+    await fs.rm(path.join(root, document));
     host = await serveStaticFiles(root);
-    const traffic = deliveryRequests(page);
-    await page.goto(`${host.url}/view/${comparisonPaths.changed}/`);
+    const missing = new URL(document, `${host.url}/`).href;
+    allowBrowserError(missingResourceNotice(missing));
+    const traffic = deliveryRequests(page, [missing]);
+    await page.goto(
+      `${host.url}/view/${comparisonPaths.changed}/?viewport=mobile`,
+    );
     await page.getByRole("button", { name: "Overlay", exact: true }).click();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(
       page.locator("iframe[data-mokly-comparison-frame]"),
     ).toHaveCount(0);
-    expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([
-      new URL(index.comparisonUrl, host.url).href,
-    ]);
+    // The panes read only the pinned generation's documents.
+    const generation = new URL(index.comparisonUrl, `${host.url}/`).href;
+    const diffs = traffic.urls.filter((url) => url.includes("/diffs/"));
+    expect(diffs).toContain(missing);
+    for (const url of diffs)
+      expect(url.startsWith(`${generation}snapshots/`)).toBe(true);
     traffic.assert();
   } finally {
     await close();

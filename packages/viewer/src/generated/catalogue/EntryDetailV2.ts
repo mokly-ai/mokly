@@ -4,6 +4,7 @@ import type { CatalogueIdentity } from "./CatalogueIdentity.js";
 import type { DetailEntry } from "./DetailEntry.js";
 import type { DetailView } from "./DetailView.js";
 import type { EntryChangeReason } from "./EntryChangeReason.js";
+import type { ReviewEntryAddress } from "./ReviewEntryAddress.js";
 import type { ViewEvidence } from "./ViewEvidence.js";
 import type { Workspace } from "./Workspace.js";
 
@@ -37,6 +38,10 @@ entry: DetailEntry,
  * Direct reasons in the review v8 shape, present for ready included entries of every kind.
  */
 reasons?: Array<EntryChangeReason>,
+/**
+ * Base side address of a ready current screen or component that has one.
+ */
+before?: ReviewEntryAddress,
 /**
  * Empty for pages, documents, and use cases.
  */

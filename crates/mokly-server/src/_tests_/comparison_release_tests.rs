@@ -77,7 +77,10 @@ async fn cached_files_do_not_retain_a_replaced_classification_or_its_base_captur
     }
     assert!(owner.upgrade().is_none());
     assert!(base.upgrade().is_none());
-    for (path, bytes) in [("review.json", "{}"), (document, "<p>Historical</p>")] {
+    for (path, bytes) in [
+        ("entries/sample.json", "{}"),
+        (document, "<p>Historical</p>"),
+    ] {
         assert_eq!(store.file(&id, path).await.unwrap().unwrap().bytes, bytes);
     }
     assert!(

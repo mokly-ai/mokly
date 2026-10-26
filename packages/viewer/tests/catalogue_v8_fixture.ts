@@ -35,7 +35,7 @@ function fixtureJson(name: string): unknown {
 /** A fresh, mutable copy of the index fixture before validation. */
 export function rawIndexFixture(): CatalogueReadModel {
   return structuredClone(
-    fixtureJson("catalogue-v7.json"),
+    fixtureJson("catalogue-v8.json"),
   ) as CatalogueReadModel;
 }
 

@@ -17,7 +17,7 @@ struct Fixtures {
 #[test]
 fn variant_slot_self_use_is_retained_and_its_child_is_transitive() {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     let mut details: Fixtures = serde_json::from_str(include_str!(

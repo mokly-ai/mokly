@@ -19,14 +19,13 @@ import { accentColor } from "../helpers/comparison_catalogue.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 
 /** The stable endpoint of Serve's selected comparisons. */
-export const SELECTED_ENDPOINT = "/mokly-viewer/diffs/review.json";
+export const SELECTED_ENDPOINT = "/mokly-viewer/diffs/selection";
 
 /** The attribute naming the snapshot address a pane or preview presents. */
 export const PANE_SOURCE = "data-mokly-preview-source";
 
-/** The renewal and metadata address of every selected generation. */
-export const SELECTED_GENERATION =
-  "**/diffs/generations/selected-*/review.json";
+/** The root of every selected generation, which the shell renews. */
+export const SELECTED_GENERATION = "**/diffs/generations/selected-*/";
 
 /** A button that starts a selected comparison request. */
 export type ComparisonAction =
@@ -79,8 +78,10 @@ export async function awaitSelectedComparison(
     request,
     trigger(),
   ]);
-  expect(response.ok()).toBe(true);
-  expect(await response.finished()).toBeNull();
+  // The selection ends at its generation's root, which answers 204 without a
+  // body. Chromium then reports the fetch as aborted, so the wait ends with
+  // the response instead of a finished request.
+  expect(response.status()).toBe(204);
 }
 
 /** Click one comparison button and wait for its selected comparison. */
