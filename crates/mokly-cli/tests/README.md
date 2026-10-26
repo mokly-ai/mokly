@@ -15,6 +15,7 @@ fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
 | `recovery_tests`          | Install and rollback failures, signals, cancellation, input boundaries, and static resources.                |
 | `base_tiers_tests`        | Base dependency tiers with real package managers, a local registry, mirrors, and secrets (Unix).             |
 | `sidecar_rendering_tests` | JavaScript rendering through the sidecar: callbacks, PostCSS evidence, timings, live props, and generations. |
+| `controls_tests`          | Control bounds and order, and numbers outside the JavaScript safe integer range.                             |
 
 Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
 packages: run `npm run build` before a raw `cargo test`.

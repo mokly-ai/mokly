@@ -23,3 +23,9 @@ pub fn detail(bytes: &[u8]) -> Value {
     readers::detail(text).expect("the model reader accepts the detail");
     serde_json::from_str(text).unwrap()
 }
+
+/// Check `text` with the live descriptor v3 reader and return it as JSON.
+pub fn live(text: &str) -> Value {
+    readers::live(text).expect("the model reader accepts the live descriptor");
+    serde_json::from_str(text).unwrap()
+}

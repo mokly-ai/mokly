@@ -155,7 +155,9 @@ Evidence: `.context/port-cli-tests-to-rust/sidecar.md`.
 
 ## Milestone 8: Controls and numbers
 
-- [ ] Port `control_bounds_warnings`, `control_order`,
+Evidence: `.context/port-cli-tests-to-rust/controls.md`.
+
+- [x] Port `control_bounds_warnings`, `control_order`,
       `unsafe_control_numbers`, `unsafe_control_warnings`,
       `unsafe_integer_props`, and `unsafe_schema_numbers`.
 
