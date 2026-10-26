@@ -121,6 +121,8 @@ fn text_spans_cover_their_own_source_text() {
         "<svg>ab<![CDATA[cd]]></svg>",
         "<math><mi><p><b>1</p>2<![CDATA[3]]>",
         "<svg><style>.x{{{y}}}</style></svg>",
+        "<svg><![CDATA[cd]]>ef</svg>",
+        "<svg><![CDATA[a]]>\n{{x}}</svg>",
     ];
     for source in HTML_ONLY.iter().chain(&foreign) {
         let mut previous_end = 0;

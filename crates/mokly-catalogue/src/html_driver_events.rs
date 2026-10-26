@@ -204,6 +204,7 @@ impl<Sink: DriverSink> Callback<Infallible, usize> for EventSink<'_, Sink> {
 /// The html5gum emitter that lets the tree builder choose each tokenizer state.
 pub(crate) struct DriverEmitter<'a, Sink: DriverSink> {
     inner: CallbackEmitter<EventSink<'a, Sink>, Infallible, usize>,
+    cdata: bool,
 }
 
 impl<'a, Sink: DriverSink> DriverEmitter<'a, Sink> {
@@ -215,6 +216,7 @@ impl<'a, Sink: DriverSink> DriverEmitter<'a, Sink> {
                 tag: OpenTag::default(),
                 next_state: None,
             }),
+            cdata: false,
         }
     }
 }
@@ -245,10 +247,20 @@ impl<Sink: DriverSink> ForwardingEmitter for DriverEmitter<'_, Sink> {
     fn adjusted_current_node_present_but_not_in_html_namespace(&mut self) -> bool {
         self.inner.emit_eof();
         self.inner.init_string();
-        self.inner
+        self.cdata = self
+            .inner
             .callback_mut()
             .builder
-            .adjusted_current_node_present_but_not_in_html_namespace()
+            .adjusted_current_node_present_but_not_in_html_namespace();
+        self.cdata
+    }
+
+    fn init_string(&mut self) {
+        if self.cdata {
+            self.cdata = false;
+            self.inner.emit_eof();
+        }
+        self.inner.init_string();
     }
 }
 

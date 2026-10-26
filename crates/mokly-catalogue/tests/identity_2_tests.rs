@@ -44,6 +44,11 @@ fn reserved_element() {
 }
 
 #[test]
+fn cdata_prop_location() {
+    fixtures::check("cdata-prop-location");
+}
+
+#[test]
 fn raw_text_prop_location() {
     fixtures::check("raw-text-prop-location");
 }
