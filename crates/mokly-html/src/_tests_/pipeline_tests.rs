@@ -117,3 +117,15 @@ fn reconstruction_positions_follow_each_authored_start_tag() {
         assert_eq!(positions, expected, "{source}");
     }
 }
+
+#[test]
+fn token_pipeline_copies_bom_and_cdata_boundaries() {
+    for source in [
+        "\u{feff}<!doctype html><html><head><title>Title</title></head><body>Body</body></html>",
+        "<svg><![CDATA[foreign text]]></svg>",
+    ] {
+        let old = crate::parse::legacy_document(source);
+        let new = pipeline::delivered_document(source);
+        assert_eq!(serialize::html(&new), serialize::html(&old), "{source:?}");
+    }
+}

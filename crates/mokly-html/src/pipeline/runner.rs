@@ -16,6 +16,7 @@ pub(super) fn run(
     base_line: usize,
     base_column: usize,
 ) -> Vec<Node> {
+    let source = source.strip_prefix('\u{feff}').unwrap_or(source);
     let arena = Arena::new(authored);
     let mut builder = if fragment {
         let context = arena.create(
