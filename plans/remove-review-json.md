@@ -178,8 +178,15 @@ envelope.
   - 11. Decision: the viewer no longer rejects a non-public evidence path
         that a loaded review carried. Severity Low, effort Small. Recommended:
         A, keep the producer's check only.
+  - Review 2 of the fix commit: `.context/remove-review-json/review-2.md`.
+    Its findings 1 and 2 were fixed.
+  - 12. Plan ticks the review TODO before the re-review. Severity Low,
+        effort Small. Recommended: A, keep the tick and record review 2.
   - `tests/browser/large_watch.spec.ts`: the React journey timed out once
     after 300 s in remote shard 1 of 4 and passed on rerun. Separate branch.
+  - `docs/protocol/mokly-upload-validation.md`: the rejection table names no
+    status for an unsupported catalogue index version in the Plan archive.
+    Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 

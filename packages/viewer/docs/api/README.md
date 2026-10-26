@@ -77,5 +77,4 @@ functions `isLinkPath` and `isLogicalFragment` of the
 [authoring links](../../../../docs/protocol/mokly-authoring.md#links), and the
 profile validators `validatePropSchema` and `validateProps` of the
 [entry props contract](../../../../docs/protocol/mokly-entry-props.md#prop-schema-profile),
-which generate no code; it has no React dependency. The comparison fact types
-are internal to the viewer.
+which generate no code; it has no React dependency.

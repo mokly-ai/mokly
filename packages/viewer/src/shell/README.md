@@ -303,11 +303,11 @@ design places, and the no-changes line follow, in that order.
 `entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
-detail's related components or a component-owned record on a shown view. The
-same facts give an unchanged view in `comparison_selection.ts` its
-"Components this screen uses changed" pane heading, and so does a view whose
-usage holds a changed component that the detail names: `workspace_context.tsx`
-collects those views with `viewsUsingComponents`. The heading names
+detail's related components or a component-owned record on a shown view.
+`comparison_selection.ts` gives an unchanged view its "Components this screen
+uses changed" pane heading when that view keeps a component-owned record, or
+when its usage holds a changed component that the detail names:
+`workspace_context.tsx` collects those views with `viewsUsingComponents`. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its
