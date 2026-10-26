@@ -75,6 +75,10 @@ fn generation(root: &Path) -> Arc<dyn RenderGeneration> {
 }
 
 fn catalogue() -> tempfile::TempDir {
+    catalogue_with("<main><h1>Home</h1></main>")
+}
+
+fn catalogue_with(body: &str) -> tempfile::TempDir {
     let root = tempfile::tempdir().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();
     fs::write(
@@ -84,7 +88,7 @@ fn catalogue() -> tempfile::TempDir {
     .unwrap();
     fs::write(
         root.path().join("specs/home.screen.html"),
-        "---\ntitle: Home\n---\n\n<main><h1>Home</h1></main>\n",
+        format!("---\ntitle: Home\n---\n\n{body}\n"),
     )
     .unwrap();
     fs::write(
@@ -136,4 +140,14 @@ fn a_props_preview_reports_the_seed_warning_once() {
         .unwrap();
     let warnings = &preview.artifact.document.as_ref().unwrap().warnings;
     assert_eq!(seed_warnings(warnings).len(), 1, "{warnings:?}");
+}
+
+#[test]
+fn a_failed_link_check_keeps_the_seed_warning() {
+    let root = catalogue_with(r#"<main><a href="mock:home#missing">Home</a></main>"#);
+    let Err(error) = generation(root.path()).render(ROUTE) else {
+        panic!("the missing fragment must fail the render");
+    };
+    let warnings = error.warnings();
+    assert_eq!(seed_warnings(&warnings).len(), 1, "{warnings:?}");
 }

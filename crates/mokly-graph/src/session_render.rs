@@ -83,13 +83,17 @@ impl ArtifactWorker for Session {
                 });
             }
         };
+        let artifact = with_closure_warnings(artifact, &closure);
+        let document = artifact
+            .document
+            .as_ref()
+            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
         if let Err(source) = validation::links(self, &document.links) {
             return Err(GraphError::Attempt {
                 failures: vec![source],
                 warnings: document.warnings.clone(),
             });
         }
-        let artifact = with_closure_warnings(artifact, &closure);
         self.state
             .cache
             .insert(self.state.plans[route].key.clone(), artifact.clone());
