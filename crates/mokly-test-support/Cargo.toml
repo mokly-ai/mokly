@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 base64 = "0.23.1"
 chrono = { version = "0.4.45", default-features = false, features = ["std"] }
+dunce = "1.0.5"
 flate2 = "1.1.10"
 mokly-model = { workspace = true }
 regex = "1.13.1"

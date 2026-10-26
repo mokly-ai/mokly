@@ -51,17 +51,12 @@ pub fn fixture(javascript: bool, object_format: &str) -> TempDir {
     root
 }
 
-/// The temporary folder without symbolic links, so that printed paths match it.
+/// The temporary folder in its canonical form, so that printed paths match it.
 ///
-/// Windows keeps the plain temporary folder, because its canonical form adds a
-/// verbatim prefix.
+/// The plain folder can hold symbolic links on macOS and 8.3 short names on Windows,
+/// while the binary prints canonical long paths. The canonical form has no verbatim prefix.
 pub fn temporary_root() -> PathBuf {
-    let root = std::env::temp_dir();
-    if cfg!(unix) {
-        root.canonicalize().unwrap()
-    } else {
-        root
-    }
+    dunce::canonicalize(std::env::temp_dir()).unwrap()
 }
 
 /// Link the workspace `node_modules` into `root` so that JavaScript entries resolve.
