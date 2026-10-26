@@ -24,7 +24,7 @@ const SELF_EDITING_PAGE: &str = "import fs from 'node:fs'; import {definePage} f
 pub fn fixture(javascript: bool, object_format: &str) -> TempDir {
     let root = tempfile::Builder::new()
         .prefix("mokly-static-publish-")
-        .tempdir()
+        .tempdir_in(temporary_root())
         .unwrap();
     let path = root.path();
     fs::create_dir(path.join("specs")).unwrap();
@@ -49,6 +49,19 @@ pub fn fixture(javascript: bool, object_format: &str) -> TempDir {
     git::git(path, &["add", "."]);
     git::git(path, &["commit", "-qm", "fixture"]);
     root
+}
+
+/// The temporary folder without symbolic links, so that printed paths match it.
+///
+/// Windows keeps the plain temporary folder, because its canonical form adds a
+/// verbatim prefix.
+pub fn temporary_root() -> PathBuf {
+    let root = std::env::temp_dir();
+    if cfg!(unix) {
+        root.canonicalize().unwrap()
+    } else {
+        root
+    }
 }
 
 /// Link the workspace `node_modules` into `root` so that JavaScript entries resolve.

@@ -11,6 +11,8 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use mokly_test_support::shim;
+
 struct Cleanup {
     child: Child,
     sidecar: Option<String>,
@@ -67,7 +69,10 @@ fn interrupt(signal: &str, shim: bool) {
     fs::write(directory.path().join("specs/hang.mockup.ts"), "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Hang',description:'',relatedDocs:[],props:{},render(){process.stderr.write('fixture-render-ready:'+process.pid+'\\n'); while(true){} }});\n").unwrap();
     let mut command = if shim {
         let mut command = Command::new("node");
-        command.arg(install_shim(directory.path(), &workspace));
+        command.arg(shim::install(
+            directory.path(),
+            Path::new(env!("CARGO_BIN_EXE_mokly")),
+        ));
         command
     } else {
         Command::new(env!("CARGO_BIN_EXE_mokly"))
@@ -133,48 +138,4 @@ fn interrupt(signal: &str, shim: bool) {
         thread::yield_now();
     }
     cleanup.sidecar = None;
-}
-
-fn install_shim(root: &Path, workspace: &Path) -> PathBuf {
-    let scope = root.join("installation/node_modules/@mokly");
-    fs::create_dir_all(&scope).unwrap();
-    std::os::unix::fs::symlink(workspace.join("packages/viewer"), scope.join("viewer")).unwrap();
-    let package = scope.join("mokly");
-    fs::create_dir_all(package.join("bin")).unwrap();
-    fs::create_dir(package.join("dist")).unwrap();
-    for file in [
-        "package.json",
-        "bin/mokly.mjs",
-        "dist/runtime.mjs",
-        "dist/shim.mjs",
-        "dist/platform.mjs",
-        "dist/version.mjs",
-        "dist/execution.mjs",
-    ] {
-        fs::copy(
-            workspace.join("packages/mokly").join(file),
-            package.join(file),
-        )
-        .unwrap();
-    }
-    std::os::unix::fs::symlink(
-        workspace.join("packages/mokly/dist/sidecar.js"),
-        package.join("dist/sidecar.js"),
-    )
-    .unwrap();
-    for entry in fs::read_dir(workspace.join("packages")).unwrap() {
-        let entry = entry.unwrap();
-        if !entry.file_name().to_string_lossy().starts_with("native-") {
-            continue;
-        }
-        let native = scope.join(entry.file_name());
-        fs::create_dir_all(native.join("bin")).unwrap();
-        fs::copy(
-            entry.path().join("package.json"),
-            native.join("package.json"),
-        )
-        .unwrap();
-        std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_mokly"), native.join("bin/mokly")).unwrap();
-    }
-    package.join("bin/mokly.mjs")
 }

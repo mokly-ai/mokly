@@ -114,7 +114,9 @@ Evidence: `.context/port-cli-tests-to-rust/changes.md`.
 
 ## Milestone 5: Recovery, signals, and input safety
 
-- [ ] Port `static_recovery_paths`, `static_recovery_process`,
+Evidence: `.context/port-cli-tests-to-rust/recovery.md`.
+
+- [x] Port `static_recovery_paths`, `static_recovery_process`,
       `static_recovery_signals`, `static_git_cancellation`,
       `static_compiler_diagnostics`, `static_fault_seam`,
       `static_input_boundary`, `static_resources`, and

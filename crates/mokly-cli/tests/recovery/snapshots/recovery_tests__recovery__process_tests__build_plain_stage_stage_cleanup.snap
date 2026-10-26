@@ -1,0 +1,7 @@
+---
+source: crates/mokly-cli/tests/recovery/process_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/stage/404.html.
+Recovery failed: Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/stage.
+  Recovery path: .context/.mokly-export-reservations/locks/site

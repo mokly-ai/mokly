@@ -1,0 +1,7 @@
+---
+source: crates/mokly-cli/tests/recovery/process_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] Exclusive rename failed: operating-system operation failed: injected install failure
+Recovery failed: Exclusive rename failed: operating-system operation failed: injected restore failure
+  Recovery path: {private}/.mokly-export-reservations/locks/site/backup

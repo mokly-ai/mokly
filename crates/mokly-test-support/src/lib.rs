@@ -4,6 +4,7 @@
 
 pub mod archive;
 pub mod changes;
+pub mod consumer;
 pub mod files;
 pub mod git;
 pub mod http;
@@ -15,6 +16,7 @@ pub mod readers;
 pub mod receiver;
 pub mod serve;
 pub mod server;
+pub mod shim;
 pub mod strict_json;
 pub mod timings;
 pub mod upload;

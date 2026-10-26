@@ -1,0 +1,5 @@
+---
+source: crates/mokly-cli/tests/recovery/process_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] Exclusive rename failed: operating-system operation failed: injected install failure

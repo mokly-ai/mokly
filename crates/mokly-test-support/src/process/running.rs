@@ -1,104 +1,17 @@
-//! Run the native `mokly` binary with captured output, signals, and its build line.
+//! A started child, its captured output, and the values that other threads wait for.
 
-use std::ffi::OsStr;
 use std::io::Read;
-use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStderr, ChildStdout, Command, Stdio};
+use std::path::PathBuf;
+use std::process::{Child, ChildStderr, ChildStdout, Command};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use crate::workspace;
-
-/// The standard-output prefix of the private build that `mokly publish` reports.
-pub const PUBLISH_BUILD: &str = "Mokly publish build: ";
+use super::command::PUBLISH_BUILD;
+use super::signals::signal;
 
 /// The hang guard for one child process or one expected state.
 const HANG_GUARD: Duration = Duration::from_secs(300);
-
-/// Builds invocations of one `mokly` binary.
-#[derive(Clone, Debug)]
-pub struct Mokly {
-    binary: PathBuf,
-}
-
-impl Mokly {
-    /// Use the binary at `binary`, normally `env!("CARGO_BIN_EXE_mokly")`.
-    pub fn new(binary: impl Into<PathBuf>) -> Self {
-        Self {
-            binary: binary.into(),
-        }
-    }
-
-    /// Prepare `mokly {args}` in `root` with the output mode `mode`.
-    ///
-    /// The child inherits the test environment without its `MOKLY_` variables.
-    /// It gets the package root, the viewer bundle, and the output mode.
-    pub fn command(&self, root: &Path, args: &[&str], mode: &str) -> Invocation {
-        let mut command = Command::new(&self.binary);
-        command.current_dir(root).args(args);
-        for (name, _) in std::env::vars_os() {
-            if name.to_string_lossy().starts_with("MOKLY_") {
-                command.env_remove(name);
-            }
-        }
-        command
-            .env("MOKLY_OUTPUT", mode)
-            .env("MOKLY_PACKAGE_ROOT", workspace::package_root())
-            .env("MOKLY_VIEWER_DIST", workspace::viewer_dist())
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        Invocation { command }
-    }
-}
-
-/// One prepared invocation that a test can adjust before it starts.
-pub struct Invocation {
-    command: Command,
-}
-
-impl Invocation {
-    /// Set the environment variable `name` for the child.
-    pub fn env(mut self, name: &str, value: impl AsRef<OsStr>) -> Self {
-        self.command.env(name, value);
-        self
-    }
-
-    /// Remove the environment variable `name` for the child.
-    pub fn env_remove(mut self, name: &str) -> Self {
-        self.command.env_remove(name);
-        self
-    }
-
-    /// Start the child and the threads that capture its output.
-    pub fn spawn(mut self) -> Running {
-        let mut child = self.command.spawn().expect("mokly starts");
-        let stdout = Arc::new(Mutex::new(Vec::new()));
-        let stderr = Arc::new(Mutex::new(Vec::new()));
-        let directory = BuildDirectory::default();
-        let readers = vec![
-            read_stdout(
-                child.stdout.take().unwrap(),
-                Arc::clone(&stdout),
-                directory.clone(),
-            ),
-            read_stderr(child.stderr.take().unwrap(), Arc::clone(&stderr)),
-        ];
-        Running {
-            child,
-            stdout,
-            stderr,
-            readers,
-            directory,
-        }
-    }
-
-    /// Run the child to completion.
-    pub fn run(self) -> Finished {
-        self.spawn().wait()
-    }
-}
 
 /// The private build directory that a child reports, shared with other threads.
 #[derive(Clone, Default)]
@@ -158,6 +71,29 @@ pub struct Running {
 }
 
 impl Running {
+    /// Start `command` and the threads that capture both of its output streams.
+    pub(super) fn start(mut command: Command) -> Self {
+        let mut child = command.spawn().expect("mokly starts");
+        let stdout = Arc::new(Mutex::new(Vec::new()));
+        let stderr = Arc::new(Mutex::new(Vec::new()));
+        let directory = BuildDirectory::default();
+        let readers = vec![
+            read_stdout(
+                child.stdout.take().unwrap(),
+                Arc::clone(&stdout),
+                directory.clone(),
+            ),
+            read_stderr(child.stderr.take().unwrap(), Arc::clone(&stderr)),
+        ];
+        Self {
+            child,
+            stdout,
+            stderr,
+            readers,
+            directory,
+        }
+    }
+
     /// The process id of the child.
     pub fn pid(&self) -> u32 {
         self.child.id()
@@ -231,15 +167,6 @@ pub struct Finished {
     pub stdout: String,
     /// Standard error.
     pub stderr: String,
-}
-
-/// Send the signal `name`, such as `INT`, to the process `pid`.
-pub fn signal(pid: u32, name: &str) {
-    let status = Command::new("kill")
-        .args(["-s", name, &pid.to_string()])
-        .status()
-        .expect("kill starts");
-    assert!(status.success(), "kill -s {name} {pid} failed");
 }
 
 fn read_stdout(

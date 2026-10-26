@@ -1,0 +1,5 @@
+---
+source: crates/mokly-cli/tests/recovery/signals_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/.mokly-export-transaction.

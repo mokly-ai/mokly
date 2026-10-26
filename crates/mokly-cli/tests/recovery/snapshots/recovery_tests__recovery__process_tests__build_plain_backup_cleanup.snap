@@ -1,0 +1,6 @@
+---
+source: crates/mokly-cli/tests/recovery/process_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] The new site is installed. Cleanup failed: Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/backup/view/home/index.html.
+  Recovery path: .context/.mokly-export-reservations/locks/site

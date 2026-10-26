@@ -1,0 +1,7 @@
+---
+source: crates/mokly-cli/tests/recovery/signals_tests.rs
+expression: "normalized(&result.stderr, path, &output, verb)"
+---
+[mokly/export-invalid] build cancelled
+Recovery failed: Exclusive rename failed: operating-system operation failed: injected restore failure
+  Recovery path: .context/.mokly-export-reservations/locks/site/backup

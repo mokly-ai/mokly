@@ -8,10 +8,11 @@ tests under `tests/` cover TypeScript code and Node tooling only. Each
 end-to-end area has one test binary with a module folder, and uses the shared
 fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
 
-| Binary                 | Area                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------ |
-| `publication_tests`    | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup. |
-| `changes_output_tests` | Changes classification, comparison contents, evidence, timings, and Serve parity.    |
+| Binary                 | Area                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `publication_tests`    | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup.          |
+| `changes_output_tests` | Changes classification, comparison contents, evidence, timings, and Serve parity.             |
+| `recovery_tests`       | Install and rollback failures, signals, cancellation, input boundaries, and static resources. |
 
 Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
 packages: run `npm run build` before a raw `cargo test`.
@@ -64,11 +65,8 @@ both build and publish signal handlers. Normal source and output operations
 still use their injected trait boundaries.
 Asset recovery tests set the terminal width from the temporary path length.
 This keeps the asserted filename visible when the host uses a long temporary root.
-Each recovery signal case owns one fault, fixture, and hang guard. It waits for
-the complete readiness marker before sending SIGINT. Test cancellation closes
-the watcher, kills the fixture's process group, waits for the inherited output
-pipes to close, and removes its output. On Unix the abort regression waits for
-the complete native gate marker before cancellation, so the shim has started
-the held native process. The regression combines local cancellation with the
-test signal and closes the marker watcher before fixture removal. Windows
-retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
+Each recovery signal case in `recovery_tests` owns one fault and one fixture.
+It waits until the readiness marker holds the fault's gate name before it sends
+SIGINT, and fails when the child exits first. A child that a failed test leaves
+behind is killed and reaped when its runner drops. Signal cases run on Unix
+only.

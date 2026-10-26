@@ -8,7 +8,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use crate::http::{self, Events};
-use crate::process::{Mokly, Running};
+use crate::process::{Finished, Invocation, Mokly, Running};
 
 /// How long a test waits for an expected Serve state.
 const STATE_WAIT: Duration = Duration::from_secs(30);
@@ -27,18 +27,34 @@ pub enum Stream {
     Stderr,
 }
 
+/// Prepare Serve in `root` with `extra` arguments and the inherited output mode.
+pub fn invocation(mokly: &Mokly, root: &Path, extra: &[&str]) -> Invocation {
+    let mut args = vec!["serve", "--no-watch", "--port", "0", "--sidecars", "1"];
+    args.extend_from_slice(extra);
+    mokly.command(root, &args, "").env_remove("MOKLY_OUTPUT")
+}
+
 impl Serve {
     /// Start Serve in `root` with `extra` arguments and the inherited output mode.
     pub fn start(mokly: &Mokly, root: &Path, extra: &[&str]) -> Self {
-        let mut args = vec!["serve", "--no-watch", "--port", "0", "--sidecars", "1"];
-        args.extend_from_slice(extra);
-        let running = mokly
-            .command(root, &args, "")
-            .env_remove("MOKLY_OUTPUT")
-            .spawn();
+        Self::spawn(invocation(mokly, root, extra))
+    }
+
+    /// Start a prepared Serve invocation.
+    pub fn spawn(invocation: Invocation) -> Self {
         Self {
-            running: Some(running),
+            running: Some(invocation.spawn()),
         }
+    }
+
+    /// The process id of the Serve command.
+    pub fn pid(&self) -> u32 {
+        self.running.as_ref().unwrap().pid()
+    }
+
+    /// Wait for Serve to exit by itself.
+    pub fn finish(mut self) -> Finished {
+        self.running.take().unwrap().wait()
     }
 
     /// Wait for the listening line and return the origin.
