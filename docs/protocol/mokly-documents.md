@@ -138,6 +138,9 @@ links keep repository spelling when catalogue placement differs:
   re-render the document without importing or executing them. A target that
   the source policy classifies as a public file stays outside that inventory
   and still renders as plain text.
+- A relative destination under `plans/` remains plain text and stays outside
+  document identity. Editing or removing that planning document does not
+  change the catalogue document key.
 - A relative destination that names no file fails with
   `<location>: link target <destination> does not exist`.
   Unreadable components, overlong names and dangling symlinks use that same text;

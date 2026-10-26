@@ -125,5 +125,6 @@ fn target(source: &str, url: &str) -> Option<String> {
     if target.starts_with(&namespace::generated("")) {
         return None;
     }
-    target.strip_prefix("static/").map(String::from)
+    let path = target.strip_prefix("static/")?;
+    (!path.starts_with("plans/") || !path.ends_with(".md")).then(|| path.to_owned())
 }

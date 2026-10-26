@@ -263,3 +263,20 @@ fn unrelated_routing_and_target_titles_do_not_invalidate_a_literal_link() {
         second.plans()["a/index.mobile.html"].key
     );
 }
+
+#[test]
+fn planning_document_links_do_not_invalidate_document_keys() {
+    let root = fixture();
+    write(
+        root.path(),
+        "specs/library.md",
+        "# Library\n\n[Plan](../plans/rust-rebuild.md)\n",
+    );
+    write(root.path(), "plans/rust-rebuild.md", "first\n");
+    let cache = cache();
+    let first = prepare(root.path(), &cache);
+    let first_key = first.plans()["library/index.html"].key.clone();
+    write(root.path(), "plans/rust-rebuild.md", "second\n");
+    let second = prepare(root.path(), &cache);
+    assert_eq!(first_key, second.plans()["library/index.html"].key);
+}

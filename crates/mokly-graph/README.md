@@ -40,6 +40,7 @@ resource digests to its key. Usage completion alone keeps the published key.
 A resource edit changes its consuming document keys and reuses JavaScript fragments.
 Missing and denied lexical resource paths stay observable for repair. Weak
 subscribers attach those paths before the background pass completes.
+Links into `plans/` stay navigational and do not enter document keys.
 `generation_key` hashes the complete render input set for the live descriptor.
 `public_files` lists authored files reached by completed renders. Serve
 rechecks their live eligibility at read time. Temporary closure membership
