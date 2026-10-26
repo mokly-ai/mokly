@@ -5511,6 +5511,26 @@ check passes on this commit.
       Severity Low, effort Medium, category performance. User decision 1
       (2026-10-26): A, exclude planning Markdown from document identity.
       Fixed in `735c7d2e` with a regression test and the document contract.
+- [ ] Decision work review of 2026-10-26, finding 2: a removed linked plan
+      file keeps the document key. Since `735c7d2e`, linked `plans/*.md`
+      files stay out of document identity, but the Markdown renderer still
+      fails a missing link target. After the file is removed, a warm Serve
+      cache returns the earlier render, while a fresh build fails with "link
+      target ... does not exist". Severity Medium, effort Small, category
+      product bug. Options: A, key each linked `plans/*.md` target only by
+      whether it exists, and say in the documents protocol that removal fails
+      the document, Small; B, check once per generation, outside the render
+      cache, that each plain-text link target exists, Medium; C, split the
+      key inputs of every plain-text link target into content and existence
+      inputs, which also removes the `plans/` special case, Medium.
+      Recommended: A. C best protects the codebase. No option is applied.
+- Decision work review of 2026-10-26:
+  `.context/html-pipeline-2-decisions/review-2000d402.md`. Findings 1, 3, 5,
+  6, and 7 are fixed in `558e580b`, `f38cb325`, and `00fbc79e`. Finding 4 is
+  resolved by `115c2fdb` and the wrapper filter record below.
+- Outside the decision work review: `crates/mokly-catalogue/src/templates.rs`
+  at line 217 reports a `{{...}}` failure in an attribute value at the
+  attribute name start, also on `origin/main`. Separate branch.
 - Outside phase 2 review 1, resolved by the one-tokenizer decision B
   (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
   kept its own integration point list without SVG `desc` or encoded MathML
@@ -5536,20 +5556,17 @@ check passes on this commit.
       and squash the branch when it merges, Small; B, add a check that builds
       and tests every commit of a branch, Medium. Recommended: A. No option
       is applied.
-- [ ] The wrapper filter repeats the catalogue allow list. Severity Low,
+- [x] The wrapper filter repeats the catalogue allow list. Severity Low,
       effort Small, category code structure. `ignore_checks.rs` writes the
       allowed wrapper attributes again beside the catalogue rule. Options:
       A, call the catalogue rule and reserved-navigation check from
       `filter_attributes`, and correct its module doc, Small; B, keep both
       lists, Small. Recommended: A. No option is applied.
-  - User decision (2026-10-26): A. Composition uses the catalogue rule
-    since `d0627104`. The reserved navigation part of A is not applied: it
-    makes composition evaluate those values, so a saved-slot `mokly-ignore`
-    with `data-mokly-link='{{missing}}'` fails with `html-props`. Open
-    decision, severity Low, effort Small. Options: A, keep dropping reserved
-    navigation names in composition, Small; B, keep them and accept the new
-    failure, Small; C, reject them in saved slots as in templates, Small.
-    Recommended: A.
+  - User decision (2026-10-26): A. Composition uses the catalogue rule since
+    `d0627104` and keeps the reserved navigation names since `115c2fdb`, as
+    the authored parse does. This keeps the `origin/main` behaviour: a
+    saved-slot `mokly-ignore` with `data-mokly-link='{{missing}}'` fails with
+    `html-props`. `a5e7461b` had removed that failure without a decision.
 - Outside phase 2 review 1, resolved by the one-tokenizer decision B
   (2026-10-26) in `3c90b1e1`: the production `unreachable!()` and `unwrap()`
   calls left with `html_token_conversion.rs`.
