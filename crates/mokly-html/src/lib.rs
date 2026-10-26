@@ -124,6 +124,9 @@ mod style_metadata_tests;
 mod plaintext_root_tests;
 
 #[cfg(test)]
+#[path = "_tests_/ignore_composition_tests.rs"]
+mod ignore_composition_tests;
+#[cfg(test)]
 #[path = "_tests_/ignore_parsing_tests.rs"]
 mod ignore_parsing_tests;
 

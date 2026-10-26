@@ -1,19 +1,9 @@
 //! Ignore-wrapper attributes disappear before composition can read the parsed tree.
 
-use std::sync::Arc;
-
-use mokly_model::axes::{ColorScheme, Viewport};
-use mokly_model::catalogue::EntryContent;
-use unimock::{MockFn, Unimock, matching};
-
 use mokly_catalogue::template_types::Template;
 
-use crate::composition::{ComposeRequest, Composer, HtmlComposer};
-use crate::fragment::{Fragment, FragmentRendererMock};
 use crate::tree::{self, Node};
 use crate::{parse, serialize, source_checks, source_locations};
-
-use super::support;
 
 fn check_authored(parser: fn(&str, &str, usize, usize) -> Vec<Node>) {
     for (wrapper, required, key) in [
@@ -83,38 +73,6 @@ fn delivered_page_ignore_attributes_are_not_evaluated_by_composition() {
         })
         .expect("page wrapper");
     assert_eq!(wrapper.get("data-x"), Some("{{missing}}"));
-}
-
-#[test]
-fn delivered_page_composition_filters_unknown_wrapper_attributes() {
-    let mut catalogue = support::prepared("<p>Home</p>");
-    catalogue.model.entries[0].metadata.path = "page".into();
-    catalogue.model.entries[0].content = EntryContent::Page;
-    let renderer = Arc::new(Unimock::new(
-        FragmentRendererMock::render
-            .next_call(matching!(_))
-            .returns(Ok(Fragment {
-                html: "<!doctype html><html><head></head><body><mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore></body></html>".into(),
-                ..Default::default()
-            })),
-    ));
-    let entry = &catalogue.model.entries[0];
-    let document = HtmlComposer {
-        fragments: renderer,
-    }
-    .compose(&ComposeRequest {
-        catalogue: &catalogue,
-        entry,
-        viewport: Viewport::Desktop,
-        color_scheme: ColorScheme::Light,
-        stylesheets: Vec::new(),
-    })
-    .unwrap();
-    assert!(
-        tree::walk(&document.tree).all(|node| {
-            !matches!(node, Node::Element(element) if element.name == "mokly-ignore")
-        })
-    );
 }
 
 #[test]
