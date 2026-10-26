@@ -81,8 +81,27 @@ points; see the
   generated TypeScript types.
 - `crates/mokly-catalogue` and `crates/mokly-html` — discovery, the catalogue
   model, HTML screens and components, and document composition.
-- `crates/mokly-sidecar` and `packages/mokly/sidecar` — the render sidecar
-  protocol and the Node process that runs React, pages, and stories.
+- [`crates/mokly-sidecar`](../../crates/mokly-sidecar/README.md) and
+  [`packages/mokly/src/sidecar`](../../packages/mokly/src/sidecar) — the render
+  sidecar protocol and pool, and the Node process that runs React, pages, and
+  stories. [`session.ts`](../../packages/mokly/src/sidecar/session.ts) handles
+  its requests.
+- [`packages/mokly/src/shim.mjs`](../../packages/mokly/src/shim.mjs),
+  [`runtime.mjs`](../../packages/mokly/src/runtime.mjs), and
+  [`execution.mjs`](../../packages/mokly/src/execution.mjs) — the `mokly`
+  shim: the Node range check and binary lookup, the runtime inputs, and signal
+  forwarding.
+- [`packages/mokly/src/authoring/definitions.ts`](../../packages/mokly/src/authoring/definitions.ts)
+  — the `define*` helpers of the authoring API.
+- [`packages/mokly/src/sidecar/postcss-process.ts`](../../packages/mokly/src/sidecar/postcss-process.ts)
+  and [`postcss-preload.ts`](../../packages/mokly/src/sidecar/postcss-preload.ts)
+  — the PostCSS child: its IPC requests and terminal state, and the read
+  observation that starts before consumer preloads. The `postcss-read-*`,
+  `postcss-file-identity.ts`, and `postcss-resolution-evidence.ts` modules
+  record the read evidence.
+- [`packages/mokly/src/sidecar/styles.ts`](../../packages/mokly/src/sidecar/styles.ts)
+  — runtime style collection. `styled-ownership.ts` and `emotion-ownership.ts`
+  record the owners of each registry rule.
 - `crates/mokly-css`, `crates/mokly-graph`, and `crates/mokly-compare` —
   stylesheets and attribution, the render graph and cache, and comparison.
 - `crates/mokly-server`, `crates/mokly-watch`, `crates/mokly-static`, and

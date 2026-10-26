@@ -45,6 +45,7 @@ How a catalogue is written: paths and roots, entry modules, HTML screens and com
 - [Mokly Guides Contract](./mokly-guides.md)
 - [Mokly Package And Authoring Contract](./mokly-package.md)
 - [Mokly Public Authoring Contract](./mokly-authoring.md)
+- [Mokly Shim And Native Runtime Inputs](./mokly-shim.md)
 - [Pages In The Catalogue](./mokly-pages.md)
 - [Paths, Roots, And Identity](./mokly-paths.md)
 - [Registered Components](./mokly-components.md)

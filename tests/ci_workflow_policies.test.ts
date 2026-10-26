@@ -134,13 +134,15 @@ test("CI functional jobs use only the checked-out lockfile", async () => {
     );
 });
 
-test("Node version files agree with the package engines and README", async () => {
-  const [nvmrc, manifestSource, lockSource, readme] = await Promise.all([
-    readText(".nvmrc"),
-    readText("package.json"),
-    readText("package-lock.json"),
-    readText("README.md"),
-  ]);
+test("Node version files agree with the package engines and READMEs", async () => {
+  const [nvmrc, manifestSource, lockSource, readme, packageReadme] =
+    await Promise.all([
+      readText(".nvmrc"),
+      readText("package.json"),
+      readText("package-lock.json"),
+      readText("README.md"),
+      readText("packages/mokly/README.md"),
+    ]);
   const manifest = JSON.parse(manifestSource) as {
     engines: { node: string };
   };
@@ -165,6 +167,10 @@ test("Node version files agree with the package engines and README", async () =>
   assert.ok(
     readme.includes(`\`${manifest.engines.node}\``),
     "the README must document the supported Node range",
+  );
+  assert.ok(
+    packageReadme.includes(`\`${manifest.engines.node}\``),
+    "the package README must document the supported Node range",
   );
   assert.ok(
     readme.includes("[`.nvmrc`](./.nvmrc)"),

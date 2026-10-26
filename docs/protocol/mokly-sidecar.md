@@ -97,7 +97,10 @@ dependency roots. Equal head and base sources have separate generations,
 class maps, and bindings. The binary uses the id in each fragment key. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release) define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,
-and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
+and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets.
+Consumed bytes include text imports and files that an import attribute loads.
+A compiler input without recorded consumed bytes fails `bundle-failed`; a later
+read never supplies its digest. A file inside
 a selected dependency root, a `node_modules` directory, is a dependency on
 both sides. JavaScript and CSS imports from it are allowed and use stable
 logical names relative to that root, such as `node_modules/pkg/style.css`.
@@ -122,7 +125,9 @@ the consumer runtime and attaches invocation source only to Mokly wrappers.
 
 `bundle` evaluates nothing. `cssModules` must install all maps before
 `describe` evaluates the generation. A bundle or evaluation failure returns
-`bundle-failed` with its source and diagnostic. A render without installed
+`bundle-failed` with its source and diagnostic. A compiler diagnostic keeps
+each message's source location and reason, without the compiler's message
+count or plugin framing. A render without installed
 bindings fails closed under the [render records](./mokly-sidecar-render-records.md).
 
 ## Style Collection

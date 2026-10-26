@@ -21,6 +21,12 @@ for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
 from request receipt to response write. The difference from the matching core
 `render.fragment` span includes transport and queue time.
 
+Within `sidecar.bundle`, the child spans `sidecar.bundle.compile`,
+`sidecar.bundle.graph`, `sidecar.bundle.inputs`, and
+`sidecar.bundle.resolution` measure compilation, module-graph construction,
+consumed input hashing, and resolution metadata. The `parentId` of each child
+is the id of its enclosing `sidecar.bundle` span.
+
 The core emits `sidecar.spawn` for process start through hello. Every later
 spawn in a pool slot is enclosed by `sidecar.recycle`. These spans measure the
 new process through hello, excluding the old stop and time between requests.
