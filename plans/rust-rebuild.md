@@ -6172,6 +6172,23 @@ does not ask the user before the merge.
 - [x] Resolve user item 195 (merge): PR #202, the fix of user item 159.
   - User decision 195 (2026-10-25): A. PR #202 merged as `6d9705aa`.
 
+- [ ] Resolve user item 196 (Medium, test; open):
+      `crates/mokly-cli/src/_tests_/serve_trace_tests.rs` and
+      `crates/mokly-graph/tests/routing_work_tests.rs` capture spans with
+      scoped subscribers, as the sidecar trace capture did before the fix of
+      user item 193. A span can then be lost while parallel tests register
+      and drop their subscribers. Options (estimate): A install the same
+      once-per-process interest guard in both captures (Small); B leave
+      them until one of them flakes. Recommended: A, in a separate branch.
+
+- [ ] Resolve user item 197 (Low, process; open): the shared-version
+      check in `scripts/release/versions.mjs` still accepts CLI 0.15.0 with
+      viewer 0.6.0, the pair before the lockstep migration. No release can
+      return to that pair after 0.16.0. Options (estimate): A remove the
+      exception, so that the check requires one shared version (Small); B
+      keep it. Recommended: A. Removal needs the user's approval, because
+      the check is release functionality.
+
 - [x] Resolve user item 200 (release): release run 40254485539 failed at
       `npm publish` with a 404 for `@mokly/native-linux-x64-gnu`. The five
       `@mokly/native-{target}` packages do not exist on npm, and trusted
@@ -6198,12 +6215,14 @@ does not ask the user before the merge.
     tokens. The rerun published two native packages, then stopped at the
     registry verifier: user item 205.
 
-- [ ] Resolve user item 201 (Low, process; open): the native bootstrap
-      workflow accepts any well-formed 40-character commit SHA, also one
-      that `main` does not contain. Options (estimate): A keep the format
-      check, because the maintainer compares `sourceCommit` in each report
-      with the reviewed commit; B add a containment check, a new rejection.
+- [x] Resolve user item 201 (Low, process): the native bootstrap workflow
+      accepts any well-formed 40-character commit SHA, also one that `main`
+      does not contain. Options (estimate): A keep the format check,
+      because the maintainer compares `sourceCommit` in each report with the
+      reviewed commit; B add a containment check, a new rejection.
       Recommended: A.
+  - User decision 201 (2026-10-26): A. The workflow keeps its format check
+    only, and the code does not change.
 
 - [x] Resolve user item 202 (test): the nightly Design Attribution Matrix
       failed on `main` (schedule run 40295914111 on `c84be6c4`) with
@@ -6232,9 +6251,19 @@ does not ask the user before the merge.
     option B finished 0.16.0 from its retained archives through a
     temporary workflow setting.
 
-- [ ] Release steps of user decision 205, after its pull request merges:
+- [x] Release steps of user decision 205, after its pull request merges:
       merge the 0.16.1 release pull request when its checks pass, then
       verify all seven packages at 0.16.1 on npm.
+  - Done on 2026-10-26. PR #207 merged as `66e1ba6a`, and release PR #208
+    merged as `713f9b38`. Release run 40364686121 published all seven
+    packages at 0.16.1 under `latest`, with the tags `v0.16.1` and
+    `viewer-v0.16.1`.
+
+- [x] Resolve user item 206 (plan): the plan still showed the 0.16.1
+      release steps as open, and user items 196 and 197 were not in the
+      plan.
+  - User decision 206 (2026-10-26): A. This plan-only change ticks the
+    release steps and records items 196 and 197.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
