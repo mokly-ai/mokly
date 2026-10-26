@@ -1,4 +1,4 @@
-//! Experimental token-driven HTML5 parsing.
+//! Token-driven HTML5 parsing.
 
 use std::convert::Infallible;
 

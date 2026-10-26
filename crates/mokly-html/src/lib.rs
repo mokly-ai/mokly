@@ -49,7 +49,6 @@ mod normalized_plaintext;
 mod normalized_regions;
 mod normalized_usage;
 mod noscript_text;
-#[allow(dead_code)]
 mod pipeline;
 mod placeholders;
 mod raw_markers;
