@@ -12,6 +12,7 @@ fn ci_job_limits_keep_the_measured_three_times_timing_contract() {
         .map(|(name, job)| (name, job["timeout-minutes"].as_i64()))
         .collect();
     let expected = BTreeMap::from([
+        ("profile", Some(30)),
         ("repository", Some(75)),
         ("viewer", Some(40)),
         ("browser", Some(60)),

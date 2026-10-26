@@ -4,7 +4,8 @@ use std::process::Command;
 
 use crate::support::{named, read_yaml, repository_root, steps};
 
-const RESULT_VARIABLES: [&str; 5] = [
+const RESULT_VARIABLES: [&str; 6] = [
+    "PROFILE_RESULT",
     "REPOSITORY_RESULT",
     "VIEWER_RESULT",
     "BROWSER_RESULT",

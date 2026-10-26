@@ -8,6 +8,8 @@ use crate::support::{jobs, read_yaml, steps, truthy, workflow_files};
 
 /// npm trusted publishing creates provenance only on GitHub-hosted runners.
 const PROVENANCE_PUBLISH_RUNNER: &str = "ubuntu-24.04";
+/// CI's Windows native job compiles and tests the whole Rust workspace.
+const CI_WINDOWS_NATIVE_RUNNER: &str = "blacksmith-8vcpu-windows-2025";
 /// Workflows whose native build matrix may run `darwin-x64` on Intel macOS.
 const INTEL_MACOS_WORKFLOWS: [&str; 3] =
     ["release.yml", "release-check.yml", "native-bootstrap.yml"];
@@ -85,6 +87,8 @@ fn workflows_use_the_smallest_blacksmith_tiers_and_publish_to_npm_from_github_ho
                         .map(|row| &row["target"])
                         .collect();
                     assert_eq!(targets, [&Yaml::String("darwin-x64".to_owned())]);
+                } else if context == "ci.yml:native" && label.ends_with("-windows-2025") {
+                    assert_eq!(label, CI_WINDOWS_NATIVE_RUNNER);
                 } else {
                     assert_minimum_runner(label, &context);
                 }
