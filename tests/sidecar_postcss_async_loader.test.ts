@@ -83,8 +83,12 @@ for (const flag of ["--loader", "--experimental-loader", "--import"])
     );
     const module = path.join(plugin, "index.mjs");
     const original =
-      "export default ()=>({postcssPlugin:'plugin',Once(root){root.walkDecls('color',decl=>decl.value='raw')}});";
+      "import value from './color.mjs';export default ()=>({postcssPlugin:'plugin',Once(root){root.walkDecls('color',decl=>decl.value='raw-'+value)}});";
     await fs.writeFile(module, original);
+    // Node resolves this helper, so only Mokly's path observer can report it.
+    const helper = path.join(plugin, "color.mjs");
+    const helperSource = "export default 'raw';";
+    await fs.writeFile(helper, helperSource);
     await fs.writeFile(
       path.join(base, "postcss.mjs"),
       "export default {plugins:{plugin:{}}};",
@@ -95,7 +99,9 @@ for (const flag of ["--loader", "--experimental-loader", "--import"])
       `export async function load(url,context,nextLoad){
 const result=await nextLoad(url,context);
 if(url===${JSON.stringify(pathToFileURL(module).href)})
-return {...result,source:Buffer.from(${JSON.stringify(original.replace("'raw'", "'transformed'"))})};
+return {...result,source:Buffer.from(${JSON.stringify(original.replace("'raw-'", "'transformed-'"))})};
+if(url===${JSON.stringify(pathToFileURL(helper).href)})
+return {...result,source:Buffer.from(${JSON.stringify(helperSource.replace("'raw'", "'transformed'"))})};
 return result;
 }`,
     );
@@ -125,18 +131,26 @@ return result;
     });
     params.moduleResolution.packageRoots = [base];
     const result = await sidecar.call<CssResult>("processCss", params);
-    assert.match(result.text, /color:transformed/u);
-    assert.ok(
-      result.readEvidence.reads
-        .filter((read) => read.path === module)
-        .every(
-          (read) =>
-            read.digest === createHash("sha256").update(original).digest("hex"),
-        ),
-      "loader output cannot certify raw bytes",
-    );
+    assert.match(result.text, /color:transformed-transformed/u);
+    for (const [file, source] of [
+      [module, original],
+      [helper, helperSource],
+    ] as const)
+      assert.ok(
+        result.readEvidence.reads
+          .filter((read) => read.path === file)
+          .every(
+            (read) =>
+              read.digest === createHash("sha256").update(source).digest("hex"),
+          ),
+        "loader output cannot certify raw bytes",
+      );
     assert.ok(
       result.readEvidence.modules.includes(module),
+      "the configured plugin keeps its resolved path",
+    );
+    assert.ok(
+      result.readEvidence.modules.includes(helper),
       "asynchronous loaders must report supplied module paths",
     );
     assert.ok(
