@@ -13,6 +13,7 @@ import {
 } from "../packages/mokly/src/sidecar/postcss-async-loader.js";
 
 import { cssParams, startSidecar } from "./helpers/sidecar.js";
+import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 import { command, publicationFixture } from "./helpers/static_publication.js";
 
 test("async loader paths queue before resolve returns", async (context) => {
@@ -29,6 +30,66 @@ test("async loader paths queue before resolve returns", async (context) => {
   assert.deepEqual(receiveMessageOnPort(port2), { message: resolved.url });
   assert.equal(receiveMessageOnPort(port2), undefined);
 });
+
+for (const flag of ["--loader", "--experimental-loader"])
+  test(`${flag} keeps the range witness of a consumer preload descriptor read`, async (context) => {
+    const { base } = await sidecarSources(context);
+    const tokens = path.join(base, "tokens.txt");
+    await fs.writeFile(tokens, "tokenvalue");
+    const preload = path.join(base, "preload.cjs");
+    await fs.writeFile(
+      preload,
+      `const fs=require('node:fs');
+const fd=fs.openSync(${JSON.stringify(tokens)},'r');
+const buffer=Buffer.alloc(64);
+const length=fs.readSync(fd,buffer,0,64,null);
+fs.closeSync(fd);
+globalThis.preloadedToken=buffer.subarray(0,length).toString();`,
+    );
+    await dependency(
+      base,
+      "plugin",
+      `export default ()=>({postcssPlugin:'token',Once(root,{result}){
+root.walkDecls('color',decl=>{decl.value=globalThis.preloadedToken});
+result.messages.push({type:'dependency',plugin:'token',file:${JSON.stringify(tokens)}});
+}});`,
+    );
+    await fs.writeFile(
+      path.join(base, "postcss.mjs"),
+      "export default {plugins:{plugin:{}}};",
+    );
+    const loader = path.join(base, "loader.mjs");
+    await fs.writeFile(
+      loader,
+      "export async function resolve(specifier,context,nextResolve){return nextResolve(specifier,context);}",
+    );
+    const sidecar = startSidecar(context, undefined, {
+      ...process.env,
+      NODE_OPTIONS: `${flag}=${pathToFileURL(loader).href} --require=${JSON.stringify(preload)}`,
+    });
+    await sidecar.call("hello");
+    const params = cssParams({
+      sourceRoot: base,
+      repositoryRoots: [],
+      text: "a{color:black}",
+    });
+    params.moduleResolution.packageRoots = [base];
+    const result = await sidecar.call<CssResult>("processCss", params);
+    assert.match(result.text, /color:tokenvalue/u);
+    assert.deepEqual(
+      result.readEvidence.reads
+        .filter((read) => read.path === tokens)
+        .map((read) =>
+          read.kind === "byte-range"
+            ? [read.offset, read.length, read.digest]
+            : [read.kind],
+        ),
+      [[0, 10, createHash("sha256").update("tokenvalue").digest("hex")]],
+      "Mokly's own loader observer must not hide earlier preload ranges",
+    );
+    assert.equal(result.readEvidence.coverage, "incomplete");
+    await sidecar.call("shutdown");
+  });
 
 for (const flag of ["--loader", "--experimental-loader", "--import"])
   test(`${flag} preserves transformed PostCSS output without a false raw witness`, async (context) => {

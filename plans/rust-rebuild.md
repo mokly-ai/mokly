@@ -5505,6 +5505,11 @@ check passes on this commit.
       port and drain, and its build entry, which also closes loader-path
       review finding 2, Medium. Recommended: B. No option is applied.
       Evidence: `.context/port-117c/`.
+  - Port review finding 1 found one more cost of the asynchronous observer.
+    Its registration in the preload under a loader flag started the loader
+    thread before consumer preloads and hid their descriptor ranges. The
+    worker now registers it after consumer preloads. Option B also removes
+    this class.
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,

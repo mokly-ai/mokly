@@ -208,8 +208,9 @@ Its CommonJS build supports asynchronous loaders on Node 22 and shares one
 observation ledger with the worker. The
 [async resolve hook](./src/sidecar/postcss-async-loader.ts) reports supplied
 module paths through a message port. Loader-transformed source stays opaque.
-[Async hook registration](./src/sidecar/postcss-async-registration.ts) follows
-each consumer `module.register` call and drains queued paths before each result.
+[Async hook registration](./src/sidecar/postcss-async-registration.ts) adds the
+hook after each consumer `module.register` call. Under a loader flag, the worker
+adds it after consumer preloads. Queued paths drain before each result.
 The [module path observer](./src/sidecar/postcss-path-hooks.ts) retains paths
 from consumer hooks without certifying their source bytes.
 The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks

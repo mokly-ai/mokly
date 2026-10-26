@@ -5,6 +5,7 @@ import type { MessagePort } from "node:worker_threads";
 import { asynchronousLoader, recordModulePath } from "./postcss-evidence.js";
 
 const flushKey = Symbol.for("mokly.postcss.asyncFlush");
+const loaderFlagKey = Symbol.for("mokly.postcss.asyncLoaderFlag");
 let installed = false;
 let registering = false;
 const ports = new Set<MessagePort>();
@@ -21,7 +22,22 @@ export function observeAsyncModuleLoads(): void {
     },
   });
   nodeModule.syncBuiltinESMExports();
-  if (asynchronousLoader) registerAsyncHook();
+  Object.defineProperty(globalThis, loaderFlagKey, {
+    value: observeLoaderFlagHooks,
+  });
+}
+
+/** Loader flags install hooks without a register call, so the worker observes
+ * them after consumer preloads. An earlier register call would start the loader
+ * thread before those preloads and make their descriptor positions opaque.
+ */
+export function observeLoaderFlagHooks(): void {
+  const value: unknown = Reflect.get(globalThis, loaderFlagKey);
+  if (typeof value === "function" && value !== observeLoaderFlagHooks) {
+    value();
+    return;
+  }
+  if (installed && asynchronousLoader && ports.size === 0) registerAsyncHook();
 }
 
 /** Completed resolves queue their paths before Node can evaluate the module.

@@ -6,7 +6,10 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
 import { guardParentOutput } from "./parent-output.js";
-import { flushAsyncModulePaths } from "./postcss-async-registration.js";
+import {
+  flushAsyncModulePaths,
+  observeLoaderFlagHooks,
+} from "./postcss-async-registration.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import {
   beginReadEvidenceGeneration,
@@ -45,6 +48,7 @@ process.once("message", (workerData: WorkerData) => {
     observeModulePaths();
   }
   observeModuleLoads((url) => phases.moduleUrl(url));
+  observeLoaderFlagHooks();
   const configuration = configureResolution(workerData).then((paths) =>
     loadPostcss(workerData.postcss, paths, phases).then((loaded) => ({
       ...loaded,
