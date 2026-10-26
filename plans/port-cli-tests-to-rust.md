@@ -47,10 +47,10 @@ Contract owners:
 No product requirement changes. The docs state where the binary's end-to-end
 tests live.
 
-- [ ] State in the CLI tests README that the binary's end-to-end behaviour is
+- [x] State in the CLI tests README that the binary's end-to-end behaviour is
       tested in `crates/mokly-cli/tests`, one test binary per area, with the
       shared fixtures of `mokly-test-support`.
-- [ ] Confirm that no protocol doc names a Node test that this plan moves.
+- [x] Confirm that no protocol doc names a Node test that this plan moves.
       Only the mokly-compare README names some; Milestone 6 updates it.
 
 ## Milestone 2: Shared test support
@@ -58,14 +58,16 @@ tests live.
 A dev-only crate holds the fixtures that more than one test crate or area
 needs. Each later milestone adds what it needs first.
 
-- [ ] Create `crates/mokly-test-support` with `publish = false`, a README,
+- [x] Create `crates/mokly-test-support` with `publish = false`, a README,
       and module docs.
-- [ ] Move the fake HTTP server from `crates/mokly-publish/tests/support` to
+- [x] Move the fake HTTP server from `crates/mokly-publish/tests/support` to
       the crate, and switch the `mokly-publish` tests to it.
-- [ ] Add the binary command with the package root and viewer environment,
-      a consumer project with linked `node_modules`, the installed shim, and
-      Git fixture helpers.
-- [ ] Run `cargo test -p mokly-publish -p mokly-test-support`, Clippy,
+- [x] Add the binary command with the package root and viewer environment,
+      the publication and Changes fixtures, Git and file helpers, the fake
+      receiver, the independent upload readers, the model readers, timing
+      records, and output identities. The milestone that first needs the
+      installed shim or a consumer project adds it.
+- [x] Run `cargo test -p mokly-publish -p mokly-test-support`, Clippy,
       formatting, and the Rust file-length lint.
 
 ## Area milestones
@@ -84,7 +86,9 @@ Each area milestone follows the same steps:
 
 ## Milestone 3: Publish
 
-- [ ] Port `static_publication`, `static_publication_acceptance`,
+Evidence: `.context/port-cli-tests-to-rust/publish.md`.
+
+- [x] Port `static_publication`, `static_publication_acceptance`,
       `static_publication_assets`, `static_publication_cases`,
       `static_publication_comparison`, `static_publication_inspector`,
       `static_publication_replan`, `static_publication_unavailable`,

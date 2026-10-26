@@ -32,6 +32,7 @@ mock = ["dep:unimock", "mokly-git/mock"]
 
 [dev-dependencies]
 insta = "1.49.0"
+mokly-test-support = { workspace = true }
 tempfile = "3.27.0"
 unimock = "0.6.8"
 

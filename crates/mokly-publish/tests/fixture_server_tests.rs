@@ -11,9 +11,9 @@ use mokly_publish::http::{Http, Request, ReqwestHttp, Step};
 use mokly_publish::plan::Plan;
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
+use mokly_test_support::server::{Response, Server};
 use serde_json::Value;
 use support::catalogue::{artifact, validate_plan};
-use support::server::{Response, Server};
 
 mod support;
 

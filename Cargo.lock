@@ -2109,7 +2109,9 @@ dependencies = [
  "mokly-sidecar",
  "mokly-source-interface",
  "mokly-static",
+ "mokly-test-support",
  "mokly-watch",
+ "regex",
  "serde_json",
  "signal-hook",
  "tempfile",
@@ -2268,6 +2270,7 @@ dependencies = [
  "mokly-git",
  "mokly-model",
  "mokly-platform",
+ "mokly-test-support",
  "rand 0.10.3",
  "reqwest",
  "serde",
@@ -2401,6 +2404,22 @@ dependencies = [
  "tracing",
  "unimock",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "mokly-test-support"
+version = "0.14.0"
+dependencies = [
+ "chrono",
+ "flate2",
+ "mokly-model",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

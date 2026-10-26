@@ -1,4 +1,3 @@
-//! Local HTTP receiver and shared finalized catalogue fixture.
+//! Shared finalized catalogue fixture.
 
 pub mod catalogue;
-pub mod server;

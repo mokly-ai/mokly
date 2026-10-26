@@ -3,6 +3,18 @@
 The `mokly-cli` tests cover native commands, comparison, and process recovery.
 Run commands from the repository root.
 
+The end-to-end behaviour of the `mokly` binary is tested here, in Rust. Node
+tests under `tests/` cover TypeScript code and Node tooling only. Each
+end-to-end area has one test binary with a module folder, and uses the shared
+fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
+
+| Binary              | Area                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| `publication_tests` | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup. |
+
+Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
+packages: run `npm run build` before a raw `cargo test`.
+
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including
 HTML, React, and stylesheet edits.
