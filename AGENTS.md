@@ -102,10 +102,6 @@ the rule. Rules for one application, package, or feature live in the
 - [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
   contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
-- Read the
-  [Rust rebuild procedures](./docs/protocol/rust-rebuild-procedures.md)
-  before you capture references from the previous backend or close a rebuild
-  milestone.
 
 ## Product
 

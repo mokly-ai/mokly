@@ -229,7 +229,6 @@ The repository gate, remote verification, dependency audits, test rules, and the
 
 ## Process
 
-The documentation rule and the rebuild procedures.
+The documentation rule.
 
 - [Documentation Policy](./documentation-policy.md)
-- [Rust Rebuild Procedures](./rust-rebuild-procedures.md)
