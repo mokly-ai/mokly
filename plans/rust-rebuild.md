@@ -6184,11 +6184,44 @@ does not ask the user before the merge.
     with its pull request. Local `linux-x64-gnu` proof:
     `.context/native-bootstrap-proof/`.
 
-- [ ] Maintainer steps of user decision 200, after its pull request merges:
+- [x] Maintainer steps of user decision 200, after its pull request merges:
       dispatch the native bootstrap workflow for a reviewed commit, publish
       the five registration archives, configure the five trusted publishers
       and verify the two existing ones, then rerun the failed publish job of
       release run 40254485539.
+  - Done on 2026-10-26. Bootstrap run 40307321788 built the five archives
+    from `c84be6c4`. They were published as `0.0.0` under `bootstrap`, and
+    each new package also shows npm's `0.0.0-stage` staged-publishing
+    placeholder. The five trusted publishers name `mokly-ai/mokly`,
+    `release.yml`, and environment `npm`, and the CLI and viewer publishers
+    read back the same. Each native package requires 2FA and disallows
+    tokens. The rerun published two native packages, then stopped at the
+    registry verifier: user item 205.
+
+- [ ] Resolve user item 201 (Low, process; open): the native bootstrap
+      workflow accepts any well-formed 40-character commit SHA, also one
+      that `main` does not contain. Options (estimate): A keep the format
+      check, because the maintainer compares `sourceCommit` in each report
+      with the reviewed commit; B add a containment check, a new rejection.
+      Recommended: A.
+
+- [x] Resolve user item 205 (release): the rerun of the 0.16.0 publish job
+      published `@mokly/native-linux-x64-gnu@0.16.0` and
+      `@mokly/native-linux-arm64-gnu@0.16.0`, then stopped. The registry
+      verifier installed the arm64 package on the x64 publish runner, and
+      npm rejected it with `EBADPLATFORM`, because npm applies `--os` and
+      `--cpu` only to optional dependencies. Every retry of 0.16.0 runs the
+      scripts of the `v0.16.0` tag.
+  - User decision 205 (2026-10-26): A. The verifier installs a native
+    package as an optional dependency with its os, cpu, and libc
+    selectors, in branch `rebuild/native-verify-platform` (`1fd02a4a`).
+    0.16.1 replaces 0.16.0, which stays incomplete on npm. The rejected
+    option B finished 0.16.0 from its retained archives through a
+    temporary workflow setting.
+
+- [ ] Release steps of user decision 205, after its pull request merges:
+      merge the 0.16.1 release pull request when its checks pass, then
+      verify all seven packages at 0.16.1 on npm.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
@@ -6204,3 +6237,8 @@ does not ask the user before the merge.
 - Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
   the Loading and recovery designs show the preview in the stage, but the
   product shows "Loading preview…". Separate branch.
+- Outside the 200 B scope: `tests/npm_pin.test.ts:48` matches only an exact
+  `npm ci` command, so it skips `npm ci --ignore-scripts`. Separate branch.
+- Outside the 200 B scope: `docs/protocol/npm-bootstrap.md:145`: the older
+  sections name a test file and describe how the code works, against the
+  documentation rules. Separate branch.
