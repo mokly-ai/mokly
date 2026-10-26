@@ -70,6 +70,8 @@ fn literal_tables_parse_through_parentheses_assertions_and_comments() {
         "var oversizedCaps = ({ \"long.md\": 0x104 }) satisfies Record<string, number>\n",
         "const oversizedCaps = /* reviewed */ {\n  // the long page\n  \"long\\u002emd\": 2.6e2,\n};\n",
         "const oversizedCaps = ({ \"long.md\": 260 } as const);\n",
+        "const oversizedCaps = { \"long.md\": 260 }\nexport default oversizedCaps;\n",
+        "const oversizedCaps = { \"long.md\": 260 } as const\nexport default oversizedCaps;\n",
     ] {
         assert_eq!(parse(source).unwrap(), expected, "{source}");
     }

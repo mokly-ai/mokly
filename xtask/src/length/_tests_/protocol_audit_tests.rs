@@ -9,7 +9,7 @@ use tempfile::TempDir;
 use crate::length::error::Error;
 use crate::remote::git_test_runner::IsolatedGit;
 
-use super::audit_protocol_caps;
+use super::{audit_protocol_caps, ratchet_outcome};
 
 const LABEL: &str = "xtask/protocol-document-caps.json";
 const LEGACY_TABLE: &str = "tests/protocol_doc_sizes.test.ts";
@@ -144,9 +144,12 @@ fn the_cap_ratchet_stays_anchored_when_origin_main_moves() {
         fixture.run(&["merge-base", "HEAD", "origin/main"]),
         branch_point
     );
-    let (findings, summary) = audit_protocol_caps(&fixture.root()).unwrap();
-    assert_eq!(findings, Vec::<String>::new());
-    assert_eq!(summary, "1 protocol document(s) and 1 cap(s)");
+    let (lines, outcome) = ratchet_outcome(audit_protocol_caps(&fixture.root()));
+    assert_eq!(
+        lines,
+        ["Protocol document cap ratchet passed (1 protocol document(s) and 1 cap(s))."]
+    );
+    assert!(outcome.is_ok());
 }
 
 #[test]
@@ -166,11 +169,27 @@ fn moving_a_capped_protocol_document_into_a_subfolder_keeps_its_cap() {
     fixture.write(LABEL, "{ \"nested/long.md\": 252 }\n");
     fixture.run(&["add", "--all"]);
 
-    let findings = fixture.findings();
+    let (lines, outcome) = ratchet_outcome(audit_protocol_caps(&fixture.root()));
+    assert!(matches!(outcome, Err(Error::ProtocolCaps)));
+    assert_eq!(lines[0], "Protocol document cap ratchet failed:");
     assert!(
-        findings
+        lines
             .iter()
-            .any(|finding| finding == "nested/long.md: cap 252 exceeds predecessor long.md cap 251"),
-        "{findings:?}"
+            .any(|line| line == "- nested/long.md: cap 252 exceeds predecessor long.md cap 251"),
+        "{lines:?}"
     );
+}
+
+#[test]
+fn an_audit_that_cannot_run_fails_the_ratchet_with_its_error() {
+    let (lines, outcome) = ratchet_outcome(Err(Error::CapTableMissing {
+        label: LABEL.to_owned(),
+    }));
+    assert_eq!(
+        lines,
+        [format!(
+            "Protocol document cap ratchet could not run: [xtask/length] {LABEL} is missing"
+        )]
+    );
+    assert!(matches!(outcome, Err(Error::CapTableMissing { .. })));
 }

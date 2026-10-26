@@ -12,9 +12,10 @@ use crate::length;
 use crate::length::protocol_audit::ProtocolCapAuditorRunMock;
 use crate::length::source_audit::SourceFileLengthAuditorRunMock;
 
-use super::request::{CheckRequest, VerificationSuite};
+use super::commands::commands_for;
+use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
-use super::runner_support::auditors;
+use super::runner_support::{auditors, step_display};
 
 #[test]
 fn source_length_audit_supports_changed_and_all_modes() {
@@ -84,6 +85,33 @@ fn a_failed_cap_ratchet_still_runs_the_node_ratchets_before_it_stops_the_suite()
             source: length::error::Error::ProtocolCaps
         })
     ));
+}
+
+#[test]
+fn the_repository_suite_runs_its_steps_in_the_documented_order() {
+    let steps = commands_for(
+        VerificationSuite::Repository,
+        None,
+        DependencyAudit::Baseline,
+    );
+    assert_eq!(
+        steps.iter().map(step_display).collect::<Vec<_>>(),
+        [
+            "npm run dependencies:check -- --baseline",
+            "npm run dependencies:check:rust",
+            "cargo xtask check-generated-types",
+            "npm run format:check",
+            "npm run lint",
+            "source and protocol file-length audit",
+            "protocol cap ratchet, then node scripts/verification/repository-ratchets.mjs",
+            "cargo fmt --all -- --check",
+            "cargo clippy --workspace --all-targets -- -D warnings",
+            "cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings",
+            "npm run build --workspace \"@mokly/viewer\"",
+            "npm run build --workspace \"@mokly/mokly\"",
+            "cargo test --workspace",
+        ]
+    );
 }
 
 fn workspace() -> PathBuf {

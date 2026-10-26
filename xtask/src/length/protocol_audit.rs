@@ -32,22 +32,31 @@ pub(crate) struct SystemProtocolCapAuditor;
 
 impl ProtocolCapAuditor for SystemProtocolCapAuditor {
     fn run(&self, workspace: &Path) -> Result<()> {
-        let (findings, summary) = match audit_protocol_caps(workspace) {
-            Ok(result) => result,
-            Err(error) => {
-                eprintln!("{NAME} ratchet could not run: {error}");
-                return Err(error);
-            }
-        };
-        if findings.is_empty() {
-            eprintln!("{NAME} ratchet passed ({summary}).");
-            return Ok(());
+        let (lines, outcome) = ratchet_outcome(audit_protocol_caps(workspace));
+        for line in lines {
+            eprintln!("{line}");
         }
-        eprintln!("{NAME} ratchet failed:");
-        for finding in findings {
-            eprintln!("- {finding}");
+        outcome
+    }
+}
+
+/// The lines that the ratchet prints for an audit result, and its outcome:
+/// a pass, a failure that lists every finding, or an audit that could not
+/// run.
+pub(crate) fn ratchet_outcome(result: Result<(Vec<String>, String)>) -> (Vec<String>, Result<()>) {
+    match result {
+        Err(error) => (
+            vec![format!("{NAME} ratchet could not run: {error}")],
+            Err(error),
+        ),
+        Ok((findings, summary)) if findings.is_empty() => {
+            (vec![format!("{NAME} ratchet passed ({summary}).")], Ok(()))
         }
-        Err(Error::ProtocolCaps)
+        Ok((findings, _)) => {
+            let mut lines = vec![format!("{NAME} ratchet failed:")];
+            lines.extend(findings.iter().map(|finding| format!("- {finding}")));
+            (lines, Err(Error::ProtocolCaps))
+        }
     }
 }
 

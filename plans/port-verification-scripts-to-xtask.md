@@ -149,5 +149,9 @@ runs the title check with Node only and has a five-minute limit.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 of 2026-10-26 fixed findings 3, 4, and 5. It also fixed
+    findings 1 and 2, which restore assertions that the port had dropped
+    and that decision 3 B requires. Report:
+    `.context/port-verification-scripts-to-xtask/review-1.md`.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
