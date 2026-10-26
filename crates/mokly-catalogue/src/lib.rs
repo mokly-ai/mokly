@@ -66,5 +66,8 @@ pub mod yaml_limits;
 mod yaml_positions;
 mod yaml_value;
 
+#[cfg(test)]
+#[path = "_tests_/html_token_span_tests.rs"]
+mod html_token_span_tests;
 mod working_tree_identity;
 mod working_tree_stream;

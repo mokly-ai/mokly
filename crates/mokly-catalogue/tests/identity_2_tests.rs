@@ -44,6 +44,11 @@ fn reserved_element() {
 }
 
 #[test]
+fn raw_text_prop_location() {
+    fixtures::check("raw-text-prop-location");
+}
+
+#[test]
 fn unknown_prop() {
     fixtures::check("unknown-prop");
 }

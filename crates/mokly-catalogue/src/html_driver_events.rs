@@ -235,11 +235,16 @@ impl<Sink: DriverSink> ForwardingEmitter for DriverEmitter<'_, Sink> {
 
     fn emit_current_tag(&mut self) -> Option<State> {
         let _ = self.inner.emit_current_tag();
-        self.inner.callback_mut().next_state.take()
+        let state = self.inner.callback_mut().next_state.take();
+        if state.is_some() {
+            self.inner.init_string();
+        }
+        state
     }
 
     fn adjusted_current_node_present_but_not_in_html_namespace(&mut self) -> bool {
         self.inner.emit_eof();
+        self.inner.init_string();
         self.inner
             .callback_mut()
             .builder
