@@ -67,31 +67,24 @@ prop in an attribute whose value is exactly `{{name}}` keeps the attribute
 when true and removes it when false; an absent optional prop substitutes the
 empty string in text and removes such an attribute; `{{…}}` naming an
 undeclared prop, an array, or an object without a path fails with
-`html-props`; `{{` that does not close is ordinary text. Every other
-attribute is ordinary HTML and is never interpreted. A component body uses
-this same template language with the component's own props and adds slot
-placeholders under the [HTML components contract](./mokly-html-components.md#body);
-one parser and one renderer serve both.
+`html-props`; `{{` that does not close is ordinary text. Every other attribute
+is ordinary HTML and is never interpreted. A component body uses this same
+template language with its own props and adds slot placeholders under the
+[HTML components contract](./mokly-html-components.md#body). One parser and
+one renderer serve both.
 
 Authored screens, components, and pages use the authored parser. It removes
-unknown attributes from `mokly-ignore` and `mokly-ignore-scope` before
-composition and attaches the source location of each authored element.
-Delivered documents, including sidecar pages and `srcdoc` values, use the
-delivered parser. It keeps authored attributes so resource and style checks
-see the same document that the browser receives.
+unknown wrapper attributes before composition and attaches source locations.
+Delivered documents, sidecar pages, and `srcdoc` values use the delivered
+parser. It keeps authored attributes for resource and style checks.
+Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
+`{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
-Substitutions accept ASCII whitespace around the prop path: `{{ name }}`
-equals `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
-
-A hyphenated element name resolves against the component registry: the
-`element` of an [HTML component](./mokly-html-components.md) or of a
-JavaScript component registered with `element`, which the sidecar's `describe`
-call reports. A hyphenated name that matches
-no component fails with `html-element`, because rendering it as a plain element
-would silently lose the component. Every element name with the `mokly-`
-prefix is reserved for Mokly: `mokly-ignore` and `mokly-ignore-scope` are
-defined below, `mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md),
-and any other `mokly-` name fails with `html-element`.
+A hyphenated element name resolves against the component registry. The name can
+belong to an HTML component or a JavaScript component registered with `element`.
+An unknown name fails with `html-element`. Every `mokly-` name is reserved for
+Mokly. `mokly-ignore` and `mokly-ignore-scope` are defined below, `mokly-slot`
+belongs to the [render sidecar](./mokly-sidecar.md), and other names fail.
 
 ## Component Elements
 

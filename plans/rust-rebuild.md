@@ -5740,6 +5740,9 @@ does not ask the user before the merge.
       positioned wrapper, and assert that the other has no position, Small;
       B, the source-identity redesign of the HTML pipeline, user decision
       98 B, Large. Recommended: A until phase 2 of 98 B lands.
+  - Phase 2 removed `parse::located` with the source-identity redesign. No
+    option of item 129 was applied. The old empty-slot fix is obsolete and
+    remains open only as a recorded review decision.
 
 - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
       commits that do not build. `mokly-catalogue` does not compile from
