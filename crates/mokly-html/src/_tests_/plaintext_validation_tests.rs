@@ -7,6 +7,29 @@ use crate::tree::{Node, Region, RegionKind, element, walk};
 
 use super::reparse;
 
+#[test]
+fn authored_plaintext_repair_matches_the_browser_tree() {
+    for source in [
+        "<p><a href=\"mock:home\">Home</p><plaintext>Raw",
+        "<table><x-card>Card</x-card></table><plaintext>Raw",
+    ] {
+        let actual = parse::authored_document(source, "fixture.html");
+        let expected = parse::legacy_authored_document(source);
+        assert_eq!(
+            serialize::html(&actual),
+            serialize::html(&expected),
+            "{source}"
+        );
+        let plaintext = walk(&actual)
+            .find_map(|node| match node {
+                Node::Element(element) if element.name == "plaintext" => Some(element),
+                _ => None,
+            })
+            .expect("plaintext element");
+        assert!(walk(&plaintext.children).all(|node| !matches!(node, Node::Element(_))));
+    }
+}
+
 fn repaired(nodes: Vec<Node>) -> Vec<Node> {
     let catalogue = support::prepared_html("<p>Home</p>", "<p>Note</p>");
     let entry = catalogue
