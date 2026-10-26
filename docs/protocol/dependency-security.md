@@ -18,8 +18,8 @@ modes, CLI, JSON summary, and comparison rules.
 
 `npm run dependencies:check` stays strict. Under this contract,
 `cargo xtask check` runs the baseline audit first by default. Ordinary pull
-requests and every push also use baseline mode in the shared repository
-prerequisite. It prints inherited findings and exception issues as notices;
+requests and every push also use baseline mode in the CI repository job. It
+prints inherited findings and exception issues as notices;
 new issues fail. Release Please and dependency update pull requests use strict
 mode. The daily scheduled workflow audits `main` strictly and creates or
 refreshes the [dependency update pull request](./dependency-audit-update-pr.md).
@@ -32,8 +32,10 @@ The release workflow runs a strict live audit immediately after install,
 before reusable evidence or the complete fallback. Complete mode runs
 `cargo xtask check --dependency-audit strict` and repeats the strict live audit
 when its gate starts. Evidence mode never reuses an earlier audit
-as time-sensitive security evidence. The CI repository prerequisite must pass
-before viewer, browser, or native jobs start. A cache hit never replaces
+as time-sensitive security evidence. The other CI jobs start without waiting for
+the CI repository job's audit, and `Required CI` fails unless it passes. An
+audit gate before those jobs was rejected: they hold only a read-only token,
+and the gate delayed every run. A cache hit never replaces
 an audit. Both modes require registry access. An audit is evidence about known
 advisories at execution time, not a guarantee that every dependency is safe.
 See the [CI workflow graph](./ci-workflow.md) and
