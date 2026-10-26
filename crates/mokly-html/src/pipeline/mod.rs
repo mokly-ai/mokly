@@ -31,6 +31,7 @@ struct CallbackSink<'a> {
     start_name: Option<String>,
     start_offset: usize,
     start_attributes: Vec<Attribute>,
+    accept_attribute: bool,
     next_state: Option<State>,
 }
 
@@ -93,19 +94,29 @@ impl<'a> Callback<Infallible, usize> for CallbackSink<'a> {
                 self.start_name = Some(String::from_utf8_lossy(name).into_owned());
                 self.start_offset = span.start;
                 self.start_attributes.clear();
+                self.accept_attribute = true;
             }
             CallbackEvent::AttributeName { name } => {
-                self.start_attributes.push(Attribute {
-                    name: QualName::new(
-                        None,
-                        Default::default(),
-                        String::from_utf8_lossy(name).into_owned().into(),
-                    ),
-                    value: StrTendril::new(),
-                });
+                let duplicate = self
+                    .start_attributes
+                    .iter()
+                    .any(|attribute| attribute.name.local.as_ref().as_bytes() == name);
+                self.accept_attribute = !duplicate;
+                if self.accept_attribute {
+                    self.start_attributes.push(Attribute {
+                        name: QualName::new(
+                            None,
+                            Default::default(),
+                            String::from_utf8_lossy(name).into_owned().into(),
+                        ),
+                        value: StrTendril::new(),
+                    });
+                }
             }
             CallbackEvent::AttributeValue { value } => {
-                if let Some(attribute) = self.start_attributes.last_mut() {
+                if self.accept_attribute
+                    && let Some(attribute) = self.start_attributes.last_mut()
+                {
                     attribute.value.push_slice(&String::from_utf8_lossy(value));
                 }
             }
@@ -220,6 +231,7 @@ impl<'a> PipelineEmitter<'a> {
                 start_name: None,
                 start_offset: 0,
                 start_attributes: Vec::new(),
+                accept_attribute: true,
                 next_state: None,
             }),
         }
