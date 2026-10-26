@@ -6213,18 +6213,21 @@ does not ask the user before the merge.
       protocol page records the boundary. Aligning it, option B of the
       finding, changes diagnostics and touches user item 113.
 
-- [ ] Decide finding 1 of the review of the decisions above on
+- [x] Decide finding 1 of the review of the decisions above on
       `rebuild/port-111c` (report: `.context/port-111c/review/review-3.md`).
       Finding 2 (Low: a probe test name contradicted its third case) is
       fixed with option B in `920754fd`. Its re-review
       (`.context/port-111c/review/review-4.md`) found the old test name
-      still wrong, fixed with option A in the same commit as this line.
+      still wrong, fixed with option A in `c662bdb1`.
   - Finding 1: the parity sentence misses two other differences, a
     declarations-block statement that ends at its first `{}` block and an
     `@-moz-document` block outside a style rule. Severity Low, effort
     Small. Recommended: B, replace the count of exceptions with one rule:
     the scoper reads each statement that the bundler keeps with the same
     start and kind.
+  - User decision (2026-10-26): B, done in the same commit as this record.
+    The protocol page and the crate README state the one rule, give the
+    `;` boundary as an example, and keep its reason.
 - Outside the `rebuild/port-111c` review scope:
   `crates/mokly-css/src/token_grammar.rs:68`: the scanners read an
   `@-moz-document` block outside a style rule as a style block, but
