@@ -1,7 +1,7 @@
 //! Typed HTML inputs: the type of an input decides how Mokly parses it.
 //!
-//! Only catalogue templates and saved slots create [`AuthoredHtml`], so a caller that holds
-//! authored text cannot ask for the delivered parse by accident.
+//! Only `Template` and `SavedSlot` create [`AuthoredHtml`], so a caller that holds one of them
+//! gets the authored parse from its helper. Delivered constructors accept any text.
 
 /// How a parse reads its text.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

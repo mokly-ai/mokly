@@ -20,12 +20,12 @@ pub struct Spanned {
     pub span: Span,
 }
 
-/// An authored start tag.
+/// A start tag.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StartTag {
     /// Lower-cased tag name bytes.
     pub name: Vec<u8>,
-    /// Attributes in authored order-independent form.
+    /// Attributes in source order-independent form.
     pub attributes: BTreeMap<Vec<u8>, Spanned>,
     /// Whether the tag had a self-closing marker.
     pub self_closing: bool,
@@ -33,7 +33,7 @@ pub struct StartTag {
     pub span: Span,
 }
 
-/// An authored end tag.
+/// An end tag.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EndTag {
     /// Tag name bytes.
@@ -75,7 +75,7 @@ pub struct Doctype {
     pub span: Span,
 }
 
-/// A token produced by Mokly's authored HTML boundary.
+/// A token produced by Mokly's HTML token boundary.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Token {
     /// Start tag.

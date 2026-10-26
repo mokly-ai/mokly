@@ -83,8 +83,8 @@ A hyphenated name resolves against the component registry. Its name comes from
 the `element` of an HTML component or JavaScript component; the sidecar
 `describe` call reports JavaScript names. An unknown hyphenated name fails with
 `html-element` because plain rendering would lose the component. Every `mokly-`
-name is reserved. The defined exceptions are `mokly-ignore`,
-`mokly-ignore-scope`, and `mokly-slot`; other names fail with `html-element`.
+name is reserved: `mokly-ignore` and `mokly-ignore-scope` are defined below,
+`mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md), and any other `mokly-` name fails with `html-element`.
 
 ## Component Elements
 

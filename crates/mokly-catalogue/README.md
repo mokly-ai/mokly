@@ -116,13 +116,13 @@ The shared token boundary removes these attributes before validation, link
 checks, or source-location collection. It retains their names for warnings
 and preserves reserved-navigation evidence and duplicate-attribute errors.
 Token checks read each body in the text modes that the HTML tree builder
-chooses, with scripting disabled, so they see exactly the elements of the
-tree. Saved variant slot fragments use the same HTML checks as
+chooses, with scripting disabled, so the checks and the tree agree on which
+text is markup. Saved variant slot fragments use the same HTML checks as
 entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
 Typed HTML inputs name each parse purpose. Templates and saved slots create
-`AuthoredHtml`, so a caller that holds authored text gets the authored parse.
+`AuthoredHtml`, so a caller that holds one of them gets the authored parse.
 All other HTML is `DeliveredHtml`. The HTML token boundary returns Mokly-owned
 token and span types, and it is the only html5gum user. `html_driver::drive`
 runs html5gum under the html5ever tree builder for any `DriverSink`: the token

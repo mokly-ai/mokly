@@ -40,7 +40,8 @@ resource digests to its key. Usage completion alone keeps the published key.
 A resource edit changes its consuming document keys and reuses JavaScript fragments.
 Missing and denied lexical resource paths stay observable for repair. Weak
 subscribers attach those paths before the background pass completes.
-Links into `plans/` stay navigational and do not enter document keys.
+Markdown links to `plans/*.md` files render as plain text and do not enter
+document keys.
 Key scans read template bodies and saved slots as authored HTML, so unknown
 ignore-wrapper attributes do not enter document keys.
 `generation_key` hashes the complete render input set for the live descriptor.

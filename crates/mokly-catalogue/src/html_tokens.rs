@@ -10,7 +10,7 @@ pub use crate::html_token_types::{
 };
 use crate::template_types::ignore_attribute_allowed;
 
-/// One authored token and the diagnostics retained at the token boundary.
+/// One token and the diagnostics retained at the token boundary.
 pub struct ParsedToken {
     /// The token visible to template, link, and source-location consumers.
     pub token: Token,
@@ -31,7 +31,7 @@ pub fn parse<'a>(input: impl Into<HtmlInput<'a>>) -> impl Iterator<Item = Parsed
     drive(input.text(), input.shape(), RecordingSink::new(authored)).into_iter()
 }
 
-/// Parse one attribute list through the same authored HTML boundary.
+/// Parse one attribute list through the same HTML token boundary.
 pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
     let synthetic = format!("<i {source}></i>");
     let mut tags = 0;
