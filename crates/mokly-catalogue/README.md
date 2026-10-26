@@ -115,18 +115,19 @@ They do not validate logical links or select component slots.
 The shared token boundary removes these attributes before validation, link
 checks, or source-location collection. It retains their names for warnings
 and preserves reserved-navigation evidence and duplicate-attribute errors.
-Token checks follow markup contexts inside `noscript` and foreign `style` or
-`title` elements. Saved variant slot fragments use the same HTML checks as
+Token checks read each body in the text modes that the HTML tree builder
+chooses, with scripting disabled, so they see exactly the elements of the
+tree. Saved variant slot fragments use the same HTML checks as
 entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
 Typed HTML inputs name each parse purpose. Templates and saved slots create
 `AuthoredHtml`, so a caller that holds authored text gets the authored parse.
 All other HTML is `DeliveredHtml`. The HTML token boundary returns Mokly-owned
-token and span types. Catalogue
-consumers of authored HTML call `html_tokens::parse`. The tree-building adapter
-has a separate html5gum integration while the one-tokenizer boundary decision
-remains open.
+token and span types, and it is the only html5gum user. `html_driver::drive`
+runs html5gum under the html5ever tree builder for any `DriverSink`: the token
+checks pass a sink that records tokens, and `mokly-html` passes its tree arena.
+Catalogue consumers of authored HTML call `html_tokens::parse`.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
@@ -210,7 +211,8 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
 - [HTML inputs](./src/html_input.rs) type authored and delivered HTML. `Template::html`, `Template::located_html`, and `SavedSlot::html` create authored inputs.
-- [HTML token boundary](./src/html_tokens.rs) and its conversion helper own spans, tokens, and ignore-wrapper filtering before token consumers run.
+- [HTML token boundary](./src/html_tokens.rs) owns spans, tokens, and ignore-wrapper filtering before token consumers run.
+- [HTML driver](./src/html_driver.rs) runs html5gum under the html5ever tree builder; [its events](./src/html_driver_events.rs) give one Mokly token and the matching tree tokens.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).
 

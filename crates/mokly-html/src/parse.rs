@@ -2,7 +2,7 @@
 
 use mokly_catalogue::html_input::HtmlInput;
 
-use crate::pipeline;
+use crate::pipeline::runner;
 use crate::tree::Node;
 
 /// Parse authored or delivered HTML.
@@ -10,5 +10,5 @@ use crate::tree::Node;
 /// Authored input drops unknown ignore-wrapper attributes, and records source positions when it
 /// has an origin. Delivered input keeps every attribute, as a browser does.
 pub fn html<'a>(input: impl Into<HtmlInput<'a>>) -> Vec<Node> {
-    pipeline::parse(input.into())
+    runner::parse(input.into())
 }

@@ -1,11 +1,10 @@
-//! Authored HTML token boundary with separate diagnostic metadata.
+//! HTML token boundary: tokens in the tree builder's text modes, with diagnostic metadata.
 
 use std::collections::BTreeMap;
 
+use crate::html_driver::drive;
 use crate::html_input::{DeliveredHtml, HtmlInput};
-use crate::html_token_conversion::{
-    collapse_raw_elements, expand_markup_contexts, own_token, tokenize,
-};
+use crate::html_recording_sink::RecordingSink;
 pub use crate::html_token_types::{
     Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token,
 };
@@ -23,19 +22,13 @@ pub struct ParsedToken {
 
 /// Parse HTML while retaining token errors and original byte spans.
 ///
-/// Authored input drops unknown ignore-wrapper attributes and reports their names. Delivered
-/// input keeps every attribute.
-pub fn parse<'a>(input: impl Into<HtmlInput<'a>>) -> impl Iterator<Item = ParsedToken> + 'a {
+/// The HTML tree builder chooses each text mode, as it does for the tree. Authored input drops
+/// unknown ignore-wrapper attributes and reports their names. Delivered input keeps every
+/// attribute.
+pub fn parse<'a>(input: impl Into<HtmlInput<'a>>) -> impl Iterator<Item = ParsedToken> {
     let input = input.into();
-    let source = input.text();
     let authored = matches!(input, HtmlInput::Authored(_));
-    let tokens = expand_markup_contexts(
-        source,
-        collapse_raw_elements(source, tokenize(source, true)),
-    );
-    tokens
-        .into_iter()
-        .map(move |token| normalize(token, authored))
+    drive(input.text(), input.shape(), RecordingSink::new(authored)).into_iter()
 }
 
 /// Parse one attribute list through the same authored HTML boundary.
@@ -69,13 +62,14 @@ pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
     attributes.filter(|_| tags == 2)
 }
 
-fn normalize(mut token: html5gum::Token<usize>, authored: bool) -> ParsedToken {
+/// Record reserved navigation evidence, and drop unknown wrapper attributes from authored tags.
+pub(crate) fn normalize(mut token: Token, authored: bool) -> ParsedToken {
     let reserved_navigation = matches!(
         &token,
-        html5gum::Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
+        Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
     );
     let mut ignored_attributes = Vec::new();
-    if authored && let html5gum::Token::StartTag(tag) = &mut token {
+    if authored && let Token::StartTag(tag) = &mut token {
         let element = String::from_utf8_lossy(&tag.name);
         tag.attributes.retain(|name, _| {
             let name = String::from_utf8_lossy(name);
@@ -88,7 +82,7 @@ fn normalize(mut token: html5gum::Token<usize>, authored: bool) -> ParsedToken {
         });
     }
     ParsedToken {
-        token: own_token(token),
+        token,
         ignored_attributes,
         reserved_navigation,
     }

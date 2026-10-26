@@ -122,65 +122,56 @@ fn raw_text_that_looks_like_a_wrapper_is_not_filtered() {
     assert_eq!(text, literal);
 }
 
+fn wrapper_warnings(source: &str) -> Vec<Vec<String>> {
+    authored(source)
+        .into_iter()
+        .filter_map(|parsed| match parsed.token {
+            Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
+                Some(parsed.ignored_attributes)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 #[test]
-fn markup_contexts_keep_wrappers_visible_to_catalogue_checks() {
-    for source in [
-        "<noscript><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></noscript>",
-        "<svg><style><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></style></svg>",
-        "<math><title><mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope></title></math>",
+fn tree_markup_keeps_wrappers_visible_to_catalogue_checks() {
+    for context in [
+        "<noscript>{}</noscript>",
+        "<svg><style>{}</style></svg>",
+        "<math><title>{}</title></math>",
+        "<svg><script>{}</script></svg>",
+        "<svg><textarea>{}</textarea></svg>",
+        "<math><annotation-xml><style>{}</style></annotation-xml></math>",
     ] {
-        let wrappers: Vec<_> = authored(source)
-            .into_iter()
-            .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
-                    Some(parsed.ignored_attributes)
-                }
-                _ => None,
-            })
-            .collect();
-        assert_eq!(wrappers, vec![vec!["typo".to_owned()]], "{source}");
+        let source = context.replace(
+            "{}",
+            "<mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope>",
+        );
+        assert_eq!(
+            wrapper_warnings(&source),
+            vec![vec!["typo".to_owned()]],
+            "{source}"
+        );
     }
 }
 
 #[test]
-fn markup_context_tracker_keeps_tree_raw_text_and_integration_points() {
-    for source in [
-        "<svg><title>&lt;x-card&gt;</title></svg>",
-        "<noscript><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></noscript>",
-        "<svg/><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style>",
-        "<svg><foreignObject><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></foreignObject></svg>",
-        "<svg><foreignObject><div></div><style><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></style></foreignObject></svg>",
+fn tree_raw_text_hides_wrappers_from_catalogue_checks() {
+    for context in [
+        "<noscript><style>{}</style></noscript>",
+        "<svg/><style>{}</style>",
+        "<svg><foreignObject><style>{}</style></foreignObject></svg>",
+        "<svg><foreignObject><div></div><style>{}</style></foreignObject></svg>",
+        "<svg><foreignObject><title>{}</title></foreignObject></svg>",
+        "<noframes>{}</noframes>",
+        "<svg><desc><style>{}</style></desc></svg>",
+        "<svg><title><style>{}</style></title></svg>",
+        "<math><annotation-xml encoding='text/html'><style>{}</style></annotation-xml></math>",
+        "<math><annotation-xml encoding='Application/XHTML+XML'><style>{}</style></annotation-xml></math>",
     ] {
-        let wrappers: Vec<_> = authored(source)
-            .into_iter()
-            .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
-                    Some(parsed.ignored_attributes)
-                }
-                _ => None,
-            })
-            .collect();
-        assert!(wrappers.is_empty(), "{source}");
+        let source = context.replace("{}", "<mokly-ignore-scope typo='x'>A</mokly-ignore-scope>");
+        assert!(wrapper_warnings(&source).is_empty(), "{source}");
     }
-}
-
-#[test]
-fn foreign_and_noframes_raw_text_matches_the_tree_parser() {
-    for source in [
-        "<noframes><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></noframes>",
-        "<svg><script><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></script></svg>",
-        "<svg><textarea><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></textarea></svg>",
-        "<svg><foreignObject><title><mokly-ignore-scope typo='x'>A</mokly-ignore-scope></title></foreignObject></svg>",
-    ] {
-        let wrappers: Vec<_> = authored(source)
-            .into_iter()
-            .filter_map(|parsed| match parsed.token {
-                Token::StartTag(tag) if tag.name.as_slice() == b"mokly-ignore-scope" => {
-                    Some(parsed.ignored_attributes)
-                }
-                _ => None,
-            })
-            .collect();
-        assert!(wrappers.is_empty(), "{source}");
-    }
+    assert!(wrapper_warnings("<svg><title>&lt;x-card&gt;</title></svg>").is_empty());
 }

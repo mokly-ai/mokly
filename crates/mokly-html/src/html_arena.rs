@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use html5ever::{QualName, local_name, ns};
 use mokly_model::catalogue::SourceLocation;
 
+use crate::pipeline::locator::Locator;
 use crate::tree::Node;
 
 #[derive(Clone)]
@@ -25,6 +26,7 @@ pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
     active_source: RefCell<Option<ActiveSource>>,
     authored: bool,
+    locator: Option<Locator>,
 }
 
 struct ActiveSource {
@@ -39,6 +41,7 @@ impl Default for Arena {
             entries: RefCell::new(vec![Entry::new(None)]),
             active_source: RefCell::default(),
             authored: false,
+            locator: None,
         }
     }
 }
@@ -72,11 +75,30 @@ impl Arena {
         }
     }
 
+    /// An authored arena that gives each start tag's element its source position.
+    pub(crate) fn located(locator: Locator) -> Self {
+        Self {
+            authored: true,
+            locator: Some(locator),
+            ..Self::default()
+        }
+    }
+
+    /// Start recording the elements that one start tag creates.
+    pub(crate) fn start_tag(&self, name: &[u8], offset: usize) {
+        if let Some(locator) = &self.locator {
+            self.set_active_source(
+                String::from_utf8_lossy(name).into_owned(),
+                locator.locate(offset),
+            );
+        }
+    }
+
     pub(crate) fn filters_authored_attributes(&self) -> bool {
         self.authored
     }
 
-    pub(crate) fn set_active_source(&self, name: String, source: SourceLocation) {
+    fn set_active_source(&self, name: String, source: SourceLocation) {
         *self.active_source.borrow_mut() = Some(ActiveSource {
             name,
             source,

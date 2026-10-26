@@ -28,8 +28,8 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
-`parse::html` reads HTML through one token-driven HTML5 pipeline with scripting
-disabled. The input type chooses the parse. Catalogue templates and saved slots
+`parse::html` reads HTML through the catalogue's shared HTML driver with
+scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
 give `AuthoredHtml`, and all other HTML is `DeliveredHtml`. Authored parses
 remove unknown ignore-wrapper attributes, and a located template also gets
 source locations. Delivered parses keep every authored attribute. Composition
@@ -88,7 +88,7 @@ it creates elements. The delivered sink keeps those attributes until
 composition filters them with the same catalogue rule before it evaluates
 conditions. Callback documents
 use the delivered parser, but the browser does not receive the wrapper nodes.
-The token pipeline gives authored elements their source locations before HTML
+The shared driver gives authored elements their source locations before HTML
 table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
 and attribute. Their values are not evaluated. Strict builds fail on these
@@ -145,7 +145,7 @@ The link-control tests retain the former ancestor and descendant tier matrix.
 ### Key Code
 
 - [Annotated tree](./src/tree.rs), [the typed parse entry point](./src/parse.rs),
-  the [token pipeline](./src/pipeline/mod.rs), and [tree sink](./src/html_sink.rs).
+  the [tree parse runner](./src/pipeline/runner.rs), and [tree sink](./src/html_sink.rs).
 - [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
   share plaintext activation. The [noscript guard](./src/noscript_text.rs)
   escapes raw HTML `noscript` closing text.

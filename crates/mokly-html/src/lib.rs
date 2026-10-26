@@ -136,3 +136,6 @@ mod pipeline_differential_tests;
 #[cfg(test)]
 #[path = "_tests_/pipeline_tests.rs"]
 mod pipeline_tests;
+#[cfg(test)]
+#[path = "_tests_/token_tree_agreement_tests.rs"]
+mod token_tree_agreement_tests;

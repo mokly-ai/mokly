@@ -1,29 +1,47 @@
-//! Run the token emitter against a document or fragment tree builder.
+//! Parse one input into a Mokly tree, and repair trees that hold an HTML `plaintext`.
 
-use html5ever::tree_builder::{TreeBuilder, TreeBuilderOpts};
-use html5ever::{QualName, local_name, ns};
-use html5gum::Tokenizer;
+use mokly_catalogue::html_driver::drive;
+use mokly_catalogue::html_input::{HtmlInput, HtmlShape};
 use mokly_model::catalogue::SourceLocation;
 
-use super::PipelineEmitter;
+use super::locator::Locator;
 use crate::html_arena::Arena;
 use crate::serialize;
 use crate::tree::{self, Node};
 
-pub(super) fn run(
+/// Parse authored or delivered HTML with the shared driver.
+pub(crate) fn parse(input: HtmlInput<'_>) -> Vec<Node> {
+    let shape = input.shape();
+    match input {
+        HtmlInput::Authored(html) => {
+            let origin = html.origin();
+            run(
+                html.text(),
+                shape,
+                true,
+                origin.map(|origin| origin.path),
+                origin.map_or(1, |origin| origin.line),
+                origin.map_or(1, |origin| origin.column),
+            )
+        }
+        HtmlInput::Delivered(html) => run(html.text(), shape, false, None, 1, 1),
+    }
+}
+
+fn run(
     source: &str,
-    fragment: bool,
+    shape: HtmlShape,
     authored: bool,
     path: Option<&str>,
     base_line: usize,
     base_column: usize,
 ) -> Vec<Node> {
-    let nodes = run_once(source, fragment, authored, path, base_line, base_column);
+    let nodes = run_once(source, shape, authored, path, base_line, base_column);
     if !contains_plaintext(&nodes) {
         return nodes;
     }
     let positions = authored.then(|| positions_before_plaintext(&nodes));
-    let mut repaired = run_once(&serialize::html(&nodes), fragment, authored, path, 1, 1);
+    let mut repaired = run_once(&serialize::html(&nodes), shape, authored, path, 1, 1);
     if let Some(positions) = positions {
         copy_positions(&mut repaired, &positions);
     }
@@ -32,46 +50,18 @@ pub(super) fn run(
 
 fn run_once(
     source: &str,
-    fragment: bool,
+    shape: HtmlShape,
     authored: bool,
     path: Option<&str>,
     base_line: usize,
     base_column: usize,
 ) -> Vec<Node> {
-    let source = source.strip_prefix('\u{feff}').unwrap_or(source);
-    let arena = Arena::new(authored);
-    let mut builder = if fragment {
-        let context = arena.create(
-            None,
-            Some(QualName::new(None, ns!(html), local_name!("body"))),
-        );
-        TreeBuilder::new_for_fragment(
-            arena,
-            context,
-            None,
-            TreeBuilderOpts {
-                scripting_enabled: false,
-                ..Default::default()
-            },
-        )
-    } else {
-        TreeBuilder::new(
-            arena,
-            TreeBuilderOpts {
-                scripting_enabled: false,
-                ..Default::default()
-            },
-        )
+    let arena = match path.filter(|_| authored) {
+        Some(path) => Arena::located(Locator::new(source, path, base_line, base_column)),
+        None => Arena::new(authored),
     };
-    let emitter =
-        PipelineEmitter::new(&mut builder, source, path, base_line, base_column, authored);
-    let tokenizer = Tokenizer::new_with_emitter(source, emitter);
-    match tokenizer.finish() {
-        Ok(()) => {}
-        Err(error) => match error {},
-    }
-    let nodes = builder.sink.output();
-    if fragment {
+    let nodes = drive(source, shape, arena);
+    if shape == HtmlShape::Fragment {
         nodes
             .into_iter()
             .flat_map(|mut node| match &mut node {

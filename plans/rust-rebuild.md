@@ -5497,10 +5497,10 @@ check passes on this commit.
       Severity Low, effort Medium, category performance. User decision 1
       (2026-10-26): A, exclude planning Markdown from document identity.
       Fixed in `735c7d2e` with a regression test and the document contract.
-- Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
-  at lines 87, 153, and 213-218 does not model SVG `desc` or encoded MathML
-  `annotation-xml` integration points.
-  Separate branch.
+- Outside phase 2 review 1, resolved by user decision 4 B (2026-10-26): the
+  token pass in `html_token_conversion.rs` kept its own integration point
+  list without SVG `desc` or encoded MathML `annotation-xml`. The file is
+  gone, and the token checks now read the tree builder's text modes.
 
 - [ ] One tokenizer run for the checks and the tree, covering decisions 98 B
       and 116 C. Severity Medium, effort Large. The checks still run their own
@@ -5526,9 +5526,9 @@ check passes on this commit.
       A, call the catalogue rule and reserved-navigation check from
       `filter_attributes`, and correct its module doc, Small; B, keep both
       lists, Small. Recommended: A. No option is applied.
-- Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
-  at lines 87, 153, and 213-218 retains production `unreachable!()` and
-  `unwrap()` calls. Separate branch.
+- Outside phase 2 review 1, resolved by user decision 4 B (2026-10-26): the
+  production `unreachable!()` and `unwrap()` calls left with
+  `html_token_conversion.rs`.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late

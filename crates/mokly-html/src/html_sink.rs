@@ -6,11 +6,24 @@ use std::mem;
 use html5ever::tendril::StrTendril;
 use html5ever::tree_builder::{ElementFlags, NodeOrText, QuirksMode, TreeSink};
 use html5ever::{Attribute, ExpandedName, QualName};
-use mokly_catalogue::html_tokens::reserved_navigation_attribute;
+use mokly_catalogue::html_driver::DriverSink;
+use mokly_catalogue::html_tokens::{Token, reserved_navigation_attribute};
 use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::html_arena::{Arena, Handle};
 use crate::tree::{self, Element, Node};
+
+impl DriverSink for Arena {
+    fn before_token(&self, token: &Token) {
+        if let Token::StartTag(tag) = token {
+            self.start_tag(&tag.name, tag.span.start);
+        }
+    }
+
+    fn after_token(&self) {
+        self.finish_active_source();
+    }
+}
 
 impl TreeSink for Arena {
     type Handle = Handle;

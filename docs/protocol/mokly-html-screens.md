@@ -70,7 +70,7 @@ undeclared prop, an array, or an object without a path fails with
 `html-props`; `{{` that does not close is ordinary text. Every other
 attribute is ordinary HTML and is never interpreted. A component body uses
 this template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
-One parser and one renderer serve both.
+One parser and one renderer serve both. Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
 
 Authored HTML removes unknown wrapper attributes and attaches source locations.
 Delivered documents, sidecar pages, and `srcdoc` values keep authored attributes for resource and style checks.
