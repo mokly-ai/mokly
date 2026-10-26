@@ -91,9 +91,10 @@ use the delivered parser, but the browser does not receive the wrapper nodes.
 The shared driver gives authored elements their source locations before HTML
 table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
-and attribute. Their values are not evaluated. Strict builds fail on these
-warnings. Reserved navigation metadata and duplicate-navigation failures
-retain their existing checks.
+and attribute. Unknown attribute values are not evaluated. Strict builds fail
+on these warnings. Reserved navigation names are not unknown attributes:
+composition keeps them, as the authored parse does, and reserved navigation
+metadata and duplicate-navigation failures retain their existing checks.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
