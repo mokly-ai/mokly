@@ -1,8 +1,10 @@
 # Port the Verification Scripts That xtask Calls
 
-Status: Active. On branch `conductor/port-verification-scripts-to-xtask`,
-stacked on `conductor/move-tooling-tests-to-xtask`, no pull request yet. The
-plan closes when its PR merges.
+Status: Active. [PR #213](https://github.com/mokly-ai/mokly/pull/213) is
+open as a draft, stacked on
+[PR #212](https://github.com/mokly-ai/mokly/pull/212). It stays a draft
+until the user's decisions for Milestones 5 to 7 are applied. The plan
+closes when its PR merges.
 
 `xtask` runs the repository gate in Rust, but it still calls small Node
 scripts: the changed-file length audit, the protocol cap ratchet inside the
@@ -141,11 +143,20 @@ runs the title check with Node only and has a five-minute limit.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
-- [ ] Save the map from each Node case to its Rust test under
+This milestone verifies Milestones 1 to 4. Milestone 9 verifies the parts
+that wait for the user's decisions.
+
+- [x] Save the map from each Node case to its Rust test under
       `.context/port-verification-scripts-to-xtask/`.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+
+Evidence: `case-map.md`, `fault-injection.md`, and `dead-code-searches.md`
+in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
+`complete-gate.log` and `complete-gate-2.log` there, remote runs
+`20261026T193526Z-450461` and `20261026T204234Z-739530`.
+
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -168,5 +179,22 @@ runs the title check with Node only and has a five-minute limit.
   - Outside the review scope: `xtask/src/check/runner.rs`: no ordered test
     pins the Rust file-length audit after `cargo test --workspace`, as on
     `origin/main`. Separate branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
-      Put its link in the status paragraph.
+- [x] Open the pull request when every other milestone TODO is ticked.
+      Put its link in the status paragraph. It opened as a draft before
+      Milestones 5 to 7, because the user asked for the pull request.
+
+## Milestone 9: Verification of the decided parts
+
+Blocked: waits for the user's decisions.
+
+- [ ] Add the map from each Node case of Milestones 5 to 7 to its Rust
+      test, or the reason that it stays in Node, under
+      `.context/port-verification-scripts-to-xtask/`.
+- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
+- [ ] Update the pull request description with the applied decisions, and
+      mark the pull request ready for review.
