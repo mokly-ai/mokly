@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_catalogue::template_types::SavedSlot;
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::routes;
@@ -209,14 +210,14 @@ pub(crate) fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<
         let bodies = catalogue
             .templates
             .get(parent)
-            .map(|template| template.body.as_str())
+            .map(|template| template.html())
             .into_iter()
             .chain(
                 catalogue
                     .slot_fragments
                     .get(&path)
                     .into_iter()
-                    .flat_map(|slots| slots.values().map(|slot| slot.body.as_str())),
+                    .flat_map(|slots| slots.values().map(SavedSlot::html)),
             );
         for body in bodies {
             for component in component_keys::direct(body, catalogue) {

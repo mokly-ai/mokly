@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::catalogue::{EntryContent, ModelEntry, SourceLocation};
 use mokly_model::usage::CatalogueUsage;
@@ -88,19 +89,21 @@ fn reparse(
     let mut repair = Repair::default();
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
-    let mut parsed = parse::delivered_document(&serialized.html);
+    let mut parsed = parse::html(DeliveredHtml::document(&serialized.html));
     let plaintext_ok = serialized.plaintext.as_ref().is_none_or(|start| {
         confirmed_plaintext(&parsed, &start.id)
             && confirmed_plaintext(
-                &parse::delivered_document(&serialized.html[..start.prefix_end]),
+                &parse::html(DeliveredHtml::document(
+                    &serialized.html[..start.prefix_end],
+                )),
                 &start.id,
             )
     });
     if !plaintext_ok || !confirmed_raw_text(&parsed, &serialized.raw_text) {
         repair = Repair::default();
         let retry = normalization_annotate::annotate_with_plaintext(source, &mut repair, false);
-        parsed =
-            parse::delivered_document(&serialize::document_with_options(&retry, true, false).html);
+        let retried = serialize::document_with_options(&retry, true, false);
+        parsed = parse::html(DeliveredHtml::document(&retried.html));
     } else if let Some(start) = &serialized.plaintext {
         normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
     }

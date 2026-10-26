@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGenerationMock;
 use mokly_html::composition::Composed;
@@ -20,7 +21,7 @@ fn history() -> Arc<Artifact> {
         content_type: "text/html".into(),
         fragment: None,
         document: Some(Composed {
-            tree: parse::delivered_document("<p>History</p>"),
+            tree: parse::html(DeliveredHtml::document("<p>History</p>")),
             usage: CatalogueUsage::Ready {
                 instances: vec![],
                 slots: vec![],

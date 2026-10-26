@@ -2,6 +2,7 @@
 
 use std::fs;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::tree::{self, Node};
 use mokly_html::{parse, serialize};
 use tempfile::TempDir;
@@ -30,8 +31,11 @@ fn plaintext_component_in_active_formatting_has_no_private_metadata() {
                 assert!(!text.contains("mokly-normalize"), "{text}");
             }
         }
-        let parsed = parse::delivered_document(html);
-        assert_eq!(parsed, parse::delivered_document(&serialize::html(&parsed)));
+        let parsed = parse::html(DeliveredHtml::document(html));
+        assert_eq!(
+            parsed,
+            parse::html(DeliveredHtml::document(&serialize::html(&parsed)))
+        );
         assert_eq!(html, serialize::html(&parsed));
     }
 }

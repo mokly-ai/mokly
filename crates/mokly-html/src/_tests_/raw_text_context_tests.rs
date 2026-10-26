@@ -1,5 +1,7 @@
 //! Grafted raw-text tags use the serialized parser namespace, not their source namespace.
 
+use mokly_catalogue::html_input::DeliveredHtml;
+
 use crate::tree::{Node, element, walk};
 use crate::{parse, serialize};
 
@@ -11,13 +13,13 @@ fn every_raw_text_tag_escapes_text_when_grafted_into_foreign_content() {
     let mut failures = Vec::new();
     for context in ["<svg></svg>", "<math></math>"] {
         for tag in TAGS {
-            let mut nodes = parse::delivered_fragment(context);
+            let mut nodes = parse::html(DeliveredHtml::fragment(context));
             nodes[0]
                 .children_mut()
                 .unwrap()
                 .push(element(tag, &[], vec![Node::Text(TEXT.into())]));
             let html = serialize::html(&nodes);
-            let parsed = parse::delivered_document(&html);
+            let parsed = parse::html(DeliveredHtml::document(&html));
             if !html.contains("&lt;b&gt;literal&lt;/b&gt;")
                 || walk(&parsed)
                     .any(|node| matches!(node, Node::Element(element) if element.name == "b"))
@@ -36,14 +38,14 @@ fn html_integration_points_keep_the_existing_raw_text_contract() {
         "<math><mtext></mtext></math>",
     ] {
         for tag in TAGS {
-            let mut nodes = parse::delivered_fragment(context);
+            let mut nodes = parse::html(DeliveredHtml::fragment(context));
             nodes[0].children_mut().unwrap()[0]
                 .children_mut()
                 .unwrap()
                 .push(element(tag, &[], vec![Node::Text(TEXT.into())]));
             let html = serialize::html(&nodes);
             assert!(html.contains(TEXT), "{tag}: {html}");
-            let parsed = parse::delivered_document(&html);
+            let parsed = parse::html(DeliveredHtml::document(&html));
             assert!(
                 !walk(&parsed)
                     .any(|node| matches!(node, Node::Element(element) if element.name == "b")),

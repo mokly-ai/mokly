@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::discovery::Inventory;
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::composition::{Composed, ComposerMock};
 use mokly_html::diagnostic_code::Code;
@@ -61,11 +62,11 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
                     && request.viewport == Viewport::Mobile
                     && request.color_scheme == ColorScheme::Dark;
                 Ok(Composed {
-                    tree: parse::delivered_document(if missing {
+                    tree: parse::html(DeliveredHtml::document(if missing {
                         "<h1>No anchor</h1>"
                     } else {
                         "<h1 id=summary>Target</h1>"
-                    }),
+                    })),
                     usage: CatalogueUsage::Unavailable,
                     warnings: vec![],
                     resources: vec![],

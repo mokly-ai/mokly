@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::{pipeline, serialize, tree};
+use crate::{serialize, tree};
 
 const GENERATED: &[&str] = &[
     "<math><annotation-xml encoding=\"text/html\"><div>x</div></annotation-xml></math>",
@@ -93,7 +93,7 @@ fn source_count(nodes: &[crate::tree::Node]) -> usize {
 fn compare(report: &mut Report, name: &str, source: &str) {
     report.inputs += 1;
     let old = crate::support::legacy_authored_document(source);
-    let new = pipeline::authored_document(source, name, 1, 1);
+    let new = crate::support::authored(source, name, true);
     if serialize::html(&old) != serialize::html(&new) {
         report.new_defects.push(name.into());
     } else {

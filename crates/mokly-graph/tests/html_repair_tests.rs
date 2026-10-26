@@ -3,6 +3,7 @@
 use std::fs;
 
 use mokly_catalogue::diagnostic::WarningSubject;
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::tree::{Node, RegionKind};
 use mokly_html::{parse, serialize};
 use mokly_model::material::instance_key;
@@ -150,7 +151,10 @@ fn block_and_anchor_components_that_escape_their_parent_lose_the_region() {
         assert!(html.contains(expected), "{html}");
         assert!(!html.contains("mokly-instance:"));
         assert!(!html.contains("mokly-normalize"));
-        assert_eq!(serialize::html(&parse::delivered_document(&html)), html);
+        assert_eq!(
+            serialize::html(&parse::html(DeliveredHtml::document(&html))),
+            html
+        );
         let document = artifact.document.as_ref().unwrap();
         let CatalogueUsage::Ready {
             instances,

@@ -1,5 +1,6 @@
 //! Iterative tree operations preserve the trusted style annotations used by comparison.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_model::axes::ColorScheme;
 
 use crate::fragment::{OwnedStyle, StyleAttribution};
@@ -45,7 +46,7 @@ fn iterative_annotation_preserves_owners_through_browser_repair() {
     )];
     let mut repair = Repair::default();
     let annotated = normalization_annotate::annotate(nodes, &mut repair);
-    let reparsed = parse::delivered_document(&serialize::html(&annotated));
+    let reparsed = parse::html(DeliveredHtml::document(&serialize::html(&annotated)));
     let repaired = tree_transform::postorder(reparsed, &mut |mut node| {
         if let Node::Element(element) = &mut node {
             metadata(element, &repair);

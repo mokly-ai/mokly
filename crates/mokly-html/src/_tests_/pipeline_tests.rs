@@ -1,6 +1,8 @@
 //! Differential probes for the token-driven parser.
 
-use crate::{pipeline, serialize, tree};
+use mokly_catalogue::html_input::DeliveredHtml;
+
+use crate::{serialize, tree};
 
 #[test]
 fn duplicate_attributes_keep_the_first_value_in_authored_and_delivered_trees() {
@@ -20,8 +22,8 @@ fn duplicate_attributes_keep_the_first_value_in_authored_and_delivered_trees() {
         ),
     ] {
         for nodes in [
-            crate::parse::delivered_fragment(source),
-            crate::parse::authored_fragment(source, "fixture.html"),
+            crate::parse::html(DeliveredHtml::fragment(source)),
+            crate::support::authored(source, "fixture.html", false),
         ] {
             let element = tree::walk(&nodes)
                 .find_map(|node| match node {
@@ -60,7 +62,7 @@ fn token_pipeline_keeps_tree_bytes_and_source_identity() {
         ("<plaintext><b>literal</b>", vec!["plaintext"]),
     ] {
         let old = crate::support::legacy_authored_document(source);
-        let new = pipeline::authored_document(source, "fixture.html", 1, 1);
+        let new = crate::support::authored(source, "fixture.html", true);
         assert_eq!(serialize::html(&new), serialize::html(&old), "{source}");
         let identities: Vec<_> = tree::walk(&new)
             .filter_map(|node| match node {
@@ -81,7 +83,7 @@ fn token_pipeline_keeps_tree_bytes_and_source_identity() {
 #[test]
 fn formatting_clones_do_not_take_a_later_start_tag_position() {
     let source = "<p><b class=one>1</p><p><b class=two>2</b></p>";
-    let nodes = crate::parse::authored_document(source, "fixture.html");
+    let nodes = crate::support::authored(source, "fixture.html", true);
     let positions: Vec<_> = tree::walk(&nodes)
         .filter_map(|node| match node {
             crate::tree::Node::Element(element) if element.name == "b" => element
@@ -113,7 +115,7 @@ fn reconstruction_positions_follow_each_authored_start_tag() {
             vec![(Some("one"), 8), (Some("two"), 32)],
         ),
     ] {
-        let nodes = crate::parse::authored_fragment(source, "fixture.html");
+        let nodes = crate::support::authored(source, "fixture.html", false);
         let positions: Vec<_> = tree::walk(&nodes)
             .filter_map(|node| match node {
                 crate::tree::Node::Element(element) if element.name == name => {
@@ -138,7 +140,7 @@ fn token_pipeline_copies_bom_and_cdata_boundaries() {
         "<svg><![CDATA[foreign text]]></svg>",
     ] {
         let old = crate::support::legacy_authored_document(source);
-        let new = pipeline::delivered_document(source);
+        let new = crate::parse::html(DeliveredHtml::document(source));
         assert_eq!(serialize::html(&new), serialize::html(&old), "{source:?}");
     }
 }
@@ -146,7 +148,7 @@ fn token_pipeline_copies_bom_and_cdata_boundaries() {
 #[test]
 fn cdata_question_follows_buffered_foreign_text() {
     let source = "<math><mi><p><b>1</p>2<![CDATA[3]]>";
-    let nodes = crate::parse::delivered_fragment(source);
+    let nodes = crate::parse::html(DeliveredHtml::fragment(source));
     let actual = crate::serialize::html(&nodes);
     assert_eq!(
         actual,

@@ -1,5 +1,6 @@
 //! Former rendered-HTML navigation cases use the core's final tree rewrite.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, UseCaseStep};
 
@@ -8,15 +9,18 @@ use crate::{controls, links, parse, serialize};
 
 #[test]
 fn native_controls_keep_fragments_separate_from_paths_and_output_attributes() {
-    let mut invalid = parse::delivered_fragment("<button to=\"details#summary\">Bad</button>");
+    let mut invalid = parse::html(DeliveredHtml::fragment(
+        "<button to=\"details#summary\">Bad</button>",
+    ));
     let error = controls::adapt(&mut invalid, "route").unwrap_err();
     assert!(
         error
             .to_string()
             .ends_with("MockLink destination and fragment must be separate unencoded values")
     );
-    let mut nodes =
-        parse::delivered_fragment("<button to=\"details\" fragment=\"summary\">Details</button>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<button to=\"details\" fragment=\"summary\">Details</button>",
+    ));
     assert!(controls::adapt(&mut nodes, "route").unwrap().is_empty());
     let html = serialize::html(&nodes);
     assert!(html.contains("href=\"mock:details#summary\""));
@@ -47,9 +51,9 @@ fn rewritten(body: &str, scheme: ColorScheme) -> Result<String> {
         }],
     };
     let entries = [source.clone(), target, tour];
-    let mut nodes = parse::delivered_document(&format!(
+    let mut nodes = parse::html(DeliveredHtml::document(&format!(
         "<!doctype html><html><head></head><body>{body}</body></html>"
-    ));
+    )));
     links::rewrite(
         &mut nodes,
         &entries,

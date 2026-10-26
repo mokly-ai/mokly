@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::iter;
 
+use mokly_catalogue::html_input::AuthoredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::tree::{self, Node};
 use mokly_html::{parse, props};
@@ -43,11 +44,17 @@ pub(crate) fn key(
         } else {
             template.body.clone()
         };
-        scan(&body, path, catalogue, &mut targets, &mut opaque);
+        scan(
+            template.derived_html(&body),
+            path,
+            catalogue,
+            &mut targets,
+            &mut opaque,
+        );
     }
     if let Some(slots) = catalogue.slot_fragments.get(&entry.metadata.path) {
         for slot in slots.values() {
-            scan(&slot.body, parent, catalogue, &mut targets, &mut opaque);
+            scan(slot.html(), parent, catalogue, &mut targets, &mut opaque);
         }
     }
     if let Some(body) = catalogue.documents.get(&entry.metadata.path) {
@@ -69,13 +76,13 @@ pub(crate) fn key(
 }
 
 fn scan(
-    body: &str,
+    html: AuthoredHtml<'_>,
     source: &str,
     catalogue: &PreparedCatalogue,
     targets: &mut BTreeSet<String>,
     opaque: &mut bool,
 ) {
-    let nodes = parse::delivered_fragment(body);
+    let nodes = parse::html(html);
     for node in tree::walk(&nodes) {
         if let Node::Element(element) = node {
             for attribute in &element.attributes {

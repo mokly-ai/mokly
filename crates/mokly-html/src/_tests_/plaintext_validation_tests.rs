@@ -1,5 +1,7 @@
 //! Reparsed namespace evidence must confirm predicted plaintext before raw bytes survive.
 
+use mokly_catalogue::html_input::DeliveredHtml;
+
 use crate::parse;
 use crate::serialize;
 use crate::support;
@@ -13,7 +15,7 @@ fn authored_plaintext_repair_matches_the_browser_tree() {
         "<p><a href=\"mock:home\">Home</p><plaintext>Raw",
         "<table><tr><td>one</td></tr><plaintext>Raw",
     ] {
-        let actual = parse::authored_document(source, "fixture.html");
+        let actual = support::authored(source, "fixture.html", true);
         let expected = crate::support::legacy_authored_document(source);
         assert_eq!(
             serialize::html(&actual),
@@ -40,8 +42,8 @@ fn authored_plaintext_repair_matches_the_browser_tree() {
 #[test]
 fn saved_slot_plaintext_repair_matches_authored_fragments() {
     let source = "<p><a href=\"mock:home\">Home</p><plaintext>Raw";
-    let actual = crate::source_locations::slot(source, "panel", "saved");
-    let expected = parse::authored_fragment(source, "fixture.html");
+    let actual = crate::source_locations::slot(&support::saved_slot(source), "panel", "saved");
+    let expected = support::authored(source, "fixture.html", false);
     assert_eq!(serialize::html(&actual), serialize::html(&expected));
     let plaintext = walk(&actual)
         .find_map(|node| match node {
@@ -74,7 +76,7 @@ fn literal() -> Node {
 fn assert_literal(nodes: Vec<Node>) {
     let parsed = repaired(nodes);
     let html = serialize::html(&parsed);
-    for tree in [&parsed, &parse::delivered_document(&html)] {
+    for tree in [&parsed, &parse::html(DeliveredHtml::document(&html))] {
         assert!(
             !walk(tree).any(|node| matches!(node, Node::Element(element) if element.name == "b")),
             "{html}"
@@ -86,8 +88,12 @@ fn assert_literal(nodes: Vec<Node>) {
 
 #[test]
 fn math_void_graft_does_not_activate_raw_text_under_annotation_xml() {
-    let mut math = parse::delivered_fragment("<math><annotation-xml></annotation-xml></math>");
-    let mut svg = parse::delivered_fragment("<svg><foreignObject></foreignObject></svg>");
+    let mut math = parse::html(DeliveredHtml::fragment(
+        "<math><annotation-xml></annotation-xml></math>",
+    ));
+    let mut svg = parse::html(DeliveredHtml::fragment(
+        "<svg><foreignObject></foreignObject></svg>",
+    ));
     svg[0].children_mut().unwrap()[0]
         .children_mut()
         .unwrap()
@@ -101,7 +107,9 @@ fn math_void_graft_does_not_activate_raw_text_under_annotation_xml() {
 
 #[test]
 fn ignored_nested_form_does_not_activate_raw_text_under_math_text() {
-    let mut nodes = parse::delivered_fragment("<form><math><mi></mi></math></form>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<form><math><mi></mi></math></form>",
+    ));
     let mi = &mut nodes[0].children_mut().unwrap()[0].children_mut().unwrap()[0];
     mi.children_mut().unwrap().push(element(
         "form",
@@ -138,7 +146,9 @@ fn assert_style_literal(nodes: Vec<Node>) {
 
 #[test]
 fn math_annotation_style_uses_escaped_retry_when_parser_keeps_foreign_style() {
-    let mut nodes = parse::delivered_fragment("<math><annotation-xml></annotation-xml></math>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<math><annotation-xml></annotation-xml></math>",
+    ));
     let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
     annotation.push(element("input", &[], Vec::new()));
     annotation.push(element(
@@ -161,7 +171,9 @@ fn math_annotation_style_uses_escaped_retry_when_parser_keeps_foreign_style() {
 
 #[test]
 fn nested_form_style_uses_escaped_retry_when_parser_ignores_form() {
-    let mut nodes = parse::delivered_fragment("<form><math><mi></mi></math></form>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<form><math><mi></mi></math></form>",
+    ));
     let mi = &mut nodes[0].children_mut().unwrap()[0].children_mut().unwrap()[0];
     mi.children_mut().unwrap().push(element(
         "form",
@@ -183,7 +195,9 @@ fn nested_form_style_uses_escaped_retry_when_parser_ignores_form() {
 
 #[test]
 fn escaped_retry_keeps_regions_and_later_element_metadata() {
-    let mut nodes = parse::delivered_fragment("<math><annotation-xml></annotation-xml></math>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<math><annotation-xml></annotation-xml></math>",
+    ));
     let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
     annotation.push(element("input", &[], Vec::new()));
     annotation.push(element(
@@ -216,7 +230,9 @@ fn escaped_retry_keeps_regions_and_later_element_metadata() {
 
 #[test]
 fn escaped_plaintext_retry_keeps_later_regions_and_end_tags() {
-    let mut nodes = parse::delivered_fragment("<math><annotation-xml></annotation-xml></math>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<math><annotation-xml></annotation-xml></math>",
+    ));
     let annotation = nodes[0].children_mut().unwrap()[0].children_mut().unwrap();
     annotation.push(element("input", &[], Vec::new()));
     annotation.push(element(

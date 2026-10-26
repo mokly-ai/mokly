@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_graph::cache::Artifact;
 use mokly_graph::key::NodeKey;
 use mokly_graph::types::{DocumentPlan, RenderGenerationMock};
@@ -111,7 +112,7 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
                 content_type: "text/html".into(),
                 fragment: None,
                 document: Some(Composed {
-                    tree: parse::delivered_document("<p>Historical</p>"),
+                    tree: parse::html(DeliveredHtml::document("<p>Historical</p>")),
                     usage: CatalogueUsage::Ready {
                         instances: vec![],
                         slots: vec![],

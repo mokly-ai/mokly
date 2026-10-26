@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::composition::{Composed, ComposerMock};
 use mokly_html::parse;
@@ -71,7 +72,7 @@ pub(super) fn probe(count: usize) -> Probe {
                 else if options.cross_link && path == "page-000" { "<a href='mock:page-003#missing'>Target</a>" }
                 else { "" };
             Ok(Composed {
-                tree: parse::delivered_document(&format!("<!doctype html><html><head><title>{path}</title></head><body><p id=anchor>{path}</p>{content}</body></html>")),
+                tree: parse::html(DeliveredHtml::document(&format!("<!doctype html><html><head><title>{path}</title></head><body><p id=anchor>{path}</p>{content}</body></html>"))),
                 usage: CatalogueUsage::Unavailable, warnings: vec![warning(path)], resources: vec![], components: vec![], links: vec![],
             })
         })),

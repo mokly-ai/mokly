@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::numeric_warnings;
 use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
@@ -101,15 +102,16 @@ impl Engine<'_> {
         self.resources.extend(result.resources.clone());
         self.warnings.extend(result.warnings.clone());
         let page = entry.content.kind() == EntryKind::Page;
-        if page {
-            source_checks::page(&result.html)?;
-        }
-        source_checks::validate(&result.html, true)?;
-        let nodes = if page {
-            parse::delivered_document(&result.html)
+        let html = if page {
+            DeliveredHtml::document(&result.html)
         } else {
-            parse::delivered_fragment(&result.html)
+            DeliveredHtml::fragment(&result.html)
         };
+        if page {
+            source_checks::page(html)?;
+        }
+        source_checks::validate(html, true)?;
+        let nodes = parse::html(html);
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
             && effective.metadata.path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(

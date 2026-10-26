@@ -120,7 +120,10 @@ Token checks follow markup contexts inside `noscript` and foreign `style` or
 entry bodies except for forbidden and unknown element checks while plan item
 128 remains open. They keep the required slot, template, link, and warning
 checks during this interim rule.
-The HTML token boundary returns Mokly-owned token and span types. Catalogue
+Typed HTML inputs name each parse purpose. Templates and saved slots create
+`AuthoredHtml`, so a caller that holds authored text gets the authored parse.
+All other HTML is `DeliveredHtml`. The HTML token boundary returns Mokly-owned
+token and span types. Catalogue
 consumers of authored HTML call `html_tokens::parse`. The tree-building adapter
 has a separate html5gum integration while the one-tokenizer boundary decision
 remains open.
@@ -206,6 +209,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
+- [HTML inputs](./src/html_input.rs) type authored and delivered HTML. `Template::html`, `Template::located_html`, and `SavedSlot::html` create authored inputs.
 - [HTML token boundary](./src/html_tokens.rs) and its conversion helper own spans, tokens, and ignore-wrapper filtering before token consumers run.
 - [Numeric warnings](./src/numeric_warnings.rs) share one formatter for props, schemas, and authored controls.
 - [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), its [alias scan](./src/yaml_aliases.rs), and its [source positions](./src/yaml_positions.rs).

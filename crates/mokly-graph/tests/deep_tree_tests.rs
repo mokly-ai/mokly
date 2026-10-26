@@ -3,6 +3,7 @@
 use std::fs;
 use std::thread;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::{parse, serialize, tree};
 use tempfile::TempDir;
 
@@ -46,8 +47,8 @@ fn twenty_thousand_levels_build_compose_serialize_compare_and_drop() {
         assert_eq!(cache.stats().entries, 0);
         let html = std::str::from_utf8(&first.bytes).unwrap();
         assert!(html.contains("deep-leaf"));
-        let parsed = parse::delivered_document(html);
-        let reparsed = parse::delivered_document(&serialize::html(&parsed));
+        let parsed = parse::html(DeliveredHtml::document(html));
+        let reparsed = parse::html(DeliveredHtml::document(&serialize::html(&parsed)));
         assert!(
             parsed == reparsed,
             "browser tree changed after serialization"

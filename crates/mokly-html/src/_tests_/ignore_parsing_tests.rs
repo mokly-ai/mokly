@@ -1,11 +1,12 @@
 //! Ignore-wrapper attributes disappear before composition can read the parsed tree.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::template_types::Template;
 
 use crate::tree::{self, Node};
 use crate::{parse, serialize, source_checks, source_locations};
 
-fn check_authored(parser: fn(&str, &str, usize, usize) -> Vec<Node>) {
+fn check_authored(page: bool) {
     for (wrapper, required, key) in [
         ("mokly-ignore", "id='clock' material-key='v1'", "id"),
         ("mokly-ignore-scope", "enabled='true'", "enabled"),
@@ -13,7 +14,7 @@ fn check_authored(parser: fn(&str, &str, usize, usize) -> Vec<Node>) {
         let source = format!(
             "<{wrapper} {required} mokly-if='$visible' mokly-viewport='mobile' class='hidden' href='mock:missing' slot='missing' extra='{{{{absent}}}}'><span class='kept'>Text</span></{wrapper}>"
         );
-        let nodes = parser(&source, "specs/example.html", 1, 1);
+        let nodes = crate::support::authored(&source, "specs/example.html", page);
         let element = tree::walk(&nodes)
             .find_map(|node| match node {
                 Node::Element(element) if element.name == wrapper => Some(element),
@@ -39,19 +40,19 @@ fn check_authored(parser: fn(&str, &str, usize, usize) -> Vec<Node>) {
 
 #[test]
 fn authored_fragments_filter_unknown_ignore_attributes() {
-    check_authored(parse::authored_fragment_at);
+    check_authored(false);
 }
 
 #[test]
 fn authored_documents_filter_unknown_ignore_attributes() {
-    check_authored(parse::authored_document_at);
+    check_authored(true);
 }
 
 #[test]
 fn delivered_documents_keep_unknown_ignore_attributes() {
-    let nodes = parse::delivered_document(
+    let nodes = parse::html(DeliveredHtml::document(
         "<mokly-ignore id='clock' class='hidden' href='mock:target'>Text</mokly-ignore>",
-    );
+    ));
     let element = tree::walk(&nodes)
         .find_map(|node| match node {
             Node::Element(element) if element.name == "mokly-ignore" => Some(element),
@@ -65,7 +66,7 @@ fn delivered_documents_keep_unknown_ignore_attributes() {
 #[test]
 fn delivered_page_ignore_attributes_are_not_evaluated_by_composition() {
     let source = "<!doctype html><html><head></head><body><mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore></body></html>";
-    let nodes = parse::delivered_document(source);
+    let nodes = parse::html(DeliveredHtml::document(source));
     let wrapper = tree::walk(&nodes)
         .find_map(|node| match node {
             Node::Element(element) if element.name == "mokly-ignore" => Some(element),
@@ -77,8 +78,9 @@ fn delivered_page_ignore_attributes_are_not_evaluated_by_composition() {
 
 #[test]
 fn delivered_wrapper_filter_removes_unknown_attributes_before_substitution() {
-    let mut nodes =
-        parse::delivered_fragment("<mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore>");
+    let mut nodes = parse::html(DeliveredHtml::fragment(
+        "<mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore>",
+    ));
     let Node::Element(element) = &mut nodes[0] else {
         panic!("expected wrapper");
     };
@@ -227,12 +229,12 @@ fn reserved_navigation_fields_remain_visible_and_fail_as_before() {
         for name in ["data-mokly-link", "data-mokly-link-control-future"] {
             let source = format!("<{wrapper} {required} {name}='forged'></{wrapper}>");
             assert_eq!(
-                source_checks::validate(&source, false)
+                source_checks::validate(DeliveredHtml::fragment(&source), false)
                     .unwrap_err()
                     .to_string(),
                 "[mokly-html/build-invalid] reserved navigation metadata in consumer output"
             );
-            let nodes = parse::delivered_fragment(&source);
+            let nodes = parse::html(DeliveredHtml::fragment(&source));
             let Node::Element(element) = &nodes[0] else {
                 panic!("expected the ignore wrapper");
             };
@@ -269,7 +271,7 @@ fn duplicate_navigation_attributes_on_wrappers_still_fail() {
                 attribute.to_ascii_uppercase()
             );
             assert_eq!(
-                source_checks::validate(&source, false)
+                source_checks::validate(DeliveredHtml::fragment(&source), false)
                     .unwrap_err()
                     .to_string(),
                 format!("[mokly-html/build-invalid] duplicate navigation attribute {attribute}")
@@ -281,5 +283,8 @@ fn duplicate_navigation_attributes_on_wrappers_still_fail() {
 #[test]
 fn literal_ignore_markup_in_raw_text_keeps_its_attributes() {
     let source = "<script>\"<mokly-ignore class='literal'>\"</script>";
-    assert_eq!(serialize::html(&parse::delivered_fragment(source)), source);
+    assert_eq!(
+        serialize::html(&parse::html(DeliveredHtml::fragment(source))),
+        source
+    );
 }

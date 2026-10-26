@@ -41,6 +41,8 @@ A resource edit changes its consuming document keys and reuses JavaScript fragme
 Missing and denied lexical resource paths stay observable for repair. Weak
 subscribers attach those paths before the background pass completes.
 Links into `plans/` stay navigational and do not enter document keys.
+Key scans read template bodies and saved slots as authored HTML, so unknown
+ignore-wrapper attributes do not enter document keys.
 `generation_key` hashes the complete render input set for the live descriptor.
 `public_files` lists authored files reached by completed renders. Serve
 rechecks their live eligibility at read time. Temporary closure membership

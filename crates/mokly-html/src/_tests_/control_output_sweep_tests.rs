@@ -1,14 +1,16 @@
 //! Preserve authored control content while consuming only the control contract.
 
+use mokly_catalogue::html_input::DeliveredHtml;
+
 use crate::controls::adapt;
 use crate::source_checks;
 use crate::{parse, serialize};
 
 #[test]
 fn sibling_controls_keep_attributes_and_add_one_html_head_stylesheet() {
-    let mut nodes = parse::delivered_document(
+    let mut nodes = parse::html(DeliveredHtml::document(
         "<!doctype html><html><head><title>Controls</title></head><body><!-- spelling --><p class='untouched'>A &amp; B &#67;</p><DIV TO='home' class='row' STYLE='display:flex' data-owner='consumer'><span title='A &amp; B'>Keep &#x20; content</span></DIV><hr><span to='home'>Second</span><svg><head></head></svg></body></html>",
-    );
+    ));
     let before = serialize::html(&nodes);
     let foreign = before
         .split("<svg>")
@@ -39,9 +41,9 @@ fn inactive_ancestors_remove_button_submission_attributes_but_keep_the_label() {
         ("div", "aria-disabled=\"true\""),
         ("div", "aria-busy=\"true\""),
     ] {
-        let mut nodes = parse::delivered_document(&format!(
+        let mut nodes = parse::html(DeliveredHtml::document(&format!(
             "<!doctype html><html><head></head><body><{tag} {state}><button to=\"home\" type=\"submit\" form=\"payments\" formaction=\"/charge\" name=\"action\" value=\"pay\">Continue</button></{tag}></body></html>"
-        ));
+        )));
         assert!(adapt(&mut nodes, "route").unwrap().is_empty());
         let html = serialize::html(&nodes);
         assert!(html.contains("<button") && html.contains("Continue</button>"));
@@ -71,16 +73,20 @@ fn reserved_control_metadata_is_rejected_in_all_namespaces_and_inert_content() {
     ] {
         for control in ["", "<button to=\"home\">Go</button>"] {
             assert!(
-                source_checks::validate(&format!("{source}{control}"), false).is_err(),
+                source_checks::validate(
+                    DeliveredHtml::fragment(&format!("{source}{control}")),
+                    false
+                )
+                .is_err(),
                 "{source}"
             );
         }
     }
     let literal = "<p data-example=\"data-mokly-link-control\">DATA-MOKLY-LINK-CONTROL</p><!-- ordinary metadata text --><style>.example::after{content:'data-mokly-link-control'}</style>";
-    assert!(source_checks::validate(literal, false).is_ok());
-    let before = serialize::html(&parse::delivered_fragment(literal));
+    assert!(source_checks::validate(DeliveredHtml::fragment(literal), false).is_ok());
+    let before = serialize::html(&parse::html(DeliveredHtml::fragment(literal)));
     for control in ["", "<button to=\"home\">Go</button>"] {
-        let mut nodes = parse::delivered_fragment(&format!("{literal}{control}"));
+        let mut nodes = parse::html(DeliveredHtml::fragment(&format!("{literal}{control}")));
         assert!(adapt(&mut nodes, "route").unwrap().is_empty());
         assert!(serialize::html(&nodes).starts_with(&before));
     }

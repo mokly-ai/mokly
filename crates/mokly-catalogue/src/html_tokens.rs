@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::html_input::{DeliveredHtml, HtmlInput};
 use crate::html_token_conversion::{
     collapse_raw_elements, expand_markup_contexts, own_token, tokenize,
 };
@@ -20,13 +21,21 @@ pub struct ParsedToken {
     pub reserved_navigation: bool,
 }
 
-/// Parse authored HTML while retaining token errors and original byte spans.
-pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
+/// Parse HTML while retaining token errors and original byte spans.
+///
+/// Authored input drops unknown ignore-wrapper attributes and reports their names. Delivered
+/// input keeps every attribute.
+pub fn parse<'a>(input: impl Into<HtmlInput<'a>>) -> impl Iterator<Item = ParsedToken> + 'a {
+    let input = input.into();
+    let source = input.text();
+    let authored = matches!(input, HtmlInput::Authored(_));
     let tokens = expand_markup_contexts(
         source,
         collapse_raw_elements(source, tokenize(source, true)),
     );
-    tokens.into_iter().map(normalize)
+    tokens
+        .into_iter()
+        .map(move |token| normalize(token, authored))
 }
 
 /// Parse one attribute list through the same authored HTML boundary.
@@ -34,7 +43,7 @@ pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
     let synthetic = format!("<i {source}></i>");
     let mut tags = 0;
     let mut attributes = None;
-    for parsed in parse(&synthetic) {
+    for parsed in parse(DeliveredHtml::fragment(&synthetic)) {
         match parsed.token {
             Token::StartTag(tag)
                 if tags == 0 && tag.name.as_slice() == b"i" && !tag.self_closing =>
@@ -60,13 +69,13 @@ pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
     attributes.filter(|_| tags == 2)
 }
 
-fn normalize(mut token: html5gum::Token<usize>) -> ParsedToken {
+fn normalize(mut token: html5gum::Token<usize>, authored: bool) -> ParsedToken {
     let reserved_navigation = matches!(
         &token,
         html5gum::Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
     );
     let mut ignored_attributes = Vec::new();
-    if let html5gum::Token::StartTag(tag) = &mut token {
+    if authored && let html5gum::Token::StartTag(tag) = &mut token {
         let element = String::from_utf8_lossy(&tag.name);
         tag.attributes.retain(|name, _| {
             let name = String::from_utf8_lossy(name);

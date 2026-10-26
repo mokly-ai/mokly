@@ -10,6 +10,7 @@ use html5ever::tree_builder::TreeBuilder;
 use html5ever::{Attribute, QualName};
 use html5gum::emitters::callback::{Callback, CallbackEmitter, CallbackEvent};
 use html5gum::{Emitter, ForwardingEmitter, Span, State};
+use mokly_catalogue::html_input::{HtmlInput, HtmlShape};
 use mokly_model::catalogue::SourceLocation;
 
 use crate::html_arena::{Arena, Handle};
@@ -261,32 +262,20 @@ impl<'a> ForwardingEmitter for PipelineEmitter<'a> {
     }
 }
 
-pub(crate) fn authored_document(
-    source: &str,
-    path: &str,
-    base_line: usize,
-    base_column: usize,
-) -> Vec<Node> {
-    runner::run(source, false, true, Some(path), base_line, base_column)
-}
-
-pub(crate) fn delivered_document(source: &str) -> Vec<Node> {
-    runner::run(source, false, false, None, 1, 1)
-}
-
-pub(crate) fn authored_fragment(
-    source: &str,
-    path: &str,
-    base_line: usize,
-    base_column: usize,
-) -> Vec<Node> {
-    runner::run(source, true, true, Some(path), base_line, base_column)
-}
-
-pub(crate) fn authored_fragment_unlocated(source: &str) -> Vec<Node> {
-    runner::run(source, true, true, None, 1, 1)
-}
-
-pub(crate) fn delivered_fragment(source: &str) -> Vec<Node> {
-    runner::run(source, true, false, None, 1, 1)
+pub(crate) fn parse(input: HtmlInput<'_>) -> Vec<Node> {
+    let fragment = input.shape() == HtmlShape::Fragment;
+    match input {
+        HtmlInput::Authored(html) => {
+            let origin = html.origin();
+            runner::run(
+                html.text(),
+                fragment,
+                true,
+                origin.map(|origin| origin.path),
+                origin.map_or(1, |origin| origin.line),
+                origin.map_or(1, |origin| origin.column),
+            )
+        }
+        HtmlInput::Delivered(html) => runner::run(html.text(), fragment, false, None, 1, 1),
+    }
 }

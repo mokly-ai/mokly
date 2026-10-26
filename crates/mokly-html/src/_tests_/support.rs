@@ -14,6 +14,7 @@ use mokly_catalogue::definition_provider::{
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::input::EntryInput;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
+use mokly_catalogue::template_types::{SavedSlot, Template};
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::SourceLocation;
 use mokly_source_interface::tree::SourceTreeMock;
@@ -22,13 +23,38 @@ use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::html_arena::Arena;
-use crate::serialize;
 use crate::tree::{self, Node as HtmlNode};
+use crate::{parse, serialize};
 
 fn terminal_text(nodes: &[HtmlNode]) -> bool {
     tree::walk(nodes).any(|node| {
         matches!(node, HtmlNode::Element(element) if element.is_html() && element.name == "plaintext")
     })
+}
+
+/// Parse a test source as an authored template body, with source positions at `path`.
+pub(crate) fn authored(source: &str, path: &str, page: bool) -> Vec<HtmlNode> {
+    let template = Template {
+        source_path: path.into(),
+        source: source.into(),
+        body: source.into(),
+        body_offset: 0,
+        page,
+    };
+    parse::html(template.located_html())
+}
+
+/// A saved variant slot fragment with a placeholder front matter position.
+pub(crate) fn saved_slot(body: &str) -> SavedSlot {
+    SavedSlot {
+        body: body.into(),
+        source: SourceLocation {
+            path: "specs/panel.component.html".into(),
+            line: 1,
+            column: 1,
+            export: None,
+        },
+    }
 }
 
 pub(crate) fn legacy_authored_document(source: &str) -> Vec<HtmlNode> {

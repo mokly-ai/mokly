@@ -1,5 +1,6 @@
 //! Child references from an authored HTML or CSS resource.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_css::{paths, syntax};
 use mokly_html::parse;
 
@@ -24,12 +25,12 @@ pub(crate) fn urls(path: &str, bytes: &[u8]) -> Result<Vec<String>> {
         }
         Ok(urls)
     } else if path.ends_with(".html") || path.ends_with(".htm") {
-        Ok(
-            collect(&parse::delivered_document(&String::from_utf8_lossy(bytes)))
-                .into_iter()
-                .map(|reference| reference.url)
-                .collect(),
-        )
+        Ok(collect(&parse::html(DeliveredHtml::document(
+            &String::from_utf8_lossy(bytes),
+        )))
+        .into_iter()
+        .map(|reference| reference.url)
+        .collect())
     } else {
         Ok(Vec::new())
     }

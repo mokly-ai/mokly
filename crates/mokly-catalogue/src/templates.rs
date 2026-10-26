@@ -40,7 +40,7 @@ pub(crate) fn validate(
     };
     let mut document_tags = [0, 0, 0];
     let mut warned_attributes = BTreeSet::new();
-    for parsed in html_tokens::parse(&template.body) {
+    for parsed in html_tokens::parse(template.html()) {
         match parsed.token {
             Token::StartTag(tag) => {
                 for attribute in parsed.ignored_attributes {

@@ -22,7 +22,7 @@ pub(crate) fn html(
     registry: &ElementRegistry,
 ) -> Vec<Issue> {
     let mut issues = Vec::new();
-    for parsed in html_tokens::parse(&template.body) {
+    for parsed in html_tokens::parse(template.html()) {
         let Token::StartTag(tag) = parsed.token else {
             continue;
         };
