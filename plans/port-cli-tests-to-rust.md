@@ -136,15 +136,22 @@ Evidence: `.context/port-cli-tests-to-rust/base-tiers.md`.
 
 ## Milestone 7: JavaScript rendering through the sidecar
 
-- [ ] Port `sidecar_callback_exports`, `sidecar_callback_mutation`,
-      `sidecar_callback_pages`, `sidecar_callback_slots`,
-      `sidecar_postcss_async_loader`, `sidecar_postcss_write_evidence`,
-      `sidecar_stderr_exit`, `sidecar_stderr_shutdown`, `sidecar_timings`,
-      `sidecar_wrapper_validation`, `static_postcss_base_evidence`,
+Evidence: `.context/port-cli-tests-to-rust/sidecar.md`.
+
+- [x] Port `sidecar_callback_slots`, `sidecar_stderr_shutdown`,
+      `sidecar_timings`, `static_postcss_base_evidence`,
       `static_postcss_evidence`, `static_postcss_identity`,
       `static_postcss_ranges`, `static_fragment_timing`,
       `static_viewer_assets`, `serve_generation_release`,
       `mokly_serve_javascript`, and `browser_host_parent_death`.
+- [x] Port the static build half of `sidecar_callback_pages`, and keep its
+      direct sidecar half in Node.
+- [x] Keep `sidecar_callback_exports`, `sidecar_callback_mutation`,
+      `sidecar_stderr_exit`, `sidecar_wrapper_validation`,
+      `sidecar_postcss_async_loader`, and `sidecar_postcss_write_evidence`
+      in Node. They call the TypeScript sidecar directly, so they test
+      TypeScript code; the inventory counted them in error. The last two end
+      with one static build that only checks the exit code.
 
 ## Milestone 8: Controls and numbers
 

@@ -29,7 +29,37 @@ impl Reply {
 /// Send `GET path` to `origin`, such as `http://127.0.0.1:3000`, and read the reply.
 pub fn get(origin: &str, path: &str) -> Reply {
     let mut reader = request(origin, path);
-    let (status, headers) = head(&mut reader);
+    let (status, headers) = response_head(&mut reader);
+    let mut body = Vec::new();
+    if headers.get("transfer-encoding").map(String::as_str) == Some("chunked") {
+        chunked(&mut reader, &mut body);
+    } else {
+        reader.read_to_end(&mut body).unwrap();
+    }
+    Reply {
+        status,
+        headers,
+        body,
+    }
+}
+
+/// Send `POST path` with `headers` and `body` to `origin`, and read the reply.
+pub fn post(origin: &str, path: &str, headers: &[(&str, &str)], body: &[u8]) -> Reply {
+    let host = origin.trim_start_matches("http://").trim_end_matches('/');
+    let mut stream = TcpStream::connect(host).unwrap();
+    stream.set_read_timeout(Some(READ_TIMEOUT)).unwrap();
+    let mut head = format!(
+        "POST {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nContent-Length: {}\r\n",
+        body.len()
+    );
+    for (name, value) in headers {
+        head.push_str(&format!("{name}: {value}\r\n"));
+    }
+    head.push_str("\r\n");
+    stream.write_all(head.as_bytes()).unwrap();
+    stream.write_all(body).unwrap();
+    let mut reader = BufReader::new(stream);
+    let (status, headers) = response_head(&mut reader);
     let mut body = Vec::new();
     if headers.get("transfer-encoding").map(String::as_str) == Some("chunked") {
         chunked(&mut reader, &mut body);
@@ -52,7 +82,7 @@ impl Events {
     /// Open the event stream at `path` on `origin`.
     pub fn open(origin: &str, path: &str) -> Self {
         let mut reader = request(origin, path);
-        let (status, _) = head(&mut reader);
+        let (status, _) = response_head(&mut reader);
         assert_eq!(status, 200, "the event stream opens");
         Self { reader }
     }
@@ -77,7 +107,7 @@ fn request(origin: &str, path: &str) -> BufReader<TcpStream> {
     BufReader::new(stream)
 }
 
-fn head(reader: &mut BufReader<TcpStream>) -> (u16, BTreeMap<String, String>) {
+fn response_head(reader: &mut BufReader<TcpStream>) -> (u16, BTreeMap<String, String>) {
     let mut line = String::new();
     reader.read_line(&mut line).unwrap();
     let status = line

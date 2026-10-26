@@ -6,4 +6,4 @@ mod signals;
 
 pub use command::{Invocation, Mokly, PUBLISH_BUILD};
 pub use running::{BuildDirectory, ChildId, Finished, Running};
-pub use signals::{alive, signal, signal_group};
+pub use signals::{TreeProcess, alive, descendants, signal, signal_group};

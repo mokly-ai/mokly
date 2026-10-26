@@ -11,8 +11,6 @@ import {
   callbackEntry,
   describeCallbacks,
 } from "./helpers/sidecar_callbacks.js";
-import { build } from "./helpers/static_changes.js";
-import { timings } from "./helpers/static_timings.js";
 
 const document = (revision: string) =>
   `<!doctype html><html><head><title>Handbook</title></head><body><main>${revision}: call 1</main></body></html>`;
@@ -24,7 +22,7 @@ const helper = (
 }`;
 
 test(
-  "pages call an imported helper once per generation and bypass the configured renderer",
+  "pages call an imported helper once per generation",
   { timeout: 120_000 },
   async (context) => {
     const root = await callbackConsumer(
@@ -68,32 +66,5 @@ export const page=definePage({...metadata,path:'handbook',title:'Handbook',rende
       assert.equal(page.html, document(revision));
     }
     await sidecar.call("shutdown");
-
-    const ready = await build(
-      root,
-      ["--no-changes", "--strict", "--sidecars=1", "--debug-timings"],
-      "plain",
-      context.signal,
-    );
-    assert.deepEqual(
-      ready.index.pages.map((page) => page.path),
-      ["handbook"],
-    );
-    const directory = path.join(
-      ready.output,
-      "static/mokly-generated/handbook",
-    );
-    assert.deepEqual(await fs.readdir(directory), ["index.html"]);
-    const html = await fs.readFile(path.join(directory, "index.html"), "utf8");
-    assert.match(html, /Second: call 1/u);
-    const renders = timings(ready.stderr).filter(
-      (record) =>
-        record.role === "sidecar" &&
-        record.stage === "sidecar.render" &&
-        record.event === "end",
-    );
-    assert.equal(renders.length, 1);
-    assert.equal(renders[0]!.kind, "page");
-    assert.equal(renders[0]!.status, "ok");
   },
 );

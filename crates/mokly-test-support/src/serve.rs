@@ -66,6 +66,12 @@ impl Serve {
 
     /// Wait until `pattern` matches the text of `stream`, and return that text.
     pub fn wait(&mut self, stream: Stream, pattern: &Regex) -> String {
+        self.wait_after(stream, pattern, 0)
+    }
+
+    /// Wait until `pattern` matches the text of `stream` after byte `offset`,
+    /// and return the whole text.
+    pub fn wait_after(&mut self, stream: Stream, pattern: &Regex, offset: usize) -> String {
         let started = Instant::now();
         loop {
             let running = self.running.as_mut().unwrap();
@@ -73,7 +79,10 @@ impl Serve {
                 Stream::Stdout => running.stdout(),
                 Stream::Stderr => running.stderr(),
             };
-            if pattern.is_match(&text) {
+            if text
+                .get(offset..)
+                .is_some_and(|tail| pattern.is_match(tail))
+            {
                 return text;
             }
             assert!(
@@ -94,12 +103,23 @@ impl Serve {
         self.running.as_ref().unwrap().stderr()
     }
 
-    /// Stop Serve with SIGINT, and check that it exits with code zero.
-    pub fn close(mut self) {
+    /// Standard output so far.
+    pub fn stdout(&self) -> String {
+        self.running.as_ref().unwrap().stdout()
+    }
+
+    /// Whether Serve has exited.
+    pub fn has_exited(&mut self) -> bool {
+        self.running.as_mut().unwrap().has_exited()
+    }
+
+    /// Stop Serve with SIGINT, check that it exits with code zero, and return its output.
+    pub fn close(mut self) -> Finished {
         let running = self.running.take().unwrap();
         running.signal("INT");
         let finished = running.wait();
         assert_eq!(finished.code, Some(0), "{}", finished.stderr);
+        finished
     }
 }
 
