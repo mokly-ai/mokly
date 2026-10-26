@@ -55,12 +55,31 @@ fn unknown_ignore_attributes_warn_once_and_strict_preserves_output() {
 
 #[test]
 fn saved_slot_ignore_attributes_are_not_evaluated() {
+    check_saved_slot_attribute(
+        "extra='{{missing}}'",
+        "unknown attribute extra on <mokly-ignore> is ignored",
+    );
+}
+
+#[test]
+fn saved_slot_reserved_wrapper_attributes_are_not_evaluated() {
+    for name in ["data-mokly-link", "data-mokly-link-control-future"] {
+        check_saved_slot_attribute(
+            &format!("{name}='{{{{missing}}}}'"),
+            &format!("reserved navigation metadata {name} on <mokly-ignore> is rejected"),
+        );
+    }
+}
+
+fn check_saved_slot_attribute(attribute: &str, warning: &str) {
     let root = tempfile::tempdir().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();
     fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
     fs::write(
         root.path().join("specs/panel.component.html"),
-        "---\ntitle: Panel\nelement: ui-panel\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {}\n    slots:\n      children: \"<mokly-ignore id='saved' extra='{{missing}}'><b>Saved</b></mokly-ignore>\"\n---\n<slot></slot>",
+        format!(
+            "---\ntitle: Panel\nelement: ui-panel\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {{}}\n    slots:\n      children: \"<mokly-ignore id='saved' {attribute}><b>Saved</b></mokly-ignore>\"\n---\n<slot></slot>"
+        ),
     )
     .unwrap();
     fs::write(
@@ -74,8 +93,8 @@ fn saved_slot_ignore_attributes_are_not_evaluated() {
         .output()
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(output.status.success(), "{stderr}");
-    assert!(stderr.contains("unknown attribute extra on <mokly-ignore> is ignored"));
+    assert!(output.status.success(), "{attribute}: {stderr}");
+    assert!(stderr.contains(warning), "{stderr}");
 }
 
 #[test]

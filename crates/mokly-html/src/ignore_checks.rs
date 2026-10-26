@@ -1,18 +1,17 @@
-//! Validate authored ignore identities after parsing has filtered wrapper attributes.
+//! Filter ignore-wrapper attributes before composition evaluates them, and validate ignore ids.
+
+use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::Element;
 
+/// Keep only the wrapper attributes that the catalogue rule allows; other elements keep all attributes.
 pub(crate) fn filter_attributes(element: &mut Element) {
-    let allowed = match element.name.as_str() {
-        "mokly-ignore" => ["id", "material-key", "mokly-if", "mokly-viewport"].as_slice(),
-        "mokly-ignore-scope" => ["enabled", "mokly-if", "mokly-viewport"].as_slice(),
-        _ => return,
-    };
-    element
-        .attributes
-        .retain(|attribute| allowed.contains(&attribute.name.as_str()));
+    let Element {
+        name, attributes, ..
+    } = element;
+    attributes.retain(|attribute| ignore_attribute_allowed(name, &attribute.name));
 }
 
 pub(crate) fn id(value: &str) -> Result<()> {
