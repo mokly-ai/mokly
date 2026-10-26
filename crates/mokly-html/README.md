@@ -109,6 +109,9 @@ use mokly_html::{parse, serialize};
 
 let tree = parse::delivered_fragment("<main><p>Hello &amp; welcome</p></main>");
 assert_eq!(serialize::html(&tree), "<main><p>Hello &amp; welcome</p></main>");
+
+let authored = parse::authored_fragment("<main>Hello</main>", "screen.html");
+assert_eq!(serialize::html(&authored), "<main>Hello</main>");
 ```
 
 ## Development

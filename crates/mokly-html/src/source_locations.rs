@@ -11,9 +11,9 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
     source_checks::validate(&template.body, false)?;
     let (line, column) = body_location(template);
     let nodes = if template.page {
-        parse::authored_document(&template.body, &template.source_path, line, column)
+        parse::authored_document_at(&template.body, &template.source_path, line, column)
     } else {
-        parse::authored_fragment(&template.body, &template.source_path, line, column)
+        parse::authored_fragment_at(&template.body, &template.source_path, line, column)
     };
     Ok(nodes)
 }

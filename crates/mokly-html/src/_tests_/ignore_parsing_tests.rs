@@ -39,12 +39,12 @@ fn check_authored(parser: fn(&str, &str, usize, usize) -> Vec<Node>) {
 
 #[test]
 fn authored_fragments_filter_unknown_ignore_attributes() {
-    check_authored(parse::authored_fragment);
+    check_authored(parse::authored_fragment_at);
 }
 
 #[test]
 fn authored_documents_filter_unknown_ignore_attributes() {
-    check_authored(parse::authored_document);
+    check_authored(parse::authored_document_at);
 }
 
 #[test]

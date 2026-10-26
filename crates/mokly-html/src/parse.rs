@@ -145,7 +145,12 @@ fn legacy_fragment_with_mode(source: &str, authored: bool) -> Vec<Node> {
 }
 
 /// Parse a complete authored page and attach source locations to its elements.
-pub(crate) fn authored_document(
+pub fn authored_document(source: &str, path: &str) -> Vec<Node> {
+    authored_document_at(source, path, 1, 1)
+}
+
+/// Parse an authored page at a source body offset.
+pub(crate) fn authored_document_at(
     source: &str,
     path: &str,
     base_line: usize,
@@ -155,7 +160,12 @@ pub(crate) fn authored_document(
 }
 
 /// Parse an authored HTML fragment and attach source locations to its elements.
-pub(crate) fn authored_fragment(
+pub fn authored_fragment(source: &str, path: &str) -> Vec<Node> {
+    authored_fragment_at(source, path, 1, 1)
+}
+
+/// Parse an authored fragment at a source body offset.
+pub(crate) fn authored_fragment_at(
     source: &str,
     path: &str,
     base_line: usize,
