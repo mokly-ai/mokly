@@ -5409,8 +5409,10 @@ check passes on this commit.
   - User decision 111 (2026-10-21): C, ported in `f4558272`. The section
     reader takes each statement's start and kind from cssparser's rule
     parsers, so the stylesheet skips `<!--` and `-->` before a statement
-    for all three scanners. Differential tests cover the 51 repository
-    stylesheets and 25 generated cases. Evidence: `.context/port-111c/`.
+    for all three scanners. Differential tests compare the old and the new
+    reader on the 51 repository stylesheets and five generated ones, and
+    check 40 HTML comment prefix cases exactly. Evidence:
+    `.context/port-111c/`.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution
@@ -6183,7 +6185,7 @@ does not ask the user before the merge.
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
 
-- [ ] Decide the open findings of the post-push review of
+- [x] Decide the open findings of the post-push review of
       `rebuild/port-111c`, the port of user decision 111 C (report:
       `.context/port-111c/review/review-1-full.md`). Finding 1 (Low, product
       bug: the probe read no qualified rules in rule lists and keyframes
@@ -6198,6 +6200,18 @@ does not ask the user before the merge.
   - Finding 4: the prefix rule record can replace the result. Severity Low,
     effort Small. Recommended: B, document the `a{}` prefix and discard a
     record that starts inside it.
+  - User decisions (2026-10-26): finding 2 A, finding 3 B, and finding 4 B,
+    done in the same commit as this record. The protocol page and the crate
+    README name the `;` boundary, and the follow-up below keeps it. The
+    regression test covers a later statement, and the differential test
+    checks each HTML comment prefix exactly. The probe ignores a record of
+    its `a{}` prefix.
+
+- [ ] Follow-up (Low, from finding 2 of the `rebuild/port-111c` review): in a
+      rule list, the CSS Modules section reader ends a statement at `;`, but
+      cssparser ends a style rule or a keyframe only at its `{}` block. The
+      protocol page records the boundary. Aligning it, option B of the
+      finding, changes diagnostics and touches user item 113.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate

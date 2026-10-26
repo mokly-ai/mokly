@@ -185,26 +185,35 @@ fn nested_group_rules_scope_animation_names_like_their_rule() {
     assert_eq!(css, expected);
 }
 
-/// cssparser skips top-level HTML comment tokens before reading a statement.
+/// cssparser skips top-level HTML comment tokens before reading a statement,
+/// before the first statement and before a later one.
 #[test]
 fn top_level_html_comments_keep_at_rule_kinds() {
     let path = "ui/comment.module.css";
-    let error = scope(path, "<!-- @value theme: red;").unwrap_err();
-    assert!(
-        error.to_string().contains("@value is unsupported"),
-        "{error}"
-    );
+    for (source, position) in [
+        ("<!-- @value theme: red;", "1:6"),
+        (".a{}<!-- @value theme: red;", "1:10"),
+    ] {
+        let error = scope(path, source).unwrap_err().to_string();
+        let expected = format!("@value is unsupported in {path}:{position};");
+        assert!(error.contains(&expected), "{error}");
+    }
 
     let spin = scoped_name(path, "spin");
     let class = scoped_name(path, "card");
-    let source = "-->@keyframes spin{to{opacity:0}}.card{animation:spin 1s}";
-    let (css, exports) = scope(path, source).unwrap();
-    assert_eq!(
-        css,
-        format!("-->@keyframes {spin}{{to{{opacity:0}}}}.{class}{{animation:{spin} 1s}}")
-    );
-    assert_eq!(exports["spin"], spin);
-    assert_eq!(exports["card"], class);
+    for (lead, scoped_lead) in [("", String::new()), (".card{}", format!(".{class}{{}}"))] {
+        let source =
+            format!("{lead}-->@keyframes spin{{to{{opacity:0}}}}.card{{animation:spin 1s}}");
+        let (css, exports) = scope(path, &source).unwrap();
+        assert_eq!(
+            css,
+            format!(
+                "{scoped_lead}-->@keyframes {spin}{{to{{opacity:0}}}}.{class}{{animation:{spin} 1s}}"
+            )
+        );
+        assert_eq!(exports["spin"], spin);
+        assert_eq!(exports["card"], class);
+    }
 }
 
 #[test]

@@ -157,29 +157,32 @@ fn trivia(text: &str) -> bool {
         .all(|node| matches!(node.token, Token::WhiteSpace(_) | Token::Comment(_)))
 }
 
+/// The first statement of each generated stylesheet.
+const STATEMENTS: [&str; 5] = [
+    "@value x: red;",
+    "@keyframes spin{to{opacity:0}}",
+    "@media all{.a{color:red}}",
+    ".a{color:red}",
+    "@font-face{src:url(font.woff2)}",
+];
+
+/// The second statement of each generated stylesheet.
+const SECOND: &str = ".b{animation:spin 1s}";
+
+/// HTML comment tokens that cssparser skips before a stylesheet statement,
+/// alone and with whitespace and comments around them.
+const HTML_COMMENT_PREFIXES: [&str; 4] = ["<!--", "-->", " /* note */ <!--", "\n-->\n"];
+
 fn generated_sources() -> Vec<String> {
-    let prefixes = ["", "<!--", "-->", " /* note */ <!--", "\n-->\n"];
-    let statements = [
-        "@value x: red;",
-        "@keyframes spin{to{opacity:0}}",
-        "@media all{.a{color:red}}",
-        ".a{color:red}",
-        "@font-face{src:url(font.woff2)}",
-    ];
-    prefixes
+    STATEMENTS
         .iter()
-        .flat_map(|prefix| {
-            statements
-                .iter()
-                .map(move |statement| format!("{prefix}{statement}.b{{animation:spin 1s}}"))
-        })
+        .map(|statement| format!("{statement}{SECOND}"))
         .collect()
 }
 
 /// Compare the legacy and parser-backed section walks across repository CSS
-/// and generated edge cases. Every difference must have a parser explanation:
-/// a start that moves over whitespace and comments only, or an HTML comment
-/// token before the statement.
+/// and generated edge cases. The only difference allowed is a start that
+/// moves over whitespace and comments.
 #[test]
 fn parser_differential_covers_repository_stylesheets_and_generated_cases() {
     let mut sources = fixtures_1::REPOSITORY_STYLESHEETS
@@ -206,18 +209,8 @@ fn parser_differential_covers_repository_stylesheets_and_generated_cases() {
             let start = right.start.min(source.len());
             let sample = source[start..].chars().take(32).collect::<String>();
             let skipped = &source[left.start.min(start)..left.start.max(start)];
-            let reason = if left.statement == right.statement
-                && left.block == right.block
-                && trivia(skipped)
-            {
-                "cssparser skips leading whitespace and comments before the statement"
-            } else if source[..start].contains("<!--") || source[..start].contains("-->") {
-                "cssparser skips an HTML comment token before the statement"
-            } else {
-                "no approved parser difference"
-            };
-            assert_ne!(
-                reason, "no approved parser difference",
+            assert!(
+                left.statement == right.statement && left.block == right.block && trivia(skipped),
                 "unexplained scanner difference in {name} at {index}: old={left:?}, new={right:?}, sample={sample:?}"
             );
         }
@@ -226,5 +219,33 @@ fn parser_differential_covers_repository_stylesheets_and_generated_cases() {
             new.len(),
             "scanner section count differs in {name}"
         );
+    }
+}
+
+/// An HTML comment prefix before the first or the second stylesheet statement
+/// changes the walk only by moving each start at or after it by its length.
+#[test]
+fn html_comment_prefixes_only_move_the_starts_after_them() {
+    for source in generated_sources() {
+        let expected = scan_new(&source);
+        for prefix in HTML_COMMENT_PREFIXES {
+            for at in [0, source.len() - SECOND.len()] {
+                let prefixed = format!("{}{prefix}{}", &source[..at], &source[at..]);
+                let moved = expected
+                    .iter()
+                    .map(|observed| Observed {
+                        start: observed.start
+                            + if observed.start >= at {
+                                prefix.len()
+                            } else {
+                                0
+                            },
+                        statement: observed.statement.clone(),
+                        block: observed.block,
+                    })
+                    .collect::<Vec<_>>();
+                assert_eq!(scan_new(&prefixed), moved, "{prefixed:?}");
+            }
+        }
     }
 }

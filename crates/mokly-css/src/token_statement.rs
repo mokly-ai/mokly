@@ -16,7 +16,12 @@ pub(crate) struct Parsed {
     pub(crate) statement: Statement,
 }
 
-/// Read one section through the parser for its block grammar.
+/// Read one section through the parser for its block grammar. `first` marks
+/// the first statement of the stylesheet. `block` marks a section that a
+/// `{}` block ends, and the parser reads an empty block in its place.
+/// cssparser skips a `@charset` only as the first rule of a stylesheet, so a
+/// later stylesheet statement is read after the rule `a{}`. A record that
+/// starts inside that prefix is never the result.
 pub(crate) fn parse(source: &str, grammar: Grammar, first: bool, block: bool) -> Option<Parsed> {
     let mut source = if block {
         let mut block_source = String::with_capacity(source.len() + 2);
@@ -35,10 +40,12 @@ pub(crate) fn parse(source: &str, grammar: Grammar, first: bool, block: bool) ->
     } else {
         (false, 0)
     };
-    parse_with_prefix(&source, grammar, skip_first).map(|mut parsed| {
-        parsed.start = parsed.start.saturating_sub(prefix);
-        parsed
-    })
+    parse_with_prefix(&source, grammar, skip_first)
+        .filter(|parsed| parsed.start >= prefix)
+        .map(|mut parsed| {
+            parsed.start -= prefix;
+            parsed
+        })
 }
 
 fn parse_with_prefix(source: &str, grammar: Grammar, skip_first: bool) -> Option<Parsed> {
@@ -201,3 +208,7 @@ impl<'i> RuleBodyItemParser<'i, Parsed, ()> for Probe {
         true
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/token_statement_tests.rs"]
+mod token_statement_tests;

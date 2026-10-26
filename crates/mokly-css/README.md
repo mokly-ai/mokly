@@ -53,9 +53,12 @@ anything beyond local names and the module scope/composition syntax.
 
 The renamer, the module check, and the token check share one statement
 grammar. The section reader takes each statement's start and kind from
-cssparser's own rule parsers, so all three scanners agree with `lightningcss`.
-It reads one block level at a time and keeps nested work on the heap. The
-grammar of a block depends on its statement and on the block around it:
+cssparser's own rule parsers, so all three scanners agree with `lightningcss`
+on them. One boundary differs: in a rule list or a lenient rule list, a `;`
+also ends a statement for the section reader, but cssparser ends a style rule
+or a keyframe only at its `{}` block. The section reader reads one block level
+at a time and keeps nested work on the heap. The grammar of a block depends on
+its statement and on the block around it:
 
 - The stylesheet is a rule list. Before each statement of the stylesheet, the
   section reader skips the HTML comment tokens `<!--` and `-->`, as cssparser

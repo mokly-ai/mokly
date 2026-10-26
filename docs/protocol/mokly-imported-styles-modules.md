@@ -62,8 +62,15 @@ never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
 At every nesting level, the scoper reads each statement with the same start
-and kind as the bundler. Before a stylesheet statement, both skip the HTML
-comment tokens `<!--` and `-->`.
+and kind as the bundler, with one exception. Before a stylesheet statement,
+both skip the HTML comment tokens `<!--` and `-->`. The exception is a `;` in
+a rule list: the stylesheet, a keyframes block, or a conditional, layer,
+scope, or starting-style block outside a style rule. There, a `;` also ends a
+statement for the scoper, but the bundler ends a style rule or a keyframe only
+at its `{}` block. So the text after such a `;` scopes as a statement of its
+own, and an `@value` there fails. Aligning this boundary with the bundler was
+not chosen: no realistic stylesheet reaches it, and the change would alter the
+diagnostics of stylesheets that fail today.
 
 ### Composition And Exports
 
