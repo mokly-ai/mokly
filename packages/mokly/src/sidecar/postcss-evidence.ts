@@ -25,51 +25,55 @@ const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
 const moduleUrlObservers = new Set<(url: string) => void>();
-const observerKey = Symbol.for("mokly.postcss.readEvidence");
-const generationKey = Symbol.for("mokly.postcss.readEvidenceGeneration");
-const generationInitKey = Symbol.for(
-  "mokly.postcss.readEvidenceGenerationInit",
-);
+const ledgerKey = Symbol.for("mokly.postcss.ledger");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
-type GenerationReset = (generation: string) => void;
-type GenerationInit = (generation: string) => void;
 
-function isGenerationReset(value: unknown): value is GenerationReset {
-  return typeof value === "function";
+/** The operations that the CommonJS preload shares with the ESM worker. */
+interface Ledger {
+  readEvidence: Observer;
+  resetGeneration: (generation: string) => void;
+  initializeGeneration: (generation: string) => void;
 }
 
-function isGenerationInit(value: unknown): value is GenerationInit {
-  return typeof value === "function";
+const ledgerMembers: readonly (keyof Ledger)[] = [
+  "readEvidence",
+  "resetGeneration",
+  "initializeGeneration",
+];
+const ledger: Readonly<Ledger> = Object.freeze({
+  readEvidence,
+  resetGeneration: resetReadEvidence,
+  initializeGeneration: markGeneration,
+});
+
+function isLedger(value: unknown): value is Ledger {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    ledgerMembers.every(
+      (name) => typeof Reflect.get(value, name) === "function",
+    )
+  );
 }
 
-function isObserver(value: unknown): value is Observer {
-  return typeof value === "function";
+/** The preload's ledger, when this copy runs beside the CommonJS preload. */
+function sharedLedger(): Ledger | undefined {
+  const value: unknown = Reflect.get(globalThis, ledgerKey);
+  return isLedger(value) && value !== ledger ? value : undefined;
 }
 
 /** A CommonJS preload and the ESM worker share one installed observer. */
 export function preloadedObserver(): Observer | undefined {
-  const value: unknown = Reflect.get(globalThis, observerKey);
-  return isObserver(value) && value !== readEvidence ? value : undefined;
+  return sharedLedger()?.readEvidence;
 }
 
 export function shareReadEvidence(): void {
-  Object.defineProperty(globalThis, observerKey, { value: readEvidence });
-  Object.defineProperty(globalThis, generationKey, {
-    value: resetReadEvidence,
-  });
-  Object.defineProperty(globalThis, generationInitKey, {
-    value: initializeReadEvidenceGeneration,
-  });
+  Object.defineProperty(globalThis, ledgerKey, { value: ledger });
 }
 
 /** Keep only witnesses observed after the current generation starts. */
 export function beginReadEvidenceGeneration(generation: string): void {
-  const value: unknown = Reflect.get(globalThis, generationKey);
-  if (isGenerationReset(value)) {
-    value(generation);
-    return;
-  }
-  resetReadEvidence(generation);
+  (sharedLedger() ?? ledger).resetGeneration(generation);
 }
 
 function resetReadEvidence(generation: string): void {
@@ -83,11 +87,10 @@ function resetReadEvidence(generation: string): void {
 
 /** Mark the worker's first generation without dropping preload observations. */
 export function initializeReadEvidenceGeneration(generation: string): void {
-  const value: unknown = Reflect.get(globalThis, generationInitKey);
-  if (isGenerationInit(value) && value !== initializeReadEvidenceGeneration) {
-    value(generation);
-    return;
-  }
+  (sharedLedger() ?? ledger).initializeGeneration(generation);
+}
+
+function markGeneration(generation: string): void {
   activeGeneration = generation;
 }
 
