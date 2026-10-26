@@ -11,7 +11,7 @@
 Mokly turns your product screens into a searchable catalogue. Write a screen
 as an HTML file, a React component, or a Storybook story. Mokly renders each
 screen at mobile and desktop sizes, in each color scheme that you configure,
-and shows which screens changed between two Git commits.
+and shows which screens changed between your branch and its base.
 
 `@mokly/mokly` gives you the `mokly` command and the authoring API.
 
@@ -93,12 +93,12 @@ export default defineScreen({
 
 ## Commands
 
-| Command         | What it does                                                   |
-| --------------- | -------------------------------------------------------------- |
-| `mokly serve`   | Serve the catalogue and update it as you edit                  |
-| `mokly build`   | Check the catalogue and write a static site to `mokly-static/` |
-| `mokly publish` | Build the catalogue and upload it to a catalogue service       |
-| `mokly --help`  | Show every command and option                                  |
+| Command         | What it does                                                        |
+| --------------- | ------------------------------------------------------------------- |
+| `mokly serve`   | Serve the catalogue and update it as you edit                       |
+| `mokly build`   | Check the catalogue and write a static site to `mokly-static/`      |
+| `mokly publish` | Build the catalogue and upload it to a catalogue service            |
+| `mokly --help`  | List the commands. Add `--help` after a command to see its options. |
 
 ## Documentation
 
