@@ -124,13 +124,15 @@ Evidence: `.context/port-cli-tests-to-rust/recovery.md`.
 
 ## Milestone 6: Base dependency tiers
 
-- [ ] Port `static_base_classic_paths`, `static_base_manager_mirror`,
+Evidence: `.context/port-cli-tests-to-rust/base-tiers.md`.
+
+- [x] Port `static_base_classic_paths`, `static_base_manager_mirror`,
       `static_base_managers`, `static_base_registry`, `static_base_secrets`,
       `static_cold_base_tiers`, and `static_dependency_timing`.
-- [ ] Keep the hosted CI defaults coverage of `static_base_manager_ci`:
+- [x] Keep the hosted CI defaults coverage of `static_base_manager_ci`:
       run the ported manager and tier cases with `CI=true` and
       `GITHUB_ACTIONS=true`.
-- [ ] Update the test notes in the mokly-compare README.
+- [x] Update the test notes in the mokly-compare README.
 
 ## Milestone 7: JavaScript rendering through the sidecar
 

@@ -267,17 +267,17 @@ cargo clippy -p mokly-compare --all-targets -- -D warnings
 ```
 
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
-isolated Git repositories, OS locks, and local packages. The Node tests in
-`tests/static_base_managers.test.ts` run cold builds with pnpm and both Yarn
-families from local archives. `tests/static_base_registry.test.ts` runs one
-cold build per manager from a local registry that requires the user token.
-Pinned test CLIs come from development dependencies, and no test uses the
-internet. Tests cover script suppression, timing tiers, registry access,
-comparison output, cache reuse, executable selection, and fallback reasons.
-Fixture setup updates pnpm lockfiles explicitly, including after a manifest
-change. `tests/static_base_manager_ci.test.ts` runs the four base-manager
-files and `tests/static_cold_base_tiers.test.ts` with `CI=true` and
-`GITHUB_ACTIONS=true`. This coverage runs in local and Testbox gates.
+isolated Git repositories, OS locks, and local packages. The `mokly-cli` test
+binary `base_tiers_tests` runs cold builds with pnpm 10, 11, and 12 and both
+Yarn families from local archives, and one cold build per manager from a local
+registry that requires the user token. Pinned test CLIs come from development
+dependencies, and no test uses the internet. Tests cover script suppression,
+timing tiers, registry access, comparison output, cache reuse, executable
+selection, and fallback reasons. Fixture setup updates pnpm lockfiles
+explicitly, including after a manifest change. The manager, registry, mirror,
+nested Yarn Classic, and cold-tier cases run twice: once without `CI` and
+`GITHUB_ACTIONS`, and once with both set to `true`, the defaults of a hosted
+runner. This coverage runs on Unix in local, Testbox, and CI gates.
 
 Registry rule ownership stays separate from delivery style groups. Both the
 private capture codec and the head comparison retain these rule records.

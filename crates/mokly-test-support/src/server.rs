@@ -184,7 +184,9 @@ fn read(stream: &mut TcpStream) -> Request {
         let (name, value) = line.trim_end().split_once(':').unwrap();
         headers.insert(name.to_ascii_lowercase(), value.trim().to_owned());
     }
-    let length = headers["content-length"].parse::<usize>().unwrap();
+    let length = headers
+        .get("content-length")
+        .map_or(0, |length| length.parse::<usize>().unwrap());
     assert!(length <= MAX_BODY);
     let mut body = vec![0; length];
     reader.read_exact(&mut body).unwrap();

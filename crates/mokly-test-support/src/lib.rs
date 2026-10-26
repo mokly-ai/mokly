@@ -10,6 +10,7 @@ pub mod git;
 pub mod http;
 pub mod identity;
 pub mod inventory;
+pub mod npm;
 pub mod process;
 pub mod publication;
 pub mod readers;

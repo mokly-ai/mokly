@@ -2410,6 +2410,7 @@ dependencies = [
 name = "mokly-test-support"
 version = "0.14.0"
 dependencies = [
+ "base64",
  "chrono",
  "flate2",
  "mokly-model",

@@ -8,11 +8,12 @@ tests under `tests/` cover TypeScript code and Node tooling only. Each
 end-to-end area has one test binary with a module folder, and uses the shared
 fixtures of [`mokly-test-support`](../../mokly-test-support/README.md):
 
-| Binary                 | Area                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------- |
-| `publication_tests`    | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup.          |
-| `changes_output_tests` | Changes classification, comparison contents, evidence, timings, and Serve parity.             |
-| `recovery_tests`       | Install and rollback failures, signals, cancellation, input boundaries, and static resources. |
+| Binary                 | Area                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------ |
+| `publication_tests`    | Publish against the fake receiver: retries, re-plans, deltas, cancellation, cleanup.             |
+| `changes_output_tests` | Changes classification, comparison contents, evidence, timings, and Serve parity.                |
+| `recovery_tests`       | Install and rollback failures, signals, cancellation, input boundaries, and static resources.    |
+| `base_tiers_tests`     | Base dependency tiers with real package managers, a local registry, mirrors, and secrets (Unix). |
 
 Tests that render JavaScript entries need the built viewer and `@mokly/mokly`
 packages: run `npm run build` before a raw `cargo test`.
