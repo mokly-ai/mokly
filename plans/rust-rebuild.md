@@ -5573,6 +5573,18 @@ check passes on this commit.
   - User decision (2026-10-26): B, applied in `bb95b90b`. The preload shares
     one frozen ledger object under the key `mokly.postcss.ledger`.
 
+- [ ] Resolve 117 C port review 5 finding 1 (test): no test fails when the
+      worker's shared generation reset breaks. The host keys each worker by
+      context, so the reset never changes the generation in the product.
+      Severity Low, test, effort Small for B. Options: A, a test in which a
+      child loads the built preload and the evidence module and starts a
+      second generation, Small; B, A as a table over every ledger member
+      that fails when a member has no case, Small; C, a comment that the
+      call guards a context change that the host does not make, Small.
+      Removing the reset deletes functionality on main, and mutation tests
+      in the gate add a gate, so both are blocked. Recommended: B. No option
+      is applied.
+
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
       the Details end with the terminal line "No changes to this screen.",
