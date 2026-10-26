@@ -194,13 +194,37 @@ Evidence: `.context/port-cli-tests-to-rust/harness.md`.
 - [x] Record the Rust test duration of `mokly-cli` before and after the port
       under `.context/port-cli-tests-to-rust/`.
   - Evidence: `.context/port-cli-tests-to-rust/durations.md`.
-- [ ] Run a manual CI run of the branch and check that both native jobs pass
+- [x] Run a manual CI run of the branch and check that both native jobs pass
       within their limits.
+  - Evidence: `.context/port-cli-tests-to-rust/ci-runs.md`.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+  - Blocked: the remote Repository suite needs more than the 30-minute
+    Testbox job limit. Every suite passed on its own. Open decision for the
+    user. Evidence: `.context/port-cli-tests-to-rust/ci-runs.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Reports: `.context/port-cli-tests-to-rust/review-1.md` and
+    `review-2.md`. Fixed: review 1 findings 1 to 12, review 2 finding 1.
+  - Review 2, 2. Recovery snapshots still ignore three report edges.
+    Severity Low, effort Small. Recommended: A, extend the final newline
+    check into one edge check.
+  - Review 1, 13. The plan does not record the Linux Node floor and Windows
+    base-tier gaps. Severity Low, effort Small. Recommended: A, record both.
+  - Review 1, 14. The design links protocol doc names Serve. Severity Low,
+    effort Small. Recommended: A, update the doc and record the decision.
+  - Review 1, 15. Ported Changes tests write to the user cache. Severity
+    Low, effort Medium. Recommended: B, isolate the cache in
+    `Mokly::command`.
+  - Follow-up: run the Rust independent reader over the 57 ownership
+    fixtures. Effort Small. Covers review 1 finding 8. Previous examples:
+    `tests/installed_receiver_fixtures.test.ts`.
+  - `tests/helpers/process_state.ts`: only its own test uses it, on `main`
+    too. Separate branch.
+  - `crates/mokly-cli/tests/sidecar_lifecycle_tests.rs`: the direct case
+    sets no `MOKLY_VIEWER_DIST`, so it fails when the target folder is
+    outside the checkout. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
