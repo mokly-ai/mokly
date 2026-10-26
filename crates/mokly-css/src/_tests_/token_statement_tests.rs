@@ -24,7 +24,7 @@ fn only_the_first_stylesheet_statement_skips_a_charset() {
 /// never the result, so the section reader classifies the statement by its
 /// tokens.
 #[test]
-fn a_dropped_later_statement_reads_no_statement() {
+fn a_later_statement_without_a_parsed_prelude_reads_no_statement() {
     assert_eq!(read("--x:1", false), None);
     assert_eq!(read("<!--", false), None);
 }

@@ -6216,7 +6216,9 @@ does not ask the user before the merge.
 - [ ] Decide finding 1 of the review of the decisions above on
       `rebuild/port-111c` (report: `.context/port-111c/review/review-3.md`).
       Finding 2 (Low: a probe test name contradicted its third case) is
-      fixed with option B in the same commit as this record.
+      fixed with option B in `920754fd`. Its re-review
+      (`.context/port-111c/review/review-4.md`) found the old test name
+      still wrong, fixed with option A in the same commit as this line.
   - Finding 1: the parity sentence misses two other differences, a
     declarations-block statement that ends at its first `{}` block and an
     `@-moz-document` block outside a style rule. Severity Low, effort
