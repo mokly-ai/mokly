@@ -6206,6 +6206,19 @@ does not ask the user before the merge.
       with the reviewed commit; B add a containment check, a new rejection.
       Recommended: A.
 
+- [x] Resolve user item 202 (test): the nightly Design Attribution Matrix
+      failed on `main` (schedule run 40295914111 on `c84be6c4`) with
+      compile error E0061. `crates/mokly-cli/tests/design_support/native.rs`
+      passed seven arguments to `changes_runtime::service`, which takes
+      eight since #199. The repository suite linted the workspace without
+      the `design-matrix` feature, so no gate compiled the target.
+  - User decision 202 (2026-10-26): B. The design support passes
+    `common.base_install_scripts_override()` (`439f2601`), and the
+    repository suite also runs
+    `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`
+    (`21876714`). Branch `rebuild/design-matrix-compile`. The full matrix
+    passed on the branch in run 40312840294.
+
 - [x] Resolve user item 205 (release): the rerun of the 0.16.0 publish job
       published `@mokly/native-linux-x64-gnu@0.16.0` and
       `@mokly/native-linux-arm64-gnu@0.16.0`, then stopped. The registry
