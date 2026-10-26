@@ -7,7 +7,7 @@ Continuation of the [public catalogue contract](./mokly-catalogue.md).
 ## Projection And Privacy
 
 The catalogue model lives in process memory. Serve and `build` project it
-into two public forms through one explicit allowlist: the catalogue index v7
+into two public forms through one explicit allowlist: the catalogue index v8
 and one entry detail v2 per entry. The
 [shell delivery contract](./mokly-shell-delivery.md) owns their fields and
 routes, and the [catalogue contract](./mokly-catalogue.md) owns the record
@@ -18,9 +18,11 @@ never spreads a model record, an entry, or an internal evidence object into
 public JSON.
 
 The index carries every current entry record with its document keys, the
-tree, the removed records, `changesStatus`, and `comparisonUrl`, and no
-per-view usage or resource evidence. The detail carries one entry's per-view
-usage, resource evidence, and workspace lists. Serve projects both from one model
+tree, the removed records, `changesStatus`, `baseCommit`, and
+`comparisonUrl`, and no per-view usage or resource evidence. The detail
+carries one entry's per-view usage, review states, ignore ids, resource
+evidence, its base side's address, and its workspace lists. No third public
+form exists: the review result v8 stays in memory. Serve projects both from one model
 state in one publication, and `build` writes both for every entry.
 
 - Screens and components emit one view per effective viewport and colour
@@ -96,11 +98,11 @@ absence. A removed entry's detail is projected into the comparison generation
 from the base render; a removed view whose base usage is not available is
 `unavailable`, never an empty ready list.
 
-`comparisonUrl` is `null` or
-`mokly-viewer/diffs/generations/<generation>/review.json`, pinned to the
-generation that produced this state's evidence. Snapshots resolve against
-that response URL. `null` forbids a fallback request to
-`/mokly-viewer/diffs/review.json`. Comparison files load only on selection.
+`comparisonUrl` is `null` or `mokly-viewer/diffs/generations/<generation>/`,
+the root of the generation that produced this state's evidence. Removed
+details, previews and snapshots resolve against that root. `null` forbids a
+fallback request to `/mokly-viewer/diffs/selection`. Comparison files load
+only on selection.
 
 ## Serialization, Identity And Versions
 

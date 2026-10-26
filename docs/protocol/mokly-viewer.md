@@ -38,7 +38,7 @@ interface ViewerSelection {
   search: string;
   tags: readonly string[];
 }
-/** The catalogue index v7 as an object, or its absolute HTTP(S) URL. */
+/** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 type IndexSource = CatalogueReadModel | string | URL;
 type DetailResult = EntryDetailV2 | string | URL;
 /** One entry detail v2, or its URL; a removed entry names its snapshot. */
@@ -118,12 +118,12 @@ the index publishes, and absent otherwise. The event has no `route`,
 `viewHref(path)` of the [artifact path contract](./mokly-artifact-paths.md)
 for its shell URL.
 
-`index` is the catalogue index v7. For an object source, `baseUrl` is
+`index` is the catalogue index v8. For an object source, `baseUrl` is
 required and supplies the HTTP(S) artifact origin root. A URL or string source
 must be an absolute HTTP(S) URL; its validated final response URL establishes
 that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
-[read model v7](./mokly-catalogue.md) before it renders.
+[read model v8](./mokly-catalogue.md) before it renders.
 
 `detail` supplies the entry detail v2 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a

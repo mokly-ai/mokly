@@ -33,10 +33,13 @@ change snapshot, and writes no review file:
 - Catalogue index v8 adds `baseCommit`, present exactly while Changes is
   ready. Its `comparisonUrl` names the root of the comparison generation,
   `mokly-viewer/diffs/generations/<generation>/`, not a file.
-- Entry detail v3 gives each screen and component view its `state` and its
-  `ignoredIds` beside `resourceEvidence`, under the same presence rule. A
-  ready current screen or component with a base side also carries `before`,
-  the base side's path, title, saved props, and supplied slots.
+- Entry detail v2 gains optional fields: each screen and component view
+  carries its `state` and its `ignoredIds` beside `resourceEvidence`, under
+  the same presence rule, and a ready current screen or component with a base
+  side carries `before`, the base side's path, title, saved props, and
+  supplied slots. The serialization contract treats optional fields as
+  additive, so the detail keeps version 2. The index changes the meaning of
+  `comparisonUrl`, so it needs version 8.
 - A comparison generation holds the removed entries' details, the removed
   page and document previews, and the snapshots with their resources.
 - Serve replaces `/mokly-viewer/diffs/review.json?path=` with
@@ -74,24 +77,26 @@ Contract owners:
 Write the requirements and the decision of the change into the protocol
 docs, so that the code milestones and the Mokly Cloud work have one contract.
 
-- [ ] Rewrite the review result section of `mokly-comparison.md` as the
+- [x] Rewrite the review result section of `mokly-comparison.md` as the
       in-memory classification and name where its public facts appear.
       Align the component comparison records and review pages.
-- [ ] State index v8 in `mokly-catalogue.md` and entry detail v3 in
-      `mokly-shell-delivery.md`, with the route table.
-- [ ] State the generation contents, the selection endpoint, the generation
+- [x] State index v8 in `mokly-catalogue.md` and the new entry detail
+      fields in `mokly-shell-delivery.md`, with the route table.
+- [x] State the generation contents, the selection endpoint, the generation
       root, and renewal in the comparison serving, selected comparison,
       on-demand, runtime, Changes serving, and viewer namespace pages.
-- [ ] State static comparisons without the review file in the export,
+- [x] State static comparisons without the review file in the export,
       export delivery, export browser, catalogue delivery, serialization,
       artifact path, removed preview, and comparison pane pages.
-- [ ] State upload envelope v3 and the Plan archive with the index in
+- [x] State upload envelope v3 and the Plan archive with the index in
       `mokly-upload.md`, `mokly-upload-exchange.md`, and the upload guide.
-- [ ] Update `mokly-format-versions.md`, including what Mokly Cloud
+- [x] Update `mokly-format-versions.md`, including what Mokly Cloud
       implements.
-- [ ] Remove the remaining live mentions of `review.json` and review v8 from
+- [x] Remove the remaining live mentions of `review.json` and review v8 from
       the protocol index, the architecture doc, and the other protocol pages.
-- [ ] Run the Markdown checks, then commit and push.
+- [x] Add the breaking comparison records release note to
+      `npm-release-notes.md`.
+- [x] Run the Markdown checks, then commit and push.
 
 ## Milestone 2: Mokly Cloud handoff
 
@@ -107,10 +112,10 @@ them, so it finishes after the release.
 
 ## Milestone 3: Comparisons from the index and the entry details
 
-Write and read index v8 and entry detail v3, stop writing the review file,
+Write and read index v8 and the new detail fields, stop writing the review file,
 and compare from the index and the details in every host.
 
-- [ ] Model: index v8 and detail v3 shapes, validation, readers, and
+- [ ] Model: index v8 and detail field shapes, validation, readers, and
       versions; the generation root route; no public review reader or
       generated review type.
 - [ ] Comparison projections: fill `baseCommit`, view `state` and
@@ -118,8 +123,9 @@ and compare from the index and the details in every host.
 - [ ] Static build: write no review file and advertise the generation root.
 - [ ] Serve: classification and selected generations without the review
       file, the selection endpoint, and the generation root route.
-- [ ] Viewer: v8 and v3 readers; comparisons, Details, and removed previews
-      from the index and the details; no review reader.
+- [ ] Viewer: the index v8 reader and the new detail fields; comparisons,
+      Details, and removed previews from the index and the details; no
+      review reader.
 - [ ] Regenerate the TypeScript types and the protocol fixtures.
 - [ ] Update the Rust, Node, viewer, and browser tests and their fixtures.
 - [ ] Update `scripts/large` and `scripts/rebuild`.

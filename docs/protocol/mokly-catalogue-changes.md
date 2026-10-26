@@ -10,8 +10,8 @@ current build remains usable.
 
 ## Shared Metadata Contract
 
-The catalogue change snapshot v4 pairs the review result v8 of one comparison
-generation with the base commit. The Rust core produces it from the catalogue
+The in-memory catalogue change snapshot v4 pairs the in-memory review result
+v8 of one comparison generation with the base commit. The Rust core produces it from the catalogue
 models of both sides under [Sides](./mokly-comparison.md#sides): the head
 from the working tree, the base from the base commit. Serve, watch, the
 static build, and publication consume the same snapshot for a generation:
@@ -34,8 +34,8 @@ interface RemovedEntrySnapshot {
 }
 ```
 
-The snapshot and the review result of one generation share `baseCommit`. The
-generated TypeScript types of the model crate are the normative shapes.
+The snapshot, the review result, and the index of one generation share
+`baseCommit`. The model crate's types are the normative shapes.
 
 Serve computes the snapshot in the background after it listens and publishes
 it with the Changes status as one revision under the
@@ -78,7 +78,7 @@ comes from `removedEntries`. There is no removed use case.
 
 Visual comparisons use review result v8 for every catalogue. Pages and
 documents add no comparison records, and their removal needs none. The static
-build must not discover removed pages or documents by reading the review
+build must not discover removed pages or documents from the review
 entries. A page's CSS evidence travels as the `resourceEvidence` of its entry
 detail.
 

@@ -29,8 +29,8 @@ a redirect.
 Publish posts one small gzip-compressed tar archive to the exact endpoint,
 which is the service's plan route. It holds `mokly-upload.json`, the ownership
 marker that lists every output file with its SHA-256 digest and byte size,
-and the pinned comparison file when comparisons are enabled. Nothing else is
-in it.
+and the catalogue index, `mokly-viewer/index.json`, which also carries the
+Changes of the build. Nothing else is in it.
 
 ```http
 Authorization: Bearer TOKEN
@@ -87,8 +87,8 @@ back, and completes again; a second `409` or `410` fails.
 `mokly-upload.json` names the Mokly version, the repository, the branch, the
 head revision, the base ref and pinned base revision, the pull request number
 when the job is running on one, the config path and the time the build
-finished. Without comparisons, `baseRef`, `baseSha` and `comparisonPath` are
-all `null`. Receivers must reject missing or extra manifest fields.
+finished. Without comparisons, `baseRef` and `baseSha` are both `null`.
+Receivers must reject missing or extra manifest fields.
 
 The source inventory stays in memory. The output contains the public catalogue
 index and entry details. It contains no source manifest or consumer configuration.
@@ -98,8 +98,8 @@ index and entry details. It contains no source manifest or consumer configuratio
 A service first authenticates the bearer credential. Only then does it
 decompress the plan archive, enforcing size and file-count limits before
 reporting version or structural failures. It validates the manifest's fields
-and version, the marker's schema, digests, sizes and paths, stores the two or
-three archived artifacts once their bytes match their digests, and compares the
+and version, the marker's schema, digests, sizes and paths, stores the three
+archived artifacts once their bytes match their digests, and compares the
 remaining digests with every verified Blob stored for that project, including
 content received for an unfinished or expired upload. Each stored Blob must
 match its declared digest and size. An integer declared size above 64 MiB or a

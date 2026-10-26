@@ -35,9 +35,9 @@ Content-Length: <bytes>
 The body is one gzip-compressed POSIX tar archive, USTAR with PAX extended
 headers when needed. It contains only regular root-relative files, with no
 enclosing directory, in fixed order: `mokly-upload.json`,
-`.mokly-export-artifact`, then the non-null `comparisonPath` review file.
+`.mokly-export-artifact`, then the catalogue index `mokly-viewer/index.json`.
 
-The two or three files are byte-identical to the finalized output. No other
+The three files are byte-identical to the finalized output. No other
 entry is permitted. Success is `200` with `Content-Type: application/json`,
 optionally with media-type parameters, and this response shape. These example
 URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
@@ -73,7 +73,7 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
   a body over 16 MiB, invalid JSON, or a non-JSON content type is
   `upload-failed`.
 
-At Plan time the receiver verifies and stores the manifest and optional review
+At Plan time the receiver verifies and stores the manifest and the index
 after matching their marker digests and sizes. It never lists those digests in
 `missing`. If a publication already exists for this `headSha` and `configPath`,
 it answers `missing: []`; Complete then resolves the keep-first result below.

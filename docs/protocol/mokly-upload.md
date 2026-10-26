@@ -1,4 +1,4 @@
-# Catalogue Upload v2
+# Catalogue Upload v3
 
 ## Boundary
 
@@ -7,10 +7,14 @@ package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly build` is local-only. `mokly publish` builds into its own
 private directory outside the repository, then runs the exchange so a receiver
 stores only content it lacks. The
-`mokly-upload.json` envelope uses `schemaVersion: 2`; the ownership marker is
+`mokly-upload.json` envelope uses `schemaVersion: 3`; the ownership marker is
 [schema 3](./mokly-export-ownership.md), and the Plan response is independently
 versioned as v1. Earlier receivers reject this format with 426 under the
 [namespace compatibility contract](./mokly-viewer-namespace.md#compatibility-failure).
+A receiver reads Changes only from the catalogue index that the Plan archive
+carries, under the
+[Changes count](./mokly-catalogue-changes.md#changes-count), so a summary such
+as a pull request check agrees with the viewer's Changes list.
 
 ## CLI
 
@@ -113,8 +117,8 @@ out the head explicitly as in the action guide.
 `mokly-upload.json` is UTF-8 JSON at the output root with exactly these fields:
 
 ```ts
-interface MoklyUploadV2 {
-  schemaVersion: 2;
+interface MoklyUploadV3 {
+  schemaVersion: 3;
   moklyVersion: string;
   repository: { host: string; owner: string; name: string };
   branch: string;
@@ -124,7 +128,6 @@ interface MoklyUploadV2 {
   pullRequest: number | null;
   configPath: string;
   exportedAt: string;
-  comparisonPath: string | null;
 }
 ```
 
@@ -132,7 +135,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
-  envelope independently of the catalogue index v7 and review result v8.
+  envelope independently of the catalogue index v8.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.
@@ -143,10 +146,10 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
   changed HEAD before Plan.
 - With a ready comparison generation, `baseRef` is the effective ref. It is
   nonempty, at most 255 UTF-8 bytes, and has no category Cc character. `baseSha` is the pinned merge
-  base, never the current tip of `baseRef`. `baseSha` equals the review v8
-  `baseCommit`, and `baseRef` is the effective ref of the pinned comparison.
-  With disabled or unavailable Changes, `baseRef`, `baseSha`, and
-  `comparisonPath` are all null and no comparison generation is present.
+  base, never the current tip of `baseRef`. `baseSha` equals the index's
+  `baseCommit`, and `baseRef` equals the index's `base`, the effective ref of
+  the pinned comparison. With disabled or unavailable Changes, `baseRef` and
+  `baseSha` are both null and no comparison generation is present.
 - `pullRequest` is null or a positive JavaScript-safe integer.
 - `configPath` is the slash-separated path from the Git repository root to the
   resolved config and follows the ownership marker's portable-path grammar.
@@ -154,9 +157,6 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
   current-only catalogue is scoped to a subdirectory.
 - `exportedAt` is UTC ISO 8601, exactly `YYYY-MM-DDTHH:mm:ss.sssZ`, recorded
   while finalizing the build. It is client-reported time, not authorization.
-- `comparisonPath` is null or
-  `mokly-viewer/diffs/generations/<64 lowercase hex characters>/review.json`, the
-  single pinned review file; never search for a newest file.
 
 The manifest is written before ownership finalization. Publish declares it as
 publication metadata, so it is excluded from the deployment identity while

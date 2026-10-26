@@ -123,8 +123,8 @@ path.
 Comparison production, the static build, shell comparison frames,
 removed-preview requests, snapshot presentation roots, and generation
 validation call these functions; none joins or slices a `snapshots/` or
-`previews/` literal itself. The review result, the catalogue index, and the
-entry details carry paths and axes, never these file names. The ESLint rule
+`previews/` literal itself. The catalogue index and the entry details carry
+paths and axes, never these file names. The ESLint rule
 `mokly/no-artifact-path-literals` keeps that ban in the viewer package: it
 reports a string literal that contains `snapshots/`, or `pages/` followed
 later by `.json`, tests a template literal as one string with each

@@ -85,6 +85,19 @@ The entry also removes `CssPageEvidence`, `CssRuleAttribution`,
 `DependencyAnalysis`, `InsertedComponentStylesheet`, `PageResourceEvidence`,
 `ResourceEvidence`, `cssAnalysis`, and `mergeCssAnalysis`.
 
+## Breaking Comparison Records Release Note
+
+A comparison generation no longer contains `review.json`. The catalogue index
+moves to version 8: it adds `baseCommit`, and its `comparisonUrl` names the
+generation's root instead of a file. Each screen and component view of an
+entry detail carries its review `state` and `ignoredIds`, and a detail carries
+the base side's `before` address; the detail stays version 2. Serve replaces
+`/mokly-viewer/diffs/review.json` with `/mokly-viewer/diffs/selection`. The
+upload envelope moves to version 3 without `comparisonPath`, and the Plan
+request sends `mokly-viewer/index.json` in place of the review file. A
+receiver reads Changes from the index, so Mokly Cloud must accept upload v3
+and index v8 before it can store a publication of this release.
+
 ## Historical Generated Output And Manifest API Release Note
 
 See [the historical note](./npm-release-history-0-15.md#historical-generated-output-and-manifest-api-release-note).

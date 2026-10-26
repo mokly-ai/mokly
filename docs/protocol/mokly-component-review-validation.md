@@ -2,16 +2,17 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-This contract validates and emits the
-[component comparison schema](./mokly-component-review.md). The producer and
-the strict path-keyed review v8 reader enforce the same canonical order and
-share one affected-consumer order key.
+This contract validates the
+[component comparison schema](./mokly-component-review.md). The comparison
+validates its review v8 result in memory, in one canonical order with one
+affected-consumer order key, before any host projects it into the index and
+the entry details.
 
 ## Validation And Canonical Output
 
 One result schema and one reason policy serve Serve's background
-classification, the selected comparison, `build`, `publish`, and the viewer's
-decoding. The producer validates the result against both sides' catalogue
+classification, the selected comparison, `build`, and `publish`. The producer
+validates the result against both sides' catalogue
 models, so evidence cannot name an unknown entry, view, instance, or rendered
 resource. Every screen, component, variant, and use case record must match its
 side addresses; use case addresses and screen reasons must match the sides'
@@ -42,8 +43,9 @@ flattened variants included; a moved entry uses its current path.
 
 Source validation receives the accepted move pairs of classification. It
 requires exact `previousPath` coverage, both original side addresses, and one
-record for every moved screen, component, variant, or use case. Readers require
-`previousPath` when paired paths differ beyond case. They reject a case-only `previousPath`, duplicate historical identities, and a paired
+record for every moved screen, component, variant, or use case. Validation
+requires `previousPath` when paired paths differ beyond case. It rejects a
+case-only `previousPath`, duplicate historical identities, and a paired
 historical identity that is also listed as removed. Catalogue readers
 additionally require ready, included, unmodified-or-changed current records
 for prior paths. Empty reasons are valid only for a paired move. Page and
@@ -63,11 +65,11 @@ proof, including supplied content. An included variant with proven render, resou
 parent identity in affected evidence without a parent Changes row. Every
 classification path performs this validation before it returns a result.
 
-The [selected comparison](./mokly-selected-comparisons.md) of Serve projects
-a validated complete result onto one screen or component variant entry. Its
-response uses this schema's record and reference validation; catalogue-wide
-source coverage and affected evidence stay with the background classification
-and the shell inspector.
+The [selected comparison](./mokly-selected-comparisons.md) of Serve captures
+the documents of one screen or component variant entry of a validated complete
+result. It returns no record: the entry's detail carries its comparison facts,
+and catalogue-wide source coverage and affected evidence stay with the
+background classification and the shell inspector.
 
 Entry paths follow the [path grammar](./mokly-paths.md#segment-grammar);
 `ignoredIds` use the
@@ -88,7 +90,7 @@ single-line text and uses safe code-span delimiters for refs and paths; JSON
 keeps original values.
 
 Lexical ordering uses UTF-16 code units. This paragraph exclusively owns the
-array order of `review.json`: `entries` sorts by kind, then path; a
+array order of the review result: `entries` sorts by kind, then path; a
 component's `variants` lists its current variants in current authored order,
 then its base-only variants in base authored order; each record's views are
 mobile/light, mobile/dark, desktop/light, desktop/dark; reasons sort by kind,
@@ -98,20 +100,12 @@ states; `affected` sorts by `changedComponentId`, consumer kind, then consumer
 path, and its evidence by side (before, then after), context kind, context
 entry path, view order, and the canonical JSON of `via`, which keeps its chain
 order; `diagnostics` keep the order in which the comparison produced them.
-Path sets are sorted and unique. Readers enforce every stated order and reject
-duplicates rather than reordering input.
+Path sets are sorted and unique. Validation enforces every stated order and
+rejects duplicates rather than reordering them. The entry details keep the
+evidence, reason, and ignore-id orders of the result.
 
-The result is compact canonical JSON under the
-[serialization contract](./mokly-catalogue-serialization.md#canonical-bytes):
-keys in lexical order, optional fields omitted, required empty arrays
-explicit, no insignificant whitespace, and no timestamp, absolute path, or
-transient control result. Generation routes carry
-`no-store` and `nosniff`, and a generation's files never change.
-
-Every producer emits review result v8, and every reader accepts only version
-8; another or an unknown number fails before any field is read. Fixture tests
-cover valid and invalid results, deterministic round trips, current and
-removed variants and consumers, metadata-only changes, zero Changes with
+Fixture tests cover valid and invalid results, deterministic order, current
+and removed variants and consumers, metadata-only changes, zero Changes with
 affected screens, and identical served and built membership.
 
 ## Path Identity

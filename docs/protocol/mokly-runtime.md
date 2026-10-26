@@ -13,7 +13,7 @@ Authored sources define the catalogue: HTML screens, components, and pages,
 use case files, Markdown documents, folder records, entry modules, and
 stories files under the configured roots, plus the configuration file, the
 renderer module, and the configured stylesheets. The catalogue model is built
-from them in memory on every start and after every watched change. The [catalogue index v7](./mokly-shell-delivery.md#catalogue-index)
+from them in memory on every start and after every watched change. The [catalogue index v8](./mokly-shell-delivery.md#catalogue-index)
 and the [entry detail v2](./mokly-shell-delivery.md#entry-detail) are the
 public form of the model.
 
@@ -124,7 +124,7 @@ writes the same relative paths as files. In addition:
 | ----------------------------------------------- | ----- | ------- | --------------------------------------------------------------------------------------------------------- |
 | `/static/mokly-generated/<route>`               | live  | files   | rendered views, pages, and documents, named under the [artifact path contract](./mokly-artifact-paths.md) |
 | `/static/<closure path>`                        | live  | files   | authored assets in the [public closure](./mokly-public-closure.md), read from the roots                   |
-| `/mokly-viewer/diffs/review.json?path=<path>`   | live  | absent  | an on-demand comparison, redirected to its immutable generation                                           |
+| `/mokly-viewer/diffs/selection?path=<path>`     | live  | absent  | an on-demand comparison, redirected to its immutable generation's root                                    |
 | `/mokly-viewer/components/render`               | live  | absent  | the live prop render of the [controls contract](./mokly-component-controls.md)                            |
 | `/mokly-viewer/components/renders/<render-id>/` | live  | absent  | a temporary preview document and its resources                                                            |
 

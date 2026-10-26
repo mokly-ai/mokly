@@ -20,20 +20,22 @@ available only in Current. No pixel counts or percentages are ever shown.
 ## Presentation
 
 Serve, the static build, and embedded viewers with either adapter use one
-presentation path for every pane document. After the comparison JSON validates,
-the viewer fetches every document the selected viewport and scheme need, for
-both viewports when both are shown, before reporting ready. Each address must
-be on the configured source origin beneath `snapshots/before/` or
-`snapshots/after/` of the immutable generation the accepted comparison response
-established: the directory of the redirected live `review.json`, or of the
-pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
-the comparison credential rule: `credentials: "omit"` for pinned delivery and
+presentation path for every pane document. Once the comparison's generation
+is established, the viewer fetches every document the selected viewport and
+scheme need, for both viewports when both are shown, before reporting ready.
+Each address must be on the configured source origin beneath
+`snapshots/before/` or `snapshots/after/` of that immutable generation: the
+root that the live selection redirected to, or the pinned `comparisonUrl`.
+The GET carries the comparison's abort signal and uses the comparison
+credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v8 addresses panes by entry identity, view axes, and state. The viewer derives
-each side's `snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's path,
-`previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
-or snapshot path travels in comparison JSON.
+The entry detail addresses panes by entry identity, view axes, and view
+state. The viewer derives each side's
+`snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's
+path, and the before side from the detail's `before` path, which names a
+[moved](./mokly-moves.md) entry's previous path; no entry route or snapshot
+path travels in the index or the details.
 
 Acceptance, parsing, and transformation follow the
 [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle)
@@ -64,7 +66,7 @@ either frame adapter: no handshake, inspection, geometry, marker, or navigation
 message exists for them, and the only privileges a pane gains are same-origin
 measurement, programmatic scrolling, key forwarding, and the guard.
 
-Captured snapshot files, comparison JSON, packaged artifacts, and served bytes
+Captured snapshot files, the details, packaged artifacts, and served bytes
 stay byte-identical. The edits above exist only in the in-memory presentation.
 
 ## Scrolling
@@ -219,7 +221,7 @@ cover the controllers and the loader.
   documents is covered by its unit tests.
 - `after` addresses are accepted for comparison loaders and rejected for
   removed-preview loaders; other generations and prefixes are rejected.
-- Snapshot files and comparison bytes are unchanged by presentation.
+- Snapshot files and generation bytes are unchanged by presentation.
 
 ## Design References
 

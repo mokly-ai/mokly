@@ -161,7 +161,7 @@ rows, parent-kind icons, sibling navigation, comparison-mode retention,
 aggregate Changes behavior, removed-variant order and breadcrumbs, Dark
 availability, and public Viewer parity. The public model carries `variantOf`
 exactly on variants and places current variants in their parent's tree node;
-catalogue v7 readers validate those relationships.
+catalogue v8 readers validate those relationships.
 
 ## Verification
 

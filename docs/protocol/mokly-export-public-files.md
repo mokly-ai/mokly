@@ -79,10 +79,11 @@ private comparison data.
 
 `mokly-viewer/index.json` and `mokly-viewer/entries/**` enter the same
 collision-checked ownership and upload inventories as every other file,
-alongside `mokly-viewer/client/inspector.js`. The index v7 is the public form
+alongside `mokly-viewer/client/inspector.js`. The index v8 is the public form
 of the catalogue model under the [catalogue contract](./mokly-catalogue.md);
-the details carry each entry's usage, resource evidence, and workspace lists.
-Ownership v3 and upload v2 gate the viewer namespace; the review result is v8.
+the details carry each entry's usage, review states, resource evidence, and
+workspace lists. Ownership v3 and upload v3 gate the viewer namespace; the
+review result v8 stays in memory.
 The deployment identity includes the index and the details under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
 includes the inspector.
@@ -143,7 +144,7 @@ regression coverage.
 ## Registered Components
 
 Component catalogues carry component and variant entries in the index, with
-removed variants in `removedEntries`, and review v8 evidence with actual
+removed variants in `removedEntries`, and comparison evidence with actual
 affected consumers in the details. The same inspector renders in served and
 built shells. The static build supplies no render capability and no token;
 controls are read-only and make no render requests. The resource validation,

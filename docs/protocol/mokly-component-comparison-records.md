@@ -5,10 +5,12 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Normative Result
 
 The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
-owns the review result v8 envelope, its view record, and its rule evidence.
-This page defines the entry records, the affected-consumer records, and the
-diagnostics inside that envelope. The generated TypeScript types of the model
-crate are the normative shapes.
+owns the in-memory review result v8 envelope, its view record, and its rule
+evidence. This page defines the entry records, the affected-consumer records,
+and the diagnostics inside that envelope. The model crate's types are the
+normative shapes. The [entry detail](./mokly-shell-delivery.md#entry-detail)
+publishes a screen or component entry's `before` address and each view's
+`state`, `ignoredIds`, and evidence.
 
 ```ts
 interface ReviewEntryAddress {

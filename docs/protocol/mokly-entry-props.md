@@ -149,7 +149,7 @@ slots default to the parent's; its supplied slots default to empty.
 
 ## Read Model
 
-Read model v7 gives every screen and component the same prop fields in the
+Read model v8 gives every screen and component the same prop fields in the
 [public catalogue read model](./mokly-catalogue.md): `propSchema`, `props`,
 which holds the entry's own props or a variant's merged props, and
 `controls`. A component parent has its own `views`, rendered from its own

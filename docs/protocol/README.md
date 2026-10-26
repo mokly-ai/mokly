@@ -22,8 +22,9 @@ strict mode.
 ## Supported Formats
 
 The [format inventory](./mokly-format-versions.md) lists the catalogue index,
-entry detail, review result, and change snapshot versions. A reader rejects an
-unsupported number before it interprets content.
+entry detail, and upload versions, and the versions of the in-memory review
+result and change snapshot. A reader rejects an unsupported number before it
+interprets content.
 
 ## Authoring
 
@@ -136,7 +137,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 The static output of `build`, its safety and ownership rules, publication, and the upload exchange.
 
 - [Catalogue Upload Exchange v1](./mokly-upload-exchange.md)
-- [Catalogue Upload v2](./mokly-upload.md)
+- [Catalogue Upload v3](./mokly-upload.md)
 - [Catalogue Upload Validation v2](./mokly-upload-validation.md)
 - [Export Ownership v3](./mokly-export-ownership.md)
 - [Optional Changes In Published Catalogues](./mokly-publication.md)

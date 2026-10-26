@@ -10,8 +10,7 @@ typed `ViewEvidence`: `rules`, the review v8 rule records with `stylesheet`,
 `selector`, `status`, and `owner`, and `resources`, the rendered-resource
 records with `path` and `owner`, under the
 [evidence schema](./mokly-css-attribution-membership.md). This page reads only
-those records, and the static build reads the same records from review result
-v8. In this page, a file is a rule's `stylesheet` or a resource's `path`; a
+those records, in Serve and in a static build alike. In this page, a file is a rule's `stylesheet` or a resource's `path`; a
 matched, unresolved, or excluded file is a file with a rule of that `status`;
 a page selector is the `selector` of a rule whose owner is the entry; a
 component selector is the `selector` of a rule whose owner is a component, and

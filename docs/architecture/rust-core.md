@@ -43,7 +43,7 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-css`              | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                                                                                                                                   | `model`, `source-interface`                                                                                                                                 |
 | `mokly-graph`            | The content-addressed render graph, scheduling, the render cache, source reads through `mokly-source-interface`, the asset closure.                                                                                                                               | `model`, `catalogue`, `source-interface`, `html`, `css`                                                                                                     |
 | `mokly-render`           | Sidecar definition and graph factories, resolved bindings, fragment drafts, consumer PostCSS, CSS Modules, and leased base inputs.                                                                                                                                | `catalogue`, `model`, `html`, `css`, `graph`, `sidecar`, `source-interface`, `compare`                                                                      |
-| `mokly-compare`          | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, shared index/detail comparison projection, review result v8, private change snapshot v4.                                                                      | `source-interface`, `model`, `catalogue`, `html`, `css`, `graph`, `git`, `platform`, `sidecar`                                                              |
+| `mokly-compare`          | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, shared index/detail comparison projection, the in-memory review result v8 and change snapshot v4.                                                             | `source-interface`, `model`, `catalogue`, `html`, `css`, `graph`, `git`, `platform`, `sidecar`                                                              |
 | `mokly-server`           | HTTP, delivery of the shared model shell stub, the catalogue index and entry detail routes, documents and assets, the live descriptor, live updates, on-demand comparison, shutdown.                                                                              | `model`, `catalogue`, `graph`, `source-interface`, `compare`, `css`                                                                                         |
 | `mokly-watch`            | Watch rules, invalidation, rebuilds, replay.                                                                                                                                                                                                                      | `catalogue`, `css`, `source-interface`                                                                                                                      |
 | `mokly-static`           | The static output of `build`: the stubs, the catalogue index, the entry details, documents, the comparison generation, and the output transaction; uses the shared marker writer.                                                                                 | `model`, `compare`, `platform`, `catalogue`, `graph`, `html`, `source-interface`                                                                            |
@@ -199,20 +199,20 @@ shape or interpretation changes. No reader accepts an earlier number; readers
 reject before interpreting any field. Package 1.0.0 is the first number held
 stable.
 
-| Boundary                               | Version | Content                                                                   |
-| -------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| Public catalogue read model            | 7       | the catalogue index at `mokly-viewer/index.json`                          |
-| Entry detail                           | 1       | one entry's usage, resource evidence, direct reasons, and workspace lists |
-| Review result                          | 8       | tree materiality and owner-attributed rules                               |
-| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                                      |
-| Live descriptor                        | 3       | the Serve JSON route with the render capability                           |
-| Inspector wire envelope                | 2       | the frame adapter messages                                                |
-| Removed page/document preview metadata | 3       | the preview of a removed page or document                                 |
-| Export ownership                       | 3       | the ownership marker `build` writes                                       |
-| Upload metadata, plan exchange         | 2, 1    | the publish exchange Mokly Cloud implements                               |
-| Export transaction marker              | 2       | the output transaction marker `build` writes                              |
-| Navigation disclosure storage          | v4      | the shell's navigation disclosure state                                   |
-| Timing and verification records        | 1       | the timing and verification evidence records                              |
+| Boundary                               | Version | Content                                                                  |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------ |
+| Public catalogue read model            | 8       | the catalogue index at `mokly-viewer/index.json`                         |
+| Entry detail                           | 2       | one entry's usage, review states, evidence, reasons, and workspace lists |
+| Review result                          | 8       | in memory only: tree materiality and owner-attributed rules              |
+| Catalogue change snapshot              | 4       | in memory only: pairs review v8 with the base commit                     |
+| Live descriptor                        | 3       | the Serve JSON route with the render capability                          |
+| Inspector wire envelope                | 2       | the frame adapter messages                                               |
+| Removed page/document preview metadata | 3       | the preview of a removed page or document                                |
+| Export ownership                       | 3       | the ownership marker `build` writes                                      |
+| Upload metadata, plan exchange         | 3, 1    | the publish exchange Mokly Cloud implements                              |
+| Export transaction marker              | 2       | the output transaction marker `build` writes                             |
+| Navigation disclosure storage          | v4      | the shell's navigation disclosure state                                  |
+| Timing and verification records        | 1       | the timing and verification evidence records                             |
 
 The render graph keeps generations in memory; there is no private IPC format.
 

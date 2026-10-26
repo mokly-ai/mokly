@@ -190,7 +190,7 @@ scheme, with the configured and declared stylesheets. Every document is kept
 in the render cache; Serve, `build`, and Changes read it there, and nothing
 is written to the repository.
 
-Read model v7 gives a component entry `propSchema`, `props` in the wire form,
+Read model v8 gives a component entry `propSchema`, `props` in the wire form,
 `slots`, `suppliedSlots`, `controls`, `views`, and `variantOf` exactly on a
 variant, under the [catalogue contract](./mokly-catalogue.md); a parent has
 its own views and an empty `suppliedSlots`. Per-view usage, resource

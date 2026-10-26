@@ -5,27 +5,32 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Generation And Serving
 
 A comparison generation is an immutable set of files under
-`mokly-viewer/diffs/generations/<generation>/`: `review.json`, the
-[review result v8](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
-`entries/<entry path>.json`, the entry detail v2 of each removed entry under
+`mokly-viewer/diffs/generations/<generation>/`: `entries/<entry path>.json`,
+the entry detail v2 of each removed entry under
 the [shell delivery contract](./mokly-shell-delivery.md#entry-detail); the
 removed previews of the [removed previews contract](./mokly-removed-previews.md);
 and the before and after snapshots with their transitive resources at the
-paths of the [artifact path contract](./mokly-artifact-paths.md). A file of a
-generation never changes after it is written or captured. Generation files
+paths of the [artifact path contract](./mokly-artifact-paths.md). It holds no
+review file: the index and the entry details carry the comparison's public
+facts under the
+[comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4).
+A file of a generation never changes after it is written or captured. Generation files
 carry no deployment id and no revision: a removed entry's detail carries the
 generation and its `snapshotId` instead, so one comparison gives the same
 bytes in every build and in every Serve process. Every generation route
 answers GET and HEAD with `Cache-Control: no-store` and
-`X-Content-Type-Options: nosniff`; snapshot documents are `text/html`.
+`X-Content-Type-Options: nosniff`; snapshot documents are `text/html`. In
+Serve the generation root, the URL that ends with `<generation>/`, answers GET
+and HEAD with 204 and no body while the generation is retained. A static
+build writes no file for the root, and its shell never requests it.
 
 The [catalogue index](./mokly-shell-delivery.md#catalogue-index) names the
-generation: `comparisonUrl` is the artifact-root-relative path of its
-`review.json`, or `null` while Changes is not ready, is unavailable, or is
-disabled. A selected-only generation of the
+generation: `comparisonUrl` is the artifact-root-relative path of its root,
+or `null` while Changes is not ready, is unavailable, or is disabled. A selected-only generation of the
 [on-demand contract](./mokly-on-demand.md) leaves it `null`, and a superseded
 completion cannot set it. Serve keeps the advertised classification's JSON
-while the current index names it. Its snapshot files expire after 60 idle
+files, the removed entries' details and previews, while the current index
+names it. Its snapshot files expire after 60 idle
 seconds. This trim releases duplicated delivery bytes; the accepted base
 capture restores retained documents without another base render. Uncaptured
 views use the pinned-source fallback. Reading a generation renews its idle
@@ -41,8 +46,8 @@ can also retain a separate base capture of up to 256 MiB, beside the graph's
 classification's capture. These bounds are separate, not a process memory limit.
 A route whose generation is gone returns 404
 and never redirects or starts work. The shell derives every snapshot and
-preview URL from that response URL and the entry's path; no descriptor and no
-second pointer exists.
+preview URL from the generation root and the entry's path; no descriptor and
+no second pointer exists.
 
 ## Serve
 
@@ -51,28 +56,28 @@ each status move as one state under
 [updates in Serve](./mokly-shell-delivery.md#updates-in-serve): the index and
 the details are replaced in one step, `revision` rises by one, and the event
 stream carries the new revision as its message id. The classification's
-generation holds `review.json` and the removed entries' details and no
-snapshot. No shell request waits for a comparison, and no comparison data or
-snapshot is requested until a reviewer selects a diff mode or opens a removed
-entry.
+generation holds the removed entries' details and previews and no snapshot.
+No shell request waits for a comparison, and no comparison data or snapshot
+is requested until a reviewer selects a diff mode or opens a removed entry.
 
 The development shell requests a comparison on demand at
-`/mokly-viewer/diffs/review.json?path=<entry path>` under the
+`/mokly-viewer/diffs/selection?path=<entry path>` under the
 [selected comparison contract](./mokly-selected-comparisons.md), and a
-removed page's or document's preview under the
+removed entry's preview under the
 [removed previews contract](./mokly-removed-previews.md). Removed component
-parents and variants request the index's advertised generation in every host.
-They renew that same URL before loading another view or mode.
-The selected endpoint response redirects to an immutable generation named
+parents and variants use the index's advertised generation in every host.
+They renew its root before loading another view or mode.
+The selection endpoint redirects to the root of an immutable generation named
 `selected-<uuid>`, whose files are captured in memory from the bounded base
 capture or pinned-source fallback and the original head generation's render
 cache. Evicted head views render again from the same inputs. Snapshot URLs
-resolve relative to that response URL. A selected generation projects the
-completed background classification onto the selected entry without
-reclassification. Before the shell changes an open
-comparison's view or diff mode, it renews the generation with a HEAD request.
-A missing or replaced generation is reacquired for the same selection before
-new panes load, and a retained result reuses its loaded JSON. Retention,
+resolve relative to that root. A selected generation captures the selected
+entry's documents from the completed background classification without
+reclassification; the entry's detail carries its view states and evidence.
+Before the shell changes an open comparison's view or diff mode, it renews the
+generation with a HEAD request to its root. A missing or replaced generation
+is reacquired for the same selection before new panes load, and a retained
+generation keeps its presented documents. Retention,
 capacity, coalescing, cancellation, and the request bounds belong to the
 selected comparison contract. A content change or a Changes status move
 invalidates pending captures and discards the cached selection. Superseded

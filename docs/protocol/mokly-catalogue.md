@@ -7,10 +7,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 | Boundary                  | Version                                      |
 | ------------------------- | -------------------------------------------- |
 | Catalogue model           | none: it lives in memory, nothing is written |
-| Public catalogue index    | 7                                            |
-| Entry detail              | 1                                            |
-| Review result             | 8                                            |
-| Catalogue change snapshot | 4                                            |
+| Public catalogue index    | 8                                            |
+| Entry detail              | 2                                            |
+| Review result             | 8, in memory only                            |
+| Catalogue change snapshot | 4, in memory only                            |
 
 Both catalogue kinds, with and without registered components, use the same
 numbers, with globally unique entry paths. Nothing is written: the catalogue
@@ -19,9 +19,9 @@ from the composed trees, and the private catalogue change snapshot pairs
 review v8 with the base commit, as the
 [format inventory](./mokly-format-versions.md) states. The
 [shell delivery contract](./mokly-shell-delivery.md) delivers the read model
-as the catalogue index v7, which carries no per-view usage or resource
+as the catalogue index v8, which carries no per-view usage or resource
 evidence, plus one entry detail v2 per entry. Removed page preview metadata
-is v3. No entry carries a derived file name. Accepted move pairs carry
+is v3. No file carries the review result. No entry carries a derived file name. Accepted move pairs carry
 `previousPath` in review records and in the read model.
 
 ## Location And Types
@@ -56,14 +56,15 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 7;
+  schemaVersion: 8;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: number; // one counter per Serve state, from 1; 0 in a build
   base?: string; // the Changes base ref when Changes is configured
+  baseCommit?: string; // the pinned merge base while Changes is ready
   live?: { generation: string }; // Serve only: the render generation
   changesStatus: ChangesStatus;
-  comparisonUrl: PublicPath | null;
+  comparisonUrl: PublicPath | null; // the comparison generation's root
   tree: readonly CatalogueNode[];
   treeOrder?: readonly string[];
   screens: readonly CatalogueScreen[];
@@ -190,7 +191,12 @@ at `static/mokly-generated/<view route>`, a current page or document at
 have no current files; their historical documents come only from their
 `preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
 without a leading slash, origin, query or hash; resolve it against the source's
-origin root, not the JSON directory or host app URL. A current component parent
+origin root, not the JSON directory or host app URL. `comparisonUrl` is the
+path of a comparison generation's root,
+`mokly-viewer/diffs/generations/<generation>/`, and ends with `/`; the
+generation's removed details, previews and snapshots resolve against it.
+`baseCommit` is the full lowercase hexadecimal merge base that Changes pinned,
+present exactly while `changesStatus` is `ready`. A current component parent
 has its own views, rendered from its own props, and its page shows them first. `previousPath` is
 present exactly on entries the
 [move contract](./mokly-moves.md) paired with an entry of the base commit.

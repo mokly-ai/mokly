@@ -84,7 +84,7 @@ base document keys and the resolved base commit, and a source, configuration,
 stylesheet, resource, or base ref change that affects its inputs invalidates
 it.
 
-The comparison artifact is the review result v8 of the
+The comparison classifies into the in-memory review result v8 of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
 with component and variant records and explicit affected-consumer evidence,
 every record addressed by its entry path and every rule and resource record
