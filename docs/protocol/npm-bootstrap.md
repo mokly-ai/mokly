@@ -151,25 +151,81 @@ lifecycle input mutations. Run it with
 
 ## Native Package Registration
 
-For each native package, run the bootstrap command on its target operating
-system and architecture. Supply the reviewed full commit and that package name:
+npm can configure a trusted publisher only for an existing package. Register
+each `@mokly/native-{target}` package once, before the first coordinated
+release that publishes it. The read-only
+[native bootstrap workflow](../../.github/workflows/native-bootstrap.yml)
+builds the five registration archives. A maintainer reviews and publishes them.
+
+The workflow accepts only a manual dispatch with one input, `commit`: the
+reviewed full 40-character commit SHA. It rejects any other value before a
+build starts. It has contents-read permission only, with no npm environment,
+OIDC permission, secret, npm token, or registry write, and it never publishes.
+Its matrix holds the targets and runners of the release workflow's native
+build, with the same pinned actions, Node.js, npm, Rust, dependency install
+without lifecycle scripts, and Linux Zig and cargo-zigbuild setup. Each job
+checks out the commit without persisted credentials and runs the bootstrap
+command for its target:
 
 ```sh
-node scripts/release/bootstrap.mjs {reviewed-full-commit-sha} .context/native-bootstrap/linux-x64-gnu @mokly/native-linux-x64-gnu
+node scripts/release/bootstrap.mjs {sha} .context/native-bootstrap/{target} @mokly/native-{target}
 ```
 
-Use a distinct `.context/native-bootstrap/{target}` destination for every
-target. Prepare Linux's pinned Zig and cargo-zigbuild tools first. The isolated
-checkout installs npm dependencies with lifecycle scripts disabled and builds
-the native binary. It uses the release runtime floors and records the same
-library dependency inspection as a coordinated build.
+A maintainer can run the same command for one target on a matching host, from
+a clean checkout of the commit, after `npm ci --ignore-scripts`. The command
+itself needs the installed dependencies. On Linux, prepare the pinned Zig and
+cargo-zigbuild tools first. The command's isolated checkout installs npm
+dependencies with lifecycle scripts disabled and builds with the release
+runtime floors. Each workflow job uploads its destination directory as the
+artifact `native-bootstrap-{target}` and keeps it for 30 days. A job without
+output fails. The artifact holds exactly three files:
 
-Native registration always packs version `0.0.0`. No coordinated CLI release
-publishes this version. Its binary embeds the reviewed source's CLI version,
-which the report records as `binaryVersion`. The staging manifest changes the
-registration version without modifying the reviewed checkout. The report binds
-the source commit and tree to the exact archive; `tls-dependencies.txt` records
-the native runtime check. Register interactively with the `bootstrap` dist-tag
-only after review. Configure each package's own trusted publisher before the
-first coordinated release. The command prepares bytes and never publishes.
-Do not use registration bytes as a coordinated release or retry artifact.
+- `mokly-native-{target}-0.0.0.tgz`: the archive to publish. Native
+  registration always packs version `0.0.0`, which no coordinated CLI release
+  publishes. Packing does not modify the reviewed checkout.
+- `pack-report.json`: the inventory, version, `integrity`, and `shasum`, with
+  the `sourceCommit` and `sourceTree` Git IDs. `binaryVersion` records the CLI
+  version that the binary embeds.
+- `tls-dependencies.txt`: the same library dependency inspection as a
+  coordinated build.
+
+Register the five packages from one machine:
+
+1. Dispatch the workflow from `main`. Find its run with
+   `gh run list --workflow native-bootstrap.yml`.
+
+   ```sh
+   gh workflow run native-bootstrap.yml --ref main -f commit={sha}
+   ```
+
+2. Download each artifact into its own new directory:
+
+   ```sh
+   gh run download {run} -n native-bootstrap-{target} -D .context/native-bootstrap/{target}
+   ```
+
+3. Review each report. `name` is `@mokly/native-{target}`, `version` is
+   `0.0.0`, `sourceCommit` is the reviewed commit, `binaryVersion` is the CLI
+   version of that commit, and the inventory holds only `LICENSE`,
+   `README.md`, `package.json`, and the target binary. The SHA-1 and SHA-512
+   of the archive match `shasum` and `integrity`. Read `tls-dependencies.txt`.
+4. Publish each reviewed archive with an approved maintainer account and 2FA:
+
+   ```sh
+   npm publish {archive} --tag bootstrap --access public
+   ```
+
+5. Compare the report with
+   `npm view @mokly/native-{target}@0.0.0 name version dist.integrity dist.shasum`.
+   As for the CLI, npm can also set `latest` to the first version. The first
+   coordinated release moves it.
+6. Configure each package's own trusted publisher: repository
+   `mokly-ai/mokly`, workflow `release.yml`, environment `npm`, and direct
+   `npm publish`. Also set `mokly:developers` access, public access, required
+   2FA, and disabled token bypass. Read back the CLI and viewer publishers too.
+   The trust configuration of one package is not evidence for another.
+
+Then the coordinated release, or a retry under the
+[release recovery rules](./npm-release-management.md#release-recovery),
+publishes through OIDC. Never repeat a registration. Do not use registration
+bytes as a coordinated release or retry artifact.

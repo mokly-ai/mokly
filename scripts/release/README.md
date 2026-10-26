@@ -32,3 +32,11 @@ keeps the original saved archives and does not rebuild them.
 
 Run the release integration and workflow tests with the repository Node test
 runner. Keep logs and locally packed archives under `.context/`.
+
+## Native registration
+
+`bootstrap.mjs` packs one registration archive from a reviewed commit and never
+publishes. The read-only `native-bootstrap.yml` workflow runs it for the five
+native targets on the release build runners and uploads each archive with its
+reports. The [bootstrap contract](../../docs/protocol/npm-bootstrap.md#native-package-registration)
+holds the maintainer procedure.

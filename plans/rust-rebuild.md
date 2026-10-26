@@ -6172,6 +6172,24 @@ does not ask the user before the merge.
 - [x] Resolve user item 195 (merge): PR #202, the fix of user item 159.
   - User decision 195 (2026-10-25): A. PR #202 merged as `6d9705aa`.
 
+- [x] Resolve user item 200 (release): release run 40254485539 failed at
+      `npm publish` with a 404 for `@mokly/native-linux-x64-gnu`. The five
+      `@mokly/native-{target}` packages do not exist on npm, and trusted
+      publishing needs an existing package. Nothing was published.
+  - User decision 200 (2026-10-26): B. A one-off read-only workflow,
+    `.github/workflows/native-bootstrap.yml`, runs the bootstrap command for
+    the five targets on the hosted runners and uploads each registration
+    archive with its source reports. Branch
+    `rebuild/native-bootstrap-workflow` (`83dfb875`); this record merges
+    with its pull request. Local `linux-x64-gnu` proof:
+    `.context/native-bootstrap-proof/`.
+
+- [ ] Maintainer steps of user decision 200, after its pull request merges:
+      dispatch the native bootstrap workflow for a reviewed commit, publish
+      the five registration archives, configure the five trusted publishers
+      and verify the two existing ones, then rerun the failed publish job of
+      release run 40254485539.
+
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
       mutex. A test that fails while it holds the lock poisons the mutex, and
