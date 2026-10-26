@@ -20,11 +20,18 @@ fn only_the_first_stylesheet_statement_skips_a_charset() {
 }
 
 /// A later stylesheet statement is read after the rule `a{}`. When cssparser
-/// drops that statement, the record of the rule before it is never the
-/// result, so the section reader classifies the statement by its tokens.
+/// reads no prelude of that statement, the record of the rule before it is
+/// never the result, so the section reader classifies the statement by its
+/// tokens.
 #[test]
 fn a_dropped_later_statement_reads_no_statement() {
     assert_eq!(read("--x:1", false), None);
     assert_eq!(read("<!--", false), None);
+}
+
+/// cssparser drops a later rule without a block, but it reads the rule's
+/// prelude first, so the rule keeps the start of that prelude.
+#[test]
+fn a_later_rule_without_a_block_keeps_its_start() {
     assert_eq!(read(" <!-- .b", false), Some((6, Statement::Rule)));
 }
