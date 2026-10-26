@@ -5470,14 +5470,15 @@ check passes on this commit.
 - [ ] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
-      The entry points are complete in `6219b4a4`. The shared catalogue
-      boundary remains open under the one-tokenizer decision.
+      The entry points are complete in `6219b4a4`. Item 115's remaining work
+      is the shared catalogue boundary, which remains open under the
+      one-tokenizer decision.
 
 - [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
       option A merged as `033e5059`. The catalogue token types are complete in
-      `dc4d8127`. The tree adapter remains a second html5gum user while the
-      one-tokenizer boundary decision is open.
+      `dc4d8127`. Item 116's remaining work is the tree adapter, which remains
+      a second html5gum user while the one-tokenizer boundary decision is open.
 
 - [ ] HTML pipeline phase 2 review 1, finding 1: the differential harness
       reads repository HTML from disk, compares only bytes, and does not assert
@@ -5495,12 +5496,30 @@ check passes on this commit.
   does not model SVG `desc` or encoded MathML `annotation-xml` integration points.
   Separate branch.
 
-- [ ] CR5 decision: one tree-driven token run must also serve catalogue checks.
-      Severity Medium, effort Large. The catalogue crate cannot depend on the
-      HTML arena crate without a dependency cycle. Options: A, move the shared
-      token/tree boundary into a new lower-level crate and route catalogue and
-      HTML through it, Large; B, keep the two boundaries and revise decisions
-      98 B and 116 C, Large. Recommended: A. No default is applied.
+- [ ] One tokenizer run for the checks and the tree, covering decisions 98 B
+      and 116 C. Severity Medium, effort Large. The checks still run their own
+      html5gum pass and guess text modes. The tree adapter is a second html5gum
+      user. The catalogue cannot depend on `mokly-html` without a cycle.
+      Options: A, keep the two runs and revise decisions 98 B and 116 C to
+      match the code, Small; B, move the html5gum-to-html5ever driver into the
+      token boundary, generic over html5ever's `TreeSink`, so checks use a
+      recording sink and `mokly-html` passes its `Arena`, with no new crate,
+      Large; C, define a tokenizer trait and token types in the catalogue,
+      implement the trait in `mokly-html`, and inject it into catalogue
+      preparation, Large; D, move the shared boundary into a new lower-level
+      crate, Large. Recommended: B. No option is applied.
+- [ ] Fix-round commits that do not build. Severity Medium, effort Medium,
+      category process. The affected commits are `b9dad262`, `e877ca04`,
+      `a5e7461b`, `62e1e3f7`, and `fd3fccba`. Options: A, record the commit map
+      and squash the branch when it merges, Small; B, add a check that builds
+      and tests every commit of a branch, Medium. Recommended: A. No option
+      is applied.
+- [ ] The wrapper filter repeats the catalogue allow list. Severity Low,
+      effort Small, category code structure. `ignore_checks.rs` writes the
+      allowed wrapper attributes again beside the catalogue rule. Options:
+      A, call the catalogue rule and reserved-navigation check from
+      `filter_attributes`, and correct its module doc, Small; B, keep both
+      lists, Small. Recommended: A. No option is applied.
 - Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
   retains production `unreachable!()` and `unwrap()` calls. Separate branch.
 
