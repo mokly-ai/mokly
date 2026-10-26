@@ -253,6 +253,7 @@ impl<'a> ForwardingEmitter for PipelineEmitter<'a> {
     }
 
     fn adjusted_current_node_present_but_not_in_html_namespace(&mut self) -> bool {
+        self.inner.emit_eof();
         self.inner
             .callback_mut()
             .builder

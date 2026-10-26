@@ -129,3 +129,14 @@ fn token_pipeline_copies_bom_and_cdata_boundaries() {
         assert_eq!(serialize::html(&new), serialize::html(&old), "{source:?}");
     }
 }
+
+#[test]
+fn cdata_question_follows_buffered_foreign_text() {
+    let source = "<math><mi><p><b>1</p>2<![CDATA[3]]>";
+    let nodes = crate::parse::delivered_fragment(source);
+    let actual = crate::serialize::html(&nodes);
+    assert_eq!(
+        actual,
+        "<math><mi><p><b>1</b></p><b>2<!--[CDATA[3]]--></b></mi></math>"
+    );
+}
