@@ -30,6 +30,21 @@ fn authored_plaintext_repair_matches_the_browser_tree() {
     }
 }
 
+#[test]
+fn saved_slot_plaintext_repair_matches_authored_fragments() {
+    let source = "<p><a href=\"mock:home\">Home</p><plaintext>Raw";
+    let actual = crate::source_locations::slot(source, "panel", "saved");
+    let expected = parse::authored_fragment(source, "fixture.html");
+    assert_eq!(serialize::html(&actual), serialize::html(&expected));
+    let plaintext = walk(&actual)
+        .find_map(|node| match node {
+            Node::Element(element) if element.name == "plaintext" => Some(element),
+            _ => None,
+        })
+        .expect("plaintext element");
+    assert!(walk(&plaintext.children).all(|node| !matches!(node, Node::Element(_))));
+}
+
 fn repaired(nodes: Vec<Node>) -> Vec<Node> {
     let catalogue = support::prepared_html("<p>Home</p>", "<p>Note</p>");
     let entry = catalogue
