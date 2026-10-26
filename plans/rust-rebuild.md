@@ -6183,6 +6183,22 @@ does not ask the user before the merge.
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
 
+- [ ] Decide the open findings of the post-push review of
+      `rebuild/port-111c`, the port of user decision 111 C (report:
+      `.context/port-111c/review/review-1-full.md`). Finding 1 (Low, product
+      bug: the probe read no qualified rules in rule lists and keyframes
+      blocks) is fixed with option B in the same commit as this record.
+  - Finding 2: rule-list statements still end at semicolons. Severity Low,
+    effort Small. Recommended: A, narrow the protocol and README parity
+    sentences to say that a `;` also ends a rule-list statement for the
+    scoper, and add a follow-up for that boundary.
+  - Finding 3: HTML comment tests cover only the first statement. Severity
+    Low, effort Small. Recommended: B, add later-statement cases and check
+    an exact expected walk after each HTML comment prefix.
+  - Finding 4: the prefix rule record can replace the result. Severity Low,
+    effort Small. Recommended: B, document the `a{}` prefix and discard a
+    record that starts inside it.
+
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
   branch.

@@ -69,7 +69,6 @@ fn parse_with_prefix(source: &str, grammar: Grammar, skip_first: bool) -> Option
 /// A parser that records one statement and drains its body without recursion.
 struct Probe {
     declarations: bool,
-    qualified: bool,
     pending: Option<Statement>,
     fallback: Option<Parsed>,
 }
@@ -78,7 +77,6 @@ impl Probe {
     fn new(grammar: Grammar) -> Self {
         Self {
             declarations: matches!(grammar, Grammar::Style | Grammar::Declarations),
-            qualified: matches!(grammar, Grammar::Style | Grammar::Declarations),
             pending: None,
             fallback: None,
         }
@@ -197,7 +195,9 @@ impl<'i> RuleBodyItemParser<'i, Parsed, ()> for Probe {
         self.declarations
     }
 
+    /// Every block reads qualified rules, as the lightningcss parsers of rule
+    /// lists, keyframes, and style blocks do.
     fn parse_qualified(&self) -> bool {
-        self.qualified
+        true
     }
 }

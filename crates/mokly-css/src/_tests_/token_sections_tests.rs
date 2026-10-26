@@ -26,6 +26,36 @@ fn block_grammar(source: &str, grammar: Grammar) -> Grammar {
     section.block.unwrap().grammar
 }
 
+/// In every grammar, a statement starts where cssparser starts it: after the
+/// whitespace and comments before it. Its prelude starts there too.
+#[test]
+fn statements_start_after_leading_whitespace_and_comments_in_every_grammar() {
+    let cases = [
+        (Grammar::Stylesheet, " /* c */ .b{}", ".b{}"),
+        (Grammar::Stylesheet, ".a{} /* c */ .b{}", ".b{}"),
+        (Grammar::Rules, " /* c */ .b{}", ".b{}"),
+        (Grammar::Lenient, " /* c */ from{}", "from{}"),
+        (Grammar::Style, " /* c */ .b{}", ".b{}"),
+        (Grammar::Style, " /* c */ color:red", "color:red"),
+        (Grammar::Declarations, " /* c */ src:url(x)", "src:url(x)"),
+    ];
+    for (grammar, source, statement) in cases {
+        let tokens = Tokens::new(source);
+        let mut range = tokens.root();
+        let mut last = None;
+        while let Some(section) = token_sections::next(&tokens, &mut range, grammar) {
+            last = Some(section);
+        }
+        let section = last.unwrap();
+        let start = source.len() - statement.len();
+        assert_eq!(section.start, start, "{grammar:?} {source}");
+        assert_eq!(
+            tokens.nodes[section.prelude.start].start, start,
+            "{grammar:?} {source}"
+        );
+    }
+}
+
 /// In a style or declarations block, only a statement without a block that
 /// starts with an identifier and a colon is a declaration. In a rule list or
 /// a lenient rule list, no statement is one. In a declarations block, every
