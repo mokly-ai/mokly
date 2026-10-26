@@ -81,7 +81,7 @@ jobs:
           key: audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
           cache-directories: .context/rust-audit-tool
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: true
       - name: Install dependencies
         run: npm ci
       - name: Build native artifacts
@@ -134,7 +134,7 @@ jobs:
         with:
           shared-key: native-binary
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: true
       - name: Install dependencies
         run: npm ci
       - name: Run viewer verification
@@ -184,7 +184,7 @@ jobs:
         with:
           shared-key: native-binary
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: true
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -243,7 +243,7 @@ jobs:
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: true
       - name: Install dependencies
         run: npm ci
       - name: Build viewer package
@@ -285,7 +285,7 @@ jobs:
         with:
           shared-key: native-binary
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: true
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
