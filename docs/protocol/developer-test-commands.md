@@ -14,7 +14,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
   set; a selected crate is partial verification. Sidecar integration tests
   require `npm run build --workspace @mokly/viewer` then
   `npm run build --workspace @mokly/mokly` before a raw Cargo run.
-- Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace suite and gate exclude it.
+- Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
 - `npm run test:browser -- [<spec> ...] [-g "<name>"]` builds first, then
   forwards its arguments to Playwright. Without filters, it runs every browser
   spec against `mokly serve` of the example catalogue.
