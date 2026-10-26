@@ -17,9 +17,16 @@ The repository suite runs these checks in this order:
    and public package exports.
 8. Rust formatting.
 9. Workspace Clippy with warnings denied.
-10. The `@mokly/viewer` build, then the `@mokly/mokly` build.
-11. The Rust tests of every crate.
-12. The Rust file-length audit.
+10. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
+11. The `@mokly/viewer` build, then the `@mokly/mokly` build.
+12. The Rust tests of every crate.
+13. The Rust file-length audit.
+
+The suite compiles and lints the feature-gated design matrix target but does
+not run it; the nightly
+[Design Attribution Matrix](./ci-workflow.md#design-attribution-matrix) runs
+it. Leaving that target to the nightly run alone was rejected, because a
+compile error then stays hidden until the nightly run fails.
 
 The [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
 selects the npm audit mode and defines its comparison rules. Report, input,

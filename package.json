@@ -1,6 +1,6 @@
 {
   "name": "mokly-workspace",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "@eslint/js": "^10.0.1",
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@mokly/viewer": "0.16.0",
+    "@mokly/viewer": "0.16.1",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
     "@tailwindcss/postcss": "^4.3.3",
