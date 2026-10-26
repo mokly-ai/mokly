@@ -8,9 +8,14 @@ The repository suite
 starts with the live npm lockfile audit, Rust advisory audit, and generated
 TypeScript byte-identity check, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
-with warnings denied, viewer and sidecar package builds, Rust tests and the Rust file-length audit. The
+with warnings denied, Clippy with warnings denied for the `mokly-cli`
+`design-matrix` feature, viewer and sidecar package builds, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
-checks to ESLint under `tests/`. The live
+checks to ESLint under `tests/`. The suite compiles and lints the
+feature-gated design matrix target but does not run it; the nightly
+[Design Attribution Matrix](./ci-workflow.md#design-attribution-matrix) runs
+it. Leaving that target to the nightly run alone was rejected, because a
+compile error then stays hidden until the nightly run fails. The live
 dependency audit defaults to baseline mode for local checks, ordinary pull
 requests, and every push. New findings or exception issues fail; inherited
 issues print as notices. Report, input, and registry errors always fail.
