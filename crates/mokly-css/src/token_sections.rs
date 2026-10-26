@@ -82,9 +82,12 @@ pub(crate) enum Statement {
 
 /// One rule or declaration at a block's own level.
 pub(crate) struct Section {
-    /// Tokens before the `{` or `;`, including leading whitespace.
+    /// Tokens from the statement start to the `{`, the `;`, or the end of the
+    /// enclosing block.
     pub(crate) prelude: Range<usize>,
-    /// Byte offset of the statement start selected by cssparser.
+    /// Byte offset of the statement start: where cssparser starts the
+    /// statement, or the first token of the section when cssparser reads no
+    /// statement there.
     pub(crate) start: usize,
     /// Byte offset of the `{` or `;`, or the end of the enclosing block.
     pub(crate) end: usize,
@@ -97,7 +100,7 @@ pub(crate) struct Section {
 }
 
 impl Section {
-    /// The byte offset of the first significant token, where diagnostics point.
+    /// The byte offset of the statement start, where diagnostics point.
     pub(crate) fn lead(&self) -> usize {
         self.start
     }

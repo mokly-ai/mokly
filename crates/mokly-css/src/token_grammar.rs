@@ -7,7 +7,9 @@ use cssparser::Token;
 use crate::token_sections::{Grammar, Statement};
 use crate::token_tree::Tokens;
 
-/// Classify a statement when cssparser cannot return a parser result.
+/// Classify a statement by its first tokens and its block, as lightningcss
+/// reads the block that holds it, when cssparser cannot return a parser
+/// result.
 pub(crate) fn classify(
     tokens: &Tokens<'_>,
     mut prelude: Range<usize>,
@@ -55,7 +57,9 @@ pub(crate) fn normalize(statement: Statement, grammar: Grammar, block: bool) -> 
     }
 }
 
-/// Return the grammar of the block that a statement opens.
+/// Return the grammar of the block that a statement opens. An
+/// `@-moz-document` block reads as a style rule's block, so a keyframes
+/// block in it holds declarations.
 pub(crate) fn nested(grammar: Grammar, statement: &Statement) -> Grammar {
     match (grammar, statement) {
         (Grammar::Stylesheet | Grammar::Rules, Statement::AtRule(name)) if rule_list(name) => {
@@ -76,6 +80,8 @@ pub(crate) fn nested(grammar: Grammar, statement: &Statement) -> Grammar {
     }
 }
 
+/// At-rules whose blocks lightningcss parses as rules: conditional, layer,
+/// scope, and starting-style rules.
 fn rule_list(name: &str) -> bool {
     matches!(
         name,
@@ -83,6 +89,8 @@ fn rule_list(name: &str) -> bool {
     )
 }
 
+/// At-rules whose blocks the scanners read as rules: keyframes, conditional,
+/// layer, document, scope, and starting-style rules.
 fn grouping(name: &str) -> bool {
     name.ends_with("keyframes")
         || matches!(
@@ -91,6 +99,9 @@ fn grouping(name: &str) -> bool {
         )
 }
 
+/// True for an at-rule name that ends with `keyframes` but that lightningcss
+/// does not parse. In a style rule, lightningcss keeps such an at-rule
+/// without a block as text.
 fn unknown_keyframes(name: &str) -> bool {
     name.ends_with("keyframes")
         && !matches!(

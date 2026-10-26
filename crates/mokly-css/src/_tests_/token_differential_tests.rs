@@ -1,5 +1,9 @@
 //! Differential coverage for the legacy and parser-backed section walks.
 
+use std::ops::Range;
+
+use cssparser::Token;
+
 use crate::token_grammar;
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::Tokens;
@@ -18,7 +22,7 @@ struct Observed {
     block: Option<Grammar>,
 }
 
-type LegacySection = (usize, Option<(std::ops::Range<usize>, Grammar)>, Statement);
+type LegacySection = (usize, Option<(Range<usize>, Grammar)>, Statement);
 
 fn scan_new(source: &str) -> Vec<Observed> {
     let tokens = Tokens::new(source);
@@ -29,7 +33,7 @@ fn scan_new(source: &str) -> Vec<Observed> {
 
 fn walk_new(
     tokens: &Tokens<'_>,
-    mut range: std::ops::Range<usize>,
+    mut range: Range<usize>,
     grammar: Grammar,
     out: &mut Vec<Observed>,
 ) {
@@ -56,7 +60,7 @@ fn scan_old(source: &str) -> Vec<Observed> {
 
 fn walk_old(
     tokens: &Tokens<'_>,
-    mut range: std::ops::Range<usize>,
+    mut range: Range<usize>,
     grammar: Grammar,
     out: &mut Vec<Observed>,
 ) {
@@ -76,7 +80,7 @@ fn walk_old(
 
 fn legacy_next(
     tokens: &Tokens<'_>,
-    range: &mut std::ops::Range<usize>,
+    range: &mut Range<usize>,
     grammar: Grammar,
 ) -> Option<LegacySection> {
     tokens.next_significant(&mut range.clone())?;
@@ -86,8 +90,8 @@ fn legacy_next(
         && token_grammar::custom_property(tokens, range.clone());
     while let Some(index) = tokens.next(range) {
         let node = &tokens.nodes[index];
-        let body = !custom && matches!(node.token, cssparser::Token::CurlyBracketBlock);
-        let semicolon = matches!(node.token, cssparser::Token::Semicolon);
+        let body = !custom && matches!(node.token, Token::CurlyBracketBlock);
+        let semicolon = matches!(node.token, Token::Semicolon);
         if body || semicolon {
             let prelude = begin..index;
             let statement = token_grammar::classify(tokens, prelude.clone(), grammar, body);
@@ -139,13 +143,18 @@ fn legacy_grouping(name: &str) -> bool {
         )
 }
 
-fn html_comment(tokens: &Tokens<'_>, mut range: std::ops::Range<usize>) -> bool {
-    tokens.next_significant(&mut range).is_some_and(|index| {
-        matches!(
-            tokens.nodes[index].token,
-            cssparser::Token::CDO | cssparser::Token::CDC
-        )
-    })
+fn html_comment(tokens: &Tokens<'_>, mut range: Range<usize>) -> bool {
+    tokens
+        .next_significant(&mut range)
+        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::CDO | Token::CDC))
+}
+
+/// True when `text` holds only whitespace and comments.
+fn trivia(text: &str) -> bool {
+    Tokens::new(text)
+        .nodes
+        .iter()
+        .all(|node| matches!(node.token, Token::WhiteSpace(_) | Token::Comment(_)))
 }
 
 fn generated_sources() -> Vec<String> {
@@ -168,7 +177,9 @@ fn generated_sources() -> Vec<String> {
 }
 
 /// Compare the legacy and parser-backed section walks across repository CSS
-/// and generated edge cases. Every difference must have a parser explanation.
+/// and generated edge cases. Every difference must have a parser explanation:
+/// a start that moves over whitespace and comments only, or an HTML comment
+/// token before the statement.
 #[test]
 fn parser_differential_covers_repository_stylesheets_and_generated_cases() {
     let mut sources = fixtures_1::REPOSITORY_STYLESHEETS
@@ -193,10 +204,11 @@ fn parser_differential_covers_repository_stylesheets_and_generated_cases() {
                 continue;
             }
             let start = right.start.min(source.len());
-            let sample = &source[start..source.len().min(start + 32)];
+            let sample = source[start..].chars().take(32).collect::<String>();
+            let skipped = &source[left.start.min(start)..left.start.max(start)];
             let reason = if left.statement == right.statement
                 && left.block == right.block
-                && left.start != right.start
+                && trivia(skipped)
             {
                 "cssparser skips leading whitespace and comments before the statement"
             } else if source[..start].contains("<!--") || source[..start].contains("-->") {
