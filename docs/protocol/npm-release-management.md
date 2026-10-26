@@ -34,7 +34,8 @@ The `@mokly/mokly` component also owns the literal documentation version in
 `generic` `extra-files`. Each version-bearing region is bounded by the Release
 Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
-those literals with the `@mokly/mokly` package version; root tests reject drift.
+those literals with the `@mokly/mokly` package version; repository tests reject
+drift.
 
 The root release manifest entry owns the shared release version. The historical
 viewer entry retains its independent release baseline. Runtime and packaging

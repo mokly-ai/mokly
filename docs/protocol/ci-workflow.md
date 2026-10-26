@@ -213,7 +213,7 @@ workflow. The hosted CI graph and its release profile keep their required jobs.
 
 ## Workflow Verification
 
-Repository tests verify workflow files by their properties and by running their
+Tests verify workflow files by their properties and by running their
 scripts. The policy test requires every `uses:` revision across
 the workflows and composite actions to be a 40-character lowercase commit. It
 forbids untrusted pull request fields in `ci.yml` `run:` steps and `${{` in
