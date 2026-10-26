@@ -55,23 +55,26 @@ fn unknown_ignore_attributes_warn_once_and_strict_preserves_output() {
 
 #[test]
 fn saved_slot_ignore_attributes_are_not_evaluated() {
-    check_saved_slot_attribute(
-        "extra='{{missing}}'",
-        "unknown attribute extra on <mokly-ignore> is ignored",
-    );
+    let stderr = build_saved_slot("extra='{{missing}}'", true);
+    assert!(stderr.contains("unknown attribute extra on <mokly-ignore> is ignored"));
 }
 
 #[test]
-fn saved_slot_reserved_wrapper_attributes_are_not_evaluated() {
+fn saved_slot_reserved_wrapper_attributes_stay_visible_to_composition() {
     for name in ["data-mokly-link", "data-mokly-link-control-future"] {
-        check_saved_slot_attribute(
-            &format!("{name}='{{{{missing}}}}'"),
-            &format!("reserved navigation metadata {name} on <mokly-ignore> is rejected"),
+        let warning = format!("reserved navigation metadata {name} on <mokly-ignore> is rejected");
+        let stderr = build_saved_slot(&format!("{name}='literal'"), true);
+        assert!(stderr.contains(&warning), "{stderr}");
+        let stderr = build_saved_slot(&format!("{name}='{{{{missing}}}}'"), false);
+        assert!(stderr.contains(&warning), "{stderr}");
+        assert!(
+            stderr.contains("[mokly/html-props] undeclared prop reference missing"),
+            "{stderr}"
         );
     }
 }
 
-fn check_saved_slot_attribute(attribute: &str, warning: &str) {
+fn build_saved_slot(attribute: &str, success: bool) -> String {
     let root = tempfile::tempdir().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();
     fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
@@ -93,8 +96,8 @@ fn check_saved_slot_attribute(attribute: &str, warning: &str) {
         .output()
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(output.status.success(), "{attribute}: {stderr}");
-    assert!(stderr.contains(warning), "{stderr}");
+    assert_eq!(output.status.success(), success, "{attribute}: {stderr}");
+    stderr
 }
 
 #[test]

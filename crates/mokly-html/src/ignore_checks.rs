@@ -1,17 +1,22 @@
 //! Filter ignore-wrapper attributes before composition evaluates them, and validate ignore ids.
 
+use mokly_catalogue::html_tokens::reserved_navigation_attribute;
 use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::Element;
 
-/// Keep only the wrapper attributes that the catalogue rule allows; other elements keep all attributes.
+/// Keep the wrapper attributes that the authored parse keeps: the catalogue rule and the
+/// reserved navigation names. Other elements keep all attributes.
 pub(crate) fn filter_attributes(element: &mut Element) {
     let Element {
         name, attributes, ..
     } = element;
-    attributes.retain(|attribute| ignore_attribute_allowed(name, &attribute.name));
+    attributes.retain(|attribute| {
+        ignore_attribute_allowed(name, &attribute.name)
+            || reserved_navigation_attribute(attribute.name.as_bytes())
+    });
 }
 
 pub(crate) fn id(value: &str) -> Result<()> {
