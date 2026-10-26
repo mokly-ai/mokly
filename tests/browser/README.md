@@ -9,6 +9,11 @@ Global setup starts the worker Serve hosts and two copied builds together.
 The shared Serve example uses the unresolved base `refs/mokly/browser-suite-no-base`.
 It waits for settled usage and unavailable Changes, with one Git diagnostic.
 Real Changes specs use their own Git fixtures.
+`exampleServerCommand` in `example_servers.ts` builds the Serve command with
+`EXAMPLE_BASE` from `../helpers/example_base.ts`, which the served design
+checks share. `../verification_example_servers.test.ts` checks the command,
+the Playwright configuration, each worker's server, readiness, and the Git
+diagnostic.
 Every host uses a free loopback port. Setup cancels and drains all work on
 failure. Teardown closes hosts before it removes their output.
 

@@ -102,10 +102,11 @@ local build remains in the private directory reported by
 ## Development
 
 ```bash
-npm test -- tests/publish_action.test.ts
-cargo xtask check --suite viewer
+cargo test -p xtask --test repository_rules publish_action
+cargo xtask check --suite repository
 ```
 
-The action tests run its actual composite shell steps with an injected npm
-installer. The viewer release smoke installs and imports the exact viewer archive.
+The action tests in `xtask/tests/repository_rules/workflows/` run its actual
+composite shell steps with an injected npm installer. They need `bash` and
+`node`, so they run on Linux and macOS only. The viewer release smoke installs and imports the exact viewer archive.
 The static build and publish contracts define the CLI consumer checks.

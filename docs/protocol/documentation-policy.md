@@ -43,7 +43,7 @@ needs the name:
 
 No test asserts the content of a protocol page. The repository gate caps a
 protocol page at 250 lines, with the reviewed exceptions in
-`xtask/protocol-document-caps.json`, and `tests/markdown_links.test.ts` checks
+`xtask/protocol-document-caps.json`, and a repository test of `xtask` checks
 that every local link and anchor resolves. Code is tested against its own
 behaviour, never against the words of a page.
 

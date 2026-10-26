@@ -17,6 +17,9 @@ internal binary and is not published to npm or crates.io.
   that the model and sidecar crates generate. Compare their exact bytes with
   `check-generated-types`, also required by Repository and CI.
 - Enforce the 300-line limit on every Rust file under `xtask/` and `crates/`.
+- Test the repository file rules: the GitHub workflows and the publish action,
+  the npm and Rust pins, the guides, the Markdown links, the design palette
+  of the example catalogue, and the Rust package-version policy.
 - Enforce the limits on changed TypeScript and JavaScript files (300 lines)
   and changed protocol Markdown (250 lines, or the exact reviewed cap in
   `xtask/protocol-document-caps.json`) against the fetched `origin/main`.
@@ -211,6 +214,23 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
+The `repository_rules` integration test binary reads the checked-out tree and
+needs no build output. Run one area with a name filter:
+
+```bash
+cargo test -p xtask --test repository_rules
+cargo test -p xtask --test repository_rules markdown_links
+cargo test -p xtask --test repository_rules workflows
+```
+
+The Repository suite runs it on Linux, and the Native suite runs it on macOS
+and Windows. The Required CI guard and publish action cases run the workflow's
+own `bash` scripts, so they compile only on Unix. The publish action cases also
+need `node`, because the action's install step runs it. Five workflow cases
+stay in Node tests, because they run Node-only code: the Node version policy
+and the example server command in `tests/ci_workflow_policies.test.ts`, and the
+release tag script in `tests/release_tags.test.ts`.
+
 The `*_adapter_tests.rs` files under `src/remote/_tests_/`,
 `src/remote/clients/_tests_/`, and `src/remote/snapshot/_tests_/` test
 operating-system boundaries with real shell children and temporary
@@ -237,6 +257,16 @@ code.
   [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
   commands, and [`src/check/runner.rs`](./src/check/runner.rs) runs them
   through injected process and file auditors.
+- [`tests/repository_rules/main.rs`](./tests/repository_rules/main.rs) holds
+  the repository file rules, one module per area:
+  [`workflows`](./tests/repository_rules/workflows/mod.rs),
+  [`guides`](./tests/repository_rules/guides/mod.rs),
+  [`markdown_links_tests.rs`](./tests/repository_rules/markdown_links_tests.rs),
+  [`design`](./tests/repository_rules/design/mod.rs), and
+  [`rust_package_version_tests.rs`](./tests/repository_rules/rust_package_version_tests.rs).
+  [`support.rs`](./tests/repository_rules/support.rs) reads repository files
+  and YAML documents. The workflow policies include the checked-out lockfile
+  rule of the [repository inputs contract](../docs/protocol/ci-test-repository-inputs.md).
 - [`src/rust_file_length.rs`](./src/rust_file_length.rs) is the Rust
   file-length auditor. [`src/command.rs`](./src/command.rs) defines the
   injected command-runner boundary, and

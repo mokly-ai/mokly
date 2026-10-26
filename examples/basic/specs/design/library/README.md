@@ -184,15 +184,17 @@ From the repository root:
 npm run build
 npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example
 npm run typecheck
-npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts tests/design_catalogue.test.ts
+npm test -- tests/design_catalogue.test.ts
+cargo test -p xtask --test repository_rules design
 cargo xtask check
 ```
 
 `build --strict` renders every library sample and every design screen, and
-fails on any error or warning. `tests/design_appearance.test.ts` checks that
-the light and dark palettes theme the same roles and meet their contrast
-pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
-and control edges stay visible and that only palette sources name colours.
+fails on any error or warning. The `design` repository rules in
+`xtask/tests/repository_rules/design/` check that the light and dark
+palettes theme the same roles and meet their contrast pairs, that marked
+boundaries and control edges stay visible, and that only palette sources
+name colours.
 `tests/design_catalogue.test.ts` serves the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that

@@ -83,11 +83,11 @@ Contract owners:
 No requirement changes. Three protocol pages name a moved test file. They
 state each check without a file name, and the READMEs name the files.
 
-- [ ] State in `docs/protocol/documentation-policy.md` that a repository
+- [x] State in `docs/protocol/documentation-policy.md` that a repository
       test checks every local link and anchor, without the file name.
-- [ ] State the npm pin sentence of
+- [x] State the npm pin sentence of
       `docs/protocol/dependency-audit-update-pr.md` without the file name.
-- [ ] State the example-server and lockfile checks of
+- [x] State the example-server and lockfile checks of
       `docs/protocol/ci-test-repository-inputs.md` without file names. Name
       the example-server test in the browser fixtures README. The
       remote-state paragraph changes with decision 3 B, which moves its
@@ -95,13 +95,16 @@ state each check without a file name, and the READMEs name the files.
 
 ## Milestone 2: Test binary and shared support
 
-- [ ] Add the dev-dependencies at their workspace versions. Check that
+- [x] Add the dev-dependencies at their workspace versions. Check that
       `Cargo.lock` gets no new package.
-- [ ] Create `xtask/tests/repository_rules/main.rs` and its support module.
-- [ ] Describe the test binary, its areas, and its commands in the xtask
+- [x] Create `xtask/tests/repository_rules/main.rs` and its support module.
+- [x] Describe the test binary, its areas, and its commands in the xtask
       README.
-- [ ] Run `cargo test -p xtask --test repository_rules`, Clippy, formatting,
+- [x] Run `cargo test -p xtask --test repository_rules`, Clippy, formatting,
       and the Rust file-length lint.
+
+Evidence: `.context/move-repository-rules-to-xtask/windows-clippy.log`, a
+Clippy run for the Windows target without the `cfg(unix)` cases.
 
 ## Area milestones
 
@@ -116,55 +119,66 @@ Each area milestone follows the same steps:
 
 ## Milestone 3: Workflows and the publish action
 
-- [ ] Port `actionlint_config`, `ci_required_guard`, `ci_timing_policy`,
+- [x] Port `actionlint_config`, `ci_required_guard`, `ci_timing_policy`,
       `dependency_audit_workflow`, `npm_pin`, `rust_pin`, `publish_action`,
       `release`, and `workflow_runner_sizes`.
-- [ ] Port the cases of `ci_workflow_policies` that read files only: the
+- [x] Port the cases of `ci_workflow_policies` that read files only: the
       action pins, untrusted input, full history, the checked-out lockfile,
       and the Testbox toolchain. The Testbox case reads
       `TESTED_NODE_VERSIONS` from `packages/mokly/src/version.mjs` as text.
       Keep the two Node-only cases in the Node file.
-- [ ] Port the structure assertions of the `release_tags` tag job. Keep the
+- [x] Port the structure assertions of the `release_tags` tag job. Keep the
       three script cases in the Node file.
-- [ ] Update the publish action README, and the two open lines of
+- [x] Update the publish action README, and the two open lines of
       `plans/rust-rebuild.md` that name `tests/actionlint_config.test.ts`
       and `tests/npm_pin.test.ts`.
 
 ## Milestone 4: Guides
 
-- [ ] Port `guides_copy`, `guides_structure`, and `guides_versions`, with
+- [x] Port `guides_copy`, `guides_structure`, and `guides_versions`, with
       the guide loader of `tests/helpers/guides.ts`.
 
 ## Milestone 5: Markdown links
 
-- [ ] Port `markdown_links`. Save the comparison of the `marked` and
+- [x] Port `markdown_links`. Save the comparison of the `marked` and
       `pulldown-cmark` link sets under `.context/move-repository-rules-to-xtask/`.
-- [ ] Remove the `marked` dev-dependency, which only this test uses.
-- [ ] Update the Markdown check in `AGENTS.md` and the development guide.
+- [x] Remove the `marked` dev-dependency, which only this test uses.
+- [x] Update the Markdown check in `AGENTS.md` and the development guide.
+
+Evidence: `.context/move-repository-rules-to-xtask/compare/comparison.md`.
 
 ## Milestone 6: Design palette
 
-- [ ] Port `design_appearance` and `design_boundaries`, with the palette
+- [x] Port `design_appearance` and `design_boundaries`, with the palette
       and style-rule readers of `tests/helpers/design_palette.ts` and
       `tests/helpers/design_styles.ts`.
-- [ ] Keep `paletteColor` of `tests/helpers/design_palette.ts` for the
+- [x] Keep `paletteColor` of `tests/helpers/design_palette.ts` for the
       browser specs, and remove the contrast functions that only the moved
       tests use.
-- [ ] Update the verification section of the design library README.
+- [x] Update the verification section of the design library README.
+
+Evidence: the contrast comparison in
+`.context/move-repository-rules-to-xtask/compare/comparison.md`.
 
 ## Milestone 7: Rust package version
 
-- [ ] Port `release_rust_version`, with the detector of
+- [x] Port `release_rust_version`, with the detector of
       `tests/helpers/rust_package_version.ts`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
-- [ ] Save the map from each Node case to its Rust test under
+- [x] Save the map from each Node case to its Rust test under
       `.context/move-repository-rules-to-xtask/`.
-- [ ] Inject one fault per area into its input, check that the Rust test
+- [x] Inject one fault per area into its input, check that the Rust test
       fails, and restore the input. Save the evidence there too.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+
+Evidence: `case-map.md` and `fault-injection.md` in
+`.context/move-repository-rules-to-xtask/`. Gate evidence:
+`repository-suite.log` and `complete-gate.log` there, remote run
+`20261026T181937Z-234094`.
+
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,

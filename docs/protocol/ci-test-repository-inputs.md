@@ -20,15 +20,13 @@ reuse depends on that determinism.
 
 The automated checks for repository inputs are deliberately narrow:
 
-- [`tests/verification_example_servers.test.ts`](../../tests/verification_example_servers.test.ts)
-  requires the browser command to use the named `EXAMPLE_BASE` constant through
-  the exported `exampleServerCommand` builder in `tests/browser/example_servers.ts`.
-  `tests/helpers/example_base.ts` owns the constant shared with served design checks.
-  It checks the Playwright configuration, each worker's server, readiness, and
-  the single Git diagnostic.
-- [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
-  requires viewer, browser, and native jobs to use the checked-out lockfile and
-  never resolve `origin/main` or a branch-point lockfile.
+- A Node test requires the browser command to use the named unavailable base
+  through one shared command builder. The served design checks share that
+  base. The test checks the Playwright configuration, each worker's server,
+  readiness, and the single Git diagnostic.
+- A repository test of `xtask` requires viewer, browser, and native jobs to use
+  the checked-out lockfile and never resolve `origin/main` or a branch-point
+  lockfile.
 
 These checks are properties of the workflow, not copies of its text. Review
 owns workflow literals such as job names, step order, matrix values and run

@@ -14,8 +14,16 @@ sha2 = "0.11.0"
 thiserror = "2.0.21"
 
 [dev-dependencies]
+fancy-regex = "0.19.2"
+percent-encoding = "2.3.2"
+pulldown-cmark = "0.13.4"
+regex = "1.13.1"
 serde_json = "1.0.154"
+tempfile = "3.27.0"
 unimock = "0.6.8"
+url = "2.5.8"
+walkdir = "2.5.0"
+yaml-rust2 = "0.13.0"
 
 [dependencies.mokly-model]
 workspace = true

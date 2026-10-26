@@ -27,9 +27,10 @@ crates and the npm packages.
 Run the tests that cover a change while you develop:
 
 ```bash
-npm test -- tests/markdown_links.test.ts
+npm test -- packages/viewer/tests/appearance_preference.test.ts
 npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 cargo test -p mokly-html
+cargo test -p xtask --test repository_rules markdown_links
 ```
 
 Put every npm test argument after `--`. Selected runs are partial
