@@ -1,6 +1,6 @@
 {
   "name": "@mokly/native-darwin-x64",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Mokly native CLI for darwin-x64.",
   "license": "MIT",
   "os": [

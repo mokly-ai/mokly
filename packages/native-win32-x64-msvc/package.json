@@ -1,6 +1,6 @@
 {
   "name": "@mokly/native-win32-x64-msvc",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Mokly native CLI for win32-x64-msvc.",
   "license": "MIT",
   "os": [

@@ -53,6 +53,7 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         rust_clippy(),
+        design_matrix_clippy(),
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
         cargo(&["test", "--workspace"]),
@@ -63,6 +64,21 @@ fn rust_clippy() -> CommandSpec {
     cargo(&[
         "clippy",
         "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings",
+    ])
+}
+
+/// Lint the feature-gated design matrix target that the workspace lint skips.
+fn design_matrix_clippy() -> CommandSpec {
+    cargo(&[
+        "clippy",
+        "-p",
+        "mokly-cli",
+        "--features",
+        "design-matrix",
         "--all-targets",
         "--",
         "-D",

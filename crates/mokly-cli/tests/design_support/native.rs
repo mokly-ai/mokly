@@ -95,6 +95,7 @@ impl Session {
                 },
                 redactor,
                 Arc::new(ProbeDiagnostics),
+                common.base_install_scripts_override(),
             ),
             cancellation,
             config: loader.clone(),

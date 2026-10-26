@@ -120,17 +120,19 @@ keeps every workflow npm pin equal to `packageManager`, requires CI and release
 jobs to set up that npm before `npm ci`, and rejects pins older than npm
 11.11.0.
 
-Linux and Windows jobs across the CI, preview, release, and Dependency Audit
-workflows use Blacksmith's 2-vCPU tiers, except the design matrix below. macOS jobs use the provider's smallest
+Linux and Windows jobs across the CI, preview, release, native bootstrap, and
+Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
+matrix below. macOS jobs use the provider's smallest
 available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
 self-hosted runner such as Blacksmith. A tooling test enforces both rules.
-A second, narrow exception permits only the release matrix's `darwin-x64`
-build on GitHub-hosted `macos-26-intel`, with `actions/checkout`. Blacksmith's
+A second, narrow exception permits only the `darwin-x64` row of the release,
+release-check, and native bootstrap build matrices on GitHub-hosted
+`macos-26-intel`, with `actions/checkout`. Blacksmith's
 macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
-it has no npm publishing permission. Every other native release row follows
+it has no npm publishing permission. Every other native build row follows
 the Blacksmith size rule. Repository jobs have a 75-minute timeout, and Viewer
 jobs have a 40-minute timeout. Browser shards, static-delivery jobs, and native
 jobs have a 60-minute execution timeout. Required CI and other jobs keep a
@@ -215,12 +217,13 @@ Tooling tests under `tests/` verify workflow files by their properties and by
 running their scripts. The policy test requires every `uses:` revision across
 the workflows and composite actions to be a 40-character lowercase commit. It
 forbids untrusted pull request fields in `ci.yml` `run:` steps and `${{` in
-Dependency Audit `run:` steps. It requires a full-history checkout in every CI
-and preview job that installs dependencies. It keeps the viewer and browser
-jobs on the checked-out lockfile. It checks that `.nvmrc`, the package and
-lockfile engines, and the README agree with the shim's tested Node versions and
-supported range. It checks that the Testbox Node.js version matches the CI
-native job and that the Testbox npm and Rust steps match the CI repository job.
+Dependency Audit and native bootstrap `run:` steps. It requires a full-history
+checkout in every CI and preview job that installs dependencies. It keeps the
+viewer and browser jobs on the checked-out lockfile. It checks that `.nvmrc`,
+the package and lockfile engines, and the README agree with the shim's tested
+Node versions and supported range. It checks that the Testbox Node.js version
+matches the CI native job and that the Testbox npm and Rust steps match the CI
+repository job.
 The [repository input contract](./ci-test-repository-inputs.md) describes its
 example server check.
 
