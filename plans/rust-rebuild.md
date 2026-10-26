@@ -5483,7 +5483,7 @@ check passes on this commit.
     late baseline. Its transformed source gets no raw witness. Evidence:
     `.context/port-117c/`.
 
-- [ ] Resolve PostCSS loader-path review finding 2 (performance): each
+- [x] Resolve PostCSS loader-path review finding 2 (performance): each
       repeated asynchronous registration keeps the earlier observer hooks,
       and each message port stays open until its peer closes. Severity Low,
       performance, effort Large for B. Options: A, close the superseded
@@ -5491,8 +5491,10 @@ check passes on this commit.
       B, use one registration broker and one observer channel, and keep the
       consumer hook order and output, Large. Recommended: B. No option is
       applied.
+  - User decision (2026-10-26): closed with no work by B of the 117 C port
+    finding. Mokly registers no asynchronous hook since `07893644`.
 
-- [ ] Resolve the 117 C port finding (code structure): the asynchronous
+- [x] Resolve the 117 C port finding (code structure): the asynchronous
       observer of 117 C adds hook work but no tested path. Synchronous
       module hooks wrap the asynchronous loader chain, so the path-only
       synchronous hook already reports each loader-supplied module. With
@@ -5510,8 +5512,13 @@ check passes on this commit.
     thread before consumer preloads and hid their descriptor ranges. The
     worker now registers it after consumer preloads. Option B also removes
     this class.
+  - User decision (2026-10-26): B, applied in `07893644`. The first answers,
+    1 B, 2 A, 3 B, and 4 B for the four 117 C port items, conflicted,
+    because 4 B removes the observer that the others change. The user then
+    chose to apply 4 B, to close items 2 and 3 with no work, and to state
+    for item 1 that hook modules keep no path.
 
-- [ ] Resolve 117 C port review 2 finding 1 (docs or spec): the loader-flag
+- [x] Resolve 117 C port review 2 finding 1 (docs or spec): the loader-flag
       fix in `6ce66aec` drops one hook module path. Under a loader flag, the
       worker now registers the asynchronous observer after consumer
       preloads. So a hook module that a preload registers and that the
@@ -5524,8 +5531,11 @@ check passes on this commit.
       with the 117 C port finding, whose option B removes the asynchronous
       observer and needs A in a wider form, Medium. Recommended: B. No
       option is applied.
+  - User decision (2026-10-26): C, with B of the 117 C port finding. The
+    protocol and the README state in `07893644` that modules of Node's
+    asynchronous loader thread, such as hook modules, have no path.
 
-- [ ] Resolve 117 C port review 2 finding 2 (test): the release inventory
+- [x] Resolve 117 C port review 2 finding 2 (test): the release inventory
       check does not require `dist/sidecar/postcss-async-loader.mjs`, which
       the preload loads by path through `module.register`. A build that
       drops it still passes the release check, and PostCSS then fails for
@@ -5536,6 +5546,8 @@ check passes on this commit.
       the separate sidecar bundles for the build and the release check,
       Large. Both options add a release rejection. Recommended: A. No
       option is applied.
+  - User decision (2026-10-26): closed with no work by B of the 117 C port
+    finding. The package has no such bundle since `07893644`.
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
