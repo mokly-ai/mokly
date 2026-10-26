@@ -2,6 +2,18 @@
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
+use crate::tree::Element;
+
+pub(crate) fn filter_attributes(element: &mut Element) {
+    let allowed = match element.name.as_str() {
+        "mokly-ignore" => ["id", "material-key", "mokly-if", "mokly-viewport"].as_slice(),
+        "mokly-ignore-scope" => ["enabled", "mokly-if", "mokly-viewport"].as_slice(),
+        _ => return,
+    };
+    element
+        .attributes
+        .retain(|attribute| allowed.contains(&attribute.name.as_str()));
+}
 
 pub(crate) fn id(value: &str) -> Result<()> {
     if value.is_empty()

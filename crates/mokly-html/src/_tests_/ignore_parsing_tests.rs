@@ -76,6 +76,18 @@ fn delivered_page_ignore_attributes_are_not_evaluated_by_composition() {
 }
 
 #[test]
+fn delivered_wrapper_filter_removes_unknown_attributes_before_substitution() {
+    let mut nodes =
+        parse::delivered_fragment("<mokly-ignore id='x' data-x='{{missing}}'>Text</mokly-ignore>");
+    let Node::Element(element) = &mut nodes[0] else {
+        panic!("expected wrapper");
+    };
+    crate::ignore_checks::filter_attributes(element);
+    assert_eq!(element.get("id"), Some("x"));
+    assert_eq!(element.get("data-x"), None);
+}
+
+#[test]
 fn screen_component_and_page_locations_survive_attribute_removal() {
     for (path, page) in [
         ("specs/home.screen.html", false),
