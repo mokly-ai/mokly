@@ -2,12 +2,11 @@
 
 use std::collections::BTreeSet;
 
-use crate::html_tokens::{StartTag, Token};
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
 use crate::diagnostic::{Code, Issue, Warning};
-use crate::html_tokens;
+use crate::html_tokens::{self, StartTag, Token};
 use crate::references::{boolean, reference, substitutions, use_reference};
 use crate::template_role::TemplateRole;
 use crate::template_types::{ElementRegistry, Template};

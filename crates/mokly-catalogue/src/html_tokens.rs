@@ -3,14 +3,13 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+use html5gum::{DefaultEmitter, Tokenizer};
+
+use crate::html_token_conversion::own_token;
 pub use crate::html_token_types::{
     Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token,
 };
 use crate::template_types::ignore_attribute_allowed;
-use html5gum::{
-    DefaultEmitter, Span as RawSpan, Spanned as RawSpanned, StartTag as RawStartTag,
-    Token as RawToken, Tokenizer,
-};
 
 /// One token and the diagnostics that must survive attribute normalization.
 pub struct ParsedToken {
@@ -62,7 +61,7 @@ pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
     attributes.filter(|_| tags == 2)
 }
 
-fn tokenize(source: &str, switch_states: bool) -> Vec<RawToken<usize>> {
+fn tokenize(source: &str, switch_states: bool) -> Vec<html5gum::Token<usize>> {
     let mut emitter = DefaultEmitter::<usize>::new_with_span();
     emitter.naively_switch_states(switch_states);
     Tokenizer::new_with_emitter(source, emitter)
@@ -70,11 +69,14 @@ fn tokenize(source: &str, switch_states: bool) -> Vec<RawToken<usize>> {
         .collect()
 }
 
-fn collapse_raw_elements(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<RawToken<usize>> {
+fn collapse_raw_elements(
+    source: &str,
+    tokens: Vec<html5gum::Token<usize>>,
+) -> Vec<html5gum::Token<usize>> {
     let mut output = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
-        let RawToken::StartTag(start) = &tokens[index] else {
+        let html5gum::Token::StartTag(start) = &tokens[index] else {
             output.push(tokens[index].clone());
             index += 1;
             continue;
@@ -87,7 +89,7 @@ fn collapse_raw_elements(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<RawT
         output.push(tokens[index].clone());
         let mut end_index = index + 1;
         while end_index < tokens.len() {
-            if let RawToken::EndTag(end) = &tokens[end_index]
+            if let html5gum::Token::EndTag(end) = &tokens[end_index]
                 && end.name.as_ref() == b"noframes"
             {
                 break;
@@ -96,13 +98,13 @@ fn collapse_raw_elements(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<RawT
         }
         if end_index < tokens.len() {
             let end = match &tokens[end_index] {
-                RawToken::EndTag(end) => end.span,
+                html5gum::Token::EndTag(end) => end.span,
                 _ => unreachable!(),
             };
             if let Some(text) = source.get(start.span.end..end.start) {
-                output.push(RawToken::String(RawSpanned {
+                output.push(html5gum::Token::String(html5gum::Spanned {
                     value: text.as_bytes().to_vec().into(),
-                    span: RawSpan {
+                    span: html5gum::Span {
                         start: start.span.end,
                         end: end.start,
                     },
@@ -117,13 +119,16 @@ fn collapse_raw_elements(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<RawT
     output
 }
 
-fn expand_markup_contexts(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<RawToken<usize>> {
+fn expand_markup_contexts(
+    source: &str,
+    tokens: Vec<html5gum::Token<usize>>,
+) -> Vec<html5gum::Token<usize>> {
     let mut output = Vec::new();
     let mut foreign_stack = Vec::new();
     let mut raw_context: Option<(Vec<u8>, bool)> = None;
     for token in tokens {
         match &token {
-            RawToken::StartTag(tag) => {
+            html5gum::Token::StartTag(tag) => {
                 let name = tag.name.as_ref();
                 let in_foreign = foreign_stack.last().is_some_and(ContextFrame::is_foreign);
                 let integration = in_foreign && is_integration_point(name);
@@ -159,7 +164,7 @@ fn expand_markup_contexts(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<Raw
                 }
                 output.push(token);
             }
-            RawToken::String(text) if raw_context.is_some() => {
+            html5gum::Token::String(text) if raw_context.is_some() => {
                 let (_, markup) = raw_context.as_ref().unwrap();
                 if *markup {
                     let value = source
@@ -177,7 +182,7 @@ fn expand_markup_contexts(source: &str, tokens: Vec<RawToken<usize>>) -> Vec<Raw
                     output.push(token);
                 }
             }
-            RawToken::EndTag(tag) => {
+            html5gum::Token::EndTag(tag) => {
                 if raw_context
                     .as_ref()
                     .is_some_and(|(name, _)| name.as_slice() == tag.name.as_ref())
@@ -227,10 +232,10 @@ fn is_integration_point(name: &[u8]) -> bool {
     )
 }
 
-fn shift_token(mut token: RawToken<usize>, offset: usize) -> RawToken<usize> {
+fn shift_token(mut token: html5gum::Token<usize>, offset: usize) -> html5gum::Token<usize> {
     let offset = offset as isize;
     match &mut token {
-        RawToken::StartTag(RawStartTag {
+        html5gum::Token::StartTag(html5gum::StartTag {
             span, attributes, ..
         }) => {
             *span = shift_span(*span, offset);
@@ -238,30 +243,30 @@ fn shift_token(mut token: RawToken<usize>, offset: usize) -> RawToken<usize> {
                 value.span = shift_span(value.span, offset);
             }
         }
-        RawToken::EndTag(tag) => tag.span = shift_span(tag.span, offset),
-        RawToken::String(text) | RawToken::Comment(text) => {
+        html5gum::Token::EndTag(tag) => tag.span = shift_span(tag.span, offset),
+        html5gum::Token::String(text) | html5gum::Token::Comment(text) => {
             text.span = shift_span(text.span, offset)
         }
-        RawToken::Doctype(doctype) => doctype.span = shift_span(doctype.span, offset),
-        RawToken::Error(error) => error.span = shift_span(error.span, offset),
+        html5gum::Token::Doctype(doctype) => doctype.span = shift_span(doctype.span, offset),
+        html5gum::Token::Error(error) => error.span = shift_span(error.span, offset),
     }
     token
 }
 
-fn shift_span(span: RawSpan<usize>, offset: isize) -> RawSpan<usize> {
-    RawSpan {
+fn shift_span(span: html5gum::Span<usize>, offset: isize) -> html5gum::Span<usize> {
+    html5gum::Span {
         start: span.start.saturating_add_signed(offset),
         end: span.end.saturating_add_signed(offset),
     }
 }
 
-fn normalize(mut token: RawToken<usize>) -> ParsedToken {
+fn normalize(mut token: html5gum::Token<usize>) -> ParsedToken {
     let reserved_navigation = matches!(
         &token,
-        RawToken::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
+        html5gum::Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
     );
     let mut ignored_attributes = Vec::new();
-    if let RawToken::StartTag(tag) = &mut token {
+    if let html5gum::Token::StartTag(tag) = &mut token {
         let element = String::from_utf8_lossy(&tag.name);
         tag.attributes.retain(|name, _| {
             let name = String::from_utf8_lossy(name);
@@ -274,7 +279,7 @@ fn normalize(mut token: RawToken<usize>) -> ParsedToken {
         });
     }
     ParsedToken {
-        token: crate::html_token_conversion::own_token(token),
+        token: own_token(token),
         ignored_attributes,
         reserved_navigation,
     }

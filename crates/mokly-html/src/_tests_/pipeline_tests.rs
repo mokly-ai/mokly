@@ -60,7 +60,7 @@ fn token_pipeline_keeps_tree_bytes_and_source_identity() {
         ("<plaintext><b>literal</b>", vec!["plaintext"]),
     ] {
         let old = crate::parse::legacy_authored_document(source);
-        let new = pipeline::document(source, "fixture.html");
+        let new = pipeline::authored_document(source, "fixture.html", 1, 1);
         assert_eq!(serialize::html(&new), serialize::html(&old), "{source}");
         let identities: Vec<_> = tree::walk(&new)
             .filter_map(|node| match node {
@@ -124,7 +124,7 @@ fn token_pipeline_copies_bom_and_cdata_boundaries() {
         "\u{feff}<!doctype html><html><head><title>Title</title></head><body>Body</body></html>",
         "<svg><![CDATA[foreign text]]></svg>",
     ] {
-        let old = crate::parse::legacy_document(source);
+        let old = crate::parse::legacy_authored_document(source);
         let new = pipeline::delivered_document(source);
         assert_eq!(serialize::html(&new), serialize::html(&old), "{source:?}");
     }

@@ -1,14 +1,12 @@
 //! Convert html5gum values into Mokly-owned HTML tokens.
 
-use html5gum::{HtmlString, Span, Spanned, Token as RawToken};
+use html5gum::{HtmlString, Span, Spanned};
 
-use crate::html_token_types::{
-    Doctype, EndTag, Error, ErrorToken, Span as OwnedSpan, Spanned as OwnedSpanned, StartTag, Token,
-};
+use crate::html_token_types::{Doctype, EndTag, Error, ErrorToken, StartTag, Token};
 
-pub(crate) fn own_token(token: RawToken<usize>) -> Token {
+pub(crate) fn own_token(token: html5gum::Token<usize>) -> crate::html_token_types::Token {
     match token {
-        RawToken::StartTag(tag) => Token::StartTag(StartTag {
+        html5gum::Token::StartTag(tag) => Token::StartTag(StartTag {
             name: tag.name.0,
             attributes: tag
                 .attributes
@@ -18,13 +16,13 @@ pub(crate) fn own_token(token: RawToken<usize>) -> Token {
             self_closing: tag.self_closing,
             span: own_span(tag.span),
         }),
-        RawToken::EndTag(tag) => Token::EndTag(EndTag {
+        html5gum::Token::EndTag(tag) => Token::EndTag(EndTag {
             name: tag.name.0,
             span: own_span(tag.span),
         }),
-        RawToken::String(value) => Token::String(own_spanned(value)),
-        RawToken::Comment(value) => Token::Comment(own_spanned(value)),
-        RawToken::Doctype(value) => {
+        html5gum::Token::String(value) => Token::String(own_spanned(value)),
+        html5gum::Token::Comment(value) => Token::Comment(own_spanned(value)),
+        html5gum::Token::Doctype(value) => {
             let data = value.value;
             Token::Doctype(Doctype {
                 name: Some(data.name.0),
@@ -34,7 +32,7 @@ pub(crate) fn own_token(token: RawToken<usize>) -> Token {
                 span: own_span(value.span),
             })
         }
-        RawToken::Error(value) => Token::Error(ErrorToken {
+        html5gum::Token::Error(value) => Token::Error(ErrorToken {
             value: if value.value == html5gum::Error::DuplicateAttribute {
                 Error::DuplicateAttribute
             } else {
@@ -45,15 +43,15 @@ pub(crate) fn own_token(token: RawToken<usize>) -> Token {
     }
 }
 
-fn own_span(span: Span<usize>) -> OwnedSpan {
-    OwnedSpan {
+fn own_span(span: Span<usize>) -> crate::html_token_types::Span {
+    crate::html_token_types::Span {
         start: span.start,
         end: span.end,
     }
 }
 
-fn own_spanned(value: Spanned<HtmlString, usize>) -> OwnedSpanned {
-    OwnedSpanned {
+fn own_spanned(value: Spanned<HtmlString, usize>) -> crate::html_token_types::Spanned {
+    crate::html_token_types::Spanned {
         value: value.value.0,
         span: own_span(value.span),
     }

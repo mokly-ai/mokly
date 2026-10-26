@@ -25,12 +25,12 @@ mod folders;
 mod front_matter;
 mod globs;
 mod html_token_conversion;
-#[cfg(test)]
-#[path = "_tests_/ignore_parsing_tests.rs"]
-mod html_token_tests;
 mod html_token_types;
 pub mod html_tokens;
 mod identity;
+#[cfg(test)]
+#[path = "_tests_/ignore_parsing_tests.rs"]
+mod ignore_parsing_tests;
 pub mod input;
 mod links;
 mod locations;
