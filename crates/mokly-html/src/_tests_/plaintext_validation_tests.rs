@@ -11,7 +11,7 @@ use super::reparse;
 fn authored_plaintext_repair_matches_the_browser_tree() {
     for source in [
         "<p><a href=\"mock:home\">Home</p><plaintext>Raw",
-        "<table><x-card>Card</x-card></table><plaintext>Raw",
+        "<table><tr><td>one</td></tr><plaintext>Raw",
     ] {
         let actual = parse::authored_document(source, "fixture.html");
         let expected = parse::legacy_authored_document(source);
@@ -27,6 +27,13 @@ fn authored_plaintext_repair_matches_the_browser_tree() {
             })
             .expect("plaintext element");
         assert!(walk(&plaintext.children).all(|node| !matches!(node, Node::Element(_))));
+        if source.starts_with("<table>") {
+            assert!(
+                !walk(&actual).any(|node| {
+                    matches!(node, Node::Element(element) if element.name == "table")
+                })
+            );
+        }
     }
 }
 

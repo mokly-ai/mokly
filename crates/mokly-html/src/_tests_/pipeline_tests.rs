@@ -96,24 +96,37 @@ fn formatting_clones_do_not_take_a_later_start_tag_position() {
 
 #[test]
 fn reconstruction_positions_follow_each_authored_start_tag() {
-    for (source, name) in [
-        ("<p><a href=one>one</p><p><a href=two>two</a></p>", "a"),
-        ("<p><nobr>one</p><p><nobr>two</nobr></p>", "nobr"),
-        ("<table><b class=one>one</table><b class=two>two", "b"),
+    for (source, name, expected) in [
+        (
+            "<p><a href=one>1<div>2<a href=two>3</a></div>",
+            "a",
+            vec![(Some("one"), 4), (Some("two"), 23)],
+        ),
+        (
+            "<p><nobr class=one>one</p><p><nobr class=two>two</nobr></p>",
+            "nobr",
+            vec![(Some("one"), 4), (Some("two"), 30)],
+        ),
+        (
+            "<table><b class=one>one</table><b class=two>two",
+            "b",
+            vec![(Some("one"), 8), (Some("two"), 32)],
+        ),
     ] {
         let nodes = crate::parse::authored_fragment(source, "fixture.html");
         let positions: Vec<_> = tree::walk(&nodes)
             .filter_map(|node| match node {
                 crate::tree::Node::Element(element) if element.name == name => {
-                    element.source.as_ref().map(|source| source.column)
+                    element.source.as_ref().map(|source| {
+                        (
+                            element.get("href").or_else(|| element.get("class")),
+                            source.column,
+                        )
+                    })
                 }
                 _ => None,
             })
             .collect();
-        let expected = source
-            .match_indices(&format!("<{name}"))
-            .map(|(index, _)| index + 1)
-            .collect::<Vec<_>>();
         assert_eq!(positions, expected, "{source}");
     }
 }
