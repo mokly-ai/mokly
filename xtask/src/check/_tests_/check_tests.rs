@@ -8,11 +8,14 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::command::CommandRunnerRunMock;
 use crate::error::Error;
+use crate::length::protocol_audit::ProtocolCapAuditorRunMock;
+use crate::length::source_audit::SourceFileLengthAuditorRunMock;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
 use super::commands::commands_for;
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
+use super::runner_support::{auditors, step_display, unused_auditors};
 
 #[test]
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
@@ -24,7 +27,6 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo xtask check-generated-types" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
-        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo fmt --all -- --check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         (
@@ -40,12 +42,7 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:delivery:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
     )));
-    let auditor = Arc::new(Unimock::new(
-        RustFileLengthAuditorRunMock
-            .next_call(matching!((root) if *root == workspace().as_path()))
-            .returns(Ok(())),
-    ));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    let runner = DefaultCheckRunner::new(command_runner, repository_auditors(), workspace());
     runner
         .run(CheckRequest::new(None, None, None).unwrap())
         .unwrap();
@@ -64,7 +61,7 @@ fn selected_viewer_builds_then_checks_and_tests() {
             .next_call(matching!((command) if command.display() == "npm run test:viewer:prepared"))
             .returns(Ok(())),
     )));
-    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+    let runner = DefaultCheckRunner::new(command_runner, unused_auditors(), workspace());
     let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
         .expect("viewer suite is valid");
     runner.run(request).expect("viewer suite succeeds");
@@ -89,9 +86,6 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .next_call(matching!((command) if command.display() == "npm run lint"))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
-            .returns(Ok(())),
-        CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs"))
             .returns(Ok(())),
         CommandRunnerRunMock
@@ -109,35 +103,11 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .next_call(matching!((command) if command.display() == "cargo test --workspace"))
             .returns(Ok(())),
     )));
-    let auditor = Arc::new(Unimock::new(
-        RustFileLengthAuditorRunMock
-            .next_call(matching!((root) if *root == workspace().as_path()))
-            .returns(Ok(())),
-    ));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    let runner = DefaultCheckRunner::new(command_runner, repository_auditors(), workspace());
     let request = CheckRequest::new(Some(VerificationSuite::Repository), None, None)
         .expect("repository request is valid");
 
     runner.run(request).expect("repository suite succeeds");
-}
-
-#[test]
-fn source_length_audit_supports_changed_and_all_modes() {
-    let command_runner = Arc::new(Unimock::new((
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs"))
-            .returns(Ok(())),
-        CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs --all"))
-            .returns(Ok(())),
-    )));
-    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
-    runner
-        .source_file_length(false)
-        .expect("changed-file audit succeeds");
-    runner
-        .source_file_length(true)
-        .expect("all-file audit succeeds");
 }
 
 #[test]
@@ -150,8 +120,7 @@ fn dependency_check_failure_stops_verification() {
                 status: "1".to_owned(),
             })),
     ));
-    let auditor = Arc::new(Unimock::new(()));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    let runner = DefaultCheckRunner::new(command_runner, unused_auditors(), workspace());
     let request = CheckRequest::new(None, None, None).expect("complete request is valid");
 
     assert!(matches!(
@@ -170,8 +139,7 @@ fn subprocess_failure_is_propagated_from_a_selected_suite() {
                 status: "9".to_owned(),
             })),
     ));
-    let auditor = Arc::new(Unimock::new(()));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    let runner = DefaultCheckRunner::new(command_runner, unused_auditors(), workspace());
     let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
         .expect("viewer request is valid");
 
@@ -234,10 +202,7 @@ fn browser_selection_builds_and_forwards_only_validated_shards() {
         DependencyAudit::Baseline,
     );
     assert_eq!(
-        commands
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
+        commands.iter().map(step_display).collect::<Vec<_>>(),
         [
             "npm run build",
             "npm run test:browser:prepared -- --shard 2/4"
@@ -247,4 +212,25 @@ fn browser_selection_builds_and_forwards_only_validated_shards() {
 
 fn workspace() -> PathBuf {
     PathBuf::from("/workspace")
+}
+
+/// The Rust and changed-file length audits that every repository suite runs.
+fn repository_auditors() -> super::runner::Auditors {
+    auditors(
+        Unimock::new(
+            RustFileLengthAuditorRunMock
+                .next_call(matching!((root) if *root == workspace().as_path()))
+                .returns(Ok(())),
+        ),
+        Unimock::new(
+            SourceFileLengthAuditorRunMock
+                .next_call(matching!((start, all) if *start == workspace().as_path() && !*all))
+                .returns(Ok(())),
+        ),
+        Unimock::new(
+            ProtocolCapAuditorRunMock
+                .next_call(matching!((root) if *root == workspace().as_path()))
+                .returns(Ok(())),
+        ),
+    )
 }

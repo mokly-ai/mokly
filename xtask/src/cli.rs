@@ -10,10 +10,12 @@ use clap::{Parser, Subcommand};
 use crate::application::{Application, Xtask};
 use crate::artifacts::{DefaultArtifacts, SystemArtifactFiles};
 use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
-use crate::check::runner::DefaultCheckRunner;
+use crate::check::runner::{Auditors, DefaultCheckRunner};
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
+use crate::length::protocol_audit::SystemProtocolCapAuditor;
+use crate::length::source_audit::SystemSourceFileLengthAuditor;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::clients::github::SystemGithub;
@@ -114,7 +116,11 @@ pub(crate) fn main() -> ExitCode {
         selector,
         check_runner: Arc::new(DefaultCheckRunner::new(
             command_runner,
-            Arc::clone(&rust_file_length_auditor),
+            Auditors {
+                rust_file_length: Arc::clone(&rust_file_length_auditor),
+                source_file_length: Arc::new(SystemSourceFileLengthAuditor),
+                protocol_caps: Arc::new(SystemProtocolCapAuditor),
+            },
             workspace.clone(),
         )),
         rust_file_length_auditor,

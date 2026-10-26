@@ -35,9 +35,6 @@ review to keep this deterministic-input rule.
 
 No workflow or composite-action `run:` step may delete remote Git state. In a
 shared Git worktree, such a command deletes the shared repository's remotes,
-remote-tracking references or upstream settings.
-[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts)
-enforces this as a text check across workflow and composite-action steps, using
-the command scanner in
-[`tests/helpers/remote_state_commands.ts`](../../tests/helpers/remote_state_commands.ts).
-It cannot see commands inside scripts that a step calls.
+remote-tracking references or upstream settings. A repository test of `xtask`
+enforces this as a text check across workflow and composite-action steps. It
+cannot see commands inside scripts that a step calls.

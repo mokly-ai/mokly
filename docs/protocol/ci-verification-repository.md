@@ -38,11 +38,11 @@ The repository and native suites build `@mokly/viewer` then `@mokly/mokly`
 before `cargo test --workspace`. The real sidecar smoke tests require these
 fresh package outputs on every host, including a clean checkout.
 
-The Rust file-length auditor runs inside `xtask` rather than as a
-subprocess in the command list; it has the same failure semantics as the
-listed commands. The source/protocol auditor is an xtask-invoked Node command:
-it checks files changed against fetched `origin/main`, plus working-tree and
-untracked files. It covers all repository TypeScript/JavaScript extensions
+The Rust file-length auditor and the source/protocol auditor run inside
+`xtask` rather than as subprocesses in the command list; they have the same
+failure semantics as the listed commands. The source/protocol auditor checks
+files changed against fetched `origin/main`, plus working-tree and untracked
+files. It covers all repository TypeScript/JavaScript extensions
 (`.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.mts`, `.cts`) and
 `docs/protocol` Markdown. There are no directory exclusions beyond
 Git-ignored untracked files; tracked files remain in scope. Every xtask

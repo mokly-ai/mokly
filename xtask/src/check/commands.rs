@@ -4,28 +4,42 @@ use crate::command::CommandSpec;
 
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 
-/// Commands in dependency order for one validated suite.
+/// One step of a suite: a subprocess or an in-process audit.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(super) enum Step {
+    /// Run one subprocess at the workspace root.
+    Command(CommandSpec),
+    /// Audit the length of changed source and protocol files.
+    SourceFileLength,
+    /// Run the protocol cap ratchet, then the Node ratchet runner, and fail
+    /// after both when either fails.
+    Ratchets(CommandSpec),
+}
+
+/// Steps in dependency order for one validated suite.
 pub(super) fn commands_for(
     suite: VerificationSuite,
     shard: Option<Shard>,
     dependency_audit: DependencyAudit,
-) -> Vec<CommandSpec> {
+) -> Vec<Step> {
     match suite {
-        VerificationSuite::Repository => repository_commands(dependency_audit),
-        VerificationSuite::Viewer => vec![
+        VerificationSuite::Repository => repository_steps(dependency_audit),
+        VerificationSuite::Viewer => commands(vec![
             npm(&["run", "build"]),
             npm(&["run", "typecheck"]),
             npm(&["run", "test:viewer:prepared"]),
-        ],
-        VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
-        VerificationSuite::Native => vec![
+        ]),
+        VerificationSuite::Browser => {
+            commands(vec![npm(&["run", "build"]), browser_test_command(shard)])
+        }
+        VerificationSuite::Native => commands(vec![
             cargo(&["xtask", "build-native"]),
             cargo(&["fmt", "--all", "--", "--check"]),
             rust_clippy(),
             npm(&["run", "build", "--workspace", "@mokly/viewer"]),
             npm(&["run", "build", "--workspace", "@mokly/mokly"]),
             cargo(&["test", "--workspace", "--no-fail-fast"]),
-        ],
+        ]),
     }
 }
 
@@ -38,26 +52,35 @@ pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
     test
 }
 
-fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
+fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
     let audit = match dependency_audit {
         DependencyAudit::Baseline => npm(&["run", "dependencies:check", "--", "--baseline"]),
         DependencyAudit::Strict => npm(&["run", "dependencies:check"]),
     };
-    vec![
+    let mut steps = commands(vec![
         audit,
         npm(&["run", "dependencies:check:rust"]),
         cargo(&["xtask", "check-generated-types"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
-        CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
-        node(&["scripts/verification/repository-ratchets.mjs"]),
+    ]);
+    steps.push(Step::SourceFileLength);
+    steps.push(Step::Ratchets(node(&[
+        "scripts/verification/repository-ratchets.mjs",
+    ])));
+    steps.extend(commands(vec![
         cargo(&["fmt", "--all", "--", "--check"]),
         rust_clippy(),
         design_matrix_clippy(),
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
         cargo(&["test", "--workspace"]),
-    ]
+    ]));
+    steps
+}
+
+fn commands(commands: Vec<CommandSpec>) -> Vec<Step> {
+    commands.into_iter().map(Step::Command).collect()
 }
 
 fn rust_clippy() -> CommandSpec {

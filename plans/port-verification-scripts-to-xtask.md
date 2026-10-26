@@ -37,9 +37,11 @@ Findings of the scope check on 2026-10-26:
   path. The port keeps it with a strict parser of that object-literal form.
 - The child environment parity test stays in Node, because `process.mjs`
   and `serve-process.mjs` keep using `child-environment.mjs`.
-- Two parts change a protocol requirement, so they wait for user decisions:
-  the Testbox commands and the pull request title workflow. Milestones 6 and
-  7 hold them.
+- Three parts wait for user decisions. The Testbox commands and the pull
+  request title workflow change a protocol requirement. The Rust audit
+  downloads its tool over HTTPS, and every HTTPS client for `xtask` either
+  adds a TLS build to every fresh `xtask` build or a new external tool.
+  Milestones 5, 6, and 7 hold them.
 
 Contract owners:
 
@@ -55,19 +57,17 @@ Contract owners:
 
 ## Milestone 1: Documentation and protocol
 
-No requirement changes for Milestones 2 to 5. The length audit page names
+No requirement changes for Milestones 2 to 4. The length audit page named
 its implementation language, which is a mechanic, not a requirement.
 
-- [ ] State the source and protocol length audit of
+- [x] State the source and protocol length audit of
       `docs/protocol/ci-verification-repository.md` without naming Node.
-- [ ] Move the description of the Rust audit from the verification scripts
-      README to the xtask README.
 
 ## Milestone 2: Remote-state guard
 
-- [ ] Port `tests/ci_workflow_remote_state.test.ts` and its command scanner
+- [x] Port `tests/ci_workflow_remote_state.test.ts` and its command scanner
       `tests/helpers/remote_state_commands.ts` to the repository rules.
-- [ ] Delete them, and state the remote-state paragraph of
+- [x] Delete them, and state the remote-state paragraph of
       `docs/protocol/ci-test-repository-inputs.md` without file names.
 
 ## Milestone 3: Changed-file length audit
@@ -76,27 +76,39 @@ The audit and the cap ratchet share one length policy and one Git
 comparison. Both move to one `xtask` module behind traits, with real Git
 repositories in the adapter tests.
 
-- [ ] Port the length policy: physical line counts, the limits, and the
+- [x] Port the length policy: physical line counts, the limits, and the
       cap table with its source-order key check.
-- [ ] Port the Git comparison: the merge base or the merged `origin/main`
+- [x] Port the Git comparison: the merge base or the merged `origin/main`
       during a merge, the changed and untracked files with renames, and the
       files and blobs of the comparison commit.
-- [ ] Run the audit in-process for `cargo xtask source-file-length-lint`
+- [x] Run the audit in-process for `cargo xtask source-file-length-lint`
       and the repository suite. Port `tests/source_file_length.test.ts`.
-- [ ] Delete `scripts/verification/source-file-length.mjs` and its test.
+- [x] Port the length checks of `tests/repository_ratchets_merge.test.ts`.
+      Its Git workspace checks stay, because the Node ratchets use that
+      workspace.
+- [x] Delete `scripts/verification/source-file-length.mjs` and its test.
 
 ## Milestone 4: Protocol cap ratchet
 
-- [ ] Port `protocol-caps.mjs` with the legacy cap table parser, and run it
+- [x] Port `protocol-caps.mjs` with the legacy cap table parser, and run it
       in-process in the repository suite with the same pass and fail lines.
-- [ ] Port `tests/protocol_caps_table.test.ts` and the six protocol cap
-      cases of the two ratchet tests.
-- [ ] Remove the protocol cap audit and its exports from
+      It runs in the ratchet step before the Node ratchets, and the step
+      fails only after both ran, as the Node runner reports every ratchet.
+- [x] Port `tests/protocol_caps_table.test.ts`, the four cap cases of
+      `tests/repository_ratchets.test.ts`, and the subfolder case of
+      `tests/repository_ratchets_git.test.ts`. A Rust case covers the cap
+      part of its anchoring case, which keeps covering the Node ratchets.
+- [x] Remove the protocol cap audit and its exports from
       `scripts/verification/repository-ratchets.mjs` and its declarations.
-      Delete `protocol-caps.mjs` and each policy export that the port
-      leaves unused.
+      Delete `protocol-caps.mjs`, `length-policy.mjs`, and the
+      `baseFiles` method of the Node Git workspace, which only they used.
 
 ## Milestone 5: Rust advisory audit
+
+Blocked: waits for the user's decision on the tool download. The wrapper
+downloads the pinned `cargo-audit` source over HTTPS. `xtask` has no HTTP
+client, and `reqwest` with `rustls` adds the `aws-lc` build to every fresh
+`xtask` build.
 
 - [ ] Port `rust-audit.mjs` and `rust-audit-tool.mjs` to an `xtask`
       command with injected time, process, download, and file boundaries.
@@ -106,6 +118,8 @@ repositories in the adapter tests.
 - [ ] Port `tests/rust_audit.test.ts` and `tests/rust_audit_tool.test.ts`.
 - [ ] Delete `audit-rust.mjs`, `rust-audit.mjs`, `rust-audit-tool.mjs`,
       their declarations, and the two tests.
+- [ ] Move the description of the Rust audit from the verification scripts
+      README to the xtask README.
 
 ## Milestone 6: Testbox commands
 

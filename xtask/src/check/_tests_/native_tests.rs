@@ -8,9 +8,10 @@ use unimock::{MockFn, Unimock, matching};
 use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
-use super::commands::commands_for;
+use super::commands::{Step, commands_for};
 use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
+use super::runner_support::{step_display, unused_auditors};
 
 #[test]
 fn every_native_command_stays_covered_by_the_local_gate() {
@@ -18,15 +19,23 @@ fn every_native_command_stays_covered_by_the_local_gate() {
         .into_iter()
         .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
         .collect();
-    if local.contains(&CommandSpec::new("npm").args(["run", "build"])) {
-        local.push(CommandSpec::new("cargo").args(["xtask", "build-native"]));
-        local.push(CommandSpec::new("cargo").args(["test", "--workspace", "--no-fail-fast"]));
+    if local.contains(&Step::Command(
+        CommandSpec::new("npm").args(["run", "build"]),
+    )) {
+        local.push(Step::Command(
+            CommandSpec::new("cargo").args(["xtask", "build-native"]),
+        ));
+        local.push(Step::Command(CommandSpec::new("cargo").args([
+            "test",
+            "--workspace",
+            "--no-fail-fast",
+        ])));
     }
     for command in commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline) {
         assert!(
             local.contains(&command),
             "Native command has no local coverage: {}",
-            command.display()
+            step_display(&command)
         );
     }
 }
@@ -35,10 +44,7 @@ fn every_native_command_stays_covered_by_the_local_gate() {
 fn selected_native_builds_once_then_runs_workspace_tests() {
     let commands = commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline);
     assert_eq!(
-        commands
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
+        commands.iter().map(step_display).collect::<Vec<_>>(),
         [
             "cargo xtask build-native",
             "cargo fmt --all -- --check",
@@ -65,7 +71,7 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
                 .next_call(matching!((command) if command.display() == "cargo test --workspace --no-fail-fast"))
                 .returns(Ok(())),
         ))),
-        Arc::new(Unimock::new(())),
+        unused_auditors(),
         PathBuf::from("/workspace"),
     );
     runner
@@ -84,7 +90,7 @@ fn native_build_failure_prevents_tests() {
                     status: "1".into(),
                 })),
         )),
-        Arc::new(Unimock::new(())),
+        unused_auditors(),
         PathBuf::from("/workspace"),
     );
     assert!(matches!(

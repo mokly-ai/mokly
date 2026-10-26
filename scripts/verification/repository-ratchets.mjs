@@ -6,30 +6,14 @@ import {
   auditInternalExports,
   internalExportAudit,
 } from "./ratchets/internal-exports.mjs";
-import { parseProtocolCapTable } from "./ratchets/length-policy.mjs";
 import { countPhysicalLines } from "./ratchets/lines.mjs";
-import {
-  auditProtocolCaps,
-  protocolCapFindings,
-} from "./ratchets/protocol-caps.mjs";
 import { auditPublicPackageExports } from "./ratchets/public-exports.mjs";
 import {
   auditTypeScriptLength,
   typeScriptLengthFindings,
 } from "./ratchets/typescript-length.mjs";
 
-export {
-  countPhysicalLines,
-  internalExportAudit,
-  parseProtocolCapTable,
-  protocolCapFindings,
-  typeScriptLengthFindings,
-};
-
-/** Run the protocol document cap audit in isolation. */
-export function protocolCapAudit(repositoryRoot) {
-  return auditProtocolCaps(repositoryRoot, new GitWorkspace(repositoryRoot));
-}
+export { countPhysicalLines, internalExportAudit, typeScriptLengthFindings };
 
 /** Run the release-tag public package export audit in isolation. */
 export function publicPackageExportAudit(repositoryRoot) {
@@ -39,7 +23,10 @@ export function publicPackageExportAudit(repositoryRoot) {
   );
 }
 
-/** Run every maintainability ratchet without stopping after the first finding. */
+/**
+ * Run every Node maintainability ratchet without stopping after the first
+ * finding. `xtask` runs the protocol document cap ratchet before this runner.
+ */
 export function runRepositoryRatchets(repositoryRoot) {
   const git = new GitWorkspace(repositoryRoot);
   git.requireBase();
@@ -48,7 +35,6 @@ export function runRepositoryRatchets(repositoryRoot) {
       "JavaScript/TypeScript file-length",
       () => auditTypeScriptLength(repositoryRoot, git),
     ],
-    ["Protocol document cap", () => auditProtocolCaps(repositoryRoot, git)],
     ["Unused internal export", () => auditInternalExports(repositoryRoot, git)],
     [
       "Public package export",
