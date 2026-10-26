@@ -1,7 +1,5 @@
 # Moves
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Candidates And Uniqueness
 
 Pairing runs once per comparison after the base and current catalogues are
@@ -47,13 +45,7 @@ pairing or identical view evidence for every variant, not schema and slugs alone
    under [normalisation](#normalisation). Repeat this pass with each new set of
    accepted pairs until it accepts no more pairs. Every iteration evaluates its
    full remaining candidate set; ambiguity is permanent across iterations.
-   Recompute logical-reference signatures after accepting pairs. Group candidates
-   by kind, component role, ignore contract and a hash of normalised material.
-   Full equality checks run only within equal hash groups, except that different
-   ignore-region sets or material-key presence require paired comparison.
-   Disjoint ignore contracts can first group by material with all ignores
-   treated as ordinary content. Overlapping contracts retain paired checks.
-   A hash is a prefilter, never proof of equality.
+   Recompute logical-reference signatures after accepting pairs.
 3. **Same source and title.** Both entries come from the same repository
    source module and have equal titles. Documents never use this signal,
    because the file is the source.
@@ -87,10 +79,7 @@ During candidate matching, bundled stylesheets, assets and the document
 resources of the closure at different routes can use equal content digests; same-route resources keep
 route identity. CSS digests resolve their URL tokens recursively. Accepted entry
 moves map root-module stylesheet routes and assets under corresponding source
-directories. Document resources map by their source-relative reference. Re-exporting entry roots use the corresponding accepted view's rendered
-references: pair unique equal digests, or its sole removed and added resource of
-the same resource kind. Accept only unique aliases present in the retained
-sets, and scope HTML rewriting to the paired current view's references.
+directories. Document resources map by their source-relative reference.
 Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
 through the same resource map. Equal moved resources suppress current
 rendered-resource evidence. A different image or stylesheet stays
@@ -171,8 +160,8 @@ The comparison keeps its pairing,
 kinds; the terminal's `moved` count and the exact diagnostics come from it. Serve reports each diagnostic through its terminal
 reporter when the classification generation is accepted. Superseded generations
 stay silent. `build` and `publish` report them during comparison. Plain
-mode writes the exact diagnostic and a newline; rich mode uses the existing
-bounded diagnostic presentation under [terminal output](./mokly-terminal-output.md).
+mode writes the exact diagnostic and a newline; rich mode uses the bounded
+diagnostic presentation of [terminal output](./mokly-terminal-output.md).
 They are not fields of `review.json` or public catalogue JSON. A build without
 Changes publishes no inferred or authored `previousPath`.
 
@@ -212,21 +201,6 @@ comparison evidence clear the accepted map; a mismatched generation is rejected.
 A known prior path reports `moved-link-target` with the new path under the
 [path diagnostics](./mokly-paths.md#diagnostics). If neither map knows it, the
 failure stays `unknown-link-target`. Links never follow a move automatically.
-
-## Verification
-
-Coverage must prove each signal in isolation, the pass order, uniqueness and
-ambiguity with its exact diagnostic, variant pairing through parents, link
-normalisation across passes and iterations, the similarity formula at and around the
-threshold, every `movedFrom` validation and the no-match diagnostic, the
-`previousPath` fields and counts in the review result and read model,
-suppressed removed previews, and the `moved-link-target` text. Regressions cover
-unrelated short Markdown, edited moves, depth-changing resource URLs and imported
-CSS, linked screens/flows/component users moving together, permanent ambiguity,
-linear full-comparison counts for unique material, and Serve and `build`
-diagnostics. Run move fixtures through review, the index and detail readers,
-Serve and `build`;
-include deleting a component after its last variant moves to another parent.
 
 ## Related Docs
 

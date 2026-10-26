@@ -1,8 +1,8 @@
 # Mokly CI And Npm Release Contract
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
-Breaking-change notes: [npm release notes](./npm-release-notes.md).
+Breaking changes and their upgrade steps: the
+[upgrade guide](../guides/start/upgrade.md). The root `CHANGELOG.md` records
+every release.
 
 ## Package Set
 
@@ -15,11 +15,12 @@ commit. It publishes the viewer with the CLI, using one shared version:
 | `@mokly/viewer`          | the Browse shell: shell assets, the index and detail readers, adapters, React mounting, and the browser entry      |
 | `@mokly/mokly`           | the Node shim behind the `mokly` bin, the sidecar entry, the authoring API, the guides, and the protocol documents |
 
-`packages/mokly/package.json` describes the public ESM package `@mokly/mokly`: managed
-version, MIT license, Mokly authorship, exact repository metadata, Node range
-`>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
-its types, the configuration JSON Schema at `config.schema.json`, and the file
-allowlist. It lists the five platform packages as exact
+`packages/mokly/package.json` describes the public ESM package `@mokly/mokly`:
+managed version, MIT license, Mokly authorship, exact repository metadata, the
+Node range of the [package contract](./mokly-package.md#node-support), the
+`mokly` bin, the authoring export with its types, the configuration JSON Schema
+at `config.schema.json`, and the file allowlist. It lists the five platform
+packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact
 dependency; React and React DOM are peer dependencies for React authoring only.
 The shim resolves the platform package for the host, rejects a version other
@@ -31,11 +32,10 @@ Each platform package carries `os`, `cpu`, and on Linux `libc` fields, so npm
 installs exactly one, and its version equals the CLI version in every release.
 The viewer is an MIT ESM package with no Node-only entry; the
 [shell delivery contract](./mokly-shell-delivery.md) owns its runtime boundary.
-The CLI package ships `docs/guides` and `docs/protocol` at the exact package
-version, including the public JSON receiver fixtures. It also ships the root
-`CHANGELOG.md` with its release history. Packing compares every guide, protocol
-file, and changelog byte with its source. Tests, private source fixtures, plans,
-caches, and review artifacts are not published.
+The CLI package ships the documentation that the
+[guide contract](./mokly-guides.md#package-publication) lists, at the exact
+package version, including the public JSON receiver fixtures. Packing compares
+every guide, protocol file, and changelog byte with its source.
 
 Read the CLI version from `packages/mokly/package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
@@ -43,8 +43,9 @@ metadata. Release pull requests update these together. `publishConfig` targets
 the public npm registry with public access.
 
 Runtime dependencies are intentional and minimal: the exact `@mokly/viewer`
-dependency, the five exact optional platform packages, and the sidecar's
-bundler and its PostCSS orchestration; the binary's own work needs none. CSS parsing,
+dependency, the five exact optional platform packages, the sidecar's bundler,
+CSS processor, and JavaScript and HTML parsers, and the type library behind the
+authoring API's prop types. The binary's own work needs none. CSS parsing,
 exclusive directory rename, Git access, and archive encoding are in the Rust
 binary and need no npm dependency. Mokly does not depend on React Native,
 consumer applications, their component systems, or Playwright. Development and
@@ -79,8 +80,8 @@ Missing inspection data or tools fail the release.
 
 The release workflow builds the binary once per target, in one build job per
 target on a runner of that operating system and architecture, with Rust 1.95.0
-from `rust-toolchain.toml`. Each build job uses `scripts/release/build-native.mjs` with a locked release
-build, checks native TLS dependencies, and packs its platform package with npm
+from `rust-toolchain.toml`. Each build job runs a locked release build, checks
+native TLS dependencies, and packs its platform package with npm
 11.21.0 and uploads the archive with its integrity, shasum, inventory, and size
 report. A target that fails to build stops the release before any publication.
 Linux x64 and ARM64 and Windows x64 use Blacksmith's 2-vCPU tiers. macOS ARM64
@@ -108,9 +109,9 @@ days before publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never
 rebuilds a partially published version.
 
-The pre-merge release-check workflow runs only on pushes to
-`rebuild/ci-release-check`, and its post-merge copy also accepts a manual
-dispatch. It builds all five target archives from the pushed commit, checks
+The release-check workflow runs on a manual dispatch and on pushes to
+`rebuild/ci-release-check`. Every job of a run uses the commit that started
+the run. It builds all five target archives, checks
 native TLS dependencies, packs all seven packages, rechecks the archives, and
 smoke-tests clean consumers. It has contents-read permission only and cannot
 publish, use the npm environment, request OIDC, or read secrets.
@@ -152,20 +153,19 @@ maintainer setup, and the evidence each release keeps.
 `cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, and
 Rust commands from the workspace root and include:
 
-- a live audit of all workspace dependency categories: baseline mode fails on
-  new issues; strict mode fails on every uncovered Low-or-higher advisory or
-  invalid exception; both fail on audit errors. Mode selection and reviewed
-  path exceptions follow [dependency security](./dependency-security.md);
-- Prettier and ESLint;
-- the file-length audits, the export and unused-member ratchets, and the
-  public API report check;
-- Rust formatting, workspace Clippy with warnings denied, and the Rust tests of
-  every crate, which cover discovery, rendering, comparison, Serve, the static
-  build, and publish against fixtures and the captured reference scenarios;
+- the [repository suite](./ci-verification-repository.md#repository-boundary):
+  the live dependency audits, formatting, lint, the length audits, the
+  repository ratchets, the Rust checks, and the Rust tests of every crate,
+  which cover discovery, rendering, comparison, Serve, the static build, and
+  publish against fixtures and the captured reference scenarios;
 - the viewer typecheck and the Node tests of the viewer and the tooling, with a
   100% pass rate; and
 - Playwright Browse and Review regressions in Chromium against `mokly serve` of
   the example catalogue, with zero retries.
+
+The [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
+defines the audit modes, and [dependency security](./dependency-security.md)
+defines the reviewed path exceptions.
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes, including sidecars. The suite and shard commands, their complete
@@ -178,16 +178,6 @@ under the [remote verification contract](./remote-verification.md). Its default
 `evidence` mode may instead consume a validated aggregate that proves the same
 tree under the
 [release verification evidence contract](./npm-release-evidence.md).
-
-Browser assertions that depend on a navigated preview's layout wait for the
-expected frame URL and the complete document state together, not only the
-outer Browse URL or an iframe `src` attribute. Delayed-stylesheet regressions
-exercise this boundary while keeping strict single-preview and control-state
-checks. The shared browser example waits for initial `ready` or `unavailable`
-Changes before opening test pages.
-Loading, watch-update, and startup tests keep their independent fixtures and
-exercise pending states and command-to-preview timings under the
-[test timing contract](./ci-test-timing.md).
 
 ## Continuous Integration
 

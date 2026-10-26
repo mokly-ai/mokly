@@ -1,7 +1,5 @@
 # Entry Modules
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Export Collection
 
 An entry module is a JavaScript or TypeScript file that a root matches and
@@ -157,7 +155,7 @@ Flow relationship failures use `invalid-metadata` with these exact texts:
 - `screen <screenPath> lists use case <flowPath>, but its steps do not name the screen`;
 - `use case <flowPath> steps through screen <screenPath>, but the screen does not list the use case`.
 
-Attribution failures from the definition provider use the same code with
+Definition attribution failures use the same code with
 `definition is not exported by a resolved entry module` or
 `definition source is not inventoried`. Invalid definitions stay present as
 relationship targets after their metadata and paths are resolved. Their own

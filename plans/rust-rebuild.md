@@ -22,7 +22,7 @@ catalogue page's format table to the old code was deleted on 2026-10-14 with
 the other protocol-content tests. On 2026-10-12 the branch was rebased onto the
 `AGENTS.md` that names the shared skills, and the rebuild procedures moved
 from the removed `docs/dev` directory to
-[the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
+[the protocol page](https://github.com/mokly-ai/mokly/blob/66e1ba6a/docs/protocol/rust-rebuild-procedures.md). Later that day
 the user withdrew the committed generated tree: both comparison sides render
 from sources, the static output is a plain output, and the Milestone 1 contracts were
 revised to match (Decisions 11 to 13). The protocol index then moved eight
@@ -6078,7 +6078,7 @@ does not ask the user before the merge.
       too; B, make `ResolvedConfig::package_roots()` return the list without
       duplicates for both sides. Recommended: B.
 
-- [ ] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
+- [x] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
       protocol pages, still start with
       `Status: In progress under the Rust rebuild plan`, but the
       documentation policy removes that line when the behaviour is
@@ -6087,6 +6087,15 @@ does not ask the user before the merge.
       the line where the behaviour is implemented; B, also add a check that
       fails on a Status line whose behaviour the plan marks complete (a new
       gate, which needs the user's approval). Recommended: A.
+  - User decision 185 (2026-10-26): A, as finding 6 of the documentation
+    skill audit. The sweep removed the line from 151 pages and kept it on 7
+    protocol pages whose behaviour is not implemented: `ci-test-timing.md`
+    (the wider clock lint), `dependency-security.md` (item 191),
+    `mokly-imported-styles-modules.md` (item 111), `mokly-terminal-errors.md`
+    (item 152), `mokly-on-demand.md` (React startup), and
+    `mokly-catalogue-delivery.md` and `mokly-documents.md` (`relatedDocs`
+    references that no producer writes). The status-line rule moved from the
+    deleted documentation policy into `AGENTS.md`.
 
 - [ ] Resolve user item 186 (docs): short summaries still say that
       `--strict` makes warnings fail, but `base-dependencies` no longer
@@ -6097,7 +6106,8 @@ does not ask the user before the merge.
       `docs/guides/cli/publish.md:33` and `:79`,
       `docs/guides/cli/serve.md:66`, `docs/guides/authoring/screens.md:216`,
       `docs/protocol/mokly-upload.md:58`,
-      `docs/architecture/build-pipeline.md:114`, and
+      `docs/architecture/build-pipeline.md:114` (page merged into
+      `docs/architecture/rust-core.md` on 2026-10-26 without this summary), and
       `examples/basic/specs/design/library/README.md:192`. The second delta
       review found more: `docs/guides/cli/options-and-exit-status.md:51`,
       `docs/protocol/README.md:19`, `docs/protocol/mokly-export.md:37`,
@@ -6242,3 +6252,71 @@ does not ask the user before the merge.
 - Outside the 200 B scope: `docs/protocol/npm-bootstrap.md:145`: the older
   sections name a test file and describe how the code works, against the
   documentation rules. Separate branch.
+
+## Rebuild procedures
+
+These procedures moved here on 2026-10-26 from
+`docs/protocol/rust-rebuild-procedures.md`, which the documentation
+alignment removed because a procedure of a completed plan is not a
+protocol requirement.
+
+### Reference Capture
+
+Run once before the teardown, from the `ts-backend-final` tag, with the old
+CLI built from that tag. Save everything under `.context/rust-rebuild/reference/`,
+which Git ignores. The references are guidance, not an oracle: the Rust core
+may differ where the spec says so.
+
+Scenarios, one directory each:
+
+| Directory          | Repository state                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `example`          | the example catalogue at the tag, built, served, and exported                                                                             |
+| `large/<scenario>` | the large fixture's four benchmark scenarios                                                                                              |
+| `moved-screen`     | the example with one screen file moved and its `movedFrom` hint absent                                                                    |
+| `removed-screen`   | the example with one screen deleted                                                                                                       |
+| `markdown-edit`    | the example with one document's body changed                                                                                              |
+| `ignore-edit`      | the example with a change inside a paired Review-ignore region only                                                                       |
+| `stylesheet-edit`  | the example with one changed rule that matches rendered elements and one changed rule that matches none, in a stylesheet that screens use |
+| `renderer-change`  | the example with a renderer edit that changes head styles for every screen                                                                |
+
+For each scenario keep the review artifact, the catalogue read model, the
+export inventory, and the terminal output of build, check, serve startup, and
+export; the previous manifest and generated tree are not kept, because the
+Rust core writes neither. Then run
+the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
+rebuild branch, over the saved outputs. The JSON table contains `availability`
+fields for captured inputs, entries by kind and path, listed changes with
+states and reasons, affected consumers, kept rules and excluded stylesheets
+per view, `exportedResources` paths and sides, and resource closures per view.
+
+### Gap Sweep
+
+Each Rust subsystem replacement runs one bounded sweep before its milestone
+closes. The sweep is a reading exercise against the previous protocol and the
+old test names, not a port.
+
+1. List the previous protocol pages and the test files that owned the
+   subsystem, read at the commit the plan names.
+2. List every assertion of each old test, including its helpers and its host
+   branches, and every section of each old protocol page. Mark each one as
+   proved or not proved, and check that the title of each port states what
+   the port proves.
+3. For each rule or test case, decide one of three outcomes with one line of
+   reason: adopt, adopt with a change, or drop.
+4. Write the adopted and changed rules into the new spec page in the same
+   change. Dropped rules need no record beyond the sweep file.
+5. Produce the behaviour table from the Rust core for every captured scenario
+   and compare it with the reference table. Put each difference into one bin:
+   an improvement the spec already states, a spec gap to close before the
+   milestone closes, or a regression to fix.
+6. Save the sweep and the comparison under
+   `.context/rust-rebuild/sweeps/<milestone>.md` and name that file in one
+   line under the milestone in the plan.
+
+Each sweep override lists the old checks that its port does not prove.
+If a delegate drops a duplicate row, the delegate moves those checks into
+the kept port.
+
+Accepted differences are listed in the breaking-change release note. A
+regression blocks the milestone.

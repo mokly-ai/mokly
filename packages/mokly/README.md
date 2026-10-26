@@ -1,67 +1,58 @@
 # @mokly/mokly
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+`@mokly/mokly` is the Mokly command-line tool and authoring API. Mokly turns
+product screens into a searchable static catalogue. A screen is an HTML file
+with YAML front matter, a React component, or a Storybook story. Mokly renders
+every screen at mobile and desktop sizes, in light and dark, and shows which
+screens changed between two Git commits.
 
-`@mokly/mokly` supplies the `mokly` Node shim, the Node render sidecar, and the
-JavaScript authoring API. The Rust binary owns catalogue decisions, document
-assembly, serving, and file writes. The sidecar bundles and renders consumer
-code in memory. Base package imports resolve from their importer's matching
-directory in the selected dependency installation. Base source aliases and
-tsconfig paths stay with the base files.
-Tracked base files beneath `node_modules` supply their base bytes and keep
-their dependency role in attribution.
+The package holds the `mokly` command, the JavaScript authoring API, and the
+render sidecar, the Node process that runs your JavaScript. A Rust binary does
+the catalogue work. npm installs that binary from the `@mokly/native-<target>`
+package that matches your system. The catalogue viewer comes from
+[`@mokly/viewer`](https://www.npmjs.com/package/@mokly/viewer), at the exact
+version that this package depends on.
 
-PostCSS children retain raw whole-file and byte-range witnesses for one
-generation beside dependency reports. A new generation drops earlier
-witnesses. Coverage remains incomplete for opaque readers. Asynchronous
-loaders and consumer hooks that bypass later providers can hide module paths
-and raw reads. Unknown paths have no late baseline. See the
-[PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
-Observation starts before consumer preloads. File providers retain their
-transformed output and the raw witnesses of underlying observed reads.
-Known inputs from providers that bypass observation retain late baselines.
-Local script loading preserves the provider's UTF-8 behavior. Native observation
-keeps the separate raw digest before text decoding.
+## Install
 
-## Install And Run
+Mokly needs Node.js `>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`:
+22.15 or newer, excluding Node 23 and Node 24.14 through 24.18. The binary
+ships for Linux x64 and arm64 with glibc, macOS x64 and arm64, and Windows x64.
 
 ```bash
 npm install --save-dev @mokly/mokly
-npx --no-install mokly --help
-npx --no-install mokly --version
 ```
 
-The package ships `config.schema.json` for editor validation and completion.
-Set `"$schema": "./node_modules/@mokly/mokly/config.schema.json"` in a
-`mokly.config.json` at the consumer root. The native binary reads the same
-schema and resolves paths from that configuration file.
+The binary comes from an optional dependency, so keep optional dependencies
+enabled when you install. React and React DOM 19 or newer are optional peer
+dependencies. Install them only when screens or components are written in
+React. A catalogue of HTML files needs neither package.
 
-The shim resolves `@mokly/viewer/browser` from its own package installation.
-It passes that package's built directory to the binary through
-`MOKLY_VIEWER_DIST`. The binary serves exactly its browser inventory, stylesheet,
-and font. Consumer working-directory layout does not select the viewer.
+## Configure
 
-Serve watches source, style, and referenced resource edits by default.
-It updates the open viewer and reloads only documents whose input key changed.
-Use `serve --no-watch` to browse one snapshot.
+Create `mokly.config.json` in your repository root:
 
-The native binary owns commands and file writes. The render sidecar and the
-authoring API share this package under the
-[package contract](../../docs/protocol/mokly-package.md).
+```json
+{
+  "$schema": "./node_modules/@mokly/mokly/config.schema.json",
+  "colorSchemes": ["light", "dark"],
+  "roots": [
+    { "dir": "specs" },
+    { "dir": "packages/ui/src", "path": "components" }
+  ]
+}
+```
 
-The supported Node range is `>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`. The shim checks
-it before package lookup. Supported hosts are Linux x64 and arm64 with glibc,
-macOS x64 and arm64, and Windows x64 with MSVC. Exact optional platform
-packages supply the binary. The shim requires the binary's exact package
-version and has no JavaScript CLI fallback.
+Mokly searches upward for `mokly.config.json`, or reads the file that
+`--config` names. Paths resolve from the configuration file. Without `roots`,
+Mokly reads the `specs` directory beside the file. `$schema` gives your editor
+validation and completion from the schema that this package ships. The
+[configuration guide](../../docs/guides/authoring/config.md) describes every
+field.
 
-## Authoring
+## Add a Screen
 
-Controls keep explicit declaration order. Derived controls follow schema order
-or first-seen prop order. The sidecar carries this order separately from sorted
-JSON object keys for the core and viewer.
-
-Export one definition from each export of a matched entry module.
+Create `specs/account/invoice.mockup.tsx`:
 
 ```tsx
 import { defineScreen } from "@mokly/mokly";
@@ -78,98 +69,80 @@ export default defineScreen({
 });
 ```
 
-`defineScreen` and `defineComponent` render from props and a
-`{ viewport, colorScheme }` context. Components require a literal JSON Schema
-and expose a typed `Component` wrapper. `json-schema-to-ts` derives data prop
-types. Declared slots hold React nodes separately from data props. Components
-can declare `element` to enable HTML invocations.
+With the default `specs` root, the screen's path is `account/invoice`, and
+`account/invoice/overdue` is its variant. An HTML screen needs no JavaScript:
+it is a `.screen.html` file with YAML front matter.
 
-The root also exports `definePage`, `defineUseCase`, `defineFolder`, `MockLink`,
-`mockLink`, `ReviewIgnore`, `ReviewIgnoreScope`, `reviewMaterialKey`, and the
-input, definition, configuration, and renderer types. A page callback returns
-one complete synchronous HTML string. React and React DOM are optional peers;
-React authoring resolves both from the consumer. HTML-only catalogues need
-neither package. They start a sidecar when configured PostCSS processes CSS.
+The package also exports `defineComponent`, `definePage`, `defineUseCase`,
+`defineFolder`, `MockLink`, `mockLink`, `ReviewIgnore`, `ReviewIgnoreScope`,
+`reviewMaterialKey`, and the input, definition, configuration, and renderer
+types.
 
-The package ships the authoring guides and protocol sources as Markdown.
-Read the [source guide](../../docs/guides/authoring/screens.md) and
-[sidecar contract](../../docs/protocol/mokly-sidecar.md).
+## Commands
 
-## Sidecar Boundary
+Run the installed executable with `npx --no-install mokly`. Options follow the
+command, for example `npx --no-install mokly serve --port 0`.
 
-The Rust pool starts `dist/sidecar.js` with inherited environment and piped
-NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
-byte limit. Oversized compiled recipes report their size and that limit as
-`bundle-failed`. A separate thread watches the parent pipe and parent identity,
-so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
-Closed parent output pipes and IPC channels stop the sidecar and PostCSS child
-quietly. Late writes do not add a crash stack to consumer diagnostics.
-The optional `hello.params.timings` boolean enables process-local timing JSON on
-stderr. Bundle, describe, render, and PostCSS spans contain no authored data.
-Bundle child spans separate compilation, module-graph construction, consumed
-input hashing, and resolution metadata. Each keeps the enclosing bundle id.
-Records start on a separate line after partial Node stderr writes. The core
-redacts tokens and escapes controls in forwarded lines; ordinary timing records
-retain their bytes. After child exit, completion drains stderr within the shared
-shutdown deadline, also for a worker that cancellation killed first. A child
-still running at the deadline is killed; completion then waits only for its
-reaper. A late drain causes a tree kill without another drain wait.
+| Command           | What it does                                                     |
+| ----------------- | ---------------------------------------------------------------- |
+| `mokly serve`     | Serve the catalogue, render on demand, and watch for changes     |
+| `mokly build`     | Validate, render every view, and write the static site           |
+| `mokly publish`   | Build into a private directory and upload to a catalogue service |
+| `mokly --help`    | Show every command and option                                    |
+| `mokly --version` | Show the installed package version                               |
 
-`bundle` compiles an unevaluated esbuild generation and reports its immutable
-compiled recipe for replay. The recipe keeps dependency-lookup provenance
-for fallback diagnostics after restoration. Evaluation-only changes reuse that compilation across slots and recycling.
-Resolution stamps include ancestor manifests, tsconfig candidates, and directory
-membership. Failed peer resolutions remain failures during replay.
-`restoreGeneration` installs retained code in a new sidecar without reading
-current sources. Worker operation events count actual compilations and
-PostCSS worker lifetimes. The result also reports its module
-graph with stable names for selected installation files. Module digests
-use the recorded compiler inputs, including text imports and
-files loaded through data import attributes. Unrecorded compiler inputs fail
-the bundle instead of receiving a digest from a later read. Repository-owned
-workspace packages and PostCSS presets use the side's own source copy.
-`cssModules` installs the core's class maps before evaluation and runs no
-compiler. CSS import stubs read that table at evaluation. The default export
-is the complete map. Each valid, non-reserved identifier key is also a named
-export. Runtime style adapters capture the bundled consumer libraries in the
-same compilation. Subpath imports select their own package's registry, and
-wrappers preserve CommonJS default-import interop within the Mokly bundle:
-Node's rule for `.mjs` and `.mts`, the `__esModule` default otherwise.
-Bundle parsing ignores package `type` and tsconfig parse settings. Set
-`@jsxImportSource` in a module when it needs another JSX runtime; a tsconfig
-`jsxImportSource` does not apply. Source-side tsconfig paths still guide resolution.
-`describe` inventories every definition and Storybook story and reports
-generation warnings. `bindings` installs resolved paths and titles before a
-render. Render methods return HTML text, collected styles, resources, typed
-instance and slot drafts, and render warnings. Registered wrappers check dynamic
-data props with the viewer's profile validator before calling their adapters.
-The Rust core rechecks every returned instance against its registered schema.
-Nested supplied slots share one encounter order per original input scope;
-repeated placements keep that
-input's order. A consumer
-renderer wraps React screens and components and must default-export a function.
-Bundle diagnostics use the compiler's source coordinates and reason without
-its framing text. Runtime style adapters follow consumer package aliases,
-including `react-native` mapped to `react-native-web`. Portable stories use the
-consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
-child process in the side's source root, with consumer plugins unbundled.
-A child watchdog stops even a blocked plugin after its sidecar dies.
-The watchdog owns the input pipe. Main-thread `process.stdin` and
-`node:process` imports share its forwarded stream, including on Windows.
-Operation events count each fork and its terminal event once.
-PostCSS child failures settle pending requests when startup, IPC, or exit fails.
-The child lifetime retains errors raised before the request is attached.
-PostCSS timeout diagnostics include the elapsed phase records for child spawn,
-configuration load, plugin construction, and the latest stylesheet run. A
-running timeout also names the last module URL observed by the child.
-The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
-and `shutdown` releases all state.
-Sidecars and PostCSS children set `PWD` to their source directory and omit
-`INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
+`mokly` without a command runs `serve`. `serve --open` opens the catalogue in
+a browser, and `serve --no-watch` serves one snapshot without watching.
+`build` writes `mokly-static/` at the repository root, or the directory that
+`--out` names, and keeps a `.mokly-export-reservations/` directory beside it.
+Git must ignore both. `publish` needs a clean Git checkout, and it reads the
+receiver's endpoint and token from `MOKLY_ENDPOINT` and `MOKLY_TOKEN`. The
+[options and exit status guide](../../docs/guides/cli/options-and-exit-status.md)
+lists every option.
+
+## How Mokly Runs Your Code
+
+The Rust binary reads the configuration, composes HTML screens and Markdown
+documents, assembles every document, serves the catalogue, and writes the
+static site. JavaScript runs only in the render sidecar. The sidecar bundles
+your entry modules and your renderer module with your module resolution and
+your own React. It also runs your PostCSS module on local stylesheets. A
+catalogue of HTML files without a renderer or a PostCSS module starts no
+sidecar.
+
+The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
+[module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and
+the [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md)
+define this boundary.
+
+## Documentation
+
+The package ships the guides and the protocol documents as Markdown.
+
+- Get started: [install](../../docs/guides/start/install.md),
+  [configure](../../docs/guides/start/configure.md), and
+  [your first screen](../../docs/guides/start/your-first-screen.md)
+- Author the catalogue: [screens](../../docs/guides/authoring/screens.md),
+  [components](../../docs/guides/authoring/components.md),
+  [Storybook stories](../../docs/guides/authoring/storybook.md),
+  [pages and documents](../../docs/guides/authoring/pages.md),
+  [use-case flows](../../docs/guides/authoring/use-case-flows.md), and
+  [styles](../../docs/guides/authoring/styles.md)
+- Use the catalogue: [browse](../../docs/guides/catalogue/browse.md),
+  [Changes](../../docs/guides/catalogue/changes.md), and
+  [build and host](../../docs/guides/catalogue/export-and-host.md)
+- Run the commands: [`serve`](../../docs/guides/cli/serve.md),
+  [`build`](../../docs/guides/cli/build.md), and
+  [`publish`](../../docs/guides/cli/publish.md)
+- Publish from CI: [the guide](../../docs/guides/ci/publish-from-ci.md) and
+  the [GitHub Action](../../.github/actions/publish/README.md)
+- Read the specifications: the
+  [protocol index](../../docs/protocol/README.md) and the
+  [package contract](../../docs/protocol/mokly-package.md)
 
 ## Development
 
-From the workspace root:
+From the repository root:
 
 ```bash
 npm run build
@@ -177,46 +150,38 @@ node --import tsx --test tests/sidecar_methods.test.ts
 cargo test -p mokly-sidecar
 ```
 
-The package `prepack` builds the viewer before the authoring declarations.
-Release packing prepares the viewer archive before the CLI archive. It packs
-the viewer and CLI together at one shared release version.
-The package build emits ESM JavaScript and declarations, the sidecar entry and
-PostCSS child entry, the shim, and packaged Markdown. Each build clears stale package
-output and copied docs first. The package includes the complete guide and
-protocol trees, their public receiver fixtures, and the root changelog history.
-Release Please writes the root `CHANGELOG.md`; the build copies it into the
-package. Copied docs, the package changelog, and build output stay ignored.
-The [registry collectors](./src/sidecar/styles.ts) retain one delivery sheet.
-[Styled-components views](./src/sidecar/styled-ownership.ts) observe rule names
-on cache hits and insertions. [Emotion views](./src/sidecar/emotion-ownership.ts)
-observe serialized identities. Both keep all users of a deduplicated rule.
-Ownership views retain consumer cache keys, sheets, and rendering policies.
-Each actual cache or sheet has its own observation state. Inline registry
-styles retain their delivery grouping and receive the same ownership metadata.
-Dependent keyframes keep every owner of the rules that use them.
-Component and slot contexts select the owner; React private owner fields and
-injection order do not select it. Typed comparison records stay separate from
-served CSS and its existing style-block grouping.
+`npm run build` builds the host native binary, the viewer, and this package.
+The [release contract](../../docs/protocol/npm-release.md) defines the packed
+contents of the package.
 
-Key code: [authoring](./src/authoring/definitions.ts),
-[sidecar](./src/sidecar/session.ts), and the
-[Rust pool](../../crates/mokly-sidecar/README.md).
-The [PostCSS process](./src/sidecar/postcss-process.ts) owns IPC requests and
-terminal child state.
-The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
-before consumer preloads in each owned child.
-Its CommonJS build supports asynchronous loaders on Node 22 and shares one
-observation ledger with the worker. Asynchronous loaders and consumer hooks can
-supply a module without a module path or raw witness after observation starts.
-Loader-transformed source stays opaque.
-The [descriptor observer](./src/sidecar/postcss-read-descriptors.ts) tracks
-file positions and reuse. FileHandle and Node stream reads share range evidence.
-The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds
-witnesses to opened files. [Descriptor sharing](./src/sidecar/postcss-read-sharing.ts)
-keeps unobservable cursor changes opaque.
-The [resolution inventory](./src/sidecar/postcss-resolution-evidence.ts) retains
-known native manifest paths for late checks without inventing consumed bytes.
+### Key Code
 
-On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
-its SIGINT and SIGBREAK listeners alive while the binary receives the shared
-console signals directly.
+- [`bin/mokly.mjs`](./bin/mokly.mjs) is the `mokly` executable, which runs the
+  shim and reports a startup failure on standard error.
+- [`src/shim.mjs`](./src/shim.mjs) holds `runShim`, which checks the Node
+  version, selects the platform package, and requires its exact version.
+- [`src/runtime.mjs`](./src/runtime.mjs) holds `systemRuntime`, which passes
+  the package root, the Node executable, and the viewer build to the binary.
+- [`src/execution.mjs`](./src/execution.mjs) holds `executeNative`, which runs
+  the binary with inherited standard streams and handles interrupt signals.
+- [`src/index.ts`](./src/index.ts) is the public authoring API.
+- [`src/authoring/definitions.ts`](./src/authoring/definitions.ts) holds the
+  `define*` helpers that turn authored input into catalogue definitions.
+- [`config.schema.json`](./config.schema.json) is the configuration schema,
+  which the binary embeds and enforces.
+- [`src/sidecar.ts`](./src/sidecar.ts) is the sidecar process entry, which
+  reads framed requests from the binary and writes one response for each.
+- [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
+  dispatches each sidecar request to its method.
+- [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
+  which owns the PostCSS child processes.
+- [`src/generated/sidecar`](./src/generated/sidecar) holds the request and
+  result types that `cargo xtask generate-types` writes from the Rust types.
+- [`scripts/build.mjs`](./scripts/build.mjs) builds `dist/` and copies the
+  guides, the protocol documents, and the root changelog into the package.
+- The [Rust sidecar pool](../../crates/mokly-sidecar/README.md) starts and
+  stops the sidecar processes.
+
+## License
+
+Mokly is available under the [MIT License](./LICENSE).

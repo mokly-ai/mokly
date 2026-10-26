@@ -121,21 +121,41 @@ mock impure boundaries. Graph integration fixtures exercise complete rendered
 document snapshots, assets, and eviction.
 The native HTML sweep fixture covers front matter, template spacing, variants,
 named and repeated slots, ignore scopes, link controls, and resource closure.
-The link-control tests retain the former ancestor and descendant tier matrix.
+The link-control tests cover the ancestor and descendant placement matrix.
 
 ### Key Code
 
-- [Annotated tree](./src/tree.rs), [HTML5 parser](./src/parse.rs), and [tree sink](./src/html_sink.rs).
-- [Text context](./src/text_mode.rs) and [serialization](./src/serialize.rs)
-  share plaintext activation. The [noscript guard](./src/noscript_text.rs)
-  escapes raw HTML `noscript` closing text.
-- [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
-- [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
-- [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).
+- [`src/composition.rs`](./src/composition.rs) defines `Composer` and
+  `HtmlComposer`, which compose a screen, component, or page from a
+  `ComposeRequest` into a `Composed` document.
+- [`src/fragment.rs`](./src/fragment.rs) defines `FragmentRenderer`, the
+  JavaScript fragment boundary, with its `FragmentRequest` and `Fragment`
+  records.
+- [`src/tree.rs`](./src/tree.rs) defines `Node`, `Element`, and `Region`, the
+  owned HTML5 tree with explicit composition regions.
+- [`src/parse.rs`](./src/parse.rs) provides `document` and `fragment`, which
+  parse HTML5 with scripting disabled.
+- [`src/serialize.rs`](./src/serialize.rs) provides `html`, which writes
+  deterministic document bytes with the inspector markers.
+- [`src/props.rs`](./src/props.rs) provides `coerce`, `substitute`, and
+  `validate`, the shared attribute coercion and template substitution.
+- [`src/links.rs`](./src/links.rs) provides `rewrite` and `references`, which
+  turn logical links into portable URLs and anchor records.
+- [`src/controls.rs`](./src/controls.rs) provides `adapt`, which validates and
+  adapts link-control roots.
+- [`src/markdown.rs`](./src/markdown.rs) defines `LinkResolver` and `render`,
+  the Markdown renderer with injected link resolution.
+- [`src/safety.rs`](./src/safety.rs) and [`src/url_safety.rs`](./src/url_safety.rs)
+  hold the final Markdown allowlist and the URL policy of composed documents.
+- [`src/error.rs`](./src/error.rs) defines `HtmlError`, the typed composition
+  failure with its authoring diagnostics.
 
 ### Related Docs
 
 - [HTML screens](../../docs/protocol/mokly-html-screens.md).
 - [HTML components](../../docs/protocol/mokly-html-components.md).
+- [Markdown documents](../../docs/protocol/mokly-documents.md).
+- [Link controls](../../docs/protocol/mokly-link-controls.md).
 - [Comparison tree](../../docs/protocol/mokly-comparison.md).
 - [Document safety](../../docs/protocol/mokly-document-safety.md).
+- [Rust core architecture](../../docs/architecture/rust-core.md).

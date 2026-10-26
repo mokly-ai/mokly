@@ -1,7 +1,5 @@
 # Sidecar Timing Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 These records use the schema and privacy rules in
 [startup diagnostics](./mokly-timings.md#opt-in-timings).
 
@@ -48,5 +46,6 @@ is a child of `sidecar.spawn`. Other stops use the active caller; without one,
 or parent reference stays open between requests. The slot retains only its
 replacement reason; that reason describes retirement, not a promised retry.
 No stop is emitted when startup created no process. Command shutdown and
-cancellation are outside these replacement stages. The added stage and reason
-are diagnostic details within timing schema version 1.
+cancellation are outside these replacement stages. The stages and reasons are
+diagnostic details within the timing record version of the
+[format inventory](./mokly-format-versions.md#version-inventory).

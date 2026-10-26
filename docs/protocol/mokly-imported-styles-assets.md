@@ -1,7 +1,5 @@
 # Imported Stylesheet Assets And Delivery
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Assets, Links And Delivery
@@ -69,25 +67,19 @@ entries may import the same helper and still link their own bundles.
 
 ## Validation And The Render Cache
 
-Validation uses one pending set per render generation: the composed
-documents, the bundled stylesheet text, and opaque asset metadata, seeded
-with every stylesheet node before any document is validated. A document that
-renders on demand joins the same set. A bundled stylesheet's `url()`
-references are validated recursively as CSS resources; an asset by existence
-only. A pending route satisfies stylesheet and component resource checks
-before anything is served or written. Nothing is read from disk by route: an
-absent pending route is a missing target. One generation computes its route
-set once from the catalogue model and parses each bundled stylesheet at most
-once; later requests reuse both while documents and edited component props
-stay request-specific. A new generation owns fresh indexes; the validation
-rules and the diagnostic order do not change.
+Validation of one render generation covers the composed documents, the
+bundled stylesheet text, and opaque asset metadata. Every stylesheet route of
+the generation, with its assets, is a valid target before any document is
+validated, and a document that renders on demand is validated against the
+same routes. A
+bundled stylesheet's `url()` references are validated recursively as CSS
+resources; an asset by existence only. A pending route satisfies stylesheet
+and component resource checks before anything is served or written. Nothing is
+read from disk by route: an absent pending route is a missing target.
 
 An opaque asset keeps its generated route, logical path, confined source
-identity, and captured SHA-256 digest. Stylesheet roots share one resource
-plan per asset path. Hash-only preparation memoizes the digest and retains
-no asset payload in source snapshots, stylesheet bundles, stylesheet caches,
-or render caches. Input and document keys include the digest. Parsed CSS
-sources retain their separate snapshot policy.
+identity, and captured SHA-256 digest. Stylesheet and document keys include
+the digest.
 
 Serve answers `GET` and `HEAD` for `/static/mokly-generated/styles/<route>`
 and `/static/mokly-generated/assets/<route>` with the generation's bytes, the
@@ -100,36 +92,24 @@ bytes. `build` writes every stylesheet and asset of its generation under
 contract reads the base side's bundles from the base commit's sources.
 Imported CSS, PostCSS, and asset sources never enter the static output.
 
-Delivery reads bounded chunks from the captured source identity and checks
-the complete stream against the generation digest and its opened length.
-Serve verifies into an unnamed temporary file before sending headers, then
-streams that immutable response file. A mismatch fails the request. Watched
-Serve requests a new generation through its coalesced rebuild queue.
-With `--no-watch`, the generation stays fixed. The terminal diagnostic names
-the asset and tells the user to restart Serve or use watching. Static output
-captures one immutable final payload after the existing file-size check.
+Delivery checks the complete asset against the generation digest and its
+opened length before Serve sends headers. A mismatch fails the request, and
+watched Serve then requests a new generation. With `--no-watch`, the
+generation stays fixed. The terminal diagnostic names the asset and tells the
+user to restart Serve or use watching. Static output captures one immutable
+final payload after its file-size check.
 A mismatch stops the build with the input-change error before installation;
 publish uses the final captured bytes. The final live fingerprint recheck
 still applies under [Output Transaction](./mokly-export.md#output-transaction).
 
-A vanished path (`NotFound` or `NotADirectory`), stopped symbolic-link
-resolution or a symbolic-link loop, and a non-regular replacement count as
-changed inputs. Other open failures keep their original IO diagnostic and do
-not request regeneration. Delivery retries interrupted reads. Explicit command
-cancellation stops the copy with the cancellation diagnostic.
+A vanished path (a missing file, or a parent that is no longer a directory),
+stopped symbolic-link resolution or a symbolic-link loop, and a non-regular
+replacement count as changed inputs. Other open failures keep their original
+IO diagnostic and do not request regeneration. Explicit command cancellation
+stops the copy with the cancellation diagnostic.
 
-Each opaque asset `GET` and `HEAD` reads, hashes, and captures the complete
-asset into a private response file. Concurrent requests for the same route
-do not share or coalesce this capture. Worker parallelism bounds active
-captures. Each capture is bounded by the byte length observed at open.
-The worker permit ends after capture; the file lives until its response
-closes. There is no aggregate byte bound on these live response files.
-Temporary storage uses the OS temporary directory, which can be backed by
-`tmpfs` and consume memory outside process RSS measurements.
-
-Git asset delivery buffers one blob under the 64 MiB Git limit, then copies
-it to the destination. Each digest cache miss starts one `cat-file blob`
-command; each delivery starts one bounded `cat-file --batch` command.
+A base-side asset is bounded by the 64 MiB output bound of the
+[Git runtime](./mokly-git.md).
 
 An edit to an imported stylesheet, a nested import, an asset, the
 configuration, or a plugin-reported dependency invalidates the stylesheet

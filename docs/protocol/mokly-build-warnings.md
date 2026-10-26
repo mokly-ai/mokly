@@ -1,7 +1,5 @@
 # Build Warnings
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
@@ -16,35 +14,9 @@ terminal rules are in the
 
 ## Record
 
-```ts
-type BuildDiagnosticCode =
-  | "base-conversion"
-  | "base-dependencies"
-  | "duplicate-component-stylesheet"
-  | "html-foster-parented"
-  | "html-ignore-attribute"
-  | "html-unused-props"
-  | "link-control-ancestor"
-  | "link-control-descendant"
-  | "marker-in-raw-text"
-  | "props-control-bounds"
-  | "props-not-data"
-  | "props-unsafe-integer"
-  | "stylesheet-extglob";
-
-type BuildDiagnosticSubject = {
-  kind: "entry" | "component" | "folder" | "configuration";
-  path: string;
-};
-
-type BuildDiagnostic = {
-  code: BuildDiagnosticCode;
-  message: string;
-} & (
-  | { route: string; subject?: never }
-  | { subject: BuildDiagnosticSubject; route?: never }
-);
-```
+A warning has a `code`, a `message`, and exactly one of a `route` or a
+`subject`. A subject has a kind, `entry`, `component`, `folder`, or
+`configuration`, and a path. The table below lists every code.
 
 - `code` is a stable kebab-case identifier that automation may branch on.
 - `route` is the document route of the view that produced the warning under
@@ -65,8 +37,8 @@ type BuildDiagnostic = {
 
 Raw C0 and C1 control characters are invalid in a diagnostic. Producers
 render authored controls as visible lowercase JSON-style `\uXXXX` escapes
-before normalization, and terminal reporters apply the same encoding
-defensively.
+before normalization. Reporters escape any remaining control character in
+the printed subject and message in the same way.
 
 A generation's diagnostics are sorted by their printed route or subject,
 then `message`, then `code`, using lexical string comparison, with a final
@@ -89,6 +61,7 @@ order, the operating system, or the absolute checkout path.
 | `props-unsafe-integer`           | An unsafe integer in props, schema keywords, or authored control metadata ([entry props](./mokly-entry-props.md#schema-inference))                                                                                                                  |
 | `props-control-bounds`           | A saved prop or story arg outside its editing bounds ([component controls](./mokly-component-controls.md))                                                                                                                                          |
 | `stylesheet-extglob`             | A configuration stylesheet matcher with unsupported extglob syntax ([configuration](./mokly-configuration.md#shape))                                                                                                                                |
+| `stylesheet-owner`               | A renderer `resources` seed that names a stylesheet ([rendering](./mokly-rendering.md#renderer-module))                                                                                                                                             |
 
 Each producing contract defines its own message. A new producer adds a row
 here and defines its message in its own contract.
@@ -98,10 +71,10 @@ here and defines its message in its own contract.
 Warnings arise at three points: catalogue validation, which parses front
 matter, infers schemas, and registers definitions; composition, which
 adapts link controls, resolves component elements, and grafts sidecar
-fragments; and the base side's preparation for Changes. A sidecar returns
-the warnings of a `bundle` or a render in its result, and the core converts
-them into this record. Diagnostics are plain data kept beside the document
-in the render cache, with the generation that produced them. A referenced
+fragments; and the base side's preparation for Changes. Warnings that the
+sidecar raises during a bundle or a render use this record too. A document's
+warnings belong to the generation that rendered it. A document reused from
+an earlier render keeps the warnings of that render. A referenced
 document keeps its own diagnostics; they do not become the requesting
 document's. A later validation or link failure keeps the warnings already
 produced without inventing a result. Warnings are never written into a
@@ -132,6 +105,7 @@ failure print before the failure diagnostic. Without strict mode, a warning
 never changes the exit status by itself. Secrets are redacted at
 presentation.
 
+Reporters write warning lines to stderr. A warning adds nothing to stdout.
 Plain reporters write exactly:
 
 ```text
@@ -157,8 +131,8 @@ both lines. For example:
 ## Watched Serve Generations
 
 Serve numbers its attempts. Startup, a rebuild, manual `r`, and a reconfiguration each
-start a new attempt before they prepare inputs, and every producer captures
-the current attempt. The sink accepts only the current attempt: starting a
+start a new attempt before they prepare inputs. Serve reports the warnings of
+the current attempt only: starting a
 newer attempt discards pending older records at once, and a late record from
 a sidecar or a background render cannot revive them, even when a failed
 attempt leaves the older generation serving. A successful attempt prints its
@@ -169,20 +143,15 @@ view that first renders on demand after readiness prints its warnings once
 when they appear, while its attempt is current; a request for an already
 reported document repeats nothing. Reconfiguration follows the same rules.
 Snapshot Serve (`--no-watch`) has one lifetime scope, and a one-shot command
-has one invocation scope. The base side's preparation reports through the
-same sink.
+has one invocation scope. The base side's preparation follows the same
+attempt rules.
 
-Each document backend captures its attempt's sink before publication.
-On-demand, background, and temporary renders deliver warnings from their
-artifacts or retained failure records through that handle. Cache hits use
-the same path. The sink serializes delivery with attempt replacement and
-completion output. A render or preview failure flushes pending records before
-its diagnostic. It does not make a successful preparation attempt failed.
-Each repair gets a new number and inherits the failed attempt's seen set.
-The next attempt after a successful repair starts with an empty seen set.
-Resource-only reloads retain the current scope. Evidence publications retain
-the scope their backend captured, including an older fenced scope. Neither
-can revive the scope of a last-good backend after an attempt fails.
+On-demand, background, and temporary renders report their warnings in the
+attempt that published their document, also when the render fails. A render
+or preview failure flushes pending records before its diagnostic. It does not
+make a successful preparation attempt failed. The next attempt after a
+successful repair starts with an empty seen set. Resource-only reloads keep
+the current scope.
 
 When preparation repeats after changed watch roots attach, success reports
 only the final pass's warnings. A failure of the second pass or its recheck
@@ -210,14 +179,3 @@ fault in the catalogue, so `--strict` does not count it; counting it would
 make a valid catalogue fail a strict build because of its base preparation. A
 strict build therefore also passes after a failed base installation, and its
 comparison can then hide changes that packages cause.
-
-## Verification
-
-Behaviour tests cover record validation and sorting, both reporter formats,
-option acceptance per command, a warning-tier structure that renders
-identical bytes with one sorted diagnostic, the plain stderr line with
-unchanged stdout and exit `0`, the strict failure before any write, the strict
-count without `base-dependencies`, and one report per attempt in Serve,
-including first on-demand and background warnings, with no repeats for an
-already reported view. Tests also cover temporary renders, failed-attempt
-repair, and cancelled or superseded work.

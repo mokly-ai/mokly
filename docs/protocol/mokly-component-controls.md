@@ -1,13 +1,12 @@
 # Component Controls
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Scope And User Behaviour
 
-Saved variants work in every catalogue. Serve temporarily edits screen and
-component props through the catalogue render path: HTML in Rust, JavaScript
-through the [sidecar](./mokly-sidecar.md). Static `build` output shows saved
-props with read-only controls and `Open this catalogue locally to edit props.`
+Saved variants work in every catalogue. Serve renders temporary edits of
+screen and component props through the catalogue render path, with the
+[sidecar](./mokly-sidecar.md) for JavaScript entries. Static `build` output
+shows saved props with read-only controls and
+`Open this catalogue locally to edit props.`
 as secondary text. Static frames add no interactive control or consumer
 JavaScript runtime. The [live descriptor](./mokly-shell-delivery.md#live-descriptor)
 grants this capability; an environment badge does not.
@@ -73,6 +72,7 @@ props and compares the base render with the current render of the saved props;
 the controls are unavailable while comparing, and the product explains that the
 comparison shows the saved props. A render response cannot overwrite a
 comparison, another entry, another viewport or scheme, or a different page.
+The [controls mockups](./mokly-component-controls-design.md) show the states.
 
 ## Rendering Boundary
 
@@ -102,17 +102,16 @@ interface RenderSuccess {
 }
 ```
 
-The server resolves `entryPath` against the current catalogue model, takes
-the entry's schema, controls, and props, merges the overrides into those
-props, and validates the complete merged props against the schema with the
-profile validator, including uneditable props and control bounds; a `set`
-value is JSON under the schema, and the JSON `null` value is a value, not an
-unset sentinel. It then renders the entry's view through the render graph
-with the merged props: the same composition, collected styles, markers, link
-rewriting, document safety, and resource validation as a catalogue render,
-memoized by the same fragment key, so a repeat render of saved props costs a
-cache hit. Server-supplied context cannot be overridden, and no second
-renderer or React resolution exists.
+Serve resolves `entryPath` against the current catalogue model and merges the
+overrides into the entry's props. It validates the complete merged props
+against the entry's schema under the
+[prop schema profile](./mokly-entry-props.md#prop-schema-profile), including
+uneditable props and control bounds. A `set` value is JSON under the schema,
+and the JSON `null` value is a value, not an unset sentinel. Serve then
+renders the entry's view with the merged props, with the same composition,
+collected styles, markers, link rewriting, document safety, and resource
+validation as a catalogue render. Server-supplied context cannot be
+overridden, and no second renderer or React resolution exists.
 
 A successful response returns an opaque render id, the revision, a sandboxed
 preview URL beneath `/mokly-viewer/components/renders/<render-id>/`, the
@@ -129,17 +128,14 @@ preview, shows an actionable error, and offers retry and reset.
 
 Only the standalone shell that Serve delivers builds this capability; a
 React host that embeds `MoklyViewer` and the static output have none, their
-controls are read-only, and they open no event stream. The shell holds the
-capability in one closure that performs the render request and exposes
-`temporaryPreviews.render` and `temporaryPreviews.expired` through one React
-context; `useViewerCapabilities()` returns them in Serve and `undefined`
-elsewhere, so the token never enters the index, a detail, a URL, local
-storage, or the shell store. Every call carries the current route and the
-installed `deploymentId` and `revision`; a result whose values differ from
-the installed ones is discarded, and navigation, a sibling-variant change, a
-revision adoption, and unmount abort work in flight. A response is accepted
-only when its revision equals the installed one and its view matches the
-request; expiry checks cover only preview URLs the shell received. When the
+controls are read-only, and they open no event stream. The shell keeps the
+render token in memory. The token never enters the index, a detail, a URL, or
+local storage. The shell discards a render result whose route,
+`deploymentId`, or `revision` differs from the installed ones. Navigation, a
+sibling-variant change, a revision adoption, and unmount abort work in
+flight. A response is accepted only when its revision equals the installed
+one and its view matches the request; expiry checks cover only preview URLs
+the shell received. When the
 index's `live.generation` changes, the shell refetches the live descriptor,
 replaces the capability, and rerenders the current validated props. No
 client module, host marker, or host loader is live-only: the client bundle
@@ -193,9 +189,9 @@ queued replacement; sequence and revision checks discard stale responses.
 Obsolete requests are cancelled on a newer edit, navigation, reset, entry or
 context change, or disconnect, and cancellation never leaves a loading state.
 
-Rendering runs through the render graph's scheduler outside the HTTP event
-loop, with one active job per page and at most eight queued jobs server-wide;
-superseded jobs from one page are coalesced. A job that passes ten seconds
+A control render does not block Serve from answering other requests. Serve
+runs one active job per page and at most eight queued jobs server-wide. It
+coalesces superseded jobs from one page. A job that passes ten seconds
 fails with a render failure; a sidecar render that passes its own deadline
 follows the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts),
 so a hanging consumer render cannot hang Browse or shutdown.
@@ -225,25 +221,3 @@ a whole before it renders, so a 400 after those checks pass shows `These values
 are not valid together.` Shutdown stops admission, rejects queued work, cancels
 active renders, and releases the memory store. Controls cannot delay a watched
 rebuild, a publication, or a comparison generation.
-
-## Verification
-
-Contract tests cover every control type, derived steps and labels, optional
-and unset values, unknown props, type and bound errors, malformed bodies,
-request size, `Origin`, `Host`, and token validation, stale revisions, render
-failure and timeout, and queue bounds. They cover both loopback names through
-a different forwarded port for POST and preview reads, missing, zero,
-oversized, and leading-zero ports, a non-loopback `Host` with loopback
-forwarded headers, and a mismatched `Origin` or token, plus ordinary routes
-with rejected non-loopback and accepted forwarded Hosts. They prove that a
-repeat render uses the same renderer and React resolution as the saved props,
-and that control requests create no file, Git status change, watch event, or
-publication entry, including when a consumer watches its repository root.
-They test bundle byte accounting, expiry and eviction, MIME types and
-headers, and memory release on shutdown.
-
-Browser tests cover prop changes, reset, variant switching, viewport and
-scheme retention, rapid edits, stale responses, navigation, comparison
-selection, render errors, retry, sidecar replacement, and shutdown. Static
-smoke tests prove the saved props are usable and issue no render request.
-The [controls mockups](./mokly-component-controls-design.md) show the states.

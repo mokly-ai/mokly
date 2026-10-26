@@ -1,7 +1,5 @@
 # CI Verification: Dependency Cache And Security
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
@@ -13,14 +11,11 @@ miss is an ordinary cold install and never permits a skipped command.
 
 The live lockfile-only workspace audit runs first in the repository prerequisite
 and does not depend on cache state. Complete local and release commands keep
-audit-first ordering. Under the [baseline audit contract](./dependency-audit-baseline.md),
-ordinary pull requests, every push, and default local checks fail only on new
-findings or exception issues; inherited issues print as notices. Report and
-input failures always fail. Release Please and dependency update pull requests,
-the daily scheduled audit on `main`, and the release publish audit stay strict.
-The release complete fallback uses `cargo xtask check --dependency-audit strict`.
-Only active reviewed workspace exceptions cover strict findings, under the
-unchanged exact-path, UTC expiry, and 31-day rules in
+audit-first ordering. The
+[baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
+selects baseline or strict mode for each command and event. Only active
+reviewed workspace exceptions cover strict findings, under the exact-path, UTC
+expiry, and 31-day rules in
 [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
 The [update pull request workflow](./dependency-audit-update-pr.md) handles
 scheduled findings and exception issues. Operational failures still fail the
@@ -32,14 +27,13 @@ Intentionally isolated clean-cache consumer tests keep private empty
 npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
 exact-artifact checks.
 
-Fixture ownership, test concurrency, failure cleanup, browser shard balance,
-and acceptance measurement follow the
-separate [suite evidence contract](./ci-suite-evidence.md).
+Fixture ownership, test concurrency, failure cleanup, and browser shard
+balance follow the separate [suite evidence contract](./ci-suite-evidence.md).
 
 ## Testbox Key And Secret Boundary
 
-The [remote verification contract](./remote-verification.md) defines this
-execution and secret boundary.
+The [remote verification contract](./remote-verification.md) defines the
+remote execution. This section owns its key and secret boundary.
 Explicit and automatic modes use the same key handling.
 
 Xtask reads the org key only from `BLACKSMITH_ORG_TOKEN`.
@@ -67,20 +61,17 @@ publishing, even if an org key is present.
 
 ### Child Environment
 
-`SECRET_VARIABLES` defines secret variables for xtask children. It
-contains only `BLACKSMITH_ORG_TOKEN`.
-`GIT_REPOSITORY_VARIABLES` holds the 15 repository-local names from
-`git rev-parse --local-env-vars` in Git 2.50.1. Git can export these variables
-to hooks, `git rebase -x` commands and `!` aliases in linked worktrees.
-These variables select which repository, work tree and index Git uses.
-Inherited repository selection can redirect snapshot commands to the checkout's
-index or make test Git commands alter its config.
-Every local runner and remote process request removes both lists from its
-child environment. This includes helpers such as `kill` and Rust test Git
-requests. Git in each child then finds its repository from the child's own
-working directory.
-Remote requests set `GIT_INDEX_FILE` only for the three snapshot tree-build
-requests, after removing the inherited list. Settings carried by
-`GIT_CONFIG_PARAMETERS` or `GIT_CONFIG_COUNT`, including `git -c` settings,
-are removed with the list. Other variables, such as `GIT_ASKPASS` and
-`GIT_SSH_COMMAND`, stay.
+Xtask removes two lists of variables from the environment of every child
+process. The secret list holds only `BLACKSMITH_ORG_TOKEN`. The Git list holds
+the 15 repository-local names that `git rev-parse --local-env-vars` prints in
+Git 2.50.1. This covers every local runner and remote process request,
+including helpers such as `kill` and the Git requests of Rust tests. Git in
+each child then finds its repository from the child's own working directory.
+
+Git can export the repository-local variables to hooks, `git rebase -x`
+commands and `!` aliases in linked worktrees. They select which repository,
+work tree and index Git uses. Inherited repository selection could redirect
+snapshot commands to the checkout's index or make test Git commands alter its
+config. Settings carried by `GIT_CONFIG_PARAMETERS` or `GIT_CONFIG_COUNT`,
+including `git -c` settings, are removed with the Git list. Other variables,
+such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay.

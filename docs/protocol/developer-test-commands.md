@@ -1,7 +1,5 @@
 # Developer Test Commands
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,
@@ -33,9 +31,9 @@ source change, run `npm run build` before using either raw command. One build
 can serve repeated raw runs while the sources stay unchanged. No test
 command prepares a baseline, a compiled example snapshot, or a packed archive.
 
-The `test:prepared` and `test:browser:prepared` commands keep the
-[strict runner contract](./ci-verification.md#gate-ownership). They are not
-public developer selection commands.
+The `test:prepared`, `test:viewer:prepared`, and `test:browser:prepared`
+commands keep the [strict runner contract](./ci-verification.md#gate-ownership).
+They are not public developer selection commands.
 
 ## Developer Test Arguments
 
@@ -52,8 +50,7 @@ that separator and omit them from the script arguments. Before any other work,
 the developer parser rejects a non-empty `npm_config_test_name_pattern` value.
 Its error says that npm consumed the flag and shows the separator form
 `npm test -- --test-name-pattern=<regex>`. Empty values and unrelated npm
-configuration do not trigger this guard. The parser accepts an environment
-parameter for this check, with `process.env` as the default.
+configuration do not trigger this guard.
 
 Before starting a test process, the developer runner follows this order:
 
@@ -68,11 +65,9 @@ The [strict discovery rules](./ci-verification.md#gate-ownership) define the
 inventory roots and file extensions. Empty discovery fails before execution.
 Both complete and selected developer runs use this same discovered inventory.
 
-The selected helper owns inventory discovery, file membership validation, the
-build check, and execution. A complete run first obtains its identity and
-report path, then removes the old report and event file before discovery and
-the build check. Thus failed discovery or a missing build cannot leave stale
-complete evidence. Both complete policies use this same sequence.
+A complete run, under the developer or the strict policy, removes its old
+report before discovery and the build check. A failed discovery or a missing
+build therefore cannot leave stale complete evidence.
 
 ### File Paths
 
@@ -108,11 +103,10 @@ the only sharded suite. Every other flag fails with the usage text, preceded by
 
 ### Developer Failure Reports
 
-Argument and inventory-membership errors are expected failures. The developer
-entrypoint catches only `ExpectedFailure`, prints its complete message to
-stderr, and sets exit code 1 without a stack or Node version footer. A missing
-build, empty discovery, concurrency errors, and other internal faults keep
-Node's default error report. The strict entrypoint and the complete report
+Argument and inventory-membership errors are expected failures. An expected
+failure prints its complete message to stderr and exits with code 1, without a
+stack or Node version footer. A missing build, empty discovery, concurrency
+errors, and other internal faults keep Node's default error report. The strict entrypoint and the complete report
 schema do not change with selection.
 
 ## Selected Runs
@@ -125,7 +119,7 @@ selected-run policy and writes no evidence report.
 Execute only the selected files, with the
 [shared file concurrency](./ci-suite-evidence.md#test-concurrency) and the
 verification reporter. Before Node starts, print
-`test files active at once: <count>` with the value used for this run. Pass
+`unit test files active at once: <count>` with the value used for this run. Pass
 name patterns to Node before its file arguments. Allow skipped and todo tests,
 including intentional Windows skips, under the developer policy. Print their
 combined count. Zero matching tests in a selected file is not a failure; the
@@ -154,25 +148,7 @@ the developer allowance for skips and todos.
 The [browser command contract](./developer-browser-commands.md#browser-selection)
 defines selected browser runs and the required static-delivery check.
 
-## Development Workflow And Verification Boundary
-
-During development, run only the test files that cover the change: `npm test`
-for Node test files, `cargo test -p <crate>` for a crate, and
-`npm run test:browser` for browser specs. Require a 100% pass rate for the tests
-that run. Run `cargo xtask check --suite repository` early to catch formatting,
-lint, file-length, export, and Rust failures before long test runs. Leave
-complete viewer and browser suite runs to the complete gate.
-
-Run the complete `cargo xtask check` once before saying work is complete. A
-local run stops at the first failed suite. A
-[remote run](./remote-verification.md) reports every failed suite. After a
-failure, fix it and rerun the narrowest command that covers it. Use the
-targeted commands for failing test files, crates, or browser specs. Use the
-failed `--suite` for repository or viewer findings. Then run the complete gate
-once more. If the gate cannot run, explain the blocker and list the checks
-already run. Documentation-only and plan-only changes keep the exception in the
-`finish-work` skill, which [AGENTS.md](../../AGENTS.md) names: validate the
-changed Markdown and review the diff.
+## Partial Verification
 
 Any selected Node test run, selected crate test, filtered Playwright run, or
 single `cargo xtask check --suite` run is partial verification. A complete
@@ -190,16 +166,11 @@ coverage, process cleanup, and native browser requirements.
 
 ## Native TLS Build Tools
 
-The publish client uses reqwest with rustls and the AWS-LC provider. Its
-non-FIPS build compiles bundled C and assembly for the target. Install a
-supported C compiler and archiver for each target. The normal Linux build
-uses the cc builder; CMake is a fallback. Windows x64 uses the provider's
-prebuilt NASM objects when that feature is enabled by rustls. Cross builds
-need target headers, libraries, and a linker as well as the Rust target.
-
-The workspace forces `AWS_LC_SYS_USE_SYSTEM=0` in `.cargo/config.toml`.
-This disables automatic host AWS-LC discovery through `OPENSSL_DIR` and
-pkg-config. Release checks inspect all five binaries for unintended crypto
-shared-library dependencies. Run the native CI on macOS and Windows before
-release acceptance. The [AWS-LC requirements](https://aws.github.io/aws-lc-rs/requirements/index.html)
+The workspace forces `AWS_LC_SYS_USE_SYSTEM=0` in `.cargo/config.toml`, so a
+build never uses a host AWS-LC library. Release checks inspect all five
+binaries for unintended crypto shared-library dependencies. The
+[publish crate guide](../../crates/mokly-publish/README.md#what-this-crate-does)
+names the C toolchain that the bundled TLS provider needs. A cross build also
+needs the target's headers, libraries, linker, and Rust target. The
+[AWS-LC requirements](https://aws.github.io/aws-lc-rs/requirements/index.html)
 list the supported native toolchains.

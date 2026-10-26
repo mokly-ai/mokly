@@ -1,7 +1,5 @@
 # Shell Delivery And Read Model Routes
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -114,18 +112,13 @@ is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
 ## Live Descriptor
 
-```ts
-interface LiveDescriptorV3 {
-  schemaVersion: 3;
-  generation: string; // equal to the index's live.generation
-  render: { url: "/mokly-viewer/components/render"; token: string };
-}
-```
+The [generated `LiveDescriptorV3` type](../../packages/viewer/src/generated/catalogue/LiveDescriptorV3.ts)
+defines the descriptor. Its `generation` equals the index's `live.generation`.
 
 Serve supplies the component controls contract's render generation and capability
 at `/mokly-viewer/live.json`. The shell fetches it when the index carries
-`live`, at start and when `live.generation` changes. The Rust core supports
-edited props for HTML entries too. With no descriptor, Props shows
+`live`, at start and when `live.generation` changes. Serve supports edited
+props for HTML entries too. With no descriptor, Props shows
 `Preparing to edit props…` and read-only fields. Refetch keeps the installed
 capability until its replacement installs. On failure, browsing works; Props
 shows `Editing could not start.` and `Try again` to fetch again. The shell also
@@ -197,8 +190,8 @@ state only after each of its details has arrived, failed, or been replaced.
 `build` computes `deploymentId` as the hash of every installed output file under the
 [static export browser contract](./mokly-export-browser.md), with index and
 detail `deploymentId` fields set to 64 zeros. Generation files carry no deployment id,
-so one comparison gives the same bytes in every build. Serve keeps one id per process,
-for example a hash of catalogue identity and start value. A new id means another build or process.
+so one comparison gives the same bytes in every build. Serve keeps one id per process.
+A new id means another build or process.
 `revision` orders the states of one Serve process from `1`; a build writes `0`.
 
 ## Embedded Viewer

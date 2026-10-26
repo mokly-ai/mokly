@@ -2,15 +2,14 @@
 
 ## Counterpart Algorithm
 
-For each source region and other pane document, cache one counterpart or no
-match. On the region's first scroll after measurement, apply the rules below
-in order and stop at the first unambiguous result. Keep that result until the
-next measurement. An accepted match reserves the target and records the reverse
-association so one target cannot serve two source regions. A target already
-reserved for another source, or already found to have no counterpart in the
-source's document, is ineligible, so a pairing never depends on which version
-the reader scrolled first. Switching Scroll together on also resolves unmatched
-regions as the
+A source region has at most one counterpart in each other pane document. On
+the region's first scroll after a measurement, apply the rules below in order
+and stop at the first unambiguous result. That result, a counterpart or no
+match, holds until the next measurement. One target never serves two source
+regions. A target already paired with another source, or already found to
+have no counterpart in the source's document, is ineligible, so a pairing
+never depends on which version the reader scrolled first. Switching Scroll
+together on also resolves unmatched regions as the
 [Scroll together contract](./mokly-comparison-scroll-together.md#realignment)
 describes.
 
@@ -26,8 +25,9 @@ scroll on every axis the source scrolls on. Otherwise apply:
    more than one region with that name, the name is ambiguous and this rule is
    skipped. Attributes on non-region elements are ignored and do not make a
    duplicate. If only one version carries the name, continue to rule 2. The
-   build does not reserve, validate, or transform this attribute; its existing
-   use on viewer-shell history regions is in a separate document scope.
+   build does not reserve, validate, or transform this attribute. The viewer
+   shell also names its own scroll-history regions with it, in a separate
+   document scope.
 2. **HTML id.** If the source has a nonempty `id`, select the region with the
    exact same id only when that id belongs to exactly one region in each
    document. Duplicate region ids make this rule ambiguous, so continue.
@@ -75,10 +75,9 @@ score = min(1, 0.55 * overlap(s, c) + 0.45 * text(s, c) + nameBonus)
 nameBonus = 0.10 when s.localName === c.localName, otherwise 0
 ```
 
-`overlap` is intersection-over-union of the two axis-aligned border boxes.
-Convert each `getBoundingClientRect()` to document coordinates by adding that
-document scrolling element's current `scrollLeft` and `scrollTop`; a zero-area
-union scores zero.
+`overlap` is intersection-over-union of the two axis-aligned border boxes in
+document coordinates, so the page offset of either document does not change
+it. A zero-area union scores zero.
 
 A text fingerprint is a set of words. Read every descendant `h1`-`h6` and
 element whose first normalized role token is `heading` in tree order, followed
@@ -91,31 +90,11 @@ either side of an element boundary can form one token; both versions read their
 markup the same way. `text` is the Jaccard index, intersection size divided by
 union size; two empty sets score zero.
 
-Comparisons with the minimum and the margin allow a `1e-9` tolerance, so a
-boundary such as `0.45 - 0.30` counts as the full `0.15` despite binary
-floating point.
-
-| Situation                                               | Governing values                       | Result                                |
-| ------------------------------------------------------- | -------------------------------------- | ------------------------------------- |
-| Same unique authored name; ids disagree                 | Rule 1                                 | Pair by authored name                 |
-| Authored name duplicated; same unique id                | Rule 1 skipped, rule 2 unique          | Pair by id                            |
-| Name only on source, no ids, unique equal role/name     | Rules 1-2 unavailable                  | Pair by role/name                     |
-| Either proposed side is `off`                           | Excluded before matching               | Do not pair                           |
-| Source scrolls on x and y; candidate on y only          | Candidate fails the axis rule          | Do not select that candidate          |
-| Same place, rewritten text, different element names     | overlap `0.90`, text `0`: `0.495`      | Pair if runner-up is at most `0.345`  |
-| Moved, identical text, different element names          | overlap `0`, text `1`: `0.45`          | Pair if runner-up is at most `0.30`   |
-| Two candidates fall within the margin                   | best `0.64`, runner-up `0.53`          | Do not pair; lead is only `0.11`      |
-| Weak overlap and text, even with the element-name bonus | overlap `<0.20`, text `<0.20`: `<0.30` | Do not pair; below the `0.45` minimum |
+A score or a lead that equals the minimum or the margin in exact arithmetic
+qualifies, even when binary floating point computes it slightly lower. For
+example, a lead of `0.45 - 0.30` counts as the full `0.15`.
 
 Because every eligible candidate is scored, a region whose identity would pair
 it with another source by rules 1 to 3 still competes in a source's fallback
 until it is reserved; the minimum and margin keep such a competitor from being
 selected unless it clearly wins.
-
-## Acceptance
-
-Unit tests prove the identity grammar, every rule in order with each row of
-the table above, and the counterpart cache, and a browser regression, listed in
-the [browser test guide](../../tests/browser/README.md#comparison-scrolling-suites),
-pairs an app shell's panels by each rule and leaves an ambiguous, an `off`,
-and a new panel unpaired.

@@ -1,7 +1,5 @@
 # Document Rendering Safety
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This continues [Markdown Documents](./mokly-documents.md#rendering).
 The structural allowlist applies to Markdown documents. The URL policy also
 applies to composed HTML screens, components, and pages.
@@ -79,15 +77,7 @@ The document template contains no script. It does not add a
 inspector script for authenticated link and frame behavior. That CSP would block
 the package's instrumentation too. Raw Markdown is literal text, and the
 independent final allowlist prevents a renderer error from introducing executable
-elements or attributes. Historical frames keep their existing script-disabled
-sandbox under the [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle).
-
-## Verification
-
-Exercise raw-mode text after `code`, `pre`, `kbd` and `script` open tags, including
-case and attribute variations. Preserve later prose, paragraphs, headings, lists,
-blockquotes, tables, links and emphasis as text. Inject unsafe final markup after
-the renderer to prove the independent boundary rejects it. Cover element,
-attribute, checkbox and URL rules, plus events merged onto the outer wrapper.
-Keep valid CommonMark/GFM output, both schemes, Serve links and the static
-output working.
+elements or attributes. A raw `code`, `pre`, `kbd`, or `script` open tag, in any
+letter case and with any attributes, is literal text too. Such a tag never
+hides the content that follows it. Historical frames use the script-disabled
+sandbox of the [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle).

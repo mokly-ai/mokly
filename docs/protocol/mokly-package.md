@@ -1,7 +1,5 @@
 # Mokly Package And Authoring Contract
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
@@ -122,9 +120,8 @@ data exit non-zero. Expected author errors do not print stacks unless
 diagnostic output is explicitly requested.
 
 No command writes into the repository except `build` into its output
-directory. The render cache is process memory. The base-side extraction cache
-and the dependency install cache live in the operating system's cache
-directory; the terminal names that directory, and deleting it is safe.
+directory. The [runtime contract](./mokly-runtime.md#render-graph-and-cache)
+owns the caches outside the repository.
 
 The [terminal output contract](./mokly-terminal-output.md) defines plain
 output compatibility, rich progress, errors and
@@ -155,9 +152,8 @@ mockup beside the product code it describes, for example
 layouts derive the same catalogue paths; source protection applies to every
 layout. These are examples, not mandatory runtime locations. A root's `files`
 globs define the complete entry shape with no additional suffix filter; the
-default patterns select `.mockup.ts` and `.mockup.tsx` modules, stories
-files, the HTML and YAML kinds, and Markdown documents under the
-[root field contract](./mokly-root-discovery.md#root-fields).
+[root field contract](./mokly-root-discovery.md#root-fields) gives the default
+patterns.
 
 ## Public Authoring API
 
@@ -183,8 +179,7 @@ namespace is a route prefix, not a repository directory. Serve and `build`
 deliver the shell stub, the catalogue index, and one entry detail per entry
 under the [shell delivery contract](./mokly-shell-delivery.md). The
 [imported-styles contract](./mokly-imported-styles.md) defines bundled CSS
-and binary assets and their routes. The catalogue model lives in memory, and
-the index is its public form; nothing is written into the repository.
+and binary assets and their routes.
 
 ## Pages And Comparisons
 
@@ -201,13 +196,9 @@ diagnostics; it never fails the current output.
 
 ## Packaged Documentation
 
-The `@mokly/mokly` package ships the plain-Markdown CLI guides under `docs/guides` and
-the protocol sources under `docs/protocol`. The package version is the
-documentation version. The private cloud repository renders those files into
-the public documentation site and owns its cloud, review, changelog, legal,
-and marketing pages; this repository owns no site runtime or deployment.
-
-The [guides contract](./mokly-guides.md) defines the source tree,
+The `@mokly/mokly` package ships the CLI guides and the protocol documents, and
+the package version is the documentation version. The
+[guides contract](./mokly-guides.md) defines the source tree,
 frontmatter, sections, link mapping, published Reference allowlist,
 release-managed version literals, and package boundary.
 
@@ -242,6 +233,11 @@ walks invocation-directory and executable ancestors for
 These inputs do not select a consumer React runtime; consumer resolution
 follows the configuration and base dependency contracts.
 
-The native CLI embeds the npm package version from `packages/mokly/package.json`.
-It supplies that same version to sidecar hello and graph configuration keys.
-Cargo crate versions do not determine the published Mokly package version.
+The shim also passes `MOKLY_VIEWER_DIST`, the directory of the
+`@mokly/viewer/browser` build that its own installation resolves. The binary
+serves exactly that build's browser inventory, stylesheet, and font, so the
+consumer's working directory never selects the viewer.
+
+The binary's version is the `@mokly/mokly` package version. The binary sends
+that version in the sidecar hello. Cargo crate versions do not determine the
+published Mokly package version.

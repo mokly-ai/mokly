@@ -1,7 +1,5 @@
 # Viewer Appearance
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## One Control In Standalone, Two Inputs When Embedded
 
 The model has two inputs: the interface appearance around previews and the
@@ -40,8 +38,8 @@ that wants previews to follow its application theme passes a matching
 
 `ViewerSelection.colorScheme`, `InstanceRef.colorScheme` and the colour-scheme
 fields of the index, the details and the comparison formats keep their preview
-meaning everywhere. Appearance creates no index, detail, comparison or
-adapter-wire schema change.
+meaning everywhere. The index, the details, the comparison formats and the
+adapter wire carry no appearance field.
 
 ## Changed Preview Indicators
 
@@ -114,7 +112,8 @@ Before any reader choice, a scheme-bearing in-shell destination applies its
 pin to the whole appearance without saving it; an unpinned destination keeps
 the current document appearance. Only the appearance controller interprets
 these pins; route installation never independently overwrites preview
-selection.
+selection. A standalone appearance change swaps only document sources and
+keeps the navigation, viewport, inspector, scroll and search state.
 
 On a full page load the effective appearance is resolved in this order: a
 `scheme` URL parameter of `light` or `dark` pins the appearance for that
@@ -134,19 +133,15 @@ as the [shell delivery contract](./mokly-shell-delivery.md) requires: it sets
 the scheme mark on the document root, then renders the shell and mounts every
 frame with the document of the effective preview scheme. No frame loads a
 light document and swaps to dark at startup, and no pre-paint script exists.
-Under Auto the appearance controller follows system changes while the
-document is open. Later choices and system changes update the document root
-and the preview selection through one callback, and only the frame adapters
-navigate preview documents. Appearance changes never add iframe history
-entries or consume catalogue Back/Forward actions. Installation is idempotent;
-the final handle release removes the system-theme listener and every bound
-selector listener so a later installation cannot duplicate callbacks or
-storage writes. Persisted `pagehide` events keep the controller alive for the
-browser's back-forward cache, and persisted `pageshow` refreshes the restored
-document; a final non-persisted `pagehide` disposes it and removes its
-lifecycle listeners. In-shell navigation, detail updates and Serve
-publications carry the current effective appearance forward rather than a
-separate preview state.
+Under Auto the appearance follows system changes while the document is open.
+Later choices and system changes update the document root and the preview
+selection together, and only the frame adapters navigate preview documents.
+Appearance changes never add iframe history entries or consume catalogue
+Back/Forward actions. A second installation of the appearance behaviour
+duplicates no callback or storage write. A page that the browser's
+back-forward cache restores refreshes its appearance. In-shell navigation,
+detail updates and Serve publications carry the current effective appearance
+forward rather than a separate preview state.
 
 Before the bundle runs, and without JavaScript, the stub shows only its
 `<noscript>` sentence, and the shell stylesheet gives that document the Auto
@@ -161,9 +156,8 @@ stylesheet and the scoped embedded stylesheet. Dark interface backgrounds,
 text and boundaries align with Mokly Cloud's warm neutral Folio palette, with
 sage reserved for accents and status. The
 [semantic palette](./mokly-viewer-palette.md#cloud-alignment) records the
-source revision, the role mapping, the approved swatches, their recorded
-contrast and the Light corrections they required; the cloud repository is a
-design reference, not a runtime dependency.
+role mapping, the approved swatches and their recorded contrast; the cloud
+repository is a design reference, not a runtime dependency.
 
 Provide Light and Dark values for these responsibilities:
 
@@ -174,11 +168,10 @@ Provide Light and Dark values for these responsibilities:
 - Navigation guides, stage dots, browser toolbar/address controls, tooltips,
   backdrops, shadows, inspector tabs, native fields and scrollbars.
 
-Audit literal colours in the shell stylesheets and in package-owned overlay
-and control creation. Replace theme-dependent literals with semantic roles,
-not a growing dark-mode override sheet. Use a focused source rule with an
-explicit allowance for fixed device artwork to prevent new theme-dependent
-colour literals outside palette definitions.
+Theme-dependent colours in the shell stylesheets and in package-owned overlay
+and control creation use semantic roles, not a dark-mode override sheet. A
+colour literal appears only in a palette definition, including the roles of
+fixed device artwork.
 
 Keep the public overrides `--mokly-accent`, `--mokly-accent-contrast` and
 `--mokly-accent-soft`. Unset overrides receive the current theme's defaults;
@@ -195,14 +188,12 @@ content keeps its styles, including host-owned markers.
 Support readable default palettes in both modes: normal text at least 4.5:1,
 large text at least 3:1, and required control, state and focus graphics at
 least 3:1 against adjacent colours. Decorative hairlines are not control
-boundaries. A Light colour may change where a touched semantic role fails
-these criteria; the three such changes are recorded in the palette contract.
-These targets follow
+boundaries. These targets follow
 [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 and [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 Consumer overrides keep the consumer contrast responsibility.
 
-Keep the established layout and typography. Use full-surface selection,
+Appearance changes no layout or typography. Use full-surface selection,
 spacing, icons and normal focus outlines; no left-edge accent rails. Respect
 forced colours and reduced motion, without animated theme changes.
 
@@ -247,87 +238,11 @@ difference result.
 
 ## Mockup Contract
 
-The owning catalogue is `examples/basic/specs/design`; use its registered
-shared components and existing screen compositions. Appearance screens and
-their affected shared component samples render Light and Dark views for both
-viewports through Mokly's authoring: the entries inherit the configured
-`colorSchemes`, every view renders once per scheme, and Browse's Appearance
-control swaps between them at the same entry. A shared render context carries
-the renderer's `input.colorScheme` to the artboard roots as a pass-through,
-not a second theme setting, and each artboard's `data-mbk-appearance` reflects
-that requested scheme. Rendered pages must not read the building or viewing
-machine's system theme; the Auto example uses the requested scheme as its
-deterministic system-theme fixture.
+The [appearance mockup contract](./mokly-viewer-appearance-mockups.md) defines
+the design screens of the appearance and their owning folders.
 
-Each artboard draws exactly one scheme control: the registered
-`chrome/appearance-selector` composed into the top bar. It depicts the
-standalone control and has no authored transitions. The depicted top bar
-component owns it, so every artboard drawing a top bar shows it rather than
-opting in. The depicted screen header carries the viewport control only, with
-no preview theme icon, and depicted component toolbars carry no scheme switch.
-The Auto artboard's selector reads Auto in both renders; every other
-artboard's selector reads the name of the scheme it was rendered for.
+## Related Docs
 
-Previews follow the artboard. Subjects with a dark render, such as Welcome, the
-comparison panes and the flow's first step, use the dark device-screen
-treatment in the Dark render and the light one in the Light render. The
-light-only Details subject keeps its light frames in both renders and shows the
-fallback caption in the Dark render, because that is a fact about the screen.
-Device-screen tokens stay independent of the interface palette.
-
-A linked Appearance section sits under Browse, with matching source directories
-under `examples/basic/specs/design/browse/appearance/`. Each design page
-names a canonical screen; other screens can share its folder. The folder
-itself has no page of its own. Folders below are the resolved folder titles
-under `Design › Browse shell`.
-
-| Folder                              | Owning screens                                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Appearance                          | `design/browse/appearance/overview`: the canonical interface around a selected screen, all light or all dark |
-| Appearance › Appearance states      | Auto selector, light-only screen, current document, and removed document fallbacks                           |
-| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference                   |
-| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                               |
-
-The catalogue groups the overview and its three nested families; artboards
-carry no navigation footer. Each screen has its own mobile and desktop
-component and reuses the registered shared components, without duplicate
-screen markup, and no page has more than five owning screen definitions. The
-exact entries are listed in the
-[shell design inventory](./mokly-shell-design-inventory.md).
-`design/browse/views/screen/dark-scheme` and
-`design/browse/views/screen/light-only` are Welcome variants with Light and
-Dark artboards; they, `design/browse/views/screen` and
-`design/browse/views/details-screen` follow the one Appearance selector. No
-design entry depicts a separate preview-scheme control,
-`controls/view-controls` carries no scheme control, and the design catalogue
-authors no scheme link pairs. Keep notes outside the screens.
-
-## Required Verification
-
-- For the mockups, switch Dark → Light → Dark on the same entry in both
-  viewports with the standalone Appearance control. Assert actual document
-  URLs, computed artboard colours, the depicted previews' treatment, the
-  light-only caption and the absence of a second scheme control, for all four
-  rendered variants.
-- Test effective-appearance resolution, preference normalization, the `scheme`
-  URL pin, storage failures, first-render ordering and cleanup,
-  back-forward-cache restoration, semantic contrast and inherited accent
-  overrides.
-- In standalone browsers, cross Auto/Light/Dark with mixed and light-only
-  catalogues at both widths, including live system changes under Auto, a
-  `scheme` pin, pinned navigation and Back/Forward after Light or Auto
-  choices, a clean first Dark render for a light-only catalogue, component
-  samples and comparison frames. In embedded browsers, cross Light/Dark
-  `theme` with Light/Dark previews and light-only catalogues, including
-  native and media-query-driven preview fixtures for both adapters, two
-  independent roots, host and slot isolation and loading, error and retry
-  transitions.
-- Verify an embedded `theme` change causes no frame reload, selection event,
-  lost props, ended pick or marker loss, and that a standalone appearance
-  change swaps only document sources and preserves navigation, viewport,
-  inspector, scroll and search state. Exercise keyboard selection, focus,
-  forced colours, the mobile drawer and inspector, hover, disabled and error
-  states, expanded frames and comparison compositing.
-- Smoke Serve, the saved appearance after a full page load and after a Serve
-  publication, a static build at the root and under a path prefix, and a
-  packaged React consumer. Run the repository gate.
+- [Viewer semantic palette](./mokly-viewer-palette.md)
+- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Embeddable viewer](./mokly-viewer.md)

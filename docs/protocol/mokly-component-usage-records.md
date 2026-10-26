@@ -1,61 +1,13 @@
 # Component Usage Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Record Shapes
 
 Usage records derive from the ownership regions of the composed trees under
 the [comparison contract](./mokly-comparison.md#tree-model). A view's usage travels as the `usage` of that view in the
 [entry detail](./mokly-shell-delivery.md#entry-detail) and feeds the
-[comparison records](./mokly-component-comparison-records.md).
-
-```ts
-type ComponentInputOwner =
-  { kind: "entry" } | { kind: "instance"; instanceKey: string };
-
-interface ComponentInstanceRecord {
-  key: string;
-  id: string;
-  componentId: string;
-  owner: ComponentInputOwner;
-  slotKey?: string;
-  order: number;
-  props: ComponentWireProps;
-  propsKey: string;
-  source?: ComponentSourceLocation;
-}
-
-interface ComponentSourceLocation {
-  path: string;
-  line: number;
-  column: number;
-}
-
-interface ComponentSlotRecord {
-  key: string;
-  instanceKey: string;
-  name: string;
-  owner: ComponentInputOwner;
-  sourceSlotKey?: string;
-}
-
-type ComponentRangeTarget =
-  | { kind: "instance"; instanceKey: string }
-  | { kind: "slot"; slotKey: string }
-  | { kind: "root" };
-
-interface ComponentRangeRecord {
-  id: string;
-  target: ComponentRangeTarget;
-  parentId?: string;
-}
-
-interface ComponentViewUsage {
-  instances: readonly ComponentInstanceRecord[];
-  slots: readonly ComponentSlotRecord[];
-  ranges: readonly ComponentRangeRecord[];
-}
-```
+[comparison records](./mokly-component-comparison-records.md). The generated
+[`CatalogueUsage`](../../packages/viewer/src/generated/catalogue/CatalogueUsage.ts)
+type and the record types that it imports define the shapes.
 
 References are local to one view except `componentId`, which names a
 registered component parent by its path. The entry owner is the screen or

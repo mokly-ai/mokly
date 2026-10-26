@@ -1,7 +1,5 @@
 # Selected live comparisons
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 A selected comparison compares one shown view in Serve on demand: the screen
 or component entry the reader opened, at the selected viewport and colour
 scheme, head against base. It reads only that entry's views and their
@@ -97,8 +95,8 @@ the [comparison pane contract](./mokly-comparison-panes.md).
 Identical pending selections coalesce. Different selections serialize, with
 at most 32 pending requests and a ten-second deadline from admission to
 completion. A Git command that a cancellation stops is drained with its
-pipes. A source or Changes replacement aborts outstanding work and changes
-the cache epoch; stale work cannot publish. Shutdown stops admission, aborts
+pipes. A source or Changes replacement aborts outstanding work, and stale
+work cannot publish. Shutdown stops admission, aborts
 outstanding work, and drains it before releasing the cache. Refresh
 regenerates the selection and coalesces with a pending capture for the same
 accepted inputs.
@@ -110,8 +108,7 @@ including removed details and preview metadata. Its snapshot files still expire
 after 60 idle seconds. A later removed preview or component parent or variant
 view restores them from the accepted base capture or pinned-source fallback.
 The current index's publication, an in-flight request, or a capture must still
-own the classification. The store holds only a weak reference to it. After
-its last owner exits, a missing snapshot returns 404 and starts no work, even
+own the classification. After its last owner exits, a missing snapshot returns 404 and starts no work, even
 while the generation's cached JSON remains available. After replacement,
 cached JSON and snapshots follow the idle rule too.
 Each classification can retain a separate base capture of up to 256 MiB,
@@ -121,28 +118,10 @@ Count all retained delivery JSON and snapshots against the same store bounds. Bo
 retained generations to 64 and 128 MiB, and each generation to 64 MiB.
 Reject new captures that exceed capacity rather than removing documents still
 within their retention window. When retained generations fill the store,
-classification retries metadata installation once per second without rerendering
-or reclassifying. Admission is checked before ready-state projection and again
-at installation. A full store does not repeat catalogue projection on each retry.
-It remains pending until capacity is free, or replacement or
-shutdown cancels it. Metadata larger than 64 MiB fails without retry.
+classification waits for capacity without rerendering or reclassifying. It
+remains pending until capacity is free, or replacement or shutdown cancels it. Metadata larger than 64 MiB fails without retry.
 Expired generations are collected
 periodically and before a new capture. A failed refresh preserves the
 earlier documents and does not poison later requests. An idle open
 comparison does not keep its generation alive; its next view or mode switch
 renews or reacquires it before new panes load.
-
-## Verification
-
-Regressions must prove that a selection renders and reads only the chosen
-entry's views and resources and keeps both sides' bytes. A variant result
-retains its parent record for evidence ownership. Cover screen-only and
-component catalogues, removed and added sides, schemes and viewports,
-asset isolation, input mutation, malformed requests,
-coalescing, refresh, invalidation, cancellation, shutdown, and retry. Advance
-the server clock to prove that idle screen and component comparisons recover
-after generation collection, without failed pane requests. Cover HEAD
-retention extension, repeated switches during renewal, abandoned renewals,
-retry, and a static build's absence of renewal traffic. Measure real browser
-comparison readiness on the large fixture separately from startup and
-background Changes; a JSON response alone is not a visible comparison.

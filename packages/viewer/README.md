@@ -20,8 +20,6 @@
   <a href="#development">Development</a>
 </p>
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone

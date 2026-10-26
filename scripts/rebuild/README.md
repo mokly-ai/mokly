@@ -40,6 +40,18 @@ without size or digest fields. It excludes shell files, viewer runtime files,
 and generated entry HTML. It normalizes the same prefixes as the closures.
 A missing inventory is distinct from an inventory with no authored resources.
 
+## Key Code
+
+- [`behaviour-table.mjs`](./behaviour-table.mjs) holds the command line,
+  `behaviourTable`, and the scenario readers `readScenario` and
+  `readRustScenario`.
+- [`legacy-adapter.mjs`](./legacy-adapter.mjs) holds `adaptLegacyScenario`,
+  which maps a capture of the previous backend to behaviour records.
+- [`rust-adapter.mjs`](./rust-adapter.mjs) holds `adaptRustScenario`, which
+  maps a capture of the Rust core to behaviour records.
+- [`behaviour-table.d.mts`](./behaviour-table.d.mts) declares
+  `BehaviourRecords`, the neutral record type that both adapters return.
+
 ## Resource Closure Contract
 
 Capture scripts live beside the reference `README.md` under the ignored

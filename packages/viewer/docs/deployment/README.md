@@ -1,7 +1,5 @@
 # Deployment and security
 
-Status: In progress under the [Rust rebuild plan](../../../../plans/rust-rebuild.md).
-
 This page belongs to the [`@mokly/viewer` README](../../README.md). It explains how to host the catalogue files for the viewer.
 
 The catalogue is static files. `mokly build` writes the shell stub, the index,
@@ -24,9 +22,8 @@ define the complete path, header, sandbox, and CSP requirements.
   real origin; an opaque `null` origin is rejected. Send
   `Access-Control-Allow-Origin: <exact app origin>` and
   `X-Content-Type-Options: nosniff` on GET, HEAD, and error responses for every
-  public path: `mokly-viewer/index.json`, `mokly-viewer/entries/**`,
-  `static/**`, `mokly-viewer/client/**`, `mokly-viewer/shell.css`,
-  `mokly-viewer/fonts/**`, and `mokly-viewer/diffs/generations/**`. Use
+  [public path](../../../../docs/protocol/mokly-viewer-namespace.md#public-paths)
+  of the catalogue. Use
   `Vary: Origin` when you select the allowed origin dynamically. The viewer uses
   no wildcard CORS and no credentials; it fetches with `credentials: "omit"`.
   Frames use `sandbox="allow-same-origin allow-scripts"`, so the published
