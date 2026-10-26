@@ -5493,7 +5493,8 @@ check passes on this commit.
       Medium; B, give every parse purpose its own input type, Large.
       Recommended: A. Apply no option.
 - Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
-  does not model SVG `desc` or encoded MathML `annotation-xml` integration points.
+  at lines 87, 153, and 213-218 does not model SVG `desc` or encoded MathML
+  `annotation-xml` integration points.
   Separate branch.
 
 - [ ] One tokenizer run for the checks and the tree, covering decisions 98 B
@@ -5521,7 +5522,8 @@ check passes on this commit.
       `filter_attributes`, and correct its module doc, Small; B, keep both
       lists, Small. Recommended: A. No option is applied.
 - Outside phase 2 review 1: `crates/mokly-catalogue/src/html_token_conversion.rs`
-  retains production `unreachable!()` and `unwrap()` calls. Separate branch.
+  at lines 87, 153, and 213-218 retains production `unreachable!()` and
+  `unwrap()` calls. Separate branch.
 
 - [ ] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
