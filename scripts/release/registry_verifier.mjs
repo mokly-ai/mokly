@@ -174,10 +174,7 @@ async function verifySignatures(
       "--no-fund",
       "--save-exact",
       ...(spec.startsWith("@mokly/native-")
-        ? [
-            `--os=${nativeTarget(spec.slice(0, spec.lastIndexOf("@"))).os}`,
-            `--cpu=${nativeTarget(spec.slice(0, spec.lastIndexOf("@"))).cpu}`,
-          ]
+        ? nativeSelectors(spec.slice(0, spec.lastIndexOf("@")))
         : []),
       spec,
     ],
@@ -193,6 +190,20 @@ async function verifySignatures(
     retryPropagation,
     `${spec} signatures are not visible on npm`,
   );
+}
+
+/**
+ * Select the package's own platform. npm applies these selectors only to
+ * optional dependencies and rejects a direct one from another platform.
+ */
+function nativeSelectors(name) {
+  const target = nativeTarget(name);
+  return [
+    "--save-optional",
+    `--os=${target.os}`,
+    `--cpu=${target.cpu}`,
+    ...(target.libc ? [`--libc=${target.libc}`] : []),
+  ];
 }
 
 function requireCommandSuccess(file, args, result) {
