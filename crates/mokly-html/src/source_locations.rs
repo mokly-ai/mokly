@@ -22,7 +22,7 @@ fn body_location(template: &Template) -> (usize, usize) {
     let end = template.body_offset.min(template.source.len());
     let mut line = 1;
     let mut column = 1;
-    for character in template.source[..end].chars() {
+    for character in template.source.get(..end).unwrap_or_default().chars() {
         if character == '\n' {
             line += 1;
             column = 1;

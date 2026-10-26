@@ -17,12 +17,8 @@ use crate::tree::Node;
 
 mod runner;
 
-/// The token-driven pipeline is the production parser path.
-pub(crate) const ENABLED: bool = true;
-
 struct CallbackSink<'a> {
     builder: &'a mut TreeBuilder<Handle, Arena>,
-    source: &'a str,
     source_path: Option<&'a str>,
     base_line: usize,
     base_column: usize,
@@ -222,7 +218,6 @@ impl<'a> PipelineEmitter<'a> {
         Self {
             inner: CallbackEmitter::new(CallbackSink {
                 builder,
-                source,
                 source_path: path,
                 base_line,
                 base_column,
@@ -253,7 +248,7 @@ impl<'a> ForwardingEmitter for PipelineEmitter<'a> {
     }
 
     fn emit_current_tag(&mut self) -> Option<State> {
-        assert!(self.inner.emit_current_tag().is_none());
+        let _ = self.inner.emit_current_tag();
         self.inner.callback_mut().next_state.take()
     }
 
@@ -263,11 +258,6 @@ impl<'a> ForwardingEmitter for PipelineEmitter<'a> {
             .builder
             .adjusted_current_node_present_but_not_in_html_namespace()
     }
-}
-
-/// Parse a complete document through the experimental token-driven pipeline.
-pub(crate) fn document(source: &str, path: &str) -> Vec<Node> {
-    runner::run(source, false, true, Some(path), 1, 1)
 }
 
 pub(crate) fn authored_document(

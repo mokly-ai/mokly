@@ -105,6 +105,10 @@ pub(crate) fn authored_fragment_at(
     })
 }
 
+pub(crate) fn authored_fragment_unlocated(source: &str) -> Vec<Node> {
+    pipeline::authored_fragment_unlocated(source)
+}
+
 fn repair_authored(nodes: Vec<Node>, reparsed: impl FnOnce(&str) -> Vec<Node>) -> Vec<Node> {
     if !terminal_text(&nodes) {
         return nodes;
