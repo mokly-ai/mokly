@@ -90,6 +90,12 @@ the rule. Rules for one application, package, or feature live in the
   no override.
 - `tests/markdown_links.test.ts` checks the local links and anchors in
   `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+- `packages/mokly/README.md` and `packages/viewer/README.md` are the npm
+  pages of their packages. Write them for users: what the package does, how
+  to install and use it, and links to the guides. Put requirements in the
+  protocol docs, code entry points in the
+  [development guide](./docs/development/README.md#key-code) or a short
+  development section, and mechanics in the code.
 - Never commit build output. `mokly-static/` and every `--out` directory
   stay ignored by Git. Commit the authored specs, configuration, components,
   and CSS under `examples/basic/`.

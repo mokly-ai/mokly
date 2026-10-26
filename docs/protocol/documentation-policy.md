@@ -24,8 +24,12 @@ the plan names.
 
 The rule applies to Markdown under `docs/**`, the root `README.md`, the
 package, example, and `xtask` READMEs, and authored `notes.md` files. The
-guides under `docs/guides` have no status notes; they ship with the npm
-package and describe the released product.
+guides under `docs/guides` and the package READMEs under `packages/` have no
+status notes; they ship in the npm packages and describe the released product.
+
+Decision: a package README is its package's npm page, so it describes the
+released product without a status line. A status line with an absolute plan
+link was rejected because the plan is internal to the repository.
 
 ## Exceptions
 

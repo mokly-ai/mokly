@@ -23,7 +23,8 @@ create these trusted records.
 Styled-components and Emotion registry rules name the component whose render
 used each rule, in component and whole-screen renders. A supplier's slot rules
 keep the supplier owner. A rule used by several owners keeps all those owners,
-even when the styling library emits it only once. Ownership does not depend on
+even when the styling library emits it only once. Keyframes keep every owner
+of the rules that use them. Ownership does not depend on
 render order or Suspense scheduling. Collection keeps HTML, class names, CSS
 text, rule order, and style-block grouping identical. Inline styles retain
 the component or slot supplier whose output produced them. Persistent native

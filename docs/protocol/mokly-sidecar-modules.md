@@ -114,9 +114,12 @@ generation table at evaluation. The core scopes the stylesheet after PostCSS
 and supplies all maps with `cssModules` before `describe` evaluates the bundle.
 `cssModules` installs the table without bundling or reading source files.
 One esbuild invocation builds each distinct compilation, including runtime
-style adapters. A root import supplies its own registry. A subpath import resolves
-the registry from the directory of its resolved file, so both use the same
-package copy. Wrappers keep the importer's CommonJS default-import interop:
+style adapters. Adapters recognize a supported styling library after the
+consumer's package aliases apply, so `react-native` aliased to
+`react-native-web` uses the React Native Web registry. A root import supplies
+its own registry. A subpath import resolves the registry from the directory of
+its resolved file, so both use the same package copy. Wrappers keep the
+importer's CommonJS default-import interop:
 Node's rule for `.mjs` and `.mts` importers, the `__esModule` default otherwise.
 The rule matches unwrapped imports in the same Mokly bundle.
 A wrapper diagnostic names the importer's logical source path as its location
