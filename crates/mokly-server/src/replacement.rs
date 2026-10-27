@@ -39,7 +39,10 @@ pub(crate) fn reuse_usage(
         };
         for view in &mut detail.views {
             let route = routes::view(path, view.viewport, view.color_scheme);
-            if keys.get(&route) != previous.document_keys.get(&route) {
+            let Some(key) = keys.get(&route) else {
+                continue;
+            };
+            if Some(key) != previous.document_keys.get(&route) {
                 continue;
             }
             if let Some(old) = old
@@ -89,7 +92,7 @@ pub(crate) fn encode_details(
             detail.detail_id = canonical::detail_id(detail)
                 .map_err(|source| crate::error::InternalError::Model { source })?;
         }
-        mokly_model::projection::set_detail_id(index, &path, &detail.detail_id);
+        mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
     }
     let mut schemas = UsageSchemas::new(&index.components);
     for (path, mut detail) in details {

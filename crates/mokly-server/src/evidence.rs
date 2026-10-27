@@ -13,7 +13,7 @@ use mokly_model::usage_schemas::UsageSchemas;
 use crate::detail_encoding::DetailEncoder;
 use crate::error::Result;
 use crate::revision::RevisionLease;
-use crate::snapshot::Snapshot;
+use crate::snapshot::{Snapshot, checked_index};
 
 /// A document's position and detail context in one immutable graph generation.
 #[derive(Clone)]
@@ -131,5 +131,10 @@ pub(crate) fn complete(
             );
         }
     }
+    let index_file = tracing::info_span!("index.build").in_scope(|| checked_index(&next.index))?;
+    next.files.insert(
+        viewer("index.json"),
+        crate::revision_file::RevisionFile::new(index_file)?,
+    );
     Ok(Some(Arc::new(next)))
 }

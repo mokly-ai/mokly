@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_model::detail_context;
+use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_server::background::{Background, UsagePass};
 use mokly_server::diagnostics::TracingDiagnostics;
@@ -124,6 +125,57 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
     );
     stop.send_replace(true);
     task.await.unwrap();
+    harness.close().await;
+}
+
+#[tokio::test]
+async fn served_index_lists_the_id_of_a_completed_detail() {
+    let harness = support::Harness::new().await;
+    let response = harness
+        .client
+        .get(format!(
+            "{}/static/mokly-generated/home/index.mobile.html",
+            harness.url
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    let detail = readers::detail(
+        &harness
+            .client
+            .get(format!("{}/mokly-viewer/entries/home.json", harness.url))
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap(),
+    )
+    .unwrap();
+    let index = readers::index(
+        &harness
+            .client
+            .get(format!("{}/mokly-viewer/index.json", harness.url))
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(detail.revision, Some(index.revision));
+    assert_eq!(
+        index
+            .screens
+            .iter()
+            .find(|entry| entry.entry.path == "home")
+            .unwrap()
+            .entry
+            .detail_id,
+        detail.detail_id
+    );
     harness.close().await;
 }
 

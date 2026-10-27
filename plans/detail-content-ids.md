@@ -289,7 +289,8 @@ milestone.
 - [x] Measure the Serve completion publications on the large React fixture
       before and after with `--debug-timings`. Propose a decision if a
       publication becomes much slower. One completion publication and two
-      index encodings took 89,235 ms before and 88,216 ms after. Evidence:
+      index encodings took 89,235 ms before and 82,714 ms after. The post-fix
+      completion `index.build` span was 243 ms. Evidence:
       `.context/deployment-id-detail-ids/serve-comparison.json`.
 - [x] Run the mockup check of `AGENTS.md`. Smoke-test Serve and a static
       build: entries, a comparison, a live prop edit, and an old tab after a

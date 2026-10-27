@@ -5,6 +5,7 @@ use std::sync::Arc;
 use axum::body::to_bytes;
 use mokly_model::canonical;
 use mokly_model::namespace::viewer;
+use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
 use tokio::sync::broadcast::error::TryRecvError;
@@ -118,6 +119,25 @@ async fn usage_completion_reuses_unchanged_detail_bytes_and_ids() {
     );
     assert_eq!(
         next.index
+            .screens
+            .iter()
+            .find(|entry| entry.entry.path == "screen-0")
+            .unwrap()
+            .entry
+            .detail_id,
+        changed.detail_id
+    );
+    let served_index = to_bytes(
+        next.files[&viewer("index.json")]
+            .response(next.index.revision)
+            .into_body(),
+        usize::MAX,
+    )
+    .await
+    .unwrap();
+    let served_index = readers::index(std::str::from_utf8(&served_index).unwrap()).unwrap();
+    assert_eq!(
+        served_index
             .screens
             .iter()
             .find(|entry| entry.entry.path == "screen-0")
