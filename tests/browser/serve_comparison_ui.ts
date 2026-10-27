@@ -78,10 +78,9 @@ export async function awaitSelectedComparison(
     request,
     trigger(),
   ]);
-  // The selection ends at its generation's root, which answers 204 without a
-  // body. Chromium then reports the fetch as aborted, so the wait ends with
-  // the response instead of a finished request.
+  // The selection ends at its generation's root, which answers 204.
   expect(response.status()).toBe(204);
+  expect(await response.finished()).toBeNull();
 }
 
 /** Click one comparison button and wait for its selected comparison. */

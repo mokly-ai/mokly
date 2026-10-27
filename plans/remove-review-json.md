@@ -190,6 +190,32 @@ envelope.
 - [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
+## Milestone 6: Review decisions and the main merge
+
+The user answered the open review items on 2026-10-27 and asked for a merge of
+the latest `main`.
+
+- [x] Merge `origin/main` at `fc8535b0`. Take its removal of the finished
+      rebuild comparison tooling (#209) over this branch's edits to
+      `scripts/rebuild/README.md` and `scripts/rebuild/rust-adapter.d.mts`.
+- [x] User decision 4 (2026-10-27): B, answer 200 with an empty body once a
+      browser check proves that it ends the aborted report.
+  - The check disproved it: a 200 answer with an empty body still ended
+    aborted. The cause is the shell, which never read the root's empty body.
+    Reading that body completes the request, so the root keeps 204, the
+    shell reads the body, and the browser helper asserts a finished request
+    again. Evidence: `.context/remove-review-json/debug-selection-200.log`
+    and `debug-selection-read.log`.
+- [x] User decision 6 (2026-10-27): A. The build and Serve parity test also
+      compares each view's `resourceEvidence`.
+- [x] User decision 10 (2026-10-27): A. `MoklyVersionError` has no `review`
+      boundary, and the breaking release note says so.
+- [x] User decision 11 (2026-10-27): A. The producer keeps the only check of
+      public evidence paths. The viewer does not change.
+- [x] User decision 12 (2026-10-27): A. The review TODO keeps its tick.
+- [ ] Run the checks and the complete gate, commit, push, and update the pull
+      request description.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Release the change as a minor version with a breaking-change note.

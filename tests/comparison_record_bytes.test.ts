@@ -26,6 +26,7 @@ function facts(detail: EntryDetailV2) {
       colorScheme: view.colorScheme,
       state: view.state,
       ignoredIds: view.ignoredIds,
+      resourceEvidence: view.resourceEvidence,
     })),
   };
 }
@@ -76,6 +77,9 @@ test(
       ) as EntryDetailV2;
       assert.equal(home.before?.path, "home");
       assert.ok(home.views.every((view) => view.state === "changed"));
+      assert.ok(
+        home.views.every((view) => view.resourceEvidence?.resources.length),
+      );
       assert.deepEqual(facts(live.detail), facts(home));
       assert.deepEqual(
         Object.keys(live.removed).sort(),

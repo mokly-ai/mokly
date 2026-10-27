@@ -63,8 +63,9 @@ for (const refresh of [false, true]) {
       );
       await page.goto(`${origin}/`);
       await page.locator("#trigger").evaluate((button, endpoint) => {
+        // Read the body as the shell does, so the request can finish.
         button.addEventListener("click", () => {
-          void fetch(endpoint);
+          void fetch(endpoint).then((response) => response.arrayBuffer());
         });
       }, intended);
       const background = page.evaluate(async (endpoint) => {

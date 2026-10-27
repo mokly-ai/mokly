@@ -209,3 +209,25 @@ test("a loaded URL outside the advertised generation fails before renewal traffi
   );
   assert.equal(requests, 0);
 });
+
+test("a live request reads the root's empty body so the browser completes it", async () => {
+  const root = `${origin}/mokly-viewer/diffs/generations/selected-1/`;
+  const reads: string[] = [];
+  const environment: ComparisonEnvironment = {
+    baseUrl: origin,
+    delivery: () => ({ kind: "live" }),
+    fetch: async () => {
+      const value = response(root);
+      const read = value.arrayBuffer.bind(value);
+      Object.defineProperty(value, "arrayBuffer", {
+        value: async () => {
+          reads.push(root);
+          return read();
+        },
+      });
+      return value;
+    },
+  };
+  await requestComparison(environment, { id: "screens/home" }, false, signal);
+  assert.deepEqual(reads, [root]);
+});

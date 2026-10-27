@@ -9,7 +9,7 @@ export class MoklyVersionError extends Error {
   readonly code = "unsupported-mokly-version";
 
   constructor(
-    readonly boundary: "catalogue" | "detail" | "live" | "review",
+    readonly boundary: "catalogue" | "detail" | "live",
     readonly version: unknown,
     readonly supported: number,
   ) {

@@ -97,6 +97,8 @@ upload envelope moves to version 3 without `comparisonPath`, and the Plan
 request sends `mokly-viewer/index.json` in place of the review file. A
 receiver reads Changes from the index, so Mokly Cloud must accept upload v3
 and index v8 before it can store a publication of this release.
+`MoklyVersionError` no longer has a `review` boundary, because the viewer reads
+no review result.
 
 ## Historical Generated Output And Manifest API Release Note
 

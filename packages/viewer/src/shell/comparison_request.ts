@@ -48,6 +48,8 @@ export async function requestComparison(
     credentials: "same-origin",
   });
   if (!response.ok) throw new Error(await failureDetails(response));
+  // Read the root's empty body, or the browser aborts the finished request.
+  await response.arrayBuffer();
   const root = safeUrl(response.url);
   if (
     !root ||
