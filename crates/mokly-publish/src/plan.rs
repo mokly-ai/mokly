@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use mokly_model::output::validation::{RESPONSE_LIMIT, hexadecimal, timestamp};
 use mokly_model::versions::PLAN_EXCHANGE;
 use serde::Deserialize;
-use serde::de::IgnoredAny;
+use serde_json::value::RawValue;
 use url::Url;
 
 use crate::error::{Error, Result};
@@ -38,31 +38,7 @@ struct Document {
     blob_url: String,
     complete_url: String,
     #[serde(default)]
-    blob_encodings: Option<BlobEncodings>,
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum BlobEncodings {
-    List(Vec<BlobEncoding>),
-    Other(IgnoredAny),
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum BlobEncoding {
-    Name(String),
-    Other(IgnoredAny),
-}
-
-impl BlobEncodings {
-    fn offers_gzip(&self) -> bool {
-        matches!(
-            self,
-            Self::List(items)
-                if items.iter().any(|item| matches!(item, BlobEncoding::Name(name) if name == "gzip"))
-        )
-    }
+    blob_encodings: Option<Box<RawValue>>,
 }
 
 #[derive(Deserialize)]
@@ -115,7 +91,7 @@ impl Plan {
             blob_encoding: if document
                 .blob_encodings
                 .as_ref()
-                .is_some_and(BlobEncodings::offers_gzip)
+                .is_some_and(|raw| offers_gzip(raw.get()))
             {
                 Encoding::Gzip
             } else {
@@ -145,4 +121,76 @@ impl Plan {
         }
         Ok(url)
     }
+}
+
+fn offers_gzip(raw: &str) -> bool {
+    let bytes = raw.as_bytes();
+    let mut index = 0;
+    skip_whitespace(bytes, &mut index);
+    if bytes.get(index) != Some(&b'[') {
+        return false;
+    }
+    index += 1;
+    loop {
+        skip_whitespace(bytes, &mut index);
+        if bytes.get(index) == Some(&b']') {
+            return false;
+        }
+        let start = index;
+        let Some(end) = item_end(bytes, &mut index) else {
+            return false;
+        };
+        if serde_json::from_slice::<String>(&bytes[start..end])
+            .ok()
+            .is_some_and(|value| value == "gzip")
+        {
+            return true;
+        }
+        skip_whitespace(bytes, &mut index);
+        match bytes.get(index) {
+            Some(b',') => index += 1,
+            Some(b']') => return false,
+            _ => return false,
+        }
+    }
+}
+
+fn skip_whitespace(bytes: &[u8], index: &mut usize) {
+    while bytes.get(*index).is_some_and(u8::is_ascii_whitespace) {
+        *index += 1;
+    }
+}
+
+fn item_end(bytes: &[u8], index: &mut usize) -> Option<usize> {
+    let start = *index;
+    let mut depth = 0usize;
+    let mut quoted = false;
+    let mut escaped = false;
+    while let Some(byte) = bytes.get(*index).copied() {
+        if quoted {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                quoted = false;
+            }
+        } else {
+            match byte {
+                b'"' => quoted = true,
+                b'[' | b'{' => depth = depth.checked_add(1)?,
+                b']' | b'}' if depth > 0 => depth -= 1,
+                b',' | b']' if depth == 0 => {
+                    let mut end = *index;
+                    while end > start && bytes[end - 1].is_ascii_whitespace() {
+                        end -= 1;
+                    }
+                    return Some(end);
+                }
+                _ => {}
+            }
+        }
+        *index += 1;
+    }
+    None
 }
