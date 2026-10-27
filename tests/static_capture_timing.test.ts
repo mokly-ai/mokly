@@ -76,6 +76,7 @@ test(
             record.parentId === start.id,
         );
         assert.ok(validation, side);
+        const validationId = validation.id;
         for (const [stage, count] of [
           ["review.capture-validate", 1],
           ["review.capture-document", expectedViews],
@@ -87,8 +88,8 @@ test(
               record.stage === stage &&
               record.event === "end" &&
               (stage === "review.capture-validate"
-                ? record.id === validation.id
-                : record.parentId === validation.id),
+                ? record.id === validationId
+                : record.parentId === validationId),
           );
           assert.equal(ended.length, count, `${side} ${stage}`);
           for (const record of ended) {

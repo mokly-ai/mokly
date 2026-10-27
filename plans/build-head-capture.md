@@ -147,28 +147,37 @@ Evidence: `.context/build-head-capture/milestone-1-2.md`.
 
 Prove that the output is unchanged and record the new times.
 
-- [ ] Run `npm run build`, then build `examples/basic` with `--strict --base`
+- [x] Run `npm run build`, then build `examples/basic` with `--strict --base`
       into `.context/build-head-capture/example`. Build the same catalogue
       with a binary from `origin/main` into a second directory. Compare the
       two directories byte for byte. Record the result and any differing file
       with its reason in `.context/build-head-capture/output-diff.txt`.
-- [ ] Smoke test: serve the built output as plain files, then open a screen,
+- [x] Smoke test: serve the built output as plain files, then open a screen,
       its Changes marks, and one comparison pane in the browser. Save a
       screenshot under `.context/build-head-capture/`.
-- [ ] Measure with the release binary on `examples/basic` and on the large
+- [x] Measure with the release binary on `examples/basic` and on the large
       HTML and React fixtures, with the 2026-10-26 method: build time,
       `changes.classify`, sidecar calls per pass, and peak memory. Save the
       records under `.context/build-head-capture/`. Add one line per
       catalogue below.
-  - Results: not measured yet.
+  - `examples/basic`: 112.128 s build, 92.299 s Changes, 18.421 s head render,
+    19.070 s base render, 601 head fragment calls, 4,685,028 KiB total peak.
+  - `large HTML`: 44.091 s build, 21.486 s Changes, 13.991 s head render,
+    14.387 s base render, 0 sidecar calls, 1,135,432 KiB total peak.
+  - `large React`: 177.040 s build, 89.611 s Changes, 201.432 s head render,
+    202.848 s base render, 5,790 head fragment calls, 2,189,636 KiB total peak.
+
+Evidence: `.context/build-head-capture/output-diff.txt`,
+`.context/build-head-capture/smoke.png`, and
+`.context/build-head-capture/measurement-summary.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
-- [ ] Run the targeted tests: `cargo test -p mokly-compare`,
+- [x] Run the targeted tests: `cargo test -p mokly-compare`,
       `cargo test -p mokly-cli`,
       `npm test -- tests/static_capture_timing.test.ts`,
       `npm test -- tests/markdown_links.test.ts`, and `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
