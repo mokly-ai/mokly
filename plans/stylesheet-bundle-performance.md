@@ -113,34 +113,43 @@ Evidence: `.context/perf5-parallel-stylesheets/baseline.md` and
    records a clear had removed. The second startup preparation bundled all 39.
 3. The cache has three gates, not two. The byte bound is the gate that fails.
 4. A hit cannot carry `shared-hit` or `local-hit` on a `css.bundle` record
-   and also produce zero `css.bundle` spans. Decision 3 chooses.
+   and also produce zero `css.bundle` spans. Decision 3 resolves it.
 5. Parallel roots alone do not reach 0.8 s. The PostCSS lock serializes about
-   34 ms for each root, about 1.2 s for one preparation. Decision 2 chooses.
+   34 ms for each root, about 1.2 s for one preparation. Decision 2 resolves
+   it.
 
-## Open decisions
+## Decisions
 
-The user answers these before implementation. The report message gives the
-full layout of each decision.
+The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
 
-1. Gate fix for step B. A: raise both stylesheet bounds to 512 MiB. B: keep
-   one copy of a PostCSS context's module evidence for all records of that
-   context, charge it once, and check its stamp once for each attempt. C: B,
-   and evict records by age instead of clearing the store. Recommended: B.
-2. PostCSS lock in step A. A: parallel roots only. B: also run the read
-   inventory outside the PostCSS cache lock. C: B, and also release the lock
-   during the round trip with one in-flight request for each input.
-   Recommended: B.
-3. Hit records. A: `css.bundle` records only real bundles and carries the
-   miss reason. A hit has no span. B: `css.bundle` wraps every request and
-   also carries `local-hit` and `shared-hit`. C: a new `css.stylesheet` span
-   wraps every request and carries the outcome, and `css.bundle` stays a
-   child on a miss. Recommended: A.
-4. Miss values of the `cache` field. A: `no-record`, `stamp-mismatch`, and
-   `inconsistent-evidence`. B: A and `evicted`, for a record that the byte
-   bound removed. Recommended: B.
-5. PostCSS context across attempts. A: keep one context for each attempt.
-   B: keep a context across attempts while its inputs do not change.
-   Recommended: A.
+1. Gate fix for step B: B. Keep one copy of a PostCSS context's module
+   evidence for all records of that context, charge it once, and check its
+   stamp once for each attempt. Rejected: A, raise both bounds to 512 MiB,
+   because a hit still costs about 20 ms and about 300 roots fill the bound
+   again. Rejected: C, B with eviction by age, because it helps only a
+   catalogue that still exceeds the bound. Reason: B removes the duplicated
+   evidence that fills the store and makes each hit cheap.
+2. PostCSS lock in step A: B. Run the read inventory outside the PostCSS
+   cache lock and keep the round trip inside it. Rejected: A, parallel roots
+   only, because it reaches about 1.2 s, not 0.8 s. Rejected: C, release the
+   lock during the round trip, because only two concurrent contexts gain from
+   it. Reason: B is the smallest change that can meet the 0.8 s target.
+3. Hit records: A. `css.bundle` records only real bundles and carries the
+   miss reason. A hit has no span. Rejected: B, wrap every request, because
+   the `css.bundle` count and union then stop matching the baseline.
+   Rejected: C, a new `css.stylesheet` span, because it adds a stage that the
+   acceptance does not need. Reason: A keeps the item's acceptance of zero
+   `css.bundle` spans and keeps the numbers comparable.
+4. Miss values of the `cache` field: B. `no-record`, `evicted`,
+   `stamp-mismatch`, and `inconsistent-evidence`. Rejected: A, the three
+   values without `evicted`, because a record that the byte bound removed
+   then looks like a root without a record. Reason: `evicted` names the cause
+   that this diagnosis needed a throwaway build to find.
+5. PostCSS context across attempts: A. Keep one context for each attempt.
+   Rejected: B, keep a context while its inputs do not change, because
+   Tailwind keeps class candidates in one context, which the PostCSS contract
+   forbids across rebuilds. Reason: with decision 1, an unchanged attempt
+   starts no PostCSS child at all.
 
 ## Design
 
@@ -157,11 +166,11 @@ full layout of each decision.
   existing names, module names, resources, sources, dependency directories,
   and cache inserts. The first failed root in root order gives the error,
   as today.
-- With option B of decision 2, the PostCSS adapter caches the raw sidecar
-  result before it releases its cache lock. The read inventory runs outside
-  the lock, and a second short lock stores the processed record. Requests of
-  one context still reach the sidecar one at a time, and equal inputs still
-  make one `processCss` call.
+- Under decision 2, the PostCSS adapter caches the raw sidecar result before
+  it releases its cache lock. The read inventory runs outside the lock, and a
+  second short lock stores the processed record. Requests of one context
+  still reach the sidecar one at a time, and equal inputs still make one
+  `processCss` call.
 - Bundling has no warnings. The `Bundle` type carries none, and the dependency
   usage records are ordered sets. The output check compares the generation:
   routes, CSS bytes, keys, sources, and warnings.
@@ -172,9 +181,9 @@ full layout of each decision.
   records `cache` with the miss reason. The shared store keeps the keys of
   records that it removed under the byte bound or kept attempt-local, with
   their reason. The timing layer copies the `cache` field to the end record.
-- With option B of decision 1, a record keeps its own read evidence. The
-  context's module evidence goes into one shared entry with its stamp and
-  consistency, keyed by its digest. The store charges the entry once. An
+- Under decision 1, a record keeps its own read evidence. The context's
+  module evidence goes into one shared entry with its stamp and consistency,
+  keyed by its digest. The store charges the entry once. An
   attempt checks the entry's stamp once and replays it once. A hit returns
   the same bundle and the same evidence as today.
 - The stamp keeps every input: sources, assets, plugin dependency digests,
