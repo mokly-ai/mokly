@@ -1,7 +1,5 @@
 # Static Build
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Scope
 
 `mokly build` validates the catalogue, renders every view in memory, and
@@ -16,10 +14,9 @@ Git, and performs no commit, push, npm publication, or hosting-account
 operation. `publish` is the one command that uploads: it runs this same build
 into its own private directory outside the repository, then runs the
 [upload exchange](./mokly-upload.md). Nothing reads the output back. Build and
-publish read rendered bytes from the head capture or render cache under the
-[render graph contract](./mokly-render-cache.md#render-cache-and-captures).
-No command writes into the repository except `build` into its output
-directory.
+publish read rendered head bytes from the head capture, or from the head source
+only after render-cache eviction. No command writes into the repository except
+`build` into its output directory.
 
 ## Command
 
@@ -68,19 +65,20 @@ build into a temporary directory.
 Paths are relative to the output directory. Every rendered file name derives
 from its entry's path under the [artifact path contract](./mokly-artifact-paths.md).
 
-| Path                                               | Content                                                                                            |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes      |
-| `mokly-viewer/index.json`                          | the catalogue index v7 with `revision: 0`, the stamped `deploymentId`, and no `live` field         |
-| `mokly-viewer/entries/<entry path>.json`           | one entry detail v2 per current entry                                                              |
-| `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract    |
-| `static/<closure path>`                            | the authored resources the documents reference                                                     |
-| `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: review v8, removed entries' details, snapshots, resources, and previews |
-| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the inspector, styles, and fonts under `mokly-viewer/`                |
-| `.mokly-export-artifact`                           | the [ownership marker v3](./mokly-export-ownership.md), written last                               |
+| Path                                               | Content                                                                                                    |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes              |
+| `mokly-viewer/index.json`                          | the catalogue index with `revision: 0`, the stamped `deploymentId`, and no `live` field                    |
+| `mokly-viewer/entries/<entry path>.json`           | one entry detail per current entry                                                                         |
+| `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract            |
+| `static/<closure path>`                            | the authored resources the documents reference                                                             |
+| `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: the review result, removed entries' details, snapshots, resources, and previews |
+| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the inspector, styles, and fonts under `mokly-viewer/`                        |
+| `.mokly-export-artifact`                           | the [ownership marker](./mokly-export-ownership.md), written last                                          |
 
-The [shell delivery contract](./mokly-shell-delivery.md) owns the stub, the
-index, and the detail shapes. The [static delivery contract](./mokly-export-delivery.md)
+The [format inventory](./mokly-format-versions.md) gives the version of each
+JSON file. The [shell delivery contract](./mokly-shell-delivery.md) owns the
+stub, the index, and the detail shapes. The [static delivery contract](./mokly-export-delivery.md)
 owns the routes a host serves, their headers, and caching. The
 [public files contract](./mokly-export-public-files.md) owns file selection.
 The [browser contract](./mokly-export-browser.md) owns the client inventory
@@ -118,102 +116,90 @@ Changes; Serve's watcher ignores the same paths.
 
 ## Output Transaction
 
-1. Parse the options, load the configuration, validate the output boundary
-   and the existing ownership marker, and reserve the resolved output against
-   concurrent writers under the [safety contract](./mokly-export-safety.md).
-2. Resolve the base commit without changing the checkout.
-3. Record the input fingerprint: the hashes of every inventoried source, the
-   configuration, the renderer module, the configured stylesheets, and the
-   authored closure. Capture root membership and configured inputs before
-   catalogue preparation. Validate the catalogue and render every view through
-   the render cache. Render the base side and compute the comparison from those
-   inputs. With `--strict`, a warning fails here, before any write.
-   Root membership includes matching regular files and folder records under
-   the discovery rules. Each root uses its own file patterns and resolved
-   directory identity. Child symlinks do not add root members or linked-directory
-   walks. Exclude output and reservation
-   directories by both logical and resolved paths. Unrelated repository files
-   do not participate. Explicit inventoried inputs and reached closure files
-   participate even beneath excluded directory names. Resolve each selected
-   path inside the real repository before hashing its target bytes.
-   The fingerprint excludes JavaScript modules that the sidecar bundles from
-   `node_modules`, files under `node_modules` that a PostCSS plugin reports,
-   `.gitignore` and the Git index, ancestor `tsconfig.json` files, ancestor
-   `package.json` files that PostCSS module resolution does not name, missing
-   resolution candidates, the file list of a directory that a PostCSS plugin
-   reports, files that a PostCSS plugin reads without reporting them, and
-   files that a render callback reads without an import. An edit to one of
-   these during a build is not detected. These include an installed
-   stylesheet that a PostCSS plugin inlines. Installed stylesheets that Mokly
-   resolves itself, their `url()` assets, the `package.json` files that this
-   resolution reads, PostCSS plugin modules, and the package manifests that
-   PostCSS module resolution names participate. Decision: the fingerprint
-   covers only the build's inputs. A walk of every repository file was
-   rejected because it hashes unrelated files on every build and stops a
-   build when an unrelated file changes.
-   For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
-   of the exact bytes it bundled as the baseline. A missing module digest is
-   an internal failure; a later source read cannot replace it. Compare captured digests with
-   those baselines before document callbacks run. Keep the baseline for the
-   final live recheck. Other reached inputs keep their first captured digest.
-   For inventoried PostCSS inputs, retain SHA-256 witnesses from the exact raw
-   buffers delivered by observed whole-file reads and module loading. Retain
-   each observed byte range with its offset, length, and end-of-file evidence. Compare
-   every witnessed version before document callbacks and at final checks.
-   A conflicting version uses the existing `export-invalid` input-change outcome
-   and preserves owned output. Cache hits and worker replacement retain the
-   original witnesses. A later scan cannot replace them.
-   Retain observed descriptor identities and verified resolved names. Equal-byte
-   replacements and symlink retargets must not replace those read-time identities.
-   PostCSS evidence always carries incomplete coverage. Native addons, helper
-   processes, uninstrumented workers, unknown descriptor positions, and private
-   loader metadata can escape observation. Known unobserved inputs retain their
-   late baseline and the live recheck. That baseline does not detect an edit
-   between an opaque read and capture. One observed read never makes a path or
-   context complete. The [PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence)
-   defines the coverage of PostCSS evidence. Mokly does not require enforced
-   immutable inputs, so compatible plugins keep working.
-   An unreadable input or directory has a fixed unreadable marker. Catalogue
-   discovery and validation report required-input failures first. An unreadable
-   excluded input does not fail the fingerprint check unless its marker changes.
-   Opaque CSS assets keep their first captured digest without retaining their
-   payload during preparation. Delivery copies through bounded chunks and
-   checks that digest before admitting final immutable output bytes. A mismatch
-   is an input change; it cannot replace the baseline with a later digest.
-   Before installation, compare selected root membership, unreadable markers,
-   resolved identities, and live streaming digests with the captured values.
-   This recheck reads no file bodies for parsing or delivery. A change from a
-   captured baseline or a mismatched sidecar digest aborts with `export-invalid` and the instruction
-   to build again. It preserves the earlier output instead of mixing generations.
-4. Assemble every route and resource into a private stage inside the
-   reservation on the output filesystem. Validate each path against the
-   marker's [portable-path rule](./mokly-export-ownership.md#file-contract)
-   when it enters the one collision-checked inventory. A regular file over
-   64 MiB fails `export-invalid` before staging.
-5. Finalize the [deployment identity](./mokly-export-browser.md#deployment-identity)
-   from every staged file except the marker and the publication metadata that
-   `publish` declares, stamp it into the index and the current details, hash
-   the exact final bytes of every file, and add the marker last. Verify
-   internal references, ownership, every route and directory-prefix collision
-   including the marker path, and the complete local dependency closure.
-   Recheck the inputs under step 3 before installation.
-6. Drain render work and stop the sidecars. Replace the owned output with
-   rollback protection, then clean the owned temporary resources and release
-   the reservation.
+`build` validates the output boundary and the existing ownership marker, and
+reserves the resolved output against concurrent writers under the
+[safety contract](./mokly-export-safety.md), before it resolves Git or
+renders. It resolves the base commit without changing the checkout. With
+`--strict`, a warning fails the build before any write.
+
+### Input Fingerprint
+
+`build` fingerprints its inputs: every inventoried source, the configuration,
+the renderer module, the configured stylesheets, the authored closure, and
+the membership of every root. Root membership is captured when the build
+starts, before catalogue preparation. An edit to a fingerprinted input during
+the build aborts with `export-invalid` and the instruction to build again.
+The earlier output stays in place instead of mixing generations.
+
+Root membership includes matching regular files and folder records under the
+discovery rules. Each root uses its own file patterns and resolved directory
+identity. Child symlinks do not add root members or linked-directory walks.
+The output and reservation directories are excluded by both logical and
+resolved paths. Unrelated repository files do not participate. Explicit
+inventoried inputs and reached closure files participate even beneath
+excluded directory names. A selected path resolves inside the real
+repository, and the fingerprint hashes the bytes of its target.
+
+Installed stylesheets that Mokly resolves itself, their `url()` assets, the
+`package.json` files that this resolution reads, PostCSS plugin modules, and
+the package manifests that PostCSS module resolution names participate. The
+fingerprint excludes JavaScript modules that the sidecar bundles from
+`node_modules`, files under `node_modules` that a PostCSS plugin reports,
+`.gitignore` and the Git index, ancestor `tsconfig.json` files, ancestor
+`package.json` files that PostCSS module resolution does not name, missing
+resolution candidates, the file list of a directory that a PostCSS plugin
+reports, files that a PostCSS plugin reads without reporting them, and files
+that a render callback reads without an import. An edit to one of these
+during a build is not detected. These include an installed stylesheet that a
+PostCSS plugin inlines. Decision: the fingerprint covers only the build's
+inputs. A walk of every repository file was rejected because it hashes
+unrelated files on every build and stops a build when an unrelated file
+changes.
+
+The baseline of a bundled JavaScript module is the digest of the exact bytes
+that the sidecar bundled. The baseline of every other input is its first
+captured digest. A later read never replaces a baseline. A PostCSS input also
+counts as changed when it conflicts with a read witness of the
+[PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence),
+including a changed target with equal bytes. Bundled modules and PostCSS
+witnesses are compared before document callbacks run. PostCSS coverage stays
+incomplete under its [coverage rules](./mokly-sidecar-postcss.md#incomplete-coverage),
+so an edit between an unobserved read and its capture is not detected. An
+opaque CSS asset follows the
+[asset delivery rules](./mokly-imported-styles-assets.md#validation-and-the-render-cache):
+a mismatch with its first captured digest is an input change.
+
+An unreadable input or directory has a fixed unreadable marker. Catalogue
+discovery and validation report required-input failures first. An unreadable
+excluded input does not fail the fingerprint check unless its marker changes.
+
+Before installation, `build` checks every input again: root membership,
+unreadable markers, resolved identities, and digests. Any change from a
+captured baseline aborts with the input-change outcome above.
+
+### Assembly And Installation
+
+Every route and resource enters one collision-checked inventory. Each path
+must pass the marker's
+[portable-path rule](./mokly-export-ownership.md#file-contract) when it
+enters. A regular file over 64 MiB fails the build with `export-invalid`. The
+[deployment identity](./mokly-export-browser.md#deployment-identity) covers
+every file except the marker and the publication metadata that `publish`
+declares. The marker hashes the exact final bytes of every file. Before
+installation, `build` verifies internal references, ownership, every route
+and directory-prefix collision including the marker path, and the complete
+local dependency closure. The sidecars stop before installation. Installation
+replaces the owned output with rollback protection.
 
 Failure, SIGINT, or SIGTERM before installation restores the captured earlier
 output when recovery is safe. A destination recreated during the operation is
 preserved beside the retained backup instead of being overwritten. A
 post-installation cleanup failure keeps the installed site and names the
 remaining recovery paths. The [recovery contract](./mokly-export-recovery.md)
-defines captured-backup validation, bounded deletion, restoration conflicts,
-and the precedence of primary and cleanup errors. There is no cross-process
-atomicity guarantee for arbitrary edits to the repository or to the private
-reservation namespace.
-
-Cancellation is checked again after ownership validation and after the old
-directory moves to backup. The stage-to-output rename is the commit point;
-once started it is drained together with cleanup, never interrupted.
+defines captured-backup validation, the commit point, bounded deletion,
+restoration conflicts, and the precedence of primary and cleanup errors.
+There is no cross-process atomicity guarantee for arbitrary edits to the
+repository or to the private reservation namespace.
 
 A non-portable candidate fails with this exact message, where `<path>` is the
 path written as a JSON string so that invisible characters are visible and no

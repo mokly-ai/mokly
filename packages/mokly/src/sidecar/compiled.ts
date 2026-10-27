@@ -15,6 +15,12 @@ import { ModulePaths } from "./module-paths.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
 
+/**
+ * The generation id: the compilation identity `bundle` hashes, plus the core's
+ * evaluation digest of the resolved configuration and CSS Modules. The real
+ * source root is part of the identity, so equal head and base sources still
+ * get separate generations; the binary keys each fragment by this id.
+ */
 export function generationId(
   identity: string,
   evaluation: string | undefined,

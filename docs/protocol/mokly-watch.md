@@ -1,7 +1,5 @@
 # Watched Catalogue Development
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch
@@ -38,10 +36,9 @@ above or the denied names below.
 
 ## Invalidation Through The Render Graph
 
-A watched change hashes the changed file and finds the nodes whose keys moved
-under the [render graph](../architecture/rust-core.md#render-graph); only
-those recompute, in parallel, and every other cached document, fragment, and
-stylesheet bundle survives:
+A watched change recomputes only the outputs whose inputs changed, under the
+[render graph](../architecture/rust-core.md#render-graph); every other cached
+document, fragment, and stylesheet bundle survives:
 
 - An edit to an HTML screen recomputes its documents. An edit to an HTML
   component recomputes the component node and the documents that use it.
@@ -59,9 +56,8 @@ stylesheet bundle survives:
   [runtime continuation](./mokly-watch-runtime.md#configuration-changes).
 
 Every completed action publishes one revision under the
-[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve): the
-index and the details are replaced in one step, and the shell reloads only
-the frames whose `documentKey` changed. Nothing is written: no output tree
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Nothing is
+written: no output tree
 exists, so no watch event comes from Mokly's own writes, and a watched change
 cannot schedule a feedback loop.
 
@@ -81,11 +77,8 @@ repository and never watched.
   `src/node_modules` are pruned beneath a `src` root, and a root at the
   repository root still prunes top-level `.git` and `node_modules`.
 - Only directory segments are denied: a regular file named `target` is an
-  ordinary file, and deleting it rebuilds like any other matched file.
-  Non-leaf segments are checked first; a denied leaf is pruned only when it
-  is a directory. Directory status comes from the watcher's event kind or
-  stats, and a lookup runs only for a raw rename fallback, treating a failed
-  lookup as a file.
+  ordinary file, and deleting it rebuilds like any other matched file. A
+  denied leaf is pruned only when it is a directory.
 - Exact required files, including the configuration,
   inventoried sources, the renderer module, the sidecar's reported modules,
   and configured stylesheets, keep their ancestor path and the file itself
@@ -114,29 +107,20 @@ The watcher is constructed before the sidecar evaluates any module, so edits
 during evaluation are buffered and replayed after readiness. Watch targets
 are the roots, the PostCSS directory roots, the rule roots, and the exact
 required files not covered by one of them; a required file with a denied
-directory between a root and itself stays an explicit target. A catalogue
-state keeps a constant-time index of exact files and their ancestors for the
-ignore callback. The watcher is replaced only when the set of effective roots
-changes. Added exact files extend its directory registrations without a root
-walk or another full preparation. Resolution metadata includes missing manifest and tsconfig candidates. File additions
-and removals in a consumed-module directory invalidate compilation reuse.
-Native additions and removals use one
-`paths_mut()` batch; existing registrations are retained. Linux renews a
-registration after its directory is replaced. Vanished directories are
-skipped. A new matching file in an existing watched directory causes one
-rebuild and no watcher replacement. Notifications carry path,
-kind, and optional stats, coalesce by path, and deliver the latest descriptor
-for that path. A classifier exception is reported once, that event is
-dropped, and later notifications keep flowing. Unspecified create and remove
-kinds use the raw rename lookup. A rescan flag or pathless native event
-queues a repository-root change and reports one loss warning per observer.
-The action rescans registrations and rebuilds inputs.
+directory between a root and itself stays an explicit target. Resolution
+metadata includes missing manifest and tsconfig candidates. File additions and
+removals in a consumed-module directory invalidate compilation reuse. Linux
+renews a registration after its directory is replaced. Vanished directories
+are skipped. A new matching file in a watched directory causes one rebuild.
+Notifications coalesce by path. A classifier exception is reported once, that
+event is dropped, and later notifications keep flowing. A rescan flag or a
+pathless native event queues a repository-root change and reports one loss
+warning per observer. The action rescans registrations and rebuilds inputs.
 
-Initial startup tries the requested concrete port and then each higher port in
-order until binding succeeds; port `0` delegates selection to the operating
-system; exhausting the range or another bind error fails with
-`server-failed` without leaking watchers. The resolved port stays stable for
-the life of the process.
+Initial startup selects its port under the
+[package contract](./mokly-package.md#cli). Exhausting the range or another
+bind error fails with `server-failed` without leaking watchers. The resolved
+port stays stable for the life of the process.
 
 The repository's `npm run dev` command runs watched Serve on
 `examples/basic/mokly.config.json`; arguments after `--` are forwarded to Serve,

@@ -1,7 +1,5 @@
 # Repository Preview Deployments
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Deployment Contract
 
 `.github/workflows/preview.yml` deploys a browsable copy of the example
@@ -19,33 +17,21 @@ builds the example with `mokly build` into an output directory under
 builds with `--base origin/main`, so the preview includes Changes against the
 branch point; the job resolves `origin/main` from its full-history checkout.
 The [static build contract](./mokly-export.md) owns the command, its options,
-its output transaction, and the static site it writes: the shell stub at
-`index.html`, `404.html`, and `view/<path>/index.html`, the catalogue index,
-one entry detail per entry, every document, the comparison generation when a
-base is given, the viewer bundle, styles, and fonts. Cloudflare Pages serves
+its output transaction, and the static site it writes. Cloudflare Pages serves
 `view/<path>/index.html` for the canonical `/view/<path>/` URLs without
 rewrites, and static HTML artifacts keep Cloudflare's extensionless aliases
-under the [artifact path contract](./mokly-artifact-paths.md). The output
-carries no live descriptor and no event stream, so the shell browses without
-live updates or live prop editing, under the
+under the [artifact path contract](./mokly-artifact-paths.md). The deployed
+shell browses without live updates or live prop editing, under the
 [shell delivery contract](./mokly-shell-delivery.md).
 
-With a base, the build renders the base commit from its sources under the
-[comparison contract](./mokly-comparison.md), writes the comparison generation
-under an immutable generation path, and the index's `comparisonUrl` names it;
-visitors fetch comparison data only after selecting a diff, and a refresh loads
-that same published result. Eligible shown views offer comparison controls,
-known unchanged views show Unmodified, and pages keep Changes membership but
-never offer visual comparisons; the [Changes contract](./mokly-changes.md) owns
-the interaction and snapshot rules. A base whose sources fail the current
-validation makes Changes unavailable with those diagnostics, and the build
-publishes the current content with Changes unavailable. Missing history fails
+With a base, the [comparison contract](./mokly-comparison.md) owns the
+published comparison, and the [Changes contract](./mokly-changes.md) owns its
+interaction and snapshot rules. A base that fails validation leaves Changes
+unavailable while the current content still deploys. Missing history fails
 the build.
 
-A build failure deploys nothing, and the last deployment stays live.
-Replacement of the output directory uses the static build's exclusive
-reservation, ownership inventory, and rollback transaction; the job adopts only
-an empty directory or an output with a valid current ownership marker.
+A build failure deploys nothing, and the last deployment stays live. Output
+replacement follows the [static build safety rules](./mokly-export-safety.md).
 
 Closing a same-repository pull request marks its sticky comment inactive and
 attempts to delete all Cloudflare deployments carrying that PR branch alias.

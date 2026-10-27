@@ -68,7 +68,11 @@ function logResult(result, logger) {
     logger.notice("Dependency audit passed; no exceptions in use.");
 }
 
-/** Run strict or baseline auditing with injected process, bytes, time and logs. */
+/**
+ * Run strict or baseline auditing with injected process, bytes, time and logs.
+ * The clock is read once for both trees, so an exception that expires between
+ * the head and baseline evaluations cannot create a false new issue.
+ */
 export async function runDependencyAudit({
   args = [],
   command,

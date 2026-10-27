@@ -2,15 +2,15 @@
 
 ## Device Chrome
 
-- **Phone frame** — 390×844, 12px bezel padding, `#171a18` body,
+- **Phone frame** — 390×844, 12px bezel padding, a `--mbk-device-body` body,
   46px radius, floating notch (108×30 at top 22px), a 36px-radius screen that
   is white unless the dark scheme is selected, and a bottom home pill (128×4).
   The screen is a column: a reserved status band followed by the embedded
   mobile fragment, which takes the remaining height and rounds only its bottom
   corners. The notch and home pill are decorative, hidden from accessibility
-  semantics, and use `pointer-events: none` in both the design library and
+  semantics, and never take pointer input, in both the design library and the
   runtime shell. Preview links remain clickable where the home pill overlaps
-  the embedded document; do not disable pointer events on the screen itself.
+  the embedded document.
 - **Phone status band** — the top 44px of the screen, padded `14px 28px 0` so
   its content clears the notch: a `9:41` clock on the left and cellular, Wi-Fi,
   and battery glyphs on the right. Text is 13.5px/600 in the screen ink
@@ -20,7 +20,8 @@
   reserves space above the fragment rather than covering screen content.
 - **Browser frame** — width 100%, max-width 1180px, height 760px, strong
   hairline border, 8px radius. Its 40px bar holds three traffic lights
-  (`#d9655b`, `#dba43d`, `#50a86d`), a monospace address pill (copies the
+  (`--mbk-device-light-close`, `--mbk-device-light-minimise`, and
+  `--mbk-device-light-expand`), a monospace address pill (copies the
   address on click, showing a `URL copied` toast), and the expand toggle.
 - **Address pill** — the address truncates with an ellipsis and the pill ends
   with a 13px stroked copy icon that holds its size, muted until the pill is
@@ -28,7 +29,8 @@
 - **Expand toggle** — a 26px bordered button holding a 13px stroked
   outward-arrow icon, sized with the address pill's copy icon so neither
   control outweighs the other. Expanding fixes the frame to `inset: 2.5vh 2.5vw` at
-  overlay z-index over a scrim (`rgba(20, 28, 22, 0.55)`), locks body scroll,
+  overlay z-index over the `--chrome-scrim` scrim of the
+  [semantic palette](./mokly-viewer-palette.md#swatches), locks body scroll,
   and swaps the icon for its inward-arrow collapse counterpart; Escape or
   clicking outside collapses it. Only one frame expands at a time. An
   expanded frame that leaves the page, such as a use-case step that a narrow
@@ -54,14 +56,13 @@ own appearance, described in
 catalogue the two are one choice, made once in the top bar; an embedded root
 keeps them apart, so a host can hold a light interface over a dark preview.
 
-| Token                   | Value     | Role                             |
-| ----------------------- | --------- | -------------------------------- |
-| `--mbk-dark-screen-bg`  | `#121514` | Dark device-screen surface       |
-| `--mbk-dark-screen-ink` | `#eef1ef` | Text and glyphs on a dark screen |
-
+A dark device screen uses two tokens: `--mbk-dark-screen-bg` for its surface
+and `--mbk-dark-screen-ink` for text and glyphs. The
+[preview tokens](./mokly-viewer-palette.md#preview-tokens) give their values.
 There is no third dark token: the secondary dark tones (status-band ink, home
-pill, screen hairline, and the depicted screen content) are `color-mix` blends
-of those two.
+pill, screen hairline, and the secondary ink, muted text and borders of the
+depicted screen content) are `color-mix` blends of those two. Depicted screen
+links use the dark link values of the preview tokens.
 
 - **Containment** — dark paints the phone screen surface, including its
   status-band ink, its home pill, and the fragment it holds, and the browser
@@ -69,9 +70,8 @@ of those two.
   address pill and shell surfaces follow interface appearance; preview scheme
   alone does not change them. Traffic-light artwork keeps its fixed colors.
 - **Screen edge** — a dark screen inside the near-black phone body would lose
-  its edge, so the phone screen carries a 1px inset `box-shadow` hairline mixed
-  from the two dark tokens, painted on an overlay above the fragment so the
-  embedded document cannot occlude it:
+  its edge, so the phone screen carries a 1px inset hairline mixed from the two
+  dark tokens, which the embedded document cannot occlude:
   `color-mix(in srgb, var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg))`.
   The browser viewport needs none; its light bar already draws that edge.
 - **Control** — a standalone catalogue carries one Appearance selector in the
@@ -110,8 +110,8 @@ breakpoint at **760px**:
   view controls stay together in the screen head band and wrap beneath the
   title when needed.
 - At or below 760px, each use-case step shows its mobile view in a phone
-  frame, the phone frame scales via `aspect-ratio: 390 / 844` within available
-  width, the browser frame drops to 560px height, and flow connector lines
+  frame, the phone frame scales within the available width and keeps its
+  390:844 aspect ratio, the browser frame drops to 560px height, and flow connector lines
   hide.
 
 `prefers-reduced-motion: reduce` disables shell transitions.

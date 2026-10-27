@@ -1,7 +1,5 @@
 # CSS Attribution Membership
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 
 ## Membership Rule
@@ -112,6 +110,15 @@ The static build copies the same validated records. The selected comparison
 of Serve never reruns the analysis and never recomputes a smaller
 changed-component set from the selected entry alone.
 
+The analysis renders no document and generates no snapshot. Every entry's
+evidence uses the own-page matches of the whole catalogue. Serve reads head
+documents from the render cache. `build` and `publish` read the head capture,
+with source fallback after render-cache eviction. Base documents use the
+bounded base capture or pinned-source fallback. A cache eviction changes only
+the time that the analysis takes, never its records. The shell's
+exact text and grouping are in
+[CSS evidence presentation](./mokly-css-evidence-presentation.md).
+
 ## Validation
 
 - Every `stylesheet` names a changed public stylesheet reached on either
@@ -125,37 +132,13 @@ changed-component set from the selected entry alone.
   containment supplies the claim for owned, ownerless, and linked rules.
   Supplier ancestry only prevents a nested component from taking a supplier's
   own rule for content that the supplier passed into it.
-  The producer checks
-  each owner against that proof, never against the result's own rows.
 - An `unresolved` record is owned by the entry.
 - A record never carries a private source path or a match node.
 - Serve's background classification, the selected comparison, `build`, and
-  `publish` produce the same records for one view. The cache key of a record
-  set includes both sides' document keys, both sides' stylesheet bytes, and
-  the catalogue-wide own-page match sets, not a view's bytes alone.
+  `publish` produce the same records for one view. A view's records depend on
+  both sides' documents, both sides' stylesheet bytes, and the
+  catalogue-wide own-page matches, not on the view's bytes alone.
 - A violation fails the result with `review-invalid`.
-
-## Read And Analysis Reuse
-
-Serve head documents use the bounded render cache; evicted views render again
-on the head root. `build` and `publish` head documents use their 256 MiB head
-capture, with source fallback for documents that are not retained. Base
-documents use the 256 MiB capture or pinned-source fallback. A
-comparison-scoped route map reuses resource digests, byte proofs, and
-changed-byte state. Public asset reads and planning digests do not enter the
-private source snapshot.
-Planning batches the generation's known read set before digest reads. Opaque
-resources use streamed digests when they exceed the blob read budget. Resource
-bytes and content-keyed stylesheet diffs have byte-bounded caches; eviction
-changes work only. The analysis renders no document. Parsed stylesheets are
-cached by content hash with a byte bound, so a stylesheet shared across paths
-and sides parses once, and eviction changes time only. Own-page matches are
-collected and filtered catalogue-wide before
-any entry's evidence is decided, without rendering a consumer again or
-generating snapshots.
-
-The shell's exact text and grouping are in
-[CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 ## Non-goals
 

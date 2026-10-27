@@ -13,6 +13,11 @@ use crate::error::Result;
 use crate::material::mapped;
 use crate::source_validation::{SourceValidation, invalid};
 
+/// Checks each instance proof against both sides' recorded usage and the
+/// after-side view evidence. An `implementation` reason then needs an instance
+/// proof, and a `dependency` reason needs an instance proof or a rule or
+/// resource record that the entry owns. It reads only the recorded classifier
+/// inputs, never the result's own rows, so a result cannot prove itself.
 pub(crate) fn validate(input: &SourceValidation<'_>) -> Result<()> {
     let paths = input.pairing.paths(input.before, input.after);
     let mut instances = BTreeMap::new();

@@ -25,6 +25,13 @@ pub(crate) struct SystemSnapshot {
 }
 
 impl Snapshot for SystemSnapshot {
+    /// Builds a detached worktree of `base` whose files are the checkout's
+    /// working tree. A temporary index captures that tree with `read-tree HEAD`,
+    /// `add -A`, and `write-tree`, so the checkout's own index never changes;
+    /// its path stays absent so Git creates a valid index. `worktree add` turns
+    /// hooks off, so no `post-checkout` hook runs. In the snapshot,
+    /// `read-tree -u --reset` installs the captured tree, then `read-tree` of
+    /// `base` resets only the index, so every difference is unstaged or untracked.
     fn create(&self, run: &RunId, base: &CommitSha) -> Result<SnapshotHandle> {
         let handle = SnapshotHandle::paths(&self.workspace, run);
         self.files.parent(&self.workspace)?;

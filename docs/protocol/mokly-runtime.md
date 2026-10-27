@@ -1,7 +1,5 @@
 # Mokly Build And Browse Runtime
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
 [Rust core architecture](../architecture/rust-core.md) is the map of the
@@ -19,30 +17,34 @@ public form of the model.
 
 ## Discovery And Validation
 
-1. Load the configuration under the
-   [configuration contract](./mokly-configuration.md).
-2. Walk every root once. A file's suffix gives its kind under the
-   [HTML screens contract](./mokly-html-screens.md) and the
-   [entry module contract](./mokly-entry-modules.md); its place gives its
-   path under the [path contract](./mokly-paths.md).
-3. Parse HTML, YAML, Markdown, and folder records in Rust. When the catalogue
-   has JavaScript, bundle it through the [sidecar](./mokly-sidecar.md) and
-   take every definition from `describe`. A configured renderer also requires
-   a bundle inventory when no JavaScript entry is present. Its imports are
-   private sources in both Serve and build.
-4. Build the catalogue model: paths, folders, variants, props and prop
-   schemas under the [entry props contract](./mokly-entry-props.md), use
-   cases, documents, and the component registry.
-5. Validate metadata, relationships, paths, links, markers, stylesheets, and
-   colour schemes. Every error is reported with its repository-relative file,
-   line, and column before any render starts, and a command with an error
-   fails with `build-invalid`. Non-fatal findings are
-   [build warnings](./mokly-build-warnings.md).
+Serve and `build` load the configuration under the
+[configuration contract](./mokly-configuration.md) and discover the sources
+under [root discovery](./mokly-root-discovery.md). A file's suffix gives its
+kind under the [HTML screens contract](./mokly-html-screens.md) and the
+[entry module contract](./mokly-entry-modules.md); its place gives its path
+under the [path contract](./mokly-paths.md). JavaScript definitions come from
+the [sidecar](./mokly-sidecar.md) `describe` call. A configured renderer also
+requires a bundle inventory when no JavaScript entry is present. Its imports
+are private sources in both Serve and build. The catalogue model holds the
+paths, folders, variants, props and prop schemas under the
+[entry props contract](./mokly-entry-props.md), use cases, documents, and the
+component registry.
+
+Validation covers metadata, relationships, paths, links, markers,
+stylesheets, and colour schemes. Every error is reported with its
+repository-relative file, line, and column before any render starts, and a
+command with an error fails with `build-invalid`. Non-fatal findings are
+[build warnings](./mokly-build-warnings.md).
 
 ## Render Graph And Cache
 
 The [render graph and cache contract](./mokly-render-cache.md#render-graph)
-defines node keys, render-cache rules, side captures, and their bounds.
+defines the render graph, render cache, side captures, and their bounds. Serve
+reads head documents from the render cache. `build` and `publish` capture the
+head once during the build check under a separate 256 MiB bound. Changes,
+output, and comparison output read that capture. An uncaptured head document
+is read from the head source, which renders it again only after render-cache
+eviction.
 
 ## Serve
 
@@ -59,30 +61,32 @@ watches the sources by default under the [watch contract](./mokly-watch.md);
 
 Serve binds `127.0.0.1` only, starting at the port the
 [package contract](./mokly-package.md#cli) names, and keeps the resolved port
-for the life of the process. Git never runs on the request path: ref
-resolution and base reads run in background work with their
-own cancellation. `--base <ref>` overrides `review.base` for the life of the
+for the life of the process. Ref resolution and base preparation run in
+background work with their own cancellation. A request reads base sources from
+Git only through the bounded comparison work of the
+[selected comparison contract](./mokly-selected-comparisons.md).
+`--base <ref>` overrides `review.base` for the life of the
 process.
 
 ## Build
 
 `mokly build` runs discovery and validation, renders every view, and captures
-the head documents during the build check for Changes and output. It reports
-warnings and writes the static site into the directory `--out` names,
-`mokly-static/` at the repository root by default, which Git must ignore. It
-writes the shell stub per route, the index, one detail per entry, every
-document, the comparison generation, the viewer bundle, styles, and fonts
-under the [static build contract](./mokly-export.md) and the [static delivery
-contract](./mokly-export-delivery.md). An error fails the
+the head once during the build check under a separate 256 MiB bound. It reports
+warnings and writes the static site into the directory `--out`
+names, `mokly-static/` at the repository root by default, which Git must
+ignore. It writes the shell stub per route, the index, one detail per entry,
+every document, the comparison generation, the viewer bundle, styles, and
+fonts under the [static build contract](./mokly-export.md) and the
+[static delivery contract](./mokly-export-delivery.md). An error fails the
 command before any file is written. With `--strict`, a warning fails it too.
-The output transaction stages the whole site, replaces the output directory in
-one step, and rolls back on failure, so the last successful output stays in
-place. A validation-only run is a build to a temporary directory.
+The output transaction stages the whole site, replaces the output directory
+in one step, and rolls back on failure, so the last successful output stays
+in place. A validation-only run is a build to a temporary directory.
 
 `mokly publish` builds into its own directory outside the repository and
 uploads the result through the [upload exchange](./mokly-upload-exchange.md).
-There is no other verb: validation is `build --strict`, and the static site is
-`build`.
+There is no other verb: validation is `build --strict`, and the static site
+is `build`.
 
 ## Sidecar Pool
 
@@ -132,7 +136,7 @@ The Browse shell is the viewer package's React tree, rendered only in the
 browser from the catalogue index and the current route's details under the
 [shell delivery contract](./mokly-shell-delivery.md). Serve and `build`
 deliver one identical stub page per shell route and never render shell HTML.
-The [viewer contract](./mokly-viewer.md#shell-tree-and-state) owns the tree:
+The [viewer contract](./mokly-viewer-selection.md#shell-tree-and-state) owns the tree:
 the top bar, search and tags, the navigation column with its All/Changes
 filter, the breadcrumbs, the viewport and appearance controls, the device
 chrome, the expand toggle, and the details inspector. The
@@ -153,12 +157,11 @@ controls derive from the Changes evidence of the index and the detail under
 the [Changes contract](./mokly-changes.md#changes-membership); a pending
 calculation shows a spinner, an unavailable one keeps All browsable, and a
 removed entry opens its base render under
-[removed previews](./mokly-removed-previews.md). An event message from
-another server process reloads the page; no other update does: the shell
-replaces the index and the details in place and reloads only the frames
-whose `documentKey` changed.
-A usage completion that changes no detail publishes nothing. Reused ready
-usage counts as complete in the new Serve snapshot.
+[removed previews](./mokly-removed-previews.md). The
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve) decide when
+the shell replaces the index and the details in place, which frames reload,
+and when the page reloads. The [live evidence contract](./mokly-live-evidence.md)
+decides which usage completions publish.
 
 ## Component Workspaces
 
@@ -219,18 +222,10 @@ directory. Serve, Changes, live prop editing, and comparison generations keep
 every result in process memory. The caches outside the repository are the
 only other files Mokly writes, and deleting them changes time only.
 
-## Verification
-
-Rust tests cover discovery, the render graph keys, cache eviction, route
-safety, the no-writes rule, and shutdown ordering with real processes. The
-browser suite covers navigation, history and focus, colour schemes, watched
-updates without a page reload, and on-demand comparison with
-rendered-resource and ignored-region classification.
-
 ## Related Docs
 
 - [Rust core architecture](../architecture/rust-core.md)
-- [Render pipeline](../architecture/build-pipeline.md)
+- [Data flow](../architecture/rust-core.md#data-flow)
 - [Package and authoring contract](./mokly-package.md)
 - [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Changes and comparisons](./mokly-changes.md)

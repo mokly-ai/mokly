@@ -58,6 +58,8 @@ pub trait CatalogueBuilder: Send + Sync {
 }
 
 /// Catalogue coordinator with no direct filesystem or sidecar dependency.
+/// Serve, `build`, and the base side of a comparison all prepare through it, so a
+/// working tree and a Git tree pass the same discovery, description, and validation.
 pub struct Builder {
     /// Read-only working or Git tree.
     pub tree: Arc<dyn SourceTree>,

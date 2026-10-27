@@ -1,12 +1,10 @@
 # Catalogue Source Protection
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Protected Inputs
 
-One source classifier serves Serve's resource reads, closure validation, the
-static output, the base side's resource reads, and Changes resource
-evidence. A file is protected when a root glob matches it, even when a folder
+Serve's resource reads, closure validation, the static output, the base
+side's resource reads, and Changes resource evidence classify sources by the
+same rules. A file is protected when a root glob matches it, even when a folder
 exclusion skips it; when it is a resolved entry source, that is an HTML
 screen, component, or page, a use case, a Markdown document, an entry module,
 or a stories file; when it appears in the
@@ -16,8 +14,8 @@ entry rule is a stable identity rather than a second inventory. Each rule
 applies to the requested path and to its resolved repository-relative
 target: a public-looking symlink cannot make a protected target public. A
 new root match is protected at once, before any render completes.
-Regular-file and root-confinement checks are mandatory. The same classifier
-runs over every resolved file at discovery under the
+Regular-file and root-confinement checks are mandatory. The same rules
+apply to every resolved file at discovery under the
 [configuration contract](./mokly-configuration.md).
 
 Public reads and the static output deny an entry source's lexical path and
@@ -57,8 +55,8 @@ An ordinary public browser script is not private merely because it ends in
 
 `build`, publish, and resource diagnostics report the denial cause: root
 match, reserved basename, or listed input, in that lexical precedence. Alias
-resolution also checks the realpath index of the inventory, including a
-retargeted live alias. A stylesheet or component-resource failure keeps its
+resolution also denies a path whose real target is an inventoried source,
+including after a live alias is retargeted. A stylesheet or component-resource failure keeps its
 typed diagnostic and referring route even when an alias cannot be resolved.
 
 ## Referenced Public Assets
@@ -82,8 +80,8 @@ decide CSS rule attribution.
 
 ## Complete Source Inventory
 
-The inventory is the catalogue model's source set, held in memory and never
-written. It is the sorted, unique union of repository-relative POSIX paths
+The inventory is the catalogue model's source set and is never written. It
+is the sorted, unique union of repository-relative POSIX paths
 of:
 
 - the configuration file, and the PostCSS module with its local imports;
@@ -136,10 +134,3 @@ blobs and JavaScript from the sources extracted under the
 the only public authored set of that side, and the Git reader rejects a
 symbolic link rather than following it. Current-side reads always use the
 current policy.
-
-## Acceptance
-
-Behaviour tests cover the boundary and lifecycle checks: entries beside referenced
-assets, reserved basenames with and without imports, alias
-and symlink denial on `GET` and `HEAD`, the inventory of each source kind,
-an outside-repository input, and the base side's closure from Git.

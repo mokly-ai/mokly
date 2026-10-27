@@ -1,83 +1,17 @@
 # Component Comparison Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Normative Result
 
 The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
 owns the review result v8 envelope, its view record, and its rule evidence.
 This page defines the entry records, the affected-consumer records, and the
-diagnostics inside that envelope. The generated TypeScript types of the model
-crate are the normative shapes.
-
-```ts
-interface ReviewEntryAddress {
-  path: string;
-  title: string;
-  props?: ComponentWireProps; // screens and components: the merged props
-  suppliedSlots?: readonly string[]; // components only
-}
-
-interface ReviewEntrySides {
-  before?: ReviewEntryAddress;
-  after?: ReviewEntryAddress;
-  previousPath?: string;
-}
-
-type ReviewState =
-  "unchanged" | "changed" | "added" | "removed" | "ignored-only";
-
-type EntryChangeReason =
-  | {
-      kind:
-        | "added"
-        | "removed"
-        | "metadata"
-        | "material"
-        | "implementation"
-        | "inputs"
-        | "structure";
-    }
-  | { kind: "dependency"; path: string }
-  | { kind: "screen"; screenPath: string };
-
-interface ReviewEntry extends ReviewEntrySides {
-  kind: "screen" | "component" | "use-case";
-  path: string;
-  title: string;
-  state: ReviewState;
-  included: boolean;
-  reasons: readonly EntryChangeReason[];
-  views: readonly ReviewView[];
-  variants?: readonly ReviewEntry[]; // component parents: their variants
-}
-
-interface ComponentUsageContext {
-  kind: "screen" | "component";
-  entry: ReviewEntryAddress;
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-}
-
-interface AffectedUsageEvidence {
-  side: "before" | "after";
-  context: ComponentUsageContext;
-  via: readonly { componentId: string; instanceKey: string }[];
-}
-
-interface AffectedConsumer {
-  changedComponentId: string;
-  consumer: { kind: "screen" | "component"; path: string };
-  evidence: readonly AffectedUsageEvidence[];
-}
-
-interface ReviewDiagnostic {
-  message: string;
-}
-```
-
-`ReviewView`, `RuleEvidence`, and `ResourceEvidence` are the view shapes of
-the comparison contract. `ComponentWireProps` is the props codec of the
+diagnostics inside that envelope. The generated
+[`ReviewEntry`](../../packages/viewer/src/generated/catalogue/ReviewEntry.ts),
+[`AffectedConsumer`](../../packages/viewer/src/generated/catalogue/AffectedConsumer.ts),
+and
+[`ReviewDiagnostic`](../../packages/viewer/src/generated/catalogue/ReviewDiagnostic.ts)
+types define their shapes. The side address of a screen or a component carries
+its merged props in the props codec of the
 [catalogue read model](./mokly-catalogue.md).
 
 ## Sides And Pairing

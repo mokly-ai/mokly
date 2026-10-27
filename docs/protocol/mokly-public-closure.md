@@ -1,15 +1,12 @@
 # Public File Policy And Referenced Closure
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## One Policy Per Compilation
 
-One policy per render generation owns the decision for each
-repository-relative authored path. It resolves the logical and the physical
-location, source membership, protected-location membership, and regular-file
-status once, and caches accepted and rejected decisions by normalized path.
-Configured stylesheets, declared component stylesheets, renderer resource
-seeds, and the transitive link walk reuse that one instance. A new generation
+One policy per render generation decides each repository-relative authored
+path once, from its logical and physical location, source membership,
+protected-location membership, and regular-file status. Configured
+stylesheets, declared component stylesheets, renderer resource seeds, and the
+transitive link walk receive the same decision for one path. A new generation
 after a source, configuration, or resource change decides again; no
 filesystem decision outlives its generation.
 Stylesheet admission does not authorize source-file delivery. Configured and
@@ -36,16 +33,14 @@ as `packageRoots: ["."]`, protects nothing by itself. The policy has no
 generated directory to skip: discovery and PostCSS scanning exclude only the
 trees that the configuration and the source protection contract name.
 
-## One Closure Builder
+## Referenced Closure
 
-Serve, `build`, publish, watch, and the base side of a comparison use one
-closure builder. Its inputs are the composed documents of a generation, the
-pending bundled stylesheets and assets of the
+Serve, `build`, publish, watch, and the base side of a comparison compute the
+same sorted unique authored closure from the same inputs: the composed
+documents of a generation, the pending bundled stylesheets and assets of the
 [imported stylesheet contract](./mokly-imported-styles.md), the resources
-that the renderer declared, the policy above, and a full or on-demand
-traversal mode. It returns the sorted unique authored closure and the
-traversal evidence that watch needs: per-file references, logical locations,
-and invalid targets whose repair starts another pass.
+that the renderer declared, and the policy above. In watched Serve, the
+repair of an invalid target starts another pass.
 
 References are read from the composed tree, each with the owner of the
 referencing element under the
@@ -112,16 +107,3 @@ the base commit's closure from Git blobs with the same policy applied to the
 base's own inventory; the Git reader rejects a symbolic link rather than
 following it, and the base's closure is the only public authored set of that
 side.
-
-## Acceptance
-
-Behaviour tests use one fixture with a linked authored page, a PDF,
-`data-nav-href`, a preload hint, an iframe, `srcset`, CSS dependencies, and
-renderer resources. They assert equal closures from `build` and from a full
-watch pass, serve the linked page and the PDF through watched Serve before
-and after resource changes, replace an accepted file and an ancestor with
-symlinks and require 404 on `GET` and `HEAD`, exercise allowed build-folder
-names and denied actual inputs through `build`, Serve, and publish, prove
-one policy decision per authored path per generation, and prove that a new
-generation rechecks changed files. A protected seed fails with the referring
-route.

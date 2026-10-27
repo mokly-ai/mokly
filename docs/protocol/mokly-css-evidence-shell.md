@@ -1,7 +1,5 @@
 # CSS Evidence In The Shell
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Shell Presentation
 
 The inspector groups kept selectors by stylesheet and rule outcome, including
@@ -11,18 +9,10 @@ language, for example "This stylesheet changed, but none of the changed styles
 apply to this screen"; selector text appears only in the details list. Excluded
 resources never produce Changes rows.
 
-In Details for screens, component variants and whole-document pages, show
-“Compared with the branch point on \<name\>.” only when the name is known.
-The name is the `base` ref of the catalogue index; an index without `base`
-has no name, so omit that sentence. Keep the “Comparison details” heading
-and the rest of Details. An index with `base` retains the sentence in every
-delivery. Use the same shared heading for all three entry kinds, as the
-[presentation contract](./mokly-css-evidence-presentation.md#details-copy) defines.
-
-During navigation, the temporary view uses the `base` ref the index already
-carries while the selected entry's detail loads. The sentence must not
-disappear and return when the detail arrives. An index without `base` still
-omits it.
+Details for screens, component variants and whole-document pages show the
+branch-point sentence and the shared heading of the
+[presentation contract](./mokly-css-evidence-presentation.md#details-copy),
+also while the selected entry's detail loads.
 
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
@@ -66,7 +56,7 @@ rules:
   Changes, offers no comparison, and shows no stage heading; its evidence panel
   ends with the terminal status line "No changes to this screen." A component
   variant's terminal line reads "No changes to this variant." The wording
-  follows the entry kind through one shared helper.
+  follows the entry kind.
 - Linked Excluded and Matched screens show the same changed Welcome in All
   and Changes. They use one shared Details card with the retained file, its
   matched selectors and the excluded file. They add no explanatory sentence

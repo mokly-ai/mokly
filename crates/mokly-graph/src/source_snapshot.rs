@@ -13,6 +13,8 @@ use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 /// Read-once source view for graph inputs, consumed as `dyn SourceTree`.
 /// Public HTTP reads must use the live tree and recheck confinement separately.
+/// Reads and digests keep one cell per path. The map lock only finds the cell, and the
+/// IO runs under the cell's own lock, so a slow read or digest never blocks other paths.
 pub struct SourceSnapshot {
     source: Arc<dyn SourceTree>,
     reads: Mutex<BTreeMap<PathBuf, Arc<ReadCell>>>,

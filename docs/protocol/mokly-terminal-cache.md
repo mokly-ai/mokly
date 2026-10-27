@@ -1,7 +1,5 @@
 # Cache Directory Output
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 The [terminal output contract](./mokly-terminal-output.md) owns modes and width.
 
 ## Cache Directory

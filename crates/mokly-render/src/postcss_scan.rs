@@ -54,6 +54,9 @@ impl Scan {
         Ok(value)
     }
 
+    /// List the files below `root` that match a directory dependency glob, cached per pair.
+    /// The glob keeps `*` in one path segment and turns off backslash escaping on every
+    /// platform, because globset's default for it differs between Unix and Windows.
     pub(crate) fn matching_files(
         &mut self,
         tree: &dyn SourceTree,

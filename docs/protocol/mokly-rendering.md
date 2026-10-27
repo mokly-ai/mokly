@@ -1,7 +1,5 @@
 # Rendering And Document Assembly
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This contract defines how the Rust core turns one view of an entry into a
 document: the boundary between the core and the sidecar, the renderer module,
 the stylesheet list of a document and its order, and document assembly. The
@@ -22,16 +20,16 @@ React screen, `renderComponent` one React component instance, `renderStory`
 one story, and `renderPage` one `definePage` callback. A render returns an
 HTML fragment, the styles the render produced, the resources the renderer
 declared, and warnings. The core parses the fragment with a spec-compliant
-HTML parser, reads its comment markers into ownership and ignore regions,
-drops the markers, and grafts the tree in. The core memoizes every fragment
+HTML parser, reads its comment markers into ownership and ignore regions, and
+grafts the tree in. [Document assembly](#document-assembly) writes the
+instance and slot markers again around every composed region. The core memoizes every fragment
 under the render graph of the
 [architecture page](../architecture/rust-core.md#render-graph). A page render
 returns a complete document instead, and the core applies the
 [page contract](./mokly-pages.md) to it.
 
 The [sidecar render records](./mokly-sidecar-render-records.md#results) define
-one fragment shape for the wire and the in-memory adapter. The fragment
-boundary carries logical instance and slot records and authenticated marker placements. Each placement names its
+the fragment shape. The fragment boundary carries logical instance and slot records and authenticated marker placements. Each placement names its
 payload and its physical enclosing marker. The provider captures these
 records from Mokly's API wrappers, independently of consumer HTML. The core
 checks them against the parsed comments, including parent relationships,
@@ -101,6 +99,11 @@ export default function render(input: RenderInput): ReactNode | RenderResult;
   the renderer loads. Each enters the referenced closure as a seed with the
   entry as owner, after the same checks as a document link; a seed grants no
   access and supplies no CSS evidence.
+  A seed that names a `.css` file still enters the closure and raises the
+  `stylesheet-owner` warning for the view: `renderer resource "<path>" is a
+stylesheet and supplies no CSS evidence. Import the CSS or declare it in
+stylesheets instead.` A stylesheet reaches the CSS evidence only through an
+  import or a `stylesheets` declaration.
 - The renderer reads `colorScheme` and `viewport` to select its theme and
   layout. It cannot write the `html` element, the head, or the stylesheet
   links. Mokly owns no product theme state.
@@ -182,9 +185,8 @@ written into the repository:
   entry detail.
 - The document is serialized once. Identical inputs give identical bytes on
   every platform; `documentKey` is the document node's key, the hash of those
-  inputs, and exists before the render. The document and its tree live in the
-  render cache keyed by their inputs. Serve answers
-  `/static/mokly-generated/<route>` from the cache, `build` writes
+  inputs, and exists before the render. Serve answers
+  `/static/mokly-generated/<route>`, `build` writes
   `static/mokly-generated/<route>` into its output directory, and the base
   side of a comparison renders the base commit's sources through the same
   path. The [artifact path contract](./mokly-artifact-paths.md) names the
@@ -202,4 +204,4 @@ document bytes.
 - [HTML components](./mokly-html-components.md)
 - [Imported stylesheet delivery](./mokly-imported-styles.md)
 - [Rust core architecture](../architecture/rust-core.md)
-- [Render pipeline](../architecture/build-pipeline.md)
+- [Data flow](../architecture/rust-core.md#data-flow)

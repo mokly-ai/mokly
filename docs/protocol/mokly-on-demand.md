@@ -27,13 +27,11 @@ stub does not satisfy that target. No validation is skipped to meet it.
 ## Foreground Documents
 
 A request for `/static/mokly-generated/<route>` renders the document on first
-request through the render graph: the entry's source node, the fragment and
-HTML component nodes it composes, the stylesheet bundle, and the composed
-document, each computed only when its key is new. A JavaScript fragment
-renders through the [sidecar](./mokly-sidecar.md) under its deadlines; an
-HTML screen or component renders in Rust. The finished document enters the
-render cache and stays there until an input changes or the byte bound evicts
-it; the next request for an evicted document renders it again.
+request. A JavaScript fragment renders through the
+[sidecar](./mokly-sidecar.md) under its deadlines; an HTML screen or component
+renders without the sidecar. The finished document stays in the render cache
+until an input changes or the byte bound evicts it; the next request for an
+evicted document renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render yields between
@@ -56,9 +54,8 @@ including a view first rendered on demand. Repeated requests repeat no warning.
 
 Live prop edits of the [controls contract](./mokly-component-controls.md)
 render through this same path with the edited props. Their temporary documents
-and resources stay in a separate memory store. Temporary documents never enter
-the saved document cache or catalogue model. Their content-addressed fragments
-may enter the bounded fragment cache.
+and resources never replace a saved document and never enter the catalogue
+model.
 
 ## Background Work And Replacement
 
@@ -67,20 +64,14 @@ order, which fills the render cache and the usage of every detail, then
 classifies Changes, which renders the base side under the
 [comparison contract](./mokly-comparison.md#sides). A completion that changes
 the index or a detail publishes one revision under the
-[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve): the
-index and the details are replaced in one step, the shell updates its
-navigation, counts, and details in place, and the frames keep their
-documents. Background work is bounded, yields to foreground renders, and
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Background work is bounded, yields to foreground renders, and
 cannot publish after its state is superseded by a watched change; a
 superseded result is discarded. `--no-watch` runs this work once.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. With
-one worker, a foreground burst needs at most one switch to the head root and
-one switch back.
-Active calls finish under their existing deadlines. Both sides share the
-configured worker bound, including when the pool has one worker. Replacement
-and shutdown wake queued calls to check cancellation before pool admission.
+Queued base calls wait until those requests finish their sidecar work. Active
+calls finish under their deadlines. Both sides share the configured worker
+bound, including when the pool has one worker.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no
@@ -92,47 +83,17 @@ A source or configuration change replaces the catalogue model and the moved
 graph nodes together under the [watch contract](./mokly-watch.md); a failed
 candidate keeps the last-good state. Replacement invalidates the cached
 documents whose keys moved, every detail, and the comparison evidence; a
-resource edit invalidates the documents that reference it. Git commands run
-outside the HTTP event loop with their own cancellation; replacement and
-shutdown cancel active commands and wait for their process and pipe closure
-before cleanup completes.
+resource edit invalidates the documents that reference it. Replacement and
+shutdown cancel active Git commands and wait for their process and pipe
+closure before cleanup completes.
 
 ## Comparison Snapshots
 
 No comparison generation is assembled until the reader selects a diff or opens a
-removed entry. For a current screen or component, the shell requests
-`/mokly-viewer/diffs/review.json?path=<path>`, with `refresh=1` for an explicit
-retry, under the [selected comparison contract](./mokly-selected-comparisons.md).
-Removed component parents and variants use the advertised generation URL.
-Historical screens, pages, and documents use that generation under the
-[removed previews contract](./mokly-removed-previews.md). The selected endpoint
-takes the current entry's base views from the bounded capture or pinned-source
-fallback and its head views from the bounded render cache. It renders evicted
-head views again from the same inputs, treats missing or pending evidence as the
-retryable failure, writes the review result v8 and the two snapshot trees into one
-immutable in-memory generation, and redirects to
-`/mokly-viewer/diffs/generations/<generation>/review.json`. Snapshot files
-are the real bytes of both sides. Generation files are served with
-`Cache-Control: no-store` and `X-Content-Type-Options: nosniff` and resolve
-only from the generation's own file map.
-
-Identical pending selections coalesce; different selections serialize, with
-at most 32 pending requests and a ten-second admission-to-completion
-deadline. A generation lives for 60 seconds after its last request; at most
-64 generations and 128 MiB of snapshots are kept, each artifact at most
-64 MiB, and a capture that exceeds the capacity is rejected rather than
-evicting a generation inside its window. A watched change or a Changes
-refresh changes the cache epoch, so stale work cannot publish, and an open
-comparison returns to Current. The static output of `build` carries one
-complete generation instead, under the
+removed entry. The [selected comparison contract](./mokly-selected-comparisons.md)
+owns the request, the capture, the retention, and the limits for a current
+screen or component. Removed component parents and variants use the advertised
+generation URL. Historical screens, pages, and documents use that generation
+under the [removed previews contract](./mokly-removed-previews.md). The static
+output of `build` carries one complete generation instead, under the
 [comparison serving contract](./mokly-comparison-serving.md).
-
-## Verification
-
-Tests cover cold start with an unrelated failing render, identical bytes for
-on-demand and background renders of one document, request coalescing,
-sidecar failure and timeout, source and resource confinement, pending usage,
-live prop isolation, replacement, superseded background results, comparison
-generation retention, and shutdown with real processes. The large-fixture
-browser benchmark checks real frame content, search, viewport and scheme
-switches, a live prop edit, and Changes, cold and warm.

@@ -1,7 +1,5 @@
 # Navigation Disclosure Persistence
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This contract owns navigation disclosure keys, storage, defaults, restoration,
 and reconciliation. Tree structure, folder rows, and sibling order come from
 the [folder contract](./mokly-folders.md#order). The
@@ -34,8 +32,8 @@ variants and then the folder's other members.
 ## Storage And Defaults
 
 Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v4`, mapping
-each current disclosure key to `true` (open) or `false` (closed). Earlier
-storage keys are never read, translated, or removed. Save **every**
+each current disclosure key to `true` (open) or `false` (closed). The
+[versioning rule](#versioning) covers earlier storage keys. Save **every**
 disclosure in the current navigation, not only user-toggled ones, so a removed
 or renamed folder disappears from the next saved map. Do not write while
 search or the Changes filter constrains the tree. A failed or unavailable

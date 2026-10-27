@@ -1,7 +1,5 @@
 # Front Matter YAML
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 The front matter block of a screen, component, or page file and a whole use
 case file are YAML. A file that breaks a rule here fails with
 `html-front-matter`.

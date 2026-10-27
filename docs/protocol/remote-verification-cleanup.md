@@ -22,16 +22,14 @@ A close warning or cancellation failure alone does not fail the check.
 A successful cancellation does not prove that the box is stopped or completed.
 
 Track successful stops and already-completed boxes. Final cleanup processes
-only the remaining boxes. One owner holds box IDs, recorded run IDs, close
-state, cancellation state and stop attempt counts across workers and final
-cleanup. Record each close or cancellation attempt before its boundary call.
-Neither stop retries nor final cleanup may repeat those attempts.
+only the remaining boxes. Each box gets at most one close attempt and one
+cancellation attempt across workers and final cleanup. Neither stop retries
+nor final cleanup repeat them. Stop attempts count across all cleanup calls.
 
-One cleanup guard tracks every warmed box that is not yet stopped or proven
-completed. When a panic unwinds the runner, the guard cleans up those remaining
-boxes with the normal rules, including the close step. Protect each close,
-status, stop, cancel, run-state read, wait and diagnostic call during unwinding.
-The guard never panics itself. The guard does no cleanup on a normal return.
+When a panic unwinds the runner, every warmed box that is not yet stopped or
+proven completed still gets cleanup under the normal rules, including the
+close step. A panic in one cleanup call does not stop the other calls, and this
+cleanup never panics itself.
 
 ## Per-Box Order
 
@@ -51,8 +49,8 @@ Use the same order after a suite, preparation failure, interrupt or panic.
 5. Attempt stop. On failure, use the waits and attempt limit below.
 6. After all suite workers end, apply final cleanup to the remaining boxes.
 
-Look up `gh` through the existing program boundary. A missing `gh` skips
-cancellation and does not skip status or stop. A failed lookup warns.
+A missing `gh` skips cancellation and does not skip status or stop. A failed
+lookup of `gh` warns.
 Use status, not a successful cancel command or a GitHub run state, as the
 completion proof for a box. Keep the stop result as the other success proof.
 
@@ -65,11 +63,9 @@ Blacksmith CLI 0.4.65 uses this control socket name:
 3. Add `.sock`. Resolve that name under the local home directory's
    `.blacksmith/c/` directory.
 
-Read the home directory from `HOME` through the environment boundary.
-The spike verified the CLI's use of `HOME` on Linux. The close step uses
-`HOME` on every platform. Do not guess another directory.
-If `HOME` is unset or empty, print the close warning once with a typed error.
-Then continue with cancellation, status and stop.
+The close step reads the home directory from `HOME` on every platform. Do not
+guess another directory. If `HOME` is unset or empty, print the close warning
+once. Then continue with cancellation, status and stop.
 
 Use only the current box ID and that exact path. Do not scan sockets, match
 processes, kill an SSH process or close another box's connection.
@@ -83,8 +79,7 @@ for the box, so a changed CLI socket name is visible:
 information: no shared SSH connection for <box-id>
 ```
 
-When the socket exists, run exactly these arguments through the injected
-`Process` boundary, from the workspace root:
+When the socket exists, run exactly this command from the workspace root:
 
 ```bash
 ssh -F /dev/null -S <absolute-control-socket-path> -O exit localhost
@@ -94,22 +89,22 @@ ssh -F /dev/null -S <absolute-control-socket-path> -O exit localhost
 control socket. `-O exit` asks that master to exit. `localhost` supplies the
 required destination argument. This command opens no new SSH connection and
 sends no key. Pass no private-key argument, remote command or standard input.
-The process removes the shared secret environment list and uses the existing
-redaction. Give SSH failures their own typed operation for diagnostics.
+The command's environment omits the secret variables, and its diagnostics are
+redacted. SSH failures carry their own `Ssh` operation name in diagnostics.
 
 Exit 0 is success. Discard successful command output, including
 `Exit request sent.`. If a failed command's socket has disappeared, treat it
 as closed and print nothing. Any other command or file-read failure
 prints one warning for the box. Do not retry close. Continue cancellation,
-status and stop. Use this warning format with the shared error formatter:
+status and stop. Use this warning format:
 
 ```text
-[xtask/executor] warning: could not close SSH connection for <box-id>: <typed-error>
+[xtask/executor] warning: could not close SSH connection for <box-id>: <error>
 ```
 
-The typed error retains its defining module prefix. SSH command errors use
+The embedded error keeps its own prefix. SSH command errors use
 `[xtask/remote]` and the error-text rule below. A close failure may leave the
-shared connection open until its existing timeout. It adds no cleanup failure
+shared connection open until its own timeout. It adds no cleanup failure
 count by itself. Do not run `ssh -O check` as another cleanup step.
 
 ## Status And Stop
@@ -133,7 +128,7 @@ unless status already proved completion:
 `warning: no GitHub run ID for <box-id>; cancellation skipped`.
 
 Run `blacksmith testbox stop --id <box-id>`. Retry a failed stop after 5 seconds,
-then after 10 more seconds. Use the injected clock for both waits.
+then after 10 more seconds.
 Allow at most three stop attempts per box across all cleanup calls.
 Read status again in final cleanup for any box whose attempts are exhausted.
 A completed status clears that box's failure without another stop.
@@ -150,8 +145,8 @@ information: cleanup box=<box-id> GitHub run=<id>
 ```
 
 If cancellation fails, read `gh run view <id> --json status --jq .status`.
-Trim the output. Map `completed` to the typed completed state. Map every other
-nonempty value to the other state. Empty output is a typed read error.
+Trim the output. `completed` means that the run ended. Every other nonempty
+value means that it did not. Empty output is a read error.
 For `completed`, suppress the cancellation warning and print:
 
 ```text
@@ -160,43 +155,41 @@ information: GitHub run=<id> already ended; cancellation not needed
 
 Any other state, empty output or failed state read keeps the cancellation
 warning. A failed state read prints its run-state warning before the cancellation
-warning. Both warnings retain their typed errors.
+warning. Both warnings keep their errors.
 Never decide from error text. Cancellation failure alone does not fail the
 check or prove that a box completed.
 
 ## Command Error Text
 
-For failed status, stop, cancel, run-state and close commands, store the
-diagnostic line in the typed command error. Do not format it at the call site.
-Trim each line. Select the last standard-error line that is not empty after
+For failed status, stop, cancel, run-state and close commands, the command
+error carries one diagnostic line. Trim each line. Select the last standard-error line that is not empty after
 trimming. If there is none, select the last such standard-output line.
 Use output after process input redaction.
 Keep at most 200 characters. Use character boundaries, not byte boundaries.
 These five requests have no input and remove the shared secret environment
 variables. Never pass a key to them. Errors from other commands stay unchanged.
 
-Append the line to the existing typed error text with `: `.
+Append the line to the command error text with `: `.
 If neither stream supplies a line, append nothing and add no separator.
-Keep the operation and the existing `exit <code>` or `a signal` wording.
-Process-start or file-read errors retain their typed source error.
-Use the shared warning formatter. Keep each module prefix once.
+Keep the operation and the `exit <code>` or `a signal` wording.
+Process-start or file-read errors keep their source error.
+Keep each module prefix once.
 Error text supplies diagnostics only. It must never decide completion,
 whether to retry, cancellation suppression or the cleanup failure count.
 
 ## Cleanup Output
 
 Use these exact lines. The reporter adds `[xtask/executor]` once.
-Use the shared warning formatter for each line that embeds a typed error.
-Keep the error's defining module prefix once. Do not repeat a prefix.
+Each embedded error keeps its own prefix once. Do not repeat a prefix.
 
 ```text
 [xtask/executor] information: box=<box-id> already completed; cleanup skipped
-[xtask/executor] warning: status for <box-id> failed: <typed-error>
-[xtask/executor] warning: could not stop <box-id>: <typed-error>
-[xtask/executor] warning: cancellation for <github-run-id> failed: <typed-error>
-[xtask/executor] warning: run state for <github-run-id> failed: <typed-error>
-[xtask/executor] warning: GitHub lookup failed: <typed-error>
-[xtask/executor] warning: cleanup worker for <box-id> failed: <typed-error>
+[xtask/executor] warning: status for <box-id> failed: <error>
+[xtask/executor] warning: could not stop <box-id>: <error>
+[xtask/executor] warning: cancellation for <github-run-id> failed: <error>
+[xtask/executor] warning: run state for <github-run-id> failed: <error>
+[xtask/executor] warning: GitHub lookup failed: <error>
+[xtask/executor] warning: cleanup worker for <box-id> failed: <error>
 ```
 
 After a failed run-state read, print the run-state warning first, then the

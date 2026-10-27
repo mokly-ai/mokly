@@ -108,6 +108,7 @@ async function createDivergedRepository() {
   await Promise.all([
     fs.mkdir(path.join(root, "docs/protocol"), { recursive: true }),
     fs.mkdir(path.join(root, "docs/protocol/fixtures"), { recursive: true }),
+    fs.mkdir(path.join(root, "docs/guides/start"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/viewer"), { recursive: true }),
     fs.mkdir(path.join(root, "scripts"), { recursive: true }),
     fs.mkdir(path.join(root, "xtask"), { recursive: true }),
@@ -130,8 +131,8 @@ async function createDivergedRepository() {
       '{ "name": "ratchet-viewer-fixture", "exports": {} }\n',
     ),
     fs.writeFile(
-      path.join(root, "docs/protocol/npm-release-notes.md"),
-      "# Release notes\n",
+      path.join(root, "docs/guides/start/upgrade.md"),
+      "# Upgrade\n",
     ),
     fs.writeFile(path.join(root, "scripts/legacy.mjs"), legacyModule),
     fs.writeFile(

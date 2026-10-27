@@ -1,8 +1,5 @@
 # Shared Design Components
 
-Status: In progress under the
-[Rust rebuild plan](../../../../../plans/rust-rebuild.md).
-
 ## Scope
 
 These sixteen components render both Mokly's design artboards and

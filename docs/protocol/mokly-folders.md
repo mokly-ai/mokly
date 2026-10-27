@@ -200,15 +200,6 @@ trailing whitespace`, `order must be an array of segments with at most one
 at the top level`, and `title cannot be set for a folder whose own page is a
 screen or component; set the entry's title`.
 
-## Verification
-
-Coverage must prove both carriers produce one record, every title rule, the
-default comparator and `order` with and without `...` in each section, search
-through folder titles, hidden folders in tree and search but not in URLs or
-Changes, `exclude` before derivation, each row rule including the `Overview`
-label and the identical rows for the two variant layouts, breadcrumb
-behaviour, and the exact text of every diagnostic.
-
 ## Related Docs
 
 - [Paths, roots, and identity](./mokly-paths.md)

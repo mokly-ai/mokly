@@ -1,4 +1,10 @@
-/** Execute the binary with inherited streams and platform-aware signal handling. */
+/**
+ * Execute the binary with inherited streams and platform-aware signal
+ * handling. POSIX forwards SIGINT, SIGTERM and SIGHUP to the binary. On
+ * Windows the binary shares the console and receives its signals directly, so
+ * the SIGINT and SIGBREAK listeners only keep the shim alive until the binary
+ * exits.
+ */
 export function executeNative(binary, arguments_, dependencies) {
   return new Promise((resolve, reject) => {
     const child = dependencies.spawn(binary, arguments_, { stdio: "inherit" });

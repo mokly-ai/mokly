@@ -1,7 +1,5 @@
 # CSS Change Attribution
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose
 
 A linked stylesheet edit is conservative evidence that a screen may render
@@ -20,20 +18,18 @@ this contract.
 
 The analysis takes two inputs for one stylesheet on one view:
 
-- The stylesheet's bytes on both sides. Serve reads the head side's bytes from
-  the render cache. `build` and `publish` read generated CSS from the head
-  capture. The bundle is written by `lightningcss` or through the consumer's
-  PostCSS module, or it is a public file of the working tree. The base side's
-  generated CSS comes from the bounded base capture, with pinned-source
-  fallback; public files use the base-side source under
+- The stylesheet's delivered bytes on both sides. Serve reads generated head
+  CSS from the render cache. `build` and `publish` read generated head CSS from
+  the head capture. On the head side, a public file comes from the working
+  tree. On the base side, these are the same delivery from the base commit,
+  and public files use the base-side source under
   [Sides](./mokly-comparison.md#sides). A side that lacks the stylesheet
   contributes an empty stylesheet after the verified-deletion check of the
   [Changes contract](./mokly-changes.md#resources); an invalid read never
   becomes an empty stylesheet.
-- The head's composed documents from the render cache in Serve or the head
-  capture in `build` and `publish`, and the base's from the bounded capture or
-  pinned-source fallback, with ownership and ignore
-  regions attached under the
+- The head's composed document from the render cache in Serve or the head
+  capture in `build` and `publish`, and the base's from its bounded capture or
+  pinned-source fallback, with ownership and ignore regions attached under the
   [tree model](./mokly-comparison.md#tree-model). A view that one side lacks
   contributes no tree.
 
@@ -63,9 +59,9 @@ A stylesheet is in scope when it is a public file that a composed document
 links: a stylesheet bundle under the
 [imported stylesheet delivery contract](./mokly-imported-styles.md), a
 configured stylesheet, or a public file of the catalogue's referenced closure.
-One predicate answers "is this stylesheet in analysis scope" for Serve,
-`build`, and `publish`. A changed asset that a stylesheet references keeps
-every view whose closure reaches it, without decoding the asset.
+Serve, `build`, and `publish` apply the same analysis scope. A changed asset
+that a stylesheet references keeps every view whose closure reaches it,
+without decoding the asset.
 
 Per-view records exist only for views with at least one kept rule or one
 excluded stylesheet. A view without either carries no record.
@@ -100,65 +96,57 @@ excluded stylesheet. A view without either carries no record.
    predicates stay in force. An unsupported selector or a matcher compilation
    failure stays unresolved; stripping state never strips a shadow or global
    keep construct.
-3. **Reduce.** Owned head styles, ownerless head styles, and linked CSS use
-   one evidence reducer. A rule with a kept match has status `matched`.
+3. **Reduce.** Owned head styles, ownerless head styles, and linked CSS follow
+   the same reduction rules. A rule with a kept match has status `matched`.
    A rule with no match on either side produces no record. Any unresolved
    rule is kept with status `unresolved`, even when another rule matched. When
-   no changed rule of a source is kept on this view, that source is
+   a source has changed rules but none is kept on this view, that source is
    examined and excluded: one record with status `excluded` marks it, and it
-   supplies no reason for the view. A failed stylesheet parse yields no
-   partial selector evidence.
+   supplies no reason for the view. A source whose diff has no rules produces
+   no record. A failed stylesheet parse yields no partial selector evidence.
 4. **Attribute.** Join equal changed rules across stylesheets by the
    [rule identity](./mokly-css-attribution-rules.md#rule-identity-across-stylesheets).
    Decide each kept rule's owner from its matched elements and their regions
    under the [membership rule](./mokly-css-attribution-rules.md): prove changed
    components from kept own-page matches after nested filtering, then decide
-   the entry's own evidence. Do not reduce away the per-rule element sets
-   before this step.
+   the entry's own evidence.
 
 ## Rule Diff Representation
 
-The parser is `lightningcss`, read before any optimization; optimized output
-is never diff material. Rules receive zero-based depth-first ordinals, one
-serialized string per selector in source order, a normalized declaration
-block, ordered `{ kind, prelude }` conditions, and a flag for custom
-properties. The condition kinds are `media`, `container`, `supports`, `layer`,
-and `nesting-parent`; preludes omit the at-keyword. An anonymous layer has an
-empty prelude. A nesting parent's prelude joins its selectors with `, `;
-implicit nested selectors keep `&`. Declaration runs after nested rules or
-directly inside nested conditions are separate `&` rules under the enclosing
-context.
+The diff reads each stylesheet before any optimization. Optimized output is
+never diff material. Each rule has one serialized string per selector in
+source order, a normalized declaration block, and its ordered enclosing
+conditions. An anonymous layer has an empty prelude. A nesting parent's
+prelude joins its selectors with `, `; implicit nested selectors keep `&`.
+Declaration runs after nested rules or directly inside nested conditions are
+separate `&` rules under the enclosing context.
 
 Declaration serialization removes comments and insignificant whitespace and
 keeps token separation, string and URL contents, duplicates, shorthand and
 longhand distinctions, and source order, including interleaved `!important`
 declarations. It does not join tokens that a comment separates:
 `url/**/("a.svg")` stays distinct from `url("a.svg")`, as do separated
-identifiers. Selectors and known condition preludes are serialized in the
-parser's normalized form. A selector-less at-rule has an empty selector list,
-an at-rule name without `@`, a serialized prelude, and its complete normalized
-body as its declarations. This includes encoding, import, namespace, and layer
+identifiers. Selectors and known condition preludes are serialized in a
+normalized form, so formatting differences do not change them. A selector-less
+at-rule has an empty selector list, an at-rule name without `@`, a serialized
+prelude, and its complete normalized body as its declarations. This includes encoding, import, namespace, and layer
 statements, empty grouping rules, and opaque unsupported at-rules. An opaque
 body stays one record, so its inner selectors cannot grant an exclusion.
 
 Rule identity within one stylesheet consists of conditions, selectors, and
 declarations; a selector-less rule adds its at-rule name and prelude, so
 differently named animations, imports, or rule kinds cannot cancel each other.
-Ordinals are excluded from identity. Rule lists are multisets: cancel exact
+Source position is not part of identity. Rule lists are multisets: cancel exact
 matches first, consuming duplicate occurrences in source order, then pair the
 remaining rules with equal conditions and selectors (and at-rule name and
 prelude) in source order as changed declarations. Excess occurrences are
 added or removed.
 
-A resolved diff has three lists: `added` sorts by after ordinal, `removed` by
-before ordinal, and `changed` pairs of before and after sort by after ordinal.
 Both sides of a changed rule are kept, so custom-property removal and
-before-only material stay available to matching. An unresolved diff holds
-side-tagged failures and no partial lists. A syntax error, an unclosed block,
-comment, or string, or a serialization failure is the `css-parse-failed`
-outcome with its cause; it never escapes as a thrown error, and both sides are
-examined for failures. The parser attempts no browser error recovery for
-incomplete source.
+before-only material stay available to matching. A syntax error, an unclosed
+block, comment, or string, or a serialization failure is a parse failure. A
+parse failure never aborts classification. Both sides are examined for
+failures. The parser attempts no browser error recovery for incomplete source.
 
 ## Kept Constructs
 
@@ -191,18 +179,12 @@ for one view becomes an `unresolved` record for that stylesheet with the
 selectors that could be serialized. It never aborts classification and never
 excludes the stylesheet.
 
-Apply these checks in the order above before ordinary matching. Global and
-shadow detection includes nested selector arguments and nesting parents, not
-literal attribute values or synthetic universals that state stripping
-introduces. For a declaration edit, compare the custom declarations and URL
+Global and shadow detection includes nested selector arguments and nesting
+parents, not literal attribute values or synthetic universals that state
+stripping introduces. For a declaration edit, compare the custom declarations and URL
 references on both sides: an unchanged custom property or URL does not trigger
 its keep rule. A changed URL in an unevaluated condition prelude also counts
 as a changed reference.
-
-## Document Matching Interface
-
-The [matching interface](./mokly-css-document-matching.md) defines the pure
-per-rule matcher and the parser and matcher composition boundary.
 
 Membership and presentation continue in
 [CSS Attribution Membership](./mokly-css-attribution-membership.md).

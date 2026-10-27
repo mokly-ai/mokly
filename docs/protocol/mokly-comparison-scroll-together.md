@@ -1,7 +1,5 @@
 # Comparison Scroll Together
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Reader Control
 
 The comparison toolbar places a native `input type="checkbox"` with
@@ -20,7 +18,7 @@ viewer root remounts; independent roots have independent choices.
 
 - In Side by side, on mirrors page viewports and paired regions; off leaves
   each version's page and regions independent. Each viewport still drives and
-  clamps only its own document, and both spacers keep the pair maximum.
+  clamps only its own document, and both viewports keep the pair maximum range.
 - In Overlay and Difference, on mirrors paired regions. Off stops region
   mirroring, but the page still has one structural offset because both layers
   remain in one chrome and its lower layer has no separate page scrollbar.
@@ -28,8 +26,8 @@ viewer root remounts; independent roots have independent choices.
 
 Changing the switch applies to the open comparison without refetching,
 re-presenting, or reloading a pane. Turning it off performs no write and leaves
-every page and region exactly where it settled. Matching and last-scroll
-tracking continue while off, but counterpart writes are suppressed.
+every page and region exactly where it settled. While it is off, the viewer
+still tracks the last-scrolled version, but it writes no counterpart offsets.
 
 ### Design Geometry
 
@@ -39,10 +37,10 @@ knob inset 2px, followed by an 8px gap and a 12px/600 label in
 `--mbk-accent-contrast` for the knob at the far end; off uses `--chrome-bg`
 for the track and `--chrome-control-edge` for its border and knob at the start.
 A keyboard-focused control draws a 2px `--mbk-sage-deep` ring 2px outside the
-track, and the transparent checkbox covers the whole control. Runtime colours
-map to `--mbk-accent-deep` and `--_mokly-private-on-accent-deep`, never the
-consumer-tunable `--mokly-accent-contrast`, and the knob has a border so forced
-colours keep it visible without opting out.
+track, and the transparent checkbox covers the whole control. The runtime
+switch draws these [palette](./mokly-viewer-palette.md) values in each
+appearance. It never uses the consumer-tunable `--mokly-accent-contrast`. The
+knob has a border, so forced colours keep it visible without opting out.
 
 The band keeps 16px between controls on a row and 8px between rows. Desktop
 places the switch after the mode group and Refresh at the far end. At the
@@ -74,18 +72,3 @@ reset when the authoritative region is at its start. When Both is shown, the
 chosen version is shared but mobile and desktop offsets are never copied to
 each other. A missing authoritative version in one section falls back to the
 version that exists there.
-
-## Acceptance
-
-`tests/browser/comparison_regions_switch.spec.ts` proves placement, copy,
-default, the drawn states, keyboard focus, forced colours, the narrow layout,
-and the loading and failure states;
-`comparison_regions_toggle.spec.ts` proves the off behavior in Side by side,
-Overlay, and Difference, realignment to the version scrolled last, no pane
-reload, persistence across screens and reloads, invalid values, and a refused
-write; the same persistence case also runs in live Serve; and
-`comparison_regions_hosts.spec.ts` proves persistence in a
-static build and a storage-free, mount-scoped choice in an embedded viewer
-through both frame adapters, across screens and source replacement. Unit
-tests under `packages/viewer/tests/` cover the preference stores, the toolbar
-markup, and the controller's off, on, and ownership rules.

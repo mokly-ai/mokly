@@ -1,16 +1,13 @@
 # Imported Stylesheet Delivery
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Delivery
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,
 or the renderer module imports with `import "./theme.css"` or
 `import styles from "./card.module.css"`, reach documents one way. Mokly
-bundles each delivery root into one stylesheet on `lightningcss` in the Rust
-core, resolves its `@import` chain and `url()` assets, and delivers the
-stylesheet through the render cache and its assets through verified source
-streams under the `static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
+bundles each delivery root into one stylesheet on `lightningcss`, resolves its
+`@import` chain and `url()` assets, and delivers the stylesheet and its
+verified assets under the `static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
 unchanged and never fetched. The sources stay private. This contract
 extends [imported CSS configuration](./mokly-configuration-imported-styles.md),
 [rendering](./mokly-rendering.md), and
@@ -103,9 +100,8 @@ package lookup from that directory.
 
 ## Bundling
 
-A root's stylesheet is one node of the render graph, keyed by its stylesheet
-sources, its assets, the PostCSS module, and the resolution settings. For
-each stylesheet of the closure the core reads the text from the working tree,
+A root's stylesheet is built again when its stylesheet sources, its assets,
+the PostCSS module, or the resolution settings change. For each stylesheet of the closure the core reads the text from the working tree,
 or from a Git blob on the base side, with package inputs read from the
 selected dependency root; runs the consumer's PostCSS plugins
 through the sidecar's `processCss` when the configuration names a `postcss`

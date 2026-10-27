@@ -1,78 +1,18 @@
 # Catalogue Entry Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Entries, Folders, And Variants
 
 The catalogue model lives in process memory. Its
 entry records are the private form of the
 [catalogue read model](./mokly-catalogue.md), which is their public form. The
-generated TypeScript types of the model crate are the normative shapes.
-
-```ts
-interface EntryRecordBase {
-  path: string;
-  kind: "screen" | "page" | "document" | "use-case" | "component";
-  title: string;
-  description: string;
-  rationale?: string;
-  movedFrom?: string;
-  relatedDocs: readonly string[];
-  sourcePath: string;
-  tags?: readonly string[];
-}
-
-interface ScreenRecord extends EntryRecordBase {
-  kind: "screen";
-  address?: string;
-  variantOf?: string;
-  colorSchemes: readonly ColorScheme[];
-  useCasePaths: readonly string[];
-  propSchema: PropSchema;
-  props: ComponentWireProps;
-  controls: Readonly<Record<string, ComponentControl>>;
-}
-
-interface UseCaseRecord extends EntryRecordBase {
-  kind: "use-case";
-  steps: readonly {
-    screenPath: string;
-    title?: string;
-    description?: string;
-  }[];
-}
-
-interface PageRecord extends EntryRecordBase {
-  kind: "page";
-}
-
-interface DocumentRecord extends EntryRecordBase {
-  kind: "document";
-  colorSchemes: readonly ColorScheme[];
-  resources: readonly string[];
-}
-
-interface ComponentRecord extends EntryRecordBase {
-  kind: "component";
-  variantOf?: string;
-  element?: string;
-  colorSchemes: readonly ColorScheme[];
-  propSchema: PropSchema;
-  props: ComponentWireProps;
-  slots: readonly string[];
-  suppliedSlots: readonly string[];
-  controls: Readonly<Record<string, ComponentControl>>;
-}
-
-interface FolderRecord {
-  path: string;
-  title?: string;
-  order?: readonly string[];
-  hidden?: boolean;
-  exclude?: readonly string[];
-  sourcePath: string;
-}
-```
+generated
+[`CatalogueModel`](../../packages/viewer/src/generated/catalogue/CatalogueModel.ts)
+type defines the shape of the model, its entry records, and its folder
+records. The generated
+[`EntryRecord`](../../packages/viewer/src/generated/catalogue/EntryRecord.ts)
+type defines the flat historical form of a screen, page, document, or
+component record that the
+[catalogue change snapshot](./mokly-catalogue-changes.md) carries.
 
 `path` is the entry's identity under the [path contract](./mokly-paths.md).
 `variantOf` is present exactly on variant entries of either kind and holds
@@ -108,9 +48,9 @@ repository-relative files in `resources`.
 
 ## Validation And Ordering
 
-One validator checks the records for Serve, `build`, and the base side of a
-comparison. It rejects incorrect types, invalid paths, props the schema
-rejects, duplicate records, unsafe repository paths, and broken
+Serve, `build`, and the base side of a comparison validate the records with
+the same rules. Validation rejects incorrect types, invalid paths, props the
+schema rejects, duplicate records, unsafe repository paths, and broken
 cross-references. Paths follow the
 [segment grammar](./mokly-paths.md#segment-grammar) and are unique
 case-insensitively across all entries. A `variantOf` names a current entry of

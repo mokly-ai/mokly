@@ -1,7 +1,5 @@
 # Component Comparison Schema
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Normative Result
 
 Every catalogue emits the review result v8 of the
@@ -10,8 +8,9 @@ whose envelope, view record, and rule evidence that page owns. The
 [component comparison records](./mokly-component-comparison-records.md) page
 owns the entry record, the affected-consumer record, and the diagnostic
 record inside that envelope, with the sides, the pairing, the view union, and
-the `included` membership field. The generated TypeScript types of the model
-crate are the normative shapes. One shape serves every catalogue: a catalogue
+the `included` membership field. The generated
+[`ReviewResultV8`](../../packages/viewer/src/generated/catalogue/ReviewResultV8.ts)
+type defines the shapes. One shape serves every catalogue: a catalogue
 without registered components emits no component entries and an empty
 `affected` list, and there is no second screen-only shape. This page defines
 the semantics of the reasons and the proof behind each affected-consumer

@@ -1,7 +1,5 @@
 # Optional Changes In Published Catalogues
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Publication Option
 
 A published catalogue is the output of `mokly build`, deployed by the consumer
@@ -85,14 +83,13 @@ authored closure. Generated resources follow the shared
 Installed output is never read back. The stylesheet freshness pass and the
 scoped npm URL checks apply.
 
-The fingerprint boundary, source capture, and final live recheck follow
-step 3 of the [Output Transaction](./mokly-export.md#output-transaction).
+The fingerprint boundary, source capture, and final live recheck follow the
+[input fingerprint rules](./mokly-export.md#input-fingerprint).
 
-Construct one catalogue model from that fingerprinted input set and use it for
-the index, the details, the route list, and resource selection. When Changes
-is included, compute its changed-entry impact and removed-entry metadata from
-that exact model and the pinned merge base; the comparison never reloads the
-model independently.
+The index, the details, the route list, and the selected resources describe
+the one catalogue state of that fingerprinted input set. When Changes is
+included, its changed-entry impact and removed-entry metadata describe that
+same state and the pinned merge base.
 
 Write rendered documents under `static/mokly-generated/` and exactly the
 referenced authored closure under `static/` as regular files; never publish a
@@ -152,25 +149,3 @@ The shell enables the controls from the index's data, never from an
 environment label or a separate shell; the design mockups cover the
 catalogue with review omitted and with review included at mobile and desktop
 widths.
-
-## Acceptance
-
-Test the default and explicit options through the CLI, including invalid
-arguments and configured, default, and overridden bases. Prove that a build
-without Changes performs no Git or comparison work and succeeds without
-comparison history, while `publish` still checks the checkout state and needs
-a committed `HEAD`.
-
-Test removed-entry absence without Changes, excluded stale comparison files
-when a build with Changes replaces one without and the reverse, rollback,
-unavailable and advancing bases, a base whose sources fail validation, a
-source change during the build, and comparisons that stay unchanged after
-publication.
-Browser tests cover the controls, persisted preferences, direct links, search
-and tags, anchors, Back/Forward, zero-change review, and no comparison
-request by default, at mobile and desktop widths. Parameterize static tests
-over both options: no live descriptor, no event stream connection or polling
-request, and no events route. Test the home, current, not-found, and
-removed-entry routes while proving that ordinary navigation and comparison
-loading work. Verify that the index, the details, and the generation agree,
-and that a failed build keeps the installed output.

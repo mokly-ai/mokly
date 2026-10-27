@@ -6,11 +6,12 @@ with output confinement and ownership reservations.
 ## Output Ownership And Confinement
 
 The output that `--out` names must be a strict descendant of the repository
-root. Validate both lexical and projected real paths before creating
-directories and again before replacing anything. Reject symlink output entries
-and escapes through symlink ancestors. A symlinked ancestor is supported only
-when its resolved location still satisfies all repository and source
-protections; the transaction pins the real output location so retargeting
+root. Both the lexical path and the real path, including the real location of
+directories that do not exist yet, must satisfy the confinement rules of this
+page. Validate them before creating directories and again before replacing
+anything. Reject symlink output entries and escapes through symlink ancestors. A symlinked
+ancestor is supported only when its resolved location still satisfies all
+repository and source protections. Retargeting that ancestor during the build
 cannot redirect installation. `publish` builds into its own private directory
 outside the repository; every other rule on this page applies to that
 directory too.
@@ -30,8 +31,8 @@ can enter the inventory. No producer can defer that check to marker writing or
 publication.
 
 Accept a missing destination or an empty real directory. A nonempty directory
-must have a regular `.mokly-export-artifact` ownership file using the
-[public schema 3](./mokly-export-ownership.md) and its file inventory.
+must have a regular `.mokly-export-artifact` ownership file using the current
+[public schema](./mokly-export-ownership.md) and its file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
 older marker versions. A regular marker that fails parsing uses
@@ -49,9 +50,9 @@ stolen. An actionable error identifies it for explicit recovery. Transaction
 paths are exact, operation-owned paths, never a broad glob or consumer directory.
 
 Reservations use `.mokly-export-reservations/locks/<output-basename>` beside
-the resolved output. Native real-path resolution and unmodified filename keys
-give case/symlink aliases the filesystem's own lock equivalence, without
-serializing genuinely distinct destinations. The internal namespace has a
+the resolved output. Two output paths that the filesystem treats as one
+location, through a case or symlink alias, share one reservation. Builds into
+distinct destinations never conflict. The internal namespace has a
 regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
 stays after `build` cleanup. Never put authored files or output directories inside it.
 After successful publication, `publish` removes its private directory as a

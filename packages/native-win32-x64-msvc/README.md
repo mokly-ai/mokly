@@ -1,7 +1,5 @@
 # @mokly/native-win32-x64-msvc
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This package carries the Mokly binary for `win32-x64-msvc`. Install
 `@mokly/mokly` to use the CLI. Its shim selects this package and requires the
 exact same version.

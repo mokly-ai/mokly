@@ -16,6 +16,8 @@ use crate::error::{Result, convert};
 use crate::source_paths;
 
 /// A base extraction and its selected dependency tier stay leased together.
+/// The base runtime and the source trees of its graphs hold this value, so both
+/// leases last while the base graph can still request a render.
 pub struct BaseSide {
     /// Extracted immutable source root.
     pub sources: Lease,
