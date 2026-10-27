@@ -1,7 +1,7 @@
 # Gzip Blob Uploads
 
-Status: Active. On branch `conductor/dedup-2-gzip-blob-uploads`, no pull
-request yet. The plan closes when its PR merges.
+Status: Active. [PR #221](https://github.com/mokly-ai/mokly/pull/221) is open.
+The plan closes when its PR merges.
 
 `mokly publish` uploads by content address. The Plan request sends the
 envelope, the ownership marker, and the index in one gzip tar. The receiver
@@ -343,8 +343,10 @@ after 180 seconds with exit 124 before Plan.
 ## Milestone 5: Verification, commit, review, and pull request
 
 Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
-`.context/gzip-blob-uploads/milestone5-repository-gate-rerun.log`, and
-`.context/gzip-blob-uploads/milestone5-complete-gate.log`.
+`.context/gzip-blob-uploads/milestone5-repository-gate-rerun.log`,
+`.context/gzip-blob-uploads/milestone5-complete-gate.log`, and, after the
+review fixes, `.context/gzip-blob-uploads/final-complete-gate.log`: the
+complete gate passed 7 of 7 suites at `c94b2ea7`.
 
 - [x] Apply the Milestone 4 review fixes before the verification gate.
       Keep the README sentence, receiver guide paragraph, and evidence record
@@ -384,7 +386,7 @@ Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
        Small. Recommended: B, run each fixture case as a named subtest.
   - Outside the scope: .prettierignore. Its fixture comment has no path
     under it, so Prettier formats every protocol fixture. Separate branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
