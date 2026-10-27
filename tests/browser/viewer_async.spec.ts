@@ -129,6 +129,10 @@ test("another deployment keeps the stage loading until the host replaces the ind
   page,
 }) => {
   const other = "1".repeat(64);
+  let deploymentId = fixture.index.deploymentId;
+  await page.route("**/mokly-viewer/deployment.json", (route) =>
+    route.fulfill({ json: { schemaVersion: 1, deploymentId } }),
+  );
   await page.evaluate((deploymentId) => {
     const seen = { unavailable: false };
     (window as unknown as { stageSeen: typeof seen }).stageSeen = seen;
@@ -159,6 +163,7 @@ test("another deployment keeps the stage loading until the host replaces the ind
   await expect(
     viewer.getByRole("status").filter({ hasText: "Loading preview…" }),
   ).toBeVisible();
+  deploymentId = other;
   await page.evaluate((deploymentId) => {
     const host = window.viewerHarness.get("one");
     host.props = {

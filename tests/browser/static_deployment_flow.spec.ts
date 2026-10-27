@@ -207,9 +207,14 @@ test("a removed step that fails before the other details keeps the use case load
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await recordStepAnswer(page);
   let useCase: Route | undefined;
+  let pageLoad: Route | undefined;
   let useCaseHeld!: () => void;
+  let pageLoadHeld!: () => void;
   let answered!: () => void;
-  const held = new Promise<void>((resolve) => (useCaseHeld = resolve));
+  const held = Promise.all([
+    new Promise<void>((resolve) => (useCaseHeld = resolve)),
+    new Promise<void>((resolve) => (pageLoadHeld = resolve)),
+  ]);
   const settled = new Promise<void>((resolve) => (answered = resolve));
   await page.route("**/mokly-viewer/entries/tour.json", async (route) => {
     if (useCase) await route.continue();
@@ -222,6 +227,13 @@ test("a removed step that fails before the other details keeps the use case load
     await route.fulfill({ status: 204 });
     answered();
   });
+  await page.route(`${host.url}/view/tour/`, async (route) => {
+    if (!route.request().isNavigationRequest()) await route.continue();
+    else {
+      pageLoad = route;
+      pageLoadHeld();
+    }
+  });
   site = next;
   await page.locator('a[data-route="tour/index.html"]').click();
   // Hold the tour's own detail, which shows the next deployment, until the
@@ -229,13 +241,12 @@ test("a removed step that fails before the other details keeps the use case load
   // tour still loads, so the stage keeps loading.
   await held;
   await settled;
-  await expect(page.locator("#mb-main [data-mokly-stage]")).toHaveAttribute(
-    "aria-busy",
-    "true",
-  );
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  // The navigation is held after the outgoing page records the step result.
+  // The session markers prove that it stayed loading and never showed an
+  // unavailable state before the full page load.
   const reloaded = page.waitForEvent("load");
   await useCase!.continue();
+  await pageLoad!.continue();
   await reloaded;
   await expect(page.locator("#mb-main h2")).toHaveText("Tour");
   expect(
