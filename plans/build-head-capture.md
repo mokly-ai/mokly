@@ -206,9 +206,6 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
        Small. Recommended: A, assert in `tests/static_capture_timing.test.ts`
        that every core `render.document` record has a `review.capture-side`
        ancestor.
-  - Outside the scope: `docs/protocol/mokly-timings.md:219`. The render cache
-    budget row links to capture bounds without a render-cache byte bound.
-    Separate branch.
   - Outside the scope: `scripts/large/`. A build of the old binary took 2.3
     times longer through the benchmark harness than in a direct run. Separate
     branch.
