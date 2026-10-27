@@ -71,14 +71,11 @@ failure reports at most one safe `markers` error for that refresh generation.
 ## Placement
 
 For every visible marker, the viewer renders its `content` inside an absolutely
-positioned container equal to the union of the instance's visible boxes. It:
-
-1. reads authenticated frame-relative boxes through
-   `MountedFrame.listInstanceBoundaries()`;
-2. applies the frame chrome scale and the iframe's `clientLeft`/`clientTop`;
-3. translates into viewer-stage coordinates; and
-4. intersects the result with the iframe's visible box, stage clipping and the
-   viewer root.
+positioned container equal to the union of the instance's visible boxes, in
+viewer-stage coordinates. The boxes are the authenticated frame-relative boxes
+of `MountedFrame.listInstanceBoundaries()` as the stage shows them, with the
+frame chrome scale and the iframe border applied, clipped to the iframe's
+visible box, the stage and the viewer root.
 
 The union covers all visible roots/ranges for that key. Empty and fully clipped
 boxes produce `hidden`. The container has `pointer-events: none`; marker content
@@ -102,20 +99,16 @@ Placement and package-owned instance labels refresh after:
 - a `markers` prop change.
 
 Refreshes are coalesced to at most one boundary measurement per animation frame
-per frame session. Every session has a generation and dirty bit. A trigger that
-arrives while `listInstanceBoundaries()` is unresolved marks the session dirty;
-after that read settles, one trailing read runs against the current generation.
-This prevents an asynchronous stale snapshot from losing a geometry wake-up.
-Replacement or disposal invalidates the generation, cancels scheduled work and
-prevents late results, errors or callbacks from reaching the host.
+per frame session. A trigger that arrives while `listInstanceBoundaries()` is
+unresolved causes one trailing read of the current session after that read
+settles, so an asynchronous stale snapshot cannot lose a geometry wake-up.
+Replacement or disposal cancels scheduled work and prevents late results,
+errors or callbacks from reaching the host.
 
-The mounted shell owns one frame registry per shell root. Workspace inspection
-labels and host markers acquire that registry's single geometry scheduler and
-contribute their demanded sessions to one deduplicated set. They therefore
-share a boundary read when both target the same session. Validated usage
-adoption increments the retained session's usage revision; the scheduler
-supersedes unresolved work for the prior revision before refreshing. A late old
-success or failure cannot delay, replace or report against the fresh snapshot.
+Workspace inspection labels and host markers share one boundary read when both
+target the same session. Validated usage adoption supersedes unresolved work
+for the prior usage before the refresh. A late old success or failure cannot
+delay, replace or report against the fresh snapshot.
 
 ## Multi-Instance Highlight
 
@@ -126,18 +119,18 @@ Duplicate references have no additional effect.
 
 The operation is atomic. Before changing the current presentation, the viewer
 requires every reference to match a ready Current session with valid usage and
-a present key. Any mismatch rejects with the frame adapter's existing
-`missing-instance` semantics and leaves the prior highlight unchanged. The
+a present key. Any mismatch rejects with the frame adapter's
+`missing-instance` error and leaves the prior highlight unchanged. The
 viewer never guesses an entry, flow step, viewport, scheme or replacement key.
 
 `highlightInstances([])` clears every highlight. `highlightInstance(ref)` is
 single-reference sugar over this operation; `highlightInstance(null)` also
-clears. Existing package masks, outlines, catalogue labels and accessible
-instance lists are reused, and label text remains `Component · id`.
+clears. The package masks, outlines, catalogue labels and accessible instance
+lists of a single highlight are reused, and label text remains `Component · id`.
 
 Picking temporarily owns the same presentation. Frame replacement, picking,
 evidence changes and superseded async work follow the main
-[viewer lifecycle](./mokly-viewer.md#selection-events-and-imperative-use). If
+[viewer lifecycle](./mokly-viewer-selection.md#selection-events-and-imperative-use). If
 ready evidence or any referenced key disappears, every mask and label in the
 multi-frame highlight clears atomically; an active pick ends once with
 `reason: "evidence"`. Unrelated evidence updates neither wait for nor redraw

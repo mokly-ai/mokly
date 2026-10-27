@@ -1,7 +1,5 @@
 # Comparison Pane Presentation
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Behavior
 
 Overlay and Difference show both versions inside one device chrome; Side by
@@ -30,7 +28,7 @@ pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v8 addresses panes by entry identity, view axes, and state. The viewer derives
+The review result addresses panes by entry identity, view axes, and state. The viewer derives
 each side's `snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's path,
 `previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
 or snapshot path travels in comparison JSON.
@@ -59,10 +57,11 @@ every pane document as soon as it commits, before slow resources let it load:
 it cancels every link and form activation and reapplies the accepted `srcdoc`
 and guard if the frame ever loads another document. A same-document anchor is
 revealed under the [scrolling contract](./mokly-comparison-scrolling.md#anchors)
-instead of navigating, and `:target` does not apply. Pane frames never enter
-either frame adapter: no handshake, inspection, geometry, marker, or navigation
-message exists for them, and the only privileges a pane gains are same-origin
-measurement, programmatic scrolling, key forwarding, and the guard.
+instead of navigating, so the shell URL and heading stay unchanged. `:target`
+does not apply. Pane frames never enter either frame adapter: no handshake,
+inspection, geometry, marker, or navigation message exists for them, and the
+only privileges a pane gains are same-origin measurement, programmatic
+scrolling, key forwarding, and the guard.
 
 Captured snapshot files, comparison JSON, packaged artifacts, and served bytes
 stay byte-identical. The edits above exist only in the in-memory presentation.
@@ -70,7 +69,7 @@ stay byte-identical. The edits above exist only in the in-memory presentation.
 ## Scrolling
 
 The [comparison scrolling contract](./mokly-comparison-scrolling.md) owns frame
-sizing, page spacers and measurement, instant writes, shorter-document
+sizing, page ranges and measurement, instant writes, shorter-document
 translation, value-based echoes, inner-region mirroring, keys, and anchors; the
 [region pairing contract](./mokly-comparison-region-pairing.md) owns how regions
 pair, and the [Scroll together contract](./mokly-comparison-scroll-together.md)
@@ -94,12 +93,13 @@ the non-scrollable frame lets the browser chain it to the shared page viewport.
 When both viewports are shown, the mobile and desktop sections each have their
 own chrome, viewport and offset.
 
-Side by side renders one chrome per version in the existing two-column grid,
-each with one page viewport holding one layer. Both viewports belong to one
-section controller, so both spacers use the pair maximum and their ranges
-always match. With Scroll together on, their page offsets and paired inner
-regions mirror in both directions. With it off, each pane scrolls independently.
-Narrow layouts keep the existing single-column responsive rules.
+Side by side renders one chrome per version in a two-column grid, each with
+one page viewport holding one layer. Both viewports share the pair maximum
+range of the [scrolling contract](./mokly-comparison-scrolling.md#page-scroller),
+so their ranges always match. With Scroll together on, their page offsets and
+paired inner regions mirror in both directions. With it off, each pane scrolls
+independently. In the narrow layout, Side by side shows the two versions in
+one column.
 
 A pane whose document is missing keeps an explicit message under its Before
 or Current label, and the comparison falls back to Side by side. A missing
@@ -133,9 +133,9 @@ expansion is unavailable outside Current.
 
 The comparison reports ready only when every selected pane document has an
 accepted presentation, so a stack never appears with one layer missing; until
-then the stage shows the existing loading copy and is busy. A fetch,
-validation, read, parse, or presentation failure renders the existing “The
-comparison could not be loaded.” copy with Try again, and its details show the
+then the stage shows “Loading comparison…” and is busy. A fetch, validation,
+read, parse, or presentation failure renders “The comparison could not be
+loaded.” with Try again, and its details show the
 loader's “The comparison is unavailable.”; an embedded host also receives the
 comparison error. Refresh and Try again fetch the comparison again and present
 its documents anew.
@@ -154,72 +154,14 @@ generations.
 
 An embedded viewer may fetch, on the source origin, every path beneath the
 advertised generation's `snapshots/before/` and `snapshots/after/` directories
-once a comparison is selected, under the existing CORS, `credentials: "omit"`,
+once a comparison is selected, under the CORS, `credentials: "omit"`,
 `nosniff`, and `text/html` rules of the
-[static delivery contract](./mokly-export-delivery.md). The documented host
-CORS requirement already covers `mokly-viewer/diffs/generations/**`, so pane
-documents need no new hosting rule. A `srcdoc` document inherits the embedding
+[static delivery contract](./mokly-export-delivery.md). The host CORS
+requirement of that contract covers `mokly-viewer/diffs/generations/**`, which
+holds the pane documents. A `srcdoc` document inherits the embedding
 document's Content Security Policy; an embedded host must allow the artifact
 origin and generated inline styles for the resources a pane document needs.
-No comparison document is fetched until a reader selects a diff mode. The
-internal advertised-path model records this documented fetch set for regression
-tests; it is not a runtime allowlist. The snapshot loader independently confines
-each request to its immutable generation and configured sides.
-
-## Acceptance
-
-Browser regressions, listed in the
-[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites),
-prove every item below in a static build. Live Serve, through the selected
-comparison path, proves the wheel, Side by side, page key, anchor,
-shorter-document, inner-region, and frame-attribute items, and Try again and
-Refresh. It also proves presentation and renewal after a watched edit. A static build and an embedded viewer through both frame adapters
-prove stack alignment, frame attributes, and inert links and anchors. The
-static build also proves Side by side mirroring. The static build and the
-cross-origin adapter prove the pane failure path. The scrolling, region
-pairing, and Scroll together contracts name their acceptance cases. Unit tests
-cover the controllers and the loader.
-
-- Wheel scrolling over an Overlay and a Difference stack puts both pane
-  documents and the shared viewport at one offset with coincident layer
-  rectangles, for desktop, mobile, both viewports at once, and a component
-  comparison.
-- With the default control on, scrolling one Side by side viewport moves the
-  other to the same offset in both directions, and an anchor in either pane
-  moves both.
-- Space, Shift+Space, PageUp, PageDown, Home, End, and the arrow keys reach the
-  nearest movable inner region first and otherwise move the applicable page
-  viewport; editable and Space-activated controls keep their keys.
-- A same-document anchor reveals enclosing regions innermost first and then
-  the page; with Scroll together on, its paired counterparts follow while the
-  shell URL and heading stay unchanged.
-- A document shorter than its pair stops at its end, its frame is shifted by the
-  remainder so its content stays aligned, and its surface shows its canvas.
-- A `min-height: 100vh` hero keeps spacer and frame sizes stable across
-  animation frames and after a late image loads, the spacer grows by exactly the
-  image, fixed bars stay at the viewport's bottom and sticky headers at its top.
-- Inner regions pair in the specified order and mirror both axes in every
-  mode, viewport, and component comparison; unmatched and `off` regions scroll
-  alone, and shorter counterparts clamp without snapshot restyling.
-- Scroll together is placed, persisted, and session-scoped as specified; its
-  off behavior and last-scrolled-version realignment are live and reload no
-  pane.
-- Every pane frame carries `data-mokly-comparison-frame`, exactly
-  `sandbox="allow-same-origin"`, `scrolling="no"`, a `srcdoc`, and
-  `data-mokly-preview-source` naming an address beneath the accepted
-  generation; no pane loads a snapshot as its `src`.
-- A document or host that asks for smooth scrolling still moves with the
-  shared offset at once, in a stack and in Side by side.
-- Links and forms inside a pane stay inert, including while a slow resource
-  holds back its load.
-- Ready waits for every selected document; a pane document that cannot be
-  presented renders the failure copy, reaches an embedded host's error event,
-  and recovers with Try again; Refresh presents the documents again; the
-  loader's rejection of redirected, other-origin, non-HTML and oversized
-  documents is covered by its unit tests.
-- `after` addresses are accepted for comparison loaders and rejected for
-  removed-preview loaders; other generations and prefixes are rejected.
-- Snapshot files and comparison bytes are unchanged by presentation.
+No comparison document is fetched until a reader selects a diff mode.
 
 ## Design References
 

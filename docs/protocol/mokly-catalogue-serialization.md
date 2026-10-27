@@ -1,7 +1,5 @@
 # Catalogue Serialization, Identity And Versions
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Canonical Bytes
 
 The catalogue index, every entry detail, every detail inside a comparison
@@ -35,9 +33,12 @@ percent of a large review result. Every other file keeps two-space
 indentation.
 
 Numbers retain their parsed JSON kind. Integers print as integers. Other
-numbers use `serde_json`'s shortest round-trip form, including integral floats
-such as `1.0` and negative zero as `-0.0`. Canonical writers use this spelling,
-not JavaScript's `JSON.stringify` spelling.
+numbers print the shortest digits that read back as the same IEEE 754 double.
+A magnitude from 0.00001 up to, but not including, 10^16 prints in positional
+form, and an integral value keeps `.0`, such as `1.0`. Other magnitudes print
+in exponent form with a signed exponent and no padding, such as `1e-6` and
+`1.5e+16`. Negative zero prints as `-0.0`. Canonical writers use this
+spelling, not JavaScript's `JSON.stringify` spelling.
 
 ## Snapshot Identity
 
@@ -74,20 +75,21 @@ unchanged, under the
 
 ## Versions
 
-The index reader requires `schemaVersion: 7` and the detail reader
-`schemaVersion: 1`; each rejects an earlier or unknown number before it reads
-any other field, under the
-[format inventory](./mokly-format-versions.md#rejection-before-interpretation).
+The index reader and the detail reader each require the version that the
+[format inventory](./mokly-format-versions.md) gives. Each rejects an earlier
+or unknown number before it reads any other field, under the
+[rejection rule](./mokly-format-versions.md#rejection-before-interpretation).
 Writers are allowlisted. Optional fields are additive; a removal, a required
 addition, a changed meaning, a new union discriminant, or an incompatible
-path requires a new number. The index and the detail are additive inventory
-entries: ownership v3 and upload v2 are unchanged, and the review result
-follows the [comparison contract](./mokly-comparison.md). The generated
-TypeScript types of the model crate are the normative shapes, and a reader
-validates a document against them before use.
+path requires a new number. The review result follows the
+[comparison contract](./mokly-comparison.md). The generated
+[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+types are the normative shapes. A reader validates a document against them
+before use.
 
 The viewer's readers of the index, the detail, the
-[live descriptor v3](./mokly-shell-delivery.md#live-descriptor), and the
+[live descriptor](./mokly-shell-delivery.md#live-descriptor), and the
 render route's answer of the
 [controls contract](./mokly-component-controls.md) read the fields their
 version defines and ignore any other field at every depth, so an older viewer

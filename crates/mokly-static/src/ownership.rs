@@ -91,6 +91,11 @@ pub(crate) fn validate(files: &dyn Files, root: &Path) -> Result<Option<Owned>> 
     Ok(Some(validated))
 }
 
+/// Deletes a validated backup by its exact list: it unlinks each listed file,
+/// removes the listed directories deepest first with non-recursive `rmdir`,
+/// unlinks the marker, then removes the root with `rmdir`. It never deletes
+/// recursively, so an unlisted addition stops the removal and survives for
+/// recovery.
 pub(crate) fn dispose(files: &dyn Files, root: &Path, mut owned: Owned) -> Result<()> {
     for path in owned.files {
         if !matches!(files.entry(&path)?, Some(Entry::File(_))) {

@@ -1,7 +1,5 @@
 # Component Inspector Design
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## One Inspector
 
 Component pages and consuming-screen designs share one inspector: beneath the
@@ -52,22 +50,21 @@ Components panel. The canonical component page opens Details.
 
 ## Navigation And Metadata
 
-Artboards contain no navigation footer for browsing mockup states. The existing
-Design catalogue hierarchy links every owning page and its child galleries.
+Artboards contain no navigation footer for browsing mockup states. The Design
+catalogue hierarchy links every owning page and its child galleries.
 Saved-variant, usage, component, and instance links stay inside the depicted
 product where they belong. Every `aria-current="page"` link must point to the
 rendered artboard's path, even when multiple states share a component/screen
 title. Selection within a component or tree can use non-page current-item
 semantics.
 
-Use stable fixture identities for catalogue selection. Display labels never
-identify the current destination or synthesize a filename. Component fixtures
-explicitly declare display name, id, source path, and description;
-render the same metadata in Details and source references.
+Display labels never identify the current destination or synthesize a
+filename. Each depicted component shows the same display name, id, source
+path, and description in Details and in its source references.
 
 ## Owning Closed States
 
-The existing component and inspection artboards cover open panels. A separate
+The component and inspection artboards cover open panels. A separate
 bounded Inspector gallery adds closed-panel states, each with its own mobile and
 desktop screen component. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md):
@@ -76,11 +73,3 @@ desktop screen component. Each entry's files derive from its path under the
 | ----------------------------------------------------- | ------------------------------------------ |
 | `design/components/inspector/inspector-closed`        | Component with all inspector panels closed |
 | `design/components/inspector/screen-inspector-closed` | Screen with all inspector panels closed    |
-
-## Verification
-
-Browser tests open each icon, switch and close panels, exercise keyboard focus,
-verify that closed panels reserve no space, and inspect both viewport layouts.
-Catalogue checks cover all owning entries and every current-page destination.
-Regression tests verify explicit Help hint source metadata and the absence of
-footer navigation. Preserve component highlight geometry and attribution checks.

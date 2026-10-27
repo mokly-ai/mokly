@@ -1,27 +1,23 @@
 # Selected Developer Test Results
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Developer Test Commands](./developer-test-commands.md).
 
-## Internal Evidence And Complete Reports
+## Observed Files And Complete Reports
 
-The Node reporter records per-file summaries, top-level file results, and every
-failure's `details.error.failureType` in its temporary event data. A file result
-is a top-level `test:pass` or `test:fail` whose name resolves to its `file`.
-
-For selected runs, a file with a top-level pass but no summary is observed with
-zero tests. An empty module and a platform-guarded file can use this path.
-Complete and strict runs derive observed files only from per-file summaries.
-They reject files with no summary. Selection does not change the written report
-schema: every failure entry is exactly `{ name, diagnostic }`. Internal file
-results, failure types, classifications, and selected totals never enter it.
+For selected runs, a file with a top-level pass but no per-file summary is
+observed with zero tests. An empty module and a platform-guarded file can use
+this path. Complete and strict runs derive observed files only from per-file
+summaries. They reject files with no summary. Selection does not change the
+written report schema: every failure entry is exactly `{ name, diagnostic }`.
+File results, failure types, classifications, and selected totals never enter
+it.
 
 ## Counts And Warnings
 
-With readable, complete evidence, print the skipped and todo count first. For
-each file explicitly named on the command line that reports zero tests, print
-this stdout line in selected-file order:
+With readable, complete evidence, print the skipped and todo count first, as
+`unit tests skipped or todo: <count>`. For each file explicitly named on the
+command line that reports zero tests, print this stdout line in selected-file
+order:
 
 ```text
 warning: no test ran in <file>
@@ -41,7 +37,7 @@ warning: no test matched --test-name-pattern
 Then print the selected scope and executed count:
 
 ```text
-selected files: <files>; tests run: <n>; partial verification; complete gate: cargo xtask check
+selected files: <count>; tests run: <n>; partial verification; complete gate: cargo xtask check
 ```
 
 `<n>` sums per-file `passed + failed + cancelled`; skips and todos do not add
@@ -62,9 +58,9 @@ otherwise use the per-file count and print the header alone. Use singular
 `test` only for one, and `tests` for every other count:
 
 ```text
-<n> selected test(s) failed:
+<n> selected unit test(s) failed:
 ✖ <name>
-<m> selected test(s) cancelled:
+<m> selected unit test(s) cancelled:
 ✖ <name>
 ```
 
@@ -77,8 +73,8 @@ When the process exits with a signal or non-zero code and reporter output is
 missing or incomplete, report the process first as an expected failure:
 
 ```text
-selected test process exited with signal <signal>; the test reporter did not finish
-selected test process exited with code <code>; the test reporter did not finish
+selected unit test process exited with signal <signal>; the test reporter did not finish
+selected unit test process exited with code <code>; the test reporter did not finish
 ```
 
 Do not print warnings, skipped or todo counts, or `tests run` from unreadable
@@ -87,8 +83,8 @@ invalid evidence is an internal fault regardless of process status.
 
 With complete evidence, check the evidence error, reporter completion, both
 failure groups, process outcome, and file set in that order. A remaining
-process failure prints `selected test process exited with signal <signal>` or
-`selected test process exited with code <code>` without the suffix. Missing or
+process failure prints `selected unit test process exited with signal <signal>`
+or `selected unit test process exited with code <code>` without the suffix. Missing or
 unexpected observed files are an internal fault. Name both sets in the error.
 Expected failures exit 1 with their message only on stderr. Internal faults
 keep Node's default stack report. Temporary output is removed on all outcomes,

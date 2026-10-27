@@ -64,6 +64,10 @@ export const SHELL_REVIEW_CSS = `
   border: 6px solid var(--chrome-control-edge);
   border-radius: 50%;
 }
+/* On uses the deep accent and its private contrast, which equal the design's
+   sage-deep and accent contrast in both appearances. The consumer's
+   --mokly-accent-contrast override pairs only with its own accent, so the
+   knob never reads it. */
 .mbk-diff-sync input:checked + .mbk-diff-sync-track {
   border-color: var(--mbk-accent-deep);
   background: var(--mbk-accent-deep);
@@ -136,7 +140,8 @@ export const SHELL_REVIEW_CSS = `
 .mb-panes[data-compare-mode="overlay"],
 .mb-panes[data-compare-mode="difference"] { grid-template-columns: minmax(0, 1fr); }
 .mbk-diff-mobile .mb-panes:not([data-compare-mode="side"]) { grid-template-columns: 390px; }
-/* The shared viewport is its chrome's only user-scrollable container. */
+/* The shared viewport is its chrome's only user-scrollable container.
+   Scroll anchoring is off, so a spacer resize never moves its offset. */
 .mb-viewport {
   position: relative;
   width: 100%;

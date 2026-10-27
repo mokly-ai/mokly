@@ -160,15 +160,19 @@ scripts, event handlers and inline body styles.
 
 A relative link to another Markdown file becomes a catalogue link to that
 document, and `mock:<path>` names any entry. A relative link or image with a
-`png`, `jpg`, `jpeg`, `gif`, `svg`, `webp`, `avif` or `pdf` destination copies
-that file beside the document's folder. For a folder README at `account/billing`,
-`../shared/flow.png` is served at `static/mokly-generated/account/shared/flow.png`.
+`png`, `jpg`, `jpeg`, `gif`, `svg`, `webp`, `avif` or `pdf` destination
+publishes that file at its repository-relative path under `static/`. With the
+configuration in the repository root and the default `specs` root,
+`../shared/flow.png` in `specs/account/billing/README.md` is served at
+`static/specs/account/shared/flow.png`.
 The file must live inside the same root.
-Copied resources cannot use hidden path segments or private directory names such
-as `node_modules`, `dist` or `target`; use an ordinary folder such as `assets`.
+Linked resources cannot use hidden path segments or private directory names
+such as `node_modules`, `dist` or `target`. Use an ordinary folder such as
+`assets`.
 File links resolve from the Markdown source directory. Logical `mock:./...`
 links resolve from the catalogue folder, including a declared README path.
-Resource copies stay in memory during Serve and enter the static build output.
+Serve reads a linked resource from your working tree, and a static build
+copies it into its output.
 A relative link to any other repository file renders as plain text, a link to
 a file that does not exist fails the build, and `http:`, `https:` and
 `mailto:` links are kept as they are.
@@ -186,8 +190,8 @@ its previous version, and a moved document pairs with its earlier version by
 content or its front-matter `movedFrom` declaration. A paired document produces
 no removed entry. Similarity compares the Markdown body after front matter;
 the shared document template cannot make unrelated notes look like a move.
-Serve and build report uncertain matches in the terminal. Use `movedFrom`
-when the content cannot establish one unique pair.
+`build` and `publish` report uncertain matches in the terminal. Use
+`movedFrom` when the content cannot establish one unique pair.
 
 ## Exported types
 

@@ -54,6 +54,7 @@ mod cache_tests;
 mod resource_access;
 
 mod closure_prefetch;
+mod closure_seeds;
 #[cfg(test)]
 #[path = "_tests_/rendering_tests.rs"]
 mod rendering_tests;

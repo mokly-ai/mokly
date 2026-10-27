@@ -8,6 +8,9 @@ use crate::cancellation::Cancellation;
 
 /// Drain delivered notifications before settling a configuration, Git, render, or stage step.
 /// The caller invokes this only before capture/install and before transaction cleanup.
+/// Ctrl+C can stop a sidecar or Git child, and its failure can reach the core before the
+/// signal listener runs. The drain and the check still see the delivered signal, so that
+/// failure settles as an interruption, not as a render or Git error.
 pub fn settle<T>(
     result: Result<T, BuildError>,
     cancellation: &dyn Cancellation,

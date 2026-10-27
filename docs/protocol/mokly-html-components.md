@@ -1,13 +1,11 @@
 # HTML Components
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Boundary
 
 An HTML component is one `.component.html` file: front matter that declares
 the element name, the props, the slots, and the saved variants, then a body
-that renders them by substitution. Mokly renders it in Rust without
-JavaScript. It joins the same registry as JavaScript components, so an HTML
+that renders them by substitution. Mokly renders it without JavaScript. It
+joins the same registry as JavaScript components, so an HTML
 screen can use either kind, a component page shows its variants, and Changes
 attributes rules and resources to it like any registered component. An HTML
 component cannot run code, loop, or compute, and it branches only through

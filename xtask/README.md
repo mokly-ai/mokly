@@ -1,7 +1,5 @@
 # Mokly xtask
 
-Status: In progress under the [Rust rebuild plan](../plans/rust-rebuild.md).
-
 `xtask` owns repository-local verification for the Mokly workspace. It is an
 internal binary and is not published to npm or crates.io.
 
@@ -23,9 +21,9 @@ internal binary and is not published to npm or crates.io.
 - Enforce the limits on changed TypeScript and JavaScript files (300 lines)
   and changed protocol Markdown (250 lines, or the exact reviewed cap in
   `xtask/protocol-document-caps.json`) against the fetched `origin/main`.
-- Ratchet file length, protocol caps, internal exports, and class members
-  against the branch point. Ratchet public package exports against release
-  tags. Check the committed public API reports.
+- Ratchet JavaScript and TypeScript file length, protocol caps, and unused
+  internal exports against the branch point. Ratchet public package exports
+  against release tags.
 - Keep local gate coverage equal to CI checks on the host platform. Every
   Native command has local coverage; `npm run build` covers the host build.
 - Run explicit and automatic remote checks on seven Testboxes with complete
@@ -57,12 +55,12 @@ Arguments remain separate from the program name.
 
 ### Suites
 
-| Suite      | Content                                                                                                                                                                                                                                                                                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository | The live npm and Rust dependency audits, generated-TypeScript byte identity, then Prettier, ESLint, the file-length audits, the protocol-cap, unused-internal-export, unused-member, and public-package-export ratchets, the public API report check, Rust formatting, workspace Clippy with warnings denied, and the Rust tests of every crate. |
-| Viewer     | The viewer typecheck, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                                                                                                                                                  |
-| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded.                                                                                                        |
-| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                                                                                                            |
+| Suite      | Content                                                                                                                                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                       |
+| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                      |
+| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded. |
+| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                     |
 
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run
@@ -130,11 +128,7 @@ shrink-only across the branch. Protocol caps scan `docs/protocol/**`
 recursively except `fixtures/`. The public-package-export ratchet compares
 each released package with its newest matching release tag reachable from
 `HEAD`. Full history and tags are required; when a release tag is unavailable,
-fetch it with `git fetch --tags origin` and retry. The
-[API and member checks](../docs/protocol/verification-api-members.md) add the
-public API report check, which compares the committed reports with
-`origin/main` and requires a release-note change, and the shrink-only
-unused-member ratchet.
+fetch it with `git fetch --tags origin` and retry.
 
 ### Dependency Audit
 

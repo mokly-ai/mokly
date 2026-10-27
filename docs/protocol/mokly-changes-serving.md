@@ -1,7 +1,5 @@
 # Changes Serving And Comparison
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
 ## Generation and serving
@@ -45,9 +43,9 @@ output directory of `build`, with its symlink-resolved in-repository target,
 is excluded from source capture and resource comparison, so a build never affects
 its own Changes.
 
-A complete comparison is one generation: `review.json`, the review result v8
+A complete comparison is one generation: `review.json`, the review result
 of the [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
-the entry detail v2 of every removed entry; and the snapshots of both sides
+the entry detail of every removed entry; and the snapshots of both sides
 with their transitive resources. No HTML report, no summary file, and no
 navigation payload is written; the terminal reports the counts and the
 diagnostics. The [catalogue change contract](./mokly-catalogue-changes.md#changes-count)

@@ -1,6 +1,15 @@
 # Browser fixtures
 
-Strict shards use [measured whole-file placement](../../scripts/verification/README.md#browser-partitioning).
+`npm run test:browser` builds the workspace and runs the selected browser
+specs. Select a spec file, and optionally a test name with `-g`:
+
+```bash
+npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
+```
+
+The [developer browser commands](../../docs/protocol/developer-browser-commands.md)
+give the selection rules and the environment variables that supply prebuilt
+output. Strict shards use [measured whole-file placement](../../scripts/verification/README.md#browser-partitioning).
 Specs import `test` from `browser_test.ts` or one of its host fixtures. The
 automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.
@@ -17,6 +26,36 @@ diagnostic.
 Every host uses a free loopback port. Setup cancels and drains all work on
 failure. Teardown closes hosts before it removes their output.
 
+Setup publishes the server URLs in `MOKLY_PLAYWRIGHT_URLS`, and each worker
+selects its own with `TEST_PARALLEL_INDEX`. `MOKLY_PLAYWRIGHT_COPIED_URL` and
+`MOKLY_PLAYWRIGHT_COPIED_DIR` carry the copied build to specs, and
+`MOKLY_PLAYWRIGHT_COMPARISON_URL` and `MOKLY_PLAYWRIGHT_COMPARISON_DIR` carry
+the comparison build.
+
+## Browser errors and waits
+
+- The automatic error fixture in `browser_test.ts` applies the console rule of
+  `console_notices.ts`. A test that causes another error declares its kind and
+  exact message pattern with `allowBrowserError` or `expectedBrowserErrors`.
+  Console resource failures also need the exact resource URL. Sandbox denials,
+  synthetic console sentinels, and page errors can omit the URL when their
+  location is unstable or absent; their exact message must identify the
+  expected failure.
+- Portable-document cases allow the absent root favicon on their own origin.
+  Manual file delivery also allows the fixed HTTP-only inspector URL to be
+  absent on disk. Private sandbox fixtures declare their exact denial notices.
+  Test-owned host documents declare a favicon that loads, so they need no
+  allowance: a `data:` favicon, or a served same-origin icon where a strict
+  content security policy blocks data URLs.
+- The fixture settles each open page before a context closes and before its
+  error check, without wall-clock waits: two animation frames, or one protocol
+  round trip when JavaScript is disabled. It tracks pauses on the shared
+  context clock, including for new pages, and advances a paused clock by 32 ms
+  instead of waiting for frames. No sleep synchronizes an assertion.
+- An assertion that depends on a navigated preview's layout waits for the
+  expected frame URL and the complete document state together. The outer Browse
+  URL or an iframe `src` attribute alone is not enough.
+
 ## Current-only copy
 
 `static_test.ts` supplies `test`, `copiedStaticUrl()`, and
@@ -24,11 +63,14 @@ failure. Teardown closes hosts before it removes their output.
 The directory holds an isolated build of `examples/basic` with Changes
 disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
-`changesStatus` is not `disabled`.
+`changesStatus` is not `disabled`. Most `static_*.spec.ts` specs,
+`stage_centring.spec.ts`, `review_snapshot_links.spec.ts`, and the shared
+`*_cases.ts` modules of the design journeys use this copy. The comparison
+specs use the two-commit copies of the
+[comparison fixture reference](comparison/README.md).
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
 It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
-The configuration selects the portable design specs and `component_fragments.spec.ts`.
 The private slot and saved-variant fixture builds its own output, removes its
 source, and checks every viewport and scheme through standalone links. Disk
 mode requires `file://` navigation without HTTP requests. The delivery reporter
@@ -40,63 +82,21 @@ A zero Playwright exit cannot hide a missing or invalid report.
 
 ### Delivery spec inventory
 
-`playwright.delivery.config.ts` selects these files from `tests/browser/`:
-
-- `comparison_design.spec.ts`
-- `component_controls.spec.ts`
-- `component_design.spec.ts`
-- `component_design_inspection.spec.ts`
-- `component_design_selection.spec.ts`
-- `component_evidence.spec.ts`
-- `component_fragments.spec.ts`
-- `component_inspector.spec.ts`
-- `component_surfaces.spec.ts`
-- `component_workspace.spec.ts`
-- `design_comparison_eligibility.spec.ts`
-- `design_comparison_eligibility_2.spec.ts`
-- `design_comparison_eligibility_3.spec.ts`
-- `design_comparison_eligibility_4.spec.ts`
-- `design_comparison_scrolling.spec.ts`
-- `design_comparison_stacks.spec.ts`
-- `design_component_stacks.spec.ts`
-- `design_index_entries.spec.ts`
-- `design_library.spec.ts`
-- `design_library_mobile.spec.ts`
-- `design_modern_controls.spec.ts`
-- `design_portable.spec.ts`
-- `design_scroll_together.spec.ts`
-- `design_stylesheet_evidence.spec.ts`
-- `design_top_bar.spec.ts`
-- `example_links.spec.ts`
-- `phone_chrome.spec.ts`
+The `testMatch` list of
+[`playwright.delivery.config.ts`](../../playwright.delivery.config.ts) names
+the portable design journeys that run in both delivery modes, including
+`component_fragments.spec.ts`.
 
 ## Deployment replacement
 
 `static_deployment.spec.ts` hosts two immutable copies. The static host's root
 callback selects the published copy once per request, before filesystem work.
 Publication changes that selection in one synchronous step. Pending requests
-keep their selected copy until teardown. The deployment test keeps its reload,
-history, frame-content, request-status, and browser-error assertions.
-It waits for the initial previews before publication. It registers a page-load
-wait before navigation and awaits the replacement document before it checks
-the title and page marker. The click can finish before the detail response
-starts that reload. The outgoing document records in session storage, which
-survives the page load, whether it ever showed a stage that could not be
-shown; the test requires that it never did.
-
-`static_deployment_flow.spec.ts` opens a use case after the next deployment
-removed one of its step screens. It holds the full page load and answers the
-removed step only after that, so the step's answer always arrives after the
-deployment change. The outgoing document runs no test script while its page
-load waits. It therefore records its stage in session storage and requests
-one test URL when the shell has handled the step's answer. The test requires
-a busy stage and no stage that could not be shown. A second test answers the
-removed step first and holds the tour's own detail until the shell has
-handled that answer. It requires the busy stage at that moment, while the
-tour still loads, and again no stage that could not be shown.
-
-`tests/static_server_deployment.test.ts` holds an old request while a request
-for the replacement copy completes. Both must return their selected file.
+keep their selected copy until teardown. This spec and
+`static_deployment_flow.spec.ts` publish the next deployment while a page is
+open, and they check that the shell never shows a stage that cannot be shown.
+`tests/static_server_deployment.test.ts` checks that an old request and a
+request for the replacement copy both return their selected file.
 
 ## Native comparison copy
 
@@ -129,20 +129,12 @@ Import `test` from `serve_comparison_test.ts` for viewer Changes journeys.
 Each test gets a private `changes` fixture and its URL as `baseURL`. It owns
 a two-commit Git repository, a `fixture-base` branch, a watcher, and real
 comparison generations. It waits for ready Changes at the pinned base.
-The `comparisonPaths` entries and both additive source hooks are available.
-The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
-
-| API                                                              | Purpose                                                                               |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `changes.paths`                                                  | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths`       |
-| `changes.url`, `changes.root`                                    | Loopback origin and private source directory                                          |
-| `changes.baseCommit`, `changes.headCommit`                       | Independent base and head commit IDs                                                  |
-| `await changes.index()`                                          | Read and validate the current catalogue index                                         |
-| `await changes.ready(afterRevision?, expectedBase?, predicate?)` | Wait for a newer ready publication and the optional semantic predicate                |
-| `await changes.edit(relativeFile, text, predicate?)`             | Atomically replace one source and wait for its accepted semantic state                |
-| `await changes.commitBase(files, parent = "base")`               | Create a commit through a temporary index; values are text or `null` to remove a file |
-| `await changes.moveBase("head" \| "base" \| commit)`             | Switch the private ref to a fixture alias or commit and wait for its merge base       |
-| `await changes.close()`                                          | Drain Serve before removing the repository; safe to repeat                            |
+`serveComparisonCatalogue` in
+[`serve_comparison_fixture.ts`](./serve_comparison_fixture.ts) builds the
+fixture object: the named paths, the URL and source root, the base and head
+commits, and the `index`, `ready`, `edit`, `commitBase`, `moveBase`, and
+`close` methods. The existing `serve_changes_fixture.ts` remains the smaller
+engine fixture.
 
 `expectedBase` is the expected pinned merge-base commit in `review.json`.
 A `predicate` receives the accepted index and can return a boolean or a
@@ -200,12 +192,8 @@ moves without sharing writable state with another test.
 
 ### Viewer journeys on Serve
 
-`serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
-selected comparison request through the redirect to its generation before UI
-deadlines apply. It also records requests to the stable endpoint and holds the
-HEAD renewal of a selected generation. A held renewal's release waits until
-the browser ended the request and the page rendered. Its outcomes report
-whether the page received each response or cancelled the request first.
+`serve_comparison_ui.ts` holds the shared viewer actions, including the waits
+for a selected comparison request and a held renewal of its generation.
 `expectCardPane` checks one pane of a Card comparison by its heading and by
 the `.accent` colour of its side, because Card's own heading is the same on
 both sides. `serve_changes_emulation.ts` rewrites the index body into a pending,
@@ -237,20 +225,18 @@ A spec adds its own sources to both commits with
 shared hooks; the option is unset by default. The object wrapper is needed
 because `test.use` reads a function value as a fixture.
 `tests/helpers/viewer_state_sources.ts` supplies `addViewerStateSources` and
-`viewerStatePaths` for the one shape that the default catalogue lacks:
-
-| `viewerStatePaths` key | Entry and evidence                                                    |
-| ---------------------- | --------------------------------------------------------------------- |
-| `chip`                 | `viewer/chip`: unmodified component parent                            |
-| `plainChip`            | `viewer/chip/plain`: unmodified component variant                     |
-| `nightChip`            | `viewer/chip/night`: only its Dark views change, through a dark sheet |
+`viewerStatePaths` for the one shape that the default catalogue lacks: an
+unmodified component parent and variant beside a variant whose Dark views
+alone change.
 
 `serve_comparison_variant.spec.ts` opens Overlay for the Card family's
 Featured variant and checks its parent-owned stylesheet evidence and both panes.
 The selected comparison, expiry, and renewal-pane journeys also use this family.
 
-Branch-point copy setup and Serve comparison setup use the isolated
-180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
+Branch-point copy setup and Serve comparison setup use the isolated setup
+budget, `ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS` in
+[`fixture_timing.ts`](../helpers/fixture_timing.ts). Test bodies keep the
+timeout of [`playwright.config.ts`](../../playwright.config.ts).
 
 ## Watched catalogue cases
 

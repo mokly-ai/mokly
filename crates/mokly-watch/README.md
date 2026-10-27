@@ -43,7 +43,11 @@ server publication boundary. No event grants permission to serve its file.
 
 ## Quick Start
 
+Build the packages first, because the `mokly` shim loads the built runtime.
+Then run the tests and a watched Serve of the example catalogue:
+
 ```bash
+npm run build
 cargo test -p mokly-watch
 npm run dev -- --port 0
 ```
@@ -64,9 +68,16 @@ directory and assert file changes without elapsed-time assertions.
 
 ### Key Code
 
-- [Plans and denial rules](./src/plan.rs).
-- [Native observer](./src/native.rs) and [observation boundary](./src/observer.rs).
-- [Events and action batches](./src/event.rs).
+- [`src/plan.rs`](./src/plan.rs) defines `Plan`, which compiles the watch
+  inputs, applies the denial rules, and classifies each event into an action.
+- [`src/observer.rs`](./src/observer.rs) defines `Observer`, the boundary that
+  callers use to replace plans, rescan, wait, drain events, and close.
+- [`src/native.rs`](./src/native.rs) defines `NativeObserver`, the `Observer`
+  implementation over the platform `notify` backend.
+- [`src/backend.rs`](./src/backend.rs) defines `WatchFactory` and
+  `DirectoryWatch`, which own native handle creation and batched updates.
+- [`src/event.rs`](./src/event.rs) defines `Event`, `Action`, and `Batch`,
+  which keep the latest event per path and the strongest queued action.
 
 ### Related Docs
 

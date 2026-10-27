@@ -75,6 +75,8 @@ for (const channel of ["stdout", "ipc"] as const)
       );
       const child = fork(path.join(root, "worker.mjs"), {
         cwd: root,
+        // Keep the test runner's loader and concurrency flags out of the
+        // compiled worker's startup.
         execArgv: [],
         stdio: ["pipe", "pipe", "pipe", "ipc"],
       });

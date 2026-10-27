@@ -34,7 +34,8 @@ Each root selects authored files and supplies their catalogue path prefix.
 ```
 
 The default file set includes HTML screens, components, and pages, Markdown
-documents, YAML use cases, JavaScript entry modules, and Storybook files.
+documents, YAML use cases, TypeScript mockup modules (`.mockup.ts` and
+`.mockup.tsx`), and Storybook stories.
 Each matched file belongs to one root. A path override in its metadata can
 replace its file-derived catalogue path.
 

@@ -20,23 +20,20 @@ The npm job checks out `main` with `fetch-depth: 0` and this checkout token:
 token: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}
 ```
 
-Set up Node 24 and npm 11.21.0, the exact `packageManager` version that the
-repository's npm pin test requires. The strict audit uses only the root lockfile,
-so do not run `npm ci` before it. Its step has an `id`,
-`continue-on-error: true`, and `shell: bash` or explicit `set -o pipefail`.
-GitHub's explicit Bash shell includes pipefail. Create `.context/` before
-`tee` opens its log:
+Set up Node 24 and npm 11.21.0, the exact `packageManager` version. The
+strict audit uses only the root lockfile, so do not run `npm ci` before it.
+The audit step runs this command and captures its log:
 
 ```bash
-mkdir -p .context
 npm run dependencies:check -- --report .context/dependency-audit.json 2>&1 | tee .context/dependency-audit.log
 ```
 
-Pipefail preserves a failed audit's original step outcome. The next step runs
-the update script with `steps.<audit-id>.outcome`, not its conclusion after
-`continue-on-error`, plus the log and JSON report paths. Give that step the
-same token expression as `GITHUB_TOKEN`, and pass `GITHUB_REPOSITORY`,
-`GITHUB_SERVER_URL`, and `GITHUB_RUN_ID` through environment variables.
+The step's outcome is the audit's own result, not the result of `tee`. A
+failed audit does not stop the job. The next step runs the update script with the audit step's
+outcome, not its conclusion, plus the log and JSON report paths. Give that
+step the same token expression as `GITHUB_TOKEN`, and pass
+`GITHUB_REPOSITORY`, `GITHUB_SERVER_URL`, and `GITHUB_RUN_ID` through
+environment variables.
 
 A strict failure caused only by uncovered findings or exception issues is
 handled by the update pull request. Creating or refreshing that pull request
@@ -52,11 +49,9 @@ node scripts/verification/dependency-audit-pr.mjs --outcome failure --log .conte
 ```
 
 `--outcome` accepts `success` or `failure`. `--log` names the captured text
-file. `--report` names the JSON summary written by `dependency-audit.mjs`
-under the [baseline audit contract](./dependency-audit-baseline.md#output-and-json-summary).
-The four workflow environment variables above are required. Unit tests inject
-file reads, the clock, `fetch`, and the command runner. They never call the
-registry or GitHub.
+file. `--report` names the JSON summary that `npm run dependencies:check`
+writes under the [baseline audit contract](./dependency-audit-baseline.md#output-and-json-summary).
+The four workflow environment variables above are required.
 Require a non-empty token, an `owner/repository` name without `.` or `..`
 path segments, a numeric run ID, and an HTTP server URL without embedded
 credentials, a query, or a fragment. Reject unknown or repeated CLI options.
@@ -141,14 +136,13 @@ On a valid failing audit with no open update pull request:
    an empty commit as `chore(deps): track dependency audit findings`.
 8. Push and open the labelled pull request with its latest body.
 
-Read the remote tip with `git ls-remote`, fetch it, and inspect its
-`origin/main..<tip>` commits with `git rev-list` and `git log`.
+Inspect the commits of the current remote tip beyond current `main`.
 The bot-only test checks both author and committer against the exact name
 and email above. Read actual branch history; do not infer ownership from a
 branch name, label, or pull request author. When recreating an existing
-branch, force-push with a lease for the inspected remote tip. For a new branch,
-use `--force-with-lease=refs/heads/dependency-audit/main:` to require absence. A concurrent
-change must fail the push instead of overwriting a human commit.
+branch, force-push with a lease for the inspected remote tip. A push that
+creates the branch requires the branch to be absent. A concurrent change must
+fail the push instead of overwriting a human commit.
 
 If the branch exists without an open pull request and contains a non-bot
 commit, fail before recreating it. Name `dependency-audit/main` and tell a
@@ -209,10 +203,9 @@ that pull request. An app installation token acts as its app. If the
 organization requires fine-grained token approval, an organization owner
 approves it.
 
-Maintainer `calummoore` created the repository secret on 2026-10-06. The token
-has no expiration date, so no scheduled rotation applies. Replace it when it
-may be exposed, when its owner loses write access, or when the owner revokes
-it. Keep the repository scope and permissions above in every replacement.
+The secret's token has no expiration date, so no scheduled rotation applies.
+Replace it when it may be exposed, when its owner loses write access, or when
+the owner revokes it. Keep the repository scope and permissions above in every replacement.
 A revoked token that stays in the secret fails checkout. Only an empty or
 deleted secret selects the `github.token` fallback.
 

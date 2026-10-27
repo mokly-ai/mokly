@@ -1,7 +1,5 @@
 # Component Instance Identity
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Identity And Scope
 
 An instance is one logical use of a registered component inside an entry's
@@ -134,19 +132,12 @@ error, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-An instance record may carry its invocation site:
-
-```ts
-interface ComponentSourceLocation {
-  path: string;
-  line: number;
-  column: number;
-}
-interface ComponentInstanceRecord {
-  // The required instance fields keep their usage record definitions.
-  source?: ComponentSourceLocation;
-}
-```
+An instance record may carry its invocation site in its optional `source`
+field. The generated
+[`ComponentInstanceRecord`](../../packages/viewer/src/generated/catalogue/ComponentInstanceRecord.ts)
+and
+[`ComponentSourceLocation`](../../packages/viewer/src/generated/catalogue/ComponentSourceLocation.ts)
+types are the shapes.
 
 `path` is a nonempty repository-relative POSIX path to the invocation site,
 not the component definition. `line` and `column` are positive safe integers,
@@ -159,10 +150,8 @@ or a selected dependency root omits this optional source metadata.
 
 The sidecar supplies the location for a `defineComponent` wrapper through the
 JSX development shim of its [bundling rules](./mokly-sidecar.md#bundling). The
-shim forwards to the consumer's `react/jsx-runtime`, preserves child semantics
-and the single React runtime, and attaches the invocation `__source` only to wrappers that
-`defineComponent` identified, through the reserved `__moklySource` prop. The
-wrapper strips `__moklySource` before prop and slot validation, hashing, and
+location reaches only wrappers that `defineComponent` identified, through the
+reserved `__moklySource` prop. The wrapper strips `__moklySource` before prop and slot validation, hashing, and
 the consumer render, exactly as it strips `moklyInstance`. The name is
 reserved from authored props and slots, and no development runtime or
 attribute reaches the fragment. Programmatic `createElement` calls and
@@ -178,8 +167,8 @@ metadata; it does not authorize serving the source file.
 Every rendered instance is an ownership region of the composed tree under the
 [comparison contract](./mokly-comparison.md#markers): a sequence of sibling
 nodes with one parent, carrying the component path, the instance key, and the
-props digest. The core attaches the region itself for a component element it
-renders in Rust and for the root of a component page, which has id `r-0` and
+props digest. The core attaches the region itself for a component element that
+it renders without the sidecar and for the root of a component page, which has id `r-0` and
 no marker. For a sidecar render, the fragment carries each instance as a
 `mokly-instance` comment pair and each supplied slot as a `mokly-slot` pair;
 the core reads them into regions when it grafts the fragment and writes the
