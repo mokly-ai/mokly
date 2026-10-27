@@ -27,33 +27,34 @@ Contract owners:
 - The [mokly-server README](../crates/mokly-server/README.md) and the
   [mokly-cli README](../crates/mokly-cli/README.md).
 
-## Open decisions
+## Decisions
 
-The user answers these before milestone 1 starts. Milestone 1 records each
-answer here with its date.
+The user answered these on 2026-10-27, after the plan review.
 
-1. Batch shape. A: a sliding window, which starts the next view when any
-   view of the batch ends. B: fixed batches, which start N views and wait
-   for all N, like the comparison capture. Recommended: A. The estimate
+1. Batch shape: A, a sliding window, which starts the next view when any
+   view of the batch ends. Rejected: B, fixed batches, which start N views
+   and wait for all N, like the comparison capture. Reason: the estimate
    below gives 2.6 s for A and 4.1 s for B at eight, and the target is 4 s.
-2. Batch size. A: the worker count. B: the smaller of the worker count and
-   the sidecar count. C: the worker count minus one, at least one, which
-   keeps one worker free for foreground requests. Recommended: B. It equals
-   A by default. With fewer sidecars than workers, A starts renders that
-   wait in the sidecar queue, where foreground calls have no priority.
-3. Start order. A: catalogue order. When several queued renders wait for one
-   free worker, the first in catalogue order starts. B: no order inside the
-   batch. Recommended: A. It costs nothing in the window design and keeps
+2. Batch size: B, the smaller of the worker count and the sidecar count, at
+   least one. Rejected: A, the worker count, because with fewer sidecars
+   than workers its extra renders wait in the sidecar queue, where
+   foreground calls have no priority. Rejected: C, the worker count minus
+   one, because it slows every pass by one eighth on eight cores and by half
+   on two cores. Reason: B equals A by default.
+3. Start order: A, catalogue order. When several queued renders wait for one
+   free worker, the first in catalogue order starts. Rejected: B, no order
+   inside the batch. Reason: A costs nothing in the window design and keeps
    tests deterministic.
-4. Failure reports. A: report each failure when its render ends. B: report
-   failures in catalogue order, each as soon as every earlier render of the
-   pass has ended. C: report every failure in catalogue order when the pass
-   ends. Recommended: B. It keeps the serial pass's order and delays a
-   report by at most the earlier renders that still run.
+4. Failure reports: B, failures in catalogue order, each as soon as every
+   earlier render of the pass has ended. Rejected: A, a report when each
+   render ends, because the order then changes between runs. Rejected: C,
+   every report when the pass ends, because a report can wait for the whole
+   pass. Reason: B keeps the serial pass's order and delays a report by at
+   most the earlier renders that still run.
 
-In every option, a failure is reported once, through `Diagnostics::failed`.
-A failure that is not reported before a stop or a replacement is discarded,
-as the serial pass discards a failure that ends after one.
+Each failure is reported once, through `Diagnostics::failed`. A failure that
+is not reported before a stop or a replacement is discarded, as the serial
+pass discards a failure that ends after one.
 
 ## Corrections to the item text
 
@@ -107,8 +108,7 @@ records under `.context/perf/`.
 
 ## Design
 
-This design assumes the recommended options. Milestone 1 adjusts it to the
-answers.
+The design follows the decisions above.
 
 - **Window.** `fill` walks the routes in catalogue order and keeps at most
   `batch` renders in flight. Before it starts a route, it checks the stop
@@ -144,22 +144,23 @@ answers.
 State the batch requirements and the decisions in force, so that the review
 can check the code against them.
 
-- [ ] Record the answers to the open decisions above, with the date.
-- [ ] Update `docs/protocol/mokly-on-demand.md`, "Foreground Documents": a
+- [x] Record the answers to the open decisions above, with the date.
+- [x] Update `docs/protocol/mokly-on-demand.md`, "Foreground Documents": a
       queued background render does not start while a foreground request
       is active, and a foreground request that finds every worker busy
       waits for the first active render to end.
-- [ ] Update `docs/protocol/mokly-on-demand.md`, "Background Work And
+- [x] Update `docs/protocol/mokly-on-demand.md`, "Background Work And
       Replacement": the batch bound, the start order, the failure reports,
       and the cancellation of queued renders. Put the decisions in force for
       decisions 1 and 2 next to their requirements, with the rejected
       option and the reason.
-- [ ] Update the Serve section of `docs/protocol/mokly-runtime.md`: the
+- [x] Update the Serve section of `docs/protocol/mokly-runtime.md`: the
       background work renders in bounded batches under the on-demand
       contract. Keep the page at or under its 250-line cap.
-- [ ] Update `crates/mokly-server/README.md`: `UsagePass` renders bounded
-      batches, and the new window module under `### Key Code`.
-- [ ] Update `crates/mokly-cli/README.md`: Serve sizes the pass from the
+- [x] Update `crates/mokly-server/README.md`: `UsagePass` renders a bounded
+      sliding window. The `### Key Code` entry of the new module waits for
+      milestone 2, when the module exists.
+- [x] Update `crates/mokly-cli/README.md`: Serve sizes the pass from the
       worker count and the sidecar pool bound.
 
 ## Milestone 2: Bounded batches in the usage pass
@@ -184,7 +185,8 @@ Write each failing test before its code.
         b, c, a, and c and a fail. The diagnostics receive a, then c, and
         receive nothing before a ends.
 - [ ] Add the window module and the `batch` field of `UsagePass`. Rewrite
-      `fill` over the window.
+      `fill` over the window. Add the module under `### Key Code` in
+      `crates/mokly-server/README.md`.
 - [ ] Add `PoolScheduling::limit` in `crates/mokly-cli/src/serve_pool.rs`.
       Add the batch size function to `crates/mokly-cli/src/serve_delivery.rs`
       with a unit test, and set the batch there.

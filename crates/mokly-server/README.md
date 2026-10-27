@@ -48,7 +48,10 @@ to typed consumers.
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
 usage first, then Changes classification against one pinned merge base. They
 yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. Ready state installs the generation root,
+cannot publish into a replacement. `UsagePass` keeps a sliding window of at
+most `batch` renders. It starts them in catalogue order and reports each
+failed render once, in catalogue order, after every earlier render ends. The
+composition root sizes the window. Ready state installs the generation root,
 the base commit, Changes membership, moved paths, removed records, and per-view
 states, ignore ids, and evidence in one revision. Included details carry
 classification reasons and their base side even without a workspace.
