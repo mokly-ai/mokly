@@ -1,4 +1,4 @@
-# Keep A Component's Usage List In Its Parent Detail
+# Keep A Component's Usage Lists In Its Parent Detail
 
 Status: Active. On branch `conductor/dedup-3-usage-list-in-parent-detail`, no pull request yet. The plan closes when its PR merges.
 
@@ -30,14 +30,13 @@ detail, and let a variant's page read the list from that detail. The rejected
 options were B, group the rows by the consuming screen with that screen's
 views, C, do A and B, and D, make no change. The reason: A removes most of the
 repeated bytes with one format change, because the copies are 81% of the
-`usedBy` bytes. The open decisions below settle or extend parts of this
-choice. They do not reopen it.
+`usedBy` bytes. The decisions below extend or settle parts of this choice.
 
-The change raises the entry detail version, to 3 unless Decision 1 gives
-another number. In the new version, the workspace of a current component
-variant has no `usedBy`. The page of a current variant also fetches the
-parent's detail and shows the parent's lists. Removed details and the
-catalogue index do not change.
+The change raises the entry detail version, to 3 when no other dedup change
+raised it first. In the new version, the workspace of a current component
+variant has no `usedBy` and no `affected`. The page of a current variant also
+fetches the parent's detail and shows the parent's lists. Removed details and
+the catalogue index do not change.
 
 This change does not cover the other three dedup changes, the Mokly Cloud
 code, or the follow-ups under [Other repeated fields](#other-repeated-fields).
@@ -57,37 +56,34 @@ Contract owners:
   [viewer README](../packages/viewer/README.md), and the
   [shell README](../packages/viewer/src/shell/README.md).
 
-## Open decisions
+## Decisions
 
-The user answers these before Milestone 1 starts. A TODO that depends on an
-answer names the decision.
+The user answered these on 2026-10-27.
 
-1. Format numbering with the other dedup changes. Recommended: A.
-   - A. One raise per release. The first dedup change to merge raises the
-     entry detail from 2 to 3. A later one that merges before the next
-     release keeps 3 and adds its rule to version 3. After a release ships 3,
-     the next change raises it to 4.
-   - B. One raise per change, in merge order: 3, then 4, then 5. Each later
-     change renames the type, the fixture, and the docs again.
-2. The variant page waits for the parent's detail. Recommended: A.
-   - A. The parent's detail joins the route's details, as the step screens of
-     a use case do. The stage, Props, and Usage wait for both details. A
-     failed parent detail makes the route unavailable with Try again.
-   - B. Usage gets its own delivery for the parent's detail, which carries its
-     lists. The stage and Props wait only for the variant's detail. A failed
-     parent detail fails Usage only.
-3. Also take `affected` from the parent. Recommended: A.
-   - A. Remove `affected` from current variant details in this change.
-   - B. Keep `affected` on variants. Plan it later as a second format change.
-     The viewer reads the parent's list under both options.
-4. The core rejects lists on a current variant. Recommended: A. The
-   [serialization contract](../docs/protocol/mokly-catalogue-serialization.md#versions)
-   already says that the core rejects a misplaced field.
-   - A. The core's detail validation rejects the omitted lists on a current
-     variant's workspace. This follows the contract. A writer bug then fails
-     the build or the publication.
-   - B. Only tests check that a current variant has no lists. This also
-     changes the requirement of the contract and its page.
+1. Format numbering with the other dedup changes: A, one raise per release.
+   - The first dedup change to merge raises the entry detail from 2 to 3. A
+     later dedup change that merges before the next release keeps 3 and adds
+     its rule to version 3. After a release ships 3, the next change raises
+     it to 4.
+   - Rejected: B, one raise per change. Each later change would rename the
+     type, the fixture, and the docs again for numbers that no release ships.
+   - Only released numbers reach users. The static output ships its own
+     viewer, and a new Serve process forces a page load.
+2. The variant page waits for the parent's detail: A.
+   - The parent's detail joins the route's details, as the step screens of a
+     use case do. The stage, Props, and Usage wait for both details. A failed
+     parent detail makes the page unavailable with Try again.
+   - Rejected: B, a separate Usage delivery for the parent's detail. It adds
+     delivery state, and a first load already sends about as many bytes as
+     before the change.
+3. Also take `affected` from the parent: A. Current variant details drop
+   `affected` in this change too.
+   - Rejected: B, a later second format change. The same format change and
+     the same parent fetch carry `affected`.
+4. The core rejects lists on a current variant: A. This follows the
+   misplaced-field rule of the
+   [serialization contract](../docs/protocol/mokly-catalogue-serialization.md#versions).
+   - Rejected: B, a check in tests only, which would change that rule.
 
 ## Design
 
@@ -96,15 +92,15 @@ answer names the decision.
 - Entry detail: one number above the last release. Release 0.16.1 ships 2, so
   this change needs 3. Decision 1 covers a raise by another dedup change.
 - The [serialization rule](../docs/protocol/mokly-catalogue-serialization.md#versions)
-  requires a new number for a removal. Version 3 removes a required field from
+  requires a new number for a removal. Version 3 removes required fields from
   some records.
 - The catalogue index, the live descriptor, the upload metadata, and the plan
   exchange do not change.
 
 ### Placement rule
 
-- The workspace of a current component variant omits `usedBy`. Under
-  Decision 3 A, it also omits `affected`.
+- The workspace of a current component variant omits `usedBy` and
+  `affected`.
 - Screens, component parents, and removed entries keep both lists. A screen's
   lists are always empty and cost about 5 KB in the example.
 - A removed variant keeps its own lists. Its `usedBy` is always empty, because
@@ -113,21 +109,20 @@ answer names the decision.
 
 ### Producers
 
-- `Workspace.used_by` becomes optional and is omitted when absent. Under
-  Decision 3 A, `affected` does too. The generated TypeScript fields become
-  optional.
+- `Workspace.used_by` and `Workspace.affected` become optional and are omitted
+  when absent. The generated TypeScript fields become optional.
 - `projection_usage::workspaces` builds a list for each component parent, an
   empty list for each screen, and no list for a variant. It stops cloning the
   parent's list into each variant.
 - `projection_workspace::apply` updates the eligibility of the rows that
-  exist. Under Decision 3 A, it sets `affected` only on details that are not
-  current variants. A removed detail is the one with `generation`.
+  exist. It sets `affected` only on details that are not current variants. A
+  removed detail is the one with `generation`.
 - `projection_removed::workspaces` keeps empty lists on every removed screen
   and component.
 - The core keeps the version 2 requirement where the lists stay.
   `detail_validation::validate` requires them on a removed workspace, and
   `detail_context::validate_with` on a current screen or parent. Under
-  Decision 4 A, `detail_context::validate_with` also rejects them on a current
+  Decision 4, `detail_context::validate_with` also rejects them on a current
   variant.
 - The static build and Serve validate each detail before they write or
   publish it. Serve reuses the bytes of an unchanged detail, so a new consumer
@@ -143,17 +138,16 @@ answer names the decision.
   component variant. Screen variants and removed variants request only their
   own detail.
 - `publicWorkspace` takes a current variant's `usedBy` and `affected` from
-  the parent's held detail, for both answers to Decision 3. `usageComplete`
-  follows only that detail. A publication writes the workspace of every
-  current screen and component, or of none, so the parent's workspace proves
-  its lists. Usage never shows a zero that it did not read.
-- The reader gates version 3 and reads the omitted lists as optional. A
-  removed workspace must carry both lists. The fence requires both on a
-  current screen or parent. It ignores them on a current variant, because the
-  viewer reads a variant's lists from the parent's detail.
-- Under Decision 2 A, the route delivery covers both details. Under Decision
-  2 B, `WorkspaceUsage` gets the delivery of the parent's request, and the
-  stage and Props keep the delivery of the routed entry.
+  the parent's held detail. `usageComplete` follows only that detail. A
+  publication writes the workspace of every current screen and component, or
+  of none, so the parent's workspace proves its lists. Usage never shows a
+  zero that it did not read.
+- The reader gates version 3 and reads both lists as optional. A removed
+  workspace must carry both lists. The fence requires both on a current screen
+  or parent. It ignores them on a current variant, because the viewer reads a
+  variant's lists from the parent's detail.
+- Under Decision 2, the route delivery covers both details, so the stage,
+  Props, and Usage wait for both.
 
 ### Fetch, fences, and Serve updates
 
@@ -188,7 +182,8 @@ answer names the decision.
 The same measurement compared each field of a variant's detail with its
 parent's detail.
 
-- `affected`: equal on a parent and its current variants. See Decision 3.
+- `affected`: equal on a parent and its current variants. Decision 3 moves it
+  with `usedBy`.
 - A removed variant's `affected`: a copy of the base parent's list when that
   parent changed. Removed variants are rare, so plan a follow-up only when a
   measurement shows weight.
@@ -202,7 +197,7 @@ Each protocol page that this milestone changes gets the status line until
 Milestone 3 ends. The renames to version 3 and the links to the generated
 version 3 type wait for Milestone 3, because the link check needs that file.
 
-- [ ] Record the user's answers to the open decisions in this plan, with the
+- [x] Record the user's answers to the open decisions in this plan, with the
       date.
 - [ ] `mokly-shell-delivery.md`: add the placement rule, its decision, and
       the rejected copies to Entry Detail. Add the parent's detail and its
@@ -216,15 +211,12 @@ version 3 type wait for Milestone 3, because the link check needs that file.
 - [ ] `mokly-export-delivery.md` Static Navigation: a navigation fetches the
       destination's details, and the parent's detail carries a variant's
       lists. `mokly-live-evidence.md` Navigation races and Workspace
-      evidence: the details of the route, not one detail. Under Decision 2 B,
-      the Usage panel follows the parent's detail, which carries its lists.
-- [ ] Decision 2 A only: `mokly-component-controls.md` and
-      `mokly-component-controls-design.md` say that Props waits for the
-      route's details.
-- [ ] `mokly-format-versions.md`: the entry detail row. Under Decision 1 A,
-      add the rule that changes between two releases share one raise.
-- [ ] Decision 4 B only: `mokly-catalogue-serialization.md` Versions states
-      the exception for the lists on a current variant.
+      evidence: the details of the route, not one detail.
+- [ ] `mokly-component-controls.md` and `mokly-component-controls-design.md`:
+      Props waits for the route's details.
+- [ ] `mokly-format-versions.md`: the entry detail row, and the Decision 1
+      rule that changes between two releases share one raise, with option B
+      as the rejected alternative.
 - [ ] Add the status line below the title of each page above.
       `mokly-component-usage-records.md` needs no change, because every
       variant keeps its view usage.
@@ -242,15 +234,12 @@ the parent's lists, so the shown lists do not change.
 - [ ] Add the helper of the Viewer design. Use it in `routeDetailRequests` for
       the parent's request, and in `publicWorkspace` for `usedBy`,
       `affected`, and `usageComplete`.
-- [ ] Decision 2 B only: give Usage the delivery of the parent's request,
-      through `data_store.ts`, `data_context.tsx`, and `use_workspace_data.ts`.
 - [ ] Viewer tests:
   - [ ] A current component variant requests its detail and its parent's. A
         parent, a screen variant, a removed variant, and a use case keep their
         requests.
-  - [ ] Under Decision 2 A, the route stays loading until both details
-        arrive, and fails only after both settle. Under Decision 2 B, Usage
-        does so for the parent's detail.
+  - [ ] The route stays loading until both details arrive, and fails only
+        after both settle.
   - [ ] A sibling navigation keeps the held parent detail and loads only the
         sibling's detail.
   - [ ] A publication refresh on a variant route adopts the index and both
@@ -259,6 +248,8 @@ the parent's lists, so the shown lists do not change.
   - [ ] `publicWorkspace` shows the parent's lists on a variant, shows no
         zero list without the parent's detail, and keeps a removed variant's
         own lists.
+  - [ ] The embedded viewer on `components/action/default` calls `detail` for
+        the variant and the parent, and shows the parent's Used by rows.
 - [ ] Browser tests:
   - [ ] `shell_usage_delivery.spec.ts`: hold the detail of
         `example/components/action`, then open
@@ -286,8 +277,8 @@ version.
       or raise the number.
 - [ ] Model: read the `rust` and `shared-types` skills. Make the list fields
       optional, raise `ENTRY_DETAIL`, and rename `EntryDetailV2` to
-      `EntryDetailV3`. Keep the version 2 requirement where the lists stay.
-      Under Decision 4 A, reject them on a current variant.
+      `EntryDetailV3`. Keep the version 2 requirement where the lists stay,
+      and reject the lists on a current variant.
 - [ ] Producers: change `projection_usage::workspaces`,
       `projection_workspace::apply`, and `projection_removed::workspaces`.
       Adapt the static build and Serve call sites.
@@ -306,13 +297,13 @@ version.
 - [ ] Rust tests:
   - [ ] `projection_usage_tests`: a variant workspace has no list, and its
         parent's list keeps the variant's own nested use.
-  - [ ] `detail_context_tests`: a current parent without lists fails. Under
-        Decision 4 A, a current variant with lists fails.
+  - [ ] `detail_context_tests`: a current parent without lists fails, and a
+        current variant with lists fails.
   - [ ] The removed projection tests: removed screens, parents, and variants
         keep both lists.
-  - [ ] The workspace projection tests: `apply` updates the parent's rows.
-        Under Decision 3 A, a current variant has no `affected` and a removed
-        variant keeps its own.
+  - [ ] The workspace projection tests: `apply` updates the parent's rows. A
+        current variant has no `affected`, and a removed variant keeps its
+        own.
   - [ ] The Serve evidence test: after usage completes,
         `components/button/disabled` has no lists, and the list of
         `components/button` is complete.
@@ -324,9 +315,9 @@ version.
       The fence rejects a current parent without lists.
 - [ ] Browser tests:
   - [ ] The live Serve spec of Milestone 2 also reads the variant's detail
-        and finds no `usedBy`.
+        and finds no `usedBy` and no `affected`.
   - [ ] Static comparison: `components/card/featured` shows Card's Used by,
-        and its detail has no `usedBy`. The removed `components/card/archived`
+        and its detail has no lists. The removed `components/card/archived`
         shows its own lists and requests no parent detail.
 - [ ] Docs: rename the version and the type links in the shell delivery,
       viewer, viewer namespace, Changes serving, comparison, runtime,
@@ -367,10 +358,9 @@ version.
     rejected options, so the plan copies them from the investigation record.
   - Plan re-review of 773577d1 (2026-10-27): five Low findings, all fixed in
     the plan. The viewer now reads both lists of a current variant from the
-    parent's detail under every answer to Decision 3.
-  - 4. No test covers the embedded viewer's parent request. Severity Low,
-       effort Small. Recommended: A, a viewer harness check of the `detail`
-       calls and the Used by rows on `components/action/default`.
+    parent's detail.
+  - Plan review 1, finding 4, no test of the embedded viewer's parent request:
+    user decision (2026-10-27) A. Milestone 2 has the test.
   - `plans/remove-review-json.md` and `plans/build-head-capture.md`: their
     status paragraphs still say Active after their pull requests merged.
     Separate branch.
@@ -385,4 +375,3 @@ version.
 - [ ] Release the change as a minor version with a breaking-change note.
 - [ ] Mokly Cloud pins that release. The `detail` source of its embedded
       viewer must answer the parent's path of a current variant.
-- [ ] Decision 3 B only: plan the `affected` follow-up.
