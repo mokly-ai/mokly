@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
+import type {
+  CatalogueReadModel,
+  EntryDetailV2,
+} from "../src/catalogue/types.js";
+import { routeDetailRequests } from "../src/shell/data_requests.js";
+import { routeFromUrl } from "../src/shell/routes.js";
+import { embeddedDataSource } from "../src/viewer/index_source.js";
+import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import {
   detailPairs,
+  detailFixture,
   rawDetailFixtures,
   rawIndexFixture,
 } from "./catalogue_v8_fixture.js";
@@ -83,6 +93,62 @@ test("the embedded viewer selects a component variant entry in navigation, chrom
     }),
     /components\/action\/second\/index\.(?:mobile|desktop)\.html/,
   );
+});
+
+test("the embedded viewer requests a variant parent and shows its usage", async () => {
+  const rawIndex = rawIndexFixture();
+  const index = readCatalogueIndex(rawIndex);
+  const calls: string[] = [];
+  const source = embeddedDataSource(
+    rawIndex,
+    { index, root: new URL("https://catalogue.example/") },
+    (path, snapshotId) => {
+      calls.push(path);
+      return detailFixture({ path, ...(snapshotId ? { snapshotId } : {}) });
+    },
+    { deploymentChanged() {}, detailFailed() {} },
+  );
+  const route = routeFromUrl(
+    // The route resolver needs the same validated index that the source holds.
+    // Its details are not needed to resolve a current selection.
+    viewerCatalogue(shellCatalogueModel(index, new Map())),
+    new URL("/view/components/action/default/", "https://catalogue.example"),
+  );
+  const requests = routeDetailRequests(index, route);
+  const details: (readonly [DetailRequest, EntryDetailV2])[] = [];
+  for (const request of requests)
+    details.push([
+      request,
+      await source.loadDetail(request, index, new AbortController().signal),
+    ]);
+  assert.deepEqual(calls, ["components/action/default", "components/action"]);
+  const parentDetail = details.find(
+    ([request]) => request.path === "components/action",
+  )?.[1];
+  assert.ok(parentDetail?.workspace);
+  parentDetail.workspace = {
+    ...parentDetail.workspace,
+    usedBy: [
+      {
+        entryPath: "product/browse/home",
+        entryKind: "screen",
+        title: "Welcome",
+        viewport: "mobile",
+        colorScheme: "light",
+        instanceKey: "a".repeat(64),
+        direct: true,
+        removed: false,
+        comparisonEligible: false,
+      },
+    ],
+  };
+  const html = heldEmbeddedMarkup({
+    index: rawIndex,
+    details,
+    selection: { screenPath: "components/action/default" },
+  });
+  assert.match(html, /<h3>Used by<\/h3>/);
+  assert.match(html, /data-usage-section="used-by"[\s\S]*>Welcome<\/a>/);
 });
 
 test("the embedded viewer resolves light fallback evidence across status, marks and comparison", () => {

@@ -9,6 +9,7 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 /** Hold the first read of one entry detail; later reads continue. */
 async function holdDetail(page: Page, entryPath: string) {
@@ -34,12 +35,13 @@ async function openPanel(page: Page, name: string) {
   return page.getByRole("tabpanel", { name, exact: true });
 }
 
-test("Usage shows Loading usage until the detail arrives, then the complete list, never the empty state", async ({
+test("a variant Usage waits for its parent detail, then keeps it for a sibling", async ({
   page,
 }) => {
-  await page.goto("/view/example/components/toolbar/");
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Toolbar");
-  await openPanel(page, "Usage");
+  const detail = await holdDetail(page, "example/components/action");
+  await page.goto("/view/example/components/action/default/");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  const usage = await openPanel(page, "Usage");
   // Record whether the zero-consumer state ever renders.
   await page.evaluate(() => {
     const record = document.documentElement;
@@ -52,15 +54,7 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
       subtree: true,
     });
   });
-  const detail = await holdDetail(page, "example/components/action");
-  await page
-    .locator(
-      'nav.mbk-nav a[data-nav-row][data-route="example/components/action/index.html"]',
-    )
-    .click();
   await expect.poll(() => detail.held.length).toBe(1);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
   await expect(usage).toHaveText("Loading usage…");
   await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
     "Loading preview…",
@@ -77,6 +71,10 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-saw-empty-usage",
   );
+  expect(detail.reads()).toBe(1);
+
+  await chooseVariant(page, "Disabled");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
   expect(detail.reads()).toBe(1);
 });
 

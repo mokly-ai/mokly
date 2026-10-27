@@ -57,3 +57,32 @@ test("a Changes completion keeps keyboard focus on an unchanged Usage link", asy
     /\/screens\/consumer\/index\.mobile\.html/u,
   );
 });
+
+test("a live publication updates Used by on a component variant without a page load", async ({
+  page,
+  changes,
+}) => {
+  const variant = changes.paths.changedVariant;
+  await page.goto(`/view/${variant}/`);
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  await expect(
+    usage.getByRole("link", { name: "Consumer screen", exact: true }).first(),
+  ).toBeVisible();
+  const address = page.url();
+  let loads = 0;
+  page.on("load", () => {
+    loads += 1;
+  });
+
+  await changes.edit(
+    "specs/screens/stable.screen.html",
+    '---\ntitle: Stable screen\n---\n<h1>Stable screen</h1>\n<ui-card label="Stable card"></ui-card>',
+  );
+
+  await expect(
+    usage.getByRole("link", { name: "Stable screen", exact: true }).first(),
+  ).toBeVisible();
+  expect(page.url()).toBe(address);
+  expect(loads).toBe(0);
+});

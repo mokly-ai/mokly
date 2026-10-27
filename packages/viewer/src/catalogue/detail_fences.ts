@@ -17,6 +17,27 @@ export interface DetailRequest {
   snapshotId?: string;
 }
 
+/**
+ * The detail that carries a selected entry's workspace lists.
+ * Current component variants use their parent's detail. Historical entries
+ * keep their own detail because their snapshot is the requested identity.
+ */
+export function workspaceDetailRequest(
+  entry: Pick<CatalogueRecord, "kind" | "path"> & { variantOf?: string },
+  snapshotId?: string,
+): DetailRequest {
+  const path =
+    snapshotId === undefined &&
+    entry.kind === "component" &&
+    entry.variantOf !== undefined
+      ? entry.variantOf
+      : entry.path;
+  return {
+    path,
+    ...(snapshotId === undefined ? {} : { snapshotId }),
+  };
+}
+
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
   | { kind: "accepted"; detail: EntryDetailV2 }

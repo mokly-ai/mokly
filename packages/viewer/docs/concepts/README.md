@@ -109,6 +109,8 @@ The Details panel shows the workspace of the entry detail in every delivery:
 Used by, Affected screens, related changed components, and input changes with
 Before and Current props. While Changes is ready, it also lists the rule and
 resource evidence of the selected view.
+A current component variant reads its Used by and Affected lists from its
+parent's detail.
 
 ## Host integration
 

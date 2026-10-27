@@ -231,41 +231,42 @@ The viewer fetches the parent's detail for a current component variant and
 shows the parent's lists. The details stay version 2, and their copies equal
 the parent's lists, so the shown lists do not change.
 
-- [ ] Add the helper of the Viewer design. Use it in `routeDetailRequests` for
+- [x] Add the helper of the Viewer design. Use it in `routeDetailRequests` for
       the parent's request, and in `publicWorkspace` for `usedBy`,
       `affected`, and `usageComplete`.
-- [ ] Viewer tests:
-  - [ ] A current component variant requests its detail and its parent's. A
+- [x] Viewer tests:
+  - [x] A current component variant requests its detail and its parent's. A
         parent, a screen variant, a removed variant, and a use case keep their
         requests.
-  - [ ] The route stays loading until both details arrive, and fails only
+  - [x] The route stays loading until both details arrive, and fails only
         after both settle.
-  - [ ] A sibling navigation keeps the held parent detail and loads only the
+  - [x] A sibling navigation keeps the held parent detail and loads only the
         sibling's detail.
-  - [ ] A publication refresh on a variant route adopts the index and both
+  - [x] A publication refresh on a variant route adopts the index and both
         details at one revision. A parent detail of another deployment gives
         the replaced state.
-  - [ ] `publicWorkspace` shows the parent's lists on a variant, shows no
+  - [x] `publicWorkspace` shows the parent's lists on a variant, shows no
         zero list without the parent's detail, and keeps a removed variant's
         own lists.
-  - [ ] The embedded viewer on `components/action/default` calls `detail` for
+  - [x] The embedded viewer on `components/action/default` calls `detail` for
         the variant and the parent, and shows the parent's Used by rows.
-- [ ] Browser tests:
-  - [ ] `shell_usage_delivery.spec.ts`: hold the detail of
+- [x] Browser tests:
+  - [x] `shell_usage_delivery.spec.ts`: hold the detail of
         `example/components/action`, then open
         `example/components/action/default`. Usage shows `Loading usage…`.
         After the release, Usage lists Welcome, Details, and Toolbar. A
         sibling variant reads the parent's detail once.
-  - [ ] A live Serve spec: give the `card` fixture a variant and open the
+  - [x] A live Serve spec: give the `card` fixture a variant and open the
         variant's Usage. An edit that adds a consumer updates Used by in place,
         without a page load.
-- [ ] Update the shell README paragraphs on `data_requests.ts`,
+- [x] Update the shell README paragraphs on `data_requests.ts`,
       `workspace_data.ts`, and omitted usage, and the Key Code line of
       `public_workspace.ts` in the viewer README. In
       `packages/viewer/docs/concepts/README.md`, say that a current variant
       shows its parent's lists, with no panel name. Update the Shell Delivery
       sentence of `docs/architecture/rust-core.md`.
-- [ ] Run the targeted tests. Commit and push.
+- [x] Run the targeted tests. Commit and push.
+      Evidence is in `.context/usage-list-in-parent-detail/milestone-2-*.log`.
 
 ## Milestone 3: Entry detail v3 without the variant copies
 
