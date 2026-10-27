@@ -67,8 +67,7 @@ as the serial pass discards a failure that ends after one.
   costs about 0.3 s to spawn and 0.2 to 0.3 s to replay the generation, in
   parallel. The base side then reuses them.
 - `Workers::background` already admits concurrent calls with foreground
-  priority, so the change needs no edit in `work.rs` except for the batch
-  size rule of decision 2.
+  priority, so the change needs no edit in `work.rs`.
 - `mokly-runtime.md` mentions the pass in one sentence of its Serve section.
   The on-demand contract owns the rules of the pass. The page has 247 of its
   250 lines, so its change keeps the line count.
@@ -132,10 +131,11 @@ answers.
   as the one active render of the serial pass is today.
 - **Publication.** One `completed_many` call after every route has ended, as
   today.
-- **Batch size.** `UsagePass` gets a `batch` field. A pure function in
-  `work.rs` gives the smaller of the worker count and the sidecar count, at
-  least one. `crates/mokly-cli/src/serve_delivery.rs` sets the field from
-  the worker count and a new `limit` method of `PoolScheduling` in
+- **Batch size.** `UsagePass` gets a `batch` field. The server crate does
+  not know the sidecar count, so the CLI composition root sets the field. A
+  pure function in `crates/mokly-cli/src/serve_delivery.rs` gives the
+  smaller of the worker count and the sidecar count, at least one. It reads
+  the sidecar count from a new `limit` method of `PoolScheduling` in
   `crates/mokly-cli/src/serve_pool.rs`. The call in `entry_serve.rs`, which
   the perf 0 item changes, stays as it is.
 
@@ -185,10 +185,9 @@ Write each failing test before its code.
         receive nothing before a ends.
 - [ ] Add the window module and the `batch` field of `UsagePass`. Rewrite
       `fill` over the window.
-- [ ] Add the batch size function to `crates/mokly-server/src/work.rs`, with
-      a unit test beside the existing `parallelism` test.
-- [ ] Add `PoolScheduling::limit` in `crates/mokly-cli/src/serve_pool.rs` and
-      set the batch in `crates/mokly-cli/src/serve_delivery.rs`.
+- [ ] Add `PoolScheduling::limit` in `crates/mokly-cli/src/serve_pool.rs`.
+      Add the batch size function to `crates/mokly-cli/src/serve_delivery.rs`
+      with a unit test, and set the batch there.
 - [ ] Add the `batch` field to the existing pass tests and to
       `crates/mokly-server/tests/http/evidence_tests.rs`. Keep every
       assertion. Keep the existing foreground tests green.
