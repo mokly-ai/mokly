@@ -4,16 +4,18 @@ use std::collections::BTreeMap;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use bytes::Bytes;
 use flate2::read::GzDecoder;
+use futures_util::future::BoxFuture;
 use mokly_model::output::artifact::Artifact;
 use mokly_model::output::upload::UploadMetadata;
 use mokly_model::output::validation::{MANIFEST, MARKER};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::http::ReqwestHttp;
-use mokly_publish::runtime::{CommandCancellation, SilentReporter, SystemClock};
+use mokly_publish::runtime::{Clock, CommandCancellation, SilentReporter, Timer};
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
 use serde_json::json;
@@ -21,6 +23,22 @@ use support::catalogue::artifact;
 use support::server::{Request, Response, Server};
 
 mod support;
+
+struct FixedClock;
+
+impl Clock for FixedClock {
+    fn now(&self) -> i64 {
+        1_800_000_000_000
+    }
+
+    fn jitter(&self, _: u64) -> u64 {
+        0
+    }
+
+    fn sleep(&self, _: Timer, _: Duration) -> BoxFuture<'_, ()> {
+        Box::pin(async {})
+    }
+}
 
 fn file(path: &str, bytes: &[u8]) -> mokly_model::output::artifact::File {
     mokly_model::output::artifact::File {
@@ -117,7 +135,7 @@ async fn run_receiver(list_gzip: bool) -> (Vec<Request>, BTreeMap<String, Bytes>
         Settings::new(&format!("{}/plan", server.origin), "secret".to_owned(), 2).unwrap();
     let client = Client {
         http: Arc::new(ReqwestHttp::new().unwrap()),
-        clock: Arc::new(SystemClock),
+        clock: Arc::new(FixedClock),
         reporter: Arc::new(SilentReporter),
     };
     let receipt = client

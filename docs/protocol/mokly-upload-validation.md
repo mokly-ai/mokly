@@ -91,7 +91,7 @@ size before storing it. For a gzip Blob, a `Content-Length` greater than the
 declared file size is 400 before the body is read. Stream-decode the body and
 stop after the declared size plus one byte. Return 400 and store nothing for
 invalid gzip data, a decoded size other than the declared size, or a decoded
-SHA-256 other than the URL digest. Raw Blobs keep their rules. Return 400 for
+SHA-256 other than the URL digest. Return 400 for
 any other `Content-Encoding`. Unless the identity is already published,
 Complete only when every marker digest is stored; otherwise answer 409.
 Authorize the repository and hosting policy before exposing a catalogue. Built

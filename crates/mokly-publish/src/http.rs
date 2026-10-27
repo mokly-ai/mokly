@@ -26,10 +26,9 @@ pub enum Step {
 }
 
 /// Content encoding applied to a Blob request body.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Encoding {
     /// Send the exact file bytes without content encoding.
-    #[default]
     Identity,
     /// Send one gzip member that decodes to the file bytes.
     Gzip,
