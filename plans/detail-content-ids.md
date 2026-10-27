@@ -100,10 +100,7 @@ For the measured heading edit, the projected upload is 15 files with 2.75 MB,
 them.
 
 An old tab now accepts a detail that a new deployment kept, because its content
-is the same. Decision 1 sets whether a changed index record changes the id.
-Decision 2 sets how an old tab recovers when its comparison generation is gone.
-A deployment that changes only the viewer files reloads no old tab, unless
-decision 1 is C.
+is the same. Decisions 1 and 2 set how an old tab still notices a new version.
 
 Rejected designs: a file hash that the shell checks, because Serve writes
 `revision` into the bytes. A separate map of ids, because the record field
@@ -152,16 +149,18 @@ stored, and a referenced file is never collected.
 
 Asked on 2026-10-27. The message to the user gives the background.
 
-1. What the detail id covers. Severity Medium, effort Small. A: the detail
+1. What the detail id covers. Severity Medium, effort Large. A: the detail
    only, so an old tab can show an old title over new content. B: the entry's
-   index record and its detail. After the measured edit, only the 2 records
-   whose details changed differed. C: B and the viewer files, so each viewer
-   change uploads every detail again. Recommended: B.
+   index record and its detail. C: B and the viewer files, so each viewer
+   change uploads every detail again. D, proposed by the user on 2026-10-27:
+   A, plus `mokly-viewer/deployment.json` with the `deploymentId`, outside the
+   id's hash. A static shell fetches it with each detail request and before
+   each generation request. Another id reloads the page. Recommended: D.
 2. An old tab whose comparison generation is gone. Severity Medium, effort
    Medium. A: accept the unavailable state until the reader reloads. B: in a
    static build, a failed detail or generation request makes the shell request
    the index again, and another `deploymentId` gives a full page load or one
-   `onError`. Recommended: B.
+   `onError`. Recommended: B. Decision 1 D closes this decision.
 3. Format numbers when the dedup changes merge in any order. Severity Medium,
    effort Small. A: each change raises the numbers on `main`, so a second
    detail change gives v4. B: one new number per format between two releases.
