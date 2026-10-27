@@ -316,21 +316,29 @@ Evidence: `.context/gzip-blob-uploads/milestone-3-verification-2026-10-27.md`.
 
 Prove the encoding through the real CLI and record the gain.
 
+Evidence: `.context/gzip-blob-uploads/smoke_receiver.mjs` and `.context/gzip-blob-uploads/smoke-results-2026-10-27.json`.
+
 - [x] Apply the Milestone 3 review fixes before the end-to-end test.
       Keep the Blob request construction, gzip test cases, support fixtures,
       and upload wording aligned with the contract.
-- [ ] `tests/helpers/static_exchange.ts`: add a `gzip` option. It lists
+- [x] `tests/helpers/static_exchange.ts`: add a `gzip` option. It lists
       gzip, decodes with `maxOutputLength` set to the declared size plus one,
       and records each Blob's encoding. Without the option, a Blob with
       `content-encoding` fails the test.
-- [ ] Add a Node test that runs `mokly publish` against the gzip receiver.
+- [x] Add a Node test that runs `mokly publish` against the gzip receiver.
       It checks the exact received inventory, at least one gzip Blob, and
       gzip bodies smaller than their files.
-- [ ] Run `npm run build`. Publish `examples/basic` in rich mode against a
+- [x] Run `npm run build`. Publish `examples/basic` in rich mode against a
       local receiver that lists gzip, then against one that does not. Record
       the Blob count, the body bytes, the raw Blobs, and the progress label.
       Save the receiver script and the results under
       `.context/gzip-blob-uploads/`. Add one line with the result below.
+
+Result: `examples/basic` with `--no-changes` sent 869 Blobs. The gzip listing
+run sent 868 gzip and 1 raw Blob, 3,946,586 request bytes and
+31,520,965 decoded bytes. The raw run sent 31,520,965 request and
+decoded bytes. Both exited 0. A default-Changes attempt timed out
+after 180 seconds with exit 124 before Plan.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
