@@ -21,8 +21,9 @@ Public test commands and strict evidence rules live in the
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
-  `runRepositoryRatchets`, which runs every maintainability ratchet of the
-  Repository suite.
+  `runRepositoryRatchets`, which runs the Node maintainability ratchets of the
+  Repository suite. `xtask` runs the protocol document cap ratchet first, in
+  the same step.
 - [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
   Testbox.
 

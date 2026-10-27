@@ -236,6 +236,10 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
       `.context/port-verification-scripts-to-xtask/`.
   - [x] Round 1, the fingerprint: `decisions-2026-10-27/case-map.md`.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+  - Round 1: gate `20261027T105758Z-135390` on `2e9da5a2` failed on two
+    unrelated browser timeouts, and gate `20261027T114824Z-435107` on
+    `72a39757` passed. Evidence: `complete-gate.log` and `complete-gate-2.log`
+    in `.context/port-verification-scripts-to-xtask/decisions-2026-10-27/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -245,6 +249,11 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
     2, 4, 5, and 6. It also fixed finding 1 with option C, because decision
     3 B keeps every assertion of the Node tests. Report:
     `.context/port-verification-scripts-to-xtask/review-3.md`.
+  - Round 1, review 4 of 2026-10-27, the re-review of `72a39757` and of merge
+    `a8d188b0`: fixed its findings 1 and 2, a stale line of the verification
+    scripts README and an outside-scope line that #218 resolved. Its finding
+    3, a renamed test in the case map, is fixed in the evidence file. Report:
+    `.context/port-verification-scripts-to-xtask/review-4.md`.
   - 3. The fingerprint's Git variable removal has no test. Severity Low,
        effort Medium. Recommended: B, build every `xtask` Git command with
        the one tested command builder.
@@ -260,10 +269,12 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
   - Outside the review scope: `docs/protocol/remote-verification.md:181`:
     the page names the source file `xtask/src/remote/error.rs`. Separate
     branch.
-  - Outside the review scope: `xtask/README.md:50`: the README says that
-    every subprocess starts at the workspace root, but the probes, the suite
-    commands, and the snapshot fingerprint start in the snapshot directory.
-    Separate branch.
+    - [x] Resolved on `main` by #218, which removed the sentence.
+  - Outside the review scope: `xtask/README.md:48` and
+    `docs/protocol/ci-verification-repository.md:47`: both say that every
+    `xtask` subprocess starts at the workspace root, but the probes, the
+    suite commands, and the snapshot Git reads start in the snapshot
+    directory. Separate branch.
   - Outside the review scope: `tests/browser/viewer_inspection_ownership.spec.ts`,
     "postMessage obsolete labels success preserves frame replacement pick",
     failed with `Timeout 10000ms exceeded while waiting on the predicate` in
