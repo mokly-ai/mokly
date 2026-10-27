@@ -167,9 +167,9 @@ Asked on 2026-10-27. The message to the user gives the background.
    detail change gives v4. B: one new number per format between two releases.
    Recommended: B.
 4. Content ids for removed entries' details. Severity Low, effort Large. A:
-   `detailId` replaces `generation`, and the generation name hashes its files
-   as they are. B: keep `generation`, so each removed detail uploads again when
-   any snapshot changes. Recommended: A.
+   keep `generation`, so each removed detail uploads again when any snapshot
+   changes. B: `detailId` replaces `generation`, and the generation name hashes
+   its files as they are. Recommended: B.
 
 ## Milestone 1: Documentation and protocol
 
