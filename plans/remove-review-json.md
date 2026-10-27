@@ -1,6 +1,6 @@
 # Remove The Comparison Review File
 
-Status: Active. On branch `calummoore/reviewjson-purpose`, no pull request yet. The plan closes when its PR merges.
+Status: Active. [PR #217](https://github.com/mokly-ai/mokly/pull/217) is open. The plan closes when its PR merges.
 
 A comparison generation holds one `review.json`: the review result v8 of
 every screen, component, variant, and use case. The file grows with every
@@ -187,7 +187,7 @@ envelope.
   - `docs/protocol/mokly-upload-validation.md`: the rejection table names no
     status for an unsupported catalogue index version in the Plan archive.
     Separate branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
