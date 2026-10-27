@@ -217,6 +217,20 @@ the latest `main`.
       request description.
   - Evidence: `.context/remove-review-json/gate5.log`.
 
+## Milestone 7: Merge main after its docs alignment
+
+`main` moved to `89c12ef1` (#218) after Milestone 6, so the pull request
+conflicted again.
+
+- [x] Merge `origin/main` at `89c12ef1`. Keep its documentation layout in
+      the 35 conflicting files and reapply this branch's requirements. The
+      merge commit lists each path.
+- [x] Move the breaking comparison records note from the deleted
+      `docs/protocol/npm-release-notes.md` into the upgrade guide,
+      `docs/guides/start/upgrade.md`, where #218 places upgrade steps.
+- [ ] Run the checks and the complete gate, push, and update the pull
+      request description.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Release the change as a minor version with a breaking-change note.
