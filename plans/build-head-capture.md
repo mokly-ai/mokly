@@ -34,13 +34,12 @@ a reordered build pipeline, because it changes the stage order. Reason: D
 reuses the tested base capture and removes an estimated 12 of the 18 minutes
 of a large React build. Serve's background pass keeps B as a follow-up.
 
-Decision 2 (open, asked 2026-10-26): the head capture bound. A, a separate
-256 MiB bound for the head, the same value as the base bound, so both captures
-together can hold up to 512 MiB beside the 256 MiB render cache. B, one
-256 MiB bound shared by both sides; the head is captured first, so a large
-head can leave no room for the base. Recommended: A, because the base capture
-keeps its behaviour and the React fixture needs about 86 MB per side. Milestone
-1 cannot close until the user answers.
+Decision 2 (2026-10-27): the head capture has its own 256 MiB bound, option
+A, the same value as the base bound. Both captures together can hold up to
+512 MiB beside the 256 MiB render cache. Rejected: B, one 256 MiB bound shared
+by both sides, because the head is captured first, so a large head can leave
+no room for the base. Reason: the base capture keeps its behaviour, and the
+React fixture needs about 86 MB per side.
 
 The 2026-10-26 baseline records and method are under `.context/measure/` on
 the measuring machine. New evidence goes under `.context/build-head-capture/`.
