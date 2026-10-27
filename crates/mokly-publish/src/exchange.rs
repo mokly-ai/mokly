@@ -175,13 +175,7 @@ impl Client {
                 .collect::<Vec<_>>(),
         )
         .map(|(digest, attempted)| async move {
-            let request = Request {
-                step: Step::Blob,
-                url: plan.blob_target(&digest, requests.settings)?,
-                body: Bytes::new(),
-                encoding: Encoding::Identity,
-                timeout: Duration::from_secs(120),
-            };
+            let url = plan.blob_target(&digest, requests.settings)?;
             let file = prepared
                 .blobs
                 .get(&digest)
@@ -190,9 +184,11 @@ impl Client {
             let (body, encoding) =
                 blob_body::prepare(file, plan.blob_encoding, requests.cancellation).await?;
             let request = Request {
+                step: Step::Blob,
+                url,
                 body,
                 encoding,
-                ..request
+                timeout: Duration::from_secs(120),
             };
             let response = requests
                 .send(&request, Some(plan.expires_at), Some(attempted.as_ref()))

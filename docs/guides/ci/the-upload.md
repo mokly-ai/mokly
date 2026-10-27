@@ -48,10 +48,10 @@ schemes are refused before a request. Publish never sends the token elsewhere.
 
 ## The blobs
 
-For each missing digest, publish sends the file's raw bytes to the blob URL
-with the digest filled in, up to the CLI's `--upload-concurrency` limit at a
-time. When the service lists gzip in the Plan, publish sends a gzip body only
-when it is smaller than the file. Otherwise it sends the raw bytes.
+For each missing digest, publish sends the raw bytes, or a gzip body when the
+service lists gzip in the Plan and the gzip body is smaller than the file. It
+fills the digest into the blob URL and respects the CLI's
+`--upload-concurrency` limit.
 
 ```http
 Authorization: Bearer TOKEN
@@ -107,6 +107,7 @@ remaining digests with every verified Blob stored for that project, including
 content received for an unfinished or expired upload. Each stored Blob must
 match its declared digest and size. A gzip body must decode within its declared
 file size, and the service checks its decoded digest and size before storage.
+The service lists gzip only when it decodes gzip Blobs for the whole upload.
 An integer declared size above 64 MiB or a path above 1,024 UTF-8 bytes receives
 `413`; malformed values and path grammar receive `400` or `422`. The service commits only when every listed digest is
 present and answers `409` until then. It keeps the first publication completed
@@ -133,7 +134,8 @@ the Plan archive and every entry sharing a digest whose Blob PUT was attempted
 in this command. Every other marker entry is unchanged. Progress applies the same rule
 per round, begins with Plan files, and advances all entries sharing a completed
 digest. `<size>` counts decoded file bytes, including the raw bytes of Plan
-files, even when a Blob request uses gzip. It says `Uploading 0 of 1 file · <size>` for one file and uses `files`
+files, even when a Blob request uses gzip. It says
+`Uploading 0 of 1 file · <size>` for one file and uses `files`
 otherwise; an empty `missing` set shows no progress label.
 
 Cancellation prints

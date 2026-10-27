@@ -20,7 +20,6 @@ use serde_json::json;
 use support::catalogue::artifact;
 use support::server::{Request, Response, Server};
 
-#[allow(dead_code)]
 mod support;
 
 fn file(path: &str, bytes: &[u8]) -> mokly_model::output::artifact::File {
@@ -30,7 +29,7 @@ fn file(path: &str, bytes: &[u8]) -> mokly_model::output::artifact::File {
     }
 }
 
-fn prepared() -> (Prepared, BTreeMap<String, Bytes>) {
+fn prepared() -> (Prepared, BTreeMap<String, Bytes>, Artifact) {
     let base = artifact(PathBuf::from("/unused/frozen"), true);
     let metadata = UploadMetadata::parse(
         &base
@@ -83,14 +82,15 @@ fn prepared() -> (Prepared, BTreeMap<String, Bytes>) {
         (digest.clone(), prepared.blobs[&digest].clone())
     })
     .collect();
-    (prepared, expected)
+    (prepared, expected, artifact)
 }
 
 async fn run_receiver(list_gzip: bool) -> (Vec<Request>, BTreeMap<String, Bytes>, Outcome) {
-    let (prepared, expected) = prepared();
+    let (prepared, expected, artifact) = prepared();
     let missing = expected.keys().cloned().collect::<Vec<_>>();
     let captured = Arc::new(Mutex::new(Vec::new()));
     let state = Arc::clone(&captured);
+    let expected_artifact = artifact.clone();
     let server = Server::start(Arc::new(move |request| {
         if request.method == "PUT" {
             state.lock().unwrap().push(request);
@@ -99,6 +99,7 @@ async fn run_receiver(list_gzip: bool) -> (Vec<Request>, BTreeMap<String, Bytes>
         if request.target.ends_with("/complete") {
             return Response::json(201, b"{}".to_vec());
         }
+        support::catalogue::validate_plan(&request.body, &expected_artifact);
         let origin = format!("http://{}", request.headers["host"]);
         let mut document = json!({
             "schemaVersion": 1,

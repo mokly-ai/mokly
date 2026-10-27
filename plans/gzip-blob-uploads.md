@@ -316,6 +316,9 @@ Evidence: `.context/gzip-blob-uploads/milestone-3-verification-2026-10-27.md`.
 
 Prove the encoding through the real CLI and record the gain.
 
+- [x] Apply the Milestone 3 review fixes before the end-to-end test.
+      Keep the Blob request construction, gzip test cases, support fixtures,
+      and upload wording aligned with the contract.
 - [ ] `tests/helpers/static_exchange.ts`: add a `gzip` option. It lists
       gzip, decodes with `maxOutputLength` set to the declared size plus one,
       and records each Blob's encoding. Without the option, a Blob with

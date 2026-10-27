@@ -38,7 +38,7 @@ and one re-plan. A failed Blob drops the other active requests. The reporter res
 Progress counts a digest once even when `missing` overlaps a Plan-archive digest.
 When a Plan lists gzip, each Blob uses gzip only when the compressed body is
 smaller than the file. Otherwise it sends the exact file bytes. Progress size
-continues to count decoded file bytes.
+Progress size counts decoded file bytes.
 Credentials have a redacted debug representation. Transport failures and
 receiver rejections use fixed safe messages. Completion URLs and CLI output
 redaction match literal and percent-encoded credentials without depending on
