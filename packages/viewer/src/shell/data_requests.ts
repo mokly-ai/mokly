@@ -51,7 +51,7 @@ export function routeDetailRequests(
   const entry = currentEntry(index, routed.path);
   if (entry?.kind !== routed.kind) return [];
   const requests: DetailRequest[] = [{ path: entry.path }];
-  const workspace = workspaceDetailRequest(entry);
+  const workspace = workspaceDetailRequest(entry, true);
   if (workspace.path !== entry.path) requests.push(workspace);
   if (entry.kind === "use-case")
     for (const step of entry.steps)

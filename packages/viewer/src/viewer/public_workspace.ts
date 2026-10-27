@@ -96,7 +96,7 @@ export function publicWorkspace(
   );
   const detail = held?.workspace;
   const workspaceDetail = model.details.get(
-    detailKey(workspaceDetailRequest(original, selected?.snapshotId)),
+    detailKey(workspaceDetailRequest(original, !removed, selected?.snapshotId)),
   );
   const workspace = workspaceDetail?.workspace;
   const publicComponent: ShellCatalogueComponent | undefined =

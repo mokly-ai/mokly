@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { DetailRequest } from "../src/catalogue/detail_fences.js";
+import {
+  workspaceDetailRequest,
+  type DetailRequest,
+} from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   EntryDetailV2,
@@ -21,6 +24,20 @@ import {
 
 const OTHER = "e".repeat(64);
 const signal = new AbortController().signal;
+
+test("a removed variant without a snapshot keeps its own list detail", () => {
+  assert.deepEqual(
+    workspaceDetailRequest(
+      {
+        kind: "component",
+        path: "components/action/retired",
+        variantOf: "components/action",
+      },
+      false,
+    ),
+    { path: "components/action/retired" },
+  );
+});
 
 function route(path: string) {
   return routeFromUrl(

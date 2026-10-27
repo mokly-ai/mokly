@@ -9,7 +9,6 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { chooseVariant } from "./workspace_actions.js";
 
 /** Hold the first read of one entry detail; later reads continue. */
 async function holdDetail(page: Page, entryPath: string) {
@@ -35,13 +34,12 @@ async function openPanel(page: Page, name: string) {
   return page.getByRole("tabpanel", { name, exact: true });
 }
 
-test("a variant Usage waits for its parent detail, then keeps it for a sibling", async ({
+test("Usage shows Loading usage until the detail arrives, then the complete list, never the empty state", async ({
   page,
 }) => {
-  const detail = await holdDetail(page, "example/components/action");
-  await page.goto("/view/example/components/action/default/");
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
-  const usage = await openPanel(page, "Usage");
+  await page.goto("/view/example/components/toolbar/");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Toolbar");
+  await openPanel(page, "Usage");
   // Record whether the zero-consumer state ever renders.
   await page.evaluate(() => {
     const record = document.documentElement;
@@ -54,7 +52,15 @@ test("a variant Usage waits for its parent detail, then keeps it for a sibling",
       subtree: true,
     });
   });
+  const detail = await holdDetail(page, "example/components/action");
+  await page
+    .locator(
+      'nav.mbk-nav a[data-nav-row][data-route="example/components/action/index.html"]',
+    )
+    .click();
   await expect.poll(() => detail.held.length).toBe(1);
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
   await expect(usage).toHaveText("Loading usage…");
   await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
     "Loading preview…",
@@ -72,8 +78,33 @@ test("a variant Usage waits for its parent detail, then keeps it for a sibling",
     "data-saw-empty-usage",
   );
   expect(detail.reads()).toBe(1);
+});
 
-  await chooseVariant(page, "Disabled");
+test("a variant Usage waits for its parent detail and reuses it for a sibling", async ({
+  page,
+}) => {
+  const detail = await holdDetail(page, "example/components/action");
+  await page.goto("/view/example/components/action/default/");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  const usage = await openPanel(page, "Usage");
+  await expect.poll(() => detail.held.length).toBe(1);
+  await expect(usage).toHaveText("Loading usage…");
+  await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
+    "Loading preview…",
+  );
+
+  await detail.release();
+  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
+  for (const name of ["Welcome", "Details", "Toolbar"])
+    await expect(
+      usage.getByRole("link", { name, exact: true }).first(),
+    ).toBeVisible();
+  expect(detail.reads()).toBe(1);
+
+  await page
+    .getByRole("navigation", { name: "Saved variants" })
+    .getByRole("link", { name: "Disabled", exact: true })
+    .click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
   expect(detail.reads()).toBe(1);
 });
