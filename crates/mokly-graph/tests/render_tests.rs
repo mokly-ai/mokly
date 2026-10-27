@@ -44,6 +44,38 @@ fn every_template_rule_has_deterministic_rendered_document_snapshots() {
 }
 
 #[test]
+fn render_and_comparison_document_return_the_same_artifact() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/catalogue");
+    let (generation, _) = support::prepare(&root, 16 * 1024 * 1024, 1);
+    let generation = generation.unwrap();
+    let route = "home/index.mobile.html";
+    let rendered = generation.render(route).unwrap();
+    let comparison = generation.comparison_document(route).unwrap();
+    assert_eq!(rendered.bytes, comparison.bytes);
+    assert_eq!(rendered.content_type, comparison.content_type);
+    let rendered_document = rendered.document.as_ref().unwrap();
+    let comparison_document = comparison.document.as_ref().unwrap();
+    assert_eq!(rendered_document.tree, comparison_document.tree);
+    assert_eq!(rendered_document.usage, comparison_document.usage);
+    assert_eq!(rendered_document.warnings, comparison_document.warnings);
+    assert_eq!(rendered_document.resources, comparison_document.resources);
+    assert_eq!(rendered_document.components, comparison_document.components);
+    assert_eq!(
+        rendered_document.links.len(),
+        comparison_document.links.len()
+    );
+    for (rendered_link, comparison_link) in rendered_document
+        .links
+        .iter()
+        .zip(&comparison_document.links)
+    {
+        assert_eq!(rendered_link.source_route, comparison_link.source_route);
+        assert_eq!(rendered_link.target, comparison_link.target);
+        assert_eq!(rendered_link.fragment, comparison_link.fragment);
+    }
+}
+
+#[test]
 fn repeated_slots_keep_one_input_and_separate_placements() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/catalogue");
     let (generation, _) = support::prepare(&root, 16 * 1024 * 1024, 1);

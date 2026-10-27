@@ -139,9 +139,10 @@ destination has no Dark view.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states without recording source data.
-It validates and captures the base through one ordered collector. Each base
-view supplies its validated document and closure without a second render.
-Base preparation passes that result to `Comparison::compare_prepared`.
+It validates and captures each side through one ordered collector. Each view
+supplies its validated document and closure without a second render. Base
+preparation passes its result to `Comparison::compare_prepared`; build
+preparation captures the head before Changes receives it.
 An uncaptured fallback also uses that entry point, so a summary that exceeds
 the capture bound does not start another pass.
 Private compressed
@@ -157,15 +158,15 @@ Queued cancelled inputs return the generation's error without starting work.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
-`DEFAULT_BASE_CAPTURE_BYTES` sets a 256 MiB retention budget. It charges encoded
+`DEFAULT_BASE_CAPTURE_BYTES` and `DEFAULT_HEAD_CAPTURE_BYTES` each set a 256 MiB retention budget. They charge encoded
 payloads, Rust metadata, closures, route keys, and conservative map overhead.
 The collector accounts for each batch's growing summary storage before
 retaining its inputs. Later kept candidates yield space to summary and generated-resource charges.
 Final retention uses the original charges in route order. A partial capture
 can use fallback sooner when final summary storage removes candidate space.
-Inputs that do not fit read from the pinned source. Head reads use the original
-bounded render cache and render again on the head root after eviction. Source
-switches stay constant while the base capture fits; fallback can add switches.
+Inputs that do not fit read from their side's source. Serve head reads use the
+original bounded render cache and render again on the head root after eviction.
+Build head reads use the head capture; fallback can add source switches.
 Move pairing, view comparison, and snapshot reads restore one base view at a time.
 Each result holds at most one base capture. It writes no files and retains no
 parsed page set. The API supports capture reuse, which tests exercise;
@@ -199,8 +200,8 @@ Own CSS states and dependency reasons use kept own-page source proof.
 Details can retain a nested component record without promoting its source to
 an own-page dependency reason.
 It releases parsed documents after collecting canonical and containment proof.
-The retained result holds a bounded base capture over its pinned source, the
-original cached head generation, view states, reasons, ownership
+The retained result holds bounded base and head captures over their sources,
+view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs
 are reused per route; public resource bytes and stylesheet diffs have explicit
 cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
@@ -293,6 +294,7 @@ so process startup speed cannot exhaust its readiness wait.
 - [Removed projection](./src/projection_removed.rs).
 - [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
+- [Bounded side capture](./src/comparison_capture.rs) and [capture accounting](./src/capture_weight.rs).
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
 - [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).
 - [Extraction](./src/extraction.rs).

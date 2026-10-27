@@ -50,13 +50,15 @@ A node recomputes only when its key moves. Fragments are memoized across
 screens, so a component rendered with the same props on many screens renders
 once.
 
-Rendered documents live in the render cache: process memory, bounded by bytes,
-evicted least recently used. Serve and `build` read it. Changes captures the
-base within 256 MiB and reads the head from this cache. Base capture misses use
-the pinned source; evicted head documents render again on the head root. The
-base-side extraction cache and the dependency install cache live in the
-operating system's cache directory under a key derived from the repository
-path, each with its own byte bound; the terminal names that directory, and
+Rendered documents live in the render cache: process memory, bounded by bytes, evicted least recently used. Serve reads the head there. `build` and `publish`
+capture it once during the build check under a separate 256 MiB bound.
+Changes, output, and comparison output read that capture; an oversized head
+document renders again from the head source. Base and head captures have
+independent bounds beside the render cache. Decision: head capture reuses the
+tested base capture; raising the cache bound was rejected because it repeats the
+limit problem, and reordering stages was rejected because it changes build order.
+Base-side extraction and dependency install caches live in the operating system's
+repository-keyed path, each with its own byte bound; the terminal names it, and
 deleting it is safe. No cache is in the repository.
 
 ## Serve
@@ -81,17 +83,15 @@ process.
 
 ## Build
 
-`mokly build` runs discovery and validation, renders every view of every
-entry, reports warnings, and writes the static site into the directory `--out`
-names, `mokly-static/` at the repository root by default, which Git must
-ignore. It writes the shell stub per route, the index, one detail per entry,
-every document, the comparison generation, the viewer bundle, styles, and
-fonts under the [static build contract](./mokly-export.md) and the
-[static delivery contract](./mokly-export-delivery.md). An error fails the
-command before any file is written. With `--strict`, a warning fails it too.
-The output transaction stages the whole site, replaces the output directory
-in one step, and rolls back on failure, so the last successful output stays
-in place. A validation-only run is a build to a temporary directory.
+`mokly build` runs discovery and validation, renders every view in the build
+check, and keeps captured documents for Changes and output. It reports warnings
+and writes the static site into `--out`, `mokly-static/` at the repository root
+by default, which Git must ignore. It writes the shell stub, index, details,
+documents, comparison generation, viewer bundle, styles, and fonts under the
+[static build contract](./mokly-export.md) and [static delivery contract](./mokly-export-delivery.md).
+An error fails before any file is written; `--strict` also fails on warnings.
+The output transaction stages the whole site, replaces the directory in one
+step, and rolls back on failure. A validation-only run is a temporary build.
 
 `mokly publish` builds into its own directory outside the repository and
 uploads the result through the [upload exchange](./mokly-upload-exchange.md).

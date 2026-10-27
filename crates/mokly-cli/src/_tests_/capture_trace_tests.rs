@@ -16,6 +16,38 @@ use unimock::{MockFn, Unimock, matching};
 use super::serve_trace_tests::capture;
 
 #[test]
+fn head_capture_records_the_head_side() {
+    let records = capture(|| {
+        let engine = Engine {
+            moves: Arc::new(Unimock::new(())),
+            css: Arc::new(MemoryParsedCss::new(1024)),
+        };
+        let head = Arc::new(Unimock::new((
+            RenderGenerationMock::comparison_capture
+                .next_call(matching!())
+                .returns(None),
+            RenderGenerationMock::collect_comparison
+                .next_call(matching!(_))
+                .returns(Ok(RenderSummary::default())),
+            RenderGenerationMock::resource_routes
+                .next_call(matching!())
+                .returns(vec![]),
+        )));
+        engine.capture_head(head).unwrap();
+    });
+    let captured: Vec<_> = records
+        .iter()
+        .filter(|record| record["stage"] == "review.capture-side")
+        .collect();
+    assert_eq!(captured.len(), 3);
+    assert_eq!(captured[0]["side"], "head");
+    assert_eq!(captured[1]["side"], "head");
+    assert_eq!(captured[2]["side"], "head");
+    assert_eq!(captured[1]["views"], 0);
+    assert_eq!(captured[2]["status"], "ok");
+}
+
+#[test]
 fn failed_capture_never_records_ok_or_success_counts() {
     let records = capture(|| {
         let engine = Engine {
@@ -69,6 +101,9 @@ fn failed_capture_never_records_ok_or_success_counts() {
             .contains("private cancellation detail")
     );
     assert_eq!(captured.len(), 2);
+    for record in &captured {
+        assert_eq!(record["side"], "base");
+    }
     assert_eq!(captured[0]["event"], "start");
     assert_eq!(captured[1]["event"], "end");
     assert_eq!(captured[1]["status"], "error");
@@ -86,6 +121,7 @@ fn successful_capture_emits_retention_counts_and_keeps_view_counts_off_end_recor
     let records = capture(|| {
         let span = tracing::info_span!(
             "review.capture-side",
+            side = "base",
             status = "error",
             views = tracing::field::Empty,
             uncaptured_views = tracing::field::Empty,
@@ -101,6 +137,7 @@ fn successful_capture_emits_retention_counts_and_keeps_view_counts_off_end_recor
     });
     assert_eq!(records.len(), 3);
     assert_eq!(records[0]["event"], "start");
+    assert_eq!(records[0]["side"], "base");
     assert_eq!(records[1]["event"], "counts");
     assert_eq!(records[1]["views"], 3);
     assert_eq!(records[1]["uncapturedViews"], 2);
@@ -160,6 +197,7 @@ fn empty_base_capture_emits_successful_zero_view_counts() {
         .filter(|record| record["stage"] == "review.capture-side")
         .collect();
     assert_eq!(records.len(), 3);
+    assert!(records.iter().all(|record| record["side"] == "base"));
     assert_eq!(records[0]["event"], "start");
     assert_eq!(records[1]["event"], "counts");
     assert_eq!(records[1]["views"], 0);
@@ -234,6 +272,7 @@ fn reused_full_partial_and_zero_captures_count_uncaptured_base_views() {
             .collect();
         assert_eq!(records.len(), 3);
         assert_eq!(records[1]["event"], "counts");
+        assert_eq!(records[1]["side"], "base");
         assert_eq!(records[1]["views"], views);
         assert_eq!(records[1]["uncapturedViews"], 4 - views);
         assert_eq!(records[1]["retainedBytes"], 128);

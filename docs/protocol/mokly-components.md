@@ -186,9 +186,10 @@ viewport, colour scheme, and scope, and grafts the returned fragment with its
 collected styles under the [sidecar contract](./mokly-sidecar.md). The
 component's own page renders its own props first and then each variant, with
 the component as the root instance, at every viewport and effective colour
-scheme, with the configured and declared stylesheets. Every document is kept
-in the render cache; Serve, `build`, and Changes read it there, and nothing
-is written to the repository.
+scheme, with the configured and declared stylesheets. Serve keeps every
+document in the render cache. `build` reads the head capture under the
+[runtime contract](./mokly-runtime.md#render-graph-and-cache), and nothing is
+written to the repository.
 
 Read model v7 gives a component entry `propSchema`, `props` in the wire form,
 `slots`, `suppliedSlots`, `controls`, `views`, and `variantOf` exactly on a

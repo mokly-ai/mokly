@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex};
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use unimock::{MockFn, Unimock, matching};
 
-use super::capture_with_bound;
 use super::comparison_capture_tests::source_calls;
+use super::{CaptureSide, capture_with_bound};
 
 struct Probe {
     generation: Arc<dyn RenderGeneration>,
@@ -22,7 +22,7 @@ fn captured(count: usize, parallelism: usize, bound: usize) -> Probe {
             .returns(parallelism),
     )));
     Probe {
-        generation: capture_with_bound(source, bound).unwrap(),
+        generation: capture_with_bound(source, bound, CaptureSide::Base).unwrap(),
         reads,
     }
 }

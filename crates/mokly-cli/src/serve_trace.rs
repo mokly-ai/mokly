@@ -62,7 +62,7 @@ struct Fields {
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
-            "viewport" | "scheme" | "action" | "operation" => {
+            "viewport" | "scheme" | "action" | "operation" | "side" => {
                 self.values.insert(field.name().into(), json!(value));
             }
             "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {

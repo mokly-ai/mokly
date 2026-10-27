@@ -60,7 +60,7 @@ Contract owners:
 State the head capture requirement and the decisions in force, so that the
 review can check the code against them.
 
-- [ ] Update the render graph and cache section of
+- [x] Update the render graph and cache section of
       `docs/protocol/mokly-runtime.md`: `build` and `publish` capture the head
       once during the build check, within the head capture bound that
       decision 2 sets. Changes, the output, and the comparison output read
@@ -68,71 +68,75 @@ review can check the code against them.
       the head root. Serve keeps reading the head from the render cache.
       Record decision 1 next to the rule: the rejected alternatives and the
       reason, in one or two sentences.
-- [ ] Update the build section of `docs/protocol/mokly-runtime.md`: a build
+- [x] Update the build section of `docs/protocol/mokly-runtime.md`: a build
       renders every view once and keeps the captured documents for Changes
       and for the output.
-- [ ] Update `docs/protocol/mokly-timings.md`: `review.capture-side` carries
+- [x] Update `docs/protocol/mokly-timings.md`: `review.capture-side` carries
       `side`, `base` or `head`. `build` and `publish` emit the head capture
       under `output.write` before `changes.classify`. The counts describe the
       documents of that side. Each side has its own capture bound under
       decision 2, beside the render cache.
-- [ ] Update `docs/protocol/mokly-components.md`: Serve reads every document
+- [x] Update `docs/protocol/mokly-components.md`: Serve reads every document
       from the render cache; `build` reads the head capture under the runtime
       contract.
-- [ ] Confirm that the build sections of
+- [x] Confirm that the build sections of
       `docs/protocol/mokly-comparison-serving.md` and
       `docs/protocol/mokly-export.md` stay true. Change nothing that stays
       true.
-- [ ] Update `crates/mokly-compare/README.md`: the capture serves both sides,
+- [x] Update `crates/mokly-compare/README.md`: the capture serves both sides,
       the head bound constant, and the head capture entry point under
       `### Key Code`. Remove the sentence that head reads use the render cache
       and render again after eviction, which stays true only in Serve.
-- [ ] Update `crates/mokly-cli/README.md`: the build check captures the head,
+- [x] Update `crates/mokly-cli/README.md`: the build check captures the head,
       and the capture spans cover both sides.
-- [ ] Update `crates/mokly-graph/README.md`: production callers capture the
+- [x] Update `crates/mokly-graph/README.md`: production callers capture the
       head in `build` too, and the comparison engine receives a captured head.
-- [ ] Write the answer to decision 2 into the runtime contract.
+- [x] Write the answer to decision 2 into the runtime contract.
+
+Evidence: `.context/build-head-capture/milestone-1-2.md`.
 
 ## Milestone 2: Head capture in the build check
 
 Replace the build check's render pass with a bounded capture of the head and
 route every later head read through it. The build output does not change.
 
-- [ ] Add a side parameter, base or head, to the capture entry point in
+- [x] Add a side parameter, base or head, to the capture entry point in
       `crates/mokly-compare/src/comparison_capture.rs`. Record it as the
       `side` field of the `review.capture-side` span. Add the head bound
       constant in `crates/mokly-compare/src/capture_weight.rs` with the value
       from decision 2.
-- [ ] Add `capture_head` beside `capture_base` on the `Comparison` trait in
+- [x] Add `capture_head` beside `capture_base` on the `Comparison` trait in
       `crates/mokly-compare/src/comparison_types.rs`, and expose it to the
       build through the `ChangesService` trait in
       `crates/mokly-compare/src/base_render.rs`.
-- [ ] In `crates/mokly-cli/src/build_prepare.rs`, replace the `render_all`
+- [x] In `crates/mokly-cli/src/build_prepare.rs`, replace the `render_all`
       call with the head capture. Keep the captured generation as the build's
       generation. Read the render summary from it, which renders nothing when
       the capture fit. A capture that does not fit falls back to the source,
       which renders as today. Map capture errors to the existing rendering
       error with the preparation warnings.
-- [ ] Update the doc comments that say head reads use the render cache, such
+- [x] Update the doc comments that say head reads use the render cache, such
       as `after` in `crates/mokly-compare/src/comparison_types.rs`.
-- [ ] Confirm that a restored head document carries everything the output
+- [x] Confirm that a restored head document carries everything the output
       loop and the inspector injection need: bytes, tree, links, usage,
       warnings, resources, and markers.
 - [ ] Rust tests in `crates/mokly-cli`:
-  - [ ] After `prepare`, the generation reports a comparison capture whose
+  - [x] After `prepare`, the generation reports a comparison capture whose
         view count equals the document count, and a later `render` returns
         the same bytes as the source without another source render.
-  - [ ] A bound too small for the summary falls back to the source, and the
+  - [x] A bound too small for the summary falls back to the source, and the
         build keeps the same warnings and document count.
-  - [ ] A build emits two `review.capture-side` groups: `head` under
+  - [x] A build emits two `review.capture-side` groups: `head` under
         `output.write` before `changes.classify`, and `base` under
         `review.base-tree`. Update `_tests_/capture_trace_tests.rs`, which
         indexes the records by position.
-- [ ] Rust tests in `crates/mokly-compare`: add the side to the existing
+- [x] Rust tests in `crates/mokly-compare`: add the side to the existing
       capture tests, and assert the `side` field on the span.
-- [ ] Node tests: filter `tests/static_capture_timing.test.ts` by side and
+- [x] Node tests: filter `tests/static_capture_timing.test.ts` by side and
       assert the head group too. Add `side` to `tests/helpers/static_timings.ts`.
-- [ ] Run the existing build warning tests. They must pass unchanged.
+- [x] Run the existing build warning tests. They must pass unchanged.
+
+Evidence: `.context/build-head-capture/milestone-1-2.md`.
 
 ## Milestone 3: Output check and measurement
 

@@ -69,7 +69,7 @@ Anchor checks and JavaScript fragments use the same scoped request mechanism.
 Each generation and each fragment adapter owns an independent registry.
 The final active lease removes its entry even when an old mutex handle still lives.
 
-Complete base validation can stream documents and closures to an ordered
+Complete side validation can stream documents and closures to an ordered
 comparison collector. Each view composes once, including when the artifact
 cache retains nothing. Validation keeps only cross-view facts between batches.
 It preserves aggregate failures and warning order. Inputs stay provisional
@@ -96,10 +96,12 @@ confined file identity; HTML and CSS inputs are read for their child references.
 Closure evidence retains exact logical instance and referring
 edge context for comparison proof. A comparison adapter can expose its existing
 capture through `comparison_capture`. The comparison engine reuses that handle
-instead of retaining another encoded copy of the same base. A smaller capture
-budget returns to the original source recipes. Wrappers that add checks must
-return `None` from `comparison_capture` so rebuilding cannot bypass their checks.
-Tests exercise capture reuse; production callers supply fresh base generations.
+instead of retaining another encoded copy of the same side. A smaller capture
+budget returns to the original source recipes. Build captures the head before
+Changes and passes that generation to the comparison engine. Wrappers that add
+checks must return `None` from `comparison_capture` so rebuilding cannot bypass
+their checks. Tests exercise capture reuse; production callers supply fresh
+generations.
 
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.

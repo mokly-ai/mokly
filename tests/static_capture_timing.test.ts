@@ -6,7 +6,7 @@ import { build, fixture } from "./helpers/static_changes.js";
 import { timings } from "./helpers/static_timings.js";
 
 test(
-  "base capture timings report bounded retention and encoded payload bytes",
+  "build capture timings report bounded retention for both sides",
   { timeout: 120_000 },
   async (context) => {
     const { root } = await fixture();
@@ -18,61 +18,85 @@ test(
         context.signal,
       );
       const records = timings(result.stderr);
-      const captured = records.filter(
+      const captures = records.filter(
         (record) => record.stage === "review.capture-side",
       );
-      assert.deepEqual(
-        captured.map((record) => record.event),
-        ["start", "counts", "end"],
-      );
-      const counts = captured[1]!;
-      assert.equal(counts.views, 6);
-      assert.equal(counts.uncapturedViews, 0);
-      assert.ok(counts.encodedBytes! > 0);
-      assert.ok(counts.retainedBytes! >= counts.encodedBytes!);
-      assert.ok(counts.retainedBytes! <= 256 * 1024 * 1024);
-      assert.equal(captured[2]!.status, "ok");
-      assert.equal(captured[0]!.views, undefined);
-      assert.equal(captured[0]!.uncapturedViews, undefined);
-      assert.equal(captured[2]!.uncapturedViews, undefined);
-      assert.equal(captured[0]!.retainedBytes, undefined);
-      assert.equal(captured[0]!.encodedBytes, undefined);
-      const parent = records.find(
-        (record) => record.event === "start" && record.id === counts.parentId,
-      );
-      assert.equal(parent!.stage, "review.base-tree");
-      for (const record of captured) {
-        assert.equal(record.role, "core");
-        assert.equal(record.session, parent!.session);
-        assert.equal(record.parentId, parent!.id);
-        assert.equal("path" in record, false);
-        assert.equal("props" in record, false);
-      }
-      const validation = records.find(
+      const bySide = (side: "base" | "head") =>
+        captures.filter((record) => record.side === side);
+      const classify = records.find(
         (record) =>
-          record.stage === "review.capture-validate" &&
-          record.event === "start",
+          record.stage === "changes.classify" && record.event === "start",
       );
-      assert.ok(validation);
-      for (const [stage, count] of [
-        ["review.capture-validate", 1],
-        ["review.capture-document", 6],
-        ["review.capture-encode", 6],
-        ["review.capture-closure", 6],
+      assert.ok(classify);
+      const head = bySide("head");
+      const base = bySide("base");
+      for (const [side, sideRecords, expectedParent, expectedViews] of [
+        ["head", head, "output.write", 2],
+        ["base", base, "review.base-tree", 6],
       ] as const) {
-        const ended = records.filter(
-          (record) => record.stage === stage && record.event === "end",
+        assert.deepEqual(
+          sideRecords.map((record) => record.event),
+          ["start", "counts", "end"],
+          side,
         );
-        assert.equal(ended.length, count, stage);
-        for (const record of ended) {
-          assert.equal(record.status, "ok");
-          assert.equal(
-            record.parentId,
-            stage === "review.capture-validate" ? counts.id : validation.id,
-          );
-          assert.equal(record.session, counts.session);
+        const start = sideRecords[0]!;
+        const counts = sideRecords[1]!;
+        const parent = records.find(
+          (record) => record.event === "start" && record.id === start.parentId,
+        );
+        assert.equal(parent?.stage, expectedParent, side);
+        assert.equal(counts.views, expectedViews);
+        assert.equal(counts.uncapturedViews, 0);
+        assert.ok(counts.encodedBytes! > 0);
+        assert.ok(counts.retainedBytes! >= counts.encodedBytes!);
+        assert.ok(counts.retainedBytes! <= 256 * 1024 * 1024);
+        assert.equal(sideRecords[2]!.status, "ok");
+        assert.equal(start.views, undefined);
+        assert.equal(start.uncapturedViews, undefined);
+        assert.equal(sideRecords[2]!.uncapturedViews, undefined);
+        assert.equal(start.retainedBytes, undefined);
+        assert.equal(start.encodedBytes, undefined);
+        assert.equal(
+          records.findIndex(
+            (record) => record.event === "start" && record.id === start.id,
+          ) < records.findIndex((record) => record.id === classify.id),
+          side === "head",
+        );
+        for (const record of sideRecords) {
+          assert.equal(record.role, "core");
+          assert.equal(record.session, parent?.session);
+          assert.equal(record.parentId, parent?.id);
           assert.equal("path" in record, false);
           assert.equal("props" in record, false);
+        }
+        const validation = records.find(
+          (record) =>
+            record.stage === "review.capture-validate" &&
+            record.event === "start" &&
+            record.parentId === start.id,
+        );
+        assert.ok(validation, side);
+        for (const [stage, count] of [
+          ["review.capture-validate", 1],
+          ["review.capture-document", expectedViews],
+          ["review.capture-encode", expectedViews],
+          ["review.capture-closure", expectedViews],
+        ] as const) {
+          const ended = records.filter(
+            (record) =>
+              record.stage === stage &&
+              record.event === "end" &&
+              (stage === "review.capture-validate"
+                ? record.id === validation.id
+                : record.parentId === validation.id),
+          );
+          assert.equal(ended.length, count, `${side} ${stage}`);
+          for (const record of ended) {
+            assert.equal(record.status, "ok");
+            assert.equal(record.session, counts.session);
+            assert.equal("path" in record, false);
+            assert.equal("props" in record, false);
+          }
         }
       }
     } finally {

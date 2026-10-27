@@ -93,6 +93,9 @@ pub trait BaseProvider: Send + Sync {
 /// Build and Serve call the same base-selection service.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangesServiceMock))]
 pub trait ChangesService: Send + Sync {
+    /// Validate and retain the working-tree head before static output reads it.
+    fn capture_head(&self, head: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>>;
+
     /// Select the merge base once, prepare sources, and compare with the supplied head.
     fn classify(
         &self,
@@ -118,6 +121,10 @@ pub struct Changes {
 }
 
 impl ChangesService for Changes {
+    fn capture_head(&self, head: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
+        self.comparison.capture_head(head)
+    }
+
     fn classify(
         &self,
         config: &ResolvedConfig,

@@ -47,7 +47,7 @@ impl Comparison for Engine {
 }
 
 impl Engine {
-    /// Classify after the caller has validated and captured the base.
+    /// Classify after the caller has validated and captured the comparison inputs.
     pub(crate) fn compare_captured(
         &self,
         request: &ComparisonRequest,

@@ -1,4 +1,4 @@
-//! Bounded base inputs replay exact documents while uncaptured inputs use their source.
+//! Bounded side inputs replay exact documents while uncaptured inputs use their source.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
@@ -21,7 +21,32 @@ use crate::capture_codec::EncodedView;
 use crate::capture_collection::Collector;
 use crate::capture_error;
 use crate::capture_styles::{self, EncodedResource};
-use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES};
+use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
+
+/// Which render-generation side a capture belongs to.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum CaptureSide {
+    /// The pinned Git base generation.
+    Base,
+    /// The working-tree head generation.
+    Head,
+}
+
+impl CaptureSide {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Base => "base",
+            Self::Head => "head",
+        }
+    }
+
+    fn bound(self) -> usize {
+        match self {
+            Self::Base => DEFAULT_BASE_CAPTURE_BYTES,
+            Self::Head => DEFAULT_HEAD_CAPTURE_BYTES,
+        }
+    }
+}
 
 pub(crate) struct CapturedView {
     pub(crate) document: EncodedView,
@@ -43,15 +68,19 @@ pub(crate) struct CapturedGeneration {
     encoded_bytes: usize,
 }
 
-/// The result owns bounded base inputs; the original source handles every cache miss.
-pub(crate) fn capture(source: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
-    capture_with_bound(source, DEFAULT_BASE_CAPTURE_BYTES)
+/// The result owns bounded side inputs; the original source handles every cache miss.
+pub(crate) fn capture(
+    source: Arc<dyn RenderGeneration>,
+    side: CaptureSide,
+) -> Result<Arc<dyn RenderGeneration>> {
+    capture_with_bound(source, side.bound(), side)
 }
 
-#[tracing::instrument(name = "review.capture-side", skip_all, fields(status = "error", views = tracing::field::Empty, uncaptured_views = tracing::field::Empty, retained_bytes = tracing::field::Empty, encoded_bytes = tracing::field::Empty))]
+#[tracing::instrument(name = "review.capture-side", skip_all, fields(side = side.label(), status = "error", views = tracing::field::Empty, uncaptured_views = tracing::field::Empty, retained_bytes = tracing::field::Empty, encoded_bytes = tracing::field::Empty))]
 pub(crate) fn capture_with_bound(
     source: Arc<dyn RenderGeneration>,
     bound: usize,
+    side: CaptureSide,
 ) -> Result<Arc<dyn RenderGeneration>> {
     let source = if let Some(previous) = source.comparison_capture() {
         if previous.retained_bytes <= bound {
