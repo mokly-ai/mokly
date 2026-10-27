@@ -57,8 +57,8 @@ the rule. Rules for one application, package, or feature live in the
 
 ## Commands
 
-- Build: `npm run build`. It builds the host native target, the shim, the
-  sidecar, the UI package, and the viewer, in that order.
+- Build: `npm run build`. It builds the host native target, the UI package,
+  the viewer, and then the shim and the sidecar, in that order.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
   Node test files under `tests/`, `packages/viewer/tests/`, and
   `packages/ui/tests/`,

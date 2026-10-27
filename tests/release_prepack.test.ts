@@ -10,7 +10,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("CLI prepack prepares viewer declarations before a clean consumer typechecks them", async (t) => {
+test("CLI prepack prepares the UI package and viewer declarations before a clean consumer typechecks them", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-prepack-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const write = async (file: string, content: string) => {
@@ -21,10 +21,10 @@ test("CLI prepack prepares viewer declarations before a clean consumer typecheck
     "package.json",
     JSON.stringify({
       private: true,
-      workspaces: ["packages/viewer", "packages/mokly"],
+      workspaces: ["packages/ui", "packages/viewer", "packages/mokly"],
     }),
   );
-  for (const name of ["viewer", "mokly"]) {
+  for (const name of ["ui", "viewer", "mokly"]) {
     await write(
       `packages/${name}/package.json`,
       JSON.stringify({
@@ -49,9 +49,10 @@ test("CLI prepack prepares viewer declarations before a clean consumer typecheck
       `
 import fs from "node:fs";
 ${name === "mokly" ? 'fs.readFileSync("../viewer/dist/index.d.ts");' : ""}
+${name === "viewer" ? 'fs.readFileSync("../ui/dist/index.js");' : ""}
 fs.mkdirSync("dist", { recursive: true });
 fs.writeFileSync("dist/index.js", "export {};\\n");
-fs.writeFileSync("dist/index.d.ts", ${JSON.stringify(name === "viewer" ? "export interface View { path: string }\n" : 'export type { View } from "@mokly/viewer";\n')});
+fs.writeFileSync("dist/index.d.ts", ${JSON.stringify({ ui: "export {};\n", viewer: "export interface View { path: string }\n", mokly: 'export type { View } from "@mokly/viewer";\n' }[name])});
 fs.appendFileSync("../../order.txt", "${name}\\n");
 `,
     );
@@ -75,7 +76,7 @@ fs.appendFileSync("../../order.txt", "${name}\\n");
   });
   assert.equal(
     await fs.readFile(path.join(root, "order.txt"), "utf8"),
-    "viewer\nmokly\n",
+    "ui\nviewer\nmokly\n",
   );
   await execute("npm", ["pack", "--pack-destination", archives], {
     cwd: path.join(root, "packages/viewer"),

@@ -18,16 +18,63 @@ const VIEWER_EXPORTS = {
   "./styles.css": "./dist/styles.css",
 };
 
+/** A component subpath of the UI package, or the subpath of its stylesheet. */
+const UI_SUBPATH = /^\.\/([a-z0-9]+(?:-[a-z0-9]+)*)(\.css)?$/u;
+
 /** Validate the public contract in either source or packed package metadata. */
 export function validatePackageManifest(metadata, name) {
+  if (name === "@mokly/ui") return validateUiManifest(metadata);
   if (name !== "@mokly/viewer") return validateCliOrNative(metadata, name);
+  validateBrowserPackage(metadata, name, "packages/viewer");
+  assert.equal(metadata.types, "./dist/index.d.ts");
+  assert.deepEqual(metadata.exports, VIEWER_EXPORTS);
+  assert.match(metadata.dependencies?.["@mokly/ui"] ?? "", VERSION);
+  assert.deepEqual(metadata.sideEffects, [
+    "./dist/browser.js",
+    "./dist/styles.css",
+  ]);
+}
+
+/**
+ * The UI package has no root entry: one subpath per component, the
+ * component's stylesheet beside it, and `styles.css` with every rule.
+ */
+function validateUiManifest(metadata) {
+  validateBrowserPackage(metadata, "@mokly/ui", "packages/ui");
+  assert.equal(metadata.types, undefined, "@mokly/ui has no root entry");
+  assert.equal(metadata.main, undefined, "@mokly/ui has no root entry");
+  assert.equal(metadata.exports?.["./styles.css"], "./dist/styles.css");
+  for (const [subpath, target] of Object.entries(metadata.exports)) {
+    if (subpath === "./styles.css") continue;
+    const [, component, css] = UI_SUBPATH.exec(subpath) ?? [];
+    assert.ok(component, `@mokly/ui exports ${subpath}, not a component`);
+    const file = `./dist/${component}/${component}`;
+    assert.deepEqual(
+      target,
+      css ? `${file}.css` : { types: `${file}.d.ts`, import: `${file}.js` },
+      subpath,
+    );
+  }
+  for (const field of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+  ])
+    for (const dependency of Object.keys(metadata[field] ?? {}))
+      assert.ok(
+        !dependency.startsWith("@mokly/"),
+        `@mokly/ui must not depend on ${dependency}`,
+      );
+  assert.deepEqual(metadata.sideEffects, ["*.css"]);
+}
+
+/** The contract of an MIT ESM browser package with React peers. */
+function validateBrowserPackage(metadata, name, directory) {
   assert.equal(metadata.name, name);
   assert.match(metadata.version, VERSION);
   assert.equal(metadata.license, "MIT");
   assert.equal(metadata.type, "module");
   assert.notEqual(metadata.private, true);
-  assert.equal(metadata.types, "./dist/index.d.ts");
-  assert.deepEqual(metadata.exports, VIEWER_EXPORTS);
   assert.deepEqual(metadata.peerDependencies, PEERS);
   assert.deepEqual(metadata.publishConfig, {
     access: "public",
@@ -36,7 +83,7 @@ export function validatePackageManifest(metadata, name) {
   assert.deepEqual(metadata.repository, {
     type: "git",
     url: "git+https://github.com/mokly-ai/mokly.git",
-    directory: "packages/viewer",
+    directory,
   });
   assert.deepEqual(
     [...metadata.files].sort(),
@@ -58,10 +105,6 @@ export function validatePackageManifest(metadata, name) {
     }
   }
   assert.equal(metadata.dependencies?.["@mokly/mokly"], undefined);
-  assert.deepEqual(metadata.sideEffects, [
-    "./dist/browser.js",
-    "./dist/styles.css",
-  ]);
   assert.equal(metadata.bin, undefined);
 }
 

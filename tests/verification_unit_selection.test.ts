@@ -13,6 +13,7 @@ import {
 } from "../scripts/verification/viewer-selection.mjs";
 
 const inventory = [
+  "packages/ui/tests/ui.test.tsx",
   "packages/viewer/tests/viewer.test.tsx",
   "tests/alpha.test.ts",
   "tests/nested/beta.test.ts",

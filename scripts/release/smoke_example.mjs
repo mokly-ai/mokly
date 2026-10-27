@@ -1,10 +1,10 @@
 /**
- * Pack the viewer, the CLI, and the host's native package; install the
- * archives into a scratch copy of the example outside the repository; serve
- * it through the installed shim from a nested directory and open a React, a
- * design, and an HTML screen and a Markdown document in headless Chrome;
- * build it with `--strict` and open the same entries in the built site; then
- * build it again through npx with an empty npm cache.
+ * Pack the UI package, the viewer, the CLI, and the host's native package;
+ * install the archives into a scratch copy of the example outside the
+ * repository; serve it through the installed shim from a nested directory
+ * and open a React, a design, and an HTML screen and a Markdown document in
+ * headless Chrome; build it with `--strict` and open the same entries in the
+ * built site; then build it again through npx with an empty npm cache.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -56,6 +56,7 @@ async function pack(destination) {
   assert.ok(host, "the packed consumer smoke requires a supported host");
   const packages = [];
   for (const [directory, name] of [
+    ["packages/ui", "@mokly/ui"],
     ["packages/viewer", "@mokly/viewer"],
     ["packages/mokly", "@mokly/mokly"],
     [host.directory, host.name],

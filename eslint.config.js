@@ -2,16 +2,18 @@ import path from "node:path";
 
 import eslint from "@eslint/js";
 import { includeIgnoreFile } from "eslint/config";
-import importPlugin from "eslint-plugin-import-x";
+import importPlugin, { createNodeResolver } from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import kebabCaseFileNames from "./scripts/eslint/kebab-case-file-names.mjs";
 import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.mjs";
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
 import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
 import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+const uiPackage = path.join(import.meta.dirname, "packages/ui");
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -36,6 +38,7 @@ export default tseslint.config(
       import: importPlugin,
       mokly: {
         rules: {
+          "kebab-case-file-names": kebabCaseFileNames,
           "no-artifact-path-literals": noArtifactPathLiterals,
           "no-directory-literals": noDirectoryLiterals,
           "no-eager-fixture-setup": noEagerFixtureSetup,
@@ -44,7 +47,7 @@ export default tseslint.config(
       },
     },
     settings: {
-      "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
+      "import-x/internal-regex": "^@mokly/(?:mokly|ui|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
@@ -81,7 +84,10 @@ export default tseslint.config(
   // variable deadlines and indirect clock calls pass both.
   // tests/test_timing_lint.test.ts checks each form with `ESLint.lintText`.
   {
-    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    files: [
+      "tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/ui/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+    ],
     ignores: ["tests/helpers/durations.ts"],
     rules: {
       "no-restricted-syntax": [
@@ -106,6 +112,80 @@ export default tseslint.config(
     rules: {
       "mokly/no-eager-fixture-setup": "error",
       "mokly/no-late-fixture-teardown": "error",
+    },
+  },
+  // The boundary between @mokly/ui and @mokly/viewer. The rules resolve
+  // imports, and TypeScript sources import `.js` and `.mjs` specifiers that
+  // name `.ts`, `.tsx`, and `.mts` files. Neither package reaches another
+  // package by a relative path; the tests of both may import the shared test
+  // helpers. tests/ui_boundary_lint.test.ts checks each rule.
+  {
+    files: [
+      "packages/ui/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/viewer/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+    ],
+    settings: {
+      "import-x/resolver-next": [
+        createNodeResolver({
+          extensionAlias: {
+            ".js": [".ts", ".tsx", ".js"],
+            ".mjs": [".mts", ".mjs"],
+          },
+        }),
+      ],
+    },
+    rules: {
+      "import/no-relative-packages": [
+        "error",
+        { ignore: ["^(?:\\.\\./)+tests/helpers/"] },
+      ],
+    },
+  },
+  // A package component imports only what packages/ui/package.json declares
+  // as a dependency or a peer, including types and other @mokly packages.
+  {
+    files: ["packages/ui/src/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    rules: {
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          packageDir: uiPackage,
+          devDependencies: false,
+          optionalDependencies: false,
+          peerDependencies: true,
+          includeInternal: true,
+          includeTypes: true,
+        },
+      ],
+    },
+  },
+  {
+    files: ["packages/viewer/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    rules: {
+      "import/no-restricted-paths": [
+        "error",
+        {
+          basePath: import.meta.dirname,
+          zones: [
+            {
+              target: "packages/viewer",
+              from: "packages/ui/src",
+              message: "Import @mokly/ui through its published subpaths.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // File names in @mokly/ui are kebab-case, so that a component file matches
+  // its published subpath. tests/ui_file_names_lint.test.ts checks the rule.
+  {
+    files: [
+      "packages/ui/src/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/ui/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+    ],
+    rules: {
+      "mokly/kebab-case-file-names": ["error", { root: uiPackage }],
     },
   },
   {

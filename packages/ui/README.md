@@ -53,8 +53,14 @@ viewer. `npm run typecheck` includes it. Tests live under `tests/` and run with
 `npm test -- packages/ui/tests/<file>`. A test that mounts a component imports
 `tests/dom.ts` first, which registers a happy-dom window for Testing Library.
 File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`; a lint
-holds the rule. A component imports only `react`, `react-dom`, and this
-package; a lint holds that rule too.
+holds the rule. A component imports only `react`, `react-dom`, and the other
+components of this package by relative path; a lint holds that rule too.
+
+A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
+styles. Its subpaths in the `exports` map are `./<name>`, with `types` and
+`import` targets in `dist/<name>/`, and `./<name>.css`. The build copies
+`<name>.css` beside the JavaScript and adds it to `styles.css` in component
+name order.
 
 ### Key Code
 
@@ -65,9 +71,13 @@ package; a lint holds that rule too.
   Dark control of the standalone shell
 - `src/comparison-toolbar/comparison-toolbar.tsx` — the comparison mode
   group, the Scroll together switch, and Refresh
-- `scripts/build.mjs` — compiles the package, copies each CSS file beside its
-  JavaScript, and writes `styles.css`
-- `tests` — Testing Library tests on happy-dom
+- [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
+  each CSS file beside its JavaScript, and writes `styles.css`
+- [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
+  stylesheets and orders `styles.css`
+- [`tests/dom.ts`](./tests/dom.ts) — the happy-dom window, the act
+  environment, and the cleanup of each DOM test
+- [`tests`](./tests) — Testing Library tests on happy-dom
 
 ### Related Docs
 

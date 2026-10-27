@@ -18,10 +18,8 @@ import { SHELL_VIEW_CSS } from "./css_views.js";
 import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
 import { CSS_WORKSPACE_MARKS } from "./css_workspace_marks.js";
 
-/** The rules every shell root shares; the embedded stylesheet scopes them. */
-export const SHELL_CSS =
-  SHELL_TOKENS_CSS +
-  SHELL_THEME_CSS +
+/** The shell's own rules, after the tokens, the palette, and the package rules. */
+const SHELL_RULES_CSS =
   SHELL_NAV_CSS +
   CSS_NAV_VARIANTS +
   CSS_NAV_CHANGED +
@@ -37,5 +35,19 @@ export const SHELL_CSS =
   SHELL_PREVIEW_CSS +
   SHELL_INSPECTOR_RESIZE_CSS;
 
+/**
+ * The rules every shell root shares: the tokens and the palette, then the
+ * `@mokly/ui` component rules, which read both, then the shell's own rules.
+ * The embedded stylesheet scopes them.
+ */
+export function shellCss(componentCss: string): string {
+  return SHELL_TOKENS_CSS + SHELL_THEME_CSS + componentCss + SHELL_RULES_CSS;
+}
+
 /** The standalone stylesheet: the shared rules and the stub's Auto appearance. */
-export const STANDALONE_SHELL_CSS = SHELL_CSS + STANDALONE_STUB_THEME_CSS;
+export function standaloneShellCss(componentCss: string): string {
+  return shellCss(componentCss) + STANDALONE_STUB_THEME_CSS;
+}
+
+/** The shell's own shared rules, without the `@mokly/ui` component rules. */
+export const SHELL_CSS = shellCss("");

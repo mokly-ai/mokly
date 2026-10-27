@@ -74,7 +74,10 @@ export async function inspectReleaseSet(root, directory) {
   return packed;
 }
 
-/** Native archives are built elsewhere. Pack the viewer before CLI prepack. */
+/**
+ * Native archives are built elsewhere. Pack the UI package, then the viewer,
+ * whose build reads the UI package stylesheet, before CLI prepack.
+ */
 export async function packReleaseSet(root, destination) {
   await verifyPackageVersions(root);
   await inspectRuntimeLicenses(root);

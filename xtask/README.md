@@ -42,8 +42,8 @@ internal binary and is not published to npm or crates.io.
 | `cargo xtask source-file-length-lint` | Audits the changed TypeScript, JavaScript, and protocol Markdown files against their limits. `--all` audits every scoped file.         |
 
 Every subprocess starts at the workspace root, even when xtask starts in a
-subdirectory. `npm run build` builds the host target too, with the shim, the
-sidecar, and the viewer.
+subdirectory. `npm run build` builds the host target too, with the UI package,
+the viewer, the shim, and the sidecar.
 Remote program discovery uses the command runner's Node shim resolver. On
 Windows it also finds native programs whose names omit the `.exe` suffix.
 On Windows, both subprocess adapters select the `.cmd` shims for npm, npx,
@@ -55,7 +55,7 @@ Arguments remain separate from the program name.
 | Suite      | Content                                                                                                                                                                                                                                   |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                       |
-| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                      |
+| Viewer     | The TypeScript typecheck of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`. The suite has no shard.                                                               |
 | Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded. |
 | Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                     |
 

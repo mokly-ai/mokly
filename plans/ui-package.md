@@ -81,7 +81,20 @@ file order would then decide ties between package, shell, and host rules.
 Reason: host theming becomes predictable, and the viewer is pre-1.0, so the
 precedence change is acceptable.
 
-Every decision is answered. No decision is open.
+Open decisions found during milestone 2, asked on 2026-10-27:
+
+- Decision 7: `@mokly/ui` has no npm registration and no trusted publisher,
+  so the first release would stop at its publish step. A register it by
+  hand at `0.0.0` with its trusted publisher and update `npm-bootstrap.md`.
+  B extend the bootstrap scripts to pack a reviewed `@mokly/ui` `0.0.0`
+  archive like the native packages and update the doc. Recommended B. The
+  registration itself needs a maintainer with npm access and is post-merge.
+- Decision 8: the elapsed-time lint of `ci-test-timing.md` is active for
+  `tests/` and now `packages/ui/tests/`, but not for `packages/viewer/tests/`,
+  which the contract names; the gap predates this plan. A add
+  `packages/viewer/tests/**` to the lint, zero findings today. B narrow the
+  contract to the covered paths. Recommended A. It widens a lint, so it
+  waits for the user.
 
 Evidence goes under `.context/ui-package/`.
 
@@ -170,55 +183,70 @@ check the code against them.
 Create the package and wire it into the build, the checks, the tests, and
 the release, with no component in it yet. The product does not change.
 
-- [ ] Create `packages/ui`: `package.json` with the name of decision 2,
+- [x] Create `packages/ui`: `package.json` with the name of decision 2,
       `type: module`, React and React DOM `>=19.0.0` peers,
       `sideEffects: ["*.css"]`, `files: ["dist", ...]`, and an `exports` map
       with one subpath per component plus `./styles.css`. No index file: the
       TypeScript skill allows a barrel only as a package entry, and subpaths
       make it unnecessary.
-  - [ ] `tsconfig.json` and `tsconfig.build.json` like the viewer's.
-  - [ ] `scripts/build.mjs`: `tsc`, copy each component's CSS beside its
+  - [x] `tsconfig.json` and `tsconfig.build.json` like the viewer's.
+  - [x] `scripts/build.mjs`: `tsc`, copy each component's CSS beside its
         JavaScript, and write `dist/styles.css` from every component CSS in
         alphabetical order.
-  - [ ] `build`, `typecheck`, and `test` scripts like the viewer's.
-- [ ] Wire the root: `workspaces` with `packages/ui` first, `npm run build`
+  - [x] `build`, `typecheck`, and `test` scripts like the viewer's.
+- [x] Wire the root: `workspaces` with `packages/ui` first, `npm run build`
       in the order UI package, viewer, CLI, `typecheck`, and the workspace
       builds in `xtask/src/check/commands.rs` in the same order.
-- [ ] Wire the release: `release-please-config.json` extra files for the
+- [x] Wire the release: `release-please-config.json` extra files for the
       package version, the viewer's pin, and the lockfile paths, and the
       package set of `scripts/release/versions.mjs`, `manifest.mjs`,
       `targets.mjs`, the smoke scripts, and `.github/workflows/ci.yml`.
-- [ ] Add `@mokly/ui` to the viewer's `dependencies` at the exact shared
+- [x] Add `@mokly/ui` to the viewer's `dependencies` at the exact shared
       version. Extend `packages/viewer/scripts/build.mjs` to read the package
       `styles.css` and include it in `shell.css` and in the embedded
       `styles.css`. Add the case to the existing styles test: the embedded
       transform wraps a `@layer` block in `@scope` unchanged.
-- [ ] Add the boundary lints of decision 4 to `eslint.config.js`:
-  - [ ] `import-x/no-extraneous-dependencies` for `packages/ui/src` with
+- [x] Add the boundary lints of decision 4 to `eslint.config.js`:
+  - [x] `import-x/no-extraneous-dependencies` for `packages/ui/src` with
         `packageDir` set to the package, so a component imports only what
         `packages/ui/package.json` declares: `react` and `react-dom`. This
         is the rule that the workspace symlinks make necessary.
-  - [ ] `import-x/no-relative-packages` for `packages/ui` and
+  - [x] `import-x/no-relative-packages` for `packages/ui` and
         `packages/viewer`, so neither package reaches the other by a
         relative path.
-  - [ ] `import-x/no-restricted-paths` for `packages/viewer` with a zone
+  - [x] `import-x/no-restricted-paths` for `packages/viewer` with a zone
         that forbids `packages/ui/src`, beside the `exports` map that already
         limits the viewer to the published subpaths.
-  - [ ] A local rule under `scripts/eslint/`, like the four rules there,
+  - [x] A local rule under `scripts/eslint/`, like the four rules there,
         that requires kebab-case file names under `packages/ui/src` and
         `packages/ui/tests` (decision 5). Cover each rule with a case in
         the ESLint rule tests, as the timing lint does.
-- [ ] Add the DOM test tier of decision 3: install `happy-dom` and
+- [x] Add the DOM test tier of decision 3: install `happy-dom` and
       `@testing-library/react` as root dev dependencies with `npm install`,
       so that the manifest and the lockfile change together. Add
       `packages/ui/tests/dom.ts`, which registers one happy-dom window per
       test process and sets `IS_REACT_ACT_ENVIRONMENT`, and the
       `packages/ui/tests` root in `scripts/verification/evidence.mjs`. Each
       DOM test imports `dom.ts` first. The dependency audit passes.
-- [ ] Check: `npm run build`, `npm run typecheck`,
+- [x] Check: `npm run build`, `npm run typecheck`,
       `cargo xtask check --suite repository`, and `npm run package:smoke`,
       which must install the new package into its consumer. Save the output
       under `.context/ui-package/skeleton/`.
+- [x] Done on 2026-10-27 by the delegated Opus 5.5 agent and checked. Its
+      choices: `@happy-dom/global-registrator` joins the dev dependencies;
+      `tests/dom.ts` also runs Testing Library cleanup after each test,
+      because node:test has no global `afterEach`; the root `tsconfig.json`
+      includes `packages/ui`; the boundary rules use the import plugin's
+      node resolver with a `.js` to `.ts` alias for the two packages;
+      `no-relative-packages` exempts the shared `tests/helpers`; the
+      kebab-case rule also checks directory names; `css.ts` exports
+      `shellCss` and `standaloneShellCss` and the unused
+      `STANDALONE_SHELL_CSS` is gone; the CLI prepack builds the UI package
+      first; the release smoke checks that `@mokly/ui/styles.css` resolves.
+      Three protocol passages that named the old build order and the three
+      archives are aligned: `ci-verification-repository.md`,
+      `developer-test-commands.md`, and `packed-consumer-smoke.md`. The root
+      `README.md` lists the package.
 
 ## Milestone 3: First components
 
@@ -255,6 +283,9 @@ after they exist.
 - [ ] Cascade layer (decision 6): each package stylesheet declares its rules
       in `@layer mokly.components`. The viewer's `css_tokens.ts` declares the
       layer order first, so the layer exists before any unlayered shell rule.
+- [ ] Add a test of the viewer's restricted-path rule against a real file in
+      `packages/ui/src`, now that one exists; the milestone 2 test used a
+      stub resolver.
 - [ ] Turn the Key Code code spans of `packages/ui/README.md` and the
       `../ui/src` entry of `packages/viewer/README.md` into links now that the
       files exist.
@@ -316,6 +347,10 @@ package and drops its own copies. Decision 1 approves the deletions.
 
 ## Post-merge follow-up (non-blocking)
 
+- [ ] Register `@mokly/ui` on npm with its trusted publisher before the first
+      release that carries it, under decision 7.
+- [ ] Give the unused-export and public-export ratchets a baseline for
+      `packages/ui` once a release tag carries the package.
 - [ ] After the first release that carries `@mokly/ui`, install
       `@mokly/viewer` into a clean consumer and confirm that `@mokly/ui`
       resolves and that `styles.css` carries the component rules.

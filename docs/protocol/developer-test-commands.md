@@ -13,7 +13,8 @@ Status: In progress under the [shared UI package plan](../../plans/ui-package.md
 - `cargo test -p <crate>` runs one crate's Rust tests, and
   `cargo test --workspace` runs the default targets. The repository suite runs the default
   set; a selected crate is partial verification. Sidecar integration tests
-  require `npm run build --workspace @mokly/viewer` then
+  require `npm run build --workspace @mokly/ui`, then
+  `npm run build --workspace @mokly/viewer`, then
   `npm run build --workspace @mokly/mokly` before a raw Cargo run.
 - Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace tests and the gate do not run it. The repository suite compiles and lints it with `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`.
 - `npm run test:browser -- [<spec> ...] [-g "<name>"]` builds first, then

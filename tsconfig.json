@@ -33,7 +33,11 @@
     "packages/viewer/src/**/*.ts",
     "packages/viewer/src/**/*.tsx",
     "packages/viewer/tests/**/*.ts",
-    "packages/viewer/tests/**/*.tsx"
+    "packages/viewer/tests/**/*.tsx",
+    "packages/ui/src/**/*.ts",
+    "packages/ui/src/**/*.tsx",
+    "packages/ui/tests/**/*.ts",
+    "packages/ui/tests/**/*.tsx"
   ],
   "exclude": ["node_modules", "**/dist"]
 }
