@@ -103,8 +103,7 @@ from the fixture record and rejects overrides. It accepts scenario, sidecar,
 memory-stop, and sidecar-timeout flags. Each scenario prints a progress line.
 Both commands warn if Git does not confirm that `--root` is ignored.
 Each fixture's `.context/` holds its setup record, logs, timing records, and
-`measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture)
-and [reference capture procedure](../../../plans/rust-rebuild.md#reference-capture).
+`measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture).
 
 Build reports include input-capture and recheck spans, retained private source
 payload, per-root CSS preparation, and bracketing RSS samples. These are

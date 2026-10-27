@@ -20,8 +20,11 @@ fixes, pinned-parent overrides, and reviewed exceptions land there.
 
 Release preparation runs the strict live audit under the
 [release evidence contract](./npm-release-evidence.md#verification-modes) and
-never reuses an earlier audit as time-sensitive security evidence. The CI
-repository prerequisite must pass before viewer, browser, or native jobs start.
+never reuses an earlier audit as time-sensitive security evidence. The other
+CI jobs start without waiting for the CI repository job's audit, and
+`Required CI` fails unless it passes. An audit gate before those jobs was
+rejected: they hold only a read-only token, and the gate would delay every
+run.
 A cache hit never replaces an audit. Both modes require registry access. An
 audit is evidence about known advisories at execution time, not a guarantee
 that every dependency is safe. See the [CI workflow graph](./ci-workflow.md)

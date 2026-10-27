@@ -6,8 +6,9 @@
 `workflow_dispatch` for any branch. A manual run uses the selected branch's
 workflow file, which must include that trigger. The workflow has read-only
 repository contents permission and cancels superseded runs.
-The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite with `--dependency-audit "$DEPENDENCY_AUDIT"`. The
+The runtime profile job is every verification job's only prerequisite, so the
+repository job's audit-first suite runs in parallel with the others. The suite
+receives `--dependency-audit "$DEPENDENCY_AUDIT"`, and the
 [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
 selects that mode for each event.
 
@@ -49,15 +50,15 @@ only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
 
-The repository job resolves floating Node 24 once per run and publishes that
-exact version, the selected matrix, and the report-runtime identities as job
-outputs. Every viewer, browser, and static-delivery job selected for Node 24,
-plus `Required CI`, installs that exact version. Matrix labels and report
-runtime identities stay `node-24`; reports record the exact installed version.
-The aggregate rejects mixed versions within a group.
+The runtime profile job resolves floating Node 24 once per run and publishes
+that exact version, the selected matrix, and the report-runtime identities as
+job outputs. The repository job, `Required CI`, and every viewer, browser, and
+static-delivery job selected for Node 24 install that exact version. Matrix
+labels and report runtime identities stay `node-24`; reports record the exact
+installed version. The aggregate rejects mixed versions within a group.
 
 Node 22.15 is the ordinary functional runtime because it is the package's
-declared minimum. The Node 24 repository prerequisite runs on every event. A
+declared minimum. The Node 24 repository job runs on every event. A
 Node 24-only regression can therefore reach unreleased `main`, but the
 dual-runtime Release Please gate must catch it before versions, tags, or npm
 artifacts can be published. Release Please normally updates its pull request
@@ -113,8 +114,9 @@ pin equals `packageManager`. CI and release jobs set up that npm before
 
 Linux and Windows jobs across the CI, preview, release, native bootstrap, and
 Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
-matrix below. macOS jobs use the provider's smallest
-available tier, which is 6 vCPUs. The publishing exception is any job that publishes
+matrix below and the CI Windows native job. That job uses 8 vCPUs, because on
+2 vCPUs its complete Rust build and test run is usually the slowest CI job.
+macOS jobs use the provider's smallest available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
@@ -144,7 +146,7 @@ workflows contain no `${{` expression.
 
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
-aggregate against the runtime profile emitted by the repository job: five
+aggregate against the runtime profile job's selection: five
 viewer and browser reports for ordinary events and ten for a Release Please
 pull request.
 

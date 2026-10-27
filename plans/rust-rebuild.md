@@ -22,7 +22,7 @@ catalogue page's format table to the old code was deleted on 2026-10-14 with
 the other protocol-content tests. On 2026-10-12 the branch was rebased onto the
 `AGENTS.md` that names the shared skills, and the rebuild procedures moved
 from the removed `docs/dev` directory to
-[the protocol page](https://github.com/mokly-ai/mokly/blob/66e1ba6a/docs/protocol/rust-rebuild-procedures.md). Later that day
+[the protocol page](https://github.com/mokly-ai/mokly/blob/b8defe26801a695fd154095b6209501eca2e983e/docs/protocol/rust-rebuild-procedures.md). Later that day
 the user withdrew the committed generated tree: both comparison sides render
 from sources, the static output is a plain output, and the Milestone 1 contracts were
 revised to match (Decisions 11 to 13). The protocol index then moved eight

@@ -9,8 +9,8 @@ committed `package-lock.json`. `npm ci` always runs, including after a cache
 hit, and every platform's optional native package remains available. A cache
 miss is an ordinary cold install and never permits a skipped command.
 
-The live lockfile-only workspace audit runs first in the repository prerequisite
-and does not depend on cache state. Complete local and release commands keep
+The live lockfile-only workspace audit runs first in the CI repository job and
+does not depend on cache state. Complete local and release commands keep
 audit-first ordering. The
 [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
 selects baseline or strict mode for each command and event. Only active
