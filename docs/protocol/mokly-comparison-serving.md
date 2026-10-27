@@ -65,8 +65,9 @@ removed entry's preview under the
 [removed previews contract](./mokly-removed-previews.md). Removed component
 parents and variants use the index's advertised generation in every host.
 In Serve, they renew its root before loading another view or mode. A static
-shell checks `mokly-viewer/deployment.json` before it opens a comparison or a
-removed entry; Serve has no deployment file and performs no such request.
+shell checks `mokly-viewer/deployment.json` before it opens a comparison,
+changes its view or mode, or opens a removed entry. Serve has no deployment
+file and performs no such request.
 The selection endpoint redirects to the root of an immutable generation named
 `selected-<uuid>`. Its snapshots hold the base and head bytes of the
 classification that it projects. Snapshot URLs resolve relative to that root.

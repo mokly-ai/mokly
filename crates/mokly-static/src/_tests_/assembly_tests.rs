@@ -12,10 +12,12 @@ use mokly_graph::key::NodeKey;
 use mokly_graph::types::{DocumentPlan, RenderGenerationMock};
 use mokly_html::{composition::Composed, parse};
 use mokly_model::axes::ColorScheme;
+use mokly_model::canonical;
 use mokly_model::catalogue::{
     CatalogueModel, EntryContent, EntryMetadata, ModelEntry, SourceLocation,
 };
 use mokly_model::output::ownership::Ownership;
+use mokly_model::output::validation::digest;
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_source_interface::tree::SourceTreeMock;
@@ -214,6 +216,32 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
             .any(|entry| entry.path == "mokly-viewer/deployment.json")
     );
     assert_eq!(ownership.files.len() + 1, files.len());
+
+    let mut zeroed = index.clone();
+    zeroed.deployment_id = "0".repeat(64);
+    let mut hashes: Vec<_> = files
+        .iter()
+        .filter(|(path, _)| {
+            **path != ".mokly-export-artifact" && **path != "mokly-viewer/deployment.json"
+        })
+        .map(|(path, bytes)| {
+            let canonical = if *path == "mokly-viewer/index.json" {
+                canonical::to_string(&zeroed).unwrap().into_bytes()
+            } else if path.starts_with("mokly-viewer/entries/") {
+                let mut detail = readers::detail(std::str::from_utf8(bytes).unwrap()).unwrap();
+                detail.deployment_id = Some("0".repeat(64));
+                canonical::to_string(&detail).unwrap().into_bytes()
+            } else {
+                bytes.to_vec()
+            };
+            ((*path).to_owned(), digest(&canonical))
+        })
+        .collect();
+    hashes.sort_by(|left, right| left.0.encode_utf16().cmp(right.0.encode_utf16()));
+    assert_eq!(
+        index.deployment_id,
+        digest(canonical::to_string(&hashes).unwrap().as_bytes())
+    );
 }
 
 #[test]

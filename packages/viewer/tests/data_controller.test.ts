@@ -87,6 +87,23 @@ test("a changed static deployment reports replaced status", async () => {
   assert.equal(fixture.controller.failed.size, 0);
 });
 
+test("a failed detail is suppressed when the deployment check replaces it", async () => {
+  const index = indexFixture();
+  const fixture = controllerFixture(index, { static: true });
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source.detail(HOME).resolve(detailFixture({ path: HOME }));
+  await flush();
+  fixture.navigate("/view/guide/");
+  fixture.source.detail("guide").reject(new Error("offline"));
+  fixture.source.deployment().resolve({
+    schemaVersion: 1,
+    deploymentId: OTHER,
+  });
+  await flush();
+  assert.equal(fixture.controller.replaced, true);
+  assert.deepEqual(fixture.source.detailFailures, []);
+});
+
 test("a failed static deployment file changes nothing", async () => {
   const index = indexFixture();
   const fixture = controllerFixture(index, { static: true });

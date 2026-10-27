@@ -102,15 +102,21 @@ export async function loadFencedDetail(
   deployment?: Promise<DeploymentFileV1 | undefined>,
 ): Promise<DetailOutcome> {
   try {
-    const [detail, deploymentFile] = await Promise.all([
+    const [detailResult, deploymentResult] = await Promise.allSettled([
       source.loadDetail(request, index, signal),
       deployment ?? Promise.resolve(undefined),
     ]);
+    const deploymentFile =
+      deploymentResult.status === "fulfilled"
+        ? deploymentResult.value
+        : undefined;
     if (
       deploymentFile !== undefined &&
       deploymentFile.deploymentId !== index.deploymentId
     )
       return { kind: "deployment" };
+    if (detailResult.status === "rejected") throw detailResult.reason;
+    const detail = detailResult.value;
     let fence = fenceDetail(index, request, detail);
     let installed = index;
     if (fence.kind === "revision") {
