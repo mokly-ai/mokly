@@ -228,8 +228,9 @@ conflicted again.
 - [x] Move the breaking comparison records note from the deleted
       `docs/protocol/npm-release-notes.md` into the upgrade guide,
       `docs/guides/start/upgrade.md`, where #218 places upgrade steps.
-- [ ] Run the checks and the complete gate, push, and update the pull
+- [x] Run the checks and the complete gate, push, and update the pull
       request description.
+  - Evidence: `.context/remove-review-json/gate6.log`.
 
 ## Post-merge follow-up (non-blocking)
 
