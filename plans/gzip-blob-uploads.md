@@ -378,6 +378,12 @@ Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
     real date. Effort Medium. Covers finding 1. Previous examples:
     tests/exchange_tests.rs uses SystemClock with the fixed expiry
     2099-01-01.
+  - Review 2: .context/gzip-blob-uploads/review-2.md. Finding 7 was fixed
+    in 125ea6ae.
+  - 6. Fixture test loses the case name on failure. Severity Low, effort
+       Small. Recommended: B, run each fixture case as a named subtest.
+  - Outside the scope: .prettierignore. Its fixture comment has no path
+    under it, so Prettier formats every protocol fixture. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
