@@ -1,15 +1,13 @@
 # Imported CSS Configuration
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
 
 ## Stylesheet Inputs
 
-Three inputs supply CSS to a composed screen or component document. The
-Rust core bundles every local delivery root:
+Three inputs supply CSS to a composed screen or component document. Mokly
+bundles every local delivery root:
 
 - configured `stylesheets` rules: local paths, config-relative, or HTTP(S)
   URLs, with the scheme-specific lists and the `$componentStylesheets` marker
@@ -21,10 +19,9 @@ Rust core bundles every local delivery root:
   [component stylesheets contract](./mokly-component-stylesheets.md).
 
 A local stylesheet, its `@import` chain, and its `url()` assets are transformed by the consumer's PostCSS module when `postcss` is set, then
-bundled on `lightningcss`. The bundle is a node of the render graph, keyed by its sources, assets,
-PostCSS module, and resolution settings; it is kept in the render cache,
-served from there, and written by `build` into `--out`. Nothing is written
-into the repository. The
+bundled under the [bundling rules](./mokly-imported-styles.md#bundling).
+Serve answers the bundle from memory, and `build` writes it into `--out`.
+Nothing is written into the repository. The
 [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete stylesheet list of a document and its order, including
 delivery without a configured rule and how pages link CSS. The styles a

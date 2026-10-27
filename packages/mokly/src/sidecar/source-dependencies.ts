@@ -5,6 +5,12 @@ import type { ModuleSources } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { resolutionOptions } from "./resolution.js";
 
+/**
+ * The private key prefix of installation lookup metadata outside the source
+ * root. These compiler-input keys name installation files and directory
+ * listings, never modules or stylesheets, and the core reads them from the
+ * selected installation without a source override.
+ */
 export const INSTALLED_INPUT_PREFIX = "node_modules/.mokly-roots/installed/";
 
 export interface SourceDependencyRoot {

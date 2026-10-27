@@ -32,6 +32,9 @@ export async function describeStories(
 
   for (const [file, module] of Object.entries(exports.stories)) {
     const meta = (module.default ?? {}) as StoryAnnotations;
+    // Storybook keeps project annotations in global state, so each
+    // composition sets this generation's preview first. They are not passed
+    // to `composeStories` too, which would apply them a second time.
     const compose = () => {
       storybook.setProjectAnnotations(annotations);
       return storybook.composeStories({

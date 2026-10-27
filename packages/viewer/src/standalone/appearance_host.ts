@@ -29,7 +29,8 @@ export function standaloneAppearanceHost(
  * Opt the stub document in and install the appearance: the root carries the
  * stored, pinned or system appearance, and the body the effective preview
  * scheme, before React renders a frame. Persisted page exits keep the
- * controller for the back-forward cache; a final exit disposes it.
+ * controller for the back-forward cache, and a persisted `pageshow` refreshes
+ * the restored page; a final exit disposes it and removes both page listeners.
  */
 export function installStandaloneAppearance(
   doc: Document,

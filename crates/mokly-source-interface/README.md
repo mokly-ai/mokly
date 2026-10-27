@@ -2,8 +2,9 @@
 
 `mokly-source-interface` defines read-only access to an authored source tree.
 Discovery and rendering depend on its `SourceTree` trait. Working-tree and
-Git-tree adapters use the same path, node, and error contract. The crate has
-no internal dependency and opens no filesystem paths itself.
+Git-tree adapters use the same path, node, and error contract. Depend on it to
+read authored sources or to add a source adapter. The crate has no internal
+dependency and opens no filesystem paths itself.
 
 ## Responsibilities
 
@@ -47,9 +48,10 @@ races. Unix `ELOOP` and `ENAMETOOLONG` retain their codes. Other failures keep
 an error code, with `unknown` as the fallback. A Git adapter never follows a
 symbolic-link blob as a regular source file.
 
-The working-tree adapter lives in `mokly-catalogue::working_tree`. Consumers
-inject it as `Arc<dyn SourceTree>`. The Git adapter is `mokly-compare::git_tree::GitTree`. It uses one commit index
-and bounded blob batches for these operations. It never follows link blobs.
+The working-tree adapter is `mokly_catalogue::working_tree::WorkingTree`.
+Consumers inject it as `Arc<dyn SourceTree>`. The Git adapter is
+`mokly_compare::git_tree::GitTree`. It uses one commit index and bounded blob
+batches for these operations. It never follows link blobs.
 
 `prefetch` accepts an exact confined read set for batched adapters. Its default
 is a no-op. `read_public` bypasses private source-snapshot retention; the caller
@@ -93,8 +95,21 @@ counts without using the disk.
 
 ### Key Code
 
-- [Tree trait and node types](./src/tree.rs).
-- [Error contract](./src/error.rs).
+- [`src/tree.rs`](./src/tree.rs) defines `SourceTree`, the object-safe
+  boundary that projects, lists, reads, hashes, and streams source paths, and
+  its `Node`, `Child`, and `FileKind` records.
+- [`src/error.rs`](./src/error.rs) defines `SourceError`, which keeps the
+  operation, the path, and the IO cause, and gives a portable code through
+  `SourceError::code`.
+- [`src/stream.rs`](./src/stream.rs) defines `SourceStream`, which copies one
+  opened source into private storage and checks its captured digest.
+- [`src/read_evidence.rs`](./src/read_evidence.rs) defines `ReadEvidence` and
+  `ReadBaseline`, which keep each observed whole-file, byte-range, and late
+  version of an input.
+- [`src/range_evidence.rs`](./src/range_evidence.rs) provides `verify`, which
+  checks all observed byte ranges of one path in one streamed pass.
+- [`src/identity_evidence.rs`](./src/identity_evidence.rs) provides `matches`,
+  which compares an opened-file witness with the current file object.
 
 ### Related Docs
 

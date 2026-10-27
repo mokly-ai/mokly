@@ -2,7 +2,9 @@
 // Firna stack: it wraps every React render in the shared @firna/ui theme for
 // the view's colour scheme. The sidecar collects react-native-web's atomic
 // styles, and the core assembles the document. The configured stylesheets
-// colour the plain HTML around the components in each scheme.
+// colour the plain HTML around the components in each scheme. It imports
+// hosts and parts only, never a whole screen registry: every document links
+// the stylesheet bundled from the renderer's imports.
 
 import { createSharedUiTheme, SharedUiThemeProvider } from "@firna/ui/theme";
 import type { ReactNode } from "react";

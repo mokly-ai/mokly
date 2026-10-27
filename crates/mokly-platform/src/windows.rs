@@ -27,6 +27,10 @@ use windows_sys::Win32::System::Threading::{
 use crate::error::{Error, IoResult, Result};
 use crate::processes::ProcessGroup;
 
+/// Renames with `MoveFileExW` and zero flags: without `MOVEFILE_REPLACE_EXISTING`
+/// an existing destination fails, and without `MOVEFILE_COPY_ALLOWED` a move to
+/// another volume fails instead of copying. It reads the last error directly
+/// after the call.
 pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::Result<()>> {
     let source = wide_path(source)?;
     let destination = wide_path(destination)?;
@@ -40,6 +44,8 @@ pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::
     })
 }
 
+/// Encodes a path as NUL-terminated UTF-16 for the wide-character API, and
+/// rejects an interior NUL, which Windows would read as a shorter path.
 fn wide_path(path: &Path) -> Result<Vec<u16>> {
     let mut text: Vec<u16> = path.as_os_str().encode_wide().collect();
     if text.contains(&0) {

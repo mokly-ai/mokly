@@ -7,9 +7,11 @@ order: 2
 
 ## Search the tree
 
-Type in the search field to narrow the navigation tree. The
-navigation reference links to the shared search
-matching rule. A folder hidden by its folder record stays out of the results.
+Type in the search field to narrow the navigation tree. An entry matches when
+the text you type appears, ignoring letter case, in its path, its title, one of
+its tags, or the title of a folder that contains it. A folder hidden by its
+folder record stays out of the results. The
+[navigation reference](/docs/reference/navigation/) links to the complete rule.
 
 ## Search by tag
 

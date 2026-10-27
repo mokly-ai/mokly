@@ -1,4 +1,7 @@
 //! Canonical JSON encoding; array order is supplied by each shape owner.
+//! Number spelling comes from serde_json's float formatter, so a serde_json upgrade can
+//! change canonical bytes and the deployment ids derived from them. For example,
+//! serde_json 1.0.154 uses zmij, which writes `1e+16` where ryu wrote `1e16`.
 
 use std::cmp::Ordering;
 

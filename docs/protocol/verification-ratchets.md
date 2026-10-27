@@ -1,6 +1,18 @@
 # Repository Verification Ratchets
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+## Comparison Commit
+
+The file-length, protocol-cap, and unused-internal-export ratchets compare
+with one comparison commit: `git merge-base HEAD origin/main`. During an
+uncommitted merge whose `MERGE_HEAD` equals `origin/main`, the comparison
+commit is `origin/main`. When `MERGE_HEAD` is an ancestor of a newer
+`origin/main`, the ratchets fail and ask the author to fetch and merge it
+again. Other uncommitted merges keep the merge-base rule. Outside such a
+merge, a moved `origin/main` does not replace the branch point with its tip.
+The [baseline dependency audit](./dependency-audit-baseline.md#comparison-commit-and-tree)
+uses the same comparison commit. The public-package-export ratchet compares
+with release tags instead, as [Public Package Exports](#public-package-exports)
+defines.
 
 ## JavaScript And TypeScript File Length
 
@@ -19,6 +31,11 @@ renamed file:
   300;
 - if its predecessor is already over 300, the candidate may stay equal or
   shrink, but any growth fails.
+
+The repository suite also runs the changed-file
+[length audit](./ci-verification-repository.md#length-audits), which fails
+every changed module above 300 lines. The suite therefore fails any changed
+module above 300 lines, whatever its predecessor.
 
 A rename keeps its predecessor comparison only when Git identifies that source;
 otherwise it is a new file. Build output is outside the source roots, and the
@@ -42,11 +59,8 @@ the audit fails. The ratchet also fails when the table is missing. A capped
 value equals that file's current physical line count; shrinking the file
 requires lowering the cap. A document at or below 250 has no cap. A new
 document must stay at or below 250 and cannot add a cap. The changed-file
-source-length audit and this ratchet share one length policy:
-TypeScript/JavaScript have a 300-line limit; a changed protocol page passes at
-250 lines or at its exact reviewed cap, never above it. The source-length audit
-reads the same working-tree table and applies 250 lines to every page when the
-file is absent. The ratchet scans Markdown recursively beneath
+[length audit](./ci-verification-repository.md#length-audits) reads the same
+working-tree table. The ratchet scans Markdown recursively beneath
 `docs/protocol/`, excluding the `docs/protocol/fixtures/` tree, and audits
 every document on every run.
 
@@ -134,13 +148,17 @@ Compare the released and current surfaces as follows:
 - For each surviving subpath, require every baseline exported name that the
   current entry point does not export.
 - A required specifier or name is noted only when
-  `docs/protocol/npm-release-notes.md` contains a single-backtick inline code
+  `docs/guides/start/upgrade.md` contains a single-backtick inline code
   span on one line whose entire content is exactly that specifier or name.
   Longer signature or prose spans do not count.
 
+The upgrade guide is the input because it holds the live upgrade steps that a
+consumer follows. The changelog is not the input, because Release Please
+writes it only when it cuts a release, after the removal merges.
+
 Each failing name diagnostic identifies the full specifier, removed name, and
 baseline tag, then tells the author to name the removal in
-`npm-release-notes.md`; a removed-subpath diagnostic identifies its specifier
+`docs/guides/start/upgrade.md`; a removed-subpath diagnostic identifies its specifier
 and baseline tag with the same instruction. The passing summary lists every
 package baseline tag and the total number of noted name and subpath removals.
 
@@ -198,20 +216,10 @@ test fixtures outside the source roots are not internal-export findings.
 Dynamic use that a static analyser cannot prove requires a precise reviewed
 baseline entry rather than a wildcard suppression.
 
-## Gate Placement And Evidence
+## Gate Placement
 
 All four auditors are repository-suite operations and therefore run in both
-`cargo xtask check --suite repository` and the unqualified complete gate. They
-run after the live dependency audit and report all findings in their own audit
-before returning failure. Focused tests cover boundary counts, new and renamed
-files, an already-oversized shrink/growth pair, cap bootstrap and stale caps,
-cap-table validation, nested protocol documents and the fixtures exclusion,
-public re-exports, newly unused symbols, CommonJS use, attempted baseline
-growth, stale baseline removal, release-tag selection, public name and subpath
-removals, explicit exports, recursive star re-exports, unresolved star targets,
-release-note retention, and a moving `origin/main` whose merge base stays
-fixed.
-
-The [API and member checks](./verification-api-members.md) add public signature
-reports with a release-note gate, an unused-member ratchet, and a test for
-literal ESLint paths. The export-name and size checks stay independent.
+`cargo xtask check --suite repository` and the unqualified complete gate. The
+[repository gate](./ci-verification-repository.md#repository-boundary) gives
+their place in the suite order. Every auditor runs, and each reports all of its
+findings before the suite fails.

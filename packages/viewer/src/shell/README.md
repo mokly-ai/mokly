@@ -51,7 +51,7 @@ navigation and inspector. The tree renders only in the browser:
 `src/browser.tsx` mounts the standalone shell into the stub that Serve and
 `build` deliver, and React hosts render it inside `MoklyViewer`, with
 host-owned slots as ordinary children. The
-[viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
+[viewer contract](../../../../docs/protocol/mokly-viewer-selection.md#shell-tree-and-state)
 defines the tree and its state model, and the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md)
 the data it reads.
@@ -125,8 +125,9 @@ or repeated values; the embedded host and standalone router consume the same
 route result. `details_rows.tsx` owns the inspector's
 metadata rows, including links between a screen and its variants, the
 `Changed views` row, and Related docs links. A related doc links to its
-document when it is a public `mock:<path>` reference or, in Serve and export,
-the source path of a current document; a removed entry keeps plain labels.
+document when it is a public `mock:<path>` reference or, in Serve and the
+static build, the source path of a current document; a removed entry keeps
+plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
@@ -375,7 +376,8 @@ stage overlays against the current preview, keeping sibling viewers,
 navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
-defines route loading, revision fencing and export omission.
+defines route loading, revision fencing, and the absence of the render
+capability in the static build.
 
 Before the first render, the browser entry reads the stored disclosure map,
 the Details choice and the navigation width through

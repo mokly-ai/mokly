@@ -1,21 +1,19 @@
 # Final Logical Link Validation
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
-The [navigation contract](./mokly-navigation.md) owns logical links, markers
-and Browse behaviour. Serve, `build`, and on-demand rendering apply the same
-final checks to every composed document before it enters the render cache,
-and both sides of a comparison pass them.
+The [navigation contract](./mokly-navigation.md) owns logical links and Browse
+behaviour, and the [composition contract](./mokly-logical-links.md) owns the
+markers. Serve, `build`, and on-demand rendering apply the same final checks
+to every composed document before it is served or written, and both sides of
+a comparison pass them.
 
 ## Reference Records
 
-After link-control adaptation and logical-link rewriting, the core keeps each
-reference's source route, target entry path and optional fragment. It indexes
-anchors from the composed documents of the destination: every view of a
-screen, or the one document of a page or document entry. Each fragment is
-checked across every required destination view under the cross-view rule of
-the navigation contract. A missing or renamed anchor fails `build-invalid`
-with the referring route. A target that names no entry fails under the
+The checks run on the documents after link-control adaptation and logical-link
+rewriting. A logical reference's fragment must name an anchor in every
+required destination view: every view of a screen, or the one document of a
+page or document entry, under the cross-view rule of the
+[logical link contract](./mokly-navigation.md#fragments). A missing or
+renamed anchor fails `build-invalid` with the referring route. A target that names no entry fails under the
 [path diagnostics](./mokly-paths.md#diagnostics), naming the new path when the
 [move contract](./mokly-moves.md) knows it.
 

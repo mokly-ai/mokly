@@ -1,7 +1,5 @@
 # Basic Mokly Consumer
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 `examples/basic` is the repository's reference consumer. It is a synthetic
 catalogue for a small workspace product, and it holds the design mockups of
 Mokly's own Browse shell. Mokly reads it through
@@ -169,8 +167,9 @@ and the recovery states that keep the edits.
 
 The `design_catalogue_tests` binary of the
 [CLI tests](../../crates/mokly-cli/tests/README.md) builds a copy of this
-configuration once with `--strict` and checks the design catalogue against the
-verification and adoption sections of those contracts. `tests/fixtures/design/` holds the frozen
+configuration once with `--strict`. It checks the design catalogue against the
+link and adoption rules of the design contracts below.
+`tests/fixtures/design/` holds the frozen
 screen inventory with the screens that only the catalogue tree reaches, the
 family parts of the adoption table, and the link expectations. The test also
 checks the shared components each design screen records, the stylesheets each

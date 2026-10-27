@@ -15,6 +15,7 @@ const EXPECTED = [
   "start/your-first-screen",
   "start/build",
   "start/serve",
+  "start/upgrade",
   "authoring/config",
   "authoring/screens",
   "authoring/components",
@@ -91,7 +92,7 @@ test("the guide tree contains the exact guide reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    33,
+    34,
   );
 });
 

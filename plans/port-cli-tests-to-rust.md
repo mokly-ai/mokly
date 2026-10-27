@@ -34,7 +34,9 @@ User decisions on the review findings, 2026-10-27:
 - Finding 2, A: record the coverage changes above. Rejected for now: B, a
   Linux run on Node 22.15, and C, Windows base tiers.
 - Finding 3, A: the design links contract names a strict static build of the
-  example instead of Serve. Rejected: B, a second check through Serve.
+  example instead of Serve. Rejected: B, a second check through Serve. Later,
+  #218 removed the Verification Contract from that doc, so the CLI tests
+  README now holds this choice.
 - Finding 4, B: every invocation of a test gets that test's own cache folder,
   which its runs share. Rejected: A, cache variables in each fixture.
 
