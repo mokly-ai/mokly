@@ -80,9 +80,10 @@ access to sources, controls, or the watcher.
 
 Versions identify meaning before a reader interprets any path. The
 [format inventory](./mokly-format-versions.md) lists the supported version of
-every boundary and the reader of each. Unknown versions fail closed. The
-deployment file requires schema version 1 and is static-only; Serve never
-writes or answers it. No other envelope exists.
+every boundary and the reader of each. Unknown versions fail closed. An
+unreadable deployment file, including one with another version, changes
+nothing. The deployment file requires schema version 1 and is static-only;
+Serve never writes or answers it. No other envelope exists.
 
 Index v8 carries identity-only entries: no layout prefix, per-entry route,
 `documentPath`, or `fragmentPath`. A reader derives every file from the

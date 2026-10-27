@@ -148,6 +148,8 @@ detail carries `detailId` and `revision`; a removed detail carries `detailId`
 and `snapshotId`. Details no longer carry `deploymentId` or `generation`.
 
 Static builds also write `mokly-viewer/deployment.json` with schema version 1.
+The TypeScript type `EntryDetailV2` becomes `EntryDetailV3`, and
+`readEntryDetail` reads version 3 only.
 The standalone shell and an embedded viewer use it to detect a replaced static
 deployment. Serve does not write or answer this file. A missing or unreadable
 file does not change viewer state. Update the viewer and any receiver that
@@ -163,8 +165,8 @@ and the entry details carry every public comparison fact.
   root of the comparison generation, which ends with `/`, instead of a file.
 - Read each view's comparison `state` and `ignoredIds` from the entry detail,
   beside its `resourceEvidence`. A ready current screen or component also
-  carries `before`, the address of its base side. The entry detail stays
-  version 3 and its `detailId`.
+  carries `before`, the address of its base side. These are optional fields of
+  the entry detail.
 - In Serve, request `/mokly-viewer/diffs/selection?path={path}` instead of
   `/mokly-viewer/diffs/review.json?path={path}`. It redirects to the root of
   the selected generation.

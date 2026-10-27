@@ -34,11 +34,13 @@ define the complete path, header, sandbox, and CSP requirements.
 - **Caching:** the deployment file, index, and details of one deployment never change. Serve
   them with revalidation, `Cache-Control: no-cache` or an equivalent validator
   policy, so the next navigation sees a new deployment. A comparison generation
-  is immutable at its content-addressed path. A detail from another deployment
-  makes the embedded viewer emit one `onError` and the standalone shell reload
-  the page. A static viewer checks the deployment file with each detail request
-  for a page change and before comparison or removed-entry requests. A missing
-  or unreadable file changes nothing.
+  is immutable at its content-addressed path. A deployment file with another
+  `deploymentId`, or a detail whose `detailId` is not listed by the index, makes
+  the embedded viewer emit one `onError` and the standalone shell reload the
+  page. A static viewer checks the deployment file with each detail request of
+  an in-shell navigation and before comparison or removed-entry requests. It
+  does not request the file on the first load. A missing or unreadable file
+  changes nothing.
 - **Content Security Policy:** removed previews and comparison panes render in
   viewer-owned, script-disabled `srcdoc` frames. A restrictive policy must
   allow the catalogue origin for the documented resource types and the inline

@@ -93,13 +93,14 @@ A new deployment replaces the stubs, the index, the deployment file, the details
 the resources, the bundle, the styles, and the fonts at the same paths.
 Serve those paths with revalidation, `Cache-Control: no-cache` or an
 equivalent validator policy, so the next navigation sees the new deployment.
-The deployment file, index, and details of one deployment never change, so a validator
-answers `304` until the next deployment; the shell keeps them for the page's
-lifetime and fetches them with `credentials: "omit"`. A comparison generation
+The deployment file, index, and details of one deployment never change, so a
+validator answers `304` until the next deployment. The shell keeps the index
+and details for the page's lifetime and requests the deployment file at each
+check, with `credentials: "omit"`. A comparison generation
 is immutable at its content-addressed path: a host may cache its files for the
 deployment's lifetime or serve them with `Cache-Control: no-store`, and it
 must not rewrite one generation's URL to another generation.
-When a detail keeps its `detailId`, its bytes and validator stay unchanged.
+When a detail keeps its `detailId`, its bytes stay unchanged across deployments.
 
 For cross-origin catalogue and viewer consumers, the public fetch paths are
 `mokly-viewer/index.json`, `mokly-viewer/deployment.json`, `mokly-viewer/entries/**`,
@@ -121,13 +122,15 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
-index, and fetches the routed entry's detail and `mokly-viewer/deployment.json`
-at the same time under the
-[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The detail carries
-the workspace lists, so no route reads another page. Static mode with a
-missing, malformed, or other-version index or detail fails closed instead of
-requesting a development endpoint. A static build never falls back to a live
-endpoint for any request.
+index, and fetches the routed entry's detail under the
+[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The first load does
+not request the deployment file. During in-shell navigation, each detail
+request also requests `mokly-viewer/deployment.json`; the shell requests it
+before it opens a comparison or a removed entry. The detail carries the
+workspace lists, so no route reads another page. Static mode with a missing,
+malformed, or other-version index or detail fails closed instead of requesting
+a development endpoint. A static build never falls back to a live endpoint
+for any request.
 
 In-shell navigation commits the destination from the index at once and fetches
 its detail and the deployment file. A deployment file with another

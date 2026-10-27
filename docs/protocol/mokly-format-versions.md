@@ -27,11 +27,11 @@ A format number changes only when the shape or the interpretation of its
 format changes. Package 1.0.0 is the first release with a stable format
 promise; before it, any release can change a number.
 
-When several related changes merge between releases, the first change that
-requires a new number raises each format that it changes. Later changes in the
-same release window keep that number and add their shape to it. If a release
-has not shipped, its next format number remains available for the first merged
-change.
+Before 1.0.0, a format takes at most one new number between two releases. The
+first change after a release that needs a new number raises it. A later change
+in the same release window keeps that number and adds its shape. The rejected
+alternative raises the number again for each change, because merge order would
+then set the numbers.
 
 The catalogue model has no version, because Mokly never writes it. The index
 carries the deployment id, the revision, the base commit, the comparison
@@ -63,9 +63,9 @@ Reject versions before reading identity, route, resource or nested payload
 fields. The index reader rejects catalogue v7 and below; no manifest and no
 review file is read. Unknown newer versions are invalid.
 
-Index, detail, deployment file, and live descriptor readers use
-`MoklyVersionError` at their
-version gates. Inspector peers reject a mismatched wire version
+Index, detail, and live descriptor readers use `MoklyVersionError` at their
+version gates. An unreadable deployment file, including one with another
+version, changes nothing. Inspector peers reject a mismatched wire version
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.
 

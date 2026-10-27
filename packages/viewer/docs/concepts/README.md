@@ -17,9 +17,9 @@ record carries the detail's content `detailId`.
 
 The viewer validates the index and each detail before it reads a field. A
 static catalogue also checks `mokly-viewer/deployment.json` at the catalogue
-origin root with each detail request for a page change and before a comparison
-or removed-entry request. It does not request this file from Serve. A missing
-or unreadable file changes nothing. It
+origin root with each detail request of an in-shell navigation and before a
+comparison or removed-entry request. It does not request the file on the first
+load or from Serve. A missing or unreadable file changes nothing. It
 fetches a URL with a plain GET, `credentials: "omit"`, and no custom header, and
 it rejects a redirect outside the origin. When another deployment replaces the
 files, the viewer emits one `onError` and keeps its state. A React host
@@ -160,7 +160,7 @@ instance regions in the live page from them.
 
 ## Live controls
 
-Entry detail v3 supplies control declaration order and `detailId`. The Props tab follows it
+Entry detail v3 supplies control declaration order. The Props tab follows it
 for editable fields and saved values. Saved props remain visible while the
 detail loads.
 

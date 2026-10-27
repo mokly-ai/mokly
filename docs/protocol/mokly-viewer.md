@@ -133,16 +133,21 @@ the artifact origin root, or a promise of either. A URL is fetched under the
 fetch rules of the shell delivery contract: same origin, `credentials: "omit"`,
 no redirect outside the origin. A static viewer also reads
 `mokly-viewer/deployment.json` at the catalogue origin root with each detail
-request for a page change and before a comparison or removed-entry request.
+request of an in-shell navigation and before a comparison or removed-entry
+request. It does not request the file on the first load.
 The viewer accepts a current detail only when its `revision`, then its
 `detailId`, then its identity and content fields match the installed index. It
 accepts a removed detail only when its identity, path record, `snapshotId`, and
-`detailId` match the index. On a revision mismatch the viewer requests the
-index again once; a detail that still disagrees leaves the entry unavailable
-with a retry control. Another deployment id emits one `onError` and keeps the
-installed state and loading stage until the host replaces `index`. A missing or
-unreadable deployment file changes nothing. Serve viewers do not request it. A
-detail that arrives after the selection moved on is discarded. Sources are
+`detailId` match the index. On a revision mismatch, the embedded viewer
+requests the index once. If the revision still disagrees after that request,
+the entry is unavailable with retry. A deployment file with another
+`deploymentId`, or a current detail whose `detailId` differs from the index at
+the same revision, emits one `onError` and keeps the installed state and
+loading stage. A detail whose identity or other content fields do not match
+leaves the entry
+unavailable with retry. A missing or unreadable deployment file changes
+nothing. Serve viewers do not request it. A detail that arrives after the
+selection moved on is discarded. Sources are
 host-supplied transports, not permission for viewer telemetry. A fetch failure
 renders an explicit error and retry state and emits `onError`. A version failure
 shows the headline of the [version contract](./mokly-viewer-namespace.md)

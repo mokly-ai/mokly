@@ -89,8 +89,8 @@ Other kinds omit it. Current and removed entries follow the same ordering rule.
 
 A current entry's detail carries `detailId` and `revision` and no
 `deploymentId` or `generation`; a removed entry's detail carries `detailId`
-and `snapshotId` and neither of the other two, so a generation's files never
-change. The detail id is the content id from the
+and `snapshotId` and no `revision`, `deploymentId`, or `generation`, so a
+generation's files never change. The detail id is the content id from the
 [catalogue serialization contract](./mokly-catalogue-serialization.md#detail-identity).
 `RuleEvidence` and `ResourceEvidence` are the per-view records of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
@@ -144,39 +144,46 @@ retries on the next publication message. Static builds have no descriptor.
 ## Fetch And Fences
 
 At start the shell fetches the index, then the detail of the routed entry and,
-for a use case, the detail of each step screen whose views its frames show; it
+for a use case, the detail of each step screen whose views its frames show. It
 renders the navigation when the index arrives and the frames when those
-details arrive. On navigation inside the shell it commits the route from the
-index at once and fetches the destination's details. A static catalogue also
-fetches `mokly-viewer/deployment.json` with each detail request for a page
-change, and before it opens a comparison or a removed entry. It uses the
-catalogue origin root for this request in both standalone and embedded hosts.
-An unreadable or missing deployment file changes nothing. A different
-`deploymentId` gives the replaced status: the standalone shell performs a full
-page load and an embedded host receives one `onError` and keeps its state.
+details arrive. It does not request the deployment file on the first load. On
+navigation inside the shell it commits the route from the index at once and
+fetches the destination's details. A static catalogue requests
+`mokly-viewer/deployment.json` with each detail request from that in-shell
+navigation, and before it opens a comparison or a removed entry. It uses the
+catalogue origin root in both standalone and embedded hosts. An unreadable or
+missing deployment file changes nothing.
+
+The deployment file is a separate static check for an old tab, so an unchanged
+detail keeps its bytes across deployments. The rejected alternative put an id
+over the index record and detail, because that misses a viewer-only deployment
+and a removed comparison.
+
 It accepts a current entry's detail in this order: `revision` must equal the
-installed index; then `detailId` must equal the index record; then `identity`,
-kind, views, and control order must match. A revision mismatch refetches the
-index once. A detail id mismatch means another static deployment replaced the
-files. If the pair still disagrees, the entry shows its unavailable state with
-retry. A use case shows its unavailable state only after each of its details
-has arrived, failed, or been replaced; until then its stage keeps loading, and
-an embedded host still receives the `onError` of each failure at once. From
-then on the shell loads no index or detail, closes the event stream, and
-reports no later failure. A route that still waits for a detail has the
-replaced delivery status: in both hosts its stage keeps the loading state,
-never the unavailable state, until the new data arrives with the full page
-load or the `index` that the host supplies. A route whose details all arrived
-keeps them. A removed detail is accepted only when `identity` equals the
-index, its path selects the index's removed record, and `snapshotId` and
-`detailId` equal that record. A held detail stays installed when a new index
-lists the same `detailId`; a current detail also keeps its `revision`.
+installed index, then `detailId` must equal the index record, then `identity`,
+kind, views, and control order must match. The revision check comes first,
+because a detail from a newer Serve publication has a new id. A revision
+mismatch refetches the index once. If the revision still disagrees, the entry
+shows its unavailable state with retry. If the revision matches but the
+`detailId` differs, the detail has replaced status in a static build and in
+Serve. The standalone shell performs a full page load, and an embedded host
+receives one `onError` and keeps its state. From then on the shell loads no
+index or detail, closes the event stream, and reports no later failure. If the
+id matches but identity, kind, views, or control order differs, the entry
+shows its unavailable state with retry. A use case shows that state only after
+each of its details has arrived, failed, or been replaced; until then its
+stage keeps loading, and an embedded host still receives the `onError` of each
+failure at once. Waiting routes keep loading, not unavailable, until a full
+page load or the host's `index` supplies new data. A removed detail is
+accepted only when `identity` equals the index, its path selects the index's
+removed record, and `snapshotId` and `detailId` equal that record. A held
+detail stays installed when a new index lists the same
+`detailId`; a current detail also keeps its `revision`.
 
 Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
 Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
-The shell keeps the index and details for the page's lifetime.
 
 ## Updates In Serve
 
@@ -186,10 +193,10 @@ on-demand renders. Serve may combine completions into one publication.
 An index or detail GET starts no render or Git command. A failed candidate
 leaves the last published state in place.
 Each publication replaces the index and the details in one step and raises
-`revision` by one. An unchanged detail keeps its `detailId` and encoded bytes.
-Serve encodes the index after it has encoded the details, because the index
-lists their ids. A usage completion also publishes the index once for that
-publication. The event stream writes one message per publication whose
+`revision` by one. The index of each publication lists the `detailId` of each
+of its details. A detail whose content does not change keeps its `detailId`
+and its bytes, apart from `revision`. The event stream writes one message per
+publication whose
 `id` is the new revision and whose `data` is the server's `deploymentId`, and
 one message with the current values on every new connection.
 
@@ -212,7 +219,7 @@ state only after each of its details has arrived, failed, or been replaced.
 
 ## Identity
 
-`build` computes `deploymentId` as the hash of every installed output file under the
+`build` computes `deploymentId` as the hash of every identity-participating output file under the
 [static export browser contract](./mokly-export-browser.md). It sets only the
 index's `deploymentId` to 64 zeros for this hash; current detail ids are
 content ids and the deployment file is excluded. Generation files carry no
@@ -231,12 +238,12 @@ The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 
 ## Fail-Closed Rules
 
-| Condition                                                                                                                                                                                                                                                                            | Shell behaviour                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                              | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
-| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                                  | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
-| a static deployment file with another `deploymentId`                                                                                                                                                                                                                                 | a full page load in the standalone shell; one `onError` in an embedded host                                             |
-| a missing or unreadable static deployment file                                                                                                                                                                                                                                       | no change                                                                                                               |
-| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                                   | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                                          | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
-| a current entry's detail whose identity, revision, or `detailId` differs from the index after one refetch, a removed entry's detail whose identity, snapshot id, or `detailId` differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry; for a use case, once each of its details arrived, failed, or was replaced     |
+| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
+| an index or an event message with another `deploymentId`, or a current detail whose `detailId` differs from the index record at the same revision                                                                                                                       | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
+| a static deployment file with another `deploymentId`                                                                                                                                                                                                                    | a full page load in the standalone shell; one `onError` in an embedded host                                             |
+| a missing or unreadable static deployment file                                                                                                                                                                                                                          | no change                                                                                                               |
+| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                      | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
+| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
+| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, snapshot id, or `detailId` differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry; for a use case, once each of its details arrived, failed, or was replaced     |

@@ -54,27 +54,29 @@ canonical JSON for metadata. Hash each generation file with its exact bytes and
 sort the `[path, sha256]` pairs in UTF-16 order, then hash the canonical JSON
 array. The removed details already carry content ids that do not depend on the
 generation name. This gives one comparison the same bytes and the same name in
-every build. The separate `deploymentId`
-identifies every installed file except the ownership marker and the
-publication metadata that `publish` declares. Identity-participating files
+every build. The separate `deploymentId` identifies every installed file
+except the ownership marker, the deployment file, and the publication metadata
+that `publish` declares. Identity-participating files
 include the stubs, the index, the details, the rendered documents, public
 files, CSS, client modules, fonts, and every generation file. Publish declares
 only `mokly-upload.json` as publication metadata.
 
-The marker and `mokly-viewer/deployment.json` are excluded because they are derived from the finalized paths and
-bytes. Publication metadata is excluded because its commit, branch, and time
-fields describe delivery rather than browser content. Both are owned files
-that the marker hashes. Changing only publication metadata therefore changes
-the marker without changing `deploymentId`. Unchanged identity-participating
+The marker is excluded because it is derived from the finalized paths and
+bytes. The deployment file is excluded because it stores the identity that
+this hash computes. Publication metadata is excluded because its commit,
+branch, and time fields describe delivery rather than browser content. The
+deployment file and publication metadata remain owned files whose exact bytes
+the marker records. Changing only publication metadata therefore changes the
+marker without changing `deploymentId`. Unchanged identity-participating
 content gives the same identity independently of insertion order and output
 directory.
 
 Finalize the identity after the complete non-marker inventory is fixed:
 
 1. For the index, take the canonical JSON with its top-level `deploymentId`
-   set to 64 zeros. For every other file, take its exact bytes. Current detail
-   ids already exclude the deployment id, and the deployment file is omitted
-   from the inventory used for this hash.
+   set to 64 zeros. For every other identity-participating file, take its exact
+   bytes. Current detail ids already exclude the deployment id, and the
+   deployment file is omitted from the inventory used for this hash.
 2. Compute the SHA-256 of each result as 64 lowercase hex characters.
 3. Sort the `[path, sha256]` pairs by `path` in UTF-16 code-unit order, the
    order the ownership marker uses.
@@ -89,7 +91,7 @@ current detail carries its `detailId` and `revision`; a removed entry's detail
 carries `detailId` and `snapshotId` instead. No generation file carries a
 deployment id. Then compute the ownership entries from the exact finalized
 bytes and add the marker through the same collision-checked inventory. No
-non-marker byte changes after identity finalization. The identity determines
+identity-participating byte changes after identity finalization. The identity determines
 the finalized browser content, while the marker is a pure function of all
 final paths and bytes, including publication metadata. The comparison
 generation keeps its separate URL and hash.
