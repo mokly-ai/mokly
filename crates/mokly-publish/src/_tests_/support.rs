@@ -9,13 +9,15 @@ use mokly_git::command::CancellationMock;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
-use mokly_model::output::validation::{INDEX, digest};
-use serde_json::json;
+use mokly_model::output::validation::{INDEX, MANIFEST, MARKER, digest};
+use serde_json::{Value, json};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::exchange::Client;
 use crate::http::{Body, Response};
 use crate::runtime::{self, ClockMock, ReporterMock};
 use crate::settings::Settings;
+use crate::snapshot::Prepared;
 
 pub(super) fn publication() -> Publication {
     Publication {
@@ -62,6 +64,23 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
     .unwrap()
 }
 
+pub(super) fn prepared_with_file(path: &str, bytes: Bytes) -> Prepared {
+    let base = artifact(false);
+    let files = base
+        .files
+        .into_iter()
+        .filter(|file| file.path != MANIFEST && file.path != MARKER)
+        .chain(std::iter::once(file(path, &bytes)))
+        .collect();
+    let artifact = Artifact::finalize(
+        base.directory,
+        files,
+        Some(publication().metadata(&inventory(false)).unwrap()),
+    )
+    .unwrap();
+    Prepared::new(&artifact).unwrap()
+}
+
 pub(super) fn file(path: &str, bytes: &[u8]) -> File {
     File {
         path: path.to_owned(),
@@ -88,11 +107,50 @@ pub(super) fn response(status: u16) -> Response {
 }
 
 pub(super) fn plan(missing: BTreeSet<String>) -> Response {
-    let body = json!({ "schemaVersion":1, "upload":{"id":"upload-1","expiresAt":"2026-09-26T13:00:00.000Z"},
+    plan_with_encoding(missing, None)
+}
+
+pub(super) fn plan_with_encoding(missing: BTreeSet<String>, encodings: Option<Value>) -> Response {
+    let mut body = json!({ "schemaVersion":1, "upload":{"id":"upload-1","expiresAt":"2026-09-26T13:00:00.000Z"},
         "missing": missing, "blobUrl":"https://api.example.com/blobs/{sha256}", "completeUrl":"https://api.example.com/complete" });
+    if let Some(encodings) = encodings {
+        body["blobEncodings"] = encodings;
+    }
     Response {
         body: Body::Bytes(serde_json::to_vec(&body).unwrap().into()),
         ..response(200)
+    }
+}
+
+pub(super) fn digest_for(prepared: &Prepared, path: &str) -> String {
+    prepared
+        .ownership
+        .files
+        .iter()
+        .find(|entry| entry.path == path)
+        .unwrap()
+        .sha256
+        .clone()
+}
+
+pub(super) fn seeded_bytes(length: usize) -> Bytes {
+    let mut value = 0x1234_5678_u32;
+    let mut bytes = Vec::with_capacity(length);
+    while bytes.len() < length {
+        value ^= value << 13;
+        value ^= value >> 17;
+        value ^= value << 5;
+        bytes.extend_from_slice(&value.to_le_bytes());
+    }
+    bytes.truncate(length);
+    bytes.into()
+}
+
+pub(super) fn client(http: Unimock, reporter: Arc<Unimock>, clock: Arc<Unimock>) -> Client {
+    Client {
+        http: Arc::new(http),
+        clock,
+        reporter,
     }
 }
 
