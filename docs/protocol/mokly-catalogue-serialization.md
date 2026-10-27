@@ -1,5 +1,7 @@
 # Catalogue Serialization, Identity And Versions
 
+Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
+
 ## Canonical Bytes
 
 The catalogue index, every entry detail, and every detail inside a
@@ -55,6 +57,21 @@ generation carries the same `snapshotId`, and the shell accepts it only when
 it equals the index's record, under the
 [shell delivery fences](./mokly-shell-delivery.md#fetch-and-fences).
 
+## Detail Identity
+
+Every current and removed entry record in the index carries a `detailId`.
+`detailId` is 64 lowercase hexadecimal characters. It is the SHA-256 of the
+detail's canonical JSON after setting `detailId` to 64 zeros and, for a
+current detail, setting `revision` to `0`. A detail never hashes its own
+final id. Equal detail content therefore has the same id in every build and
+Serve publication.
+
+A current detail carries `detailId` and `revision`. It carries no
+`deploymentId` or `generation`. A removed detail carries `detailId` and
+`snapshotId`. It carries no `deploymentId`, `generation`, or `revision`.
+Readers require these fields for the detail's kind and reject a detail that
+contains `deploymentId` or `generation`.
+
 ## Deployment Identity And Revision
 
 `deploymentId` is a 64-hex identity and `revision` one integer. The
@@ -76,9 +93,11 @@ addition, a changed meaning, a new union discriminant, or an incompatible
 path requires a new number. The detail's view `state` and `ignoredIds` and
 its `before` address are additive optional fields, so they keep the detail's
 number. The review result stays in memory under the
-[comparison contract](./mokly-comparison.md). The generated
+[comparison contract](./mokly-comparison.md). The required `detailId` and the
+current and removed detail shapes use the detail version in the
+[format inventory](./mokly-format-versions.md). The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/)
 types are the normative shapes. A reader validates a document against them
 before use.
 

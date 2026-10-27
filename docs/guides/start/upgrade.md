@@ -140,6 +140,19 @@ Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
 
+## Upgrade to content-addressed details
+
+The catalogue index keeps `deploymentId`, and each entry record now carries a
+`detailId`. Current and removed entry details use detail version 3. A current
+detail carries `detailId` and `revision`; a removed detail carries `detailId`
+and `snapshotId`. Details no longer carry `deploymentId` or `generation`.
+
+Static builds also write `mokly-viewer/deployment.json` with schema version 1.
+The standalone shell and an embedded viewer use it to detect a replaced static
+deployment. Serve does not write or answer this file. A missing or unreadable
+file does not change viewer state. Update the viewer and any receiver that
+validates catalogue versions before deploying a catalogue with these shapes.
+
 ## Upgrade to comparisons without `review.json`
 
 A comparison generation no longer contains `review.json`. The catalogue index
@@ -151,7 +164,7 @@ and the entry details carry every public comparison fact.
 - Read each view's comparison `state` and `ignoredIds` from the entry detail,
   beside its `resourceEvidence`. A ready current screen or component also
   carries `before`, the address of its base side. The entry detail stays
-  version 2.
+  version 3 and its `detailId`.
 - In Serve, request `/mokly-viewer/diffs/selection?path={path}` instead of
   `/mokly-viewer/diffs/review.json?path={path}`. It redirects to the root of
   the selected generation.

@@ -1,5 +1,7 @@
 # Comparison Generation And Serving
 
+Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
+
 ## Generation And Serving
 
 A comparison generation is an immutable set of files under
@@ -13,9 +15,10 @@ review file: the index and the entry details carry the comparison's public
 facts under the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4).
 A file of a generation never changes after it is written or captured. Generation files
-carry no deployment id and no revision: a removed entry's detail carries the
-generation and its `snapshotId` instead, so one comparison gives the same
-bytes in every build and in every Serve process. Every generation route
+carry no deployment id and no revision: a removed entry's detail carries its
+`detailId` and `snapshotId` instead, so one comparison gives the same bytes in
+every build and in every Serve process. The generation name hashes the files
+as they are. Every generation route
 answers GET and HEAD with `Cache-Control: no-store` and
 `X-Content-Type-Options: nosniff`; snapshot documents are `text/html`. In
 Serve the generation root, the URL that ends with `<generation>/`, answers GET
@@ -61,7 +64,9 @@ The development shell requests a comparison on demand at
 removed entry's preview under the
 [removed previews contract](./mokly-removed-previews.md). Removed component
 parents and variants use the index's advertised generation in every host.
-In Serve, they renew its root before loading another view or mode.
+In Serve, they renew its root before loading another view or mode. A static
+shell checks `mokly-viewer/deployment.json` before it opens a comparison or a
+removed entry; Serve has no deployment file and performs no such request.
 The selection endpoint redirects to the root of an immutable generation named
 `selected-<uuid>`. Its snapshots hold the base and head bytes of the
 classification that it projects. Snapshot URLs resolve relative to that root.

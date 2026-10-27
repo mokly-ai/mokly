@@ -170,31 +170,34 @@ Add the status line of the repository rules to each changed protocol page.
 
 - [x] Record the answers to decisions 1 to 4 with the date. Update the design
       and the TODOs below to the chosen options.
-- [ ] `mokly-catalogue-serialization.md`: add a detail identity section with
+- [x] `mokly-catalogue-serialization.md`: add a detail identity section with
       the id input and the decision in force. Reject a deployment id in each
       detail, because any edit changed every detail. Keep `deploymentId` as an
       index field, and name the new fields in the version paragraph.
-- [ ] `mokly-shell-delivery.md`: the `detailId` fields, the current and
+- [x] `mokly-shell-delivery.md`: the `detailId` fields, the current and
       removed detail fields, the deployment file route and check, the fence
       order and its reason, held details, unchanged ids in Serve publications,
       the identity, and the fail-closed table. Split it if it passes 250 lines.
-- [ ] `mokly-export-browser.md`: the deployment identity without the
+- [x] `mokly-export-browser.md`: the deployment identity without the
       deployment file and with only the index's field zeroed, the generation
       name, and the deployment file.
-- [ ] `mokly-export-delivery.md`: static navigation with the deployment file,
+- [x] `mokly-export-delivery.md`: static navigation with the deployment file,
       and revalidation for it. An unchanged detail keeps its validators.
-- [ ] `mokly-comparison-serving.md`: the removed detail fields and the check
+- [x] `mokly-comparison-serving.md`: the removed detail fields and the check
       before generation requests. `mokly-viewer.md`: the embedded checks and
       `EntryDetailV3`. `mokly-viewer-namespace.md`: the new public path.
-- [ ] `mokly-format-versions.md`: the index, detail, and deployment file rows,
+- [x] `mokly-format-versions.md`: the index, detail, and deployment file rows,
       the rejection rule, the Mokly Cloud sentence, and the rule of decision 3.
-- [ ] Align the sentences in `mokly-upload.md`, `mokly-export.md`, and
+- [x] Align the sentences in `mokly-upload.md`, `mokly-export.md`, and
       `mokly-comparison.md` that name the stamped details, the output files, or
       the detail type. Change nothing that stays true.
-- [ ] Add an upgrade section to `docs/guides/start/upgrade.md`. Update
+- [x] Add an upgrade section to `docs/guides/start/upgrade.md`. Update
       `packages/viewer/docs/deployment/README.md` and
       `packages/viewer/docs/concepts/README.md`.
-- [ ] Run `npm run format:check` and the Markdown link test.
+- [x] Run `npm run format:check` and the Markdown link test. Evidence:
+      `.context/deployment-id-detail-ids/milestone-1-checks.log`. The remote
+      tag check found no `v0.17.0`, so the index remains v8 and the detail is
+      v3 for this release window.
 
 ## Milestone 2: Mokly Cloud handoff
 

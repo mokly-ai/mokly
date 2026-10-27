@@ -1,5 +1,7 @@
 # Static Delivery
 
+Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
+
 ## Hosting Contract
 
 Deploy the output directory's contents as the HTTP(S) origin's document root.
@@ -46,6 +48,7 @@ authored case of each segment when written into URLs.
 | `view/<path>/index.html`                                                    | the same stub, one per current and removed entry    |
 | `404.html`                                                                  | the same stub                                       |
 | `mokly-viewer/index.json`                                                   | the catalogue index                                 |
+| `mokly-viewer/deployment.json`                                              | the deployment file v1                              |
 | `mokly-viewer/entries/<entry path>.json`                                    | one entry detail per current entry                  |
 | `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                           |
 | `static/mokly-generated/<route>`                                            | rendered views and documents                        |
@@ -86,19 +89,20 @@ kind under the Changes contract.
 Every JSON file is served as `application/json; charset=utf-8`, and every
 `mokly-viewer/` and `static/` response carries `X-Content-Type-Options: nosniff`.
 
-A new deployment replaces the stubs, the index, the details, the documents,
+A new deployment replaces the stubs, the index, the deployment file, the details, the documents,
 the resources, the bundle, the styles, and the fonts at the same paths.
 Serve those paths with revalidation, `Cache-Control: no-cache` or an
 equivalent validator policy, so the next navigation sees the new deployment.
-The index and the details of one deployment never change, so a validator
+The deployment file, index, and details of one deployment never change, so a validator
 answers `304` until the next deployment; the shell keeps them for the page's
 lifetime and fetches them with `credentials: "omit"`. A comparison generation
 is immutable at its content-addressed path: a host may cache its files for the
 deployment's lifetime or serve them with `Cache-Control: no-store`, and it
 must not rewrite one generation's URL to another generation.
+When a detail keeps its `detailId`, its bytes and validator stay unchanged.
 
 For cross-origin catalogue and viewer consumers, the public fetch paths are
-`mokly-viewer/index.json`, `mokly-viewer/entries/**`,
+`mokly-viewer/index.json`, `mokly-viewer/deployment.json`, `mokly-viewer/entries/**`,
 `static/mokly-generated/<route>`, `static/<referenced closure path>`,
 `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`,
 and `mokly-viewer/diffs/generations/**`. Send correct MIME types,
@@ -117,7 +121,8 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
-index, and fetches the routed entry's detail under the
+index, and fetches the routed entry's detail and `mokly-viewer/deployment.json`
+at the same time under the
 [fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The detail carries
 the workspace lists, so no route reads another page. Static mode with a
 missing, malformed, or other-version index or detail fails closed instead of
@@ -125,9 +130,10 @@ requesting a development endpoint. A static build never falls back to a live
 endpoint for any request.
 
 In-shell navigation commits the destination from the index at once and fetches
-its detail. A detail with another `deploymentId` means another deployment
-replaced the files, so the shell performs a full page load of the requested
-URL rather than mixing deployments. An open tab keeps its loaded deployment
+its detail and the deployment file. A deployment file with another
+`deploymentId`, or a detail whose `detailId` differs from the index record,
+means another deployment replaced the files, so the shell performs a full page
+load of the requested URL rather than mixing deployments. An open tab keeps its loaded deployment
 for the page's lifetime; reload the page to adopt a newer one. In-shell
 navigation, reload, Back/Forward, new tabs, and browser-normalized response
 URLs keep the same entry identity, scroll, and disclosure behaviour. Unknown
@@ -136,7 +142,8 @@ and never invents a catch-all route.
 
 A removed entry resolves from the index's `removedEntries`; it needs no query
 when its path is unique, and a present `snapshot` must match the published
-record. Its detail is fetched from the generation that `comparisonUrl` names
+record. The shell checks the deployment file before it opens the removed entry.
+Its detail is fetched from the generation that `comparisonUrl` names
 and accepted only under the removed-entry fence. Unknown, stale, and
 mismatched identities stay unavailable.
 

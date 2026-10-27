@@ -1,5 +1,7 @@
 # Static Build
 
+Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
+
 ## Scope
 
 `mokly build` validates the catalogue, renders every view in memory, and
@@ -67,7 +69,8 @@ from its entry's path under the [artifact path contract](./mokly-artifact-paths.
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes   |
 | `mokly-viewer/index.json`                          | the catalogue index with `revision: 0`, the stamped `deploymentId`, and no `live` field         |
-| `mokly-viewer/entries/<entry path>.json`           | one entry detail per current entry                                                              |
+| `mokly-viewer/deployment.json`                     | the static deployment file with `schemaVersion: 1` and the index's `deploymentId`               |
+| `mokly-viewer/entries/<entry path>.json`           | one entry detail per current entry, with a content `detailId`                                   |
 | `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract |
 | `static/<closure path>`                            | the authored resources the documents reference                                                  |
 | `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: removed entries' details, snapshots, resources, and previews         |
@@ -80,7 +83,9 @@ stub, the index, and the detail shapes. The [static delivery contract](./mokly-e
 owns the routes a host serves, their headers, and caching. The
 [public files contract](./mokly-export-public-files.md) owns file selection.
 The [browser contract](./mokly-export-browser.md) owns the client inventory
-and the deployment identity. The marker lists every file with its digest.
+and the deployment identity. The deployment file is excluded from that
+identity. The marker lists every file with its digest, including the
+deployment file.
 
 ## Changes In The Output
 
