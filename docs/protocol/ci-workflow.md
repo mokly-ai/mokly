@@ -114,8 +114,9 @@ pin equals `packageManager`. CI and release jobs set up that npm before
 
 Linux and Windows jobs across the CI, preview, release, native bootstrap, and
 Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
-matrix below and the CI Windows native job. That job uses 8 vCPUs, because on
-2 vCPUs its complete Rust build and test run is usually the slowest CI job.
+matrix below and the CI jobs that compile Rust. Those use 8 vCPUs, because fast
+CI results are worth their higher cost. The CI Windows native job does not use
+16 vCPUs, because with the Rust build cache it is no faster than on 8 vCPUs.
 macOS jobs use the provider's smallest available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
@@ -191,7 +192,10 @@ artifact. This workflow is optional. `Required CI` does not depend on it.
 [Testbox workflow contract](./remote-verification-testbox.md#workflow) defines
 its triggers, job, step order, and action revisions. Its Node.js version equals
 the version of the CI native jobs. Its npm and Rust setup equals the setup of
-the CI repository job. `Required CI` does not depend on this workflow. The
+the CI repository job. Its runner and workflow `env` equal those of the CI
+suite jobs. It restores the Rust build cache of the CI viewer, browser, and
+static-delivery jobs and never saves it.
+`Required CI` does not depend on this workflow. The
 hosted CI graph and its release profile keep their required jobs.
 
 ## Related Docs

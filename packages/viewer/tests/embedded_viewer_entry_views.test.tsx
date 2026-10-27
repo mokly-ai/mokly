@@ -8,7 +8,7 @@ import {
   detailPairs,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,

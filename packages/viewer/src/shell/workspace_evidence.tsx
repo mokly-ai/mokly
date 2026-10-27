@@ -4,8 +4,7 @@ import { Fragment } from "react";
 
 import { decodeProps } from "../components/codec.js";
 import { viewHref } from "../navigation/routes.js";
-import { componentViewEntry } from "../review/entries.js";
-import type { ChangeReason, ReviewResult } from "../review/types.js";
+import type { ChangeReason } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
 import { ComparisonHeading, StylesheetDetails } from "./evidence_details.js";
@@ -14,25 +13,26 @@ import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 
 /**
- * Comparison facts for the current entry and optional loaded comparison, in
- * the designs' order: the branch point and, for a moved entry, the path its
+ * Comparison facts for the current entry and, once a comparison loads, its
+ * compared views, in the designs' order: the branch point and, for a moved entry, the path its
  * earlier side comes from; one sentence per reason; the changed and excluded
  * stylesheets; the paired prop values; then the changed components used here.
  * An entry that only changed components affect ends with their explanation in
  * place of the no-changes line.
  */
 export function WorkspaceEvidence({
+  compared = false,
   data,
-  loaded,
   previousPath,
   variantPath,
 }: {
+  /** A comparison of the routed entry is loaded. */
+  compared?: boolean;
   data: WorkspaceData;
-  loaded?: ReviewResult;
   previousPath?: string;
   variantPath?: string;
 }) {
-  const evidence = workspaceComparisonEvidence(data, variantPath, loaded);
+  const evidence = workspaceComparisonEvidence(data, compared);
   const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
   const savedView = data.variants.find(
@@ -41,10 +41,7 @@ export function WorkspaceEvidence({
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
-  const variant =
-    evidence.comparison?.kind === "component"
-      ? componentViewEntry(evidence.comparison, variantPath)
-      : undefined;
+  const savedProps = evidence.comparison?.savedProps;
   return (
     <section
       className="mbk-comparison-evidence"
@@ -99,16 +96,15 @@ export function WorkspaceEvidence({
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
           {evidence.sharedImpact ? <p>{wording.sharedImpact}</p> : null}
-          {variant?.before &&
-          variant.after &&
-          JSON.stringify(variant.before.props) !==
-            JSON.stringify(variant.after.props) ? (
+          {savedProps &&
+          JSON.stringify(savedProps.before) !==
+            JSON.stringify(savedProps.after) ? (
             <>
               <h3>Saved props changed</h3>
               <p>Before</p>
-              <pre>{propText(decodeProps(variant.before.props))}</pre>
+              <pre>{propText(decodeProps(savedProps.before))}</pre>
               <p>Current</p>
-              <pre>{propText(decodeProps(variant.after.props))}</pre>
+              <pre>{propText(decodeProps(savedProps.after))}</pre>
             </>
           ) : null}
           {!evidence.sharedImpact &&

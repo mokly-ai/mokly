@@ -58,13 +58,12 @@ export function entryDetailPath(path: string): string {
 }
 
 /**
- * A removed entry's detail inside the comparison generation that the index's
- * validated `comparisonUrl` names, relative to the artifact origin root.
+ * A removed entry's detail inside the comparison generation whose root the
+ * index's validated `comparisonUrl` names, relative to the artifact origin root.
  */
 export function removedEntryDetailPath(
   comparisonUrl: string,
   path: string,
 ): string {
-  const generation = comparisonUrl.slice(0, -"review.json".length);
-  return `${generation}entries/${encodeUrlPath(path)}.json`;
+  return `${comparisonUrl}entries/${encodeUrlPath(path)}.json`;
 }

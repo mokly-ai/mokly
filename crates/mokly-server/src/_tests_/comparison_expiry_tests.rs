@@ -11,7 +11,6 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::axes::EntryKind;
-use mokly_model::readers;
 use mokly_model::review::ReviewKind;
 use tokio::sync::watch;
 use tower::ServiceExt;
@@ -25,7 +24,7 @@ use crate::comparison_support::{accepted, snapshot};
 use crate::entropy::EntropyMock;
 use crate::publication::SharedPublication;
 
-const SELECTED: &str = "/mokly-viewer/diffs/review.json?path=sample";
+const SELECTED: &str = "/mokly-viewer/diffs/selection?path=sample";
 
 fn graph(document: &'static [u8], stylesheet: &'static [u8]) -> Arc<dyn RenderGeneration> {
     let artifact = Arc::new(Artifact {
@@ -124,15 +123,19 @@ async fn select(router: &Router) -> String {
     response.headers()["location"].to_str().unwrap().to_owned()
 }
 
-async fn read_selection(router: &Router, url: &str, kind: ReviewKind) -> Bytes {
+/// Read a selection's root and documents, which must hold its captured bytes.
+async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
     let response = request(router, Method::GET, url).await;
-    assert_eq!(response.status(), StatusCode::OK);
-    let json = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-    let review = readers::review(std::str::from_utf8(&json).unwrap()).unwrap();
-    assert_eq!(review.entries.len(), 1);
-    assert_eq!(review.entries[0].kind, kind);
-    assert_eq!(review.entries[0].path, "sample");
-    let directory = url.strip_suffix("review.json").unwrap();
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    assert!(
+        to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let directory = url;
+    assert!(directory.ends_with('/'));
+    let mut documents = Vec::new();
     for (side, document, stylesheet) in [
         ("before", "<p>Before</p>", "p{color:red}"),
         ("after", "<p>After</p>", "p{color:blue}"),
@@ -148,24 +151,23 @@ async fn read_selection(router: &Router, url: &str, kind: ReviewKind) -> Bytes {
             )
             .await;
             assert_eq!(response.status(), StatusCode::OK);
-            assert_eq!(
-                to_bytes(response.into_body(), usize::MAX).await.unwrap(),
-                expected
-            );
+            let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            assert_eq!(bytes, expected);
+            documents.push(bytes);
         }
     }
-    json
+    documents
 }
 
 async fn idle_recovery(kind: ReviewKind) {
     let (router, store, now) = setup(kind);
     let original = select(&router).await;
-    let json = read_selection(&router, &original, kind).await;
+    let documents = read_selection(&router, &original).await;
     now.store(59_999, Ordering::SeqCst);
     store.collect();
     assert_eq!(store.state.lock().unwrap().bundles.len(), 1);
     let head = request(&router, Method::HEAD, &original).await;
-    assert_eq!(head.status(), StatusCode::OK);
+    assert_eq!(head.status(), StatusCode::NO_CONTENT);
     assert!(
         to_bytes(head.into_body(), usize::MAX)
             .await
@@ -190,7 +192,7 @@ async fn idle_recovery(kind: ReviewKind) {
     );
     let replacement = select(&router).await;
     assert_ne!(replacement, original);
-    assert_eq!(read_selection(&router, &replacement, kind).await, json);
+    assert_eq!(read_selection(&router, &replacement).await, documents);
     store.stop().await;
 }
 

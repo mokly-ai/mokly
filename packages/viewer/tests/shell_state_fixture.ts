@@ -1,7 +1,7 @@
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { shellModelFixture } from "./catalogue_v7_fixture.js";
+import { shellModelFixture } from "./catalogue_v8_fixture.js";
 
 export const model = shellModelFixture();
 

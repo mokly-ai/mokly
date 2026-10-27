@@ -5,15 +5,12 @@ import { expect, type Locator } from "@playwright/test";
 import { paneFrame } from "./comparison_scroll.js";
 
 /**
- * The absolute address of the accepted generation that an index names, ending
- * in `/`, as a host on `origin` serves it.
+ * The absolute address of a generation root, ending in `/`, as a host on
+ * `origin` serves it: an index's `comparisonUrl`, or the root of one of the
+ * generation's snapshot documents.
  */
-export function generationAddress(
-  origin: string,
-  comparisonUrl: string,
-): string {
-  return new URL(comparisonUrl.replace(/review\.json$/u, ""), `${origin}/`)
-    .href;
+export function generationAddress(origin: string, address: string): string {
+  return new URL(address.replace(/snapshots\/.*$/u, ""), `${origin}/`).href;
 }
 
 /**

@@ -6,6 +6,9 @@ import zlib from "node:zlib";
 import { verifyInventory } from "./receiver/ownership.js";
 import { cleanupAll } from "./static_cleanup.js";
 
+/** The catalogue index that every Plan archive carries after the envelope and marker. */
+const INDEX = "mokly-viewer/index.json";
+
 interface MarkerEntry {
   path: string;
   sha256: string;
@@ -58,7 +61,6 @@ export async function exchange(
     headSha: string;
     baseRef: string | null;
     baseSha: string | null;
-    comparisonPath: string | null;
   }> = [];
   const missingCounts: number[] = [];
   const missingSets: string[][] = [];
@@ -91,19 +93,16 @@ export async function exchange(
         ) as (typeof metadata)[number];
         assert.deepEqual(
           [...files.keys()],
-          [
-            "mokly-upload.json",
-            ".mokly-export-artifact",
-            ...(envelope.comparisonPath ? [envelope.comparisonPath] : []),
-          ],
+          ["mokly-upload.json", ".mokly-export-artifact", INDEX],
         );
-        if (envelope.comparisonPath) {
-          const review = JSON.parse(
-            files.get(envelope.comparisonPath)!.toString(),
-          ) as { schemaVersion: number; baseCommit: string };
-          assert.equal(review.schemaVersion, 8);
-          assert.equal(review.baseCommit, envelope.baseSha);
-        }
+        const index = JSON.parse(files.get(INDEX)!.toString()) as {
+          schemaVersion: number;
+          base?: string;
+          baseCommit?: string;
+        };
+        assert.equal(index.schemaVersion, 8);
+        assert.equal(index.baseCommit ?? null, envelope.baseSha);
+        if (envelope.baseSha) assert.equal(index.base, envelope.baseRef);
         metadata.push(envelope);
         identity = `${envelope.headSha}:${envelope.configPath}`;
         markerBytes = files.get(".mokly-export-artifact")!;

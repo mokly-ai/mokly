@@ -34,7 +34,7 @@ function incompleteIndex(
   };
   const entries = (key: string) =>
     ((index[key] as JsonRecord[] | undefined) ?? []).map(entry);
-  return {
+  const incomplete: JsonRecord = {
     ...index,
     changesStatus: status,
     comparisonUrl: null,
@@ -45,6 +45,9 @@ function incompleteIndex(
     documents: entries("documents"),
     useCases: entries("useCases"),
   };
+  // Only ready Changes names its base commit.
+  delete incomplete["baseCommit"];
+  return incomplete;
 }
 
 /** Rewrite every index the page reads while an incomplete state is set. */

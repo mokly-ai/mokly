@@ -20,11 +20,11 @@ single marker writer. The static builder installs its exact immutable bytes.
 The CLI adapter constructs `Finalized` once and retains both the artifact and
 its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
 metadata, hashes, and the compressed Plan body. No directory walk occurs.
-Review identity validation streams through the review JSON and rejects nested
-duplicate keys without constructing its full value tree. It checks the review
-result's `baseCommit` against the upload's `baseSha`. The static writer derives
-`baseRef` from the retained change snapshot, because the review result has no
-base-ref field.
+Index identity validation streams through the catalogue index and rejects
+nested duplicate keys without constructing its full value tree. It checks the
+index's `baseCommit` against the upload's `baseSha` and its `base` against
+`baseRef`. The Plan archive carries the envelope, the ownership marker, and the
+index, so a receiver reads Changes from the index without another request.
 The installed index and every generation file enter the same upload inventory.
 Disabled or unavailable Changes has no generation and null comparison metadata.
 The index still records unavailable Changes and its selected base ref.
@@ -85,6 +85,9 @@ trait mocks to downstream tests.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Finalized`, `Prepared`, and
   `OutputSnapshot`, which validate finished output once and keep the prepared
   upload.
+- [`src/index_identity.rs`](./src/index_identity.rs) defines `IndexIdentity`,
+  which streams the catalogue index and keeps its base and base commit for the
+  check against the upload metadata.
 - [`src/settings.rs`](./src/settings.rs) defines `Settings` and `Token`, the
   validated endpoint, credential, and concurrency.
 - [`src/http.rs`](./src/http.rs) defines `Http` and `ReqwestHttp`, the

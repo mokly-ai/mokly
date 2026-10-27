@@ -132,13 +132,8 @@ export async function serveComparisonCatalogue(
                 current.changesStatus !== "ready"
               )
                 return false;
-              if (expectedBase) {
-                const review = await fetch(
-                  new URL(current.comparisonUrl!, url),
-                );
-                if ((await review.json()).baseCommit !== expectedBase)
-                  return false;
-              }
+              if (expectedBase && current.baseCommit !== expectedBase)
+                return false;
               if (predicate && !(await predicate(current))) return false;
               accepted = current;
               return true;

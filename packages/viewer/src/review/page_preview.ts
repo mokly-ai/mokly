@@ -1,27 +1,26 @@
 /** The removed page and document preview metadata v3 of a comparison generation. */
 
-import {
-  reviewCommit,
-  reviewEntryPath,
-  reviewInvalid,
-  reviewObject,
-  reviewString,
-} from "./result_helpers.js";
+import { commitId, entryPath, string } from "../catalogue/values.js";
+import { invalidData, record } from "../components/data.js";
+
 import type { RemovedPagePreview } from "./types.js";
+
+const FIELDS = ["schemaVersion", "baseRef", "baseCommit", "path"];
 
 /** Strictly validate a removed page's identity-only preview payload. */
 export function parseRemovedPagePreview(value: unknown): RemovedPagePreview {
-  const input = reviewObject(value, [
-    "schemaVersion",
-    "baseRef",
-    "baseCommit",
-    "path",
-  ]);
-  if (input.schemaVersion !== 3) reviewInvalid("unsupported preview version");
+  if (
+    !record(value) ||
+    Object.keys(value).length !== FIELDS.length ||
+    FIELDS.some((field) => !Object.hasOwn(value, field))
+  )
+    invalidData("$preview", "expected exactly the preview metadata fields");
+  if (value.schemaVersion !== 3)
+    invalidData("$preview", "unsupported preview version");
   return {
     schemaVersion: 3,
-    baseRef: reviewString(input.baseRef),
-    baseCommit: reviewCommit(input.baseCommit),
-    path: reviewEntryPath(input.path),
+    baseRef: string(value.baseRef),
+    baseCommit: commitId(value.baseCommit),
+    path: entryPath(value.path),
   };
 }

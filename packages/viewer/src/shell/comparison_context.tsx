@@ -7,7 +7,7 @@ import type { SnapshotPresentationEnvironment } from "../previews/presentation.j
 
 import type { ScrollTogetherPreference } from "./comparison_scroll_preference.js";
 
-/** A live Serve route or one catalogue-pinned immutable metadata file. */
+/** A live Serve route or one catalogue-pinned immutable generation root. */
 export type ComparisonDelivery =
   { kind: "live" } | { kind: "pinned"; comparisonUrl: string | null };
 

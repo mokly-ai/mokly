@@ -15,6 +15,7 @@ import {
   loadComparison,
   PANE_SOURCE,
   selectedRequests,
+  SELECTED_ENDPOINT,
   SELECTED_GENERATION,
 } from "./serve_comparison_ui.js";
 import { networkFailure } from "./shell_error_allowances.js";
@@ -31,9 +32,15 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
   page,
   changes,
 }) => {
+  // Each selection and generation root that the page requests anew.
   const metadata: string[] = [];
   page.on("request", (request) => {
-    if (request.method() === "GET" && request.url().includes("review.json"))
+    const path = new URL(request.url()).pathname;
+    if (
+      request.method() === "GET" &&
+      (path === SELECTED_ENDPOINT ||
+        /\/diffs\/generations\/[^/]+\/$/u.test(path))
+    )
       metadata.push(request.url());
   });
   await page.goto(`/view/${changes.paths.changed}/`);
@@ -120,9 +127,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
   const generation = generationOf(
     (await page.locator(after).getAttribute(PANE_SOURCE))!,
   );
-  allowBrowserError(
-    networkFailure(changes.url, new URL(`${generation}review.json`).pathname),
-  );
+  allowBrowserError(networkFailure(changes.url, new URL(generation).pathname));
   await page.route(SELECTED_GENERATION, (route) => route.abort("failed"), {
     times: 1,
   });

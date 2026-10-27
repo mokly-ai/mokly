@@ -21,7 +21,7 @@ fn publication_metadata_is_exact_bounded_and_round_trips() {
             comparison
         );
         let object: Value = serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(object.as_object().unwrap().len(), 11);
+        assert_eq!(object.as_object().unwrap().len(), 10);
         for field in object.as_object().unwrap().keys() {
             let mut invalid = object.clone();
             invalid.as_object_mut().unwrap().remove(field);
@@ -67,8 +67,8 @@ fn metadata_validates_each_primitive_and_comparison_pair() {
         ("pullRequest", json!(9_007_199_254_740_992_u64)),
         ("configPath", json!("../config.json")),
         ("exportedAt", json!("2026-02-30T00:00:00.000Z")),
-        ("comparisonPath", json!("mokly-viewer/diffs/review.json")),
         ("comparisonPath", Value::Null),
+        ("schemaVersion", json!(2)),
     ] {
         let mut invalid = valid.clone();
         invalid[field] = value;
@@ -77,6 +77,9 @@ fn metadata_validates_each_primitive_and_comparison_pair() {
             "{field}"
         );
     }
+    let mut unpaired = valid.clone();
+    unpaired["baseSha"] = Value::Null;
+    assert!(UploadMetadata::parse(&serde_json::to_vec(&unpaired).unwrap()).is_err());
     assert!(matches!(
         UploadMetadata::parse(&vec![b' '; 16 * 1024 + 1]),
         Err(FormatError::TooLarge)

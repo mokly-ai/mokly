@@ -14,9 +14,9 @@ import type { RemovedEntry } from "./RemovedEntry.js";
 // prettier-ignore
 export type CatalogueReadModel = {
 /**
- * Must equal 7; readers gate it before decoding.
+ * Must equal 8; readers gate it before decoding.
  */
-schemaVersion: 7,
+schemaVersion: 8,
 /**
  * Origin-scoped catalogue identity.
  */
@@ -34,6 +34,10 @@ revision: number,
  */
 base?: string,
 /**
+ * Pinned merge base, present exactly while Changes is ready.
+ */
+baseCommit?: string,
+/**
  * Present only in Serve.
  */
 live?: LiveGeneration,
@@ -42,7 +46,7 @@ live?: LiveGeneration,
  */
 changesStatus: ChangesStatus,
 /**
- * Generation-pinned review URL, or null.
+ * Root of the generation-pinned comparison, or null.
  */
 comparisonUrl: string | null,
 /**

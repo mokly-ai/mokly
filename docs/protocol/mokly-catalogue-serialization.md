@@ -2,8 +2,8 @@
 
 ## Canonical Bytes
 
-The catalogue index, every entry detail, every detail inside a comparison
-generation, and the generation's `review.json` are canonical JSON. Sort object
+The catalogue index, every entry detail, and every detail inside a
+comparison generation are canonical JSON. Sort object
 keys recursively by UTF-16 code units; preserve authored `steps` and `tags`
 order. Entry arrays sort by kind and path in UTF-16 order, which yields
 `component`, `document`, `page`, `screen`, `use-case`; a parent's variants
@@ -23,14 +23,6 @@ keep authored order. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical
 bytes regardless of enumeration order, time, or output location, so a
 detail's bytes change exactly when its content changes.
-
-A comparison generation's `review.json` is the one compact file: the same key
-order, number spelling, and final LF, without insignificant whitespace. It
-grows with every rule record of every added or changed view, and static hosts
-limit the size of one file, for example to 25 MiB on Cloudflare Pages.
-Two-space indentation was rejected for this file because it is about 40
-percent of a large review result. Every other file keeps two-space
-indentation.
 
 Numbers retain their parsed JSON kind. Integers print as integers. Other
 numbers print the shortest digits that read back as the same IEEE 754 double.
@@ -81,7 +73,9 @@ or unknown number before it reads any other field, under the
 [rejection rule](./mokly-format-versions.md#rejection-before-interpretation).
 Writers are allowlisted. Optional fields are additive; a removal, a required
 addition, a changed meaning, a new union discriminant, or an incompatible
-path requires a new number. The review result follows the
+path requires a new number. The detail's view `state` and `ignoredIds` and
+its `before` address are additive optional fields, so they keep the detail's
+number. The review result stays in memory under the
 [comparison contract](./mokly-comparison.md). The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
 and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)

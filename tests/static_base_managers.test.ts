@@ -4,7 +4,6 @@ import path from "node:path";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
-import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 
 import { baseManagerFixture } from "./helpers/base_manager_fixture.js";
 import { managers } from "./helpers/base_manager_tools.js";
@@ -72,12 +71,7 @@ for (const manager of managers) {
       );
       assert.equal(index.changesStatus, "ready");
       assert.ok(index.comparisonUrl);
-      const review = parseReviewResult(
-        JSON.parse(
-          await fs.readFile(path.join(output, index.comparisonUrl), "utf8"),
-        ),
-      );
-      assert.equal(review.baseCommit, fixture.base);
+      assert.equal(index.baseCommit, fixture.base);
       for (const [name, kind, included] of [
         ["welcome", "unmodified", false],
         ["dependency", "changed", true],

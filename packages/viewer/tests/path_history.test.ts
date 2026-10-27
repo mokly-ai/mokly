@@ -4,7 +4,7 @@ import test from "node:test";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { canonicalRouteUrl } from "../src/shell/store_browser_urls.js";
 
-import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import { catalogueFixture, indexFixture } from "./catalogue_v8_fixture.js";
 
 const model = indexFixture();
 const catalogue = catalogueFixture(model);

@@ -10,7 +10,7 @@ import { build } from "esbuild";
 export async function smokeBrowser(root, repositoryRoot) {
   const index = JSON.parse(
     await fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/fixtures/catalogue-v7.json"),
+      path.join(repositoryRoot, "docs/protocol/fixtures/catalogue-v8.json"),
       "utf8",
     ),
   );

@@ -63,16 +63,16 @@ build into a temporary directory.
 Paths are relative to the output directory. Every rendered file name derives
 from its entry's path under the [artifact path contract](./mokly-artifact-paths.md).
 
-| Path                                               | Content                                                                                                    |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes              |
-| `mokly-viewer/index.json`                          | the catalogue index with `revision: 0`, the stamped `deploymentId`, and no `live` field                    |
-| `mokly-viewer/entries/<entry path>.json`           | one entry detail per current entry                                                                         |
-| `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract            |
-| `static/<closure path>`                            | the authored resources the documents reference                                                             |
-| `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: the review result, removed entries' details, snapshots, resources, and previews |
-| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the inspector, styles, and fonts under `mokly-viewer/`                        |
-| `.mokly-export-artifact`                           | the [ownership marker](./mokly-export-ownership.md), written last                                          |
+| Path                                               | Content                                                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes   |
+| `mokly-viewer/index.json`                          | the catalogue index with `revision: 0`, the stamped `deploymentId`, and no `live` field         |
+| `mokly-viewer/entries/<entry path>.json`           | one entry detail per current entry                                                              |
+| `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract |
+| `static/<closure path>`                            | the authored resources the documents reference                                                  |
+| `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: removed entries' details, snapshots, resources, and previews         |
+| `mokly-viewer/client/**`, `shell.css`, `fonts/**`  | the standalone shell bundle, the inspector, styles, and fonts under `mokly-viewer/`             |
+| `.mokly-export-artifact`                           | the [ownership marker](./mokly-export-ownership.md), written last                               |
 
 The [format inventory](./mokly-format-versions.md) gives the version of each
 JSON file. The [shell delivery contract](./mokly-shell-delivery.md) owns the
@@ -90,8 +90,8 @@ commit's Git tree under the [comparison contract](./mokly-comparison.md#sides),
 and writes one complete comparison generation. Entry-level Changes attribution
 and every screen comparison use that one commit, the same current documents,
 and the same source-capture and resource-comparison exclusions. The index carries `base`,
-`changesStatus: "ready"`, and the `comparisonUrl` of the generation's
-`review.json`; removed screens, pages, documents, components, and variants
+`baseCommit`, `changesStatus: "ready"`, and the `comparisonUrl` of the
+generation's root; removed screens, pages, documents, components, and variants
 keep their base context under [removed previews](./mokly-removed-previews.md),
 and a current and a removed record never share a path.
 

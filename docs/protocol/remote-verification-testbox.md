@@ -11,9 +11,15 @@ workflow file only. A branch push must match both filters. Tag pushes do not
 start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
-Run one job on `blacksmith-2vcpu-ubuntu-2404`.
+Run one job on the runner of the CI suite jobs, `blacksmith-8vcpu-ubuntu-2404`.
+Set the workflow `env` of the CI workflow, which holds the CI Cargo settings.
 Set `timeout-minutes: 30`.
 `Required CI` does not depend on this workflow.
+
+The job matches the CI suite jobs in runner, Cargo settings, and Rust build
+cache, so each command takes about the time and runner cost of its CI job.
+One job serves all seven commands. The repository command therefore restores
+the cache of the other suites, not the cache of the CI repository job.
 
 Run the steps in this order:
 
@@ -28,17 +34,21 @@ Run the steps in this order:
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Run `npm ci`.
-6. Run `cargo xtask build-native` to build the host native artifact.
-7. Write the lowercase SHA-256 digest of `package-lock.json`
+5. Restore the Rust build cache that the CI viewer, browser, and
+   static-delivery jobs share, with the same action and options. Set
+   `save-if: false`. Boxes run unreviewed local trees, so they never save.
+6. Run `npm ci`.
+7. Run `cargo xtask build-native` to build the host native artifact.
+8. Write the lowercase SHA-256 digest of `package-lock.json`
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
    Create the stamp directory if needed. Write the stamp only after both
    installation and the native build succeed.
-8. Run `npx playwright install --with-deps chromium`.
-9. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
-   Replace previous entries for those two names. Preserve other entries.
-   New Testbox SSH sessions must use Node 22.15.0 and Chromium.
-10. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
+9. Run `npx playwright install --with-deps chromium`.
+10. Write the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, and each workflow
+    `env` entry to `/etc/environment`. Replace previous entries for those
+    names. Preserve other entries. New Testbox SSH sessions must use
+    Node 22.15.0, Chromium, and the CI Cargo settings.
+11. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
 
 Warmup selects a 30-minute idle timeout. Readiness uses `10m`. The pinned
 action does not detect the SSH session, so only the start of each

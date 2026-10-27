@@ -1,7 +1,8 @@
 {
   "base": "main",
+  "baseCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "changesStatus": "ready",
-  "comparisonUrl": "mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json",
+  "comparisonUrl": "mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/",
   "components": [
     {
       "changes": {
@@ -266,7 +267,7 @@
     }
   ],
   "revision": 0,
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "screens": [
     {
       "changes": {

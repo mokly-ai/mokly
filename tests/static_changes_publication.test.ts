@@ -49,10 +49,6 @@ test(
           assert.equal(server.bodies.length, 1);
           assert.equal(server.metadata[0]!.baseRef, "fixture-base");
           assert.equal(server.metadata[0]!.baseSha, base);
-          assert.equal(
-            server.metadata[0]!.comparisonPath,
-            local.index.comparisonUrl,
-          );
           const inventory = status
             ? new Map(
                 [...(await files(output))].map(([name, bytes]) => [
@@ -69,7 +65,6 @@ test(
           );
           const envelope = upload(inventory.get("mokly-upload.json")!);
           assert.equal(envelope.baseSha, base);
-          assert.equal(envelope.comparisonPath, local.index.comparisonUrl);
           for (const [name, bytes] of previous) {
             if (name !== ".mokly-export-artifact")
               assert.deepEqual(

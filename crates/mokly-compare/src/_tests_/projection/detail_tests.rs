@@ -1,15 +1,19 @@
-//! Review reasons are detail evidence independent of usage workspaces.
+//! Review reasons, view states, and base addresses are detail evidence independent of workspaces.
 
 use std::sync::Arc;
 
-use mokly_model::axes::EntryKind;
-use mokly_model::review::{EntryChangeReason, ReviewResultV8, ReviewState};
+use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
+use mokly_model::projection::{self, ViewKey};
+use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::review::{
+    EntryChangeReason, ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewResultV8, ReviewState,
+};
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 use serde_json::json;
 use unimock::Unimock;
 
 use crate::comparison_types::{ComparisonResult, EntryClassification};
-use crate::projection_detail;
+use crate::{projection_detail, projection_index};
 
 use super::support::{classified, details, entry, model};
 
@@ -128,4 +132,82 @@ fn detail_reasons_share_review_order_and_deduplication() {
             {"kind":"material"}, {"kind":"metadata"}
         ])
     );
+}
+
+fn address(path: &str) -> ReviewEntryAddress {
+    ReviewEntryAddress {
+        path: path.into(),
+        title: path.into(),
+        props: None,
+        supplied_slots: None,
+    }
+}
+
+fn record(state: ReviewState, before: Option<&str>, after: bool) -> ReviewEntry {
+    ReviewEntry {
+        kind: ReviewKind::Screen,
+        path: "sample".into(),
+        title: "sample".into(),
+        before: before.map(address),
+        after: after.then(|| address("sample")),
+        previous_path: None,
+        state,
+        included: true,
+        reasons: vec![],
+        views: vec![],
+        variants: None,
+    }
+}
+
+fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV2> {
+    let catalogue = model(vec![entry("sample", EntryKind::Screen, None)]);
+    let state = projection_index::publication("mokly.config.json".into(), "base");
+    let keys = [ViewKey {
+        path: "sample".into(),
+        viewport: Some(Viewport::Desktop),
+        color_scheme: ColorScheme::Light,
+        key: "a".repeat(64),
+    }];
+    let index = projection::index(&catalogue, &keys, &state).unwrap();
+    projection::pending_details(&catalogue, &index, &keys)
+}
+
+#[test]
+fn view_states_ignore_ids_and_the_base_address_reach_a_current_detail() {
+    let mut change = classified("sample", EntryKind::Screen, ReviewState::IgnoredOnly);
+    change.documents[0].ignored_ids = vec!["hero".into()];
+    let mut result = comparison(change);
+    result.review.entries = vec![record(ReviewState::IgnoredOnly, Some("Sample"), true)];
+    let mut details = viewed_details();
+    projection_detail::apply_evidence(&mut details, &result);
+    let detail = serde_json::to_value(&details["sample"]).unwrap();
+    assert_eq!(detail["views"][0]["state"], json!("ignored-only"));
+    assert_eq!(detail["views"][0]["ignoredIds"], json!(["hero"]));
+    assert_eq!(
+        detail["views"][0]["resourceEvidence"],
+        json!({"rules":[],"resources":[]})
+    );
+    assert_eq!(detail["before"], json!({"path":"Sample","title":"Sample"}));
+}
+
+#[test]
+fn added_and_removed_details_carry_no_base_address() {
+    for (state, before, after, generation) in [
+        (ReviewState::Added, None, true, None),
+        (
+            ReviewState::Removed,
+            Some("sample"),
+            false,
+            Some("c".repeat(64)),
+        ),
+    ] {
+        let mut result = comparison(classified("sample", EntryKind::Screen, state));
+        result.review.entries = vec![record(state, before, after)];
+        let mut details = viewed_details();
+        details.get_mut("sample").unwrap().generation = generation;
+        projection_detail::apply_evidence(&mut details, &result);
+        let detail = serde_json::to_value(&details["sample"]).unwrap();
+        assert!(detail.get("before").is_none(), "{state:?}");
+        assert_eq!(detail["views"][0]["ignoredIds"], json!([]));
+    }
 }

@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-
 import { expect, type Request } from "@playwright/test";
 
 import {
@@ -16,7 +14,8 @@ import {
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
 
-const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
+/** Every pane document of a comparison generation, without subresources. */
+const DOCUMENTS = "**/mokly-viewer/diffs/generations/*/snapshots/**/*.html";
 const stage = "[data-diff-stage]";
 
 test("pending requests cannot replace Current or a newly navigated screen", async ({
@@ -27,7 +26,7 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
     release = resolve;
   });
   const heldRequests: Request[] = [];
-  await page.route(REVIEW, async (route) => {
+  await page.route(DOCUMENTS, async (route) => {
     heldRequests.push(route.request());
     const response = await route.fetch();
     await waiting;
@@ -37,15 +36,15 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await modeButton(page, "Overlay").click();
   await expect(page.locator(stage)).toContainText("Loading comparison");
-  // Move on only once the shell holds a request for the review.
+  // Move on only once the shell holds a request for a pane document.
   await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await modeButton(page, "Current").click();
   await expect(page.locator("[data-current-screen]")).toBeVisible();
   await navRow(page, comparisonPaths.unchanged).click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
-  // Release the held review, wait until the browser ends that request (the
-  // shell cancels it when the reader chooses Current), then let the shell
-  // handle and render the outcome.
+  // Release the held documents, wait until the browser ends those requests
+  // (the shell cancels them when the reader chooses Current), then let the
+  // shell handle and render the outcome.
   release();
   await expect
     .poll(() => heldRequests.every((held) => ended.has(held)))
@@ -67,15 +66,11 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
   allowBrowserError,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 500));
+  const failing = `/${index.comparisonUrl}snapshots/before/mokly-generated/${comparisonPaths.changed}/index.mobile.html`;
+  allowBrowserError(responseFailure(baseURL!, failing, 500));
   await page.route(
-    REVIEW,
-    (route) =>
-      route.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: '{"error":"failed"}',
-      }),
+    `**${failing}`,
+    (route) => route.fulfill({ status: 500, body: "failed" }),
     { times: 1 },
   );
   await page.goto(`/view/${comparisonPaths.changed}/`);
@@ -104,19 +99,12 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   allowBrowserError,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  const generation = new URL(index.comparisonUrl, baseURL).href.replace(
-    /review\.json$/u,
-    "",
-  );
-  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 503));
+  const generation = new URL(index.comparisonUrl, baseURL).href;
+  const failing = `/${index.comparisonUrl}snapshots/before/mokly-generated/${comparisonPaths.changed}/index.mobile.html`;
+  allowBrowserError(responseFailure(baseURL!, failing, 503));
   await page.route(
-    REVIEW,
-    (route) =>
-      route.fulfill({
-        status: 503,
-        contentType: "application/json",
-        body: "{}",
-      }),
+    `**${failing}`,
+    (route) => route.fulfill({ status: 503, body: "unavailable" }),
     { times: 1 },
   );
   await page.goto(`/view/${comparisonPaths.changed}/?viewport=mobile`);
@@ -136,10 +124,10 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
     );
   expect(await sources()).toEqual(pinned(comparisonPaths.changed));
 
-  // Hold every review read: leave during the refresh's read for another
-  // changed screen, and open its comparison while both reads wait.
+  // Hold every document read: leave during the refresh's reads for another
+  // changed screen, and open its comparison while all of them wait.
   const held: { request: Request; open: () => void }[] = [];
-  await page.route(REVIEW, async (route) => {
+  await page.route(DOCUMENTS, async (route) => {
     let open = (): void => undefined;
     const gate = new Promise<void>((resolve) => {
       open = resolve;
@@ -151,13 +139,13 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   });
   const ended = endedRequests(page);
   await page.getByRole("button", { name: "Refresh comparison" }).click();
-  await expect.poll(() => held.length).toBe(1);
+  await expect.poll(() => held.length).toBe(2);
   await expect(page.locator(stage)).toHaveAttribute("aria-busy", "true");
   await navRow(page, comparisonPaths.lightOnly).click();
   const heading = page.locator("#mb-main h2").first();
   await expect(heading).toHaveText("Daylight screen");
   await modeButton(page, "Overlay").click();
-  await expect.poll(() => held.length).toBe(2);
+  await expect.poll(() => held.length).toBe(4);
   /** The destination presents its own versions. */
   const expectDaylight = async () => {
     await expect(heading).toHaveText("Daylight screen");
@@ -168,39 +156,17 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
         text,
       );
   };
-  // The destination's read ends first; the abandoned refresh's read ends
-  // after it, and changes nothing.
-  held[1]!.open();
+  // The destination's reads end first; the abandoned refresh's reads end
+  // after them, and change nothing.
+  for (const destination of held.slice(2)) destination.open();
   await expectDaylight();
   await markPaneDocuments(page.locator(stage));
-  held[0]!.open();
-  await expect.poll(() => ended.has(held[0]!.request)).toBe(true);
+  for (const abandoned of held.slice(0, 2)) abandoned.open();
+  await expect
+    .poll(() => held.slice(0, 2).every(({ request }) => ended.has(request)))
+    .toBe(true);
   await passRenderingUpdates(page);
   await expectDaylight();
   // The same pane documents stay, not equal replacements.
   await expectPaneDocumentsKept(page.locator(stage));
-});
-
-test("released review v6 uses the standalone version message", async ({
-  page,
-}) => {
-  const released = JSON.parse(
-    await fs.readFile(
-      new URL("../fixtures/released-review-v6.json", import.meta.url),
-      "utf8",
-    ),
-  );
-  await page.route(REVIEW, (route) => route.fulfill({ json: released }));
-  await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  await expect(page.getByRole("alert")).toContainText(
-    "This catalogue needs a compatible viewer",
-  );
-  await page.locator("[data-comparison-failure] summary").click();
-  await expect(page.locator("[data-comparison-failure]")).toContainText(
-    "Unsupported Mokly review version 6; this viewer supports version 8.",
-  );
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
-  await modeButton(page, "Current").click();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
 });

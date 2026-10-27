@@ -10,7 +10,7 @@ import {
 } from "../src/shell/frame_source_hook.js";
 import { frameSource, stageDocumentKey } from "../src/shell/stage_sources.js";
 
-import { indexFixture } from "./catalogue_v7_fixture.js";
+import { indexFixture } from "./catalogue_v8_fixture.js";
 
 const KEY = "5".repeat(64);
 const NEXT = "6".repeat(64);

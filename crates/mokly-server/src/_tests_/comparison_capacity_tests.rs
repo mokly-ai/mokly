@@ -96,7 +96,12 @@ async fn refresh_identity_collision_keeps_the_earlier_generation() {
         ServerError::ComparisonCapacity
     ));
     assert_eq!(
-        store.file(&id, "review.json").await.unwrap().unwrap().bytes,
+        store
+            .file(&id, "entries/sample.json")
+            .await
+            .unwrap()
+            .unwrap()
+            .bytes,
         "{}"
     );
     store.stop().await;
