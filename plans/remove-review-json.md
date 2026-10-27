@@ -213,8 +213,9 @@ the latest `main`.
 - [x] User decision 11 (2026-10-27): A. The producer keeps the only check of
       public evidence paths. The viewer does not change.
 - [x] User decision 12 (2026-10-27): A. The review TODO keeps its tick.
-- [ ] Run the checks and the complete gate, commit, push, and update the pull
+- [x] Run the checks and the complete gate, commit, push, and update the pull
       request description.
+  - Evidence: `.context/remove-review-json/gate5.log`.
 
 ## Post-merge follow-up (non-blocking)
 
