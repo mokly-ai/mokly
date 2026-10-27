@@ -1,0 +1,300 @@
+# Render Cache Weight, Cache Counts, And Watch Recheck
+
+Status: Active. On branch
+`conductor/perf-0-cache-weights-cache-counts-and-the-watch-recheck`, no pull
+request yet. The plan closes when its PR merges.
+
+This plan is item perf 0 of the startup performance work. An orchestrator
+coordinates seven `perf N` workspaces and merges their pull requests. This
+pull request merges first, because the other workspaces measure their
+changes through its cache counts. It carries two items of the profile that
+the orchestrator measured on 2026-10-27.
+
+Item 4, the render cache weight. The render cache is the in-memory LRU of
+rendered documents and fragments that Serve, `build`, and Changes share. It
+is bounded at 256 MiB of charged bytes. The charge of one artifact is an
+estimate of its retained memory. Today the charge counts the usage,
+instance, and slot records of a document or fragment at 64 times their JSON
+length. On `examples/basic` the head alone charges 632 MiB, so the cache
+evicts head entries in the background pass and again while the base
+renders. The compare step then composes most head documents again and
+renders their fragments again through the sidecars. No timing record
+reports cache misses, evictions, or charged bytes.
+
+Item 7, the startup recheck. Watched Serve attaches its first watcher before
+the first preparation. A preparation loads the configuration, discovers the
+sources, validates them with the sidecar, and plans the render graph. When
+the prepared catalogue has watch roots that the first watch plan did not
+have, startup prepares the whole catalogue a second time before readiness.
+On `examples/basic` the second preparation takes 2.5 to 2.9 s.
+
+Decision 1 keeps the 256 MiB bound, unless the answer to D4 changes it. The
+change does not change the eviction order, the background pass (perf 3),
+CSS bundling (perf 5), per-entry render keys (perf 4), or base retention
+across edits (perf 6).
+
+## Decisions
+
+Decision 1 (2026-10-27, user): item 4 option C. Charge the actual byte
+length of the records, or a small multiple such as two. Keep the documented
+256 MiB bound. Emit the cache hit, miss, eviction, and byte counts in the
+timing records at the end of `serve.background`, `changes.classify`,
+`review.capture-side`, `review.compare-views`, and the build's
+`output.write`.
+
+Decision 2 (2026-10-27, user): item 7 option A. Run discovery first and seed
+the first watch plan with the discovered roots, so that the roots match after
+the preparation and no recheck runs.
+
+Open decisions, asked on 2026-10-27:
+
+- D1, the record multiplier. Recommended: two.
+- D2, the shape and the names of the count fields. Recommended: one
+  `render.cache` counts record for each phase.
+- D3, a correction of decision 2, which cannot remove the recheck.
+  Recommended: the coverage rule of the design below.
+- D4, the eviction acceptance of item 4 under the 256 MiB bound.
+  Recommended: keep the bound and amend the acceptance.
+
+## Corrections To The Item Text
+
+The item text was written from commit `89c12ef1`. This plan was measured at
+`a9dd1e81`, the merge base with `origin/main`.
+
+1. Discovery adds no watch roots. The roots of a watch plan are the
+   configured roots, the watch rule roots, and the PostCSS directory
+   dependencies. Imported stylesheets become exact watched files, not
+   roots. Only the sidecar's `processCss` reports PostCSS directories,
+   during graph preparation. On `examples/basic` the extra root is
+   `examples/basic/src`, from `@source "../.."` in
+   `examples/basic/src/components/workspace-note/utilities.css`. Decision 2
+   therefore cannot remove the second preparation.
+2. The first watcher already observes all 63 directories that the extra
+   root needs: the root's own directory is the parent of the configured
+   `src/components` root. An edit in these directories during the first
+   preparation is already buffered. The second preparation protects nothing
+   on this catalogue.
+3. The head already evicts itself in the background pass: 913 evictions at
+   the current charge. The base render is not the only cause.
+4. A 256 MiB bound cannot hold both sides of `examples/basic` at a
+   multiplier of one or two. After the base render, the head and the base
+   charge 296 MiB at one and 311 MiB at two. The cache then evicts 640 to
+   740 head entries while the base renders. Zero evictions hold for
+   `serve.background` only.
+5. This machine is faster than the machine of the item's baseline. The
+   second preparation takes 2.5 to 2.9 s here, not about 5 s.
+
+## Measurements
+
+Method: the shared method of the orchestrator, release build, eight cores,
+eight sidecars, OS cache directory warm. The raw records and the scripts are
+under `.context/perf/`. The summary is
+`.context/render-cache-weight-and-watch-recheck/baseline.md`.
+
+Before, at `a9dd1e81`. A range gives the values of two runs.
+
+| Measure                                            | `examples/basic`   | After one edit | React fixture |
+| -------------------------------------------------- | ------------------ | -------------- | ------------- |
+| `serve.ready`                                      | 13.2 to 13.8 s     |                | 6.5 s         |
+| `catalogue.validate`, `graph.prepare` before ready | 2 and 2            |                | 1 and 1       |
+| second preparation before ready                    | 2.8 to 2.9 s       |                | none          |
+| `serve.background`                                 | 12.3 to 13.4 s     | 14.9 s         | 1.8 s         |
+| `changes.classify`                                 | 55.5 to 55.9 s     | 71.1 s         | 9.0 to 9.2 s  |
+| `review.base-tree`                                 | 32.9 to 33.6 s     | 50.4 s         | 8.7 to 8.9 s  |
+| `review.capture-side`                              | 5.1 to 5.3 s       | 5.0 s          | 1.0 to 1.3 s  |
+| `review.compare-views`                             | 21.4 to 21.8 s     | 19.7 s         | 0.25 s        |
+| `sidecar.render` count, whole run                  | 2,110 to 2,181     | 4,267          | 324           |
+| `css.bundle` count, union                          | 152, 9.7 to 10.3 s | 193, 20.7 s    | 12, 0.26 s    |
+| `watch.action`                                     |                    | 10.1 s         |               |
+| edit to the end of the second classification       |                    | 96.2 s         |               |
+
+The cold run of `examples/basic` gave `serve.ready` 12.7 s,
+`changes.classify` 121.7 s, `review.compare-views` 18.7 s, and 1,996
+sidecar renders.
+
+The multiplier measurement used an experiment build. It reports the cache
+counts, the resident size, and the live heap at the start and the end of
+each phase. The live heap is the in-use total of the allocator. After the
+background pass the head holds 1,178 cache entries, and their records are
+7.7 MiB of JSON. The head's cache entries hold 179.4 MiB of live heap: the
+heap grew 233.9 MiB over the pass with a 4 GiB bound and 54.5 MiB with a
+zero bound. The resident size grew 240.0 MiB over the pass with a 4 GiB
+bound. That growth includes state outside the cache, so it is an upper
+bound.
+
+| Multiplier | Head charge after the background pass | Live heap per charged byte | Resident growth per charged byte |
+| ---------- | ------------------------------------- | -------------------------- | -------------------------------- |
+| 64         | 631.9 MiB                             | 0.28                       | 0.38                             |
+| 2          | 156.8 MiB                             | 1.14                       | 1.53                             |
+| 1          | 149.1 MiB                             | 1.20                       | 1.61                             |
+
+| Experiment run         | `serve.background` evictions | `changes.classify` evictions | `review.compare-views` | `sidecar.render` count |
+| ---------------------- | ---------------------------- | ---------------------------- | ---------------------- | ---------------------- |
+| multiplier 64, 256 MiB | 913                          | 3,279                        | 16.7 s                 | 2,095                  |
+| multiplier 2, 256 MiB  | 0                            | 1,244                        | 6.0 s                  | 1,461                  |
+| multiplier 1, 256 MiB  | 0                            | 1,190                        | 5.7 s                  | 1,461                  |
+| multiplier 64, 4 GiB   | 0                            | 0                            | 1.9 s                  | 1,098                  |
+
+## Design
+
+Record charges. One named constant replaces the three multipliers of the
+weight module in `mokly-graph`. Its value is the D1 answer.
+
+Cache counts. Each command creates its one render cache at its composition
+root, with the 256 MiB bound, and passes it to the timing layer and to the
+render services. Today the render services create the cache themselves, so
+the timing layer cannot read it. The timing layer reads the cache
+statistics when one of the five phases starts. When the phase closes, it
+emits one counts record before the phase's end record. The record carries
+the hits, misses, and evictions between the start and the end, and the
+charged bytes and entries at the end. Under D2 option A the record has the
+stage `render.cache`, the phase span as `parentId`, and the phase's stage as
+`phase`. A failed phase also emits its record. The counts cover every cache
+operation of the process during the phase, so a parent phase also counts
+its nested phases and concurrent foreground work. The counts code lives in
+a new module beside the timing layer, so the layer's file stays under the
+file cap and its `css.bundle` code stays as perf 5 expects.
+
+Watch recheck, under D3 option B. The watch `Observer` reports whether it
+already registers every directory that the roots of a plan need.
+`NativeObserver` compares the root walk of the plan with its registered
+directories. A candidate whose roots changed still attaches a new observer,
+so a failed candidate keeps the active observer. The candidate asks for the
+second preparation only when the active observer does not cover the
+candidate plan. Otherwise the active observer's buffered events replay into
+the new observer at adoption, as they do today. The same rule applies at
+startup and on a rebuild, because both use the same candidate step. The
+active observer's registrations do not change during a preparation: the
+watch queue drains no event while an action runs, and startup drains none
+before readiness.
+
+Contract owners:
+
+- [Timings contract](../docs/protocol/mokly-timings.md): the cache counts
+  record.
+- [Watch contract](../docs/protocol/mokly-watch.md#watch-targets-and-readiness):
+  the readiness rule.
+- [Runtime contract](../docs/protocol/mokly-runtime.md#render-graph-and-cache):
+  the 256 MiB bound, unchanged.
+- The [mokly-graph README](../crates/mokly-graph/README.md), the
+  [mokly-watch README](../crates/mokly-watch/README.md), and the
+  [mokly-cli README](../crates/mokly-cli/README.md).
+
+## Milestone 1: Documentation and protocol
+
+State the count record, the readiness rule, and the charge, so that the
+review can check the code against them.
+
+- [ ] Update `docs/protocol/mokly-timings.md`: the `render.cache` counts
+      record of the D2 answer, its five phases, and its fields. Say that
+      the counts cover the whole process during the phase, and that charged
+      bytes are an estimate under the runtime bound, not measured memory.
+      Keep the `serve.background` counts record as it is.
+- [ ] Update "Watch Targets And Readiness" in `docs/protocol/mokly-watch.md`
+      with the readiness rule of the D3 answer.
+- [ ] Update `crates/mokly-graph/README.md`: the cache charges the usage,
+      instance, and slot records at the D1 multiple of their JSON length.
+- [ ] Update `crates/mokly-watch/README.md`: the observer reports whether it
+      already observes the root directories of a plan.
+- [ ] Update `crates/mokly-cli/README.md`: each command creates one render
+      cache at its composition root and shares it with the timing layer.
+- [ ] Confirm that the render cache section of `docs/protocol/mokly-runtime.md`
+      stays true. Change nothing that stays true.
+- [ ] Record the answers to D1 to D4 in this plan, with the date.
+
+## Milestone 2: Record charges
+
+Charge the records at the D1 multiple. No other charge changes.
+
+- [ ] Write the failing test first in a new
+      `crates/mokly-graph/src/_tests_/weight_tests.rs`: a document's usage
+      record and a fragment's instance and slot records add the D1 multiple
+      of their JSON length to the charge.
+- [ ] Replace the three multipliers in `crates/mokly-graph/src/weight.rs`
+      with one named constant. Say in the module comment that the charge is
+      an estimate.
+- [ ] Run the tests of `mokly-graph`, `mokly-compare`, `mokly-render`, and
+      `mokly-server`. A test that expected an eviction from the old
+      multiplier keeps its intent with a smaller bound or a larger record.
+
+## Milestone 3: Cache counts in the timing records
+
+Emit the counts of the D2 answer at the end of the five phases.
+
+- [ ] Write the failing tests first in a new
+      `crates/mokly-cli/src/_tests_/cache_trace_tests.rs`, with a mocked
+      render cache and the mocked clock. Each of the five phases emits one
+      count record before its end record, with the phase differences and
+      the end totals. Other stages emit none. A phase that ends with
+      `error` still emits. Nested phases each emit their own record.
+- [ ] Add the cache constructor with the 256 MiB bound to
+      `crates/mokly-cli/src/render_runtime.rs`. `Services::new` takes the
+      cache instead of creating it.
+- [ ] Create the cache in `entry_serve.rs`, `entry_build.rs`, and
+      `entry_publish.rs`. Pass it to `serve_trace::install`, and through
+      `ServeServices`, the build `Context`, and the publish `Output` to
+      `Services::new`.
+- [ ] Add the counts to the timing layer in a new
+      `crates/mokly-cli/src/serve_trace_cache.rs`.
+- [ ] Update the existing trace tests for the new layer field.
+
+## Milestone 4: Startup recheck
+
+Prepare a second time only when a new root reaches a directory that the
+active watcher did not observe.
+
+- [ ] Write the failing tests first in
+      `crates/mokly-watch/src/_tests_/native_registration_tests.rs`: the
+      observer covers a plan whose root directories it registered. It does
+      not cover a plan whose root reaches an unregistered directory. It
+      covers nothing after `close`.
+- [ ] Add the coverage method to `Observer` in
+      `crates/mokly-watch/src/observer.rs`. Implement it in `NativeObserver`
+      from the root walk that registration uses.
+- [ ] Write the failing tests first in
+      `crates/mokly-cli/src/_tests_/serve_watch_tests.rs`: changed roots
+      that the active observer covers attach a new observer without a
+      recheck. Changed roots that it does not cover set the recheck.
+- [ ] Set `recheck` from the coverage in `candidate` of
+      `crates/mokly-cli/src/serve_watch.rs`. Keep the new observer for
+      changed roots. Update the module comment of `serve_preparation.rs`.
+- [ ] Add a process test under `crates/mokly-cli/tests/serve_js/` for an
+      edit during startup. A PostCSS plugin reads a file under a directory
+      that it reports, signals, and waits for a gate file. The test edits
+      the file, then writes the gate.
+  - [ ] Covered directory: readiness serves the old CSS, then a rebuild
+        serves the new CSS.
+  - [ ] Directory outside every observed directory: the second preparation
+        runs, and readiness serves the new CSS.
+
+## Milestone 5: Measurement after the change
+
+Measure the branch with the same method and compare it with the table
+above.
+
+- [ ] Build the release binary and the packages with the shared method.
+- [ ] Run the warm serve run twice, the edit run once, and the React fixture
+      twice. Rerun a pair that differs by more than ten percent.
+- [ ] Add the after values to the table in this plan. Save the records under
+      `.context/perf/` and the summary under
+      `.context/render-cache-weight-and-watch-recheck/`.
+- [ ] Confirm the acceptance: one `catalogue.validate` and one
+      `graph.prepare` before `serve.ready`, zero evictions in
+      `serve.background`, and the D4 outcome for `review.compare-views` and
+      the `sidecar.render` count.
+
+## Milestone 6: Verification, commit, review, and pull request
+
+- [ ] Run `cargo xtask check --suite repository` early.
+- [ ] Smoke-test watched Serve with `npm run dev -- --port 0`: open a screen,
+      edit a screen module, and see the rebuilt screen.
+- [ ] Run the targeted tests and the complete gate `cargo xtask check`.
+- [ ] Commit with Conventional Commits and push the branch after each
+      milestone.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
+- [ ] Open the pull request when every other milestone TODO is ticked. Put
+      the before and after table in its body and its link in the status
+      paragraph.
