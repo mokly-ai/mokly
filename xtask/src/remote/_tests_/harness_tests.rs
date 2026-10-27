@@ -274,22 +274,24 @@ fn build(case: Case, stuck: bool) -> Harness {
     fixture
 }
 
+/// The read failure that the in-process fingerprint returns.
+fn fingerprint_failure() -> Error {
+    Error::SourceTree {
+        source: crate::source_tree::error::Error::Read {
+            path: "/workspace".to_owned(),
+            source: std::io::Error::other("fingerprint test failure"),
+        },
+    }
+}
+
 /// Fail the final fingerprint read the way each late-failure case requires.
 fn final_read(case: Case, interrupted: &AtomicBool) -> Result<(), Error> {
     match case {
-        Case::FinalFingerprint => Err(Error::Command {
-            operation: Operation::Fingerprint,
-            code: Some(1),
-            detail: None,
-        }),
+        Case::FinalFingerprint => Err(fingerprint_failure()),
         Case::LateInterrupt if interrupted.load(Ordering::SeqCst) => Err(Error::Cancelled),
         Case::SignalledFingerprint => {
             interrupted.store(true, Ordering::SeqCst);
-            Err(Error::Command {
-                operation: Operation::Fingerprint,
-                code: None,
-                detail: None,
-            })
+            Err(fingerprint_failure())
         }
         _ => Ok(()),
     }

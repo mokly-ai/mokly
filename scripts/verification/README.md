@@ -122,9 +122,10 @@ and dependency preparation used by the other commands. It builds with
 `npm run build` and then runs `npm run test:delivery:prepared`. Build failures,
 signals, and either delivery failure produce a nonzero command result.
 
-The remote command runs [`refresh-source-mtimes.mjs`](./refresh-source-mtimes.mjs)
-before this wrapper. It refreshes every regular copied path that differs from
-the warmup base, so the first Cargo build cannot reuse a stale native binary.
+The readiness probe runs [`refresh-source-mtimes.mjs`](./refresh-source-mtimes.mjs)
+before `cargo xtask source-tree`, and each remote command runs it before this
+wrapper. It refreshes every regular copied path that differs from the warmup
+base, so the first Cargo build cannot reuse a stale native binary.
 
 No browser command also runs delivery. The remote plan gives static delivery
 its own seventh Testbox and requires its exit result. Browser and viewer

@@ -22,8 +22,6 @@ pub(crate) enum Operation {
     Ssh,
     /// Read or cancel a GitHub workflow run.
     Github,
-    /// Compute the source fingerprint.
-    Fingerprint,
     /// Validate downloaded reports.
     Aggregate,
     /// Open or write verification logs.
@@ -168,6 +166,12 @@ pub(crate) enum Error {
     /// An interrupt cancelled a step; only a final result adds the box count.
     #[error("[xtask/remote] an interrupt cancelled the operation")]
     Cancelled,
+    /// The source-tree fingerprint could not be read.
+    #[error("[xtask/remote] {source}")]
+    SourceTree {
+        /// Original fingerprint error.
+        source: crate::source_tree::error::Error,
+    },
     /// The user interrupted the check; only a final result carries this count.
     #[error("[xtask/remote] verification interrupted; cleanup={cleanup} boxes remain")]
     Interrupted {

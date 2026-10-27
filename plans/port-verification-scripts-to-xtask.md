@@ -3,8 +3,9 @@
 Status: Active. [PR #213](https://github.com/mokly-ai/mokly/pull/213) is
 open as a draft, stacked on
 [PR #212](https://github.com/mokly-ai/mokly/pull/212). It stays a draft
-until the user's decisions for Milestones 5 to 7 are applied. The plan
-closes when its PR merges.
+until the two open decisions are settled: the suite wrapper's process
+ownership in Milestone 6 and the step boundary of review 1 finding 2. The
+plan closes when its PR merges.
 
 `xtask` runs the repository gate in Rust, but it still calls small Node
 scripts: the changed-file length audit, the protocol cap ratchet inside the
@@ -12,8 +13,11 @@ Node ratchet runner, the Rust advisory audit behind
 `npm run dependencies:check:rust`, and the source-tree fingerprint. Each
 Testbox also runs a Node modification-time refresh and the Node suite
 wrapper, and the pull request workflow runs a Node title check. This plan
-ports these scripts and their Node tests to `xtask`, with every assertion
-kept, and deletes the Node scripts and tests that the port replaces.
+ports the length audit, the cap ratchet, the remote-state guard, the
+fingerprint, and the suite wrapper, with every assertion kept, and deletes
+the Node scripts and tests that the port replaces. The Rust audit, the
+modification-time refresh, and the title check stay in Node, as the user
+decided on 2026-10-27.
 
 User decision 3 B, 2026-10-26, in the workspace "mokly/tests Rust
 migration": port the small scripts and their 18 test files, that is, the
@@ -39,11 +43,34 @@ Findings of the scope check on 2026-10-26:
   path. The port keeps it with a strict parser of that object-literal form.
 - The child environment parity test stays in Node, because `process.mjs`
   and `serve-process.mjs` keep using `child-environment.mjs`.
-- Three parts wait for user decisions. The Testbox commands and the pull
+- Three parts waited for user decisions. The Testbox commands and the pull
   request title workflow change a protocol requirement. The Rust audit
   downloads its tool over HTTPS, and every HTTPS client for `xtask` either
   adds a TLS build to every fresh `xtask` build or a new external tool.
   Milestones 5, 6, and 7 hold them.
+
+User decisions of 2026-10-27, in the same workspace:
+
+- 2 A: the Rust audit stays in Node. Rejected: B, `reqwest` with `rustls`,
+  which makes each cold `xtask` build about 31 seconds slower; C, the system
+  `curl`, which adds an external tool to the gate.
+- 3 B: port the fingerprint and the suite wrapper to `cargo xtask` commands.
+  The Node modification-time refresh stays and runs first in the probe and
+  in each suite command. Rejected: A, keep all three in Node; C, a shell
+  refresh, which is harder to test.
+- 4 A: the pull request title check stays in Node. Rejected: B, a Rust check
+  that needs the toolchain and an `xtask` build for each title edit.
+- 5 B: remove the legacy cap table path. A comparison commit without the JSON
+  table takes its caps from line counts, as the ratchet page says. Rejected:
+  A, keep the parser and change the page. Reason: line counts give the same
+  caps for every page at a comparison commit that passed its own size test.
+- The step boundary of review 1 finding 2 stays open: the user asked for an
+  explanation.
+- New open decision, found while porting 3 B: the Node suite wrapper runs
+  each child under a Node verification process owner, which
+  `docs/protocol/ci-suite-evidence.md` requires of report-producing
+  wrappers. The wrapper port waits for the user's choice of how the Rust
+  wrapper owns its child processes.
 
 Contract owners:
 
@@ -107,39 +134,50 @@ repositories in the adapter tests.
 
 ## Milestone 5: Rust advisory audit
 
-Blocked: waits for the user's decision on the tool download. The wrapper
-downloads the pinned `cargo-audit` source over HTTPS. `xtask` has no HTTP
-client, and `reqwest` with `rustls` adds the `aws-lc` build to every fresh
-`xtask` build.
+Settled by user decision 2 A of 2026-10-27: the Rust audit stays in Node.
 
-- [ ] Port `rust-audit.mjs` and `rust-audit-tool.mjs` to an `xtask`
-      command with injected time, process, download, and file boundaries.
-      `npm run dependencies:check:rust` keeps its name and runs it.
-- [ ] Check that the new `xtask` dependencies add no package to
-      `Cargo.lock`.
-- [ ] Port `tests/rust_audit.test.ts` and `tests/rust_audit_tool.test.ts`.
-- [ ] Delete `audit-rust.mjs`, `rust-audit.mjs`, `rust-audit-tool.mjs`,
-      their declarations, and the two tests.
-- [ ] Move the description of the Rust audit from the verification scripts
-      README to the xtask README.
+- [x] Keep `rust-audit.mjs`, `rust-audit-tool.mjs`, and their two tests in
+      Node. No change.
 
 ## Milestone 6: Testbox commands
 
-Blocked: waits for the user's decision on the Testbox commands. Each box
-runs the Node fingerprint probe, then the Node modification-time refresh and
-the Node suite wrapper. The refresh must run before any build, and a
-`cargo xtask` command builds first.
+User decision 3 B of 2026-10-27: port the fingerprint and the suite wrapper.
+The Node refresh runs first, because a `cargo xtask` command builds before
+it runs.
 
-- [ ] Apply the user's decision on the fingerprint, the suite wrapper, and
-      the refresh, with their ten test files.
+- [x] Port the fingerprint to `cargo xtask source-tree` and the
+      `source_tree` module, with every case of
+      `tests/verification_source_tree.test.ts`,
+      `tests/verification_source_tree_types.test.ts`,
+      `tests/verification_source_tree_cli.test.ts`, and the source-tree cases
+      of `tests/verification_fingerprint_arguments.test.ts`.
+- [x] Compute the checkout and snapshot fingerprints in-process, and run
+      the probe as the Node refresh followed by `cargo xtask source-tree`.
+      State both in the two Testbox protocol pages.
+- [ ] Apply the user's decision on the wrapper's process ownership. Then
+      port `testbox-suite.mjs` to a `cargo xtask` command that runs after
+      the Node refresh, with every case of
+      `tests/verification_testbox_suite.test.ts`,
+      `tests/verification_testbox_failures.test.ts`,
+      `tests/verification_testbox_staging.test.ts`,
+      `tests/verification_testbox_staging_git.test.ts`,
+      `tests/verification_testbox_process.test.ts`, and the wrapper cases of
+      `tests/verification_fingerprint_arguments.test.ts`.
+- [ ] Delete `source-tree.mjs`, `testbox-suite.mjs`, their declarations,
+      their Node tests, and `typeRepository` of
+      `tests/helpers/source_tree_types.ts`, once no Node wrapper uses the
+      Node fingerprint. Keep `isolatedGitEnvironment` for the bootstrap
+      tests.
+
+Evidence: `fingerprint-parity.log` in
+`.context/port-verification-scripts-to-xtask/decisions-2026-10-27/`.
 
 ## Milestone 7: Pull request title
 
-Blocked: waits for the user's decision on the title workflow. The workflow
-runs the title check with Node only and has a five-minute limit.
+Settled by user decision 4 A of 2026-10-27: the title check stays in Node.
 
-- [ ] Apply the user's decision on `pull-request-title.mjs` and its two test
-      files.
+- [x] Keep `pull-request-title.mjs` and its two test files in Node. No
+      change.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
@@ -170,12 +208,16 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
     `.context/port-verification-scripts-to-xtask/review-2.md`.
   - Decision for the user: remove the legacy cap table path, the wider fix
     of review 1 finding 5 and review 2 finding 1. Effort Large.
+    - [x] Settled by user decision 5 B of 2026-10-27. Milestone 9 removes it.
   - Decision for the user: run every suite step through one injected step
     boundary, the wider fix of review 1 finding 2. Effort Medium.
+    - Open: on 2026-10-27 the user asked for an explanation.
   - Outside the review scope: `docs/protocol/verification-ratchets.md:53`:
     the page says that a comparison commit without the JSON cap table takes
     its caps from line counts, but the ratchet first reads the legacy table,
     as the Node code on `origin/main` does. Separate branch.
+    - [x] Resolved by user decision 5 B: the ratchet now takes line counts,
+          as the page says.
   - Outside the review scope: `xtask/src/check/runner.rs`: no ordered test
     pins the Rust file-length audit after `cargo test --workspace`, as on
     `origin/main`. Separate branch.
@@ -183,10 +225,12 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
       Put its link in the status paragraph. It opened as a draft before
       Milestones 5 to 7, because the user asked for the pull request.
 
-## Milestone 9: Verification of the decided parts
+## Milestone 9: Decided changes and their verification
 
-Blocked: waits for the user's decisions.
-
+- [x] Remove the legacy cap table path, its parser, and its tests, as user
+      decision 5 B chose. The repository test of the legacy table now shows
+      that a comparison commit without the JSON table takes its caps from
+      line counts, also when it still holds the old size test.
 - [ ] Add the map from each Node case of Milestones 5 to 7 to its Rust
       test, or the reason that it stays in Node, under
       `.context/port-verification-scripts-to-xtask/`.

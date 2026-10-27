@@ -23,6 +23,7 @@ fn application_dispatches_native_build_and_type_generation() {
         selector: unused.clone(),
         check_runner: unused.clone(),
         remote_runner: unused.clone(),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: unused.clone(),
         environment: unused.clone(),
         reporter: unused.clone(),

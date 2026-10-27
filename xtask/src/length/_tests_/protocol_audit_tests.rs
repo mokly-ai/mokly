@@ -1,5 +1,5 @@
 //! The cap ratchet over real Git repositories: the comparison table, the
-//! legacy table, renames, and a moved `origin/main`.
+//! line-count bootstrap, renames, and a moved `origin/main`.
 
 use std::fs;
 use std::path::PathBuf;
@@ -12,7 +12,8 @@ use crate::remote::git_test_runner::IsolatedGit;
 use super::{audit_protocol_caps, ratchet_outcome};
 
 const LABEL: &str = "xtask/protocol-document-caps.json";
-const LEGACY_TABLE: &str = "tests/protocol_doc_sizes.test.ts";
+/// The former Node size test, whose caps the ratchet no longer reads.
+const FORMER_SIZE_TEST: &str = "tests/protocol_doc_sizes.test.ts";
 const LONG_DOCUMENT: &str = "docs/protocol/long.md";
 
 /// A fixture repository in a temporary directory.
@@ -87,16 +88,16 @@ fn diverged_repository() -> Fixture {
 }
 
 #[test]
-fn the_cap_ratchet_reads_the_legacy_table_at_an_older_comparison_commit() {
+fn a_comparison_commit_without_the_json_table_takes_its_caps_from_line_counts() {
     let fixture = Fixture::new("main");
     fixture.write(LONG_DOCUMENT, &lines(270));
     fixture.write(
-        LEGACY_TABLE,
+        FORMER_SIZE_TEST,
         "const oversizedCaps = { \"long.md\": 260 };\n",
     );
     fixture.commit("comparison commit");
     fixture.run(&["update-ref", "refs/remotes/origin/main", "HEAD"]);
-    fs::remove_file(fixture.root().join(LEGACY_TABLE)).unwrap();
+    fs::remove_file(fixture.root().join(FORMER_SIZE_TEST)).unwrap();
     let missing = audit_protocol_caps(&fixture.root()).unwrap_err();
     assert!(matches!(missing, Error::CapTableMissing { .. }));
     assert!(
@@ -108,24 +109,20 @@ fn the_cap_ratchet_reads_the_legacy_table_at_an_older_comparison_commit() {
     fixture.write(LONG_DOCUMENT, &lines(265));
     fixture.write(LABEL, "{ \"long.md\": 265 }\n");
     fixture.commit("JSON cap table");
+    assert_eq!(fixture.findings(), Vec::<String>::new());
+    fixture.write(LONG_DOCUMENT, &lines(275));
+    fixture.write(LABEL, "{ \"long.md\": 275 }\n");
     assert_eq!(
         fixture.findings(),
-        ["long.md: cap 265 exceeds predecessor long.md cap 260"]
+        ["long.md: cap 275 exceeds predecessor long.md cap 270"]
     );
-    fixture.write(LONG_DOCUMENT, &lines(260));
-    fixture.write(LABEL, "{ \"long.md\": 260 }\n");
-    assert_eq!(fixture.findings(), Vec::<String>::new());
 }
 
 #[test]
-fn the_cap_ratchet_prefers_the_json_table_at_the_comparison_commit() {
+fn the_cap_ratchet_prefers_the_json_table_to_line_counts_at_the_comparison_commit() {
     let fixture = Fixture::new("main");
     fixture.write(LONG_DOCUMENT, &lines(280));
     fixture.write(LABEL, "{ \"long.md\": 260 }\n");
-    fixture.write(
-        LEGACY_TABLE,
-        "const oversizedCaps = { \"long.md\": 270 };\n",
-    );
     fixture.commit("comparison commit");
     fixture.run(&["update-ref", "refs/remotes/origin/main", "HEAD"]);
     fixture.write(LONG_DOCUMENT, &lines(265));

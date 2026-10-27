@@ -110,6 +110,7 @@ fn application_dispatches_source_length_and_complete_check() {
             ReporterExecutorMock.each_call(matching!(_)).returns(()),
         )),
         check_runner: checks,
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: Arc::new(Unimock::new(
             RustFileLengthAuditorRunMock
                 .next_call(matching!((workspace) if workspace.to_str() == Some("/workspace")))
@@ -192,6 +193,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
         selector: unused(),
         check_runner: unused(),
         remote_runner: unused(),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: unused(),
         environment: unused(),
         reporter: unused(),
@@ -239,6 +241,7 @@ fn local_application(check_runner: Arc<Unimock>, complete: bool) -> Application 
             ReporterExecutorMock.each_call(matching!(_)).returns(()),
         )),
         check_runner,
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: Arc::new(Unimock::new(())),
         workspace: PathBuf::from("/workspace"),
     }

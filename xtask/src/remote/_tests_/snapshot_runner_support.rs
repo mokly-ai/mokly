@@ -65,6 +65,16 @@ fn failure(operation: Operation) -> Error {
     }
 }
 
+/// The read failure that the in-process fingerprint returns.
+fn fingerprint_failure() -> Error {
+    Error::SourceTree {
+        source: crate::source_tree::error::Error::Read {
+            path: "/workspace".to_owned(),
+            source: std::io::Error::other("fingerprint test failure"),
+        },
+    }
+}
+
 fn display_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
@@ -179,7 +189,7 @@ pub(super) fn fixture(case: Case) -> Fixture {
                         &format!("fingerprint:{}", display_path(cwd)),
                     );
                     if case == Case::FingerprintFailure {
-                        return Err(failure(Operation::Fingerprint));
+                        return Err(fingerprint_failure());
                     }
                     let snapshot = cwd != Path::new("/workspace");
                     Ok(format!(

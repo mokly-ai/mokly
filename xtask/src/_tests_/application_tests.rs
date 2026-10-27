@@ -83,6 +83,7 @@ fn application(
                     assert!(message.starts_with(if remote { "remote:" } else { "local:" }));
                 })),
         )),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: unused,
         workspace: PathBuf::from("/workspace"),
     }
@@ -133,6 +134,7 @@ fn rejecting_application(environment: Arc<Unimock>, interrupt: Arc<Unimock>) -> 
         selector: unused.clone(),
         check_runner: unused.clone(),
         remote_runner: unused.clone(),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: unused.clone(),
         reporter: unused,
         environment,
@@ -232,6 +234,7 @@ fn strict_audit_mode_reaches_the_remote_runner() {
                 .next_call(matching!(DependencyAudit::Strict))
                 .answers(&|_, _| Ok(())),
         )),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: Arc::new(Unimock::new(())),
         environment: Arc::new(Unimock::new(
             EnvironmentGetMock

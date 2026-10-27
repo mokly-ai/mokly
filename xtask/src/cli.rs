@@ -34,7 +34,12 @@ use crate::remote::scripts::SystemScripts;
 use crate::remote::snapshot::contracts::Snapshot;
 use crate::remote::snapshot::filesystem::SystemSnapshotFiles;
 use crate::remote::snapshot::system::SystemSnapshot;
+use crate::remote::source_fingerprint::SourceTreeFingerprint;
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
+use crate::source_tree::command::SystemSourceTreeCommand;
+use crate::source_tree::error::Error as SourceTreeError;
+use crate::source_tree::records::SourceFingerprint;
+use crate::source_tree::system::SystemTree;
 
 #[derive(Debug, Parser)]
 #[command(name = "xtask", about = "Mokly repository automation")]
@@ -87,6 +92,20 @@ pub(crate) enum Command {
         #[arg(long)]
         all: bool,
     },
+    /// Print the source-tree fingerprint of this checkout.
+    SourceTree {
+        /// Fail unless the fingerprint equals this value.
+        #[arg(long, value_name = "FINGERPRINT", value_parser = parse_fingerprint)]
+        expect: Option<SourceFingerprint>,
+        /// Print the checkout's HEAD after the fingerprint.
+        #[arg(long)]
+        print_head: bool,
+    },
+}
+
+/// Accept only the exact fingerprint format before any Git or file read.
+fn parse_fingerprint(value: &str) -> std::result::Result<SourceFingerprint, SourceTreeError> {
+    SourceFingerprint::parse(value)
 }
 
 /// Parse arguments, compose real dependencies, and return a process exit code.
@@ -124,6 +143,7 @@ pub(crate) fn main() -> ExitCode {
             workspace.clone(),
         )),
         rust_file_length_auditor,
+        source_tree: Arc::new(SystemSourceTreeCommand),
         remote_runner: Arc::new(DefaultRemoteRunner {
             dependencies: dependencies.clone(),
         }),
@@ -163,7 +183,10 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
         workspace: workspace.clone(),
     });
     let git: Arc<dyn Git + Send + Sync> = scripts.clone();
-    let fingerprint: Arc<dyn Fingerprint + Send + Sync> = scripts.clone();
+    let fingerprint: Arc<dyn Fingerprint + Send + Sync> = Arc::new(SourceTreeFingerprint {
+        tree: Arc::new(SystemTree),
+        interrupt: Arc::clone(&interrupt),
+    });
     let aggregate: Arc<dyn Aggregate + Send + Sync> = scripts;
     let blacksmith: Arc<dyn Blacksmith + Send + Sync> = Arc::new(SystemBlacksmith {
         process: Arc::clone(&process),
@@ -210,3 +233,7 @@ fn workspace_root() -> Result<PathBuf> {
 #[cfg(test)]
 #[path = "_tests_/cli_tests.rs"]
 mod cli_tests;
+
+#[cfg(test)]
+#[path = "_tests_/source_tree_cli_tests.rs"]
+mod source_tree_cli_tests;

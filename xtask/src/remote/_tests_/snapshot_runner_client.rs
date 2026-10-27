@@ -28,7 +28,7 @@ pub(super) fn client(case: Case, events: Arc<Mutex<Vec<String>>>) -> Arc<Unimock
                 assert!(command.starts_with("node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:"));
                 Ok(output(String::new()))
             } else {
-                assert_eq!(command, format!("node scripts/verification/source-tree.mjs --expect sha256:{} --print-head", "a".repeat(64)));
+                assert_eq!(command, format!("node scripts/verification/refresh-source-mtimes.mjs && cargo xtask source-tree --expect sha256:{} --print-head", "a".repeat(64)));
                 Ok(output(format!("sha256:{}\n{}\n", "a".repeat(64), if case == Case::BehindHead { "d".repeat(40) } else { "b".repeat(40) })))
             }
         })),

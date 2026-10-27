@@ -4,8 +4,6 @@
 mod caps;
 pub(crate) mod error;
 mod git;
-mod legacy_caps;
-mod legacy_literals;
 mod policy;
 pub(crate) mod protocol_audit;
 mod protocol_caps;

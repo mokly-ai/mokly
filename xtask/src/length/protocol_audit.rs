@@ -9,12 +9,9 @@ use std::path::Path;
 use super::caps::{CAP_TABLE, ProtocolCaps, parse_cap_table};
 use super::error::{Error, Result};
 use super::git::GitWorkspace;
-use super::legacy_caps::parse_legacy_caps;
 use super::policy::PROTOCOL_PREFIX;
 use super::protocol_caps::{CapInputs, protocol_cap_findings};
 
-/// The former protocol size test that held the caps before the JSON table.
-const LEGACY_CAP_TEST: &str = "tests/protocol_doc_sizes.test.ts";
 /// The protocol pages below the workspace root.
 const PROTOCOL_ROOT: &str = "docs/protocol";
 /// The ratchet's name in the repository suite output.
@@ -152,22 +149,15 @@ fn baseline_documents(git: &GitWorkspace) -> Result<BTreeMap<String, Vec<u8>>> {
     Ok(documents)
 }
 
-/// The caps of the comparison commit: its JSON table, else the legacy test
-/// table, else none so that the policy bootstraps from line counts.
+/// The caps of the comparison commit: its JSON table, else none so that the
+/// policy bootstraps from line counts.
 fn baseline_caps(git: &GitWorkspace) -> Result<Option<ProtocolCaps>> {
     let base = git.require_base()?.to_owned();
-    if git.base_file_exists(CAP_TABLE)? {
-        let label = format!("{base}:{CAP_TABLE}");
-        return Ok(Some(parse_cap_table(&git.read_base(CAP_TABLE)?, &label)?));
-    }
-    if !git.base_file_exists(LEGACY_CAP_TEST)? {
+    if !git.base_file_exists(CAP_TABLE)? {
         return Ok(None);
     }
-    let label = format!("{base}:{LEGACY_CAP_TEST}");
-    match parse_legacy_caps(&git.read_base(LEGACY_CAP_TEST)?, &label)? {
-        Some(caps) => Ok(Some(caps)),
-        None => Err(Error::LegacyMissing { label }),
-    }
+    let label = format!("{base}:{CAP_TABLE}");
+    Ok(Some(parse_cap_table(&git.read_base(CAP_TABLE)?, &label)?))
 }
 
 /// The comparison-commit name of each Git-detected rename below

@@ -13,6 +13,7 @@ mod executor;
 mod length;
 mod remote;
 mod rust_file_length;
+mod source_tree;
 
 fn main() -> std::process::ExitCode {
     cli::main()

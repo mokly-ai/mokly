@@ -125,8 +125,8 @@ Do not add special handling for this case.
 Run each probe and all seven commands with the snapshot directory as the
 local working directory. The Blacksmith CLI fetches its `HEAD`, which is the
 base, then copies its non-ignored source differences to the box.
-Before any build, each remote command gives every regular copied path that
-differs from `HEAD` a fresh modification time. Unchanged paths keep their
+Before any build, each probe and each remote command gives every regular copied
+path that differs from `HEAD` a fresh modification time. Unchanged paths keep their
 warmup times, so Cargo can reuse unchanged native artifacts and rebuild every
 changed crate.
 Keep the checkout root for warmup, download, SSH disconnect, status and stop.

@@ -98,7 +98,7 @@ impl DefaultRemoteRunner {
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let command = format!(
-            "node scripts/verification/source-tree.mjs --expect {fingerprint} --print-head"
+            "node scripts/verification/refresh-source-mtimes.mjs && cargo xtask source-tree --expect {fingerprint} --print-head"
         );
         let results = thread::scope(|scope| {
             let workers: Vec<_> = boxes

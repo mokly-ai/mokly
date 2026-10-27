@@ -135,9 +135,13 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   SSH adapters, and [`disconnect.rs`](../src/remote/clients/disconnect.rs)
   owns the socket identity and the SSH close.
 - [`../scripts/verification/testbox-suite.mjs`](../../scripts/verification/testbox-suite.mjs)
-  is the suite wrapper on each box,
-  [`source-tree.mjs`](../../scripts/verification/source-tree.mjs) computes the
-  fingerprint, and [`aggregate.mjs`](../../scripts/verification/aggregate.mjs)
+  is the suite wrapper on each box. It still checks the fingerprint with
+  [`source-tree.mjs`](../../scripts/verification/source-tree.mjs).
+  [`src/source_tree/scan.rs`](../src/source_tree/scan.rs) computes the
+  fingerprint for the checkout, the snapshot, and the box probe, through
+  [`src/remote/source_fingerprint.rs`](../src/remote/source_fingerprint.rs)
+  and `cargo xtask source-tree`, and
+  [`aggregate.mjs`](../../scripts/verification/aggregate.mjs)
   validates the report aggregate with
   [`report-validation.mjs`](../../scripts/verification/report-validation.mjs)
   and [`shard-balance.mjs`](../../scripts/verification/shard-balance.mjs).

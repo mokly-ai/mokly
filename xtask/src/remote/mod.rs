@@ -20,6 +20,7 @@ pub(crate) mod runner;
 pub(crate) mod runtime;
 pub(crate) mod scripts;
 pub(crate) mod snapshot;
+pub(crate) mod source_fingerprint;
 mod suites;
 mod verdict;
 
