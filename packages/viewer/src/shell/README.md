@@ -144,7 +144,8 @@ the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
 reader selects the evidence that belongs to the preview;
-`css_workspace_marks.ts` draws the dot and clips its wording.
+`@mokly/ui/change-mark` draws the dot and clips its wording, and
+`css_workspace_marks.ts` mutes the dot on a disabled control.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
@@ -184,9 +185,12 @@ The icons, the change mark, the appearance selector and the comparison
 toolbar are `@mokly/ui` components under `packages/ui/src`: props in,
 callbacks out, no store. `appearance.tsx` is the viewer's wrapper that reads
 the identifier and workspace contexts and renders
-`@mokly/ui/appearance-selector`. The package CSS files sit in the
-`mokly.components` cascade layer, which `css_tokens.ts` declares first, so an
-unlayered shell layout rule wins over them.
+`@mokly/ui/appearance-selector`; `view_marks.ts` still owns the ids and the
+wording of the change marks, which the shell passes in. The package CSS files
+sit in the `mokly.components` cascade layer, which `css_tokens.ts` declares
+first, so an unlayered shell layout rule wins over them. A shell rule that
+must override a component rule therefore stays unlayered here, such as the
+compact comparison mode buttons in `css_review.ts`.
 
 `css.ts` concatenates the shared stylesheet. Split string modules preserve
 its exact bytes. The standalone stylesheet adds one rule to it: a root without
@@ -257,7 +261,9 @@ mobile view in a phone frame, under the
 `layout_breakpoint.ts` holds that contract's layout breakpoint as one media
 query, narrower than 900px, which every shell and viewer rule and script
 reads, so the catalogue drawer, the inspector sheet and the embedded rail
-switch at the same width.
+switch at the same width. The `@mokly/ui` stylesheets cannot import it, so
+they repeat the query, and the viewer's
+[styles test](../../tests/styles.test.ts) holds them to it.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical

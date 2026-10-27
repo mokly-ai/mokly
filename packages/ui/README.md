@@ -24,27 +24,35 @@ shared version.
 
 Each component is a subpath export, such as `@mokly/ui/appearance-selector`,
 with its CSS at the matching `.css` subpath. The package has no root entry.
-The viewer bundles `styles.css` into its own `shell.css` and `styles.css`, so
-a delivery or a host loads one stylesheet as before. A shell container that
-needs the store stays in `@mokly/viewer` and composes a package component.
+`styles.css` holds the rules of every component; a component's own stylesheet
+leaves out the components it renders, such as the change mark of the
+appearance selector. The rules read the shell's colour tokens, such as
+`--chrome-surface`, which the `@mokly/viewer` stylesheet declares. The viewer
+bundles `styles.css` into its own `shell.css` and `styles.css`, so a delivery
+or a host loads one stylesheet as before. A shell container that needs the
+store stays in `@mokly/viewer` and composes a package component.
 
 ## Quick Start
 
 ```tsx
 import { AppearanceSelector } from "@mokly/ui/appearance-selector";
-import "@mokly/ui/appearance-selector.css";
+import "@mokly/ui/styles.css";
 
 export function Toolbar() {
   return (
     <AppearanceSelector
-      idPrefix="toolbar-"
       value="auto"
       changed={false}
+      changedId="toolbar-appearance-changed"
+      changedText="Other theme changed"
       onChange={(theme) => console.log(theme)}
     />
   );
 }
 ```
+
+`changed` shows the change mark, and `changedId` names its wording, which the
+select's `aria-describedby` points at while the control is marked.
 
 ## Development
 
@@ -60,17 +68,22 @@ A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpaths in the `exports` map are `./<name>`, with `types` and
 `import` targets in `dist/<name>/`, and `./<name>.css`. The build copies
 `<name>.css` beside the JavaScript and adds it to `styles.css` in component
-name order.
+name order. Each stylesheet wraps its rules in `@layer mokly.components`, so
+an unlayered shell or host rule wins over them; a test holds the rule.
 
 ### Key Code
 
-- `src/icons/icons.tsx` — the shell glyphs, with `IconSvg` as their frame
-- `src/change-mark/change-mark.tsx` — the dot that marks a control whose
-  other view changed
-- `src/appearance-selector/appearance-selector.tsx` — the Auto, Light, and
-  Dark control of the standalone shell
-- `src/comparison-toolbar/comparison-toolbar.tsx` — the comparison mode
-  group, the Scroll together switch, and Refresh
+- [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
+  workspace control icons, with `IconSvg` as their frame
+- [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —
+  `ChangeMark`, the dot and the screen reader wording that mark a view control
+  whose other view changed
+- [`src/appearance-selector/appearance-selector.tsx`](./src/appearance-selector/appearance-selector.tsx)
+  — `AppearanceSelector`, the Auto, Light, and Dark control of the standalone
+  shell
+- [`src/comparison-toolbar/comparison-toolbar.tsx`](./src/comparison-toolbar/comparison-toolbar.tsx)
+  — `ComparisonToolbar` and its `ComparisonMode`: the mode group, the Scroll
+  together switch, and Refresh
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component

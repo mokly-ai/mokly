@@ -1,8 +1,9 @@
 /** React-owned rows for the catalogue hierarchy. */
 
+import { FolderIcon, FolderOpenIcon } from "@mokly/ui/icons";
+
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
-import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { activateDisclosure } from "./nav_disclosure.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";

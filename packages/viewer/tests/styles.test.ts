@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { embeddedStyles } from "../scripts/styles.mjs";
 import { SHELL_CSS, shellCss, standaloneShellCss } from "../src/shell/css.js";
@@ -8,6 +10,13 @@ import {
   STANDALONE_STUB_THEME_CSS,
 } from "../src/shell/css_theme.js";
 import { SHELL_TOKENS_CSS } from "../src/shell/css_tokens.js";
+import { NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
+
+/** The rules of the installed `@mokly/ui`, which the build bundles. */
+const PACKAGE_CSS = await fs.readFile(
+  fileURLToPath(import.meta.resolve("@mokly/ui/styles.css")),
+  "utf8",
+);
 
 const bareDocumentSelector =
   /(?<![-_a-zA-Z0-9])(?:html|body)(?![-_a-zA-Z0-9])|:root(?![-_a-zA-Z0-9])/;
@@ -67,4 +76,28 @@ test("embedded styles keep a package layer block whole inside the scope", () => 
   assert.doesNotMatch(styles, /-:scope/);
   assert.doesNotMatch(styles, bareDocumentSelector);
   assert.match(styles, /:scope\.mbk\s*\{/);
+});
+
+test("the shell declares the package layer before any rule", () => {
+  assert.match(SHELL_CSS, /^\s*@layer mokly\.components;/);
+  const shell = shellCss(PACKAGE_CSS);
+  const statement = shell.indexOf("@layer mokly.components;");
+  assert.ok(statement >= 0, "the layer statement is present");
+  assert.ok(statement < shell.indexOf("@layer mokly.components {"));
+  // The embedded transform folds the statement and every block of the layer
+  // into one block in the statement's place: still the scope's first rule.
+  const embedded = embeddedStyles(shell, "");
+  assert.match(
+    embedded,
+    /@scope \(\.mokly-viewer\) to \(\[data-mokly-slot\]\) \{\s*@layer mokly\.components \{/,
+  );
+  assert.equal(embedded.match(/@layer mokly\.components\b/g)?.length, 1);
+});
+
+test("the package rules switch at the shell's one layout breakpoint", () => {
+  const queries = [...PACKAGE_CSS.matchAll(/@media ([^{]+)\{/g)].map((match) =>
+    match[1]!.trim(),
+  );
+  assert.ok(queries.length > 0, "the package stylesheet has a narrow rule");
+  for (const query of queries) assert.equal(query, NARROW_SHELL);
 });

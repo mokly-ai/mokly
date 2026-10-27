@@ -222,8 +222,8 @@ and Review regressions against `mokly serve` of the example catalogue.
 
 ### Key Code
 
-- `../ui/src` — the `@mokly/ui` presentational components the shell
-  composes, one directory per component with its CSS beside it
+- [`../ui/src`](../ui/src) — the `@mokly/ui` presentational components the
+  shell composes, one directory per component with its CSS beside it
 - [`src/viewer`](./src/viewer) — the embedded `MoklyViewer`: React lifecycle,
   selection, host integration, and instance operations
 - [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and

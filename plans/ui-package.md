@@ -259,15 +259,15 @@ change, and the approved artboards stay the reference, so no mockup precedes
 this milestone. Milestone 4 adopts the package components in the mockups
 after they exist.
 
-- [ ] `icons`: move `IconSvg`, `ChevronIcon`, and the glyphs of
+- [x] `icons`: move `IconSvg`, `ChevronIcon`, and the glyphs of
       `src/shell/icons.tsx` and `src/shell/workspace_icons.tsx` to
       `packages/ui/src/icons/icons.tsx`, exported as `@mokly/ui/icons`. The
       viewer imports them from there.
-- [ ] `change-mark`: move `src/shell/view_changed_mark.tsx` to
+- [x] `change-mark`: move `src/shell/view_changed_mark.tsx` to
       `packages/ui/src/change-mark/change-mark.tsx` with the ids and the
       wording it reads from `src/shell/view_marks.ts`. The appearance
       selector renders it.
-- [ ] `appearance-selector`: move `src/shell/appearance.tsx` to
+- [x] `appearance-selector`: move `src/shell/appearance.tsx` to
       `packages/ui/src/appearance-selector/appearance-selector.tsx`. The two
       context reads become props: the id prefix, today from
       `useShellIdentifier`, and the changed-views mark, today from
@@ -275,27 +275,27 @@ after they exist.
       that reads both contexts and renders the package component. Move the
       `.mbk-appearance` rules from `src/shell/css_nav_search.ts` to
       `appearance-selector.css`.
-- [ ] `comparison-toolbar`: move `src/shell/comparison_toolbar.tsx` to
+- [x] `comparison-toolbar`: move `src/shell/comparison_toolbar.tsx` to
       `packages/ui/src/comparison-toolbar/comparison-toolbar.tsx`. The
       package declares its own `ComparisonMode` union, and the viewer's
       `use_comparison.ts` type narrows to it. Move the `.mbk-diff-toolbar`
       rules from `src/shell/css_review.ts` to `comparison-toolbar.css`.
-- [ ] Cascade layer (decision 6): each package stylesheet declares its rules
+- [x] Cascade layer (decision 6): each package stylesheet declares its rules
       in `@layer mokly.components`. The viewer's `css_tokens.ts` declares the
       layer order first, so the layer exists before any unlayered shell rule.
-- [ ] Add a test of the viewer's restricted-path rule against a real file in
+- [x] Add a test of the viewer's restricted-path rule against a real file in
       `packages/ui/src`, now that one exists; the milestone 2 test used a
       stub resolver.
-- [ ] Turn the Key Code code spans of `packages/ui/README.md` and the
+- [x] Turn the Key Code code spans of `packages/ui/README.md` and the
       `../ui/src` entry of `packages/viewer/README.md` into links now that the
       files exist.
-- [ ] Tests in `packages/ui/tests` with Testing Library: the appearance menu
+- [x] Tests in `packages/ui/tests` with Testing Library: the appearance menu
       opens, selects, closes on Escape, and reports the choice through its
       callback, with the roles and names the shell specs query; the toolbar
       mode group, the Scroll together switch, and Refresh report through
       their callbacks. Move the viewer tests that cover only the moved markup.
       Keep every assertion.
-- [ ] Check: `npm run build`, the targeted viewer tests, the browser specs
+- [x] Check: `npm run build`, the targeted viewer tests, the browser specs
       `tests/browser/browse_appearance_navigation.spec.ts`,
       `tests/browser/design_appearance_toggle.spec.ts`, and the comparison
       toolbar specs, then the mockup check command of `AGENTS.md`, because
@@ -303,6 +303,20 @@ after they exist.
       Appearance control and the comparison toolbar in Light and Dark, in the
       standalone shell and in the embedded fixture. Save screenshots under
       `.context/ui-package/components/`.
+- [x] Done on 2026-10-27 by the delegated Opus 5.5 agent and checked. Its
+      choices: `ChangeMark` takes `id`, `kind`, `marked`, and `text`, and
+      its styles move to `change-mark.css`; `AppearanceSelector` takes
+      `value`, `changed`, `changedId`, `changedText`, `hidden`, and an
+      optional `onChange`, while the standalone startup script keeps
+      applying the choice; the package `ComparisonMode` type is the one the
+      viewer's comparison presentation reuses; each package stylesheet
+      repeats the narrow breakpoint, which a viewer test compares with
+      `layout_breakpoint.ts`; one narrow-screen rule for the mode buttons
+      stays unlayered in `css_review.ts`, because inside the layer it would
+      lose to `.mbk-seg button`; the embedded transform merges the layer
+      blocks into one, which a test records. The computed styles of 36
+      states and the embedded fixture matched the baseline exactly. The
+      moved toolbar test keeps every assertion in the package.
 
 ## Milestone 4: Design library adoption
 

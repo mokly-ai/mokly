@@ -1,11 +1,11 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the closed / open
 // folder icons for collapsible folders, the screen / page / use-case leaf
-// icons, the top bar's brand, search and tag controls, and the device chrome's
-// copy and expand / collapse controls. Icons are stroke-based on a 24-unit
-// viewBox and inherit `currentColor`; the brand mark is the filled Mokly logo
-// on its own 32-unit grid. Authored folder groups swap closed and open
-// folder icons; top-level catalogue sections and the details inspector use the
-// chevron.
+// icons, the top bar's brand, search and tag controls, the device chrome's
+// copy and expand / collapse controls, and the workspace controls' icons.
+// Icons are stroke-based on a 24-unit viewBox and inherit `currentColor`; the
+// brand mark is the filled Mokly logo on its own 32-unit grid. Authored folder
+// groups swap closed and open folder icons; top-level catalogue sections and
+// the details inspector use the chevron.
 
 import type { ReactNode } from "react";
 
@@ -211,6 +211,70 @@ export function FlowIcon(props: { size?: number }) {
       <rect height={8} rx={2} width={8} x={3} y={3} />
       <path d="M7 11v4a2 2 0 0 0 2 2h4" />
       <rect height={8} rx={2} width={8} x={13} y={13} />
+    </IconSvg>
+  );
+}
+
+/** The glyphs of the shared workspace controls. */
+export type WorkspaceIconName =
+  | "details"
+  | "components"
+  | "props"
+  | "usage"
+  | "highlight"
+  | "scheme"
+  | "viewport"
+  | "close"
+  | "caret";
+
+/** One consistent stroke icon of the shared workspace controls. */
+export function WorkspaceIcon({
+  name,
+  size = 18,
+}: {
+  name: WorkspaceIconName;
+  size?: number;
+}) {
+  return (
+    <IconSvg size={size}>
+      {name === "details" ? (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v6m0-10v.1" />
+        </>
+      ) : name === "components" ? (
+        <>
+          <path d="m12 3 9 5-9 5-9-5Zm-9 9 9 5 9-5m-18 5 9 5 9-5" />
+        </>
+      ) : name === "props" ? (
+        <>
+          <path d="m8 5-6 7 6 7m8-14 6 7-6 7m-3-17-2 20" />
+        </>
+      ) : name === "usage" ? (
+        <>
+          <rect x="2" y="8" width="6" height="8" rx="1" />
+          <path d="M8 12h6m0-7v14m0-14h3m-3 14h3" />
+          <rect x="17" y="2" width="5" height="6" rx="1" />
+          <rect x="17" y="16" width="5" height="6" rx="1" />
+        </>
+      ) : name === "highlight" ? (
+        <>
+          <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+          <rect x="7" y="7" width="10" height="10" rx="1" />
+        </>
+      ) : name === "scheme" ? (
+        <path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z" />
+      ) : name === "viewport" ? (
+        <>
+          <rect x="6" y="3" width="16" height="12" rx="2" />
+          <path d="M12 15v5m-2 0h8" />
+          <rect x="2" y="9" width="7" height="12" rx="1" />
+        </>
+      ) : name === "close" ? (
+        <path d="m6 6 12 12M6 18 18 6" />
+      ) : (
+        <path d="m6 9 6 6 6-6" />
+      )}
     </IconSvg>
   );
 }

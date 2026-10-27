@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
-import { SHELL_CSS } from "../src/shell/css.js";
+import { SHELL_CSS, shellCss } from "../src/shell/css.js";
 
 import { PALETTE_PAIRS } from "./palette_pairs.js";
 
@@ -17,6 +18,13 @@ const SOURCE = new URL("../src/", import.meta.url).pathname;
 const PALETTE_SOURCES = new Set(["css_tokens.ts", "css_theme.ts"]);
 
 const LITERAL = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g;
+
+/** The rules of the installed `@mokly/ui`, which every shell stylesheet carries. */
+const PACKAGE_STYLESHEET = "@mokly/ui/styles.css";
+const PACKAGE_CSS = await fs.readFile(
+  fileURLToPath(import.meta.resolve(PACKAGE_STYLESHEET)),
+  "utf8",
+);
 
 async function styleModules(): Promise<{ file: string; text: string }[]> {
   const entries = await fs.readdir(SOURCE, {
@@ -33,6 +41,7 @@ async function styleModules(): Promise<{ file: string; text: string }[]> {
       text: await fs.readFile(path.join(entry.parentPath, name), "utf8"),
     });
   }
+  modules.push({ file: PACKAGE_STYLESHEET, text: PACKAGE_CSS });
   return modules;
 }
 
@@ -51,7 +60,7 @@ test("no shell stylesheet names a colour outside a palette source", async () => 
 test("the shell stylesheets were actually scanned", async () => {
   const modules = await styleModules();
   assert.ok(modules.length > 15, `only ${modules.length} modules scanned`);
-  for (const source of PALETTE_SOURCES)
+  for (const source of [...PALETTE_SOURCES, PACKAGE_STYLESHEET])
     assert.ok(
       modules.some((module) => module.file === source),
       `${source} is missing`,
@@ -223,7 +232,9 @@ test("a public override foreground only sits on the accent it pairs with", () =>
     "var(--mokly-accent-soft)",
   ]);
   const failures: string[] = [];
-  for (const [, selector, body] of SHELL_CSS.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+  for (const [, selector, body] of shellCss(PACKAGE_CSS).matchAll(
+    /([^{}]+)\{([^}]*)\}/g,
+  )) {
     const color = /(?:^|;|\{)\s*color:\s*([^;]+)/.exec(body ?? "")?.[1]?.trim();
     const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
     const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/

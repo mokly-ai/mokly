@@ -1,6 +1,7 @@
 /** The comparison band: its modes, Scroll together and Refresh. */
 
-import type { ComparisonMode } from "./use_comparison.js";
+/** A comparison presentation: Current, or one of the three diff modes. */
+export type ComparisonMode = "current" | "side" | "overlay" | "difference";
 
 const modes: readonly [ComparisonMode, string][] = [
   ["current", "Current"],
@@ -25,13 +26,16 @@ export function ComparisonToolbar({
   onTogether,
   together,
 }: {
+  /** Whether Current is shown, which hides Scroll together and Refresh. */
   current: boolean;
+  /** Whether the entry has a comparison; the band is hidden otherwise. */
   eligible: boolean;
+  /** Whether a comparison loaded, which shows Refresh. */
   loaded: boolean;
   mode: ComparisonMode;
-  onMode(mode: ComparisonMode): void;
-  onRefresh(): void;
-  onTogether(on: boolean): void;
+  onMode: (mode: ComparisonMode) => void;
+  onRefresh: () => void;
+  onTogether: (on: boolean) => void;
   together: boolean;
 }) {
   return (

@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
-import path from "node:path";
 import test from "node:test";
 
-import { ESLint } from "eslint";
-
-import { repositoryRoot } from "./helpers/fixture.js";
 import { lintProbe, requireLintRule } from "./helpers/lint_config.js";
 
 const dependencyRule = "import/no-extraneous-dependencies";
@@ -12,41 +8,8 @@ const relativeRule = "import/no-relative-packages";
 const pathRule = "import/no-restricted-paths";
 const uiSource = "packages/ui/src/probe/probe.tsx";
 
-/**
- * Resolve every relative import to the file it names, existing or not. No
- * component exists under packages/ui/src yet, so this stub stands in for
- * the file system when a test needs an import of the package source.
- */
-const everyFileExists = {
-  interfaceVersion: 3,
-  name: "every-relative-import-exists",
-  resolve(source: string, file: string) {
-    return source.startsWith(".")
-      ? { found: true, path: path.resolve(path.dirname(file), source) }
-      : { found: false };
-  },
-};
-const stubbedEslint = new ESLint({
-  cwd: repositoryRoot,
-  overrideConfig: [
-    {
-      files: ["packages/viewer/**"],
-      settings: { "import-x/resolver-next": [everyFileExists] },
-    },
-  ],
-});
-
-async function messages(
-  source: string,
-  filePath: string,
-  rule: string,
-  eslint?: ESLint,
-) {
-  const result = eslint
-    ? (await eslint.lintText(source, { filePath }))[0]
-    : await lintProbe(source, filePath);
-  assert.ok(result, filePath);
-  assert.equal(result.fatalErrorCount, 0, filePath);
+async function messages(source: string, filePath: string, rule: string) {
+  const result = await lintProbe(source, filePath);
   return result.messages
     .filter(({ ruleId }) => ruleId === rule)
     .map(({ message, severity }) => ({ message, severity }));
@@ -88,7 +51,10 @@ test("a UI component imports only the dependencies and peers its package declare
 
 test("neither package imports another package by a relative path", async () => {
   for (const [file, source] of [
-    [uiSource, 'import { IconSvg } from "../../../viewer/src/shell/icons.js";'],
+    [
+      uiSource,
+      'import { AppearanceSelect } from "../../../viewer/src/shell/appearance.js";',
+    ],
     [
       "packages/ui/tests/probe.test.tsx",
       'import "../../viewer/tests/marker_dom.js";',
@@ -110,7 +76,7 @@ test("neither package imports another package by a relative path", async () => {
       "packages/ui/tests/probe.test.ts",
       'import "../../../tests/helpers/durations.js";',
     ],
-    ["packages/viewer/src/probe.tsx", 'import "./shell/icons.js";'],
+    ["packages/viewer/src/probe.tsx", 'import "./shell/appearance.js";'],
     [
       "packages/viewer/tests/probe.test.ts",
       'import "../../../tests/helpers/fixture.js";',
@@ -131,7 +97,7 @@ test("the viewer never imports the UI package source", async () => {
     ],
   ] as const) {
     await requireLintRule(file, pathRule);
-    assert.deepEqual(await messages(source, file, pathRule, stubbedEslint), [
+    assert.deepEqual(await messages(source, file, pathRule), [
       {
         message: `Unexpected path "${source.match(/"([^"]+)"/)![1]}" imported in restricted zone. Import @mokly/ui through its published subpaths.`,
         severity: 2,
@@ -139,17 +105,36 @@ test("the viewer never imports the UI package source", async () => {
     ]);
   }
   for (const source of [
-    'import "./shell/icons.js";',
+    'import "./shell/appearance.js";',
     'import "../../ui/dist/icons/icons.js";',
+    'import { IconSvg } from "@mokly/ui/icons";',
   ])
     assert.deepEqual(
-      await messages(
-        source,
-        "packages/viewer/src/probe.tsx",
-        pathRule,
-        stubbedEslint,
-      ),
+      await messages(source, "packages/viewer/src/probe.tsx", pathRule),
       [],
       source,
     );
+});
+
+test("a viewer import of a real package component reports both boundary rules", async () => {
+  const file = "packages/viewer/src/shell/probe.tsx";
+  for (const rule of [relativeRule, pathRule])
+    await requireLintRule(file, rule);
+  const source =
+    'import { IconSvg } from "../../../ui/src/icons/icons.js";\nvoid IconSvg;\n';
+  const relative = await messages(source, file, relativeRule);
+  assert.equal(relative.length, 1);
+  assert.equal(relative[0]!.severity, 2);
+  assert.deepEqual(await messages(source, file, pathRule), [
+    {
+      message:
+        'Unexpected path "../../../ui/src/icons/icons.js" imported in restricted zone. Import @mokly/ui through its published subpaths.',
+      severity: 2,
+    },
+  ]);
+  // The published subpath of the same component passes both rules.
+  const published =
+    'import { IconSvg } from "@mokly/ui/icons";\nvoid IconSvg;\n';
+  for (const rule of [relativeRule, pathRule])
+    assert.deepEqual(await messages(published, file, rule), [], rule);
 });

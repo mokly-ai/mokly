@@ -1,11 +1,17 @@
 /** Grouped, compact viewport, theme and inspection controls. */
+import { ChangeMark } from "@mokly/ui/change-mark";
+import { WorkspaceIcon } from "@mokly/ui/icons";
+
 import type { ColorScheme } from "../data/axes.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
-import { ViewChangedMark } from "./view_changed_mark.js";
-import { VIEW_CHANGED_IDS, viewMarks, type ChangedView } from "./view_marks.js";
-import { WorkspaceIcon } from "./workspace_icons.js";
+import {
+  VIEW_CHANGED_IDS,
+  VIEW_CHANGED_TEXT,
+  viewMarks,
+  type ChangedView,
+} from "./view_marks.js";
 
 export function WorkspaceControls({
   changedViews,
@@ -49,10 +55,11 @@ export function WorkspaceControls({
           <option value="desktop">Desktop</option>
           <option value="both">Both</option>
         </select>
-        <ViewChangedMark
+        <ChangeMark
           id={viewportChangedId}
           kind="viewport"
           marked={marks.viewport}
+          text={VIEW_CHANGED_TEXT.viewport}
         />
       </label>
       {dark ? (
@@ -71,10 +78,11 @@ export function WorkspaceControls({
           }
         >
           <WorkspaceIcon name="scheme" />
-          <ViewChangedMark
+          <ChangeMark
             id={schemeChangedId}
             kind="scheme"
             marked={marks.scheme}
+            text={VIEW_CHANGED_TEXT.scheme}
           />
         </button>
       ) : null}

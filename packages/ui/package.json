@@ -8,6 +8,25 @@
     "*.css"
   ],
   "exports": {
+    "./appearance-selector": {
+      "types": "./dist/appearance-selector/appearance-selector.d.ts",
+      "import": "./dist/appearance-selector/appearance-selector.js"
+    },
+    "./appearance-selector.css": "./dist/appearance-selector/appearance-selector.css",
+    "./change-mark": {
+      "types": "./dist/change-mark/change-mark.d.ts",
+      "import": "./dist/change-mark/change-mark.js"
+    },
+    "./change-mark.css": "./dist/change-mark/change-mark.css",
+    "./comparison-toolbar": {
+      "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
+      "import": "./dist/comparison-toolbar/comparison-toolbar.js"
+    },
+    "./comparison-toolbar.css": "./dist/comparison-toolbar/comparison-toolbar.css",
+    "./icons": {
+      "types": "./dist/icons/icons.d.ts",
+      "import": "./dist/icons/icons.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "peerDependencies": {

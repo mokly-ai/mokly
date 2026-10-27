@@ -11,6 +11,8 @@ import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
  * `--chrome-control-edge`, and an invalid field borders `--mbk-danger-ink`.
  */
 export const SHELL_TOKENS_CSS = `
+@layer mokly.components;
+
 @font-face {
   font-family: "Inter";
   font-style: normal;
