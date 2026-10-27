@@ -51,7 +51,7 @@ Contract owners:
 ## The item text and the code
 
 The item text came from a reading of `89c12ef1`. These points differ at
-`a9dd1e81`. The open decisions below correct them.
+`a9dd1e81`. The decisions below correct them.
 
 - The item says that a bare import from a dependency file to a linked
   workspace package keeps the full path, because it is bare. Under the item
@@ -83,8 +83,7 @@ The item text came from a reading of `89c12ef1`. These points differ at
 
 ## Design
 
-The design uses the recommended option of each open decision. It changes
-when the user picks another option.
+The design follows the decisions below.
 
 - **Fast-path rule.** The catch-all callback returns at once when the
   resolution is the outer resolution of an import, the import kind is not
@@ -156,9 +155,10 @@ fallback compiled in 0.44 to 0.69 s. Relative imports from repository-owned
 files on the full path added about 0.25 s. Evidence:
 `.context/esbuild-resolve-fast-path/prototype.md`.
 
-## Open decisions
+## Decisions
 
-The user answers these before Milestone 2 starts.
+The user answered all five decisions on 2026-10-27 with the recommended
+option: 1A, 2A, 3B, 4A, and 5A. Each entry keeps the rejected options.
 
 1. Fall back to the full path when native resolution diverges. Severity
    High, effort Medium.
@@ -170,7 +170,8 @@ The user answers these before Milestone 2 starts.
      copy precedence, and escape errors lose the importer location.
    - C. Keep the full path for every import on the base side. The base
      compile stays at about 7.8 s and misses the acceptance target.
-   - Recommended: A.
+   - Chosen: A. It is the only option that keeps every result identical and
+     meets the target on both sides.
 2. Keep or relax the failure of a handled `require`. Severity Medium,
    effort Small.
    - A. Keep today's failure: the log override ends the native attempt, and
@@ -179,42 +180,46 @@ The user answers these before Milestone 2 starts.
      succeeds, and the call fails at run time inside its `try`. Bare imports
      from catalogue files keep today's failure. This option adds one protocol
      requirement.
-   - Recommended: A.
+   - Chosen: A. It keeps the results identical. A change to the failure
+     rules belongs to its own item.
 3. Fast-path scope for importers in nested `node_modules`. Severity Low,
    effort Small.
    - A. The item set: non-bare imports, and bare imports whose importer is
      inside a selected dependency root.
    - B. Every import except a bare import from a repository-owned file. The
      base remap never applies to the other importers.
-   - Recommended: B.
+   - Chosen: B. The full path does nothing for an importer that the remap
+     never changes, and decision 1A keeps the results identical.
 4. Relative imports from repository-owned files, the first open decision of
    the item. Severity Low, effort Small.
    - A. Take the fast path. With decision 1A, escape diagnostics stay the
      same through the fallback.
    - B. Keep the full path. The compile takes about 0.25 s longer.
-   - Recommended: A.
+   - Chosen: A. The results stay identical, and the compile is about a
+     third faster.
 5. The replay order of the dependency usage, the second open decision of
    the item. Severity Low, effort Small.
    - A. Concurrent calls in metafile order. The unmapped directories are a
      set that the bundle sorts, and each record depends only on its
      arguments and the file system.
    - B. One call at a time in metafile order.
-   - Recommended: A.
+   - Chosen: A. The order cannot change the result, so concurrent calls only
+     save time.
 
 ## Milestone 1: Documentation and protocol
 
-The recommended options keep every requirement, so no protocol page
-changes.
+The chosen options keep every requirement, so no protocol page changes.
 
-- [ ] Record the answers to the open decisions, with the date, in this plan.
-- [ ] Confirm that `docs/protocol/mokly-sidecar-modules.md` and the bundling
+- [x] Record the answers to the open decisions, with the date, in this plan.
+- [x] Confirm that `docs/protocol/mokly-sidecar-modules.md` and the bundling
       section of `docs/protocol/mokly-sidecar.md` stay true under the
       answers. No sentence there describes the resolve callback. Change
       nothing that stays true.
-- [ ] If the user picks option B of decision 1, change the repository
+- [x] If the user picks option B of decision 1, change the repository
       mapping and diagnostic requirements for dependency files in both
       pages. If the user picks option B of decision 2, add the requirement
-      for a handled `require` failure to `mokly-sidecar-modules.md`.
+      for a handled `require` failure to `mokly-sidecar-modules.md`. Not
+      needed: the user picked A for both.
 
 ## Milestone 2: Fast path, classification, and fallback
 
