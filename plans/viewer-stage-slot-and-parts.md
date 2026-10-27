@@ -88,8 +88,8 @@ that option. Another answer changes the milestones that the decision names.
    - C: B, plus a host function that maps each link to a host route.
    - Reason: B gives the same markup in the browser and the server. A modified
      click then opens the catalogue's own page, not a path on the host's
-     origin. C is a larger API that no host asked for. Affects Milestones 1
-     and 6.
+     origin. C is a larger API that no host asked for. Affects Milestones 1,
+     6, and 9.
    - Scope: the request asks for the scope of A, full addresses in a static
      render. B goes further, because it also changes the browser links of
      every embedded host.
@@ -99,7 +99,7 @@ that option. Another answer changes the milestones that the decision names.
    - B: A new `details` prop of entry details that the host holds.
    - C: No details. The parts that need a detail show their loading state.
    - Reason: A meets the "every source is an object" rule with no new prop. The
-     browser keeps the `detail` call after mount. Affects Milestones 1 and 6.
+     browser keeps the `detail` call after mount. Affects Milestones 1, 6, and 7.
    - Note: the user rejected option F of Decision 6, a static render with
      up-front entry data, and chose option H. Options A and B here also give a
      static render entry data, but beside the stage slot of option H. The user
@@ -114,7 +114,7 @@ that option. Another answer changes the milestones that the decision names.
      places it.
    - Reason: A gives one placement for both renders and removes the
      measurement. B keeps two placements. C needs CSS anchor positioning in
-     every browser of every host. Affects Milestones 1 and 4.
+     every browser of every host. Affects Milestones 1, 4, and 9.
 5. **Inspection and markers with a host stage, Medium.** Recommended: A, as the
    request recommends.
    - A: Inspection is unavailable. Highlight components is disabled with a
@@ -137,7 +137,7 @@ that option. Another answer changes the milestones that the decision names.
    - B: Export the bare `MoklyPhoneFrame` and `MoklyBrowserFrame` chrome.
    - C: No export. The host copies the design.
    - Reason: one component follows the selected viewport and keeps the label
-     and the preview scheme surface. Affects Milestones 1 and 5.
+     and the preview scheme surface. Affects Milestones 1, 5, and 7.
 8. **Stability promise, Low.** Recommended: A.
    - A: One promise for every export. The documented props, composition rules,
      and behaviour are the API. A breaking change ships only in a minor
@@ -352,8 +352,15 @@ viewer contract is at its exact cap of 396 lines, so split it first.
         render.
   - [ ] The theming paragraph: scoped styles exclude slot content, except a
         `MoklyDeviceFrame` inside it.
+  - [ ] The root entry item says that a React host renders the viewer in the
+        browser. Add that it can also render it statically.
+  - [ ] The sentence "Every delivery renders the shell from data in the
+        browser" applies to Serve and `build` only.
 - [ ] `mokly-viewer-shell-tree.md`: Serve and `build` render the tree in the
       browser. A React host can also render it statically.
+- [ ] `mokly-package.md`: the package table says that the viewer is "the
+      Browse shell, rendered in the browser". Add the static render. Keep the
+      line count.
 - [ ] Add `mokly-viewer-parts.md`: the exports, the composition rules, the
       behaviour across parts, the state rule, and the stability promise, with
       Decisions 1 and 8 in force.
@@ -400,7 +407,11 @@ Change the shared design components before the UI changes.
       toolbar in the same directory.
 - [ ] Update `docs/protocol/mokly-design-component-library.md`: both variant
       lists, item 4 with the toolbar state without Scroll together, and item 5
-      with the host stage reason.
+      with the host stage reason. Item 5 also omits the `loading` reason that
+      the view controls accept, so add it there.
+- [ ] Add `host-stage` to the `comparison-toolbar` and `view-controls` rows of
+      `tests/browser/design_library_inventory.ts`. Then run
+      `npm run test:browser -- tests/browser/design_adoption.spec.ts`.
 - [ ] Run the mockup check of `AGENTS.md`. Smoke-test both new variants in the
       mobile and desktop views through `npm run dev`.
 
@@ -562,23 +573,26 @@ Prove in the release that the published archive renders statically.
 
 ## Milestone 8: Package README And API Docs
 
-- [ ] `packages/viewer/README.md`: the static rendering promise, and links to
-      the examples. Remove "renders only in the browser". The README has 285
-      lines, so keep it at or below 300.
-- [ ] Add a page under `packages/viewer/docs/` with a stage slot example and a
-      custom layout example.
+- [ ] `packages/viewer/README.md`: the static rendering promise, a link to the
+      examples page, and the part entry points under its Key Code section.
+      Remove "renders only in the browser". The README has 285 lines, so keep
+      it at or below 300.
+- [ ] Add the examples page as `packages/viewer/docs/{topic}/README.md`, like
+      the other package pages, so that the Markdown link check reads it. It
+      holds a stage slot example and a custom layout example.
 - [ ] Split `packages/viewer/src/shell/README.md` by area before it grows. It
-      has 515 lines.
+      has 515 lines. Name each new page `README.md`, so that the Markdown link
+      check reads it.
+- [ ] The shell README describes the entry provider, the part files, and the
+      static render rule.
 - [ ] `packages/viewer/docs/api/README.md`: `slots.stage`, `MoklyViewerRoot`,
       each part with its props and placement, `ViewerStageContext`, and the
       stability promise.
 - [ ] `packages/viewer/docs/concepts/README.md`: host stages, custom layouts,
       static rendering, and link addresses.
-- [ ] `packages/viewer/src/shell/README.md`: the entry provider and the part
-      files under the key code, and the static render rule.
 - [ ] Search `docs/`, `plans/`, and every `README.md` for
-      `EmbeddedStageOverlay`, "renders only in the browser", and each other
-      removed or renamed name. Update the live references.
+      `EmbeddedStageOverlay`, for the words "in the browser", and for each
+      other removed or renamed name. Update the live references.
 
 ## Milestone 9: Release And Upgrade Notes
 
@@ -608,29 +622,43 @@ on the minor stream.
       `implementation-review` skill after the push. Report the findings, then
       apply the review-fix rule: fix the `Auto-fix: yes` findings, re-review
       once, and report the rest.
-  - The review of the plan on 2026-10-27 fixed findings 1 and 7 to 11. The
-    report is in `.context/viewer-stage-slot-and-parts/review-1.md`. These
-    findings stay open for the user.
-  - Finding 2: Rule 4 conflicts with the root style scope. Severity Medium,
-    effort Small. Recommended: A, state that host layout elements in the root
-    get the viewer's base rules.
-  - Finding 3: Three allowed layouts have no behaviour. Severity Medium, effort
-    Medium. Recommended: B, CSS keyed on part markers and a slot context,
-    tested in Milestone 4.
-  - Finding 4: Static render detail failures are unspecified. Severity Medium,
-    effort Small. Recommended: A, a throw reaches the host, a fence failure
-    shows the failure state, and no callback fires.
-  - Finding 5: Milestone 6 flips the first-render tests. Severity Medium,
-    effort Small. Recommended: B, one named test helper for each render.
-  - Finding 6: The extended release smoke never runs before merge. Severity
-    Medium, effort Medium. Recommended: B, one check that
+  - Two reviews of the plan ran on 2026-10-27. Review 1 fixed its findings 1
+    and 7 to 11, and review 2 fixed its findings 2, 3, 5, 6, and 7. The
+    reports are `review-1.md` and `review-2.md` in
+    `.context/viewer-stage-slot-and-parts/`. These items stay open for the
+    user.
+  - Review 1 finding 2: Rule 4 conflicts with the root style scope. Severity
+    Medium, effort Small. Recommended: A, state that host layout elements in
+    the root get the viewer's base rules.
+  - Review 1 finding 3: Three allowed layouts have no behaviour. Severity
+    Medium, effort Medium. Recommended: B, CSS keyed on part markers and a slot
+    context, tested in Milestone 4.
+  - Review 1 finding 4: Static render detail failures are unspecified.
+    Severity Medium, effort Small. Recommended: A, a throw reaches the host, a
+    fence failure shows the failure state, and no callback fires.
+  - Review 1 finding 5: Milestone 6 flips the first-render tests. Severity
+    Medium, effort Small. Recommended: B, one named test helper for each
+    render.
+  - Review 1 finding 6: The extended release smoke never runs before merge.
+    Severity Medium, effort Medium. Recommended: B, one check that
     `npm run package:smoke` also runs.
-  - Finding 12: The plan does not hold work for the decisions. Severity Low,
-    effort Small. Recommended: A, Milestone 1 starts after the answers.
+  - Review 2 finding 1: Overlapping and repeated parts have no result.
+    Severity Medium, effort Small. Recommended: A, a second part of one kind
+    renders nothing and warns once.
+  - Review 1 finding 12: The plan does not hold work for the decisions.
+    Severity Low, effort Small. Recommended: A, Milestone 1 starts after the
+    answers.
+  - Review 2 finding 4: No step opens a static render. Severity Low, effort
+    Small. Recommended: A, open both conformance screens in Chrome in
+    Milestone 7.
+  - Follow-up: run `design_adoption.spec.ts` in the mockup check of
+    `AGENTS.md`. Effort Small. Covers review 2 finding 2. Previous examples:
+    review 1 finding 10.
+  - Follow-up: extend the Markdown link check to every Markdown file under
+    `packages/`. Effort Small. Covers review 2 finding 5. Previous examples:
+    the F9b README split in `plans/rust-rebuild.md`.
   - `docs/protocol/mokly-viewer.md`: a route change does not discard the
     inspector tab, which the root store keeps. Separate branch.
-  - `docs/protocol/mokly-design-component-library.md`: the view controls'
-    reason list omits `loading`. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked. Put its
       link in the status paragraph.
 
