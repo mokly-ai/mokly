@@ -74,9 +74,8 @@ under `output.write` before `changes.classify`; its counts describe head
 documents. The base capture appears under `review.base-tree`; its counts
 describe base documents. Repeated discovery for the same side, route, content
 digest, and exclusion identity is a defect. A contained parse or selector
-failure in
-`review.css-analysis` returns unresolved evidence with status `ok`; an
-escaping error ends the span with `error`. The spans log no paths,
+failure in `review.css-analysis` returns unresolved evidence with status `ok`.
+An escaping error ends the span with `error`. The spans log no paths,
 selectors, CSS, or document text.
 
 Dependency `tier` is numeric: 1 for working dependencies, 2 for the base
@@ -217,7 +216,7 @@ CI's small correctness fixtures have
 | sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
-| render cache bounds                | the byte bounds of the [render graph and cache contract](./mokly-render-cache.md#render-graph-and-cache)                       |
+| render cache bounds                | the byte bounds of the [render graph and cache contract](./mokly-render-cache.md#render-cache-and-captures)                    |
 | `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |
 | watch edit-to-reload               | recorded per edit kind from scenario 4                                                                                         |

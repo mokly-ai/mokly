@@ -140,15 +140,17 @@ changed-component set from the selected entry alone.
 Serve head documents use the bounded render cache; evicted views render again
 on the head root. `build` and `publish` head documents use their 256 MiB head
 capture, with source fallback for documents that are not retained. Base
-documents use the 256 MiB capture or pinned-source fallback.
-A comparison-scoped route map reuses resource digests, byte proofs, and changed-byte state. Public
-asset reads and planning digests do not enter the private source snapshot.
+documents use the 256 MiB capture or pinned-source fallback. A
+comparison-scoped route map reuses resource digests, byte proofs, and
+changed-byte state. Public asset reads and planning digests do not enter the
+private source snapshot.
 Planning batches the generation's known read set before digest reads. Opaque
-resources use streamed digests when they exceed the blob read budget. Resource bytes
-and content-keyed stylesheet diffs have byte-bounded caches; eviction changes
-work only. The analysis renders no document. Parsed stylesheets are cached by content hash with a byte bound, so a
-stylesheet shared across paths and sides parses once, and eviction changes
-time only. Own-page matches are collected and filtered catalogue-wide before
+resources use streamed digests when they exceed the blob read budget. Resource
+bytes and content-keyed stylesheet diffs have byte-bounded caches; eviction
+changes work only. The analysis renders no document. Parsed stylesheets are
+cached by content hash with a byte bound, so a stylesheet shared across paths
+and sides parses once, and eviction changes time only. Own-page matches are
+collected and filtered catalogue-wide before
 any entry's evidence is decided, without rendering a consumer again or
 generating snapshots.
 

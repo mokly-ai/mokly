@@ -166,8 +166,8 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in Rust memory, outside the sidecar's V8 heap. A view's
   trees are discarded when its comparison ends; nothing retains a catalogue-wide
   set of parsed pages.
-  Serve results hold at most one private base capture, bounded by the named
-  256 MiB default `DEFAULT_BASE_CAPTURE_BYTES`. Build results can also hold a
+  Each result holds at most one private base capture, bounded by the named
+  256 MiB default `DEFAULT_BASE_CAPTURE_BYTES`. A build result also holds a
   private head capture, bounded by its own 256 MiB limit. These budgets are
   separate from the 256 MiB render cache. A build can hold the render cache,
   head capture, and base capture at the same time. The charge includes

@@ -17,8 +17,9 @@ operation. `publish` is the one command that uploads: it runs this same build
 into its own private directory outside the repository, then runs the
 [upload exchange](./mokly-upload.md). Nothing reads the output back. Build and
 publish read rendered bytes from the head capture or render cache under the
-[render graph and cache contract](./mokly-render-cache.md#render-graph-and-cache). No command
-writes into the repository except `build` into its output directory.
+[render graph contract](./mokly-render-cache.md#render-cache-and-captures).
+No command writes into the repository except `build` into its output
+directory.
 
 ## Command
 

@@ -33,7 +33,8 @@ collected styles, `mock:` links, link validation
 render cache (process memory, bounded by bytes)
         |
         +---- serve:   documents on request, live updates on change
-        +---- build:   head capture, every document, and shell routes into `--out`
+        +---- build:   renders and captures every view once, then writes shell
+                         routes into `--out`
         `---- Changes: base capture and comparison over the base commit's tree
 ```
 
@@ -102,8 +103,8 @@ One document is composed per view, that is per viewport and colour scheme:
    the document is assembled under the
    [document safety rules](../protocol/mokly-document-safety.md).
 
-Serve keeps the finished document in the render cache with its ownership tree.
-Build keeps the head capture for output and comparison. The
+The render cache keeps the finished document with its ownership tree in Serve
+and `build`. Build also keeps the head capture for output and comparison. The
 [comparison contract](../protocol/mokly-comparison.md) reads the relevant
 side capture or cache.
 
@@ -112,11 +113,12 @@ side capture or cache.
 - `serve` renders the catalogue index at start and each document on request,
   watches the sources, and pushes live updates to the shell. Live prop edits
   render through the same path.
-- `build` validates the catalogue, captures the head, renders every view, fails
-  on errors and, with `--strict`, on warnings, and writes the static output: the shell stub
-  per route, the index, one detail per entry, every document, the comparison
-  generation, the viewer bundle, styles, and fonts, under the output
-  transaction of the [static build contract](../protocol/mokly-export.md).
+- `build` validates the catalogue, renders and captures every view once, fails
+  on errors and, with `--strict`, on warnings, and writes the static output:
+  the shell stub per route, the index, one detail per entry, every document,
+  the comparison generation, the viewer bundle, styles, and fonts, under the
+  output transaction of the
+  [static build contract](../protocol/mokly-export.md).
 - Changes renders the base commit's sources through the same graph, with the
   base tree read from Git and JavaScript dependencies resolved under the
   dependency tiers, and compares the composed trees.

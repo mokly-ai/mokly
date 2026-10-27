@@ -240,14 +240,19 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
 fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_source() {
     let reads = Arc::new(Mutex::new(Vec::new()));
     let captured = capture(source("base", 4, reads.clone()), CaptureSide::Base).unwrap();
+    let received = Arc::new(Mutex::new(Vec::new()));
+    let received_for_mock = received.clone();
     let mut collector = Unimock::new(
         ComparisonCollectorMock::collect
             .each_call(matching!(_, _))
-            .answers(&|_, route, input| {
-                assert_eq!(input.artifact.bytes, format!("base:{route}").as_bytes());
-                assert!(input.closure.files.contains(route));
+            .answers_arc(Arc::new(move |_, route, input| {
+                received_for_mock.lock().unwrap().push((
+                    route.to_owned(),
+                    input.artifact.bytes.clone(),
+                    input.closure.files.clone(),
+                ));
                 Ok(())
-            })
+            }))
             .n_times(4),
     );
     assert_eq!(
@@ -258,4 +263,10 @@ fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_sou
         4
     );
     assert_eq!(reads.lock().unwrap().len(), 4);
+    let received = received.lock().unwrap();
+    assert_eq!(received.len(), 4);
+    for (route, bytes, files) in received.iter() {
+        assert_eq!(bytes, format!("base:{route}").as_bytes());
+        assert!(files.contains(route));
+    }
 }

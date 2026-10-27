@@ -41,11 +41,8 @@ public form of the model.
 
 ## Render Graph And Cache
 
-The [render cache contract](./mokly-render-cache.md#render-graph-and-cache)
-defines node keys, render-cache rules, side captures, and their bounds. Serve
-reads head documents from the render cache. `build` and `publish` read the head
-capture during Changes and static output. Base captures use the pinned source
-when a document is not retained.
+The [render graph and cache contract](./mokly-render-cache.md#render-graph)
+defines node keys, render-cache rules, side captures, and their bounds.
 
 ## Serve
 
@@ -69,9 +66,23 @@ process.
 
 ## Build
 
-`mokly build` follows the [render cache contract](./mokly-render-cache.md#build)
-and the [static build contract](./mokly-export.md). `publish` uses the same
-build path in its private directory before the upload exchange.
+`mokly build` runs discovery and validation, renders every view, and captures
+the head documents during the build check for Changes and output. It reports
+warnings and writes the static site into the directory `--out` names,
+`mokly-static/` at the repository root by default, which Git must ignore. It
+writes the shell stub per route, the index, one detail per entry, every
+document, the comparison generation, the viewer bundle, styles, and fonts
+under the [static build contract](./mokly-export.md) and the [static delivery
+contract](./mokly-export-delivery.md). An error fails the
+command before any file is written. With `--strict`, a warning fails it too.
+The output transaction stages the whole site, replaces the output directory in
+one step, and rolls back on failure, so the last successful output stays in
+place. A validation-only run is a build to a temporary directory.
+
+`mokly publish` builds into its own directory outside the repository and
+uploads the result through the [upload exchange](./mokly-upload-exchange.md).
+There is no other verb: validation is `build --strict`, and the static site is
+`build`.
 
 ## Sidecar Pool
 

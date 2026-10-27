@@ -175,13 +175,13 @@ The phase owner erases its animated row before cache notes and serializes both
 streams. Warnings precede the colored Changes status. Nested Git failures keep
 the historical commit and Git detail. Changes runs inside the static pipeline
 before warning gates and output installation. Build preparation captures the
-head once, then passes that
-generation and the same Changes result to the terminal, static index,
-generation writer, and publication metadata. The pipeline uses the summary for
-terminal Changes reporting and warning policy before installation. Review timing
-spans retain their caller context under `output.write`, including the one
-pinned base lookup. Head and base use `mokly-render::Runtime` with one shared
-pool and render cache; build capture spans cover both sides.
+head once, then passes that generation and the same Changes result to the
+terminal, static index, generation writer, and publication metadata. The
+pipeline uses the summary for terminal Changes reporting and warning policy
+before installation. Review timing spans retain their caller context under
+`output.write`, including the one pinned base lookup. Head and base use
+`mokly-render::Runtime` with one shared pool and render cache; build capture
+spans cover both sides.
 JavaScript and PostCSS base inputs hold source and dependency leases.
 Historical sidecars and PostCSS children use the same parent-death protection
 as current rendering, including when consumer code blocks.
@@ -257,7 +257,9 @@ private directory and symbolic-link boundaries.
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Structured timings](./src/serve_trace.rs) and the
   [core stage selection](./src/serve_trace_stages.rs).
-- [Build service](./src/build.rs) and [build preparation](./src/build_prepare.rs), with the strict warning count, and
+- [Build service](./src/build.rs) and
+  [build preparation](./src/build_prepare.rs), with the strict warning count,
+  and
   [build presentation](./src/build_output.rs).
 - [Design attribution matrix](./tests/design_attribution_tests.rs).
 - [Design behaviour checks](./tests/design_behaviour_tests.rs) pin four design

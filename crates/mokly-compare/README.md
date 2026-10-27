@@ -146,8 +146,8 @@ preparation captures the head before Changes receives it.
 Base capture fallback uses that entry point, so an oversized base summary does
 not start another base pass. A head summary fallback returns the source to the
 build check, which renders it again.
-Private compressed
-inputs preserve exact document bytes, generated CSS, and trusted annotations.
+Private compressed inputs preserve exact document bytes, generated CSS, and
+trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and
 encoding spans retain their separate measurements under that validation span.
 They contain no source data or error payloads.
@@ -163,13 +163,15 @@ JSON decode.
 256 MiB retention budget. They charge encoded payloads, Rust metadata,
 closures, route keys, and conservative map overhead.
 The collector accounts for each batch's growing summary storage before
-retaining its inputs. Later kept candidates yield space to summary and generated-resource charges.
+retaining its inputs. Later kept candidates yield space to summary and
+generated-resource charges.
 Final retention uses the original charges in route order. A partial capture
 can use fallback sooner when final summary storage removes candidate space.
 Inputs that do not fit read from their side's source. Serve head reads use the
 original bounded render cache and render again on the head root after eviction.
 Build head reads use the head capture; fallback can add source switches.
-Move pairing, view comparison, and snapshot reads restore one base view at a time.
+Move pairing, view comparison, and snapshot reads restore one base view at a
+time.
 Each result holds at most one base capture. It writes no files and retains no
 parsed page set. The API supports capture reuse, which tests exercise;
 production callers supply fresh bases. Serve can hold an accepted capture while
@@ -205,12 +207,13 @@ It releases parsed documents after collecting canonical and containment proof.
 Serve retains the original cached head generation and one bounded base capture.
 Build retains the captured head and the bounded base capture. Both results keep
 view states, reasons, ownership records, and immutable historical metadata.
-Resource facts and byte proofs
-are reused per route; public resource bytes and stylesheet diffs have explicit
-cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
-working files are streamed without retaining their bytes. Remaining source
-budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
-pinned base generation. `Lookup` indexes kind-aware, case-folded identities once per projection batch.
+Resource facts and byte proofs are reused per route. Public resource bytes and
+stylesheet diffs have explicit cache bounds. Opaque resources compare SHA-256
+digests; oversized blobs and working files are streamed without retaining their
+bytes. Remaining source budgets make Changes unavailable with the path and
+limit. Actual-instance implementation reasons preserve own view states. Removed
+previews read the same pinned base generation. `Lookup` indexes kind-aware,
+case-folded identities once per projection batch.
 It resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 `projection_reference::References` uses this lookup for original metadata and
@@ -297,7 +300,8 @@ so process startup speed cannot exhaust its readiness wait.
 - [Removed projection](./src/projection_removed.rs).
 - [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
-- [Bounded side capture](./src/comparison_capture.rs) and [capture accounting](./src/capture_weight.rs).
+- [Bounded side capture](./src/comparison_capture.rs) and
+  [capture accounting](./src/capture_weight.rs).
 - [`Comparison::capture_head`](./src/comparison_types.rs) and
   [`ChangesService::capture_head`](./src/base_render.rs) expose head capture
   to build preparation.

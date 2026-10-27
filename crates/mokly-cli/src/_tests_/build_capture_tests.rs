@@ -1,7 +1,7 @@
 //! Build preparation keeps a bounded head capture or its source fallback.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
@@ -119,12 +119,14 @@ fn prepare_passes_the_captured_head_to_classify() {
             })),
     ));
     let captured_generation: Arc<dyn RenderGeneration> = captured.clone();
+    let received_head = Arc::new(Mutex::new(None));
+    let received_head_for_mock = received_head.clone();
     let changes = Arc::new(Unimock::new((
         captured_head(captured_generation.clone()),
         ChangesServiceMock::classify
             .next_call(matching!(_, _, _, _))
             .answers_arc(Arc::new(move |_, _, _, head, _| {
-                assert!(Arc::ptr_eq(&head, &captured_generation));
+                *received_head_for_mock.lock().unwrap() = Some(head);
                 Err(mokly_compare::error::Error::UnsupportedManager)
             })),
     )));
@@ -139,7 +141,14 @@ fn prepare_passes_the_captured_head_to_classify() {
     };
     let mut build_options = options();
     build_options.no_changes = false;
-    assert!(service.prepare(Path::new("/repo"), &build_options).is_err());
+    let result = service.prepare(Path::new("/repo"), &build_options);
+    assert!(matches!(
+        result,
+        Err(crate::build::BuildError::Comparison { source, .. })
+            if matches!(source.as_ref(), mokly_compare::error::Error::UnsupportedManager)
+    ));
+    let received_head = received_head.lock().unwrap().take().unwrap();
+    assert!(Arc::ptr_eq(&received_head, &captured_generation));
 }
 
 #[test]

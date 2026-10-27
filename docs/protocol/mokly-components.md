@@ -188,8 +188,8 @@ component's own page renders its own props first and then each variant, with
 the component as the root instance, at every viewport and effective colour
 scheme, with the configured and declared stylesheets. Serve keeps every
 document in the render cache. `build` reads the head capture under the
-[render graph and cache contract](./mokly-render-cache.md#render-graph-and-cache), and nothing is
-written to the repository.
+[render graph contract](./mokly-render-cache.md#render-cache-and-captures),
+and nothing is written to the repository.
 
 Read model v7 gives a component entry `propSchema`, `props` in the wire form,
 `slots`, `suppliedSlots`, `controls`, `views`, and `variantOf` exactly on a

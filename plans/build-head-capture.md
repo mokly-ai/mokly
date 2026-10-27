@@ -160,12 +160,20 @@ Prove that the output is unchanged and record the new times.
       `changes.classify`, sidecar calls per pass, and peak memory. Save the
       records under `.context/build-head-capture/`. Add one line per
       catalogue below.
-  - `examples/basic`: 112.128 s build, 92.299 s Changes, 18.421 s head render,
-    19.070 s base render, 601 head fragment calls, 4,685,028 KiB total peak.
-  - `large HTML`: 44.091 s build, 21.486 s Changes, 13.991 s head render,
-    14.387 s base render, 0 sidecar calls, 1,135,432 KiB total peak.
-  - `large React`: 177.040 s build, 89.611 s Changes, 201.432 s head render,
-    202.848 s base render, 5,790 head fragment calls, 2,189,636 KiB total peak.
+  - `examples/basic`: 112.128 s build versus 219.520 s baseline, 92.299 s
+    Changes versus 148.090 s, one head capture versus four repeated head
+    passes, 601 versus 2,937 head fragment calls, and 4,685,028 versus
+    3,514,732 KiB total peak.
+  - `large HTML`: 44.091 s build versus 166.157 s baseline, 21.486 s Changes
+    versus 77.501 s, one head capture versus repeated head passes, 0 versus 0
+    sidecar calls, and 1,135,432 versus 1,339,904 KiB total peak.
+  - `large React`: 177.040 s build versus 1,056.519 s baseline, 89.611 s
+    Changes versus 445.383 s, one head capture versus four repeated head
+    passes, 5,790 versus about 23,100 head fragment calls, and 2,189,636 versus
+    2,120,160 KiB total peak.
+  - Memory check: direct core peaks were 581,616/585,804 KiB new versus
+    688,340/694,160 KiB baseline; sidecar sums were 2,203,200/2,200,656 KiB
+    new versus 2,005,456/2,111,516 KiB baseline. The new core peak was lower.
 
 Evidence: `.context/build-head-capture/output-diff.txt`,
 `.context/build-head-capture/smoke.png`, and
