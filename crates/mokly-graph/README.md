@@ -1,7 +1,5 @@
 # mokly-graph
 
-Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
-
 `mokly-graph` plans and evaluates catalogue renders for Mokly. Depend on it
 from Serve, comparison, or static output. It uses `mokly-catalogue` for
 prepared definitions, `mokly-html` for composition, and `mokly-css` for

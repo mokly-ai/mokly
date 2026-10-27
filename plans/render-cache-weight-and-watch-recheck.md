@@ -225,17 +225,17 @@ review can check the code against them.
 
 Charge the records at the D1 multiple. No other charge changes.
 
-- [ ] Write the failing test first in a new
+- [x] Write the failing test first in a new
       `crates/mokly-graph/src/_tests_/weight_tests.rs`: a document's usage
       record and a fragment's instance and slot records add the D1 multiple
       of their JSON length to the charge.
-- [ ] Replace the three multipliers in `crates/mokly-graph/src/weight.rs`
+- [x] Replace the three multipliers in `crates/mokly-graph/src/weight.rs`
       with one named constant. Say in the module comment that the charge is
       an estimate.
-- [ ] Run the tests of `mokly-graph`, `mokly-compare`, `mokly-render`, and
+- [x] Run the tests of `mokly-graph`, `mokly-compare`, `mokly-render`, and
       `mokly-server`. A test that expected an eviction from the old
       multiplier keeps its intent with a smaller bound or a larger record.
-- [ ] Remove the status line of `crates/mokly-graph/README.md`.
+- [x] Remove the status line of `crates/mokly-graph/README.md`.
 
 ## Milestone 3: Cache counts in the timing records
 
