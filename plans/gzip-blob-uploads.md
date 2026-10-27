@@ -379,7 +379,7 @@ Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
     tests/exchange_tests.rs uses SystemClock with the fixed expiry
     2099-01-01.
   - Review 2: .context/gzip-blob-uploads/review-2.md. Finding 7 was fixed
-    in 125ea6ae.
+    in 125ea6ae and 182359bb.
   - 6. Fixture test loses the case name on failure. Severity Low, effort
        Small. Recommended: B, run each fixture case as a named subtest.
   - Outside the scope: .prettierignore. Its fixture comment has no path
