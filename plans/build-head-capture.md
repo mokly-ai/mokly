@@ -179,7 +179,7 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
       `npm test -- tests/markdown_links.test.ts`, and `npm run format:check`.
 - [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
