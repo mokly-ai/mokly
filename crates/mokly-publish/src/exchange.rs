@@ -11,9 +11,10 @@ use futures_util::{StreamExt, stream};
 use tracing::Instrument;
 
 use crate::accounting::{Receipt, count, plan_digests, progress};
+use crate::blob_body;
 use crate::completion::{Completion, rejection};
 use crate::error::{Error, Result};
-use crate::http::{Http, Request, Step};
+use crate::http::{Encoding, Http, Request, Step};
 use crate::plan::Plan;
 use crate::retry::Requests;
 use crate::runtime::{Cancellation, Clock, Reporter};
@@ -91,6 +92,7 @@ impl Client {
             step: Step::Plan,
             url: requests.settings.endpoint.clone(),
             body: prepared.archive.clone(),
+            encoding: Encoding::Identity,
             timeout: Duration::from_secs(120),
         };
         let plan = {
@@ -134,6 +136,7 @@ impl Client {
             step: Step::Complete,
             url: plan.complete_url.clone(),
             body: Bytes::new(),
+            encoding: Encoding::Identity,
             timeout: Duration::from_secs(120),
         };
         let span = tracing::info_span!("upload.complete", status = "error");
@@ -172,14 +175,19 @@ impl Client {
                 .collect::<Vec<_>>(),
         )
         .map(|(digest, attempted)| async move {
+            let url = plan.blob_target(&digest, requests.settings)?;
+            let file = prepared
+                .blobs
+                .get(&digest)
+                .ok_or(Error::InvalidBundle)?
+                .clone();
+            let (body, encoding) =
+                blob_body::prepare(file, plan.blob_encoding, requests.cancellation).await?;
             let request = Request {
                 step: Step::Blob,
-                url: plan.blob_target(&digest, requests.settings)?,
-                body: prepared
-                    .blobs
-                    .get(&digest)
-                    .ok_or(Error::InvalidBundle)?
-                    .clone(),
+                url,
+                body,
+                encoding,
                 timeout: Duration::from_secs(120),
             };
             let response = requests

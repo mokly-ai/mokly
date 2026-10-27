@@ -50,6 +50,7 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
     "expiresAt": "2026-09-26T12:15:00.000Z"
   },
   "missing": ["<sha256>", "<sha256>"],
+  "blobEncodings": ["gzip"],
   "blobUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/blobs/{sha256}",
   "completeUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/complete"
 }
@@ -69,9 +70,17 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
 - `blobUrl` and `completeUrl` obey the request-boundary URL rule above.
   `blob:`, `data:`, `file:` and every other scheme are invalid even if URL
   parsing exposes the endpoint's origin.
-- Unknown fields are ignored. A missing or invalid field, another 2xx status,
-  a body over 16 MiB, invalid JSON, or a non-JSON content type is
+- `blobEncodings` is optional. The CLI uses gzip for that Plan round only when
+  this value is an array that contains the exact string `gzip`. It ignores
+  every other item, and any other value, including `null`, counts as absent.
+- The receiver lists `gzip` only when it decodes gzip Blobs for the whole
+  upload, until the upload expires.
+- Unknown fields are ignored. A missing or invalid required field, another 2xx
+  status, a body over 16 MiB, invalid JSON, or a non-JSON content type is
   `upload-failed`.
+- Decision in force: the field is optional and the exchange stays v1 because
+  earlier CLIs ignore unknown Plan fields. Rejected: a v2 Plan, because a v1
+  CLI refuses every v2 Plan.
 
 At Plan time the receiver verifies and stores the manifest and the index
 after matching their marker digests and sizes. It never lists those digests in
@@ -85,7 +94,9 @@ it answers `missing: []`; Complete then resolves the keep-first result below.
 means absent), and `document` or raw `body`. Complete cases add `outcome`
 (`published`, `already-published`, `replan`, `retry`, or an error category) and
 normalized `viewerUrl` or null; invalid Plan cases are `upload-failed`. It
-covers every field, content-type, status, URL and placeholder boundary here.
+covers every field, content-type, status, URL, placeholder, and Blob encoding
+boundary here. A valid Plan case can carry `blobEncoding`, the Blob encoding
+the client chooses for that Plan: `gzip` or the default `identity`.
 
 ### Blobs
 
@@ -96,15 +107,28 @@ concurrency limit:
 PUT <blobUrl with {sha256} replaced>
 Authorization: Bearer TOKEN
 Content-Type: application/octet-stream
-Content-Length: <size from the marker>
+Content-Length: <body length>
+Content-Encoding: gzip
 ```
 
-The body is the exact file bytes for that digest. Marker entries sharing a
-digest require one PUT. Any 2xx means stored; receivers return 204 with no
-body. `400` means the bytes did not match the declared digest or size. `404`
-means the digest is outside this Plan or the upload id is unknown. `410` means
-the upload expired and consumes the command's single re-plan. The first failed
-Blob cancels in-flight requests and starts no new ones.
+`Content-Encoding: gzip` is present only for an encoded body. `Content-Length`
+is the length of the request body.
+
+When the round's Plan lists gzip and one gzip member of the file is smaller
+than the file, the body is that member and has `Content-Encoding: gzip`.
+Otherwise the body is the exact file bytes without `Content-Encoding`.
+The marker digest and size always describe the decoded file bytes. Marker
+entries sharing a digest require one PUT. Every attempt of one Blob sends the
+same headers and body. Any 2xx means stored; receivers return 204 with no body.
+`400` means invalid gzip data or decoded bytes that do not match the declared
+digest or size. `404` means the digest is outside this Plan or the upload id is
+unknown. `410` means the upload expired and consumes the command's single
+re-plan. The first failed Blob cancels in-flight requests and starts no new
+ones.
+
+Decision in force: the CLI compares the gzip size with the file instead of
+keeping a list of compressed media types. This needs no list and never sends
+a body larger than its file.
 
 ### Complete
 
@@ -174,13 +198,19 @@ Rich progress is per Plan round. Hash each Plan-archive file and combine those
 digests with that round's `missing` set. `<total>` is the number of marker
 entries whose digest is in that combined set. `<n>` begins at the number whose
 digest belongs to any Plan-archive file, then advances by every marker
-entry sharing a digest when that digest's PUT completes. `<size>` is the sum
-of byte sizes once per distinct combined digest, including all Plan-archive
-files; the marker's own byte length participates even though it is not an
-entry. A re-plan restarts at that round's initial `<n>`, `<total>` and `<size>`.
-A round with empty `missing` shows no progress label. In one round, its final
-`<n>` equals the summary's `<uploaded>`. The
+entry sharing a digest when that digest's PUT completes. `<size>` counts file
+bytes once per distinct combined digest, including the raw bytes of files in
+the Plan archive; it does not count the compressed archive or gzip Blob body.
+The marker's own byte length participates even though it is not an entry. A
+re-plan restarts at that round's initial `<n>`, `<total>` and `<size>`. A round
+with empty `missing` shows no progress label. In one round, its final `<n>`
+equals the summary's `<uploaded>`. The
 [terminal output contract](./mokly-terminal-output.md) owns the progress label.
+
+Decision in force: the progress `<size>` counts decoded file bytes because the
+Plan archive already travels compressed and counts its files' raw bytes, and
+the label exists before any Blob compresses. The summary line counts marker
+entries, so the encoding does not affect it.
 
 A `201` completion prints exactly one counted summary, followed by the viewer
 URL on its own line when accepted. A `200` completion replaces the counted
