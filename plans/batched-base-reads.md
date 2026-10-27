@@ -38,7 +38,8 @@ there.
 Decision (2026-10-27, the user, in the orchestrator's item): apply option A,
 then option B. Git stays the authority on conversion. HTML-only catalogues
 have no extraction and keep Git reads, which A batches. The questions that the
-item left open are the open decisions below.
+item left open are decisions 1 to 5 below. The user answered them and approved
+the plan on 2026-10-27.
 
 Contract owners:
 
@@ -130,13 +131,13 @@ from the code at `a9dd1e81` or from Git's behaviour:
   the Git read. A file read goes through `Disk`, which rejects a link below
   the root, a nonregular file, a host-unsupported name, and a file above the
   byte bound. A file that the extraction does not hold as a regular file reads
-  through Git. See open decision 3. `Disk` gains a confined streaming digest
+  through Git. See decision 3. `Disk` gains a confined streaming digest
   for opaque resources.
 - `Sources` gains a method that attaches a leased extraction. `GitSources`
   then expands its index over the whole tree once, so a later projection
   needs no Git lookup. Its reads and digests use the extraction. `GitTree`
   keeps its repository-root path namespace, its confinement, its index, its
-  byte cache, and its failure reports. See open decision 1.
+  byte cache, and its failure reports. See decision 1.
 - `BaseSide.sources` becomes `Arc<Lease>`, so the base sources and the base
   side hold the same lease.
 - `Cache` gains a lookup that leases a complete entry and never builds one. It
@@ -184,28 +185,37 @@ of 1.0 s, and 1.2 s after a commit of `* text=auto`.
 
 Evidence: `.context/batched-base-reads/baseline.md`.
 
-## Open decisions
+## Decisions
 
-The user answers these in the workspace. Each line gives the recommended
-option. The report of the plan commit gives the full layout.
+The user answered each decision on 2026-10-27 with the recommended option.
 
-1. Which tree adapter serves the extraction reads. Severity Medium, effort
-   Large. Recommended: B, `GitTree` with an extraction byte source.
-2. When base reads switch to the extraction. Severity Medium, effort Large.
-   Recommended: C, also lease an existing extraction before the base
-   configuration loads, without a build.
-3. Files that the extraction does not hold. Severity Low, effort Small.
-   Recommended: A, read them through Git.
-4. One pull request or two. Severity Low, effort Small. Recommended: B, two
-   stacked pull requests, A first.
-5. Follow-up for an HTML-only base prefetch, option C. Severity Low, effort
-   Small. Recommended: A, no follow-up.
+1. The extraction reads use `GitTree` with an extraction byte source, option
+   B. Rejected: A, a `WorkingTree` over the extraction directory, because it
+   needs a new path map and loses the commit's link and submodule metadata.
+2. Base preparation leases an existing complete extraction before the base
+   configuration loads, without a build, when the working configuration names
+   a renderer or a PostCSS module, option C. Rejected: A, a switch only after
+   the dependency step, because configuration and discovery then keep about
+   4 s of warm Git reads. Rejected: B, a build before the configuration loads,
+   because it changes the rule that only a base that needs a sidecar gets an
+   extraction.
+3. A file that the extraction does not hold reads through Git, option A.
+   Rejected: B, unavailable with a warning, because Windows comparisons would
+   lose files that the core reads today. Rejected: C, missing, because Changes
+   could show a false removal.
+4. Two stacked pull requests ship the work, option B. Design A opens from this
+   branch after milestone 4. Design B opens from a second branch on top of it.
+   Rejected: A, one pull request, because design A is complete on its own and
+   its byte framing deserves a focused review.
+5. No follow-up for an HTML-only base prefetch, option A. Rejected: B, a
+   follow-up, because the small HTML fixture classifies in 1.2 s with
+   `* text=auto`, and design A already batches its prefetch reads.
 
 ## Milestone 1: Documentation and protocol for batch conversion
 
 State the batch conversion requirements before the code changes.
 
-- [ ] Update `docs/protocol/mokly-git.md`, section "Tree, Blob, And Source
+- [x] Update `docs/protocol/mokly-git.md`, section "Tree, Blob, And Source
       Archive Reads": one Git process converts a bounded batch of files with
       the same bytes as a conversion of each file alone; a failed, timed-out,
       or oversized batch converts its files again one at a time, so a failure
@@ -213,10 +223,10 @@ State the batch conversion requirements before the code changes.
       decision in force: one process for each batch, rejected: one process
       for each converted file, because process start-up dominated base reads.
       The sentinel framing is a mechanism, so it goes to the README.
-- [ ] Add the `review.base-extraction` row to `docs/protocol/mokly-timings.md`
+- [x] Add the `review.base-extraction` row to `docs/protocol/mokly-timings.md`
       under `review.base-tree`, with the `action` field. perf 0 also edits this
       page, so keep the change to the row.
-- [ ] Add the status line of the repository rules to each changed page. The
+- [x] Add the status line of the repository rules to each changed page. The
       milestone that implements the behaviour removes it.
 
 ## Milestone 2: Extraction timing span
@@ -278,16 +288,19 @@ failing test first.
 - [ ] Build `examples/basic` with `--strict --base fc8535b0` with the
       baseline binary and with the new binary. Compare the two output
       directories byte for byte. Record the result.
-- [ ] Commit and push. If open decision 4 selects two pull requests, open the
-      first one here, with the measurement table, and run the review TODO of
-      milestone 8 for its diff.
+- [ ] Merge `origin/main` with the `git-merge` skill. Commit and push.
+- [ ] Review the complete diff against `origin/main` with the
+      `implementation-review` skill. Apply the review-fix rule: fix the
+      `Auto-fix: yes` findings, re-review once, and report the rest.
+- [ ] Open the first pull request, for design A, with the before and after
+      table in its body. Put its link in the status paragraph.
 
 ## Milestone 5: Documentation and protocol for extraction reads
 
 - [ ] Update `docs/protocol/mokly-base-preparation.md`, section "Sources":
       while a preparation leases a complete extraction of the base commit,
       base reads use its files; a file that it does not hold reads through
-      Git, under open decision 3; the early lease rule of open decision 2,
+      Git, under decision 3; the early lease rule of decision 2,
       with its rejected options as the decision in force.
 - [ ] Update `docs/protocol/mokly-base-cache.md`: a lookup can lease a
       complete entry without a build, and it creates no entry.
@@ -344,5 +357,5 @@ failing test first.
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
 - [ ] Open the pull request when every other milestone TODO is ticked, with
-      the before and after table in its body. With two pull requests, this is
-      the second one. Put its link in the status paragraph.
+      the before and after table in its body. This is the second pull
+      request, from the stacked branch. Put its link in the status paragraph.
