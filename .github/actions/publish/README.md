@@ -9,14 +9,11 @@ self-hosted services. It uses no private repository or package API.
 
 The action is maintained here at `mokly-ai/mokly/.github/actions/publish`.
 Pin it to a reviewed commit SHA (or a release tag containing this directory).
-`version` is required: choose an exact published version containing `publish`;
-versions, ranges and `latest` from before this feature cannot provide it. The
-feature must be released to npm before remote consumers can use the action.
-The installed CLI resolves its exact `@mokly/viewer` dependency from npm; no
-separate viewer version input is needed. Installation fails if those versions
-disagree. Older CLI releases without that dependency remain supported. The
-repository release workflow publishes and verifies the viewer first so the CLI
-is installable when released.
+`version` is required. Choose an exact published version whose CLI has the
+`publish` command. The installed CLI resolves its exact `@mokly/viewer`
+dependency from npm, so no separate viewer version input is needed.
+Installation fails if those versions disagree. For a CLI release without that
+dependency, the action skips the viewer check.
 
 ## Keep the checkout clean
 

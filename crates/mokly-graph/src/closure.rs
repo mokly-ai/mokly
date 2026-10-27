@@ -12,6 +12,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::asset_delivery::AssetRead;
 use crate::closure_prefetch;
+use crate::closure_seeds;
 use crate::error;
 use crate::error::{Result, invalid};
 use crate::policy::PublicPolicy;
@@ -41,7 +42,7 @@ pub trait GeneratedResources: Send + Sync {
 /// Sorted authored closure with traversal and ownership evidence.
 #[derive(Clone, Debug, Default)]
 pub struct Closure {
-    /// Historical resources excluded after checkout conversion failed.
+    /// Base resources excluded after checkout conversion, and stylesheet seeds.
     pub warnings: Vec<Warning>,
     /// Repository-relative authored files, never generated route names.
     pub files: BTreeSet<String>,
@@ -81,17 +82,9 @@ impl ClosureBuilder for Walker {
             .into_iter()
             .map(|reference| (source.clone(), reference))
             .collect();
-        for seed in seeds {
-            queue.push_back((
-                "static/index.html".into(),
-                ResourceReference {
-                    url: seed.clone(),
-                    owner: EvidenceOwner::Entry,
-                    ignored: false,
-                    instance_key: None,
-                },
-            ));
-        }
+        let (seeded, warnings) = closure_seeds::queue(route, seeds);
+        queue.extend(seeded);
+        result.warnings.extend(warnings);
         closure_prefetch::prefetch(self, &source, &collect(tree))?;
         let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
         let mut visited = BTreeSet::new();

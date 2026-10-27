@@ -7,39 +7,29 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 `npm run dependencies:check` audits the workspace lockfile against the
 configured npm registry's current advisory database. It explicitly includes
 production, development, optional, and peer dependencies, even if local npm
-configuration would otherwise omit a category. The Node entry point is
-`scripts/verification/dependency-audit.mjs`. Both audit modes run `npm audit
---json --audit-level=low --package-lock-only --include=prod --include=dev
---include=optional --include=peer --prefix .` against the live registry.
-Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
-transport, report, and input errors always fail. The
-[baseline audit contract](./dependency-audit-baseline.md) defines the
-modes, CLI, JSON summary, and comparison rules.
+configuration would otherwise omit a category. Strict mode fails on every
+uncovered Low-or-higher advisory or exception issue. Registry, transport,
+report, and input errors always fail. The
+[baseline audit contract](./dependency-audit-baseline.md) defines the npm audit
+command, the modes, the CLI, the JSON summary, the comparison rules, and the
+mode that each command and CI event selects.
 
-`npm run dependencies:check` stays strict. Under this contract,
-`cargo xtask check` runs the baseline audit first by default. Ordinary pull
-requests and every push also use baseline mode in the CI repository job. It
-prints inherited findings and exception issues as notices;
-new issues fail. Release Please and dependency update pull requests use strict
-mode. The daily scheduled workflow audits `main` strictly and creates or
-refreshes the [dependency update pull request](./dependency-audit-update-pr.md).
-It closes that pull request when the strict audit of `main` passes and preserves
-branches with human commits. Audit command, registry, report, and input failures
-do not change pull requests.
-Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
+The daily scheduled workflow audits `main` strictly and maintains the
+[dependency update pull request](./dependency-audit-update-pr.md). Dependency
+fixes, pinned-parent overrides, and reviewed exceptions land there.
 
-The release workflow runs a strict live audit immediately after install,
-before reusable evidence or the complete fallback. Complete mode runs
-`cargo xtask check --dependency-audit strict` and repeats the strict live audit
-when its gate starts. Evidence mode never reuses an earlier audit
-as time-sensitive security evidence. The other CI jobs start without waiting for
-the CI repository job's audit, and `Required CI` fails unless it passes. An
-audit gate before those jobs was rejected: they hold only a read-only token,
-and the gate would delay every run. A cache hit never replaces
-an audit. Both modes require registry access. An audit is evidence about known
-advisories at execution time, not a guarantee that every dependency is safe.
-See the [CI workflow graph](./ci-workflow.md) and
-[CI verification contract](./ci-verification.md) for job ownership and aggregation.
+Release preparation runs the strict live audit under the
+[release evidence contract](./npm-release-evidence.md#verification-modes) and
+never reuses an earlier audit as time-sensitive security evidence. The other
+CI jobs start without waiting for the CI repository job's audit, and
+`Required CI` fails unless it passes. An audit gate before those jobs was
+rejected: they hold only a read-only token, and the gate would delay every
+run.
+A cache hit never replaces an audit. Both modes require registry access. An
+audit is evidence about known advisories at execution time, not a guarantee
+that every dependency is safe. See the [CI workflow graph](./ci-workflow.md)
+and [CI verification contract](./ci-verification.md) for job ownership and
+aggregation.
 
 The release workflow's packed ESM-consumer smoke also audits its freshly
 resolved production, optional, and peer dependencies before exercising the
@@ -158,8 +148,6 @@ An accepted risk always prints its advisory, package, exact path, end date,
 UTC days left, reason, and tracking link. Failures print each uncovered advisory
 with its identifier, package, severity, title, URL, and install locations. They
 also print each invalid, expired, or stale record and the required action.
-Unit tests inject commands, file reads, clocks, and logging; they do not call
-the registry. Fixtures retain fields from a real report captured after `npm ci`.
 
 ## Update Policy
 
@@ -182,10 +170,13 @@ Do not use an override to replace an unpatched package. Document why it exists a
 the conditions for removing it. Audit every dependency category after an update;
 an old override is not proof that the current tree is clean.
 
+After a dependency update, run the complete gate from a clean `npm ci` and
+exercise the real preview runtime through its browser tests. Review lockfile
+removals, package engines, native optional packages, and the packed artifact.
+
 Record each hold below a compatible release with its reason and removal
 condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
-for a declared floor. Dependency audit tests check the committed exception
-file against the installed lockfile.
+for a declared floor.
 
 List only reviewed exceptions, overrides, exact pins and holds here, because
 later updates must respect them. Explain a one-time update in its pull request,
@@ -199,8 +190,8 @@ The current maintenance choices are:
   `5.20261012.0-beta` and adds 29 development packages, including workerd and
   sharp/libvips. Miniflare's exact `undici` pin is overridden, as the next
   item says. Update the pin in a reviewed tooling change after static URL,
-  header, preview cleanup, and live dependency-audit checks pass. Remove it if
-  previews no longer use Cloudflare.
+  header, preview cleanup, and live dependency-audit checks pass. Remove the
+  pin when previews stop using Cloudflare.
 
 - `undici` 7.30.1 is an override scoped to `miniflare`, which pins `undici`
   7.29.1. That release has GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, and
@@ -208,9 +199,9 @@ The current maintenance choices are:
   help: `wrangler` 4.152.0 resolves a Miniflare with the same pin. Remove the
   override when the pinned `miniflare` resolves `undici` 7.30.1 or newer.
 
-- `release-please` 17.6.0 is an exact development pin. Release tests exercise
-  its real manifest parser, changelog writer, workspace plugin, and version
-  updaters. Update the pin with the workflow action and schema in a reviewed
+- `release-please` 17.6.0 is an exact development pin. The repository's
+  release configuration checks use its real manifest parser, changelog
+  writer, workspace plugin, and version updaters. Update the pin with the workflow action and schema in a reviewed
   tooling change. It is not a runtime dependency of any published package.
 
 - `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
@@ -229,21 +220,6 @@ The current maintenance choices are:
   only after one works with that alias, in a reviewed change that runs the
   design catalogue test and `npm run package:smoke`.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
-  status 1 when a reporter event write fails, but the wrapper test in
-  `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that
-  test in a reviewed change before moving Playwright.
-
-## Required Evidence
-
-Add a regression first when a reported bug can be reproduced safely. Keep
-malicious-input tests bounded; never run an advisory's unbounded memory or CPU
-exhaustion example inside the normal test process. Verification of command
-ordering and fail-closed behavior uses the injected command-runner boundary, not
-live network calls from Rust unit tests.
-
-After dependency updates, use a clean `npm ci`, run the complete
-`cargo xtask check`, and exercise the real preview runtime through its browser
-tests. Review lockfile removals, package engines, native optional packages, and
-the packed artifact. Commit and push all completed changes before using the
-`implementation-review` skill against `origin/main`; apply its review-fix rule
-to the findings.
+  status 1 when a reporter event write fails, where 1.61 exits with status 0.
+  Move Playwright only in a reviewed change that checks how the browser
+  suite's report records a failed reporter.

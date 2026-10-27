@@ -23,6 +23,9 @@ use crate::selector_scope::{broaden_nested, parent_has_anchor};
 pub const MAX_HAS_TREE_DEPTH: usize = 512;
 
 /// Actual element match, kept only until catalogue-wide attribution ends.
+/// The index is local to the matched document's tree, so the match stays with that
+/// document's result, and `attribution::observe` keeps its containing regions before the
+/// tree is released. It is internal evidence and is never serialized.
 #[derive(Clone, Debug)]
 pub struct ElementMatch {
     /// Side of the original tree.
@@ -61,6 +64,10 @@ pub enum DocumentMatching {
 }
 
 /// Match every selector of every diffed rule against both supplied documents.
+/// Kept constructs are checked before ordinary matching: a failed nesting substitution,
+/// an invalid tree, a conservative change, a selector-less rule, a construct that
+/// broadening keeps, a relational selector over a too-deep tree, and a parse failure.
+/// Each check only marks the selector unresolved, so their order is not observable.
 pub fn match_document(
     diff: &RuleDiff,
     before: Option<&MatchTree>,

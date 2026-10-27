@@ -83,6 +83,11 @@ impl DiskCache {
         }))
     }
 
+    /// Builds a missing entry under its exclusive entry lock. `None` tells the
+    /// caller to retry the hit, which then leases the completed entry. Sources
+    /// build in `staging/` and publish by rename. Dependency installs build at
+    /// their final locked location, so the local links that the install writes
+    /// stay valid.
     fn build(
         &self,
         namespace: &Path,

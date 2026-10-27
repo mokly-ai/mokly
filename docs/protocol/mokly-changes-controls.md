@@ -81,7 +81,7 @@ selection.
 These marks and the `Changed views` row apply in a static build with Changes as
 well as in Serve.
 
-Diffs render inside the existing main region with the catalogue, title, details,
+Diffs render inside the main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot
 frames follow the [pane](./mokly-comparison-panes.md) and
 [scrolling](./mokly-comparison-scrolling.md) contracts: script-disabled,

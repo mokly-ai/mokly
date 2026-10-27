@@ -1,13 +1,12 @@
 # Component Controls Design
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Controls Panel
 
-Reuse the component page, saved-variant strip, canvas, comparison band, and
-shared icon inspector. Controls occupy the Props tab; Details and Usage
-stay independently available. The leaf Action component has no Nested
-components tab. The [workspace design](./mokly-component-workspace-design.md)
+The controls artboards show the component page with its saved-variant strip,
+canvas, comparison band, and shared icon inspector. Controls occupy the Props
+tab; Details and Usage stay independently available. The leaf Action
+component has no Nested components tab. The
+[workspace design](./mokly-component-workspace-design.md)
 groups view controls, shows both selected preview contexts, and gives the
 inspector a resizable pane beneath the desktop preview and a rounded bottom sheet
 over the mobile preview. Its centered desktop divider and iOS-style mobile
@@ -68,9 +67,8 @@ number field's help and error name its bounds and its step. After
 Reset, Try again, or Update preview, focus moves to the panel heading; after
 Switch to Current, to the first field; after a start retry, to the status
 that replaces the button, and to the heading when that status leaves; after
-a catalogue retry, to the loading status. The settled strings are in
-`examples/basic/specs/design/components/controls/parts/copy.ts`.
-Do not add environment badges or implementation details to the rendered UI.
+a catalogue retry, to the loading status. The rendered UI shows no
+environment badge and no implementation detail.
 
 Mockup inputs keep native semantics. Authored links connect edited, reset,
 variant, pending, failure, preparation, comparison, read-only, and recovery
@@ -113,14 +111,3 @@ the Props panel.
 | `design/components/controls/limits/no-props`            | Screen without props or registered components         |
 | `design/components/controls/limits/invalid-together`    | Values not valid together, with Reset                 |
 | `design/components/controls/limits/expired`             | Expired temporary preview, with Update preview        |
-
-## Verification
-
-Serve the example with `mokly serve` so that Mokly renders every matching
-artboard, and commit only the authored changes. Test all input labels/types, current variant identity, full reset
-values, optional/unset states, pending/error preservation, validation errors,
-read-only comparison values, read-only guidance, and links between owning states.
-Open every artboard in the served Browse frames and visually inspect both
-viewport variants. Test inspector open/switch/close and keyboard behavior in
-served frames and in the `mokly build` output.
-Run the complete local gate, commit/push, and required post-push review.

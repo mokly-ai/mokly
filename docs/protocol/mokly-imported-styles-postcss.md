@@ -1,7 +1,5 @@
 # Imported Stylesheet PostCSS And Dependency Inventory
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This is the PostCSS and inventory companion to the
 [imported stylesheet contract](./mokly-imported-styles.md).
 [Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout.
@@ -106,10 +104,8 @@ as a public file fails with the protected-target diagnostic of the
 plugin and the Tailwind exclusion. The in-repository regular files are then
 validated: a malformed message and a missing explicit file fail as the
 catalogue states, and among missing inputs, exact files come before
-directories. Each glob is compiled once per report,
-classification is cached within the generation, and a file already checked
-as an explicit dependency is not checked again. Diagnostics and inventory
-order compare paths by UTF-16 code units without locale collation.
+directories. Diagnostics and inventory order compare paths by UTF-16 code
+units without locale collation.
 
 ## Tailwind
 
@@ -133,8 +129,5 @@ the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
 
 ## Dependency Retention
 
-The core hashes each reported dependency once per cached generation context.
-It retains digests, classification metadata, plugin provenance, and directory
-watch recipes, including empty matching directories. It retains no dependency
-file contents. Processed CSS and this metadata count toward the PostCSS cache's
+Processed CSS and its dependency metadata count toward the PostCSS cache's
 64 MiB byte bound; an oversized result is returned without cache retention.

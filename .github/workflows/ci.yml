@@ -50,6 +50,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      # Read the exact version that floating Node 24 resolved to; the repository
+      # job and every Node 24 job request it. The `node-version` output of
+      # actions/setup-node holds the same version with a leading `v`; this step
+      # omits the `v`.
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"

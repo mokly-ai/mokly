@@ -143,6 +143,9 @@ impl SourceTree for GitTree {
         Ok(directories.children.get(key).cloned().unwrap_or_default())
     }
 
+    /// Serves a hit from the byte-bounded LRU. A miss reads only the requested
+    /// blob and holds no cache lock during the Git IO, so a slow conversion
+    /// never blocks hits on other paths.
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("read", path, io::ErrorKind::IsADirectory));

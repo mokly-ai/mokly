@@ -20,6 +20,10 @@ use crate::impact_validation;
 use crate::instance_proof::InstanceProof;
 use crate::move_types::Pairing;
 
+/// Recorded classifier inputs that a result must match: the accepted move
+/// pairs, each entry's evidence, both sides' usage, the implementation-impact
+/// set, and the instance proofs. Validation never uses the result's own rows
+/// as proof, so the check is not circular.
 pub(crate) struct SourceValidation<'a> {
     pub(crate) before: &'a CatalogueModel,
     pub(crate) after: &'a CatalogueModel,

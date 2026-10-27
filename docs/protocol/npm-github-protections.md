@@ -11,10 +11,12 @@ dispatch authorizes a retry of those already-created immutable tags.
 
 ## Required State
 
-- Environment `npm`: no required reviewers, no administrator bypass, no wait
-  timer, and a custom branch-only deployment policy for `main`. Keep the
-  environment as the trusted-publisher identity and branch boundary; it is not
-  a second approval after the reviewed release PR.
+- Environment `npm`: no required reviewers, no administrator bypass
+  (`can_admins_bypass: false`), no wait timer, and custom branch policies
+  enabled. Its deployment policy list holds only `main` with `type: branch`,
+  not a tag pattern. Keep the environment as the trusted-publisher identity
+  and branch boundary; it is not a second approval after the reviewed release
+  PR.
 - Active tag ruleset `Immutable release tags`: match `refs/tags/v*` and
   `refs/tags/viewer-v*`, prohibit
   updates and deletion, and grant no bypass. Allow creation so release automation
@@ -25,92 +27,10 @@ dispatch authorizes a retry of those already-created immutable tags.
   They share environment `npm` and its main-only policy; a second GitHub
   environment is unnecessary. The CLI's trust does not cover the viewer or a native package.
 
-## Apply With An Authorized Maintainer Credential
-
-First read the existing settings. Preserve unrelated non-review protection
-rules if the settings changed since this runbook was prepared, and update an
-existing matching ruleset instead of creating duplicates. Confirm no release
-workflow is waiting for environment approval before removing reviewers, because
-changing the rule can immediately start that job.
-
-```sh
-gh api repos/mokly-ai/mokly/environments/npm
-gh api repos/mokly-ai/mokly/environments/npm/deployment-branch-policies
-gh api repos/mokly-ai/mokly/rulesets
-gh api repos/mokly-ai/mokly/branches/main/protection
-```
-
-Use a credential with repository Environments and Administration write access.
-The empty `reviewers` list intentionally removes the redundant approval stage.
-It does not remove the environment, its branch policy or npm's environment-bound
-trusted-publisher identity.
-
-Apply the environment update below. Run the deployment-policy `POST` only when
-the preceding read-back does not already contain the `main` branch policy.
-
-```sh
-gh api --method PUT repos/mokly-ai/mokly/environments/npm --input - <<'JSON'
-{
-  "wait_timer": 0,
-  "prevent_self_review": false,
-  "reviewers": [],
-  "deployment_branch_policy": {
-    "protected_branches": false,
-    "custom_branch_policies": true
-  }
-}
-JSON
-gh api --method POST repos/mokly-ai/mokly/environments/npm/deployment-branch-policies --input - <<'JSON'
-{ "name": "main", "type": "branch" }
-JSON
-gh api --method POST repos/mokly-ai/mokly/rulesets --input - <<'JSON'
-{
-  "name": "Immutable release tags",
-  "target": "tag",
-  "enforcement": "active",
-  "bypass_actors": [],
-  "conditions": {
-    "ref_name": { "include": ["refs/tags/v*", "refs/tags/viewer-v*"], "exclude": [] }
-  },
-  "rules": [{ "type": "update" }, { "type": "deletion" }]
-}
-JSON
-```
-
-Then open Settings → Environments → npm and clear **Allow administrators to
-bypass configured protection rules**, and save. GitHub's documented REST
-create/update-environment request does not expose this switch; do not assume
-an extra `can_admins_bypass` request field applies it. The read-back must report
-`can_admins_bypass: false` before publishing is enabled.
-
-If any request fails, stop and read back the current state before retrying. Do
-not enable publishing while protection is incomplete. Equivalent settings are
-available in repository Settings → Environments → npm and Settings → Rules →
-Rulesets. These commands do not store tokens or change npm package ownership.
-
-## Verify And Retain Evidence
-
-Repeat the four read commands above. The environment must have no
-`required_reviewers` or wait-timer rule, must report `can_admins_bypass: false`,
-and must have custom branch policies enabled. The deployment policy list must
-contain only `main` with `type: branch`, not a tag pattern. Read the tag ruleset
-in full with
-`gh api repos/mokly-ai/mokly/rulesets/<ruleset-id>` and verify its active status,
-tag target, both shared-version `v*` and `viewer-v*` conditions, both rules, and empty bypass
-list. Check `main` protection's required status checks include `Required CI`.
-
-Retain the API read-back alongside release evidence. Do not test immutability
-by trying to move or delete a real release tag.
-
-## Workspace Credential Blocker
-
-At the migration review, the workspace credential could read the environment and ruleset
-list, but attempts to update the environment or create the tag ruleset return
-HTTP 403 `Resource not accessible by integration`. That read-back showed an
-unprotected environment and empty ruleset list; detailed `main` protection was
-also denied although `main` reported `protected: true`. This is historical
-evidence, not current state. Re-read and retain both streams' settings with an
-authorized credential. Committing this runbook applies no external protections.
+Publishing stays disabled until a read-back of the environment, its deployment
+branch policies, the tag ruleset, and the `main` branch protection confirms
+this state. Retain that API read-back alongside release evidence. Do not test
+tag immutability by trying to move or delete a real release tag.
 
 ## Primary References
 

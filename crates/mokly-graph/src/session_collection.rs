@@ -8,6 +8,8 @@ use crate::types::{ComparisonDocument, RenderGeneration, RenderSummary};
 use crate::validation_summary::Summary;
 use crate::workers::{ComparisonWorker, ValidatedView};
 
+/// Read one view's input after a cancellation check. The check runs before the cache
+/// lookup, so a cancelled capture also stops on a cache hit.
 struct Inputs<'a> {
     session: &'a Session,
 }
@@ -20,6 +22,9 @@ impl ComparisonWorker for Inputs<'_> {
 }
 
 impl Session {
+    /// Validate every view in bounded route batches and pass each input to the collector
+    /// in route order. Cancellation is checked before each view read and before each
+    /// encode, so a cancelled capture stops with the generation's cancellation error.
     pub(crate) fn collect_validated(
         &self,
         collector: &mut dyn ComparisonCollector,

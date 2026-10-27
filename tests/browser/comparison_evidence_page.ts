@@ -1,6 +1,7 @@
 /**
  * Inspector copy and readers for the stylesheet Details specs on comparison
- * copies. The copy is fixed by docs/protocol/mokly-css-evidence-shell.md.
+ * copies. The copy is fixed by docs/protocol/mokly-css-evidence-presentation.md
+ * and docs/protocol/mokly-css-evidence-shell.md.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";

@@ -1,7 +1,5 @@
 # Remote Verification: Testbox Execution
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Workflow
@@ -42,28 +40,20 @@ Run the steps in this order:
    New Testbox SSH sessions must use Node 22.15.0 and Chromium.
 10. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
 
-Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
-The pinned action does not detect the SSH session in this environment.
-Only the start of each `testbox run` resets the observed idle timer.
+Warmup selects a 30-minute idle timeout. Readiness uses `10m`. The pinned
+action does not detect the SSH session, so only the start of each
+`testbox run` resets the idle timer.
 Download a report as its command ends. Then clean up that box at once under
 the [cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts).
 
-Blacksmith's "Complete runner" step runs `/job_completed.sh`.
-It waits for open SSH sessions before shutdown. Blacksmith bills that wait.
-CLI 0.4.65 uses `ControlMaster=auto`, `ControlPersist=300` and a control
-socket under `~/.blacksmith/c/`. Its shared connection stays open after a
-command ends. The [close step](./remote-verification-cleanup.md#close-the-shared-ssh-connection)
-defines the socket name and the local command that closes it.
-CI jobs and Testboxes that reach the 30-minute job limit have no open SSH
-connection at job end. Their "Complete runner" step takes 0 to 1 seconds.
-
-Key login saves the key in the local CLI credential file.
-It replaces any saved login for the same organization.
-The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
+Blacksmith's "Complete runner" step waits for open SSH sessions before
+shutdown, and Blacksmith bills that wait. The CLI's shared SSH connection stays
+open after a command ends. Cleanup therefore closes it under the
+[close step](./remote-verification-cleanup.md#close-the-shared-ssh-connection).
 
 Workflow action revisions and their version comments require review.
 The [verification reference](../../scripts/verification/README.md#testbox-workflow-reference)
-lists the revisions and the controlled workflow-step tests.
+lists the revisions.
 
 ## Remote Commands
 
@@ -89,8 +79,8 @@ independent `static-delivery` command without a shard.
 default or `strict`. The wrapper accepts that option only with the repository
 suite and passes it to `cargo xtask check`. The command name stays
 `repository`. Invalid arguments fail before any suite starts.
-Both scripts use `validateFingerprint` from `source-tree.mjs`.
-Its error contains no usage text. Each script adds its own usage line.
+An invalid `--expect` value fails with the same error in the wrapper and in
+the fingerprint script. Each script follows that error with its own usage line.
 
 Static delivery runs on its own box. It builds the source and checks the
 example through static HTTP and file URLs. Both modes must pass.
@@ -123,73 +113,65 @@ fallback at this boundary.
 
 ## Suite Wrapper
 
-`scripts/verification/testbox-suite.mjs` performs these steps on each box:
+The suite wrapper runs these steps on each box, in this order:
 
-1. Compute the fingerprint. Fail immediately if it differs from `--expect`.
-2. Run `git add -A` under the [box index rule](./remote-verification-base.md#box-index).
-   Failed or signalled staging fails before history, installs, cargo or stamp writes.
-3. Check whether the repository is shallow. If it is, run
-   `git fetch --unshallow --tags origin`. A failed fetch fails the wrapper.
-   The CLI sync uses `git fetch --no-tags --depth 50` and makes the clone
-   shallow on every `testbox run`, even after full-history checkout.
-   Restore history and release tags in every suite command before its checks.
-4. Compare the current `package-lock.json` SHA-256 with the workflow stamp at
-   `$HOME/.mokly-testbox/package-lock.sha256`.
-   A missing stamp counts as a mismatch. On a mismatch, run `npm ci`, then
-   `npx playwright install chromium`. Fail if either command fails.
-   Write the new digest stamp only after both commands succeed.
-   An equal digest requires neither command.
-5. Set `MOKLY_VERIFICATION_REPORT` to
-   `.context/verification-reports/remote/<command>.json`.
-   Run `cargo xtask check --executor local --suite <suite>`.
-   Add `--shard INDEX/4` for a browser shard.
-   Explicit local mode prevents recursive remote execution.
-   For `static-delivery`, run `npm run build`, then
-   `npm run test:delivery:prepared` instead. A failed or interrupted build
-   prevents delivery. The parent validates both delivery reports before exit.
-6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
+1. It computes the fingerprint and fails at once if the value differs from
+   `--expect`.
+2. It stages the synced tree under the
+   [box index rule](./remote-verification-base.md#box-index). Failed or
+   signalled staging fails before history, installs, cargo or stamp writes.
+3. It restores full history and release tags when the clone is shallow. A
+   failed fetch fails the wrapper. The CLI sync makes the clone shallow on
+   every `testbox run`, even after a full-history checkout, so every suite
+   command restores history before its checks.
+4. It reinstalls dependencies when the SHA-256 digest of `package-lock.json`
+   differs from the workflow stamp at `$HOME/.mokly-testbox/package-lock.sha256`.
+   A missing stamp counts as a difference. The reinstall runs `npm ci`, then
+   `npx playwright install chromium`, and fails if either command fails. It
+   writes the new digest stamp only after both commands succeed. An equal
+   digest requires neither command.
+5. It sets `MOKLY_VERIFICATION_REPORT` to
+   `.context/verification-reports/remote/<command>.json` and runs
+   `cargo xtask check --executor local --suite <suite>`, with
+   `--shard INDEX/4` for a browser shard. Explicit local mode prevents
+   recursive remote execution. For `static-delivery`, it runs
+   `npm run build`, then `npm run test:delivery:prepared` instead. A failed or
+   interrupted build prevents delivery. The wrapper validates both delivery
+   reports before it exits.
+6. It returns the suite's exit code. A wrapper preparation failure returns
+   nonzero.
 
-Stream child standard output and standard error. Forward SIGINT and SIGTERM
-to the running child through the verification process owner.
-An interrupted command must not produce a successful wrapper result.
+The wrapper streams the child's standard output and standard error. It
+forwards SIGINT and SIGTERM to the running child. An interrupted command must
+not produce a successful wrapper result.
 
 Testbox commands do not receive `GITHUB_SHA`, `GITHUB_ACTIONS` or `CI` from
-the workflow session. Keep that behavior. Report writers must read the synced
-repository's `HEAD`. Do not replace it with the workflow dispatch commit.
+the workflow session. Report writers must read the synced repository's `HEAD`.
+Do not replace it with the workflow dispatch commit.
 Do not send the local org token or saved CLI credentials to the box.
 
 ## Source-Tree Fingerprint
 
-`scripts/verification/source-tree.mjs` uses the same algorithm locally and on
-every box. Run it from the repository root.
+`node scripts/verification/source-tree.mjs` computes the fingerprint locally
+and on every box with the same algorithm. Run it from the repository root. It
+prints `sha256:` followed by a lowercase hex SHA-256 digest and a newline.
 
-1. Read index entries with `git ls-files --stage -z`. Reject mode `160000`.
-2. Take index path bytes from those entries. Read untracked path bytes with
-   `git ls-files -z --others --exclude-standard`. Dedupe and sort by unsigned
-   byte order. Preserve repository-relative bytes.
-3. Cache leading-component checks per directory. Skip a path if a leading
-   component is a symbolic link or is not a directory. Then use `lstat`.
-   Skip `ENOENT` and `ENOTDIR` for either listing. Other read errors fail.
-   Reject any directory with a `.git` file or directory. Skip other index
-   directories; their files come from untracked or later index paths.
-   Reject untracked directories and other unsupported types. Name the relative
-   path and tell the caller to ignore or remove a nested repository or worktree.
-   Ignore `.claude/worktrees/` in `.gitignore`; other non-ignored nested
-   repositories still fail. Never silently omit them.
-4. For a regular file, read its working-tree bytes. Use mode `100755` if any
-   executable permission bit is set. Otherwise use `100644`.
-   For a symbolic link, use mode `120000`. Hash its link-target bytes.
-   Do not read the linked file. Include broken symbolic links.
-5. Compute each content digest as lowercase SHA-256 hex.
-   Encode a record as ASCII mode, NUL, raw path bytes, NUL, ASCII content
-   digest, NUL. Concatenate records in the sorted path order.
-6. Hash the concatenated records with SHA-256. Print `sha256:` followed by
-   its lowercase hex digest and a newline.
+The digest covers every index path and every non-ignored untracked path: its
+repository-relative path bytes, its mode, and its content. A regular file has
+mode `100755` when any executable permission bit is set, and `100644`
+otherwise. A symbolic link has mode `120000`. Its content is its link target,
+so a broken link still counts. The digest therefore includes content, mode,
+path, deletion and non-ignored untracked changes. It excludes Git metadata,
+commit identity and Git-ignored untracked files. The same working tree has the
+same digest whether changes are committed or uncommitted. Tracked paths still
+participate if an ignore rule matches them.
 
-The digest includes content, mode, path, deletion and non-ignored untracked
-changes. It excludes Git metadata, commit identity and Git-ignored untracked
-files. The same working tree has the same digest whether changes are committed
-or uncommitted. Tracked paths still participate if an ignore rule matches them.
+A submodule entry fails. A directory with a `.git` file or directory fails, and
+so do untracked directories and other unsupported file types. The error names
+the relative path and tells the caller to ignore or remove a nested repository
+or worktree. `.gitignore` ignores `.claude/worktrees/`; other non-ignored
+nested repositories still fail. Never silently omit them. Other read errors
+fail.
 
 `--expect <fingerprint>` requires the computed value to match exactly.
 A mismatch returns nonzero. Both scripts include the expected and actual
@@ -219,14 +201,14 @@ Use the CLI download command for each required report:
 blacksmith testbox download --id <box-id> .context/verification-reports/remote/<command>.json .context/verification-reports/remote/<run>/<command>.json
 ```
 
-Run the existing aggregate after box cleanup:
+Run the aggregate after box cleanup:
 
 ```bash
 node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.15.0
 ```
 
-The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
-still apply. Keep the report schema unchanged. The aggregate must accept
+The [evidence rules](./ci-verification.md#inventory-and-report-evidence)
+apply. The aggregate must accept
 exactly five reports for the expected commit and runtime profile.
 It must prove complete browser shard coverage.
 The box `HEAD` and reports name the base; the

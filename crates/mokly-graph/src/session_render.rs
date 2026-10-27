@@ -83,6 +83,11 @@ impl ArtifactWorker for Session {
                 });
             }
         };
+        let artifact = with_closure_warnings(artifact, &closure);
+        let document = artifact
+            .document
+            .as_ref()
+            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
         if let Err(source) = validation::links(self, &document.links) {
             return Err(GraphError::Attempt {
                 failures: vec![source],
@@ -99,6 +104,32 @@ impl ArtifactWorker for Session {
             .extend(closure.files);
         Ok(artifact)
     }
+}
+
+/// Adds the closure's warnings to the document's own warnings, once each.
+///
+/// The closure walk raises warnings that composition cannot see, such as the
+/// stylesheet-owner warning for a renderer seed. Serve and the props preview report
+/// only the document's warnings, so the view's report needs both lists.
+pub(crate) fn with_closure_warnings(artifact: Arc<Artifact>, closure: &Closure) -> Arc<Artifact> {
+    let Some(document) = &artifact.document else {
+        return artifact;
+    };
+    let added: Vec<_> = closure
+        .warnings
+        .iter()
+        .filter(|warning| !document.warnings.contains(warning))
+        .cloned()
+        .collect();
+    if added.is_empty() {
+        return artifact;
+    }
+    let mut document = document.clone();
+    document.warnings.extend(added);
+    Arc::new(Artifact {
+        document: Some(document),
+        ..(*artifact).clone()
+    })
 }
 
 impl ClosureObserver for Session {

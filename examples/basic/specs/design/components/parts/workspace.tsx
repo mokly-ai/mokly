@@ -33,7 +33,11 @@ export function InspectorWorkspace({
   );
 }
 
-/** Both real viewport previews share the same controls and inspector. */
+/**
+ * Both real viewport previews share the same controls and inspector. This
+ * helper is not registered, so it keeps `render(viewport)`; only registered
+ * boundaries must take explicit content slots.
+ */
 export function PreviewWorkspace({
   inspector,
   render,

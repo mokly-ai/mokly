@@ -196,7 +196,7 @@ test("every status and device token value is covered by a painted pair", () => {
   );
 });
 
-test("the palette carries the contract's three Light corrections", () => {
+test("the palette carries the three Light role values of the contract", () => {
   assert.equal(LIGHT.get("--chrome-muted"), "#676e6a");
   assert.equal(LIGHT.get("--chrome-control-edge"), "#868e88");
   assert.equal(LIGHT.get("--mbk-danger-ink"), "#964334");

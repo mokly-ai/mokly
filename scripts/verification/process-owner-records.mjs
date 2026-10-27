@@ -77,6 +77,7 @@ export async function writeOwnerRecord(registry, ownerId, parentId) {
   }
 }
 
+/** Signal each group registered under the owner subtree, after recording its descendant groups. */
 export async function terminateOwnedProcesses(registry, ownerId, signal) {
   const records = captureProcessGroups(
     registry,
@@ -98,6 +99,11 @@ export async function terminateOwnedProcesses(registry, ownerId, signal) {
     );
 }
 
+/**
+ * Rescan the registry until every owned group has exited, so a registration
+ * that raced with shutdown is still found; each live group gets SIGKILL once.
+ * Groups still running after five seconds fail and keep their records.
+ */
 export async function drainOwnedProcesses(registry, ownerId) {
   const deadline = Date.now() + DRAIN_TIMEOUT_MS;
   const signalled = new Set();

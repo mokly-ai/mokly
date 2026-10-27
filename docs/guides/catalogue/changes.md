@@ -102,9 +102,10 @@ resolves to and by its bytes, not by how its link is spelled, so an unchanged
 image or stylesheet that moves with its entry adds no change. Similarity counts
 only what you wrote: a Markdown document's body without its front matter, and
 the text in a page's rendered body, never the shared template around them.
-When more than one candidate matches, nothing is paired, and Serve and export
-print the ambiguity in the terminal, suggesting `movedFrom`. Declare it on the
-entry, or in a document's front matter, with the complete previous path:
+When more than one candidate matches, nothing is paired, and `build` and
+`publish` print the ambiguity in the terminal, suggesting `movedFrom`. Declare
+it on the entry, or in a document's front matter, with the complete previous
+path:
 
 ```tsx
 // specs/account/home.mockup.tsx
@@ -113,20 +114,18 @@ import { defineScreen } from "@mokly/mokly";
 export default defineScreen({
   title: "Account home",
   description: "The account landing screen.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
-
   relatedDocs: [],
   movedFrom: "account/overview",
+  render: () => <main>Account</main>,
 });
 ```
 
 A `movedFrom` that names nothing in the baseline leaves the entry Added, and
-the terminal reports it. Once the base branch contains the move, the declaration names no
-removed entry and can be deleted; keeping it is harmless. A moved screen with
-variants carries its variants with it, pairing each by slug. A variant you
-delete during the move stays listed under the screen at its new place,
-labelled Removed.
+`build` and `publish` report it in the terminal. Once the base branch contains
+the move, the declaration names no removed entry and can be deleted; keeping
+it is harmless. A moved screen with variants carries its variants with it,
+pairing each by slug. A variant you delete during the move stays listed under
+the screen at its new place, labelled Removed.
 
 ## Compare a screen
 
@@ -211,5 +210,5 @@ compared.
 If a referenced public file is invalid, Changes is unavailable until it is
 repaired, while All stays open. A verified deletion still identifies the
 screens it affects. Where history is unavailable, current previews stay
-available without change evidence. A comparison base built by an earlier
-Mokly release makes Changes unavailable until the base includes this version.
+available without change evidence. Both sides render with your installed
+Mokly version, so a Mokly upgrade alone lists no change.

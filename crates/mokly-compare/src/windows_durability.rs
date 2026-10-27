@@ -10,6 +10,8 @@ use windows_sys::Win32::Storage::FileSystem::{
 
 use crate::error::{InternalError, Result};
 
+/// Replaces the target with `MOVEFILE_WRITE_THROUGH`, so the move is on disk
+/// when the call returns. Windows has no directory flush to order the rename.
 pub(crate) fn rename(source: &Path, target: &Path) -> Result<()> {
     let source: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
     let target: Vec<u16> = target.as_os_str().encode_wide().chain(Some(0)).collect();
