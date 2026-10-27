@@ -8,8 +8,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 `workflow_dispatch` for any branch. A manual run uses the selected branch's
 workflow file, which must include that trigger. The workflow has read-only
 repository contents permission and cancels superseded runs.
-The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite. The
+The runtime profile job is every verification job's only prerequisite, so the
+repository job's audit-first suite runs in parallel with the others. The
 [baseline audit contract](./dependency-audit-baseline.md) sets
 `DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests, every push,
 and every manual dispatch. It
@@ -57,16 +57,16 @@ only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
 
-The repository job resolves floating Node 24 once. An explicit shell step reads
-`process.versions.node` and exposes that exact version, the selected matrix,
-and the report-runtime identities as job outputs. Every viewer and browser job
-selected for Node 24, plus `Required CI`, requests the captured version. Matrix
-labels and report runtime identities stay `node-24`; reports record the exact
-installed version. The aggregate rejects mixed versions within a group. The
-setup action itself does not provide the installed version output.
+The runtime profile job resolves floating Node 24 once. An explicit shell step
+reads `process.versions.node` and exposes that exact version, the selected
+matrix, and the report-runtime identities as job outputs. The repository job,
+`Required CI`, and every job selected for Node 24 request the captured version.
+Matrix labels and report runtime identities stay `node-24`; reports record the
+exact installed version. The aggregate rejects mixed versions within a group.
+The setup action itself does not provide the installed version output.
 
 Node 22.15 is the ordinary functional runtime because it is the package's
-declared minimum. The Node 24 repository prerequisite runs on every event. A
+declared minimum. The Node 24 repository job runs on every event. A
 Node 24-only regression can therefore reach unreleased `main`, but the
 dual-runtime Release Please gate must catch it before versions, tags, or npm
 artifacts can be published. Release Please normally updates its pull request
@@ -103,12 +103,12 @@ Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
-caches only npm downloads. Every cached CI job keys npm's download cache from
-the checked-out `package-lock.json`. Only the repository audit reads a
-comparison-commit lockfile, for baseline evaluation rather than a cache key. The
+caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
+download cache from the checked-out `package-lock.json`. Only the repository
+audit reads a comparison-commit lockfile, for baseline evaluation rather than a
+cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
-and
-[cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
+and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
 Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
@@ -122,24 +122,25 @@ jobs to set up that npm before `npm ci`, and rejects pins older than npm
 
 Linux and Windows jobs across the CI, preview, release, native bootstrap, and
 Dependency Audit workflows use Blacksmith's 2-vCPU tiers, except the design
-matrix below. macOS jobs use the provider's smallest
-available tier, which is 6 vCPUs. The publishing exception is any job that publishes
-to npm with trusted publishing, the release `publish` job: it runs on
-GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
-provenance only on GitHub-hosted runners and rejects a publish from a
-self-hosted runner such as Blacksmith. A tooling test enforces both rules.
-A second, narrow exception permits only the `darwin-x64` row of the release,
-release-check, and native bootstrap build matrices on GitHub-hosted
-`macos-26-intel`, with `actions/checkout`. Blacksmith's
-macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
-it has no npm publishing permission. Every other native build row follows
-the Blacksmith size rule. Repository jobs have a 75-minute timeout, and Viewer
-jobs have a 40-minute timeout. Browser shards, static-delivery jobs, and native
-jobs have a 60-minute execution timeout. Required CI and other jobs keep a
-30-minute timeout. These limits
-are hang guards, not speed requirements. Each limit must allow at least three
-times the job's typical duration, including setup and builds. The longer
-limits preserve the four browser shards without reducing test coverage.
+matrix below and the CI Windows native job. That job uses 8 vCPUs, because on
+2 vCPUs its complete Rust build and test run is usually the slowest CI job.
+macOS jobs use the provider's smallest available tier, which is 6 vCPUs. The
+publishing exception is any job that publishes to npm with trusted publishing,
+the release `publish` job: it runs on GitHub-hosted `ubuntu-24.04` with
+`actions/checkout`, because npm creates provenance only on GitHub-hosted
+runners and rejects a publish from a self-hosted runner such as Blacksmith. A
+tooling test enforces both rules. A second, narrow exception permits only the
+`darwin-x64` row of the release, release-check, and native bootstrap build
+matrices on GitHub-hosted `macos-26-intel`, with `actions/checkout`.
+Blacksmith's macOS hosts are ARM64. This row keeps native Intel build and
+execution coverage; it has no npm publishing permission. Every other native
+build row follows the Blacksmith size rule. Repository jobs have a 75-minute
+timeout, and Viewer jobs have a 40-minute timeout. Browser shards,
+static-delivery jobs, and native jobs have a 60-minute execution timeout.
+Required CI and other jobs keep a 30-minute timeout. These limits are hang
+guards, not speed requirements. Each limit must allow at least three times the
+job's typical duration, including setup and builds. The longer limits preserve
+the four browser shards without reducing test coverage.
 
 Action revisions are immutable commit hashes with reviewed version comments,
 runtime versions are explicit, and fork pull requests receive no release
@@ -149,7 +150,7 @@ secrets or write permissions.
 
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
-aggregate against the runtime profile emitted by the repository job: five
+aggregate against the runtime profile job's selection: five
 viewer and browser reports for ordinary events and ten for a Release Please
 pull request.
 

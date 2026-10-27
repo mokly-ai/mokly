@@ -6,13 +6,16 @@ Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
 
-CI caches npm's download cache only. `actions/setup-node` keys it from the
-committed `package-lock.json`. `npm ci` always runs, including after a cache
-hit, and every platform's optional native package remains available. A cache
-miss is an ordinary cold install and never permits a skipped command.
+CI caches npm's download cache and Rust dependency builds. `actions/setup-node`
+keys the npm cache from the committed `package-lock.json`. `npm ci` always
+runs, including after a cache hit, and every platform's optional native
+package remains available. A cache miss is an ordinary cold install or build
+and never permits a skipped command.
 
-The live lockfile-only workspace audit runs first in the repository prerequisite
-and does not depend on cache state. Complete local and release commands keep
+The [Rust build cache](#rust-build-cache) section gives the rules for Rust.
+
+The live lockfile-only workspace audit runs first in the CI repository job and
+does not depend on cache state. Complete local and release commands keep
 audit-first ordering. Under the [baseline audit contract](./dependency-audit-baseline.md),
 ordinary pull requests, every push, and default local checks fail only on new
 findings or exception issues; inherited issues print as notices. Report and
@@ -35,6 +38,39 @@ exact-artifact checks.
 Fixture ownership, test concurrency, failure cleanup, browser shard balance,
 and acceptance measurement follow the
 separate [suite evidence contract](./ci-suite-evidence.md).
+
+### Rust Build Cache
+
+Every CI job that runs cargo restores a Rust build cache after it installs the
+toolchain and before cargo runs. The cache holds the Cargo registry and the
+builds of crates.io dependencies. It holds no build of a workspace crate. The
+Repository job's cache also holds the installed Rust audit tool. Each key
+covers the runner platform, the toolchain, the Cargo environment, the
+lockfile, and the workspace manifests. The Repository job's key also covers
+the audit tool lockfile and installer. Jobs that build the same artifacts
+share one cache.
+
+Only CI runs on `main` save a Rust build cache. Pull requests, including fork
+pull requests, restore the `main` copy and never save. The cache scopes each
+entry to its branch, so no pull request can change what `main` or another pull
+request restores. A restored cache is the job's private copy. Cargo rebuilds
+every artifact whose inputs differ, so cache state never changes a check
+result. The release, release-check, release-prepare, and native bootstrap
+workflows use no build cache, so no published binary holds cached build output.
+
+CI builds Rust without debug info and without incremental compilation.
+Without debug info, the test build takes about a third less time and each
+cache is about half the size. Panic messages keep their file and line.
+
+CI caches dependency builds instead of compiler output through sccache.
+sccache alone saves about the same time, but it needs storage secrets, fork
+pull requests build without it, and every holder of a write key could change
+what CI reads. Its GitHub Actions store also bypasses the runner provider's
+colocated cache and exceeds GitHub's cache upload rate limit on a cold run.
+
+A tooling test checks that every CI cargo job restores the cache, that only
+`main` saves it, and that the audit tool key covers the tool inputs. It also
+checks the CI build settings and that the release workflows use no build cache.
 
 ## Testbox Key And Secret Boundary
 
