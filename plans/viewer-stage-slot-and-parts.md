@@ -107,7 +107,8 @@ answer changes the milestones that the decision names.
      up-front entry data, and chose option H. Options A and B here also give a
      static render entry data, but beside the stage slot of option H. The user
      decides whether that rejection covers them.
-4. **Stage overlay placement, Medium.** Open. Recommended: A.
+4. **Stage overlay placement, Medium.** Open. Recommended: D, since
+   2026-10-27, when the user asked what the overlay is for.
    - A: The overlay renders inside the stage part, and CSS places it over the
      stage canvas. Its content remounts when the selection moves to another
      workspace.
@@ -115,10 +116,16 @@ answer changes the milestones that the decision names.
      static render uses CSS.
    - C: The overlay stays beside the main area, and CSS anchor positioning
      places it.
-   - Reason: A gives one placement for both renders and removes the
-     measurement. B keeps two placements. C needs CSS anchor positioning,
-     which Chrome 125, Safari 26, and Firefox 147 support. Older versions,
-     such as Firefox ESR 140, do not. Affects Milestones 1, 4, and 9.
+   - D: Remove the `stageOverlay` slot and the planned `MoklyStageOverlay`
+     part. A host draws a card over the whole stage with `stage`, and content
+     on one component with markers.
+   - Reason: Mokly Cloud's one documented use is a card that offers to open a
+     private catalogue in a new tab when a comparison fails. The `stage`
+     function covers that use, so D removes the measurement problem instead of
+     solving it. D deletes a shipped slot, so it needs the user's approval. A
+     gives one placement for both renders. B keeps two placements. C needs CSS
+     anchor positioning, which Chrome 125, Safari 26, and Firefox 147 support.
+     Affects Milestones 1, 4, and 9.
 5. **Inspection and markers with a host stage, Medium.** Open. Recommended: A,
    as the request recommends.
    - A: Inspection is unavailable. Highlight components is disabled with a
