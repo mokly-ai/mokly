@@ -173,8 +173,9 @@ Comparison works on trees, never on text offsets. The
   head capture, and base capture at the same time. The charge includes
   compressed documents and generated CSS, all generated resource digests,
   uncompressed Rust usage and link metadata, closures, route keys, and map
-  overhead. Inputs above this bound fall back to the pinned source. No capture
-  writes files. Each paired read restores only its requested base view. The
+  overhead. Base inputs above the base bound fall back to the pinned source.
+  Head inputs above the head bound fall back to the head source. No capture
+  writes files. Each paired read restores only its requested base view.
   Serve's original head generation uses the bounded render cache and renders
   evicted views again on the head root. Build head reads use the head capture,
   with source fallback when a document is not retained. Root switches stay

@@ -46,8 +46,7 @@ the measuring machine. New evidence goes under `.context/build-head-capture/`.
 
 Contract owners:
 
-- [Runtime contract](../docs/protocol/mokly-runtime.md), render graph and
-  cache, and build.
+- [Runtime contract](../docs/protocol/mokly-runtime.md), build.
 - [Render graph and cache contract](../docs/protocol/mokly-render-cache.md),
   render graph, render cache, side captures, and both decisions.
 - [Timings contract](../docs/protocol/mokly-timings.md), `review.capture-side`.
@@ -176,6 +175,12 @@ Prove that the output is unchanged and record the new times.
   - Memory check: direct core peaks were 581,616/585,804 KiB new versus
     688,340/694,160 KiB baseline; sidecar sums were 2,203,200/2,200,656 KiB
     new versus 2,005,456/2,111,516 KiB baseline. The new core peak was lower.
+  - Direct runs without the harness on 2026-10-27, both release binaries on
+    the same machine: large React 455.9 s versus 142.2 s build, 208.1 s
+    versus 72.1 s Changes. Large HTML 86.0 s versus 39.9 s build. The
+    `examples/basic` memory runs took 76.3 to 82.9 s versus 43.2 to 43.7 s.
+    The harness runs above took longer than direct runs, most for the old
+    binary.
 
 Evidence: `.context/build-head-capture/output-diff.txt`,
 `.context/build-head-capture/smoke.png`, and
@@ -190,21 +195,27 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
 - [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - [ ] 1. No test guards the render-once requirement. Severity Low, effort
-        Small. Recommended: A, assert in
-        `tests/static_capture_timing.test.ts` that every core
-        `render.document` record has a `review.capture-side` ancestor.
-  - [ ] Outside the scope: `docs/protocol/*.md` and `AGENTS.md`. Most pages
-        still carry the completed-plan status line. Separate branch.
-  - [ ] Outside the scope: `docs/protocol/mokly-timings.md:219`. The render
-        cache budget row links to capture bounds without a render-cache byte
-        bound. Separate branch.
-  - [ ] Outside the scope: `docs/architecture/rust-core.md:170`. The
-        architecture page names a code constant instead of only a component.
-        Separate branch.
+  - Review 1 found six Low findings. `47515dfc` fixed findings 2 to 6. The
+    re-review found two Low docs findings, fixed in the commit that ticks
+    this TODO. Reports: `.context/build-head-capture/review-1.md` and
+    `review-2.md`.
+  - 1. No test guards the render-once requirement. Severity Low, effort
+       Small. Recommended: A, assert in `tests/static_capture_timing.test.ts`
+       that every core `render.document` record has a `review.capture-side`
+       ancestor.
+  - Outside the scope: `docs/protocol/*.md` and `AGENTS.md`. Most pages still
+    carry the completed-plan status line. Separate branch.
+  - Outside the scope: `docs/protocol/mokly-timings.md:219`. The render cache
+    budget row links to capture bounds without a render-cache byte bound.
+    Separate branch.
+  - Outside the scope: `docs/architecture/rust-core.md:170`. The architecture
+    page names a code constant instead of only a component. Separate branch.
+  - Outside the scope: `scripts/large/`. A build of the old binary took 2.3
+    times longer through the benchmark harness than in a direct run. Separate
+    branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
