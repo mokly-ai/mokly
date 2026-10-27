@@ -282,14 +282,19 @@ milestone.
 
 ## Milestone 5: Measurement and smoke tests
 
-- [ ] Repeat the measurement in `.context/deployment-id-detail-ids/`. Expect
+- [x] Repeat the measurement in `.context/deployment-id-detail-ids/`. Expect
       about 16 new files and 2.75 MB. Add one line with the result.
-- [ ] Measure the Serve completion publications on the large React fixture
+      Review-fix rerun: 16 new digests and 2,775,366 bytes. Evidence:
+      `.context/deployment-id-detail-ids/compare-a4-b4.txt`.
+- [x] Measure the Serve completion publications on the large React fixture
       before and after with `--debug-timings`. Propose a decision if a
-      publication becomes much slower.
-- [ ] Run the mockup check of `AGENTS.md`. Smoke-test Serve and a static
+      publication becomes much slower. One completion publication and two
+      index encodings took 89,235 ms before and 88,216 ms after. Evidence:
+      `.context/deployment-id-detail-ids/serve-comparison.json`.
+- [x] Run the mockup check of `AGENTS.md`. Smoke-test Serve and a static
       build: entries, a comparison, a live prop edit, and an old tab after a
       redeploy. Save a screenshot under `.context/deployment-id-detail-ids/`.
+      Evidence: `.context/deployment-id-detail-ids/milestone-5-smoke.log`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
