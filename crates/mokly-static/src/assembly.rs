@@ -205,7 +205,7 @@ impl Assembler for CatalogueAssembler {
         let metadata = input
             .publication
             .as_ref()
-            .map(|publication| publication.metadata(input.changes, index.comparison_url.as_deref()))
+            .map(|publication| publication.metadata(input.changes))
             .transpose()?;
         let mut files = inventory.into_files();
         files.extend(identity::finalize(&mut index, &mut details, &files)?);

@@ -90,9 +90,10 @@ fn store(
         diagnostics,
     );
     let mut metadata = files();
-    for path in ["entries/sample.json", "previews/sample/index.json"] {
-        metadata.insert(path.into(), metadata["review.json"].clone());
-    }
+    metadata.insert(
+        "previews/sample/index.json".into(),
+        metadata["entries/sample.json"].clone(),
+    );
     store.install(input, metadata).unwrap();
     (store, now, publications)
 }
@@ -112,12 +113,9 @@ async fn idle_recovery(kind: &str) {
             .files
             .contains_key(DOCUMENT)
     );
-    // A HEAD renewal reads the same immutable JSON and retains the same generation URL.
-    for path in [
-        "review.json",
-        "entries/sample.json",
-        "previews/sample/index.json",
-    ] {
+    // A renewal reads the same immutable JSON and retains the same generation URL.
+    assert!(store.renew(&input.id));
+    for path in ["entries/sample.json", "previews/sample/index.json"] {
         assert!(store.file(&input.id, path).await.unwrap().is_some());
     }
     assert_eq!(
@@ -133,7 +131,7 @@ async fn idle_recovery(kind: &str) {
     now.store(120_000, Ordering::SeqCst);
     assert!(
         store
-            .file(&input.id, "review.json")
+            .file(&input.id, "entries/sample.json")
             .await
             .unwrap()
             .is_none()

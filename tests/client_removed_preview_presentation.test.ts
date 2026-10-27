@@ -108,7 +108,7 @@ test("pinned presentations accept extensionless delivery and cache by address", 
   const loader = createSnapshotPresentationLoader(
     GENERATION,
     ["before"],
-    { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
+    { kind: "pinned", comparisonUrl: GENERATION },
     fetch.value,
   );
   const signal = AbortSignal.timeout(15_000);
@@ -139,7 +139,7 @@ for (const suffix of ["/index.html", "/index", "/", ""]) {
     const loader = createSnapshotPresentationLoader(
       GENERATION,
       ["before"],
-      { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
+      { kind: "pinned", comparisonUrl: GENERATION },
       fetch.value,
     );
     const result = await loader.load(requested, AbortSignal.timeout(15_000));

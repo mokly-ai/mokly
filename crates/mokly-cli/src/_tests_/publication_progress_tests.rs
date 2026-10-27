@@ -44,6 +44,7 @@ fn prepared() -> Prepared {
         ("static/one.txt", "one"),
         ("static/copy.txt", "one"),
         ("static/two.txt", "two"),
+        ("mokly-viewer/index.json", r#"{"schemaVersion":8}"#),
     ]
     .into_iter()
     .map(|(path, bytes)| File {
@@ -188,11 +189,11 @@ async fn exercise(empty: bool) {
         assert_eq!(resets.len(), 2);
         let first_start = lines
             .iter()
-            .position(|line| line.contains("Uploading 1 of 4 files"))
+            .position(|line| line.contains("Uploading 2 of 5 files"))
             .unwrap();
         let first_done = lines
             .iter()
-            .position(|line| line.contains("Uploading 4 of 4 files"))
+            .position(|line| line.contains("Uploading 5 of 5 files"))
             .unwrap();
         assert!(resets[0] < first_start && first_start < first_done && first_done < resets[1]);
         if empty {
@@ -202,11 +203,11 @@ async fn exercise(empty: bool) {
                 Some("Uploading catalogue")
             );
         } else {
-            assert!(lines[resets[1] + 1].contains("Uploading 1 of 3 files"));
-            assert!(lines.last().unwrap().contains("Uploading 3 of 3 files"));
+            assert!(lines[resets[1] + 1].contains("Uploading 2 of 4 files"));
+            assert!(lines.last().unwrap().contains("Uploading 4 of 4 files"));
         }
     }
-    assert_eq!(receipt.uploaded, if empty { 4 } else { 6 });
+    assert_eq!(receipt.uploaded, if empty { 5 } else { 7 });
     assert_eq!(receipt.unchanged, if empty { 2 } else { 0 });
     output.published(&receipt, Duration::ZERO);
     assert!(output.state.lock().unwrap().label.is_none());

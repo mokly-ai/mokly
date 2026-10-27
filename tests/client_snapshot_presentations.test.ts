@@ -184,7 +184,7 @@ test("failed entries are removed and comparison failures keep their copy", async
   const loader = createSnapshotPresentationLoader(
     GENERATION,
     ["before", "after"],
-    { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
+    { kind: "pinned", comparisonUrl: GENERATION },
     environment(async () => {
       fetches += 1;
       if (fetches === 1) throw new Error("provider details");

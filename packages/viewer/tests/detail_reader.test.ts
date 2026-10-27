@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 
-import { rawDetailFixtures } from "./catalogue_v7_fixture.js";
+import { rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
 const HASH = "b".repeat(64);
 const RETIRED =
@@ -190,4 +190,35 @@ test("workspace links name a visual entry and an instance key", () => {
   const key = current("components/action");
   (key.workspace as Raw).affected = [{ ...link, instanceKey: "short" }];
   rejects(key, /invalid identity/);
+});
+
+test("view states and ignore ids travel with evidence, and a base belongs to a current visual entry", () => {
+  const home = current("product/browse/home");
+  assert.equal(readEntryDetail(home).views[0]?.state, "changed");
+  assert.deepEqual(readEntryDetail(home).before?.path, "product/browse/home");
+  for (const field of ["state", "ignoredIds", "resourceEvidence"]) {
+    const detail = current("product/browse/home");
+    delete views(detail)[0]![field];
+    rejects(detail, /state and ignore ids travel with evidence/);
+  }
+  for (const ids of [
+    ["b", "a"],
+    ["a", "a"],
+  ]) {
+    const detail = current("product/browse/home");
+    views(detail)[0]!.ignoredIds = ids;
+    rejects(detail, /sorted and unique/);
+  }
+  const invalid = current("product/browse/home");
+  views(invalid)[0]!.ignoredIds = ["Hero"];
+  rejects(invalid, /invalid ignore id/);
+  const slotted = current("product/browse/home");
+  (slotted.before as Raw).suppliedSlots = [];
+  rejects(slotted, /only a component supplies slots/);
+  const historical = removed();
+  historical.before = { path: "product/browse/home/retired", title: "Retired" };
+  rejects(historical, /only a current screen or component has a base/);
+  const guide = current("guide");
+  guide.before = { path: "guide", title: "Guide" };
+  rejects(guide, /only a current screen or component has a base/);
 });

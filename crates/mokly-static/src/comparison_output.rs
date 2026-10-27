@@ -36,10 +36,6 @@ pub(crate) fn append(
     ))?;
     projection_removed::workspaces(&mut details);
     let mut inventory = Inventory::default();
-    inventory.insert(
-        "review.json".into(),
-        identity::review(&result.review)?.into(),
-    )?;
     side(
         result.before.as_ref(),
         ReviewSide::Before,
@@ -67,7 +63,7 @@ pub(crate) fn append(
     }
     compare(projection_workspace::apply(&mut details, result))?;
     let (generation, files) = finalize(inventory, &mut details)?;
-    index.comparison_url = Some(routes::comparison_review(&generation));
+    index.comparison_url = Some(routes::comparison_generation(&generation));
     let prefix = routes::comparison_generation(&generation);
     for file in files {
         output.insert(format!("{prefix}{}", file.path), file.bytes)?;

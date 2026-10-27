@@ -26,19 +26,20 @@ and the document route. It builds the canonical index and entry detail files
 with revision zero and no live capability. The
 [format inventory](../../docs/protocol/mokly-format-versions.md) gives their
 versions. The shared model writer adds publication metadata when requested and
-writes the ownership marker last. Ready Changes supplies the review result,
-detail-root reasons, view evidence, workspace lists, and removed records from
-the same comparison result. The change snapshot stays private. Both pinned
-graph sides supply immutable documents and resources. Removed details carry
-their historical snapshot ID and generation. Removed page and document
-previews carry typed preview metadata. `mokly_compare::projection_removed`
-owns these records, details, and metadata.
+writes the ownership marker last. Ready Changes supplies the base commit, the
+generation root, detail-root reasons, each view's state, ignore ids, and
+evidence, the base side, workspace lists, and removed records from the same
+comparison result. The review result and the change snapshot stay private; no
+generation file holds them. Both pinned graph sides supply immutable documents
+and resources. Removed details carry their historical snapshot ID and
+generation. Removed page and document previews carry typed preview metadata.
+`mokly_compare::projection_removed` owns these records, details, and metadata.
 The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.
 The comparison inventory is finalized before deployment identity. Disabled or
 unavailable Changes writes no generation; both states remain explicit in the index.
 The strict index reader runs before installation and retains its diagnostic on failure.
-Publication takes its base ref, commit, and comparison path from that same result.
+Publication takes its base ref and commit from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and
 `mokly_platform::rename::Rename` boundaries. It accepts missing, empty, or owned output.

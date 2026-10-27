@@ -22,10 +22,7 @@ fn removed() -> Value {
 }
 
 fn generation_url() -> String {
-    format!(
-        "mokly-viewer/diffs/generations/{}/review.json",
-        "c".repeat(64)
-    )
+    format!("mokly-viewer/diffs/generations/{}/", "c".repeat(64))
 }
 
 fn expect_contract<T: Debug>(result: Result<T, ReadError>, expected: ContractViolation) {
@@ -83,6 +80,16 @@ fn invalid_removed_records_and_generation_urls_are_rejected() {
             ContractViolation::ComparisonUrl,
         ),
         (
+            "/comparisonUrl",
+            json!(format!("{}review.json", generation_url())),
+            ContractViolation::ComparisonUrl,
+        ),
+        (
+            "/changesStatus",
+            json!("ready"),
+            ContractViolation::BaseCommit,
+        ),
+        (
             "/removedEntries/0/entry/previousPath",
             json!("earlier"),
             ContractViolation::RemovedPreviousPath,
@@ -130,6 +137,13 @@ fn invalid_removed_records_and_generation_urls_are_rejected() {
     other["entry"]["path"] = json!("other");
     value["removedEntries"].as_array_mut().unwrap().push(other);
     cases.push((value, ContractViolation::Snapshot));
+    let mut value = good.clone();
+    value["baseCommit"] = json!("b".repeat(40));
+    cases.push((value, ContractViolation::BaseCommit));
+    let mut value = good.clone();
+    value["changesStatus"] = json!("ready");
+    value["baseCommit"] = json!("B".repeat(40));
+    cases.push((value, ContractViolation::BaseCommit));
     for (value, expected) in cases {
         expect_contract(index(&value.to_string()), expected);
     }
@@ -189,7 +203,7 @@ fn screen_detail() -> Value {
     json!({"schemaVersion":2,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
         "deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
         "views":[{"viewport":"mobile","colorScheme":"light","usage":{"status":"ready","instances":[],"slots":[],"ranges":[]},
-            "resourceEvidence":{"rules":[],"resources":[]}}],
+            "state":"unchanged","ignoredIds":[],"resourceEvidence":{"rules":[],"resources":[]}}],
         "workspace":{"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]}})
 }
 
@@ -220,6 +234,46 @@ fn detail_views_usage_evidence_and_workspace_round_trip() {
         detail(&invalid.to_string()),
         ContractViolation::DetailEvidence,
     );
+}
+
+#[test]
+fn view_states_and_the_base_address_travel_with_ready_evidence() {
+    let value = screen_detail();
+    let mut before = value.clone();
+    before["before"] = json!({"path":"Home","title":"Home","props":{"value":["number","1"]}});
+    assert_eq!(
+        serde_json::to_value(detail(&before.to_string()).unwrap()).unwrap(),
+        before
+    );
+    let mut cases = Vec::new();
+    for field in ["state", "ignoredIds", "resourceEvidence"] {
+        let mut invalid = value.clone();
+        invalid["views"][0].as_object_mut().unwrap().remove(field);
+        cases.push(invalid);
+    }
+    for ids in [json!(["b", "a"]), json!(["a", "a"]), json!(["Bad"])] {
+        let mut invalid = value.clone();
+        invalid["views"][0]["ignoredIds"] = ids;
+        cases.push(invalid);
+    }
+    let mut invalid = before.clone();
+    invalid["before"]["suppliedSlots"] = json!([]);
+    cases.push(invalid);
+    let mut invalid = before.clone();
+    invalid["before"]["path"] = json!("../home");
+    cases.push(invalid);
+    let mut invalid = before;
+    invalid.as_object_mut().unwrap().remove("deploymentId");
+    invalid.as_object_mut().unwrap().remove("revision");
+    invalid["generation"] = json!("c".repeat(64));
+    invalid["entry"]["snapshotId"] = json!("d".repeat(64));
+    cases.push(invalid);
+    for invalid in cases {
+        expect_contract(
+            detail(&invalid.to_string()),
+            ContractViolation::DetailComparison,
+        );
+    }
 }
 
 #[test]

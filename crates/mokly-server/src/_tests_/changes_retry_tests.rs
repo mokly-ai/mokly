@@ -1,23 +1,28 @@
 //! Retry timing, cancellation, and permanent metadata rejection use fake clocks.
 
+use std::collections::BTreeMap;
 use std::future::Future;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::Poll;
 use std::time::Duration;
 
+use axum::body::Bytes;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::public_metadata::ChangesStatus;
-use mokly_model::review::ReviewDiagnostic;
 use tokio::sync::oneshot;
 use tokio::time::Instant;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::assets::File;
 use crate::changes::{ChangeCancellation, ChangeSourceMock, ChangeToken};
 use crate::changes_background::ChangesPass;
 use crate::changes_support::fixture;
 use crate::comparison_capture::MAX_BYTES;
 use crate::comparison_store::ComparisonsMock;
-use crate::comparison_support::{accepted, files, snapshot};
+use crate::comparison_support::{
+    accepted, files, historical, historical_inputs, history, snapshot,
+};
 use crate::error::ServerError;
 use crate::publication::{Publications, PublicationsMock, SharedPublication};
 
@@ -51,8 +56,7 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
             .answers_arc(Arc::new(move |_, accepted, files| {
                 let count = checks.fetch_add(1, Ordering::SeqCst);
                 if count == 0 {
-                    *first.lock().unwrap() =
-                        Some((accepted.id.clone(), files["review.json"].bytes.clone()));
+                    *first.lock().unwrap() = Some((accepted.id.clone(), names(files)));
                     *began_check.lock().unwrap() = Some(Instant::now());
                     rejected.lock().unwrap().take().unwrap().send(()).unwrap();
                     Err(ServerError::ComparisonCapacity)
@@ -75,7 +79,7 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
                     .answers_arc(Arc::new(move |_, accepted, files| {
                         assert_eq!(
                             *identity.lock().unwrap(),
-                            Some((accepted.id.clone(), files["review.json"].bytes.clone()))
+                            Some((accepted.id.clone(), names(&files)))
                         );
                         Ok(())
                     }))
@@ -131,12 +135,45 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
     }
 }
 
+/// The installed metadata identity: its file names and bytes.
+fn names(files: &BTreeMap<String, File>) -> Vec<(String, Bytes)> {
+    files
+        .iter()
+        .map(|(path, file)| (path.clone(), file.bytes.clone()))
+        .collect()
+}
+
 #[tokio::test(start_paused = true)]
 async fn oversized_metadata_publishes_unavailable_without_admission_or_installation() {
-    let (origin, mut result, _graph) = fixture();
-    result.review.diagnostics.push(ReviewDiagnostic {
-        message: "x".repeat(MAX_BYTES),
-    });
+    let (catalogue, plans) = historical_inputs();
+    let mut current = catalogue.clone();
+    current.model.entries.clear();
+    let before = Unimock::new((
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(catalogue),
+        RenderGenerationMock::plans
+            .each_call(matching!())
+            .returns(plans),
+        RenderGenerationMock::render
+            .each_call(matching!("sample/index.html"))
+            .answers_arc(Arc::new(|_, _| Ok(history()))),
+    ));
+    let after = Unimock::new((
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(current.clone()),
+        RenderGenerationMock::generation_key
+            .each_call(matching!())
+            .returns("after"),
+    ));
+    let mut result = Arc::try_unwrap(historical()).ok().unwrap().result;
+    result.before = Arc::new(before.clone());
+    result.after = Arc::new(after.clone());
+    result.snapshot.base_ref = "x".repeat(MAX_BYTES);
+    let mut origin = (*snapshot(None)).clone();
+    Arc::make_mut(&mut origin.generation).model = Arc::new(current.model);
+    let origin = Arc::new(origin);
     let source = Arc::new(Unimock::new((
         ChangeSourceMock::classify
             .next_call(matching!(_, _))

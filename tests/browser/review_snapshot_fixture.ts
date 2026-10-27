@@ -47,7 +47,7 @@ import {createSnapshotPresentationLoader} from './packages/viewer/src/previews/p
 const generation=new URL(${JSON.stringify("/" + generation + "/")},location.origin).href;
 const suffix=new URL(location.href).searchParams.get('view') || 'mobile';
 const address=generation+'snapshots/before/mokly-generated/example/screens/welcome/index.'+suffix+'.html';
-const loader=createSnapshotPresentationLoader(generation,['before'],{kind:'pinned',comparisonUrl:generation+'review.json'}, {
+const loader=createSnapshotPresentationLoader(generation,['before'],{kind:'pinned',comparisonUrl:generation}, {
  baseUrl:location.origin,fetch:(input,init)=>fetch(input,init),parse:source=>new DOMParser().parseFromString(source,'text/html')
 });
 const presentation=await loader.load(address,new AbortController().signal);

@@ -1,4 +1,4 @@
-/** Public read model v7, entry detail v2 and live descriptor v3 shapes. */
+/** Public read model v8, entry detail v2 and live descriptor v3 shapes. */
 
 import type { CatalogueComponent } from "../generated/catalogue/CatalogueComponent.js";
 import type { CatalogueScreen } from "../generated/catalogue/CatalogueScreen.js";
@@ -33,6 +33,8 @@ export type { RelatedComponent } from "../generated/catalogue/RelatedComponent.j
 export type { RemovedEntry } from "../generated/catalogue/RemovedEntry.js";
 export type { RenderCapability } from "../generated/catalogue/RenderCapability.js";
 export type { ResourceEvidence } from "../generated/catalogue/ResourceEvidence.js";
+export type { ReviewEntryAddress } from "../generated/catalogue/ReviewEntryAddress.js";
+export type { ReviewState } from "../generated/catalogue/ReviewState.js";
 export type { RuleEvidence } from "../generated/catalogue/RuleEvidence.js";
 export type { RuleStatus } from "../generated/catalogue/RuleStatus.js";
 export type { UsageLink } from "../generated/catalogue/UsageLink.js";

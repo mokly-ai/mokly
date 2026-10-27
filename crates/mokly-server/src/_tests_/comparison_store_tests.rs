@@ -83,10 +83,22 @@ async fn identical_pending_requests_coalesce_refresh_is_new_and_head_renews_rete
         id
     );
     now.store(59_999, Ordering::SeqCst);
-    assert!(store.file(&id, "review.json").await.unwrap().is_some());
+    assert!(
+        store
+            .file(&id, "entries/sample.json")
+            .await
+            .unwrap()
+            .is_some()
+    );
     now.store(60_000, Ordering::SeqCst);
     store.collect();
-    assert!(store.file(&id, "review.json").await.unwrap().is_some());
+    assert!(
+        store
+            .file(&id, "entries/sample.json")
+            .await
+            .unwrap()
+            .is_some()
+    );
     let renewed = store
         .selected(accepted, "sample".into(), true)
         .await
@@ -94,8 +106,20 @@ async fn identical_pending_requests_coalesce_refresh_is_new_and_head_renews_rete
     assert_ne!(renewed, id);
     now.store(120_000, Ordering::SeqCst);
     store.collect();
-    assert!(store.file(&id, "review.json").await.unwrap().is_none());
-    assert!(store.file(&renewed, "review.json").await.unwrap().is_none());
+    assert!(
+        store
+            .file(&id, "entries/sample.json")
+            .await
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        store
+            .file(&renewed, "entries/sample.json")
+            .await
+            .unwrap()
+            .is_none()
+    );
     store.stop().await;
 }
 
@@ -198,7 +222,7 @@ async fn retained_generations_are_rejected_at_capacity_and_never_evicted_early()
     ));
     assert!(
         store
-            .file(&format!("{:064x}", 0), "review.json")
+            .file(&format!("{:064x}", 0), "entries/sample.json")
             .await
             .unwrap()
             .is_some()
@@ -226,7 +250,13 @@ async fn a_status_replacement_discards_selection_cache_even_with_equal_content_i
     assert!(publications.replace(snapshot(Some(next.clone())).at_revision(2)));
     let new = store.selected(next, "sample".into(), false).await.unwrap();
     assert_ne!(old, new);
-    assert!(store.file(&old, "review.json").await.unwrap().is_some());
+    assert!(
+        store
+            .file(&old, "entries/sample.json")
+            .await
+            .unwrap()
+            .is_some()
+    );
     store.stop().await;
 }
 

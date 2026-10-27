@@ -21,7 +21,7 @@ fn comparison_routes_keep_each_side_and_unicode_path_without_host_specific_encod
         "previews/old/page/index.json"
     );
     assert_eq!(
-        routes::comparison_review("hash"),
-        "mokly-viewer/diffs/generations/hash/review.json"
+        routes::comparison_generation("hash"),
+        "mokly-viewer/diffs/generations/hash/"
     );
 }

@@ -43,11 +43,12 @@ output directory of `build`, with its symlink-resolved in-repository target,
 is excluded from source capture and resource comparison, so a build never affects
 its own Changes.
 
-A complete comparison is one generation: `review.json`, the review result
-of the [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
-the entry detail of every removed entry; and the snapshots of both sides
-with their transitive resources. No HTML report, no summary file, and no
-navigation payload is written; the terminal reports the counts and the
+A complete comparison is one generation: the entry detail v2 of every
+removed entry, the removed previews, and the snapshots of both sides with
+their transitive resources. The review result v8 of the
+[comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
+stays in memory, and the index and the entry details carry its public facts.
+No HTML report, no summary file, and no navigation payload is written; the terminal reports the counts and the
 diagnostics. The [catalogue change contract](./mokly-catalogue-changes.md#changes-count)
 defines the Changes count; the terminal reports it with the moved count and
 the ignored-only diagnostic count beside it.
@@ -62,7 +63,7 @@ copied transitively, binary fonts and images included; explicit HTTP(S) and
 each side, byte for byte, even when ignore normalization changes a
 classification. No timestamp and no absolute path enters the JSON. The
 [review validation contract](./mokly-component-review-validation.md) owns
-every array order of the result.
+every array order of the result and the details' evidence.
 
 ## Resource URL Classification
 

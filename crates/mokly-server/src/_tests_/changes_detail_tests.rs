@@ -1,4 +1,4 @@
-//! Serve delivers reasons without a workspace and removes them with stale evidence.
+//! Serve delivers reasons and base addresses without a workspace and removes them with stale evidence.
 
 use std::sync::Arc;
 
@@ -50,6 +50,15 @@ async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     result.entries.truncate(1);
     result.entries[0].path = "screen-0".into();
     result.entries[0].documents.clear();
+    result.review.entries.truncate(1);
+    let review = &mut result.review.entries[0];
+    review.path = "screen-0".into();
+    for side in [review.before.as_mut(), review.after.as_mut()]
+        .into_iter()
+        .flatten()
+    {
+        side.path = "screen-0".into();
+    }
     let mut snapshot = (*publication_support::snapshot(1, Arc::new(Unimock::new(())))).clone();
     snapshot.index.screens[0].entry.changes = CatalogueChanges::Ready {
         kind: ChangeKind::Changed,
@@ -59,11 +68,14 @@ async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     changes_detail::apply(&mut snapshot).unwrap();
     let ready = delivered(&snapshot).await;
     assert_eq!(ready["reasons"], json!([{ "kind": "material" }]));
+    assert_eq!(ready["before"]["path"], json!("screen-0"));
     assert!(ready.get("workspace").is_none());
     let mut replacement = snapshot.clone();
     replacement.changes = None;
     replacement.index.changes_status = ChangesStatus::Pending;
     replacement.index.screens[0].entry.changes = CatalogueChanges::Pending;
     changes_detail::apply(&mut replacement).unwrap();
-    assert!(delivered(&replacement).await.get("reasons").is_none());
+    let withdrawn = delivered(&replacement).await;
+    assert!(withdrawn.get("reasons").is_none());
+    assert!(withdrawn.get("before").is_none());
 }

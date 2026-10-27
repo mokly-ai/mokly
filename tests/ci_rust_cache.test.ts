@@ -20,6 +20,8 @@ const TOOLCHAIN_INSTALL = "rustup toolchain install";
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
 /** Only runs on `main` may write what CI and pull requests restore. */
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/** Testboxes run unreviewed local trees on `main`, so they never save. */
+const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
 const RUST_AUDIT_INSTALLER = "scripts/verification/rust-audit-tool.mjs";
 /** Settings that build CI Rust without debug info or incremental artifacts. */
@@ -77,17 +79,24 @@ test("every CI Rust job restores the build cache right after the toolchain", asy
   assert.ok(rustJobs > 0, "CI must have Rust jobs");
 });
 
-test("Rust build caches save only from main", async () => {
+test("Rust build caches save only from main, and Testboxes never save", async () => {
   let caches = 0;
   for (const file of await automationFiles()) {
     for (const step of stepsOf(await readWorkflow(file))) {
       if (!isRustCache(step)) continue;
       caches += 1;
-      assert.equal(
-        step.with?.["save-if"],
-        MAIN_ONLY,
-        `${file} must save its Rust build cache only from main`,
-      );
+      if (RESTORE_ONLY_WORKFLOWS.includes(file))
+        assert.equal(
+          step.with?.["save-if"],
+          false,
+          `${file} must never save its Rust build cache`,
+        );
+      else
+        assert.equal(
+          step.with?.["save-if"],
+          MAIN_ONLY,
+          `${file} must save its Rust build cache only from main`,
+        );
     }
   }
   assert.ok(caches > 0, "CI must restore Rust build caches");

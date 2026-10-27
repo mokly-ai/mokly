@@ -10,7 +10,7 @@ import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-import { indexFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { indexFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 const entry = (path: string, kind = "page", title = path): ManifestEntry =>

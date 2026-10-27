@@ -73,8 +73,8 @@ entry path and the view axes: one document per historical view for a screen,
 the light document for a page, and one document per scheme in the removed
 record's `colorSchemes` for a document.
 
-A removed screen's historical views are the `removed` views of its entry in
-the generation's review result v8. Pages and documents have no comparison
+A removed screen's historical views are the views of its removed detail,
+each with the `removed` state. Pages and documents have no comparison
 record; their documents are delivered the same way. A removed page or
 document also carries the removed preview metadata at
 `previews/<path>/index.json` inside the generation. The
@@ -116,7 +116,7 @@ generation exists, and a removed component entry carries none.
 Removed entries have no current files and no route field; their URL is
 `/view/<path>/`, and historical HTML is never disguised as current output.
 The descriptor contains no base metadata, source paths, or commit identifiers
-beyond those public in the review JSON. Readers validate each `snapshotId` as
+beyond those public in the index and the details. Readers validate each `snapshotId` as
 a unique lowercase 64-hex identity. Every removed record requires
 `snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
 identity. With a null comparison URL, the field may be absent. Readers

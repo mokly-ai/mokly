@@ -6,7 +6,8 @@ import { comparisonIndex, modeButton } from "./comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 
-const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
+/** Every pane document of a comparison generation, without subresources. */
+const DOCUMENTS = "**/mokly-viewer/diffs/generations/*/snapshots/**/*.html";
 
 type Box = { bottom: number; left: number; right: number; top: number };
 
@@ -202,12 +203,19 @@ test("the switch stays while a comparison loads and after it fails", async ({
   allowBrowserError,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 500));
+  for (const side of ["before", "after"])
+    allowBrowserError(
+      responseFailure(
+        baseURL!,
+        `/${index.comparisonUrl}snapshots/${side}/mokly-generated/${comparisonPaths.changed}/index.desktop.html`,
+        500,
+      ),
+    );
   let release = (): void => undefined;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route(REVIEW, async (route) => {
+  await page.route(DOCUMENTS, async (route) => {
     await held;
     await route.fulfill({ status: 500, body: "unavailable" });
   });

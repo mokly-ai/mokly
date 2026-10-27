@@ -10,15 +10,15 @@ fixed.
 
 | Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
-| `index.json`                                                 | the catalogue index v7                                          | Serve, output |
+| `index.json`                                                 | the catalogue index v8                                          | Serve, output |
 | `entries/<entry path>.json`                                  | one entry detail v2 per current entry                           | Serve, output |
-| `diffs/generations/<generation>/review.json`                 | review result v8                                                | Serve, output |
 | `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v2 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
+| `diffs/generations/<generation>/`                            | the generation root, which renews a retained generation         | Serve only    |
 | `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
 | `live.json`                                                  | the live descriptor v3                                          | Serve only    |
 | `events`                                                     | the event stream, one message per publication                   | Serve only    |
-| `diffs/review.json`                                          | the on-demand selected comparison and removed preview endpoint  | Serve only    |
+| `diffs/selection`                                            | the on-demand selected comparison endpoint                      | Serve only    |
 | `components/**`                                              | live controls and transient component renders                   | Serve only    |
 
 The [shell delivery contract](./mokly-shell-delivery.md#routes) owns the
@@ -43,16 +43,16 @@ slash; HTTP URLs prepend `/`:
 ```text
 mokly-viewer/index.json
 mokly-viewer/entries/<entry path>.json
-mokly-viewer/diffs/generations/<64 lowercase hex>/review.json
 mokly-viewer/diffs/generations/<64 lowercase hex>/entries/<entry path>.json
 static/mokly-generated/<document route>
 static/<catalogue-relative authored closure file>
 ```
 
-The static output never contains `live.json`, `events`, `diffs/review.json`,
-`components/**`, or any other live capability. The upload Plan contains only
-`mokly-upload.json`, `.mokly-export-artifact`, and the optional pinned review
-file, without a full-artifact upload; Blob digest, size, and snapshot
+The static output never contains `live.json`, `events`, `diffs/selection`,
+`components/**`, or any other live capability, and no comparison generation
+contains a review file. The upload Plan contains only `mokly-upload.json`,
+`.mokly-export-artifact`, and `mokly-viewer/index.json`, without a
+full-artifact upload; Blob digest, size, and snapshot
 accounting follow the [upload exchange](./mokly-upload-exchange.md).
 Catalogue references, frame URLs, the inspector, geometry and navigation
 checks, CORS allowlists, deployment hashing, receiver fixtures, archive
@@ -67,7 +67,7 @@ The public paths of a catalogue are `mokly-viewer/index.json`,
 `mokly-viewer/entries/**`, `static/**`, `mokly-viewer/client/**`,
 `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and the immutable
 generations under `mokly-viewer/diffs/generations/**`. Serve answers
-`live.json`, `events`, `diffs/review.json`, and `components/**` to the
+`live.json`, `events`, `diffs/selection`, and `components/**` to the
 same-origin shell only, outside the public paths. The public paths keep ordinary path confinement and grant no
 access to sources, controls, or the watcher.
 
@@ -78,21 +78,21 @@ Versions identify meaning before a reader interprets any path. The
 every boundary and the reader of each. Unknown versions fail closed. No other
 envelope exists.
 
-Index v7 carries identity-only entries: no layout prefix, per-entry route,
+Index v8 carries identity-only entries: no layout prefix, per-entry route,
 `documentPath`, or `fragmentPath`. A reader derives every file from the
 entry's path, viewport, and scheme through the artifact path contract. The
 index carries no `usage` and no `resourceEvidence`, and its reader rejects
 either field anywhere; the detail carries them. Ownership v3 uses the
 `{ path, sha256, size }` inventory with its limits, collision rules,
 classification precedence, content-delta semantics, and duplicate-JSON-key
-checks. Upload v2 requires the strict field list, limits, metadata identity,
+checks. Upload v3 requires the strict field list, limits, metadata identity,
 the `mokly-viewer/` namespace, and the null-without-comparisons rule, even for
-a current-only output; an output without a comparison path does not bypass
-the gate.
+a current-only output; an output without a comparison does not bypass the
+gate.
 
 ## Compatibility Failure
 
-A receiver that does not support ownership v3 or upload v2 rejects the upload
+A receiver that does not support ownership v3 or upload v3 rejects the upload
 with HTTP 426 before it validates paths or creates a publication, after
 bounded archive parsing, authentication, and upload-limit checks. The CLI
 maps 426 to `upload-unsupported-version` with this exact message:
@@ -108,14 +108,13 @@ fails before mutation with
 Missing ownership and unsafe filesystem entries have separate errors. The
 marker is required for upload and local replacement.
 
-A viewer given an index, a detail, a live descriptor, or a review with
-another version rejects it before it derives a `/static/` URL or reads an
-entry field. The viewer exposes a typed version failure that a host can
-distinguish from malformed data; its diagnostic is
+A viewer given an index, a detail, or a live descriptor with another version
+rejects it before it derives a `/static/` URL or reads an entry field. The
+viewer exposes a typed version failure that a host can distinguish from
+malformed data; its diagnostic is
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
-with boundary `catalogue`, `detail`, `live`, or `review` and the supported
-version of the format inventory. A rejected review produces no comparison panes and leaves
-Current available; a malformed current result is invalid data, not a version
+with boundary `catalogue`, `detail`, or `live` and the supported version of
+the format inventory. A malformed current document is invalid data, not a version
 failure. No reader infers a version from file existence or falls back to
 another URL.
 
@@ -126,10 +125,7 @@ the viewer that matches their catalogue; it logs the diagnostic separately and
 renders no navigation and no frame after a rejected index or detail. The
 embedded viewer shows the headline without an action, because only its host can
 update the viewer, and reports `onError` with `code: "version"`, the headline as
-`message`, and `details` with the typed diagnostic. A rejected review follows the
-same rule in the comparison pane: the standalone shell shows the headline with
-`Reload`, and the embedded viewer shows it without an action and reports
-`onError`. `ViewerError` is:
+`message`, and `details` with the typed diagnostic. `ViewerError` is:
 
 ```ts
 interface ViewerError {

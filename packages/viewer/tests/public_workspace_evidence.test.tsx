@@ -13,7 +13,7 @@ import {
   type DetailFixtures,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 
 const { catalogue, model, source, sourceVariant } = componentWorkspaceFixture();
@@ -94,13 +94,61 @@ test("a published component keeps its selected saved view's evidence", () => {
 test("a published screen without view evidence projects none", () => {
   const path = "product/browse/home/empty";
   const unrecorded = edited(({ current }) => {
-    for (const view of current[path]!.views) delete view.resourceEvidence;
+    for (const view of current[path]!.views) {
+      delete view.resourceEvidence;
+      delete view.state;
+      delete view.ignoredIds;
+    }
   });
   const entry = unrecorded.catalogue.byPath.get(path);
   assert.ok(entry?.kind === "screen");
   assert.equal(
     publicWorkspace(unrecorded.catalogue, unrecorded.model, entry)
       .resourceEvidence,
+    undefined,
+  );
+});
+
+test("a ready detail gives the routed entry its compared views and base side", () => {
+  const moved = edited(({ current }) => {
+    const detail = current["product/browse/home"]!;
+    detail.before = { ...detail.before!, path: "product/home" };
+    detail.views[0]!.ignoredIds = ["hero"];
+  });
+  const home = moved.catalogue.byPath.get("product/browse/home");
+  assert.ok(home?.kind === "screen");
+  const compared = publicWorkspace(moved.catalogue, moved.model, home).compared;
+  assert.equal(compared?.path, "product/browse/home");
+  assert.equal(compared?.basePath, "product/home");
+  assert.deepEqual(compared?.views[0]?.ignoredIds, ["hero"]);
+  assert.equal(compared?.views[0]?.state, "changed");
+  assert.equal(compared?.savedProps, undefined);
+  const variant = edited(({ current }) => {
+    current["components/action/default"]!.before!.props = {
+      label: ["string", "Earlier"],
+    };
+  });
+  const entry = variant.catalogue.byPath.get("components/action/default");
+  assert.ok(entry?.kind === "component");
+  assert.deepEqual(
+    publicWorkspace(variant.catalogue, variant.model, entry).compared
+      ?.savedProps,
+    {
+      before: { label: ["string", "Earlier"] },
+      after: { label: ["string", "Continue"] },
+    },
+  );
+  const unready = edited(({ current }) => {
+    for (const view of current["product/browse/home"]!.views) {
+      delete view.resourceEvidence;
+      delete view.state;
+      delete view.ignoredIds;
+    }
+  });
+  const pending = unready.catalogue.byPath.get("product/browse/home");
+  assert.ok(pending?.kind === "screen");
+  assert.equal(
+    publicWorkspace(unready.catalogue, unready.model, pending).compared,
     undefined,
   );
 });

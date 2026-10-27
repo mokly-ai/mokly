@@ -8,6 +8,7 @@ import {
   readRange,
   readSlot,
 } from "./component_values.js";
+import { readBaseAddress, readViewComparison } from "./detail_comparison.js";
 import { readDetailReasons } from "./detail_reasons.js";
 import { assertPublicDetail } from "./privacy.js";
 import type {
@@ -76,6 +77,14 @@ export function readEntryDetail(value: unknown): EntryDetailV2 {
     ...(input.reasons === undefined
       ? {}
       : { reasons: readDetailReasons(input.reasons) }),
+    ...(input.before === undefined
+      ? {}
+      : {
+          before: readBaseAddress(
+            input.before,
+            kind === "component" ? "component" : "screen",
+          ),
+        }),
     views: array(input.views).map(readDetailView),
     ...(input.controlOrder === undefined
       ? {}
@@ -113,18 +122,22 @@ export function readEntryDetail(value: unknown): EntryDetailV2 {
     invalidData("$detail", "only screens and components have a workspace");
   if (kind !== "page" && detail.resourceEvidence)
     invalidData("$detail", "only a page carries entry resource evidence");
+  if (detail.before && !(current && visual))
+    invalidData("$detail", "only a current screen or component has a base");
   return detail;
 }
 
 function readDetailView(value: unknown): DetailView {
   const input = object(value);
+  const ready = input.resourceEvidence !== undefined;
   return {
     viewport: choice(input.viewport, VIEWPORTS),
     colorScheme: choice(input.colorScheme, SCHEMES),
     usage: readUsage(input.usage),
-    ...(input.resourceEvidence === undefined
-      ? {}
-      : { resourceEvidence: readViewEvidence(input.resourceEvidence) }),
+    ...readViewComparison(input, ready),
+    ...(ready
+      ? { resourceEvidence: readViewEvidence(input.resourceEvidence) }
+      : {}),
   };
 }
 

@@ -3,11 +3,8 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 
-import {
-  VERSION_ERROR_MESSAGE,
-  type MoklyVersionError,
-} from "../catalogue/version_error.js";
 import type { ViewRouteKind } from "../navigation/routes.js";
+import type { ComparedEntry } from "../review/types.js";
 
 import {
   selectedComparisonDocuments,
@@ -15,8 +12,6 @@ import {
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
-import type { ShellContext } from "./context.js";
-import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
@@ -24,6 +19,7 @@ import { useScrollTogether } from "./use_scroll_together.js";
 /** Render comparison chrome around a controller owned by the workspace. */
 export function ControlledDiffScreen({
   children,
+  compared,
   comparison,
   entryId,
   entryKind,
@@ -31,6 +27,8 @@ export function ControlledDiffScreen({
   usingChanged,
 }: {
   children: ReactNode;
+  /** The routed entry's comparison facts from its detail. */
+  compared?: ComparedEntry | undefined;
   comparison: ComparisonController;
   entryId: string;
   entryKind: ViewRouteKind;
@@ -44,25 +42,17 @@ export function ControlledDiffScreen({
         ? selectedComparisonViews(
             comparison.loaded,
             comparison.presentation,
-            entryKind,
-            entryId,
+            compared,
             usingChanged,
           )
         : undefined,
-    [
-      comparison.loaded,
-      comparison.presentation,
-      entryId,
-      entryKind,
-      usingChanged,
-    ],
+    [compared, comparison.loaded, comparison.presentation, usingChanged],
   );
   const documents = useComparisonDocuments(
     comparison.presentation ? comparison.loaded : undefined,
     selectedComparisonDocuments(views),
   );
   const together = useScrollTogether();
-  const store = useOptionalShellStore();
   const current = comparison.mode === "current";
   const failure =
     comparison.failure ??
@@ -100,14 +90,7 @@ export function ControlledDiffScreen({
         hidden={current}
       >
         {failure ? (
-          <ComparisonFailure
-            details={failure}
-            reload={reviewReload(store?.context, () =>
-              globalThis.location.reload(),
-            )}
-            retry={comparison.retry}
-            versionError={comparison.versionError}
-          />
+          <ComparisonFailure details={failure} retry={comparison.retry} />
         ) : comparison.presentation && documents.status === "ready" ? (
           <ComparisonViews
             entryId={entryId}
@@ -125,65 +108,27 @@ export function ControlledDiffScreen({
   );
 }
 
-/**
- * The Reload of a rejected review: only the standalone shell offers it,
- * because a reload loads the viewer that ships with its catalogue; an
- * embedded viewer reports the failure to its host instead.
- */
-export function reviewReload(
-  context: Pick<ShellContext, "embedded"> | undefined,
-  reload: () => void,
-): (() => void) | undefined {
-  return context?.embedded === false ? reload : undefined;
-}
-
-/**
- * A comparison that could not load offers Try again. A rejected review
- * shows the version headline, with Reload when the host offers it.
- */
+/** A comparison that could not load offers Try again. */
 export function ComparisonFailure({
   details,
-  reload,
   retry,
-  versionError,
 }: {
   details: string;
-  reload?: (() => void) | undefined;
   retry(): void;
-  versionError?: MoklyVersionError | undefined;
 }) {
   return (
     <>
-      {versionError ? (
-        <p role="alert">
-          {VERSION_ERROR_MESSAGE}
-          {reload ? (
-            <>
-              {" "}
-              <button
-                className="mbk-empty-link"
-                data-diff-reload=""
-                onClick={reload}
-                type="button"
-              >
-                Reload
-              </button>
-            </>
-          ) : null}
-        </p>
-      ) : (
-        <p>
-          The comparison could not be loaded.{" "}
-          <button
-            className="mbk-empty-link"
-            data-diff-refresh=""
-            onClick={retry}
-            type="button"
-          >
-            Try again
-          </button>
-        </p>
-      )}
+      <p>
+        The comparison could not be loaded.{" "}
+        <button
+          className="mbk-empty-link"
+          data-diff-refresh=""
+          onClick={retry}
+          type="button"
+        >
+          Try again
+        </button>
+      </p>
       <details data-comparison-failure="">
         <summary>Comparison details</summary>
         <p>{details}</p>

@@ -17,9 +17,9 @@ rewrite rules.
 | -------------------------------------------------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------------- |
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
-| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v7                                     |
+| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v8                                     |
 | `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v2                                        |
-| `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live      | file                                    | review result v8, under the comparison contract            |
+| `/mokly-viewer/diffs/generations/<generation>/`                                              | live      | absent                                  | the generation root: 204 while Serve retains it            |
 | `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v2 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
@@ -54,11 +54,12 @@ render. The in-frame inspector script is the [frame adapter's](./mokly-frame-ada
 
 ## Catalogue Index
 
-The index is the read model v7 of the
+The index is the read model v8 of the
 [catalogue contract](./mokly-catalogue.md), which owns its fields and the tree
-rules: `schemaVersion: 7`, `identity`, `deploymentId`, one integer `revision`,
-the `base` ref when Changes is configured, `changesStatus`, `comparisonUrl`,
-`tree`, every current entry record, and `removedEntries`. Each view of a screen
+rules: `schemaVersion: 8`, `identity`, `deploymentId`, one integer `revision`,
+the `base` ref when Changes is configured, `baseCommit` while Changes is
+ready, `changesStatus`, `comparisonUrl`, `tree`, every current entry record,
+and `removedEntries`. Each view of a screen
 or component carries `viewport`, `colorScheme`, `comparison`, and `documentKey`;
 a page record carries one `documentKey`, a document record one per colour
 scheme. `documentKey` is the document node's key in the
@@ -93,6 +94,13 @@ present only while Changes is `ready` under
 [usage records](./mokly-component-usage-records.md#record-shapes).
 `ComponentWireProps` has the shape of the
 [canonical wire props](./mokly-component-props.md#canonical-wire-props).
+A screen or component view carries its review `state` and its sorted unique
+`ignoredIds` exactly when it carries `resourceEvidence`. A ready current
+screen or component that has a base side carries `before`, the base side's
+path, title, saved props and, on a component, supplied slots, under the
+[component comparison records](./mokly-component-comparison-records.md#sides-and-pairing).
+The before side of a comparison uses that path, so a moved or case-renamed
+entry finds its base documents.
 `reasons` carries classification reasons in the review v8 `EntryChangeReason` shape and sorted unique order, under the same reason policy.
 Pages and documents have no review record. Their details carry the classification's direct reasons under this policy.
 Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field.

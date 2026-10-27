@@ -189,15 +189,25 @@ identity, dependency installation, and bundle settings. The
 
 ## Review Result v8 And Snapshot v4
 
-The generated
-[`ReviewResultV8`](../../packages/viewer/src/generated/catalogue/ReviewResultV8.ts)
-type and the types that it imports define the shape of the review result. The
+The comparison classifies every entry and view into one review result v8 and
+pairs it with the base commit in the catalogue change snapshot v4. Both stay
+in memory: no host writes, serves, or uploads them. The
+[catalogue index](./mokly-catalogue.md) and the
+[entry details](./mokly-shell-delivery.md#entry-detail) are the only public
+comparison records. A catalogue-wide comparison file is rejected: it would
+repeat the details' evidence and outgrow the per-file limits of static hosts.
+
+The model crate's `ReviewResultV8` type and the types that it uses define the
+shape of the review result. The
 [component comparison records](./mokly-component-comparison-records.md) page
 states the rules of `ReviewEntry`, `AffectedConsumer`, and `ReviewDiagnostic`.
 Entries are path-keyed: kind, path, `previousPath` on moved pairs, metadata
 reasons, views, and component variants grouped under their parent. Every
-evidence record names its owner. The catalogue change snapshot v4 pairs
-review v8 with the base commit for Serve, the static build, and publication.
+evidence record names its owner. Serve, the static build, and publication
+project the same snapshot. The generated
+[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+types define the index and the detail.
 
 `ignoredIds` lists the sorted unique ids of paired ignore regions removed for
 canonical equality, including equal regions in an `unchanged` view. Git

@@ -68,6 +68,7 @@ pub fn index(
         deployment_id: state.deployment_id.clone(),
         revision: state.revision,
         base: state.base.clone(),
+        base_commit: None,
         live: state
             .live_generation
             .as_ref()
@@ -175,6 +176,8 @@ pub fn pending_details(
                         viewport,
                         color_scheme: key.color_scheme,
                         usage: CatalogueUsage::Pending,
+                        state: None,
+                        ignored_ids: None,
                         resource_evidence: None,
                     })
                 })
@@ -195,6 +198,7 @@ pub fn pending_details(
                     },
                     views,
                     reasons: None,
+                    before: None,
                     resource_evidence: None,
                     workspace: None,
                     control_order: match &entry.content {

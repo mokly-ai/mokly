@@ -120,8 +120,8 @@ path.
 
 These functions define the snapshot and preview layout. Every producer and
 reader of a comparison generation derives its paths from this layout. The
-review result, the catalogue index, and the entry details carry paths and
-axes, never these file names.
+catalogue index and the entry details carry paths and axes, never these file
+names.
 
 ## Shell Documents And Browser Paths
 

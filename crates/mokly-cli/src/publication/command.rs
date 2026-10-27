@@ -146,7 +146,7 @@ impl Publish for Command {
             || prepared.metadata.branch != request.publication.branch
             || prepared.metadata.mokly_version != options.version
             || prepared.metadata.pull_request != request.publication.pull_request
-            || (options.no_changes && prepared.metadata.comparison_path.is_some())
+            || (options.no_changes && prepared.metadata.base_sha.is_some())
         {
             return Err(Error::Exchange {
                 source: error::Error::InvalidBundle,

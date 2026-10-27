@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
-  ReviewResult,
+  ComparedEntry,
   ReviewState,
 } from "../packages/viewer/dist/review/types.js";
 import {
@@ -20,17 +20,14 @@ import { cssSchemaFixture } from "./helpers/review_css_schema.js";
 
 /** Render one presented comparison as the shell does once it is ready. */
 function renderComparison(
-  result: ReviewResult,
+  entry: ComparedEntry,
   presentation: ComparisonPresentation,
 ): string {
-  const loaded = { result, url: "https://example.test/review.json" };
-  const entryId = "auth";
-  const views = selectedComparisonViews(
-    loaded,
-    presentation,
-    "screen",
-    entryId,
-  );
+  const loaded = {
+    url: `https://example.test/mokly-viewer/diffs/generations/${"a".repeat(64)}/`,
+  };
+  const entryId = entry.path;
+  const views = selectedComparisonViews(loaded, presentation, entry);
   return renderToStaticMarkup(
     createElement(ComparisonViews, {
       entryId,
@@ -49,11 +46,10 @@ function renderComparison(
 }
 
 test("a material change with matched stylesheet evidence reads Screen changed", () => {
-  const result = cssSchemaFixture();
-  const entry = result.entries[0]!;
+  const entry = cssSchemaFixture();
   const view = entry.views[0]!;
 
-  const markup = renderComparison(result, {
+  const markup = renderComparison(entry, {
     colorScheme: "light",
     mode: "side",
     requestedColorScheme: "light",
@@ -66,11 +62,13 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
 });
 
 test("a change that only stylesheet records prove reads as a style change", () => {
-  const result = cssSchemaFixture();
-  const entry = result.entries[0]!;
-  entry.reasons = entry.reasons.filter((reason) => reason.kind !== "material");
+  const fixture = cssSchemaFixture();
+  const entry = {
+    ...fixture,
+    reasons: fixture.reasons.filter((reason) => reason.kind !== "material"),
+  };
 
-  const markup = renderComparison(result, {
+  const markup = renderComparison(entry, {
     colorScheme: "light",
     mode: "side",
     requestedColorScheme: "light",
@@ -82,8 +80,7 @@ test("a change that only stylesheet records prove reads as a style change", () =
 });
 
 test("an effective Light comparison retains the requested Dark fallback label", () => {
-  const result = cssSchemaFixture();
-  const markup = renderComparison(result, {
+  const markup = renderComparison(cssSchemaFixture(), {
     colorScheme: "light",
     mode: "side",
     requestedColorScheme: "dark",
@@ -105,9 +102,9 @@ const STATE_LABELS: readonly (readonly [ReviewState, string])[] = [
 test("each view state reads the ordinary label that the contract names", () => {
   for (const [state, label] of STATE_LABELS) {
     // The material reason keeps the ordinary label for a changed view.
-    const result = cssSchemaFixture();
-    result.entries[0]!.views[0]!.state = state;
-    const markup = renderComparison(result, {
+    const entry = cssSchemaFixture();
+    entry.views[0]!.state = state;
+    const markup = renderComparison(entry, {
       colorScheme: "light",
       mode: "side",
       requestedColorScheme: "light",

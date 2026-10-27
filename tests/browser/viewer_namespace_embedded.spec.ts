@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-
 import { expect } from "@playwright/test";
 
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
@@ -59,57 +57,8 @@ for (const source of ["object", "url"] as const)
         code: "version",
         message,
         details:
-          "Unsupported Mokly catalogue version 3; this viewer supports version 7.",
+          "Unsupported Mokly catalogue version 3; this viewer supports version 8.",
       },
     ]);
     await expect(page.locator("#one iframe")).toHaveCount(0);
   });
-
-test("released review v6 uses the embedded typed version failure", async ({
-  page,
-}) => {
-  const released = JSON.parse(
-    await fs.readFile(
-      new URL("../fixtures/released-review-v6.json", import.meta.url),
-      "utf8",
-    ),
-  );
-  await page.route("**/mokly-viewer/diffs/**/review.json", (route) =>
-    route.fulfill({ json: released }),
-  );
-  await page.goto(fixture.host.url);
-  await page.waitForFunction(() => Boolean(window.viewerHarness));
-  await page.evaluate(() => {
-    const host = window.viewerHarness.start("one");
-    const catalogue = structuredClone(host.props.index) as CatalogueReadModel;
-    catalogue.changesStatus = "ready";
-    catalogue.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
-    for (const entry of [...catalogue.screens, ...catalogue.components])
-      entry.changes = { status: "ready", kind: "changed", included: true };
-    for (const view of catalogue.screens[0]!.views)
-      view.comparison = { status: "ready", kind: "changed", eligible: true };
-    host.props = { ...host.props, index: catalogue } as MoklyViewerProps;
-    host.render();
-  });
-  await page.locator('[data-diff-mode="side"]').click();
-  const message = "This catalogue needs a compatible viewer";
-  await expect(page.getByRole("alert")).toContainText(message);
-  expect(
-    await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .events.filter((event) => event.name === "error")
-        .map((event) => event.value),
-    ),
-  ).toEqual([
-    {
-      code: "version",
-      message,
-      details:
-        "Unsupported Mokly review version 6; this viewer supports version 8.",
-    },
-  ]);
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
-  await page.getByRole("button", { name: "Current", exact: true }).click();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
-});

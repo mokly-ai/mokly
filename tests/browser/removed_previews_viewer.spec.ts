@@ -91,10 +91,11 @@ for (const adapter of ["same-origin", "cross"] as const) {
       comparisonPaths.removedScreen,
     );
     await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
-    // No review read carries a query: each reads the pinned generation's file.
+    // No generation read carries a query: each reads the pinned generation's file.
     expect(
       requests.filter(
-        (url) => url.includes("review.json") && new URL(url).search !== "",
+        (url) =>
+          url.includes("/mokly-viewer/diffs/") && new URL(url).search !== "",
       ),
     ).toEqual([]);
     expect(await probe(page, "frameMessages")).toEqual([]);

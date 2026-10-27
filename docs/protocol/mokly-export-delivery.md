@@ -156,26 +156,28 @@ fallback.
 ## Static Comparisons
 
 Each build with Changes packages one complete comparison, with every
-referenced before and after document, the removed entries' details, the
-removed previews, and the transitive resources under one generation root:
+before and after document, the removed entries' details, the removed
+previews, and the transitive resources under one generation root:
 
 ```text
-mokly-viewer/diffs/generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/
 ```
 
-The generation keeps the review JSON, the snapshot document bytes, and the
-relative snapshot paths of the comparison unchanged.
+The generation keeps the snapshot document bytes and the relative snapshot
+paths of the comparison unchanged. It holds no review file.
 
-The index's `comparisonUrl` names this immutable JSON file directly. The shell
-requests it only for a selected diff or an opened removed entry and resolves
-snapshots from the actual response URL. A static build needs no redirect from
-`/mokly-viewer/diffs/review.json`; Serve keeps its stable endpoint.
+The index's `comparisonUrl` names this immutable root directly. A selected
+diff loads only the snapshot documents that it shows, resolved against that
+root; the comparison's view states and evidence come from the selected
+entry's detail. An opened removed entry loads its detail and its historical
+documents from the same root. A static build needs no selection endpoint and
+requests no generation root; Serve keeps its selection endpoint.
 
 Current is the default after navigation and reload. Browsing, Changes
-filtering, and scheme or viewport switches request no comparison JSON and no
-snapshot file. A build with Changes carries the same per-view states as Serve,
-so its shell marks hidden changed views and lists them in Details without
-fetching that JSON. Added entries keep their current preview without
+filtering, and scheme or viewport switches request no snapshot file. A build
+with Changes carries the same per-view states as Serve, so its shell marks
+hidden changed views and lists them in Details from the index and the
+details. Added entries keep their current preview without
 comparison modes. Removed screens and pages have no comparison modes;
 selecting one requests the packaged historical version under removed previews.
 Side by side, Overlay, and Difference keep the UI and the
