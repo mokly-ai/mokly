@@ -1,12 +1,15 @@
 # Developer Test Commands
 
+Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
+
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,
   then calls the developer Node test runner. With no arguments, it runs the
   complete discovered Node test inventory under the developer skip policy and
-  writes the evidence report. The inventory is the tooling tests under `tests/`
-  and the viewer tests under `packages/viewer/tests/`.
+  writes the evidence report. The inventory is the tooling tests under `tests/`,
+  the viewer tests under `packages/viewer/tests/`, and the UI package tests
+  under `packages/ui/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
   `cargo test --workspace` runs the default targets. The repository suite runs the default
   set; a selected crate is partial verification. Sidecar integration tests

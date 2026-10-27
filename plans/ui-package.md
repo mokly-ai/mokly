@@ -66,16 +66,22 @@ repository, because the subpath exports, the CSS file beside each component,
 and the design library the package replaces all use kebab-case. Reason: the
 file name matches the published subpath, and a lint holds the convention.
 
-Open decisions, asked on 2026-10-27. The plan uses the recommended option in
-each TODO and names the TODO that another answer changes.
+Decision 2 (2026-10-27, the user): the package name is option A, `@mokly/ui`
+in the directory `packages/ui`. Rejected: B, `@mokly/viewer-ui`, because it
+names the current owner and reads wrong once another package uses it.
+Rejected: C, `@mokly/components`, because the catalogue term "components"
+means a consumer's registered components. Reason: the name is short and
+collides with no product term.
 
-- Decision 2: the package name. A `@mokly/ui`. B `@mokly/viewer-ui`.
-  C `@mokly/components`. Recommended A.
-- Decision 6: the cascade layer. A package rules in `@layer mokly.components`,
-  so an unlayered host rule or shell layout rule wins without specificity
-  games. B unlayered rules at a fixed position in the concatenation, as today.
-  Recommended A. B removes the layer TODO of milestone 3 and the appearance
-  contract TODO of milestone 1.
+Decision 6 (2026-10-27, the user): package rules sit in the
+`mokly.components` cascade layer, option A, so an unlayered host rule or
+shell layout rule wins over them without specificity games. Rejected: B,
+unlayered rules at a fixed position in the concatenation as today, because
+file order would then decide ties between package, shell, and host rules.
+Reason: host theming becomes predictable, and the viewer is pre-1.0, so the
+precedence change is acceptable.
+
+Every decision is answered. No decision is open.
 
 Evidence goes under `.context/ui-package/`.
 
@@ -102,7 +108,7 @@ Contract owners:
 State the package, its boundary, and decision 1, so that the review can
 check the code against them.
 
-- [ ] Update the Package And Props section of `docs/protocol/mokly-viewer.md`:
+- [x] Update the Package And Props section of `docs/protocol/mokly-viewer.md`:
       `@mokly/ui` holds presentational shell components and their
       stylesheets. A package component takes props and callbacks only, with
       React as its only peer. It reads no store, no catalogue read model
@@ -110,34 +116,48 @@ check the code against them.
       the exact shared version and bundles its CSS, so `shell.css` and
       `styles.css` stay the only stylesheets a delivery or a host loads.
       Record decision 1 next to the rule.
-- [ ] Update `docs/protocol/mokly-viewer-appearance.md`: package component
+- [x] Update `docs/protocol/mokly-viewer-appearance.md`: package component
       rules sit in the `mokly.components` cascade layer, and an unlayered
-      host rule wins over them. Decision 6, option A.
-- [ ] Update the Viewer Package Boundary of
+      host rule wins over them. Decision 6, option A. Done on 2026-10-27 in
+      the stylesheet paragraph of `docs/protocol/mokly-viewer.md` instead,
+      beside the `styles.css` rule, because the appearance contract stands at
+      248 lines, two under its cap, and the viewer contract owns the host
+      stylesheet rule.
+- [x] Update the Viewer Package Boundary of
       `docs/architecture/package-boundary.md`: the UI package component, its
       responsibility, and the dependency direction CLI, viewer, UI package.
-- [ ] Update `docs/protocol/npm-release.md`: the package set includes
+- [x] Update `docs/protocol/npm-release.md`: the package set includes
       `@mokly/ui`, and the publication order is the platform packages, the UI
       package, the viewer, then the CLI.
-- [ ] Update the Scope and the Catalogue And Source Ownership sections of
+- [x] Update the Scope and the Catalogue And Source Ownership sections of
       `docs/protocol/mokly-design-components.md`: an inventory component that
       the UI package provides renders the package component through its
       `defineComponent` registration, and its public stylesheet is the
       package stylesheet. The `design-library/G/S.css` rule applies to the
       other components. Record decision 1 next to the rule.
-- [ ] Update `docs/protocol/developer-test-commands.md` and
+- [x] Update `docs/protocol/developer-test-commands.md` and
       `docs/protocol/ci-test-timing.md`: the Node test roots include
-      `packages/ui/tests/`.
-- [ ] Update `AGENTS.md`: the package list, the test roots, the build order,
+      `packages/ui/tests/`. Also `docs/protocol/ci-verification.md`, which
+      names the strict discovery roots.
+- [x] Update `docs/protocol/npm-release-management.md` and
+      `docs/protocol/npm-release-operations.md`: the eight-package set and
+      the publication order, found while editing the release contract.
+- [x] Update `AGENTS.md`: the package list, the test roots, the build order,
       the Product section, and the kebab-case file name rule of
       `packages/ui` from decision 5.
-- [ ] Write `packages/ui/README.md` with the sections of the documentation
+- [x] Write `packages/ui/README.md` with the sections of the documentation
       skill: Responsibilities, What This Package Does, Quick Start,
       Development, Key Code, Related Docs. Update the Responsibilities,
       Development, and Key Code sections of `packages/viewer/README.md`, the
       moved-component paragraphs of `packages/viewer/src/shell/README.md`,
       and the scope sentence of
-      `examples/basic/specs/design/library/README.md`.
+      `examples/basic/specs/design/library/README.md`. The Key Code entries
+      of the new README and the viewer README name the package files as
+      code spans until milestone 3 creates them, so the link test stays
+      green at each milestone end.
+- [x] Add the repository's status line to each touched protocol,
+      architecture, and README page except `ci-test-timing.md`, which
+      already carries the Rust rebuild plan's line. Milestone 5 removes them.
 - [x] Confirm that `docs/protocol/mokly-imported-styles.md` already covers a
       package stylesheet under `node_modules/@mokly/ui/`. Change it only if
       the workspace symlink needs a rule. Confirmed on 2026-10-27: a package
@@ -235,6 +255,9 @@ after they exist.
 - [ ] Cascade layer (decision 6): each package stylesheet declares its rules
       in `@layer mokly.components`. The viewer's `css_tokens.ts` declares the
       layer order first, so the layer exists before any unlayered shell rule.
+- [ ] Turn the Key Code code spans of `packages/ui/README.md` and the
+      `../ui/src` entry of `packages/viewer/README.md` into links now that the
+      files exist.
 - [ ] Tests in `packages/ui/tests` with Testing Library: the appearance menu
       opens, selects, closes on Escape, and reports the choice through its
       callback, with the roles and names the shell specs query; the toolbar
@@ -280,6 +303,8 @@ package and drops its own copies. Decision 1 approves the deletions.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
+- [ ] Remove the status lines that milestone 1 added, because the behaviour
+      is implemented.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

@@ -1,20 +1,25 @@
 # Shared Design Components
 
+Status: In progress under the [shared UI package plan](../../../../../plans/ui-package.md).
+
 ## Scope
 
 These sixteen components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
-library; the actual Mokly browser shell remains in the package source.
+library. `chrome/appearance-selector` and `controls/comparison-toolbar`
+render the `@mokly/ui` components that the shipped shell uses, with the
+package stylesheets named by their dependency paths; the other components
+keep their own markup and styles here until the package provides them. The
+Mokly browser shell itself remains in the package source.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
 always composes it, so every artboard with a top bar draws it; a screen does not
 opt in. The value defaults to the scheme the file was rendered for and is
 overridden only to depict a different setting, as the Auto artboard does. It is
-the only scheme control the design catalogue draws. Its three pre-rendered faces
-and `data-*` hooks mirror the shipped shell control, with a regression test
-guarding that shared structural contract.
+the only scheme control the design catalogue draws. It is the shipped shell
+control itself, rendered from `@mokly/ui/appearance-selector`.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the

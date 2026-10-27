@@ -1,5 +1,7 @@
 # Shared Browse shell
 
+Status: In progress under the [shared UI package plan](../../../../plans/ui-package.md).
+
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -177,6 +179,14 @@ routed workspace settles it when `comparisonEligibilityKnown` first reports
 final eligibility, and opens Side by side only for an eligible view. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
+
+The icons, the change mark, the appearance selector and the comparison
+toolbar are `@mokly/ui` components under `packages/ui/src`: props in,
+callbacks out, no store. `appearance.tsx` is the viewer's wrapper that reads
+the identifier and workspace contexts and renders
+`@mokly/ui/appearance-selector`. The package CSS files sit in the
+`mokly.components` cascade layer, which `css_tokens.ts` declares first, so an
+unlayered shell layout rule wins over them.
 
 `css.ts` concatenates the shared stylesheet. Split string modules preserve
 its exact bytes. The standalone stylesheet adds one rule to it: a root without
@@ -418,10 +428,10 @@ must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
-`diffs.tsx` owns the comparison band and stage; `comparison_toolbar.tsx`
+`diffs.tsx` owns the comparison band and stage; `@mokly/ui/comparison-toolbar`
 renders the band's mode group, the Scroll together switch (a native checkbox
 with `role="switch"`, shown in every diff mode including loading and failure)
-and Refresh. `use_comparison.ts` requests, renews and fences the selected
+and Refresh, from props and callbacks alone. `use_comparison.ts` requests, renews and fences the selected
 comparison. Current entries use Serve's selected endpoint. Removed component
 parents and variants use the current index's advertised generation in every
 host, which separates historical entries from current entries at the same path.

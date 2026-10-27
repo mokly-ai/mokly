@@ -1,5 +1,7 @@
 # npm Release Management
 
+Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
+
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management
@@ -69,8 +71,9 @@ the CLI, native packages, and viewer. The release workflow then:
    selection and failure semantics. No preparation step receives publication
    credentials or access to the protected npm environment.
 6. On the first run, preparation downloads the five native archives and packs
-   the viewer and CLI from the same release commit. Every report identifies the
-   shared release commit. A retry reuses the original checked seven-package set
+   the UI package, the viewer, and the CLI from the same release commit. Every
+   report identifies the shared release commit. A retry reuses the original
+   checked eight-package set
    without rebuilding it. Preparation checks packed
    manifests, inventories, runtime licenses, and clean-consumer smokes. It then
    rechecks source and tags and preserves the archives and evidence.
@@ -80,7 +83,8 @@ the CLI, native packages, and viewer. The release workflow then:
    archives stop publication instead of causing a privileged rebuild.
 7. Queries npm, publishes, and verifies each registry artifact in the
    [publication order](./npm-release.md#release-build-matrix-and-publication-order):
-   the platform packages, then the shared-version viewer, then the CLI.
+   the platform packages, then the shared-version UI package and viewer, then
+   the CLI.
 
 Publishing occurs in the workflow invocation that creates the CLI release.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
@@ -155,7 +159,7 @@ checked set or prepare a new reviewed release version.
 If the first run failed before it saved the complete set, rerun its failed
 jobs. Before a new build, a registry lookup must prove all newly released
 versions absent. An existing new-release version requires the saved set.
-Every release checks all seven newly published packages. Native registrations use
+Every release checks all eight newly published packages. Native registrations use
 the reserved `0.0.0` version, which no coordinated release publishes, under the
 [bootstrap contract](./npm-bootstrap.md#native-package-registration).
 

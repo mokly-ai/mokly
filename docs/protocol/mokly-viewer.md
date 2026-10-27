@@ -1,5 +1,7 @@
 # Embeddable Mokly Viewer
 
+Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
+
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
@@ -17,6 +19,23 @@ The package has four entry points:
   [shell delivery contract](./mokly-shell-delivery.md) defines. Serve and
   `build` deliver it as `/mokly-viewer/client/shell.js`.
 - `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), the link grammar of the [authoring links contract](./mokly-authoring.md#links), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the scoped stylesheet of an embedded root.
+
+### Shared UI Package
+
+`@mokly/ui` is an MIT, ESM npm package under `packages/ui`, with React and
+React DOM `>=19.0.0` as its only peers. It holds presentational shell
+components and their stylesheets as CSS files. `@mokly/viewer` depends on its
+exact released version and bundles its CSS, so `shell.css` and `styles.css`
+stay the only stylesheets that a delivery or a host loads. A package component
+takes props and callbacks only. It reads no store, no context, no catalogue
+read model type, no network, no history, and no frame. Each component is
+reachable by its own subpath, such as `@mokly/ui/appearance-selector`, and the
+package has no root entry. The viewer reaches the package through those
+subpaths only. The package never imports the viewer, the CLI, or consumer
+code. Decision: a separate package, not a directory in the viewer with an
+import lint, because only a package boundary stops a relative import of the
+viewer internals at the resolver, and one implementation then serves the
+product and its design mockups.
 
 Every delivery renders the shell from data in the browser.
 
@@ -203,8 +222,13 @@ values under the [appearance contract](./mokly-viewer-appearance.md).
 Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
 ownership follow the [shell design](./mokly-shell-design.md) and
 [brand contract](./mokly-shell-brand.md). Scoped styles exclude the host page
-and slot content; do not inject host CSS into frames. The host must give the
-viewer's containing element a definite height. The viewer fills that height,
+and slot content; do not inject host CSS into frames. The rules of the shared
+UI package sit in the `mokly.components` cascade layer, which the stylesheet
+declares before any unlayered rule, so an unlayered shell layout rule or host
+rule wins over a component rule whatever its specificity. Decision: a layer,
+not a fixed position in the concatenation, because file order would otherwise
+decide ties between package, shell, and host rules. The host must give
+the viewer's containing element a definite height. The viewer fills that height,
 clips its outer shell and owns scrolling within the stage and other bounded
 shell regions; the embedding document must not be the stage scroll container.
 
