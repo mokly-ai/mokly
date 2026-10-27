@@ -152,6 +152,18 @@ answer changes the milestones that the decision names.
      entry parts and the tab parts are experimental.
    - Reason: the package is pre-1.0 and already follows rule A. One tier is
      simpler for hosts. Affects Milestones 1 and 8.
+9. **Home of the stage function, Low.** Open since 2026-10-27, when the user
+   asked whether the `slots` object is an anti-pattern. Recommended: B.
+   - A: `slots` holds the host content and the `stage` function.
+   - B: `slots` holds only host content. `stage` is its own prop on
+     `MoklyViewer`, as on `MoklyViewerRoot`.
+   - C: Flat props replace `slots`, such as `topBarEnd` and `stage`.
+   - D: `MoklyViewer` takes no host content. A host with its own content
+     composes the root and the parts.
+   - Reason: `stage` is a function that decides what the viewer loads, not
+     content. B keeps one name in both APIs and breaks no host. The request
+     put `stage` in `ViewerSlots`, so B changes the request. Affects
+     Milestones 1, 5, and 8.
 
 The plan also makes three choices that a review can change: the flat `Mokly*`
 export names, the `stage` prop on the root, and a warning without a throw for a
