@@ -17,20 +17,20 @@ Blobs, Complete or downgrade. It reports:
 The catalogue service does not support this Mokly version. Update the service and try again.
 ```
 
-| Rejection                                                                              | HTTP status            | CLI category                      |
-| -------------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
-| Unsupported envelope or present non-3 ownership `schemaVersion`                        | 426                    | `upload-unsupported-version`      |
-| Invalid archive, missing marker version, malformed value/path, or byte mismatch        | 400 or 422             | `upload-invalid-bundle`           |
-| Invalid gzip Blob data, decoded digest or size mismatch, or any other Content-Encoding | 400                    | `upload-invalid-bundle`           |
-| Any exceeded limit, including declared file size or path byte length                   | 413                    | `upload-too-large`                |
-| Missing/invalid token or forbidden repository                                          | 401 or 403             | `upload-unauthorized`             |
-| Blob digest outside the Plan, or unknown upload id                                     | 404                    | `upload-failed`                   |
-| Complete while a listed digest is missing                                              | 409                    | one re-plan, then `upload-failed` |
-| Expired upload, or locally reached `expiresAt`                                         | 410                    | one re-plan, then `upload-failed` |
-| Retryable status after five attempts                                                   | 408, 429, 500, 502–504 | `upload-failed`                   |
-| Other non-2xx or 2xx, redirect, or invalid response                                    | any other              | `upload-failed`                   |
-| Command cancellation classified under Accounting And Output                            | local                  | cancellation `upload-failed`      |
-| Any non-cancellation local error, including a build recovery failure                   | local                  | its own category and message      |
+| Rejection                                                                       | HTTP status            | CLI category                      |
+| ------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
+| Unsupported envelope or present non-3 ownership `schemaVersion`                 | 426                    | `upload-unsupported-version`      |
+| Invalid archive, missing marker version, malformed value/path, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
+| Oversized or invalid gzip Blob, decoded mismatch, or other `Content-Encoding`   | 400                    | `upload-invalid-bundle`           |
+| Any exceeded limit, including declared file size or path byte length            | 413                    | `upload-too-large`                |
+| Missing/invalid token or forbidden repository                                   | 401 or 403             | `upload-unauthorized`             |
+| Blob digest outside the Plan, or unknown upload id                              | 404                    | `upload-failed`                   |
+| Complete while a listed digest is missing                                       | 409                    | one re-plan, then `upload-failed` |
+| Expired upload, or locally reached `expiresAt`                                  | 410                    | one re-plan, then `upload-failed` |
+| Retryable status after five attempts                                            | 408, 429, 500, 502–504 | `upload-failed`                   |
+| Other non-2xx or 2xx, redirect, or invalid response                             | any other              | `upload-failed`                   |
+| Command cancellation classified under Accounting And Output                     | local                  | cancellation `upload-failed`      |
+| Any non-cancellation local error, including a build recovery failure            | local                  | its own category and message      |
 
 Local validation uses the same categories. Other local typed failures keep
 their categories, and no request follows a build failure. Unexpected
@@ -44,16 +44,15 @@ upload manifest, the shell stub, the catalogue index and entry details, static
 assets and enabled comparisons. CLI and receiver enforce these binary-unit
 v3 ceilings; receivers may impose lower quotas and return 413.
 
-| Limit                                                    | Maximum            |
-| -------------------------------------------------------- | ------------------ |
-| Plan request body, compressed                            | 100 MiB            |
-| Plan archive decompressed, including headers and padding | 512 MiB            |
-| One regular file, Blob or ownership marker               | 64 MiB             |
-| Gzip Blob body and decoded bytes                         | Declared file size |
-| Regular files, including upload manifest and marker      | 20,000             |
-| Upload manifest                                          | 16 KiB             |
-| Relative path                                            | 1,024 UTF-8 bytes  |
-| Plan or Complete response body read by the CLI           | 16 MiB             |
+| Limit                                                    | Maximum           |
+| -------------------------------------------------------- | ----------------- |
+| Plan request body, compressed                            | 100 MiB           |
+| Plan archive decompressed, including headers and padding | 512 MiB           |
+| One regular file, Blob or ownership marker               | 64 MiB            |
+| Regular files, including upload manifest and marker      | 20,000            |
+| Upload manifest                                          | 16 KiB            |
+| Relative path                                            | 1,024 UTF-8 bytes |
+| Plan or Complete response body read by the CLI           | 16 MiB            |
 
 ## Receiver Validation
 
@@ -90,8 +89,8 @@ comparison files.
 Answer `missing` from every verified blob stored for the same project,
 including a blob received for an unfinished or expired earlier upload. Never
 expose another project's content membership. Verify every raw Blob digest and
-size before storing it. For a gzip Blob, reject a `Content-Length` greater than
-the declared file size before reading the body. Stream-decode the body and
+size before storing it. For a gzip Blob, a `Content-Length` greater than the
+declared file size is 400 before the body is read. Stream-decode the body and
 stop after the declared size plus one byte. Return 400 and store nothing for
 invalid gzip data, a decoded size other than the declared size, or a decoded
 SHA-256 other than the URL digest. Raw Blobs keep their rules. Return 400 for

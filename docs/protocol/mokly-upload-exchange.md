@@ -81,7 +81,7 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
   status, a body over 16 MiB, invalid JSON, or a non-JSON content type is
   `upload-failed`.
 - Decision in force: the field is optional and the exchange stays v1 because
-  earlier CLIs ignore unknown Plan fields. A v2 Plan is rejected because a v1
+  earlier CLIs ignore unknown Plan fields. Rejected: a v2 Plan, because a v1
   CLI refuses every v2 Plan.
 
 At Plan time the receiver verifies and stores the manifest and the index
@@ -212,7 +212,7 @@ equals the summary's `<uploaded>`. The
 Decision in force: the progress `<size>` counts decoded file bytes because the
 Plan archive already travels compressed and counts its files' raw bytes, and
 the label exists before any Blob compresses. The summary line counts marker
-entries and does not change.
+entries, so the encoding does not affect it.
 
 A `201` completion prints exactly one counted summary, followed by the viewer
 URL on its own line when accepted. A `200` completion replaces the counted

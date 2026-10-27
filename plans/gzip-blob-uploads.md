@@ -234,6 +234,9 @@ Evidence: `.context/gzip-blob-uploads/milestone-1-verification-2026-10-27.md`.
 Under decision 3, a Conductor workspace in `mokly-ai/mokly-cloud` owns the
 receiver change. Its plan and pull request live in that repository.
 
+- [x] Apply the Milestone 1 protocol wording fixes before writing the cloud
+      brief. The receiver handoff depends on the corrected rejection and
+      accounting rules.
 - [ ] Write `.context/gzip-blob-uploads/cloud-brief.md` against the protocol
       docs of this branch. Include:
   - [ ] The listing behind a configuration switch that is off by default:
