@@ -74,15 +74,23 @@ pub(crate) fn encode_details(
 ) -> Result<BTreeMap<String, Arc<EntryDetailV3>>> {
     let mut result = BTreeMap::new();
     for (path, detail) in details.iter_mut() {
+        let detail_id = canonical::detail_id(detail)
+            .map_err(|source| crate::error::InternalError::Model { source })?;
         if let Some(previous) = previous
             && let Some(old) = previous.details.get(path)
         {
-            detail.revision = old.revision;
-            detail.detail_id = old.detail_id.clone();
+            let old_id = canonical::detail_id(old.as_ref())
+                .map_err(|source| crate::error::InternalError::Model { source })?;
+            if detail_id == old_id {
+                detail.revision = old.revision;
+                detail.detail_id = old.detail_id.clone();
+            } else {
+                detail.revision = Some(index.revision);
+                detail.detail_id = detail_id;
+            }
         } else {
             detail.revision = Some(index.revision);
-            detail.detail_id = canonical::detail_id(detail)
-                .map_err(|source| crate::error::InternalError::Model { source })?;
+            detail.detail_id = detail_id;
         }
         mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
     }

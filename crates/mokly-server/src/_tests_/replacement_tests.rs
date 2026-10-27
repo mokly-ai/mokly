@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
@@ -72,6 +73,41 @@ fn one_changed_detail_encodes_once_at_both_catalogue_sizes() {
             &origin.details["screen-1"]
         ));
     }
+}
+
+#[test]
+fn changed_detail_gets_a_new_content_id_and_unchanged_detail_keeps_its_id() {
+    let origin = publication_support::snapshot(2, Arc::new(Unimock::new(())));
+    let mut index = origin.index.clone();
+    index.revision += 1;
+    let mut details: BTreeMap<_, _> = origin
+        .details
+        .iter()
+        .map(|(path, detail)| (path.clone(), detail.as_ref().clone()))
+        .collect();
+    details.get_mut("screen-0").unwrap().views[0].usage = publication_support::ready();
+    let encoder = Unimock::new(
+        DetailEncoderMock::encode
+            .next_call(matching!(_, _, _))
+            .answers(&|_, detail, index, schemas| ValidatedDetails.encode(detail, index, schemas)),
+    );
+    let mut files = BTreeMap::new();
+    let result = encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
+    let changed = &result["screen-0"];
+    let changed_id = canonical::detail_id(changed.as_ref()).unwrap();
+    assert_eq!(changed.detail_id, changed_id);
+    assert_eq!(index.screens[0].entry.detail_id, changed_id);
+    assert!(!Arc::ptr_eq(changed, &origin.details["screen-0"]));
+    assert_eq!(
+        result["screen-1"].detail_id,
+        origin.details["screen-1"].detail_id
+    );
+    assert!(Arc::ptr_eq(
+        &result["screen-1"],
+        &origin.details["screen-1"]
+    ));
+    assert!(files.contains_key(&viewer("entries/screen-0.json")));
+    assert!(files.contains_key(&viewer("entries/screen-1.json")));
 }
 
 #[test]

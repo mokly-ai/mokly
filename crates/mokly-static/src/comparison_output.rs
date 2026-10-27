@@ -51,38 +51,17 @@ pub(crate) fn append(
         )?;
     }
     let records = compare(projection_removed::records(result, historical))?;
-    for (removed, record) in result.snapshot.removed_entries.iter().zip(records) {
+    for record in records {
         checkpoint(cancellation)?;
-        let path = &removed.entry.metadata().path;
+        let path = record.entry.path().to_owned();
         index.removed_entries.push(record);
         output.insert(format!("view/{path}/index.html"), stub.to_vec().into())?;
     }
     compare(projection_workspace::apply(&mut details, result))?;
     let (generation, files) = finalize(inventory, &mut details)?;
-    for (removed, record) in result
-        .snapshot
-        .removed_entries
-        .iter()
-        .zip(&mut index.removed_entries)
-    {
-        if let Some(detail) = details.get(&removed.entry.metadata().path) {
-            match &mut record.entry {
-                mokly_model::public_records::CatalogueRecord::Screen(entry) => {
-                    entry.entry.detail_id = detail.detail_id.clone()
-                }
-                mokly_model::public_records::CatalogueRecord::Component(entry) => {
-                    entry.entry.detail_id = detail.detail_id.clone()
-                }
-                mokly_model::public_records::CatalogueRecord::Page(entry) => {
-                    entry.entry.detail_id = detail.detail_id.clone()
-                }
-                mokly_model::public_records::CatalogueRecord::Document(entry) => {
-                    entry.entry.detail_id = detail.detail_id.clone()
-                }
-                mokly_model::public_records::CatalogueRecord::UseCase(entry) => {
-                    entry.entry.detail_id = detail.detail_id.clone()
-                }
-            }
+    for record in &mut index.removed_entries {
+        if let Some(detail) = details.get(record.entry.path()) {
+            record.entry.set_detail_id(&detail.detail_id);
         }
     }
     index.comparison_url = Some(routes::comparison_generation(&generation));
