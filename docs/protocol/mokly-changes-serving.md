@@ -1,7 +1,5 @@
 # Changes Serving And Comparison
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
 ## Generation and serving

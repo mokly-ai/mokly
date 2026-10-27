@@ -1,7 +1,5 @@
 # Component Comparison Schema
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Normative Result
 
 Every comparison classifies into the in-memory review result v8 of the

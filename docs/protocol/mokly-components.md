@@ -1,7 +1,5 @@
 # Registered Components
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Product Contract
 
 A registered component owns a catalogue page, optional variant entries, and
@@ -121,8 +119,8 @@ output.
 
 HTML components and `defineComponent` definitions share one registry. The
 [sidecar](./mokly-sidecar.md#definitions) reports every JavaScript
-definition through `describe`; the Rust core parses the HTML components and
-builds the registry from both before any render starts.
+definition through `describe`. Both forms are registered before any render
+starts.
 
 `element` names the custom element that HTML screen and component bodies use
 for the component under the
@@ -161,8 +159,8 @@ rendering; `mokly-instance` is its attribute form on a component element in
 an HTML body. Its default, scope, stable key, duplicate rules, and sentinels
 belong to [Component Instance Identity](./mokly-instances.md). Each rendered
 instance is an ownership region of the composed tree under the
-[comparison contract](./mokly-comparison.md#markers): the Rust core attaches
-the region to an HTML component it renders, and reads a sidecar fragment's
+[comparison contract](./mokly-comparison.md#markers): the core attaches the
+region to an HTML component it renders, and reads a sidecar fragment's
 markers into the same regions. Usage derives from those regions, so only
 actual rendering establishes usage; import lists do not. The
 [usage-record contract](./mokly-component-usage-records.md) owns the records,
@@ -181,16 +179,15 @@ derived from usage rather than separately authored relationships.
 From a React screen, the wrapper renders inside the screen's fragment and
 writes the instance markers. From an HTML body, the core renders the
 component through `renderComponent` with the coerced props, the slot
-placeholders, and the enclosing ignore scope, memoized by handle, props,
-viewport, colour scheme, and scope, and grafts the returned fragment with its
-collected styles under the [sidecar contract](./mokly-sidecar.md). The
-component's own page renders its own props first and then each variant, with
-the component as the root instance, at every viewport and effective colour
-scheme, with the configured and declared stylesheets. Every document is kept
-in the render cache; Serve, `build`, and Changes read it there, and nothing
-is written to the repository.
+placeholders, and the enclosing ignore scope, and grafts the returned fragment
+with its collected styles under the [sidecar contract](./mokly-sidecar.md).
+The component's own page renders its own props first and then each variant,
+with the component as the root instance, at every viewport and effective
+colour scheme, with the configured and declared stylesheets. Serve, `build`,
+and Changes use the same rendered documents. Nothing is written to the
+repository.
 
-Read model v8 gives a component entry `propSchema`, `props` in the wire form,
+The read model gives a component entry `propSchema`, `props` in the wire form,
 `slots`, `suppliedSlots`, `controls`, `views`, and `variantOf` exactly on a
 variant, under the [catalogue contract](./mokly-catalogue.md); a parent has
 its own views and an empty `suppliedSlots`. Per-view usage, resource
@@ -232,4 +229,4 @@ and a props failure names the property path.
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)
 - [Render sidecar](./mokly-sidecar.md)
-- [Render pipeline](../architecture/build-pipeline.md)
+- [Data flow](../architecture/rust-core.md#data-flow)

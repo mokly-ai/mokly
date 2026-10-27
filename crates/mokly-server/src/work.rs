@@ -42,6 +42,8 @@ pub trait Work: Send + Sync {
     /// Recheck and read a reached public asset off the HTTP event loop.
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile>;
     /// Coalesce a page's work and bound admission and duration.
+    /// The render runs on a blocking thread, outside the HTTP event loop, behind eight
+    /// server-wide queue tickets, and fails after ten seconds.
     async fn preview(
         &self,
         documents: Arc<dyn Documents>,
@@ -59,6 +61,8 @@ pub struct Workers {
     pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     pub(crate) workers: Arc<Semaphore>,
+    /// Eight preview queue tickets server-wide. A page reuses its live ticket, so its
+    /// superseded jobs never hold more than one.
     queued: Arc<Semaphore>,
     pages: Mutex<BTreeMap<String, Weak<Page>>>,
     pub(crate) closed: AtomicBool,

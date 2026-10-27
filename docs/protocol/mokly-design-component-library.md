@@ -1,7 +1,5 @@
 # Mokly Design Component Library Inventory
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Components And Saved Examples
 
 Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
@@ -23,44 +21,43 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Implementation                                                      | Variant names                                                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
-| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
-| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                                                   |
-| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                                                            |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                                                      |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                                                              |
-| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                                                    |
-| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                                                             |
-| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                                                   |
-| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                                                                  |
-| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                                                              |
-| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
-| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
-| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState, LoadingState`                 | `home`, `missing-route`, `no-changes`                                                                                                         |
-| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
+| Group / slug                  | Variant names                                                                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| chrome / top-bar              | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
+| chrome / catalogue-navigation | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
+| chrome / screen-header        | `screen`, `component`, `changed`, `removed`                                                                                                   |
+| chrome / appearance-selector  | `auto`, `light`, `dark`, `compact`                                                                                                            |
+| controls / comparison-toolbar | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                                                      |
+| controls / view-controls      | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                                                              |
+| controls / tag-picker         | `all`, `selected`, `empty`                                                                                                                    |
+| controls / tag-chip           | `default`, `selected`, `inactive`                                                                                                             |
+| controls / change-status      | `unmodified`, `added`, `changed`, `removed`                                                                                                   |
+| inspector / inspector         | `details`, `props`, `closed`                                                                                                                  |
+| inspector / metadata-row      | `text`, `code`, `linked`, `tags`                                                                                                              |
+| inspector / prop-field        | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
+| preview / device-frame        | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
+| preview / comparison-pane     | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
+| preview / empty-state         | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / flow-step           | `first`, `second`                                                                                                                             |
 
-Fixtures for each variant come from the corresponding existing screen state,
-assembled into complete explicit props at declaration time, apart from the
-render-context fallback a dual-scheme sample uses above. They may reuse the
-same typed fixture values used by screen adapters. They never import/render the
-complete owning artboard. All selected-screen footers use the icon panel and the
-viewport control uses the grouped icons. No disclosure variant or segmented
-viewport presentation is supported. Comparison-mode segments stay.
+Each variant depicts the corresponding screen state with complete explicit
+props, apart from the render-context fallback a dual-scheme sample uses above.
+A sample never renders its complete owning artboard. All selected-screen
+footers use the icon panel and the viewport control uses the grouped icons. No
+disclosure variant or segmented viewport presentation is supported.
+Comparison modes keep their segments.
 
 ## Data, Slots And Controls
 
-Use literal object schemas and the shared validator/codec. Lists are typed
-arrays of plain records; optional means omitted, distinct from an empty value.
-Numbers are finite, counts/depth are nonnegative integers and flow numbers start
-at one. Logical destinations are existing catalogue paths from the design-link
-contract, never raw URLs or guessed labels. Existing resource/prop budgets apply.
-Controls below use text, boolean, number and primitive enum selections only.
+Lists are typed arrays of plain records; optional means omitted, distinct
+from an empty value. Numbers are finite, counts/depth are nonnegative integers
+and flow numbers start at one. Logical destinations are current catalogue
+paths from the [design-link contract](./mokly-design-links.md), never raw URLs
+or guessed labels. The catalogue's resource and prop limits apply. Controls
+below use text, boolean, number and primitive enum selections only.
 
 1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
-   existing text/icon menu presentation; available tag records, optional active
+   text or icon menu presentation; available tag records, optional active
    tag and picker-open flag; explicit navigation destinations; and an
    `auto/light/dark` interface appearance that falls back to the render
    context's scheme. Controls: query,
@@ -70,7 +67,8 @@ Controls below use text, boolean, number and primitive enum selections only.
    opt in. The value defaults to the scheme the file was rendered for and is
    overridden only to depict a different setting, as the Auto artboard does.
    Brand/search structure belongs to this component;
-   it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
+   it composes the registered picker, chip and appearance selector. Mobile keeps
+   compact branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `folder/screen/component/flow/page/document/variant`, depth, optional
    count/open/destination, changed mark, moved flag, and variant-list state; a variant row
@@ -92,22 +90,23 @@ Controls below use text, boolean, number and primitive enum selections only.
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for
-   every failure. Counts and rows come from the same fixture scenario. Responsive uses the original desktop
-   sidebar/mobile drawer; the drawer variant explicitly depicts the drawer.
+   every failure. Counts and rows come from the same fixture scenario.
+   Responsive uses the desktop sidebar and the mobile drawer; the drawer
+   variant explicitly depicts the drawer.
 3. **Screen header:** title, breadcrumb records, optional path chip,
    optional `unmodified/added/changed/removed` status, explicit comparison
    eligibility/mode, the Scroll together state and destinations. An `actions`
-   slot holds caller controls. Controls: title and optional status. Compose the
-   status/toolbar implementations without introducing a comparison band into
-   ineligible screen states.
+   slot holds caller controls. Controls: title and optional status. The header
+   composes the change status and the comparison toolbar. An ineligible screen
+   state shows no comparison band.
 4. **Comparison toolbar:** `current/side-by-side/overlay/difference` mode,
    explicit eligible state, accessibility flag, Scroll together state and
    available mode destinations. Controls: mode, eligibility and Scroll together.
    Ineligible renders no band; stories depicting a band supply eligible fixture
    data. A diff mode draws the native Scroll together switch between the mode
    group and Refresh, and `side-by-side-apart` saves it off; Current draws
-   neither. Preserve the opaque background, refresh depiction and current
-   linked/native/inactive behavior for each screen family.
+   neither. The band keeps its opaque background and refresh depiction, and each
+   screen family keeps its linked, native, or inactive mode behaviour.
 5. **View controls:** selected preview `mobile/desktop/both`, optional
    highlight state, unavailable reason `empty/unavailable/comparison/removed`,
    and optional changed views as viewport/scheme records. Controls: selection,
@@ -118,9 +117,9 @@ Controls below use text, boolean, number and primitive enum selections only.
    header icon group contains the viewport dropdown and optional highlight
    toggle; one Appearance control sets the catalogue scheme.
 6. **Tag picker:** tag records containing stable id, label and optional
-   destination, plus optional active id. Controls: optional active tag using
-   the existing forms/onboarding examples. Empty input follows the current hidden
-   picker behavior; the outer inspector can still inspect the empty variant.
+   destination, plus optional active id. Controls: optional active tag, with
+   the forms and onboarding tags as examples. An empty tag list hides the
+   picker; the outer inspector can still inspect the empty variant.
 7. **Tag chip:** stable tag id, label, selected state and optional destination.
    Controls: label and selected state. Missing destinations stay non-links;
    repeated picker/metadata instances are keyed by tag identity, not label.
@@ -139,18 +138,18 @@ Controls below use text, boolean, number and primitive enum selections only.
    fixed while content scrolls. There are no alternate presentation, behavior or
    destination props.
 10. **Metadata row:** label plus a `children` slot for text, code, links or tags.
-    Control: label. Keep the correct existing `div`/`dl` semantics through an
-    explicit `metadata/props` presentation. Registered chips may be supplied by
-    the screen through the slot; row framing must not take ownership of their
-    values or of source/doc paths.
+    Control: label. An explicit `metadata/props` presentation chooses between a
+    plain `div` row and a `dt`/`dd` pair inside a `dl`. Registered chips may be
+    supplied by the screen through the slot; row framing must not take
+    ownership of their values or of source/doc paths.
 11. **Prop field:** label, stable input id, optional description/error and
     optional-field/supplied flags; a `control` slot contains the native input or
     selection control. Controls: label and optional description/error. Typed
     field values and disabled/read-only behavior stay with the caller's slot,
     while the field frames that control's surface, border and invalid state so
     a prop panel reads the same in every host.
-    Preserve label/input/error associations and assign unique ids for repeated
-    forms. This is reusable field framing, not a new forms or schema engine.
+    Label, input, and error associations hold, and repeated forms use unique
+    ids. This is reusable field framing, not a forms or schema engine.
 12. **Device frame:** device `phone/browser`, optional caption, a `scheme`
     flag that adds the rendered scheme to the caption, depicted dark state,
     light-only note, compact-phone and expandable flags, browser address;
@@ -163,64 +162,57 @@ Controls below use text, boolean, number and primitive enum selections only.
     host.
 13. **Comparison pane:** side `before/after`, label, state `present/missing`,
     optional missing message and `children` slot. Controls: label, state and
-    optional message. Missing state hides the content slot and uses the existing
+    optional message. Missing state hides the content slot and shows the
     explicit missing pane; comparison-grid layout remains caller-owned.
 14. **Empty state:** no required prop: an optional title, body, code, action
     label, destination, and busy flag. The busy flag marks a loading state,
     sets `aria-busy`, and makes the body a status.
-    Controls: title, body, loading and action label. Keep the canonical recovery
-    links and non-interactive cases rather than adding library-specific navigation.
+    Controls: title, body, loading and action label. It keeps the canonical
+    recovery links and non-interactive cases and adds no library-specific
+    navigation.
 15. **Flow step:** positive step number, title, description, the owning
     screen's title and path, and `children` slot containing the reused screen
     preview. The reference reads `This screen in the catalogue: <title> →`.
-    Controls: number, title, description and screen title. References still
-    point to the standalone owning screen, and flows never become the original
-    home of screen markup.
+    Controls: number, title, description and screen title. References point to
+    the standalone owning screen, and a flow never becomes the home of screen
+    markup.
 16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
     compact flag for narrow bars. Controls: setting and compact. It is a native
     selection control named Appearance, holding one value; it is the catalogue's
     single setting, so the value it holds is also the scheme the previews
     around it follow, and it does not fabricate a native open list.
 
-Scenario adapters explicitly map current names to these semantic fields. Do not
-add uncontrolled catch-all objects, per-screen CSS strings or function props to
-avoid an adapter. Only expose supported controls; optional props can be unset,
-while slots and list data remain inspectable with their real supplied values.
+Screens map their scenario data to these semantic fields. No component takes
+an uncontrolled catch-all object, a per-screen CSS string, or a function prop.
+Components expose only supported controls. Optional props can be unset. Slots
+and list data stay inspectable with their real supplied values.
 
-## Styles, Hosts And Adoption Coverage
+## Styles, Hosts And Screen Families
 
-The core contract specifies exact component-owned file locations. Extract rules
-from the existing source sheet into that owner's sheet only when all affected
-elements belong to its implementation. Decorative icons and shared tokens can
-remain shared styles; existing cross-component `:has()` behavior stays in
-documented shared layout/state sheets unless genuinely isolated.
-Keep registered definitions/variant fixtures outside the exclusive `.view.tsx`
-implementation; registration/fixture changes are metadata or rendered-output
-changes, not path-based implementation evidence.
+The [design components contract](./mokly-design-components.md) gives each
+component's stylesheet location. A component's sheet holds a rule only when
+every element that the rule styles belongs to that component. Decorative icons
+and shared tokens can stay in shared styles. Cross-component `:has()`
+behaviour stays in the documented shared layout and state sheets unless it is
+genuinely isolated. A registration or fixture change is a metadata or
+rendered-output change, never path-based implementation evidence.
 
 Every library component declares its own exclusive local CSS delivery root in
 `stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
 links only components actually rendered in a view, including nested components
 and transient prop edits; an absent child adds no link. CSS changes use
-[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Keep required
-mixed/global sheets in configured rules; remove
-only migrated selectors from them, preserving their remaining behavior.
-Use a minimal host for standalones, with design tokens, original root classes,
-required semantic parents (such as a `dl` for prop rows), bounded panel dimensions
-and enough overflow space for popovers and frames.
-The host must not supply hidden scenario data or another full-screen component.
+[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners.
+Mixed and global sheets stay in configured rules. Standalone samples render in
+a minimal host with design tokens, the screens' root classes, required
+semantic parents (such as a `dl` for prop rows), bounded panel dimensions, and
+enough overflow space for popovers and frames. The host supplies no hidden
+scenario data and no other full-screen component.
 
-| Existing design family                               | Required reuse                                                                                                                     |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                                 |
-| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable           |
-| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content              |
-| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit                   |
-| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                         |
-| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the existing navigation, header, frame, inspector, comparison and empty components |
-
-Adoption tests enumerate the actual owning screen inventory, assert the expected
-component ids per viewport, and verify there are no calls bypassing the registered
-implementations at migrated composition points. Test ids and behavior,
-not raw marker counts. Keep existing visual contracts and meaningful source
-attribution coverage when replacing old exact counts with the expanded inventory.
+| Design family                                        | Required components                                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                        |
+| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable  |
+| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; fixture previews remain content              |
+| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit          |
+| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                |
+| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the navigation, header, frame, inspector, comparison and empty components |

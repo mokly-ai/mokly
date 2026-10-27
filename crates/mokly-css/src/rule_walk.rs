@@ -1,4 +1,6 @@
 //! Depth-first rule collection keeps traversal frames on the heap.
+//! Each frame and rule copies its inherited conditions, so the work grows with the
+//! square of the nesting depth while the stack stays flat.
 
 use std::vec::IntoIter;
 

@@ -145,6 +145,9 @@ fn find<'a>(entries: &'a [ReviewEntry], path: &str, current_only: bool) -> Optio
     None
 }
 
+/// Copy one side's requested documents and resource closures into the generation.
+/// The base side reads its bounded capture or the pinned-source fallback, and the head
+/// side reads its render cache; an evicted view renders again from the same inputs.
 fn capture_side(
     files: &mut BTreeMap<String, File>,
     remaining: &mut usize,

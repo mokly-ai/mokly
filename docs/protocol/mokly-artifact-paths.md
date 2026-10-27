@@ -1,7 +1,5 @@
 # Path-Derived Artifact Paths
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Layout
 
 Every entry owns one directory named by its path under the
@@ -112,24 +110,18 @@ function previewMetadataPath(path: string): string;
 `snapshots/<side>/mokly-generated/<documentRoute(...)>`; a removed page or
 document has a before side only. `snapshotSidePath` returns the directory
 prefix `snapshots/<side>/`, including its trailing slash.
-`snapshotResourcePath` appends one nonempty path accepted by
-`isSafeRepositoryPath` to that prefix; it rejects absolute paths, empty or
-dot segments, backslashes, colons, and NUL. `previewMetadataPath` returns
+`snapshotResourcePath` appends one nonempty repository-relative path to that
+prefix. It rejects absolute paths, empty or dot segments, backslashes, colons,
+and NUL. `previewMetadataPath` returns
 `previews/<path>/index.json`. Each path is relative to the comparison
 generation `mokly-viewer/diffs/generations/<generation>/`, and each function
 validates its typed axes and its path before composing a relative POSIX
 path.
 
-Comparison production, the static build, shell comparison frames,
-removed-preview requests, snapshot presentation roots, and generation
-validation call these functions; none joins or slices a `snapshots/` or
-`previews/` literal itself. The catalogue index and the entry details carry
-paths and axes, never these file names. The ESLint rule
-`mokly/no-artifact-path-literals` keeps that ban in the viewer package: it
-reports a string literal that contains `snapshots/`, or `pages/` followed
-later by `.json`, tests a template literal as one string with each
-substitution replaced by `${}`, exempts the route builder module and test
-directories, and runs with the repository suite.
+These functions define the snapshot and preview layout. Every producer and
+reader of a comparison generation derives its paths from this layout. The
+catalogue index and the entry details carry paths and axes, never these file
+names.
 
 ## Shell Documents And Browser Paths
 
@@ -144,7 +136,7 @@ shell normalises its history entries to the canonical form. Hosts that
 remove `index.html` or add or remove a trailing slash therefore need no
 Mokly adapter; `parseViewHref` accepts every form.
 
-The navigation module also owns:
+`@mokly/viewer/data` also exports:
 
 ```ts
 function providerNormalizedHtmlPath(pathname: string): string | undefined;
@@ -165,12 +157,12 @@ The catalogue index and the entry details carry paths and view axes and no
 route or layout-prefix field; a reader derives every current URL from the path
 through the shared functions, and disk existence, host settings, and payload
 metadata select no other layout. A reader rejects another `schemaVersion`
-before it derives a URL. The shell, component stages, geometry, inspection,
-and navigation derive paths from the same functions and construct no second
-route map: validated segments are encoded once, a query and a fragment are
-kept under the [navigation contract](./mokly-navigation.md), and an
-artifact-relative path resolves at the source origin root, not at the JSON
-directory or an embedding application's URL. An adapter validates a current
+before it derives a URL. The viewer derives its paths from the same functions
+and constructs no second route map. It encodes validated segments once. It
+keeps a query and a fragment under the
+[navigation contract](./mokly-navigation.md). It resolves an
+artifact-relative path at the source origin root, not at the JSON directory
+or an embedding application's URL. An adapter validates a current
 document's path under `/static/mokly-generated/`, strips that fixed prefix
 once, resolves the logical route through the path functions, and keeps a
 valid fragment separately; authored closure URLs are resources, not entry
@@ -191,7 +183,7 @@ holds only rendered documents, bundled stylesheets, and CSS assets. `static/<rep
 authored closure, whose paths cannot start with `mokly-generated/`. Each
 helper keeps its stated scope: namespace-relative, static-relative,
 generation-relative, or origin-relative; `viewHref` and
-`providerNormalizedHtmlPath` begin with `/`. Callers still apply their own
-output inventory, case-folded collision, source exclusion, regular-file, and
-generation-confinement checks. These builders centralise naming; they do not
-authorise reading or writing a path.
+`providerNormalizedHtmlPath` begin with `/`. The functions compose names
+only. They do not check the output inventory, case-folded collisions, source
+exclusion, file types, or generation confinement. A returned path does not
+authorise a read or a write.

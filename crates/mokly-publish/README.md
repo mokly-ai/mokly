@@ -1,21 +1,21 @@
 # mokly-publish
 
 `mokly-publish` prepares immutable static output for Mokly Cloud and implements
-the public upload exchange v1. Callers use its traits for the exchange, Git
+the public upload exchange. Callers use its traits for the exchange, Git
 checks, output snapshots, HTTP, timing, cancellation, and reporting. The CLI
 owns publication orchestration and the static output adapter.
 
 ## Responsibilities
 
-- Validate upload metadata v2 from the shared output model.
-- Validate ownership v3, exact bytes, portable paths, and upload limits.
+- Validate the upload metadata from the shared output model.
+- Validate the ownership marker, exact bytes, portable paths, and upload limits.
 - Send Plan, missing content blobs, and Complete through one origin.
 - Apply bounded retries, one re-plan, cancellation, and digest accounting.
 - Check committed HEAD and the complete checkout before and after the build.
 
 ## What This Crate Does
 
-`mokly-model::output` owns the shared upload and ownership shapes and the
+`mokly_model::output` owns the shared upload and ownership shapes and the
 single marker writer. The static builder installs its exact immutable bytes.
 The CLI adapter constructs `Finalized` once and retains both the artifact and
 its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
@@ -52,7 +52,7 @@ The TLS provider compiles bundled C and assembly with a target C compiler and
 archiver. Linux normally uses the cc builder; CMake is a fallback. Rustls
 enables prebuilt NASM objects for Windows x64. The workspace forces
 `AWS_LC_SYS_USE_SYSTEM=0` to disable automatic host libcrypto discovery. See
-[the developer toolchain rules](../../docs/protocol/developer-test-commands.md#native-tls-build-tools).
+[the native TLS requirements](../../docs/protocol/developer-test-commands.md#native-tls-build-tools).
 
 ## Quick Start
 
@@ -70,7 +70,6 @@ outcome, and an optional normalized viewer URL.
 
 ```bash
 cargo clippy -p mokly-publish --all-targets -- -D warnings
-cargo test -p mokly-publish
 ```
 
 Unit tests use unimock and fake timing. Integration tests run a local fake
@@ -81,18 +80,33 @@ trait mocks to downstream tests.
 
 ### Key Code
 
-- [Shared output model](../mokly-model/src/output/mod.rs) and
-  [prepared output](./src/snapshot.rs), with the
-  [index identity check](./src/index_identity.rs).
-- [Exchange](./src/exchange.rs), [retry policy](./src/retry.rs), and
-  [HTTP adapter](./src/http.rs).
-- [Secret redaction](./src/redaction.rs) matches literal and percent-encoded
-  credentials.
-- [CLI adapter](../mokly-cli/src/publication/mod.rs) and [Git checks](./src/checkout.rs).
+- [`src/exchange.rs`](./src/exchange.rs) defines `Exchange` and `Client`,
+  which send Plan, the missing Blobs, and Complete with bounded retries.
+- [`src/snapshot.rs`](./src/snapshot.rs) defines `Finalized`, `Prepared`, and
+  `OutputSnapshot`, which validate finished output once and keep the prepared
+  upload.
+- [`src/index_identity.rs`](./src/index_identity.rs) defines `IndexIdentity`,
+  which streams the catalogue index and keeps its base and base commit for the
+  check against the upload metadata.
+- [`src/settings.rs`](./src/settings.rs) defines `Settings` and `Token`, the
+  validated endpoint, credential, and concurrency.
+- [`src/http.rs`](./src/http.rs) defines `Http` and `ReqwestHttp`, the
+  one-attempt HTTP boundary and its rustls adapter.
+- [`src/runtime.rs`](./src/runtime.rs) defines the injected `Clock`,
+  `Cancellation`, and `Reporter` traits.
+- [`src/checkout.rs`](./src/checkout.rs) defines `Checkout` and `GitCheckout`,
+  which check committed `HEAD` and a clean checkout.
+- [`src/accounting.rs`](./src/accounting.rs) defines `Receipt` and
+  `Progress`, the digest-based upload accounting.
+- [`src/redaction.rs`](./src/redaction.rs) defines `SecretMatcher`, which
+  matches literal and percent-encoded credentials.
+- [`../mokly-cli/src/publication/mod.rs`](../mokly-cli/src/publication/mod.rs)
+  holds the CLI orchestration that calls this crate.
 
 ### Related Docs
 
 - [Upload metadata and CLI](../../docs/protocol/mokly-upload.md).
-- [Exchange v1](../../docs/protocol/mokly-upload-exchange.md).
+- [Upload exchange](../../docs/protocol/mokly-upload-exchange.md).
 - [Validation and limits](../../docs/protocol/mokly-upload-validation.md).
 - [Static ownership](../../docs/protocol/mokly-export-ownership.md).
+- [Rust core architecture](../../docs/architecture/rust-core.md).

@@ -75,6 +75,7 @@ function processTree(rows: ProcessRow[], root: number): ProcessRow[] {
 export function treeRss(rows: ProcessRow[], root: number): number {
   return processTree(rows, root).reduce((sum, row) => sum + row.rssKiB, 0);
 }
+/** Sample the CLI tree's and the whole harness tree's RSS every 50 ms until stopped. */
 export function monitor(
   root: number | undefined,
   failed: (message: string) => void,

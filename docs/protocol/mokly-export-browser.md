@@ -7,23 +7,19 @@ standalone browser inventory and the deployment identity algorithm that the
 ## Browser Modules
 
 The standalone inventory under `mokly-viewer/client/` is the client-rendered
-shell: `shell.js`, the `@mokly/viewer/browser` entry bundled with React and
-React DOM, the shell tree, the readers of the catalogue index and the entry
-detail, the frame adapters, the message transport, geometry, the comparison
-and removed-preview controllers, and the typed removed-preview
-validators. `mokly-viewer/shell.css` and `mokly-viewer/fonts/**` complete the
+shell: `shell.js` is the `@mokly/viewer/browser` entry bundled with React and
+React DOM. `mokly-viewer/shell.css` and `mokly-viewer/fonts/**` complete the
 shell's assets. The viewer package build records every browser output in the
 browser module inventory v1. `build` copies exactly the files that inventory
 lists, and Serve serves exactly those files; a package directory that differs
 from its inventory fails the command.
 
-`build` lexes every package-owned `.js` file under `mokly-viewer/` as a
-module and checks every decoded static import, re-export, and literal dynamic
-import against the inventory and the URL rules, including relative specifiers
-that contain `+` or `:`. Quoted prose, comments, regular expressions, and
-`import.meta` are not module requests. A computed dynamic expression is not
-evaluated and not treated as a path. A lexer failure fails the build and names
-the script.
+`build` checks every decoded static import, re-export, and literal dynamic
+import of each package-owned `.js` file under `mokly-viewer/` against the
+inventory and the URL rules. A request that names no file of the inventory
+fails the build. A computed dynamic expression is not evaluated and not
+treated as a path. A script that does not parse as a module fails the build
+and names the script.
 
 The bundle detects a static build from the index, which has no `live` field.
 In a static build the shell never requests the live descriptor, the event

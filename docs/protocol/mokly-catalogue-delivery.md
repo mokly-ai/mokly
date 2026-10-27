@@ -6,16 +6,15 @@ Continuation of the [public catalogue contract](./mokly-catalogue.md).
 
 ## Projection And Privacy
 
-The catalogue model lives in process memory. Serve and `build` project it
-into two public forms through one explicit allowlist: the catalogue index v8
-and one entry detail v2 per entry. The
+Serve and `build` project the catalogue model into two public forms: the
+catalogue index and one entry detail per entry, at the versions of the
+[format inventory](./mokly-format-versions.md). The
 [shell delivery contract](./mokly-shell-delivery.md) owns their fields and
 routes, and the [catalogue contract](./mokly-catalogue.md) owns the record
-types. The projection reads the validated catalogue model, the validated
-folder records, and, when Changes is ready, the review result v8 and the
-change snapshot v4 of the [comparison contract](./mokly-comparison.md). It
-never spreads a model record, an entry, or an internal evidence object into
-public JSON.
+types. Public JSON carries only those fields. The projection reads the
+validated catalogue model, the validated folder records, and, when Changes is
+ready, the review result and the change snapshot of the
+[comparison contract](./mokly-comparison.md).
 
 The index carries every current entry record with its document keys, the
 tree, the removed records, `changesStatus`, `baseCommit`, and

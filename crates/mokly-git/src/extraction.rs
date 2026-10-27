@@ -14,6 +14,11 @@ use crate::repository::{GitRepository, Repository};
 use crate::tree::{Entry, Limits};
 
 impl GitRepository {
+    /// Extracts the commit's regular files in batches of at most 4,096 files and
+    /// 48 MiB; a larger file forms its own batch and streams to disk. Listing
+    /// the tree first fetches every missing object in one request. Each batch is
+    /// converted, copied into the archive, and released before the next is read,
+    /// so memory does not grow with the repository.
     pub(crate) fn extract_sources(
         &self,
         commit: &ObjectId,

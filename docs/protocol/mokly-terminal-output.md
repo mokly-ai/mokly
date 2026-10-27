@@ -1,7 +1,5 @@
 # CLI Terminal Output
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Scope
 
 This contract defines the user-visible terminal behaviour of the `mokly` CLI

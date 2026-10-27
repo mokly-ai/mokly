@@ -53,6 +53,13 @@ export interface MountedFrame {
     mode: "off" | "highlight" | "pick",
   ): Promise<void>;
   scrollTo(key: string): Promise<void>;
+  /**
+   * Add a listener until the returned cleanup runs. Passing the mount's own
+   * `onEvent` adopts that receiver, matched by function identity, instead of
+   * adding it twice. A wrapper that changes the event stream passes the
+   * wrapped callback it gave as `onEvent`; any other callback adds a second
+   * listener, so every event arrives twice.
+   */
   subscribe(listener: (event: FrameEvent) => void): () => void;
   dispose(): void;
 }

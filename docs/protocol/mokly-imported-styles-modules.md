@@ -13,10 +13,9 @@ scopes the file to produce the class map that the JavaScript import receives
 and the scoped text that it bundles under the
 [delivery contract](./mokly-imported-styles.md#bundling). One naming rule
 produces both, so the map and the delivered stylesheet agree by construction.
-The sidecar's [`bundle`](./mokly-sidecar.md#bundling) compiles the import to a
-stub that reads the map from the generation's table, which the core supplies
-through `cssModules` after `bundle` reports the graph and before `describe`
-evaluates the modules. Scoping runs after renderer
+The core supplies the maps through `cssModules` after the sidecar's
+[`bundle`](./mokly-sidecar.md#bundling) reports the graph and before
+`describe` evaluates the modules. Scoping runs after renderer
 pruning and after the consumer's PostCSS plugins, with no source map, so a
 `sourceMappingURL` comment never loads a map or reads a file. Diagnostic positions refer to the CSS that the scoper receives.
 Their lines break where CSS breaks them: at a line feed, a carriage return,
@@ -61,11 +60,9 @@ guard runs before scoping. `lightningcss` bundles the scoped text and is
 never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
-The CSS Modules scanners have a known parity gap for an HTML comment token
-(`<!--` or `-->`) before a stylesheet statement. cssparser skips that token,
-but the scanners keep it, so the statement can receive a different kind from
-the scanners and from `lightningcss`. The current rebuild records this gap;
-post-merge work will align the scanners.
+The CSS Modules scanners give every stylesheet statement the same start and
+kind that `lightningcss` gives it. This includes a statement after an HTML
+comment token (`<!--` or `-->`), which cssparser skips.
 
 ### Composition And Exports
 

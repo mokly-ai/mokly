@@ -1,7 +1,5 @@
 # Mokly Public Authoring Contract
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Public Authoring API
 
 Mokly has two authoring forms. HTML screens, HTML components, HTML pages, and
@@ -102,10 +100,9 @@ sorted. Tags are optional catalogue vocabulary, not a second hierarchy.
 The TypeScript input types define the allowed fields. Unknown keys always
 produce a registry `invalid-field` violation with the exact text
 `unknown field <field>`, attributed to the entry's source. Generic
-`defineScreen` inference can accept extra top-level keys so wrappers keep
-precise return types; use an explicit `ScreenInput` annotation or
-`satisfies ScreenInput` to check those keys statically. Fresh variant
-literals in direct calls keep excess-key checks. Runtime validation applies
+`defineScreen` inference can accept extra top-level keys, so wrappers keep
+precise return types. Fresh variant literals in direct calls keep excess-key
+checks. Runtime validation applies
 to every input, including structurally typed variables and untyped callers.
 Unknown flow-step fields use the same code and the text
 `step #<n>: unknown field <field>`, with one-based step numbers. Folder
@@ -128,16 +125,15 @@ Windows device name.
 
 ## Module Attribution And Discovery
 
-Imports of `@mokly/mokly` from any repository-owned module bind the authoring
-helpers to that importing module when the sidecar bundles the module. A
-module is repository-owned when its real path lies inside `repoRoot` and
-outside `node_modules` and Mokly's own package runtime; installed packages
-receive the plain, unattributed API and cannot self-attribute. Definitions
-created at module evaluation or later through a shared helper factory
-therefore keep the defining module's repo-relative source path without
-process-global attribution state. A definition created in a helper beside a
-product component is attributed to that helper, not to the entry module that
-exports it, and the helper need not match a root.
+A definition is attributed to the repository-owned module that imports
+`@mokly/mokly` and calls the helper. A module is repository-owned when its
+real path lies inside `repoRoot` and outside `node_modules` and Mokly's own
+package runtime. Installed packages receive the plain, unattributed API and
+cannot self-attribute. A definition created at module evaluation or later
+through a shared helper factory keeps the defining module's repo-relative
+source path. A definition created in a helper beside a product component is
+attributed to that helper, not to the entry module that exports it, and the
+helper need not match a root.
 
 The configured [roots](./mokly-paths.md#roots) define which files Mokly
 reads. A matched `.md` file is a document; a matched `.screen.html`,
@@ -191,9 +187,9 @@ and in HTML bodies alike under the
 fragment is a bare HTML id without `#` or percent-encoding. Both helpers
 immediately apply the path grammar and reject fragment, percent-encoded, or
 `mock:` syntax in the `to` value; only the separate fragment input or the
-complete raw logical attribute form may carry a fragment. The shared runtime
-predicates reject non-string, non-definition values before
-regular-expression evaluation, so untyped JavaScript callers cannot rely on
+complete raw logical attribute form may carry a fragment. Both helpers
+reject a `to` value that is neither a string nor a definition, and a fragment
+that is not a string. Untyped JavaScript callers therefore cannot rely on
 implicit coercion. A link may name any entry, including a variant or a
 document. A link to a path that names no entry fails the build under the
 [path diagnostics](./mokly-paths.md#diagnostics), naming the new path when

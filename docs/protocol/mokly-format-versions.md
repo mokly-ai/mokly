@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                              |
@@ -22,11 +20,14 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 | Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                             |
 | Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                  |
 
-The catalogue model lives in memory and is never written; the index carries
-the deployment id, the revision, the base commit, and the comparison
-generation's root; the review result and the change snapshot live in memory; a page embeds no
-state; both sides of a comparison render from sources. The render graph holds
-generations in memory; there is no private IPC format.
+A format number changes only when the shape or the interpretation of its
+format changes. Package 1.0.0 is the first release with a stable format
+promise; before it, any release can change a number.
+
+The catalogue model has no version, because Mokly never writes it. The index
+carries the deployment id, the revision, the base commit, and the comparison
+generation's root. The review result and the change snapshot live in memory. A
+page embeds no state. Both sides of a comparison render from sources.
 Lock-holder files keep their PID/token identities; do not confuse tokens,
 generation hashes, event revisions or package versions with format versions.
 
@@ -37,14 +38,14 @@ fallback exists for any boundary.
 
 ## Catalogue Model
 
-The Rust core keeps the catalogue model in memory and writes nothing.
 Entries carry path-based fields for screens, pages, documents, use cases,
 components and variants, including the HTML and YAML file kinds of the
 [HTML screens contract](./mokly-html-screens.md). Usage records
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
-Resource owners exclude CSS. The read model v8 is the model's public form, and
-the generated TypeScript types in the model crate are the normative shapes.
+Resource owners exclude CSS. The read model v8 is the model's public form. The
+[generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
+are the normative shapes.
 
 ## Rejection Before Interpretation
 
@@ -67,11 +68,3 @@ sends no Blob or Complete request and does not downgrade. The ownership and uplo
 fields and namespace; catalogue readers independently enforce their payload
 versions. Mokly Cloud implements upload metadata v3, catalogue v8 and entry
 detail v2, and reads Changes from the index.
-
-## Acceptance
-
-Test every version boundary with an earlier number and an unknown newer
-number. Confirm rejection precedes getters for identity/path
-fields. Update index, detail, live, static, upload and browser fixtures together. Keep old-version fixtures only as rejection tests.
-Verify unavailable Changes with a base whose sources fail current validation,
-and moved comparisons and removed previews with a base rendered from Git.

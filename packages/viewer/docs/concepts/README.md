@@ -1,7 +1,5 @@
 # Core concepts
 
-Status: In progress under the [Rust rebuild plan](../../../../plans/rust-rebuild.md).
-
 This page belongs to the [`@mokly/viewer` README](../../README.md). It explains how the viewer reads a catalogue, what a selection holds, and how a host connects to the viewer.
 
 ## Catalogue sources
@@ -18,21 +16,16 @@ catalogue index, read model v8, and one entry detail v2 per entry.
 
 The viewer validates the index and each detail before it reads a field. It
 fetches a URL with a plain GET, `credentials: "omit"`, and no custom header, and
-it rejects a redirect outside the origin. A current entry's detail must carry
-the index's `identity`, `deploymentId`, and `revision`. A removed entry's detail
-must carry the generation that `comparisonUrl` names and the removed record's
-`snapshotId`. On a revision mismatch the viewer fetches the index once more; a
-detail that disagrees after that leaves the entry unavailable with a retry
-control. A different `deploymentId` means another deployment replaced the
-files: the viewer emits one `onError` and keeps its state, and the entry's
-stage keeps loading. A React host supplies newer data by replacing `index`.
+it rejects a redirect outside the origin. When another deployment replaces the
+files, the viewer emits one `onError` and keeps its state. A React host
+supplies newer data by replacing `index`. The
+[viewer contract](../../../../docs/protocol/mokly-viewer.md#package-and-props)
+defines which details the viewer accepts and how it recovers from a revision
+mismatch.
 
 Keep the `index` object, the URL value, the `detail` function, and the frame
 adapter identities stable while the viewer is mounted. Replacing one remounts
 the viewer and cancels pending work.
-
-URL-source requests start after effect replay. A discarded StrictMode effect
-starts no request. Source replacement aborts the old load and fences its result.
 
 ## Selection
 

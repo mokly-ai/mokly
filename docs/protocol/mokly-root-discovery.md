@@ -1,7 +1,5 @@
 # Root Discovery And Source Membership
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and
 Changes share. Discovery walks a source tree: the working tree for Serve,
@@ -13,12 +11,10 @@ not a file and never matches; the race rules below concern the working tree.
 
 ## Traversal And Races
 
-Before any walk, discovery projects the repository identity and every
-distinct root identity once for the pass. A non-benign repository or root
-projection error fails before per-root validation. Walks run in declared root
-order and validate matched files during each walk. The first denial or
-empty-root failure stops the pass. Accepted and vanished candidates are each
-validated once per pass. Walks skip directories that vanish or are replaced
+A repository or root identity error that is not benign fails before any
+per-root validation. Walks run in declared root order and validate matched
+files during each walk. The first denial or empty-root failure stops the pass.
+Walks skip directories that vanish or are replaced
 (`ENOENT` or `ENOTDIR`). Other read or projection errors fail with
 `config-invalid`, naming the repository-relative path and error code
 (`unknown` if absent). A matched file that is deleted or replaced by
@@ -40,7 +36,8 @@ from that directory before derivation.
 A matched file's suffix gives its kind. A file ending in `.md` is a
 [document](./mokly-documents.md). A file ending in `.screen.html`,
 `.component.html`, `.page.html`, or `.use-case.yaml` is an HTML or YAML entry
-of the [HTML screens contract](./mokly-html-screens.md), parsed in Rust. A
+of the [HTML screens contract](./mokly-html-screens.md), parsed without
+JavaScript. A
 file ending in `.stories.ts`, `.stories.tsx`, `.stories.js`, or `.stories.jsx`
 is a Storybook stories file. Every other matched file is an entry module under
 the [entry module contract](./mokly-entry-modules.md). The glob alone defines
@@ -49,9 +46,8 @@ a module. Entry modules and stories files are bundled and described by the
 [sidecar](./mokly-sidecar.md); HTML, YAML, and Markdown files never are.
 
 Every `_folder.json` inside a walked root is also owned by exactly one root,
-independently of `files`. Overlapping roots that encounter that record fail with
-`config-invalid`: `file <file> is matched by roots[<first>] and roots[<second>]`,
-where `<file>` is repository-relative and the indices are in configured order.
+independently of `files`. Overlapping roots that encounter that record fail
+with the [root overlap error](#glob-validation) of a matched file.
 
 Every root must keep at least one file; otherwise `root matches no file: <dir>`
 lists denied and vanished paths, including dropped files, sorted under
@@ -72,11 +68,10 @@ authored source under the
 [source-protection contract](./mokly-source-protection.md): it is never
 served or written as a public file, and it stays protected through aliases.
 
-Discovery runs when the configuration is resolved, so every resolved
-configuration carries its sorted file set beside `roots`, and again at the
-start of each rebuild, so watched Serve observes created, renamed, or
-deleted files under the [watch contract](./mokly-watch.md). Later stages
-read that set and never repeat the walk within one render pass. The
+Discovery runs when the configuration is resolved and again at the start of
+each rebuild, so watched Serve observes created, renamed, or deleted files
+under the [watch contract](./mokly-watch.md). Every stage of one render pass
+uses the same sorted file set. The
 catalogue model attributes a definition only to a resolved entry module or
 an inventoried source.
 

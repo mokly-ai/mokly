@@ -28,7 +28,7 @@ export async function createPublicExportFixture(
 ): Promise<PublicExportFixture> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-exports-"));
   await Promise.all([
-    fs.mkdir(path.join(root, "docs/protocol"), { recursive: true }),
+    fs.mkdir(path.join(root, "docs/guides/start"), { recursive: true }),
     fs.mkdir(path.join(root, "src"), { recursive: true }),
   ]);
   await Promise.all([
@@ -132,9 +132,9 @@ export async function writePackageExports(
   });
 }
 
-/** Replace the fixture release-note document. */
+/** Replace the fixture upgrade guide that names removed exports. */
 export async function writeNotes(root: string, source: string): Promise<void> {
-  await writeFile(root, "docs/protocol/npm-release-notes.md", source);
+  await writeFile(root, "docs/guides/start/upgrade.md", source);
 }
 
 /** Replace one repository-relative fixture source. */

@@ -28,6 +28,12 @@ function preserveSymbols(original: object, wrapped: object): void {
   }
 }
 
+/**
+ * Track descriptors opened by path, `promises.open` handles included, and
+ * record each scalar or vector read, sync or callback, as a byte range. A
+ * write, or a read whose arguments cannot be followed, makes the cursor
+ * unknown; a close forgets the descriptor.
+ */
 export function observeDescriptors(): void {
   if (installed) return;
   installed = true;

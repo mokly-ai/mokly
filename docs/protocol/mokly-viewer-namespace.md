@@ -1,15 +1,12 @@
 # Portable Viewer Namespace And Version Gates
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.
-The model crate defines the directory names once in `namespace`, beside the
-`mokly-generated` document prefix, and the generated TypeScript of
-`@mokly/viewer/data` carries them in its generated `Namespace` module; every path builder of the binary and of
-the viewer uses that one definition. Identifiers, DOM attributes, and
-protocol names that contain `mokly` are fixed.
+`@mokly/viewer/data` exports the directory names and the `mokly-generated`
+document prefix, generated from the same definition that the binary uses.
+Identifiers, DOM attributes, and protocol names that contain `mokly` are
+fixed.
 
 | Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
@@ -56,11 +53,11 @@ The static output never contains `live.json`, `events`, `diffs/selection`,
 contains a review file. The upload Plan contains only `mokly-upload.json`,
 `.mokly-export-artifact`, and `mokly-viewer/index.json`, without a
 full-artifact upload; Blob digest, size, and snapshot
-accounting follow the [upload exchange](./mokly-upload-exchange.md). Every
-producer and consumer uses the one path definition: catalogue references,
-frame URLs, the inspector, geometry and navigation checks, CORS allowlists,
-deployment hashing, receiver fixtures, archive assertions, and provider
-adapters. `/view/` and `/static/` keep their meanings. No other file or alias
+accounting follow the [upload exchange](./mokly-upload-exchange.md).
+Catalogue references, frame URLs, the inspector, geometry and navigation
+checks, CORS allowlists, deployment hashing, receiver fixtures, archive
+assertions, and provider adapters all use these exact paths. `/view/` and
+`/static/` keep their meanings. No other file or alias
 exists under `mokly-viewer/`, and a host does not rewrite another path to the
 index.
 
@@ -74,25 +71,12 @@ generations under `mokly-viewer/diffs/generations/**`. Serve answers
 same-origin shell only, outside the public paths. The public paths keep ordinary path confinement and grant no
 access to sources, controls, or the watcher.
 
-## Version Matrix
+## Version Gates
 
-Versions identify meaning before a reader interprets any path. The supported
-versions are:
-
-| Boundary                      | Writer | Reader policy                                |
-| ----------------------------- | ------ | -------------------------------------------- |
-| Catalogue index               | 8      | Require 8 before entry and path validation   |
-| Entry detail                  | 2      | Require 2 before reading entry fields        |
-| Live descriptor               | 3      | Require 3 before using the render capability |
-| Removed page preview metadata | 3      | Require 3 before resolving a document        |
-| Export ownership marker       | 3      | Accept 3 for upload and output replacement   |
-| Upload metadata envelope      | 3      | Strict current fields and namespace          |
-| Plan response                 | 1      | Content-delta exchange                       |
-
-The [combined version inventory](./mokly-format-versions.md) lists every
-boundary, including the inspector wire version. Unknown versions fail closed.
-The index carries `deploymentId`, `revision`, and `comparisonUrl`, and a page
-embeds no state; no other envelope exists.
+Versions identify meaning before a reader interprets any path. The
+[format inventory](./mokly-format-versions.md) lists the supported version of
+every boundary and the reader of each. Unknown versions fail closed. No other
+envelope exists.
 
 Index v8 carries identity-only entries: no layout prefix, per-entry route,
 `documentPath`, or `fragmentPath`. A reader derives every file from the
@@ -129,8 +113,8 @@ rejects it before it derives a `/static/` URL or reads an entry field. The
 viewer exposes a typed version failure that a host can distinguish from
 malformed data; its diagnostic is
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
-with boundary `catalogue`, `detail`, or `live` and the table's supported
-version. A malformed current document is invalid data, not a version
+with boundary `catalogue`, `detail`, or `live` and the supported version of
+the format inventory. A malformed current document is invalid data, not a version
 failure. No reader infers a version from file existence or falls back to
 another URL.
 
@@ -160,7 +144,7 @@ lookup, index and detail fetch URLs, and the embedded viewer's version error
 for these versions; a receiver that does not rejects publication with 426.
 Receiver deployment is independent of a local build.
 
-## Names And Acceptance
+## Deployed Names
 
 Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#`, or
 `~`. This applies to the viewer namespace, `entries`, `generations`,
@@ -182,17 +166,3 @@ output replacement require it. Other dot-prefixed fixed names belong to the
 static build's output transaction; they are local state and are never
 deployed. Provider metadata is optional host configuration and never a
 visitor dependency.
-
-Regression tests cover an old receiver rejecting a new current-only and a
-Changes-enabled upload, new readers rejecting old and unknown versions before
-any path use, and ownership v3 fixtures with explicit unsupported-v2 cases;
-Plan v1 retry, keep-first, delta, and cancellation tests stay. No source
-enters any output. Smoke-test Serve, a plain static server with the optional
-marker removed, and a publication Plan, Blobs, and Complete round trip. Keep
-the build and upload regression on the example output: inspect every segment
-of its complete built and reconstructed inventories for `.`, `_`, `#`, or `~`
-prefixes, with only the root marker exception; this asserts the fixture, not
-arbitrary consumer names. A unit test enumerates the fixed deployed names
-Mokly chooses and checks the same rule. Include a Changes-enabled example
-output so `generations/`, removed previews, and binary CSS resources are
-covered. Stop every server after testing.

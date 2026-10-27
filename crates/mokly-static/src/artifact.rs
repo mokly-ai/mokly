@@ -9,6 +9,9 @@ use mokly_model::output::validation::{MARKER, digest};
 use crate::error::{Error, Result};
 use crate::inventory::Inventory;
 
+/// Checks the whole artifact before any byte is staged: unique paths, the
+/// portable-path rule and the 64 MiB file limit of the inventory, and a last
+/// marker whose entries match each file's size and digest.
 pub(crate) fn validate(artifact: &Artifact) -> Result<()> {
     let mut paths = BTreeMap::new();
     let mut inventory = Inventory::default();

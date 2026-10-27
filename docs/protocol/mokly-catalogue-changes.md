@@ -1,7 +1,5 @@
 # Catalogue Change Metadata And Removed Pages
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 A base commit without the selected configuration file has an empty catalogue.
 Every current entry is added. A malformed configuration or a failed Git read
 keeps its validation or Git failure. A comparison size or command budget
@@ -11,28 +9,14 @@ current build remains usable.
 ## Shared Metadata Contract
 
 The in-memory catalogue change snapshot v4 pairs the in-memory review result
-v8 of one comparison generation with the base commit. The Rust core produces it from the catalogue
+of one comparison generation with the base commit. The Rust core produces it from the catalogue
 models of both sides under [Sides](./mokly-comparison.md#sides): the head
 from the working tree, the base from the base commit. Serve, watch, the
-static build, and publication consume the same snapshot for a generation:
-
-```ts
-interface CatalogueChangeSnapshotV4 {
-  schemaVersion: 4;
-  baseRef: string;
-  baseCommit: string;
-  changedEntries: readonly string[];
-  movedEntries: readonly { path: string; previousPath: string }[];
-  removedEntries: readonly RemovedEntrySnapshot[];
-}
-
-interface RemovedEntrySnapshot {
-  entry: ScreenRecord | PageRecord | DocumentRecord | ComponentRecord;
-  folderTitles: readonly string[];
-  parentTitle?: string; // Required exactly on removed variants.
-  snapshotId: string;
-}
-```
+static build, and publication consume the same snapshot for a generation.
+They therefore agree on removed metadata, `previousPath`, collision
+rejection, and counts. The generated
+[`CatalogueChangeSnapshotV4`](../../packages/viewer/src/generated/catalogue/CatalogueChangeSnapshotV4.ts)
+type and the types that it imports define the shape.
 
 The snapshot, the review result, and the index of one generation share
 `baseCommit`. The model crate's types are the normative shapes.
@@ -76,11 +60,10 @@ components use the
 display metadata comes from the current catalogue; removed display metadata
 comes from `removedEntries`. There is no removed use case.
 
-Visual comparisons use review result v8 for every catalogue. Pages and
-documents add no comparison records, and their removal needs none. The static
-build must not discover removed pages or documents from the review
-entries. A page's CSS evidence travels as the `resourceEvidence` of its entry
-detail.
+Visual comparisons of every catalogue use the review result version of the
+[format inventory](./mokly-format-versions.md). Pages and documents add no
+comparison records, and their removal needs none. A page's CSS evidence
+travels as the `resourceEvidence` of its entry detail.
 
 ## Removal Selection And Precedence
 
@@ -96,12 +79,11 @@ current entry cannot carry a `removed` comparison state. Only records inside
 
 Ordinary removed entries sort by kind then path. Snapshot decoding rejects
 unknown historical fields, duplicate snapshot identities, invalid parent-title
-placement, and ordering established by the snapshot itself. Complete source
-validation uses both catalogues to verify surviving-parent placement and base
-authored variant order; this order is not inferred from variant path spelling. If a removed variant's
-parent survives, place the removed variant at the position its parent
-occupies in that ordering and keep the base's authored sibling order among
-removed variants. This is the combined parent/variant projection of the
+placement, and ordering established by the snapshot itself. If a removed
+variant's parent survives, place the removed variant at the position its
+parent occupies in that ordering and keep the base's authored sibling order
+among removed variants. That order comes from the base catalogue, not from
+variant path spelling. This is the combined parent/variant projection of the
 [catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions).
 
 A removed variant of either kind follows these same rules. Its relationship
@@ -135,6 +117,7 @@ Removed page and document rows are hidden from All; removed screens stay
 visible there. Removed variant placement, fallback, and order follow
 [variant navigation](./mokly-variant-navigation.md). Search and tag filtering
 use base path segments, title, and tags like current leaves. Home totals and the tag picker use current entries.
+The home view recreates no removed folder.
 
 The removed page or document view shows the base document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
@@ -143,11 +126,6 @@ folder titles. Historical titles are informational text, not folder nodes or
 links that pretend the old hierarchy still exists. Changing a surviving
 folder's title does not rewrite the base titles. Keep the view available at
 `/view/<path>/` even when All is selected.
-
-For example, removing the last entry in `Documents` leaves a flat
-`Statement · Removed` row in Changes. Details keep its old `Documents` folder
-title; neither navigation nor the home view recreates the old folder. The
-design mockups cover this exact state at mobile and desktop widths.
 
 ## Changes Count
 
@@ -165,32 +143,21 @@ enter the count.
 
 ## Watch And Publication
 
-Recompute current impact, moved pairings, removed metadata, and base folder
-titles together when watch replaces a generation, before Serve publishes the
-revision. Navigation, counts, details, and previous-version views never mix
-snapshots from separate generations. A static build with Changes uses the
-same snapshot and base commit as its view comparisons, and the index carries
-its metadata as data.
+When watch replaces a generation, Serve publishes its current impact, moved
+pairings, removed metadata, and base folder titles in one revision.
+Navigation, counts, details, and previous-version views never mix snapshots
+from separate generations. A static build with Changes uses the same snapshot
+and base commit as its view comparisons, and the index carries its metadata as
+data. Serve and the static build use one snapshot's ownership classification
+for every entry, including component variants. They never resolve a newer
+base while they render that snapshot.
 
 A build without Changes, under the option the
 [publication contract](./mokly-publication.md) owns, computes no snapshot and
-has no removed entries. With Changes included, the static build keeps removed
+has no removed entries. It does no Git or comparison work. With Changes
+included, the static build keeps removed
 page and document rows, Moved rows, and previous-version views from this
 model; it writes each removed entry's detail and its documents, with their
 resource closure, into the comparison generation under
 [removed previews](./mokly-removed-previews.md). Pages and documents still
 generate no visual comparison records.
-
-## Acceptance
-
-Use generic fixtures for removing a page or document and its now-empty
-ancestor folders, renaming a surviving folder's title, reusing a path with
-another kind, and moving an entry between folders with and without edits.
-Assert identical removed metadata, `previousPath`, collision rejection, and
-counts in Serve, watch, and a build with Changes; keep screen comparison
-coverage. Test filters and search, All versus Changes visibility, direct
-access to a removed entry's `/view/<path>/` URL, base breadcrumbs, Moved rows,
-no recreated folders, a base whose sources fail validation, and zero Git or
-comparison work for a build without Changes. Serve and the static build reuse
-one snapshot's ownership classification for every entry, including component
-variants, and never resolve a newer base while they render that snapshot.

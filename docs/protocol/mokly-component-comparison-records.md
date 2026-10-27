@@ -1,85 +1,17 @@
 # Component Comparison Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Normative Result
 
 The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
 owns the in-memory review result v8 envelope, its view record, and its rule
 evidence. This page defines the entry records, the affected-consumer records,
-and the diagnostics inside that envelope. The model crate's types are the
-normative shapes. The [entry detail](./mokly-shell-delivery.md#entry-detail)
-publishes a screen or component entry's `before` address and each view's
-`state`, `ignoredIds`, and evidence.
-
-```ts
-interface ReviewEntryAddress {
-  path: string;
-  title: string;
-  props?: ComponentWireProps; // screens and components: the merged props
-  suppliedSlots?: readonly string[]; // components only
-}
-
-interface ReviewEntrySides {
-  before?: ReviewEntryAddress;
-  after?: ReviewEntryAddress;
-  previousPath?: string;
-}
-
-type ReviewState =
-  "unchanged" | "changed" | "added" | "removed" | "ignored-only";
-
-type EntryChangeReason =
-  | {
-      kind:
-        | "added"
-        | "removed"
-        | "metadata"
-        | "material"
-        | "implementation"
-        | "inputs"
-        | "structure";
-    }
-  | { kind: "dependency"; path: string }
-  | { kind: "screen"; screenPath: string };
-
-interface ReviewEntry extends ReviewEntrySides {
-  kind: "screen" | "component" | "use-case";
-  path: string;
-  title: string;
-  state: ReviewState;
-  included: boolean;
-  reasons: readonly EntryChangeReason[];
-  views: readonly ReviewView[];
-  variants?: readonly ReviewEntry[]; // component parents: their variants
-}
-
-interface ComponentUsageContext {
-  kind: "screen" | "component";
-  entry: ReviewEntryAddress;
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-}
-
-interface AffectedUsageEvidence {
-  side: "before" | "after";
-  context: ComponentUsageContext;
-  via: readonly { componentId: string; instanceKey: string }[];
-}
-
-interface AffectedConsumer {
-  changedComponentId: string;
-  consumer: { kind: "screen" | "component"; path: string };
-  evidence: readonly AffectedUsageEvidence[];
-}
-
-interface ReviewDiagnostic {
-  message: string;
-}
-```
-
-`ReviewView`, `RuleEvidence`, and `ResourceEvidence` are the view shapes of
-the comparison contract. `ComponentWireProps` is the props codec of the
+and the diagnostics inside that envelope. The model crate's `ReviewEntry`,
+`AffectedConsumer`, and `ReviewDiagnostic` types define their shapes. The
+[entry detail](./mokly-shell-delivery.md#entry-detail) publishes a screen or
+component entry's `before` address, whose shape is the generated
+[`ReviewEntryAddress`](../../packages/viewer/src/generated/catalogue/ReviewEntryAddress.ts)
+type, and each view's `state`, `ignoredIds`, and evidence. The side address of
+a screen or a component carries its merged props in the props codec of the
 [catalogue read model](./mokly-catalogue.md).
 
 ## Sides And Pairing

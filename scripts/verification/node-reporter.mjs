@@ -1,6 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Stream test output and write temporary event data to
+ * `MOKLY_NODE_EVENT_REPORT`: per-file summaries, failures with their
+ * `failureType`, and file results. A file result is a top-level pass or fail
+ * whose name resolves to its file; a selected run uses it to observe a file
+ * that wrote no summary.
+ */
 export default async function* verificationReporter(source) {
   const output = process.env.MOKLY_NODE_EVENT_REPORT;
   if (!output) throw new Error("MOKLY_NODE_EVENT_REPORT is required");

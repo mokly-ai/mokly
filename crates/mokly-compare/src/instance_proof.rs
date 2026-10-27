@@ -14,6 +14,11 @@ use crate::comparison_types::ViewKey;
 use crate::material::mapped;
 use crate::view_material::MaterialComparison;
 
+/// Consumer-view proof that a paired instance changed its render or reached a
+/// dependency of its component. It keeps the exact instance, view, side, and
+/// reference: the referring route, the written URL, and the resolved target.
+/// Validation can then admit a parent's non-CSS dependency from this record
+/// without a fresh path match.
 pub(crate) struct InstanceProof {
     pub(crate) component: String,
     pub(crate) instance: String,

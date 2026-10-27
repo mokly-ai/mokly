@@ -11,6 +11,8 @@ use mokly_source_interface::stream::{OpenedSource, SourceStream};
 use crate::git_tree::GitTree;
 
 impl GitTree {
+    /// Hashes an opaque blob once and memoizes the digest. A miss reads the blob
+    /// through one Git digest command instead of filling the byte cache.
     pub(crate) fn digest_file(&self, path: &Path) -> Result<String> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("digest", path, io::ErrorKind::IsADirectory));
@@ -66,6 +68,8 @@ impl GitTree {
         Ok(hash)
     }
 
+    /// Delivers one opaque blob from one bounded batch read. The blob stays under
+    /// the default read limit, so the stream buffers it in memory.
     pub(crate) fn opaque_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("open stream", path, io::ErrorKind::IsADirectory));

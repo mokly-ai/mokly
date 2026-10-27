@@ -56,6 +56,10 @@ pub(crate) fn key(
 }
 
 impl Builder for Install<'_> {
+    /// Copies the leased source extraction, runs each manager, then removes the
+    /// download caches, stores, and private mirror. The removal comes before the
+    /// cache counts bytes and flushes the entry, so those folders neither count
+    /// against the bound nor cost flush time.
     fn build(&self, destination: &Path) -> Result<()> {
         self.owner.storage.copy(
             &self.request.source_root,

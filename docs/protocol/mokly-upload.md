@@ -6,10 +6,10 @@ Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly build` is local-only. `mokly publish` builds into its own
 private directory outside the repository, then runs the exchange so a receiver
-stores only content it lacks. The
-`mokly-upload.json` envelope uses `schemaVersion: 3`; the ownership marker is
-[schema 3](./mokly-export-ownership.md), and the Plan response is independently
-versioned as v1. Earlier receivers reject this format with 426 under the
+stores only content it lacks. The `mokly-upload.json` envelope, the
+[ownership marker](./mokly-export-ownership.md), and the Plan response each
+carry their own version of the [format inventory](./mokly-format-versions.md).
+Earlier receivers reject this format with 426 under the
 [namespace compatibility contract](./mokly-viewer-namespace.md#compatibility-failure).
 A receiver reads Changes only from the catalogue index that the Plan archive
 carries, under the
@@ -65,9 +65,7 @@ Strict mode is opt-in so recoverable authoring warnings do not block publication
 
 After a successful publication or an already-published response, delete exactly
 the private directory created by this publication, including its site and
-reservation directory. Use the allocated path retained by the command, never
-a path reconstructed from output or environment data. Do not follow symbolic
-links. A failed or cancelled upload retains the whole private directory.
+reservation directory. Do not follow symbolic links. A failed or cancelled upload retains the whole private directory.
 If removal fails, warn with the private directory path and keep publication
 successful. The receiver has already accepted it. Removing only the snapshot
 would leave the reservation directory behind.
@@ -83,9 +81,7 @@ The CLI enforces this rule; a receiver cannot verify it. A receiver keeps the
 first publication it completes for a `headSha` and `configPath`.
 
 Publish checks HEAD and repository status before the build, then checks both again
-before Plan. Either status check fails before any receiver request. Status uses
-fixed Git argv without a shell, `--porcelain=v1 -z`, `--untracked-files=all`,
-and `--ignore-submodules=none`. Modified, staged, deleted, renamed, type-changed,
+before Plan. Either status check fails before any receiver request. Modified, staged, deleted, renamed, type-changed,
 unmerged, untracked non-ignored paths and submodule changes anywhere in the
 repository count, regardless of user Git settings. Git-ignored files and
 Mokly-owned caches and temporary paths never count. Uncommitted changes fail
@@ -169,8 +165,10 @@ installed output, never a later walk of mutable output.
 ## Output
 
 The [exchange accounting and output contract](./mokly-upload-exchange.md#accounting-and-output)
-defines uploaded and unchanged counts, per-round progress, singular and plural
-strings, viewer URL handling, cancellation, and transport-failure copy. The
+defines uploaded and unchanged counts, per-round progress, viewer URL
+handling, and cancellation classification. The
+[terminal compatibility contract](./mokly-terminal-errors.md) owns the exact
+summary, cancellation, and transport-failure lines, and the
 [terminal output contract](./mokly-terminal-output.md#one-shot-commands) owns
 plain and rich rendering. Failed publication leaves the complete built
 directory in place; it is not rolled back.

@@ -1,10 +1,8 @@
 # Component Review Validation
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This contract validates the
 [component comparison schema](./mokly-component-review.md). The comparison
-validates its review v8 result in memory, in one canonical order with one
+validates its review result in memory, in one canonical order with one
 affected-consumer order key, before any host projects it into the index and
 the entry details.
 
@@ -20,50 +18,45 @@ use case steps. Unknown fields, inconsistent sides, duplicate records or
 reasons, missing view evidence, and invalid values fail rather than being
 dropped.
 
-For each entry, the classifier records the owner-attributed rule and resource
-records of its actual view comparisons. For CSS, it records the unfiltered
-and kept own-page match sets of every rule identity before any entry's
-evidence is decided. Nested filtering uses the unfiltered sets; a component
-owner requires kept own-page matches or trusted exact-instance proof. The
+A `dependency` reason is valid only when a view of that entry carries a rule
+or resource record owned by the entry for that path. A reachable path alone
+never justifies a reason. The
 [ownership rule](./mokly-component-changes.md#rendered-resources-and-styles)
-excludes unrendered source paths and declared paths. Source validation accepts
-a `dependency` reason only when a view of that entry carries a rule or
-resource record owned by the entry for that path; a reachable path alone never
-justifies a reason. A component parent's non-CSS dependency can instead use
-recorded consumer-view proof at a paired instance with unchanged props and
-supplied slot content. That proof retains the exact instance, view, side,
-referring route, written URL, and resolved target. Inline rules use their
-containing public document route and recorded containment proof.
-An `implementation` reason requires actual-instance render proof or a trusted
-owned-rule match in a paired physical instance with unchanged caller inputs.
-These reasons never alter the component's own view states.
-Validation uses the recorded classifier evidence, never the
-result's own rows or a fresh path match. Source keys use kind and path,
-flattened variants included; a moved entry uses its current path.
+excludes unrendered source paths and declared paths. A CSS component owner
+requires kept own-page matches under the
+[CSS rule contract](./mokly-css-attribution-rules.md) or trusted
+exact-instance proof. A component parent's non-CSS dependency can instead
+rest on consumer-view proof at a paired instance with unchanged props and
+supplied slot content. Inline rules use their containing public document
+route and containment proof. An `implementation` reason requires
+actual-instance render proof or a trusted owned-rule match in a paired
+physical instance with unchanged caller inputs. These reasons never alter the
+component's own view states. Source coverage keys each record by kind and
+path, flattened variants included. A moved entry uses its current path.
 
-Source validation receives the accepted move pairs of classification. It
-requires exact `previousPath` coverage, both original side addresses, and one
-record for every moved screen, component, variant, or use case. Validation
-requires `previousPath` when paired paths differ beyond case. It rejects a
-case-only `previousPath`, duplicate historical identities, and a paired
+Each moved screen, component, variant, or use case of an accepted move pair
+has exactly one record, with both original side addresses. `previousPath`
+appears exactly on those records. Validation requires `previousPath` when
+paired paths differ beyond case. It rejects a case-only `previousPath`,
+duplicate historical identities, and a paired
 historical identity that is also listed as removed. Catalogue readers
 additionally require ready, included, unmodified-or-changed current records
 for prior paths. Empty reasons are valid only for a paired move. Page and
 document moves are catalogue evidence under the
 [move contract](./mokly-moves.md#result).
 
-Source validation also receives the implementation-impact set computed from
-the classifier's paired canonical forms, unchanged inputs, and
-rendered-resource policy. It requires exact equality with the complete
-affected-consumer evidence derived from that set and both sides' usage.
-Neither a subset nor the set of every changed component is sufficient:
-variant or control metadata edits can be direct changes without
-implementation impact, and a wrapper-only or unresolved entry reason has no
-component impact unless another rule proves a kept component match. Linked
-and ownerless CSS require own-page proof; declared owners can use exact-instance
-proof, including supplied content. An included variant with proven render, resource, or CSS impact permits its
-parent identity in affected evidence without a parent Changes row. Every
-classification path performs this validation before it returns a result.
+`affected` holds exactly the consumer evidence of the components with
+implementation impact, derived from both sides' usage. Implementation impact
+follows from the paired canonical forms, the unchanged inputs, and the
+rendered-resource policy. Neither a subset nor the set of every changed
+component is valid: variant or control metadata edits can be direct changes
+without implementation impact, and a wrapper-only or unresolved entry reason
+has no component impact unless another rule proves a kept component match.
+Linked and ownerless CSS require own-page proof; declared owners can use
+exact-instance proof, including supplied content. An included variant with
+proven render, resource, or CSS impact permits its parent identity in
+affected evidence without a parent Changes row. Every classification path
+performs this validation before it returns a result.
 
 The [selected comparison](./mokly-selected-comparisons.md) of Serve captures
 the documents of one screen or component variant entry of a validated complete
@@ -83,9 +76,9 @@ addresses use the side's own schema and the canonical JSON of the
 [entry props contract](./mokly-entry-props.md). Instance keys are opaque
 validated identifiers and never become filesystem paths or selectors.
 
-A generation written by `build` is served by a static host as plain files;
-Serve's selected generations serve an immutable captured byte map and reopen
-no filesystem path. Diagnostic text renders authored titles as escaped
+A generation written by `build` is served by a static host as plain files.
+Serve serves its selected generations from captured bytes and reopens no
+filesystem path. Diagnostic text renders authored titles as escaped
 single-line text and uses safe code-span delimiters for refs and paths; JSON
 keeps original values.
 
@@ -104,10 +97,6 @@ Path sets are sorted and unique. Validation enforces every stated order and
 rejects duplicates rather than reordering them. The entry details keep the
 evidence, reason, and ignore-id orders of the result.
 
-Fixture tests cover valid and invalid results, deterministic order, current
-and removed variants and consumers, metadata-only changes, zero Changes with
-affected screens, and identical served and built membership.
-
 ## Path Identity
 
 Pair entries by kind and case-folded path. A case-only rename keeps one
@@ -120,11 +109,10 @@ Grouped component records keep the views that belong to each component side.
 
 Both sides are the composed documents of the
 [comparison contract's sides](./mokly-comparison.md#sides), rendered by the
-current Mokly version with their real bytes. Head views use the bounded render
-cache; base views use the bounded capture or pinned-source fallback. Ownership
-regions are node annotations of those trees. The base is the merge base of `HEAD` and the configured base; staged,
-unstaged, and untracked edits participate on the head side. No command checks
-the base commit out. Cross-kind path reuse and moves follow the
+current Mokly version with their real bytes. Ownership regions are node
+annotations of those trees. The base is the merge base of `HEAD` and the
+configured base; staged, unstaged, and untracked edits participate on the
+head side. No command checks the base commit out. Cross-kind path reuse and moves follow the
 [comparison engine](./mokly-changes-serving.md#comparison-engine) and the
 [move contract](./mokly-moves.md); title edits are metadata changes.
 

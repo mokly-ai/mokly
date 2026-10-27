@@ -8,7 +8,12 @@ import { executeNative } from "./execution.mjs";
 
 const require = createRequire(import.meta.url);
 
-/** The host runtime, created only by the executable entry. */
+/**
+ * The host runtime, created only by the executable entry. The binary gets the
+ * `@mokly/viewer/browser` build that this installation resolves in
+ * `MOKLY_VIEWER_DIST`, so the consumer's working directory never selects the
+ * viewer it serves.
+ */
 export function systemRuntime() {
   return {
     nodeVersion: process.versions.node,

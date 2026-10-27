@@ -119,6 +119,11 @@ export function createRegionMirror(host: RegionMirrorHost): RegionMirror {
     return settled;
   }
 
+  /**
+   * Mirror one region offset to its counterpart in every other version.
+   * Matching continues while Scroll together is off and only the write waits
+   * for the switch, so turning it on can reuse the cached pairings.
+   */
   function follow(layer: RegionLayer, region: Element, offset: ScrollOffset) {
     for (const other of host.layers()) {
       if (other.document === layer.document) continue;

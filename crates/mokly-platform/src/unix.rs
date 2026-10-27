@@ -12,6 +12,9 @@ use crate::processes::ProcessGroup;
 #[cfg(target_os = "macos")]
 use crate::unix_group_members::{self, SystemMembers};
 
+/// Renames with Linux `renameat2(RENAME_NOREPLACE)` or macOS
+/// `renamex_np(RENAME_EXCL)`, and reads `errno` directly after the call. The
+/// outer error is an invalid path; the inner result is the rename's own.
 pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::Result<()>> {
     let source = path_string(source)?;
     let destination = path_string(destination)?;
@@ -38,6 +41,7 @@ pub(crate) fn exclusive_rename(source: &Path, destination: &Path) -> Result<io::
     })
 }
 
+/// Rejects a path with an interior NUL, which C would read as a shorter path.
 fn path_string(path: &Path) -> Result<CString> {
     match CString::new(path.as_os_str().as_bytes()) {
         Ok(path) => Ok(path),

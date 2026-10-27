@@ -155,9 +155,9 @@ Blob and Complete attempts and waits may not reach or pass `upload.expiresAt`.
 Do not start an attempt at or after expiry, and do not begin a wait that would
 end at or after it. Local expiry consumes the same one re-plan as 409 and 410.
 Receivers choose an expiry long enough for a complete upload; Mokly Cloud
-allows sixty minutes. Command cancellation stops attempts and waits immediately
-with the cancellation output below. Exhausted retries use the transport-failure
-output below.
+allows sixty minutes. Command cancellation stops attempts and waits
+immediately with the cancellation output. Exhausted retries use the
+transport-failure output.
 
 ## Accounting And Output
 
@@ -179,43 +179,26 @@ of byte sizes once per distinct combined digest, including all Plan-archive
 files; the marker's own byte length participates even though it is not an
 entry. A re-plan restarts at that round's initial `<n>`, `<total>` and `<size>`.
 A round with empty `missing` shows no progress label. In one round, its final
-`<n>` equals the summary's `<uploaded>`.
-
-The progress label uses binary units, whole bytes below 1 KiB and one decimal
-place from KiB upward. Its exact singular and plural forms are:
-
-```text
-Uploading 0 of 1 file · <size>
-Uploading 0 of 2 files · <size>
-```
+`<n>` equals the summary's `<uploaded>`. The
+[terminal output contract](./mokly-terminal-output.md) owns the progress label.
 
 A `201` completion prints exactly one counted summary, followed by the viewer
-URL on its own line when accepted:
-
-```text
-Published Mokly catalogue. 1 file uploaded, <unchanged> unchanged.
-Published Mokly catalogue. 2 files uploaded, <unchanged> unchanged.
-```
-
-Zero and every value other than one use `files`. `unchanged` is not followed
-by a noun and does not pluralize. A `200` completion replaces the counted line
-with `Mokly catalogue already published for this commit.` and may print the
-kept publication's viewer URL. Rich mode uses the same wording after its
-success glyph and before its duration.
+URL on its own line when accepted. A `200` completion replaces the counted
+line with the already-published line and may print the kept publication's
+viewer URL. The [terminal compatibility contract](./mokly-terminal-errors.md)
+owns the exact lines.
 
 This document owns cancellation classification and precedence for
 `mokly publish`. A failure is a cancellation only when the command's
 cancellation aborted it, in a request or in the Git runner, or when the core
-explicitly marked the error as a cancellation where it detected the
-cancellation. The only signal-based exception is the
+detected the cancellation itself. The only signal-based exception is the
 [pre-installation window](./mokly-export-recovery.md#pre-installation-window)
 owned by the static build recovery contract. Outside that window, never infer
 cancellation from a cause chain, a combined error's members, error text or an
-already-aborted command signal.
-Never put the mark on an error that combines cancellation with a rollback,
-backup or reservation-cleanup failure.
+already-aborted command signal. An error that combines cancellation with a
+rollback, backup or reservation-cleanup failure is not a cancellation.
 
-`mokly publish` uses the cancellation output below only for a cancellation. It
+`mokly publish` uses the cancellation output only for a cancellation. It
 prints every other error unchanged with that error's own category, whether or
 not the command was also cancelled. This includes a build recovery error
 that names the backup or reservation path required for recovery. Every failed
@@ -223,25 +206,10 @@ publish exits with status 1. The
 [static build recovery contract](./mokly-export-recovery.md#cancellation-and-recovery-precedence)
 owns output transaction outcomes and the `mokly build` output.
 
-A cancellation keeps category `upload-failed`. Plain mode prints exactly:
-
-```text
-[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
-```
-
-Rich mode uses headline `Publication was cancelled.`, no detail line, and hint
-`Run mokly publish again when you are ready.` It never shows a connection hint
-for cancellation.
-
-An exhausted retry or transport failure uses this exact plain line:
-
-```text
-[mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.
-```
-
-Rich mode uses headline `The catalogue upload did not complete.`, no detail
-line, and the distinct hint `Check the endpoint and connection, then retry.`
-Raw response bodies, headers, URLs, credentials and transport exception text
+A cancellation keeps category `upload-failed`. The
+[terminal compatibility contract](./mokly-terminal-errors.md#plain-compatibility)
+gives the exact plain and rich output of a cancellation and of an exhausted
+retry or transport failure. Raw response bodies, headers, URLs, credentials and transport exception text
 never enter either mode.
 
 ## Rejections, Limits And Receiver Validation

@@ -179,6 +179,8 @@ impl RenderGeneration for CapturedGeneration {
         }
         self.source.closure(route)
     }
+    /// Replays every captured view, checking cancellation before each one, also on
+    /// cache hits, so a cancelled generation stops with its own cancellation error.
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         let summary = self.summary.clone();
         collector.summary(&summary);

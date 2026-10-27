@@ -55,6 +55,10 @@ pub(crate) fn closures(
     })
 }
 
+/// Pairs a moved view's base-only resources with its head-only resources: by a
+/// unique equal digest on both sides, or as the sole removed and added resource
+/// of one file kind. The map holds only this view's closure references, so the
+/// alias rewrite of HTML and CSS stays scoped to the paired view.
 fn aliases(
     before: &Closure,
     after: &Closure,

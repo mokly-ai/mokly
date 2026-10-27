@@ -6,6 +6,26 @@ describes the complete gate and focused commands.
 Public test commands and strict evidence rules live in the
 [verification contract](../../docs/protocol/ci-verification.md).
 
+## Key code
+
+- [`run-viewer.mjs`](./run-viewer.mjs) runs the viewer suite for `npm test`
+  and, with `--strict`, for `npm run test:viewer:prepared`.
+- [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
+  Playwright specs of `npm run test:browser` after it checks the build.
+- [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
+  shard of it, and writes its report.
+- [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and
+  `file://` delivery checks of `npm run test:delivery:prepared`.
+- [`dependency-audit.mjs`](./dependency-audit.mjs) and
+  [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
+- [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
+  that a commit has every CI suite report for each runtime profile.
+- [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
+  `runRepositoryRatchets`, which runs every maintainability ratchet of the
+  Repository suite.
+- [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
+  Testbox.
+
 ## Workflow syntax
 
 Run `actionlint` without arguments from the repository root to check every
@@ -87,10 +107,7 @@ aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
 inputs in estimated milliseconds per test. They use the median per-test cost
-from hosted runs `39581933162`, `39586827857`, and `39592076732`, all on
-`cdb32803`. Each run kept the same four-shard assignment and all browser
-reports passed. Earlier remote observations remain in the plan and its
-evidence; they do not replace these hosted measurements.
+of complete, successful hosted browser runs.
 
 For each sample and `specFile`, sum `observedTests.durationMs` and divide by
 its observed test count. Take the median of the available per-test sample
