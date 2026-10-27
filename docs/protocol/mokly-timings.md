@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the

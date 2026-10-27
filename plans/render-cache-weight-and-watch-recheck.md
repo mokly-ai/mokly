@@ -241,23 +241,26 @@ Charge the records at the D1 multiple. No other charge changes.
 
 Emit the counts of the D3 answer at the end of the five phases.
 
-- [ ] Write the failing tests first in a new
+- [x] Write the failing tests first in a new
       `crates/mokly-cli/src/_tests_/cache_trace_tests.rs`, with a mocked
       render cache and the mocked clock. Each of the five phases emits one
       count record before its end record, with the phase differences and
       the end totals. Other stages emit none. A phase that ends with
       `error` still emits. Nested phases each emit their own record.
-- [ ] Add the cache constructor with the 256 MiB bound to
+- [x] Add the cache constructor with the 256 MiB bound to
       `crates/mokly-cli/src/render_runtime.rs`. `Services::new` takes the
       cache instead of creating it.
-- [ ] Create the cache in `entry_serve.rs`, `entry_build.rs`, and
+- [x] Create the cache in `entry_serve.rs`, `entry_build.rs`, and
       `entry_publish.rs`. Pass it to `serve_trace::install`, and through
       `ServeServices`, the build `Context`, and the publish `Output` to
       `Services::new`.
-- [ ] Add the counts to the timing layer in a new
+- [x] Add the counts to the timing layer in a new
       `crates/mokly-cli/src/serve_trace_cache.rs`.
-- [ ] Update the existing trace tests for the new layer field.
-- [ ] Remove the status line of `docs/protocol/mokly-timings.md`.
+- [x] Update the existing trace tests for the new layer field. Three tests
+      that assert exact record lists now expect the `render.cache` records.
+- [x] Move the timing start-up of Serve into `ServeTiming::start` in
+      `serve_timing.rs`, so `entry_serve.rs` stays within the file cap.
+- [x] Remove the status line of `docs/protocol/mokly-timings.md`.
 
 ## Milestone 4: Startup recheck
 
