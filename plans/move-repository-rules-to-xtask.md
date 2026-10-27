@@ -190,6 +190,9 @@ Evidence: `case-map.md` and `fault-injection.md` in
   - 2. Two publish action checks became stricter. Severity Low, effort
        Small. Recommended: A, keep the standard-error check and confirm it
        with the user.
+    - [x] Settled by user decision 1 A of 2026-10-27: keep the stricter
+          standard-error check. Rejected: B, restore the Node meaning,
+          because the Node check passed for any failure of the step.
   - Outside the review scope: `docs/protocol/ci-workflow.md:220`: the page
     says the policy test requires full-history checkouts in CI and preview
     jobs, but the check covers `ci.yml` only. Separate branch.
