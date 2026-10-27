@@ -89,6 +89,9 @@ test("version 3 permits a current variant without workspace lists", () => {
 });
 
 test("removed visual details require both workspace lists", () => {
+  const withoutWorkspace = removed();
+  delete withoutWorkspace.workspace;
+  assert.equal(readEntryDetail(withoutWorkspace).workspace, undefined);
   const missing = removed();
   delete (missing.workspace as Raw).usedBy;
   rejects(missing, /removed visual details require workspace lists/);

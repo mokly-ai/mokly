@@ -95,6 +95,7 @@ fn current_and_removed_detail_fences_are_exclusive() {
     value.as_object_mut().unwrap().remove("deploymentId");
     value.as_object_mut().unwrap().remove("revision");
     value["entry"]["snapshotId"] = json!("d".repeat(64));
+    assert!(detail(&value.to_string()).is_ok());
     value["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
     assert!(detail(&value.to_string()).is_ok());
     value["usage"] = json!({"status":"ready"});

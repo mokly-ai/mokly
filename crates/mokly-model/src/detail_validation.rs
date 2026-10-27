@@ -60,13 +60,12 @@ pub(crate) fn validate(detail: &EntryDetailV3) -> Result<(), ReadError> {
     if !visual && (!detail.views.is_empty() || detail.workspace.is_some()) {
         return Err(invalid(ContractViolation::DetailKind));
     }
-    if removed && visual {
-        let Some(workspace) = detail.workspace.as_ref() else {
-            return Err(invalid(ContractViolation::Workspace));
-        };
-        if workspace.used_by.is_none() || workspace.affected.is_none() {
-            return Err(invalid(ContractViolation::Workspace));
-        }
+    if removed
+        && visual
+        && let Some(workspace) = detail.workspace.as_ref()
+        && (workspace.used_by.is_none() || workspace.affected.is_none())
+    {
+        return Err(invalid(ContractViolation::Workspace));
     }
     if visual != detail.control_order.is_some()
         || detail

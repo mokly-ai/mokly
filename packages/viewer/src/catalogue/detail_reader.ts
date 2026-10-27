@@ -125,8 +125,8 @@ export function readEntryDetail(value: unknown): EntryDetailV3 {
   if (
     removed &&
     visual &&
-    (!detail.workspace ||
-      detail.workspace.usedBy === undefined ||
+    detail.workspace &&
+    (detail.workspace.usedBy === undefined ||
       detail.workspace.affected === undefined)
   )
     invalidData("$detail", "removed visual details require workspace lists");

@@ -154,7 +154,7 @@ test("usage must fit the index's components and the entry kind", () => {
   );
 });
 
-test("workspace lists stay on current parents and are absent on variants", () => {
+test("workspace lists stay on current parents and variant lists are ignored", () => {
   const index = indexFixture();
   const parent = current("components/action", (detail) => {
     delete (detail.workspace as unknown as Record<string, unknown>).usedBy;
@@ -170,6 +170,31 @@ test("workspace lists stay on current parents and are absent on variants", () =>
   });
   assert.equal(
     fenceDetail(index, { path: "components/action/default" }, variant).kind,
+    "accepted",
+  );
+});
+
+test("removed details may omit their workspace, but partial lists are rejected", () => {
+  const index = indexFixture();
+  const withoutWorkspace = removed(RETIRED, (detail) => {
+    delete (detail as unknown as Record<string, unknown>).workspace;
+  });
+  assert.equal(
+    fenceDetail(
+      index,
+      { path: "product/browse/home/retired", snapshotId: RETIRED },
+      withoutWorkspace,
+    ).kind,
+    "accepted",
+  );
+  const partial = removed(RETIRED);
+  delete (partial.workspace as unknown as Record<string, unknown>).usedBy;
+  assert.equal(
+    fenceDetail(
+      index,
+      { path: "product/browse/home/retired", snapshotId: RETIRED },
+      partial,
+    ).kind,
     "rejected",
   );
 });

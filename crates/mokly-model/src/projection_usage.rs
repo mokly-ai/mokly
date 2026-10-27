@@ -19,19 +19,6 @@ pub fn workspaces(
     if !ready {
         return BTreeMap::new();
     }
-    let parents: BTreeMap<_, _> = index
-        .components
-        .iter()
-        .map(|component| {
-            (
-                component.entry.path.as_str(),
-                component
-                    .variant_of
-                    .as_deref()
-                    .unwrap_or(&component.entry.path),
-            )
-        })
-        .collect();
     let variants: BTreeSet<&str> = index
         .components
         .iter()
@@ -85,24 +72,31 @@ pub fn workspaces(
             }
         }
     }
-    let lists: BTreeMap<String, Vec<UsageLink>> = parents
-        .into_iter()
-        .map(|(path, parent)| {
-            (
-                path.to_owned(),
-                consumers.get(parent).cloned().unwrap_or_default(),
-            )
+    let mut lists: BTreeMap<&str, Vec<UsageLink>> = index
+        .components
+        .iter()
+        .filter(|component| component.variant_of.is_none())
+        .map(|component| {
+            let path = component.entry.path.as_str();
+            (path, consumers.remove(path).unwrap_or_default())
         })
         .collect();
     let mut workspaces = BTreeMap::new();
     for (path, detail) in details {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            let component_parent =
+                detail.entry.kind == EntryKind::Component && !variants.contains(path.as_str());
             workspaces.insert(
                 path.clone(),
                 Workspace {
                     comparison_eligible: false,
-                    used_by: (!variants.contains(path.as_str()))
-                        .then(|| lists.get(path).cloned().unwrap_or_default()),
+                    used_by: (!variants.contains(path.as_str())).then(|| {
+                        if component_parent {
+                            lists.remove(path.as_str()).unwrap_or_default()
+                        } else {
+                            Vec::new()
+                        }
+                    }),
                     affected: (!variants.contains(path.as_str())).then(Vec::new),
                     related_components: Vec::new(),
                     input_changes: Vec::new(),

@@ -121,20 +121,16 @@ function matches(
     const workspace = detail.workspace;
     if (historical) {
       if (
-        !workspace ||
-        workspace.usedBy === undefined ||
-        workspace.affected === undefined
+        workspace &&
+        (workspace.usedBy === undefined || workspace.affected === undefined)
       )
         return false;
     } else if (workspace) {
       const currentVariant =
         entry.kind === "component" && entry.variantOf !== undefined;
-      if (currentVariant) {
-        if (workspace.usedBy !== undefined || workspace.affected !== undefined)
-          return false;
-      } else if (
-        workspace.usedBy === undefined ||
-        workspace.affected === undefined
+      if (
+        !currentVariant &&
+        (workspace.usedBy === undefined || workspace.affected === undefined)
       ) {
         return false;
       }
