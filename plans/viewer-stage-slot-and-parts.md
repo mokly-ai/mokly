@@ -152,18 +152,24 @@ answer changes the milestones that the decision names.
      entry parts and the tab parts are experimental.
    - Reason: the package is pre-1.0 and already follows rule A. One tier is
      simpler for hosts. Affects Milestones 1 and 8.
-9. **Home of the stage function, Low.** Open since 2026-10-27, when the user
-   asked whether the `slots` object is an anti-pattern. Recommended: B.
+9. **Shape of the host content props, Low.** Open since 2026-10-27, when the
+   user asked whether the `slots` object is an anti-pattern and then whether
+   flat props are better. Recommended: C.
    - A: `slots` holds the host content and the `stage` function.
    - B: `slots` holds only host content. `stage` is its own prop on
      `MoklyViewer`, as on `MoklyViewerRoot`.
-   - C: Flat props replace `slots`, such as `topBarEnd` and `stage`.
+   - C: Flat props replace `slots`: `topBarStart`, `topBarEnd`, `railStart`,
+     `railEnd`, `emptyState`, `sidePanel`, `stageOverlay`, and `stage`.
+     `sidePanel` and `stageOverlay` keep their object values, so each
+     required pair stays together.
    - D: `MoklyViewer` takes no host content. A host with its own content
      composes the root and the parts.
-   - Reason: `stage` is a function that decides what the viewer loads, not
-     content. B keeps one name in both APIs and breaks no host. The request
-     put `stage` in `ViewerSlots`, so B changes the request. Affects
-     Milestones 1, 5, and 8.
+   - Reason: with C, every prop has one shape, like the other props and the
+     parts. `stage` stands beside the other behaviour props. The break is cheap
+     while Mokly Cloud upgrades. The removal of the public `ViewerSlots` type
+     needs a line in the npm release notes. The request put `stage` in
+     `ViewerSlots`, so B, C, and D change the request. The design text shows
+     A until the user answers. Affects Milestones 1, 4, 5, 8, and 9.
 
 The plan also makes three choices that a review can change: the flat `Mokly*`
 export names, the `stage` prop on the root, and a warning without a throw for a
