@@ -771,6 +771,139 @@
       "body": "<!doctype html><title>Sign in</title>"
     },
     {
+      "name": "blob-encodings-gzip",
+      "valid": true,
+      "blobEncoding": "gzip",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": ["gzip"]
+      }
+    },
+    {
+      "name": "blob-encodings-unknown-before-gzip",
+      "valid": true,
+      "blobEncoding": "gzip",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": ["zstd", "gzip"]
+      }
+    },
+    {
+      "name": "blob-encodings-non-strings-before-gzip",
+      "valid": true,
+      "blobEncoding": "gzip",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": [null, 1, "gzip"]
+      }
+    },
+    {
+      "name": "blob-encodings-without-gzip",
+      "valid": true,
+      "blobEncoding": "identity",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": ["br"]
+      }
+    },
+    {
+      "name": "blob-encodings-gzip-requires-exact-string",
+      "valid": true,
+      "blobEncoding": "identity",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": ["GZIP", "gzip "]
+      }
+    },
+    {
+      "name": "blob-encodings-string-is-absent",
+      "valid": true,
+      "blobEncoding": "identity",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": "gzip"
+      }
+    },
+    {
+      "name": "blob-encodings-null-is-absent",
+      "valid": true,
+      "blobEncoding": "identity",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/publication-uploads/u-1/complete",
+        "blobEncodings": null
+      }
+    },
+    {
       "name": "complete-201-new-publication",
       "step": "complete",
       "valid": true,

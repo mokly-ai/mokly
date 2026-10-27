@@ -19,6 +19,7 @@ The catalogue service does not support this Mokly version. Update the service an
 | ------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
 | Unsupported envelope or present non-3 ownership `schemaVersion`                 | 426                    | `upload-unsupported-version`      |
 | Invalid archive, missing marker version, malformed value/path, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
+| Oversized or invalid gzip Blob, decoded mismatch, or other `Content-Encoding`   | 400                    | `upload-invalid-bundle`           |
 | Any exceeded limit, including declared file size or path byte length            | 413                    | `upload-too-large`                |
 | Missing/invalid token or forbidden repository                                   | 401 or 403             | `upload-unauthorized`             |
 | Blob digest outside the Plan, or unknown upload id                              | 404                    | `upload-failed`                   |
@@ -53,6 +54,9 @@ v3 ceilings; receivers may impose lower quotas and return 413.
 
 ## Receiver Validation
 
+The [Plan listing rule](./mokly-upload-exchange.md#plan) defines when a
+receiver lists `gzip` for an upload.
+
 Authenticate before decompression. Enforce compressed, decompressed, entry
 count and individual-entry limits before reporting version or structural
 failures. Reject invalid gzip or tar, truncation, trailing non-padding data,
@@ -82,9 +86,14 @@ comparison files.
 
 Answer `missing` from every verified blob stored for the same project,
 including a blob received for an unfinished or expired earlier upload. Never
-expose another project's content membership. Verify every Blob digest and size
-before storing it. Unless the identity is already published, Complete only
-when every marker digest is stored; otherwise answer 409. Authorize the
-repository and hosting policy before exposing a catalogue. Built HTML and
-assets are consumer-authored content; the envelope is not a sanitization or
-sandboxing boundary.
+expose another project's content membership. Verify every raw Blob digest and
+size before storing it. For a gzip Blob, a `Content-Length` greater than the
+declared file size is 400 before the body is read. Stream-decode the body and
+stop after the declared size plus one byte. Return 400 and store nothing for
+invalid gzip data, a decoded size other than the declared size, or a decoded
+SHA-256 other than the URL digest. Return 400 for
+any other `Content-Encoding`. Unless the identity is already published,
+Complete only when every marker digest is stored; otherwise answer 409.
+Authorize the repository and hosting policy before exposing a catalogue. Built
+HTML and assets are consumer-authored content; the envelope is not a
+sanitization or sandboxing boundary.

@@ -91,6 +91,18 @@ pub enum InternalError {
         /// Original source, for typed inspection only.
         source: std::io::Error,
     },
+    /// Gzip encoding failed without exposing the source text.
+    #[error("blob encoding failed")]
+    Encoding {
+        /// Original source, for typed inspection only.
+        source: std::io::Error,
+    },
+    /// The blocking gzip task did not finish.
+    #[error("blob encoding task failed")]
+    BlockingTask {
+        /// Original source, for typed inspection only.
+        source: tokio::task::JoinError,
+    },
 }
 
 /// Convert shared format validation into the stable upload categories.
