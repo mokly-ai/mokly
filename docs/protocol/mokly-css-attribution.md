@@ -20,16 +20,19 @@ this contract.
 
 The analysis takes two inputs for one stylesheet on one view:
 
-- The stylesheet's bytes on both sides. The head side's bytes come from the
-  render cache: a bundle the core wrote on `lightningcss` or through the
-  consumer's PostCSS module, or a public file of the working tree. The base
-  side's generated CSS comes from the bounded base capture, with pinned-source
-  fallback; public files use the base-side source under [Sides](./mokly-comparison.md#sides). A side that lacks the stylesheet
+- The stylesheet's bytes on both sides. Serve reads the head side's bytes from
+  the render cache. `build` and `publish` read generated CSS from the head
+  capture. The bundle is written by `lightningcss` or through the consumer's
+  PostCSS module, or it is a public file of the working tree. The base side's
+  generated CSS comes from the bounded base capture, with pinned-source
+  fallback; public files use the base-side source under
+  [Sides](./mokly-comparison.md#sides). A side that lacks the stylesheet
   contributes an empty stylesheet after the verified-deletion check of the
   [Changes contract](./mokly-changes.md#resources); an invalid read never
   becomes an empty stylesheet.
-- The head's composed documents from the bounded render cache and the base's
-  from the bounded capture or pinned-source fallback, with ownership and ignore
+- The head's composed documents from the render cache in Serve or the head
+  capture in `build` and `publish`, and the base's from the bounded capture or
+  pinned-source fallback, with ownership and ignore
   regions attached under the
   [tree model](./mokly-comparison.md#tree-model). A view that one side lacks
   contributes no tree.

@@ -120,7 +120,7 @@ route every later head read through it. The build output does not change.
 - [x] Confirm that a restored head document carries everything the output
       loop and the inspector injection need: bytes, tree, links, usage,
       warnings, resources, and markers.
-- [ ] Rust tests in `crates/mokly-cli`:
+- [x] Rust tests in `crates/mokly-cli`:
   - [x] After `prepare`, the generation reports a comparison capture whose
         view count equals the document count, and a later `render` returns
         the same bytes as the source without another source render.
@@ -137,6 +137,11 @@ route every later head read through it. The build output does not change.
 - [x] Run the existing build warning tests. They must pass unchanged.
 
 Evidence: `.context/build-head-capture/milestone-1-2.md`.
+
+- [x] Restore the runtime capture requirements and split the runtime contract
+      when the restored text exceeds its protocol page cap.
+- [x] Align architecture and protocol docs that described build head reads as
+      render-cache reads.
 
 ## Milestone 3: Output check and measurement
 

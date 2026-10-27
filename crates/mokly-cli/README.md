@@ -173,8 +173,9 @@ admission, it pins the selected base before catalogue validation and rendering.
 The comparison uses that same repository, commit, and ref without another lookup.
 The phase owner erases its animated row before cache notes and serializes both
 streams. Warnings precede the colored Changes status. Nested Git failures keep
-the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
-installation. Build preparation captures the head once, then passes that
+the historical commit and Git detail. Changes runs inside the static pipeline
+before warning gates and output installation. Build preparation captures the
+head once, then passes that
 generation and the same Changes result to the terminal, static index,
 generation writer, and publication metadata. The pipeline uses the summary for
 terminal Changes reporting and warning policy before installation. Review timing

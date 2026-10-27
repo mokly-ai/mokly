@@ -155,6 +155,7 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
             }
         }
         assert_eq!(before.render_all().unwrap().documents, count);
+        assert_eq!(after.render_all().unwrap().documents, count);
         for side in [&before, &after] {
             assert_eq!(
                 side.resource_digest("static/mokly-generated/assets/image.png")

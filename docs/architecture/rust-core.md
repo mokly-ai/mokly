@@ -104,17 +104,19 @@ generation changed. Fragment results are memoized across screens, so a
 component rendered with the same props on many screens renders once.
 
 No node is written to the repository. The render cache is process memory,
-bounded by bytes and evicted least recently used. Serve and `build` read it.
-Changes captures the base within a 256 MiB bound and reads the head through the
-render cache. Base misses use the pinned source; evicted head documents render
-again on the head root. The base-side extraction cache and the dependency install cache live
-outside the repository, in the operating system's cache directory under a key
-derived from the repository path, each with its own byte bound and
-least-recently-used eviction; the terminal names that directory, and deleting
-it is safe. `build` is the only command that writes into the repository, into
-the output directory `--out` names, `mokly-static/` at the repository root by
-default, which Git must ignore; `publish` builds into its own directory outside
-the repository and uploads.
+bounded by bytes and evicted least recently used. Serve reads its head from
+that cache. `build` and `publish` capture the head during the build check under
+their own 256 MiB bound, then Changes and output read that capture. Changes
+captures the base within 256 MiB in Serve and in `build`. Base misses use the
+pinned source. A head capture miss uses the head source and can render again.
+The base-side extraction cache and the dependency install cache live outside
+the repository, in the operating system's cache directory under a key derived
+from the repository path, each with its own byte bound and least-recently-used
+eviction. The terminal names that directory, and deleting it is safe. `build`
+is the only command that writes into the repository, into the output directory
+`--out` names, `mokly-static/` at the repository root by default, which Git
+must ignore. `publish` builds into its own directory outside the repository and
+uploads.
 
 ## Shell Delivery
 
@@ -164,19 +166,22 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in Rust memory, outside the sidecar's V8 heap. A view's
   trees are discarded when its comparison ends; nothing retains a catalogue-wide
   set of parsed pages.
-  Each result holds at most one private base capture, bounded by the named
-  256 MiB default `DEFAULT_BASE_CAPTURE_BYTES`. This budget is separate from
-  the 256 MiB render cache. The charge includes
+  Serve results hold at most one private base capture, bounded by the named
+  256 MiB default `DEFAULT_BASE_CAPTURE_BYTES`. Build results can also hold a
+  private head capture, bounded by its own 256 MiB limit. These budgets are
+  separate from the 256 MiB render cache. A build can hold the render cache,
+  head capture, and base capture at the same time. The charge includes
   compressed documents and generated CSS, all generated resource digests,
   uncompressed Rust usage and link metadata, closures, route keys, and map
   overhead. Inputs above this bound fall back to the pinned source. No capture
   writes files. Each paired read restores only its requested base view. The
-  original head generation uses the bounded render cache and renders evicted
-  views again on the head root. Root switches stay constant while the base
-  capture fits; source fallback can add switches. The API supports reuse of a
-  captured base, which tests exercise. Production callers supply fresh bases.
-  Serve can hold an accepted capture while building its replacement, so two
-  captures and the render cache can overlap.
+  Serve's original head generation uses the bounded render cache and renders
+  evicted views again on the head root. Build head reads use the head capture,
+  with source fallback when a document is not retained. Root switches stay
+  constant while the base capture fits; source fallback can add switches. The
+  API supports reuse of a captured base, which tests exercise. Production
+  callers supply fresh bases. Serve can hold an accepted capture while building
+  its replacement, so two captures and the render cache can overlap.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
 - The render cache, the base-side extraction cache, and the base-side

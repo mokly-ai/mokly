@@ -46,11 +46,12 @@ fn every_template_rule_has_deterministic_rendered_document_snapshots() {
 #[test]
 fn render_and_comparison_document_return_the_same_artifact() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/catalogue");
-    let (generation, _) = support::prepare(&root, 16 * 1024 * 1024, 1);
+    let (generation, _) = support::prepare(&root, 0, 1);
     let generation = generation.unwrap();
     let route = "home/index.mobile.html";
     let rendered = generation.render(route).unwrap();
     let comparison = generation.comparison_document(route).unwrap();
+    assert!(!std::sync::Arc::ptr_eq(&rendered, &comparison));
     assert_eq!(rendered.bytes, comparison.bytes);
     assert_eq!(rendered.content_type, comparison.content_type);
     let rendered_document = rendered.document.as_ref().unwrap();

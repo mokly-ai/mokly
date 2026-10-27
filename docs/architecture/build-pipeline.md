@@ -33,8 +33,8 @@ collected styles, `mock:` links, link validation
 render cache (process memory, bounded by bytes)
         |
         +---- serve:   documents on request, live updates on change
-        +---- build:   every document and the shell routes into `--out`
-        `---- Changes: the same graph over the base commit's tree
+        +---- build:   head capture, every document, and shell routes into `--out`
+        `---- Changes: base capture and comparison over the base commit's tree
 ```
 
 No step writes into the repository. `build` writes its output directory; the
@@ -102,16 +102,18 @@ One document is composed per view, that is per viewport and colour scheme:
    the document is assembled under the
    [document safety rules](../protocol/mokly-document-safety.md).
 
-The finished document is kept in the render cache with its ownership tree,
-which the [comparison contract](../protocol/mokly-comparison.md) reads.
+Serve keeps the finished document in the render cache with its ownership tree.
+Build keeps the head capture for output and comparison. The
+[comparison contract](../protocol/mokly-comparison.md) reads the relevant
+side capture or cache.
 
 ## 5. Consumers Of The Cache
 
 - `serve` renders the catalogue index at start and each document on request,
   watches the sources, and pushes live updates to the shell. Live prop edits
   render through the same path.
-- `build` validates the catalogue, renders every view, fails on errors and,
-  with `--strict`, on warnings, and writes the static output: the shell stub
+- `build` validates the catalogue, captures the head, renders every view, fails
+  on errors and, with `--strict`, on warnings, and writes the static output: the shell stub
   per route, the index, one detail per entry, every document, the comparison
   generation, the viewer bundle, styles, and fonts, under the output
   transaction of the [static build contract](../protocol/mokly-export.md).

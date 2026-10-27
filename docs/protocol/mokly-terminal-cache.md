@@ -8,7 +8,7 @@ The [terminal output contract](./mokly-terminal-output.md) owns modes and width.
 
 The first time a command opens the base-side extraction cache or the
 dependency install cache of the
-[runtime contract](./mokly-runtime.md#render-graph-and-cache), it writes one
+[render graph and cache contract](./mokly-render-cache.md#render-graph-and-cache), it writes one
 line that names the directory. Rich mode prints it dimmed before the next
 durable line; plain mode prints the exact string of the compatibility
 contract on stdout. The line appears once per process and names the directory

@@ -15,10 +15,10 @@ control, and host configuration. `build` uploads nothing, fetches nothing from
 Git, and performs no commit, push, npm publication, or hosting-account
 operation. `publish` is the one command that uploads: it runs this same build
 into its own private directory outside the repository, then runs the
-[upload exchange](./mokly-upload.md). Nothing reads the output back; the
-[render cache](../architecture/rust-core.md#render-graph) is the only source
-of rendered bytes, and no command writes into the repository except `build`
-into its output directory.
+[upload exchange](./mokly-upload.md). Nothing reads the output back. Build and
+publish read rendered bytes from the head capture or render cache under the
+[render graph and cache contract](./mokly-render-cache.md#render-graph-and-cache). No command
+writes into the repository except `build` into its output directory.
 
 ## Command
 

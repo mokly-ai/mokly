@@ -143,8 +143,9 @@ It validates and captures each side through one ordered collector. Each view
 supplies its validated document and closure without a second render. Base
 preparation passes its result to `Comparison::compare_prepared`; build
 preparation captures the head before Changes receives it.
-An uncaptured fallback also uses that entry point, so a summary that exceeds
-the capture bound does not start another pass.
+Base capture fallback uses that entry point, so an oversized base summary does
+not start another base pass. A head summary fallback returns the source to the
+build check, which renders it again.
 Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and
@@ -158,8 +159,9 @@ Queued cancelled inputs return the generation's error without starting work.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
-`DEFAULT_BASE_CAPTURE_BYTES` and `DEFAULT_HEAD_CAPTURE_BYTES` each set a 256 MiB retention budget. They charge encoded
-payloads, Rust metadata, closures, route keys, and conservative map overhead.
+`DEFAULT_BASE_CAPTURE_BYTES` and `DEFAULT_HEAD_CAPTURE_BYTES` each set a
+256 MiB retention budget. They charge encoded payloads, Rust metadata,
+closures, route keys, and conservative map overhead.
 The collector accounts for each batch's growing summary storage before
 retaining its inputs. Later kept candidates yield space to summary and generated-resource charges.
 Final retention uses the original charges in route order. A partial capture
@@ -200,9 +202,10 @@ Own CSS states and dependency reasons use kept own-page source proof.
 Details can retain a nested component record without promoting its source to
 an own-page dependency reason.
 It releases parsed documents after collecting canonical and containment proof.
-The retained result holds bounded base and head captures over their sources,
-view states, reasons, ownership
-records, and immutable historical metadata. Resource facts and byte proofs
+Serve retains the original cached head generation and one bounded base capture.
+Build retains the captured head and the bounded base capture. Both results keep
+view states, reasons, ownership records, and immutable historical metadata.
+Resource facts and byte proofs
 are reused per route; public resource bytes and stylesheet diffs have explicit
 cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
 working files are streamed without retaining their bytes. Remaining source
@@ -295,6 +298,9 @@ so process startup speed cannot exhaust its readiness wait.
 - [View attribution](./src/comparison_attribution.rs) applies the shared CSS reduction and exact instance proof.
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
 - [Bounded side capture](./src/comparison_capture.rs) and [capture accounting](./src/capture_weight.rs).
+- [`Comparison::capture_head`](./src/comparison_types.rs) and
+  [`ChangesService::capture_head`](./src/base_render.rs) expose head capture
+  to build preparation.
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
 - [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).
 - [Extraction](./src/extraction.rs).
