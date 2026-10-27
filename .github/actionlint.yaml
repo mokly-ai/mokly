@@ -1,8 +1,8 @@
 self-hosted-runner:
   labels:
-    - blacksmith-16vcpu-windows-2025
     - blacksmith-2vcpu-ubuntu-2404
     - blacksmith-2vcpu-ubuntu-2404-arm
     - blacksmith-2vcpu-windows-2025
     - blacksmith-6vcpu-macos-26
     - blacksmith-8vcpu-ubuntu-2404
+    - blacksmith-8vcpu-windows-2025

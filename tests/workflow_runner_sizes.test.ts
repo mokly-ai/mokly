@@ -32,7 +32,7 @@ const LARGER_LINUX_RUNNERS: Readonly<Record<string, string>> = {
   "ci.yml:static-delivery": "blacksmith-8vcpu-ubuntu-2404",
 };
 /** CI's Windows native job compiles and tests the whole Rust workspace. */
-const CI_WINDOWS_NATIVE_RUNNER = "blacksmith-16vcpu-windows-2025";
+const CI_WINDOWS_NATIVE_RUNNER = "blacksmith-8vcpu-windows-2025";
 /** Workflows whose native build matrix may run `darwin-x64` on Intel macOS. */
 const INTEL_MACOS_WORKFLOWS = [
   "release.yml",
