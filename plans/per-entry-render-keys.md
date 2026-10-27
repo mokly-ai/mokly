@@ -48,24 +48,40 @@ Contract owners:
 - The [mokly-graph README](../crates/mokly-graph/README.md) and the
   [mokly-render README](../crates/mokly-render/README.md).
 
-## Open Decisions
+## Decisions
 
-The decisions message of 2026-10-27 asks these. Each answer is recorded here
-with its date. Without an answer, the recommended option applies.
+The user answered decisions 1 to 5 on 2026-10-27. A decision without an
+answer stays open and blocks the work that depends on it.
 
-1. Cross-side render cache rule. Recommended: A, share entries across sides
-   through content keys. B adds a side marker to every key.
-2. Package identity across sides, only with decision 1 A. Recommended: A, the
-   key keeps the selected installation's directories, so a base with its own
-   installation shares nothing. B adds logical package digests from the
-   sidecar.
-3. Scope of the resolution files. Recommended: A, one digest of every
-   resolution file in every key. B scopes the files to each closure. C leaves
-   them out.
-4. Bundler name renaming. Recommended: A, bundle with esbuild `keepNames`. B
-   documents the limit only.
-5. Bundle fingerprint in the live generation. Recommended: A, keep it. B
-   drops it.
+1. Decision 1 (2026-10-27): A, render cache entries are shared across sides
+   through content keys, in both directions. Sidecar generations, class
+   maps, and bindings stay per side. Rejected: B, a side marker in every key,
+   because the base would keep rendering every view. Reason: equal inputs
+   give byte-equal renders, and the key covers every input that can differ
+   between sides.
+2. Decision 2 (2026-10-27): B, the key identifies the packages that the
+   sidecar loads at render time by logical package identities that the
+   sidecar reports. Rejected: A, the selected installation's directories,
+   because a base with its own installation, tier two, could then share
+   nothing. Reason: a tier-two base with the same packages reuses head
+   renders. Decision 6 asks how complete that identity must be.
+3. Decision 3 (2026-10-27): B, each key holds only the resolution files on
+   the directory chains of its closure modules. Rejected: A, one digest of
+   every resolution file, because a dependency upgrade would move every key,
+   and C, no resolution files, because a `sideEffects` change could leave a
+   stale render. Reason: a dependency upgrade moves only its importers' keys.
+4. Decision 4 (2026-10-27): A, the bundle keeps authored function and class
+   names through esbuild `keepNames`. Rejected: B, a guide note only, because
+   the stale-render gap would stay. Reason: it closes the gap and also fixes
+   unstable story titles.
+5. Decision 5 (2026-10-27): A, the live generation keeps the bundle
+   fingerprint. Rejected: B, drop it. Reason: the shell and the Changes
+   identity keep their current behaviour.
+6. Decision 6, open: a package manifest does not show every change to the
+   installed files. Options: A, keep decision 2 B and report the manifests
+   of each runtime package and of its transitive dependencies; B, change
+   decision 2 to A; C, keep decision 2 B and also digest the installed files
+   that the runtime packages load. Milestone 3 waits for this answer.
 
 ## Corrections And Planning Findings
 
@@ -108,23 +124,29 @@ this explicit input list:
    consumed-byte digest for a JavaScript module, the class map digest for a
    CSS Module, and nothing for other stylesheets. Stylesheet bytes reach
    documents through stylesheet keys, as today.
-2. Bindings. The path and title of every binding whose handle's module is in
+2. Resolution files, under decision 3 B. The `package.json` and
+   `tsconfig.json` candidates of each closure module's directory chain, up
+   to that module's source or dependency root, each with its digest or its
+   absence. Names drop the reserved installed-input prefix, so that a base
+   that reads another installation names its files as the head does.
+3. Bindings. The path and title of every binding whose handle's module is in
    the closure. This covers the entry's own binding, the components it uses,
    and its link targets.
-3. Bundle environment, one digest shared by every key of a side:
-   - the bundle settings except the source root and the entry and stories
-     file lists: module resolution, repository roots, configuration
-     directory, and renderer path;
-   - under decision 2 A, the selected dependency directories and the
-     resolved peer packages;
-   - under decision 3 A, every logical resolution input except the preview
-     candidates, with the reserved installed-input prefix removed, so that a
-     base that reads the working installation names its files as the head
-     does.
+4. Bundle environment, one digest shared by every key of a side:
+   - the bundle settings without absolute paths: the module resolution
+     aliases, conditions, loaders, main fields, extensions, and package roots
+     relative to their installation, plus the configuration directory and
+     the renderer path;
+   - under decision 2 B, the logical identity of each package that the
+     sidecar loads at render time and does not bundle: React, React DOM,
+     `@storybook/react`, and the Emotion server packages. Decision 6 sets
+     what that identity covers;
+   - every resolution file on no closure chain, such as a manifest that
+     resolution read. A naming gap therefore only over-invalidates.
 
-No closure record and no binding contains a source root. Under decision 2 A,
-the environment names the installation, not the source root. Equal inputs on
-two sides that read one installation therefore give equal keys.
+No input contains a source root or an installation path. Equal inputs on two
+sides therefore give equal keys, also when the base has its own
+installation.
 
 ### Keys that use it
 
@@ -169,9 +191,10 @@ unrelated screen U, a stories file with a preview, and a renderer.
 | Edit                                           | Keys that move                   | Keys that stay               |
 | ---------------------------------------------- | -------------------------------- | ---------------------------- |
 | module edit: comment line in H                 | S                                | C, P, T, U, stories          |
-| dependency upgrade: module bytes used by C     | C, S, the HTML screen            | P, T, U, stories             |
-| dependency upgrade: its manifest, decision 3 A | every JavaScript key             | HTML-only documents          |
-| resolution file edit, decision 3 A             | every JavaScript key             | HTML-only documents          |
+| dependency upgrade: manifest and module bytes  | C, S, the HTML screen            | P, T, U, stories             |
+| runtime package upgrade, such as React DOM     | every JavaScript key             | HTML-only documents          |
+| resolution file edit: `tsconfig.json` beside S | S, which is alone in its folder  | C, P, T, U, stories          |
+| resolution file edit: root `package.json`      | every JavaScript key             | HTML-only documents          |
 | preview edit                                   | stories                          | S, C, P, T, U                |
 | class map change: class added to C's module    | C, S, the HTML screen            | P, T, U, stories             |
 | slot provider edit: P's module                 | P, C, S, the HTML screen         | T, U, stories                |
@@ -227,6 +250,9 @@ each page until its behaviour is implemented.
       cached document carries no side-specific warning.
 - [ ] Update the authoring and evaluation section of
       `docs/protocol/mokly-sidecar-modules.md` under decision 4.
+- [ ] After decision 6, state in the compiled recipe section of
+      `docs/protocol/mokly-sidecar-modules.md` that the bundle result reports
+      the logical identity of each runtime package under decision 2 B.
 - [ ] Leave the crate READMEs and the guides to the milestones that change
       the code, because they describe released behaviour and entry points.
 - [ ] Run `npm run format:check` and
@@ -248,25 +274,35 @@ that no module outside a closure can change a render through renaming.
 ## Milestone 3: Render input keys
 
 Compute one render input key per entry module from the explicit input list.
-Nothing uses the keys yet, so the product does not change.
+Nothing uses the keys yet, so the product does not change. This milestone
+waits for decision 6.
 
-- [ ] Add the bundle environment digest and the per-stylesheet class map
-      digests to `JavaScriptGeneration` in
-      `crates/mokly-catalogue/src/render_sources.rs`. Compute both in
-      `crates/mokly-render/src/bundle.rs` and keep them in the bundle state,
-      so that a reused bundle keeps them.
+- [ ] Add a failing sidecar test first: two installations with the same
+      runtime package versions report equal identities, and a changed
+      version of a runtime package or of a package that it depends on gives
+      different identities.
+- [ ] Report the logical runtime package identities in the bundle result
+      under decisions 2 B and 6. Regenerate the TypeScript types from the
+      Rust result type. perf 1 changes the same sidecar files.
+- [ ] Add the bundle environment digest, the resolution file digests by
+      logical name, and the per-stylesheet class map digests to
+      `JavaScriptGeneration` in `crates/mokly-catalogue/src/render_sources.rs`.
+      Compute them in `crates/mokly-render/src/bundle.rs` and keep them in
+      the bundle state, so that a reused bundle keeps them.
 - [ ] Add a render input key builder to `crates/mokly-graph`, with a new key
-      kind in `key.rs`. It computes each closure once over the module graph
-      and maps a handle to its module by the longest module path before a
-      `#`.
+      kind in `key.rs`. It computes each closure once over the module graph,
+      puts each resolution file on the chains of the closures that contain
+      it or into the environment, and maps a handle to its module by the
+      longest module path before a `#`.
 - [ ] Write the unit tests first, one per input kind, each asserting the
       exact set of module keys that move. The seven key tests of the item: a
       module edit, a dependency upgrade, a preview edit, a resolution file
       edit, a class map change, a slot provider edit, and a link target
-      rename. Also: a renderer edit, a plain stylesheet edit that moves
-      nothing, equal inputs under two source roots that give equal keys, an
-      installed-input name that matches the working name, and an unknown
-      handle that uses the fallback.
+      rename. Also: a renderer edit, a runtime package upgrade, a resolution
+      file on no closure chain that moves every key, a plain stylesheet edit
+      that moves nothing, equal inputs under two source roots and two
+      installations that give equal keys, an installed-input name that
+      matches the working name, and an unknown handle that uses the fallback.
 - [ ] Add the builder to `### Key Code` in `crates/mokly-graph/README.md`.
 
 ## Milestone 4: Keys use the render input keys
@@ -311,8 +347,9 @@ Let equal head and base inputs share render cache entries under decision 1.
       base keys equal the head keys, a base capture after a head render makes
       no sidecar render call, and an entry that differs renders on the base
       sidecar with the base generation.
-- [ ] Under decision 2 A, add a test that a base with its own installation
-      gets keys that differ from the head's.
+- [ ] Under decision 2 B, add a test that a base with its own installation
+      of the same packages gets the head's keys, and that a different
+      runtime package version moves every JavaScript key.
 - [ ] Remove the status lines of `docs/protocol/mokly-sidecar.md` and
       `docs/protocol/mokly-runtime.md`.
 
