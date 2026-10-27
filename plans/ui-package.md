@@ -138,9 +138,12 @@ check the code against them.
       moved-component paragraphs of `packages/viewer/src/shell/README.md`,
       and the scope sentence of
       `examples/basic/specs/design/library/README.md`.
-- [ ] Confirm that `docs/protocol/mokly-imported-styles.md` already covers a
+- [x] Confirm that `docs/protocol/mokly-imported-styles.md` already covers a
       package stylesheet under `node_modules/@mokly/ui/`. Change it only if
-      the workspace symlink needs a rule.
+      the workspace symlink needs a rule. Confirmed on 2026-10-27: a package
+      stylesheet uses its dependency name, a repository package uses the
+      side's mapped copy under the sidecar module rules, and the symlink
+      policy is shared with the JavaScript graph. No change.
 
 ## Milestone 2: Package skeleton and tooling
 
