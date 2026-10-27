@@ -335,15 +335,20 @@ version.
 
 ## Milestone 4: Smoke tests and measurements
 
-- [ ] Run `npm run build`. Build the example with `--strict` into
+- [x] Run `npm run build`. Build the example with `--strict` into
       `.context/example`. Measure it with the scripts in
       `.context/usage-list-in-parent-detail/scripts/`, and name the result
-      file here.
-- [ ] Run `npm run dev`. Open the Usage panel of
+      file here. Evidence is in
+      `.context/usage-list-in-parent-detail/milestone-4-*.log` and
+      `.context/usage-list-in-parent-detail/milestone-4-*.txt`.
+- [x] Run `npm run dev`. Open the Usage panel of
       `design/library/inspector/metadata-row/text`. Check the Used by list,
       the two detail requests, and one request on a sibling. Save a
-      screenshot under `.context/usage-list-in-parent-detail/`.
-- [ ] Serve the static output with a static file server and repeat the check.
+      screenshot under `.context/usage-list-in-parent-detail/`. Evidence is
+      in `serve-smoke.json`, `serve-usage.png`, and `milestone-4-serve-smoke-final2.log`.
+- [x] Serve the static output with a static file server and repeat the check.
+      Evidence is in `static-smoke.json`, `static-usage.png`, and
+      `milestone-4-static-smoke.log`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
