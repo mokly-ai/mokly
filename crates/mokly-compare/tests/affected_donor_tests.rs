@@ -89,13 +89,19 @@ fn usage_links(result: &ComparisonResult) -> Vec<UsageLink> {
     let mut details = projection::pending_details(model, &index, &[]);
     details.get_mut("badge").unwrap().workspace = Some(Workspace {
         comparison_eligible: false,
-        used_by: vec![],
-        affected: vec![],
+        used_by: Some(vec![]),
+        affected: Some(vec![]),
         related_components: vec![],
         input_changes: vec![],
     });
     projection_workspace::apply(&mut details, result).unwrap();
-    details.remove("badge").unwrap().workspace.unwrap().affected
+    details
+        .remove("badge")
+        .unwrap()
+        .workspace
+        .unwrap()
+        .affected
+        .unwrap()
 }
 
 #[test]

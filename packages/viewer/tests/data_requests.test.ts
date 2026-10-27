@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
@@ -36,7 +36,7 @@ function route(path: string): ShellRoute {
 /** A source that answers from scripts and records every request. */
 function scripted(
   indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV2 | Error,
+  detail: (request: DetailRequest) => EntryDetailV3 | Error,
 ) {
   const calls = { indexes: 0, details: [] as DetailRequest[] };
   const source: ShellDataSource = {
@@ -57,7 +57,7 @@ function scripted(
   return { source, calls };
 }
 
-function revised(path: string, revision: number): EntryDetailV2 {
+function revised(path: string, revision: number): EntryDetailV3 {
   return { ...detailFixture({ path }), revision };
 }
 

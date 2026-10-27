@@ -85,7 +85,7 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
 
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let mut value = json!({"schemaVersion":2,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    let mut value = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
     assert!(detail(&value.to_string()).is_ok());
     value["generation"] = json!("c".repeat(64));
     assert!(matches!(
@@ -95,6 +95,7 @@ fn current_and_removed_detail_fences_are_exclusive() {
     value.as_object_mut().unwrap().remove("deploymentId");
     value.as_object_mut().unwrap().remove("revision");
     value["entry"]["snapshotId"] = json!("d".repeat(64));
+    value["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
     assert!(detail(&value.to_string()).is_ok());
     value["usage"] = json!({"status":"ready"});
     assert!(detail(&value.to_string()).is_err());

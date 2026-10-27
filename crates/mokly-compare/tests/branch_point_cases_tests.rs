@@ -236,8 +236,8 @@ fn affected_destinations(result: &ComparisonResult) {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
             detail.workspace = Some(Workspace {
                 comparison_eligible: false,
-                used_by: vec![],
-                affected: vec![],
+                used_by: Some(vec![]),
+                affected: Some(vec![]),
                 related_components: vec![],
                 input_changes: vec![],
             });

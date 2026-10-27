@@ -8,7 +8,7 @@ import { comparisonGeneration } from "./snapshot_identity.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "./types.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
@@ -40,8 +40,8 @@ export function workspaceDetailRequest(
 
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
-  | { kind: "accepted"; detail: EntryDetailV2 }
-  | { kind: "revision"; detail: EntryDetailV2 }
+  | { kind: "accepted"; detail: EntryDetailV3 }
+  | { kind: "revision"; detail: EntryDetailV3 }
   | { kind: "deployment" }
   | { kind: "rejected" };
 
@@ -63,7 +63,7 @@ export function detailKey(request: DetailRequest): string {
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
-  detail: EntryDetailV2,
+  detail: EntryDetailV3,
 ): DetailFence {
   if (request.snapshotId === undefined) {
     if (detail.deploymentId === undefined) return { kind: "rejected" };
@@ -112,11 +112,34 @@ export function currentEntry(
 function matches(
   index: CatalogueReadModel,
   entry: CatalogueRecord,
-  detail: EntryDetailV2,
+  detail: EntryDetailV3,
   historical: boolean,
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)
     return false;
+  if (entry.kind === "screen" || entry.kind === "component") {
+    const workspace = detail.workspace;
+    if (historical) {
+      if (
+        !workspace ||
+        workspace.usedBy === undefined ||
+        workspace.affected === undefined
+      )
+        return false;
+    } else if (workspace) {
+      const currentVariant =
+        entry.kind === "component" && entry.variantOf !== undefined;
+      if (currentVariant) {
+        if (workspace.usedBy !== undefined || workspace.affected !== undefined)
+          return false;
+      } else if (
+        workspace.usedBy === undefined ||
+        workspace.affected === undefined
+      ) {
+        return false;
+      }
+    }
+  }
   if (entry.kind !== "screen" && entry.kind !== "component")
     return detail.views.length === 0;
   if (

@@ -1,7 +1,5 @@
 # Component Controls
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Scope And User Behaviour
 
 Saved variants work in every catalogue. Serve renders temporary edits of

@@ -7,7 +7,7 @@ import {
 } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import {
   loadRefresh,
@@ -46,13 +46,13 @@ function route(path: string) {
   );
 }
 
-function revised(path: string, revision: number): EntryDetailV2 {
+function revised(path: string, revision: number): EntryDetailV3 {
   return { ...detailFixture({ path }), revision };
 }
 
 function scripted(
   indexes: readonly CatalogueReadModel[],
-  detail: (request: DetailRequest) => EntryDetailV2,
+  detail: (request: DetailRequest) => EntryDetailV3,
 ) {
   const calls: DetailRequest[] = [];
   const source: ShellDataSource = {

@@ -5,7 +5,7 @@ import { fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { loadFencedDetail } from "../src/shell/data_requests.js";
 import type { ShellDataSource } from "../src/shell/data_source.js";
@@ -24,7 +24,7 @@ function withDark<T extends { colorScheme: string }>(
 }
 
 /** Home's detail at a revision, optionally with dark views. */
-function home(revision: number, dark = false): EntryDetailV2 {
+function home(revision: number, dark = false): EntryDetailV3 {
   const detail = rawDetailFixtures().current[HOME]!;
   detail.revision = revision;
   if (dark)

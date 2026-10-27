@@ -1,7 +1,5 @@
 # Live catalogue evidence updates
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Revisions and publication
 
 Serve has one update model: the publications and the event stream of the

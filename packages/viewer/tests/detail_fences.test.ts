@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type { EntryDetailV2 } from "../src/catalogue/types.js";
+import type { EntryDetailV3 } from "../src/catalogue/types.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
@@ -15,8 +15,8 @@ const REMOVED_PAGE =
 
 function current(
   path: string,
-  edit?: (detail: EntryDetailV2) => void,
-): EntryDetailV2 {
+  edit?: (detail: EntryDetailV3) => void,
+): EntryDetailV3 {
   const detail = rawDetailFixtures().current[path]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -24,8 +24,8 @@ function current(
 
 function removed(
   snapshotId: string,
-  edit?: (detail: EntryDetailV2) => void,
-): EntryDetailV2 {
+  edit?: (detail: EntryDetailV3) => void,
+): EntryDetailV3 {
   const detail = rawDetailFixtures().removed[snapshotId]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -151,6 +151,26 @@ test("usage must fit the index's components and the entry kind", () => {
   assert.equal(
     fenceDetail(index, { path: "components/action" }, pending).kind,
     "accepted",
+  );
+});
+
+test("workspace lists stay on current parents and are absent on variants", () => {
+  const index = indexFixture();
+  const parent = current("components/action", (detail) => {
+    delete (detail.workspace as unknown as Record<string, unknown>).usedBy;
+  });
+  assert.equal(
+    fenceDetail(index, { path: "components/action" }, parent).kind,
+    "rejected",
+  );
+  const variant = current("components/action/default", (detail) => {
+    const workspace = detail.workspace as unknown as Record<string, unknown>;
+    workspace.usedBy = [];
+    workspace.affected = [];
+  });
+  assert.equal(
+    fenceDetail(index, { path: "components/action/default" }, variant).kind,
+    "rejected",
   );
 });
 

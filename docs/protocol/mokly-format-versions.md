@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                         |
@@ -76,4 +74,4 @@ A receiver that does not support these versions answers HTTP 426, and the CLI
 sends no Blob or Complete request and does not downgrade. The ownership and upload readers check their own
 fields and namespace; catalogue readers independently enforce their payload
 versions. Mokly Cloud implements upload metadata v3, catalogue v8 and entry
-detail v2, and reads Changes from the index.
+detail v3, and reads Changes from the index.

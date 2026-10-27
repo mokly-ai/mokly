@@ -274,62 +274,64 @@ The writers stop writing the lists on current variants, and the readers move
 to version 3 in the same milestone, because each reader accepts exactly one
 version.
 
-- [ ] Apply Decision 1 against `origin/main`. Keep an unreleased version 3,
+- [x] Apply Decision 1 against `origin/main`. Keep an unreleased version 3,
       or raise the number.
-- [ ] Model: read the `rust` and `shared-types` skills. Make the list fields
+- [x] Model: read the `rust` and `shared-types` skills. Make the list fields
       optional, raise `ENTRY_DETAIL`, and rename `EntryDetailV2` to
       `EntryDetailV3`. Keep the version 2 requirement where the lists stay,
       and reject the lists on a current variant.
-- [ ] Producers: change `projection_usage::workspaces`,
+- [x] Producers: change `projection_usage::workspaces`,
       `projection_workspace::apply`, and `projection_removed::workspaces`.
       Adapt the static build and Serve call sites.
-- [ ] Run `cargo xtask generate-types`.
-- [ ] Rename `docs/protocol/fixtures/entry-details-v2.json` for the new
+- [x] Run `cargo xtask generate-types`.
+- [x] Rename `docs/protocol/fixtures/entry-details-v2.json` for the new
       version, and drop the lists from `components/action/default`. Update
       the two Rust tests, `catalogue_v8_fixture.ts`,
       `tests/helpers/viewer_catalogue.ts`, and
       `scripts/release/smoke_browser.mjs` that read it.
-- [ ] Viewer: the version 3 reader, the fence rule, and the type rename in
+- [x] Viewer: the version 3 reader, the fence rule, and the type rename in
       the sources, tests, and browser helpers.
-- [ ] Update the version tests: the version array and the accepted snapshot
+- [x] Update the version tests: the version array and the accepted snapshot
       of `type_generation_and_versions_are_stable`, and each test that builds
       a version 2 detail, such as `detail_reasons_tests.rs` and
       `public_contract_tests.rs`.
-- [ ] Rust tests:
-  - [ ] `projection_usage_tests`: a variant workspace has no list, and its
+- [x] Rust tests:
+  - [x] `projection_usage_tests`: a variant workspace has no list, and its
         parent's list keeps the variant's own nested use.
-  - [ ] `detail_context_tests`: a current parent without lists fails, and a
+  - [x] `detail_context_tests`: a current parent without lists fails, and a
         current variant with lists fails.
-  - [ ] The removed projection tests: removed screens, parents, and variants
+  - [x] The removed projection tests: removed screens, parents, and variants
         keep both lists.
-  - [ ] The workspace projection tests: `apply` updates the parent's rows. A
+  - [x] The workspace projection tests: `apply` updates the parent's rows. A
         current variant has no `affected`, and a removed variant keeps its
         own.
-  - [ ] The Serve evidence test: after usage completes,
+  - [x] The Serve evidence test: after usage completes,
         `components/button/disabled` has no lists, and the list of
         `components/button` is complete.
-- [ ] Node tests: a static build writes a variant detail without the lists
+- [x] Node tests: a static build writes a variant detail without the lists
       and its parent's detail with them. `tests/helpers/mokly_serve.ts` waits
       for `workspace`, not for `usedBy`, so it settles on a variant path.
-- [ ] Viewer tests: the reader accepts a version 3 variant workspace without
+- [x] Viewer tests: the reader accepts a version 3 variant workspace without
       lists and rejects version 2. A removed workspace without lists fails.
       The fence rejects a current parent without lists.
-- [ ] Browser tests:
-  - [ ] The live Serve spec of Milestone 2 also reads the variant's detail
+- [x] Browser tests:
+  - [x] The live Serve spec of Milestone 2 also reads the variant's detail
         and finds no `usedBy` and no `affected`.
-  - [ ] Static comparison: `components/card/featured` shows Card's Used by,
+  - [x] Static comparison: `components/card/featured` shows Card's Used by,
         and its detail has no lists. The removed `components/card/archived`
         shows its own lists and requests no parent detail.
-- [ ] Docs: rename the version and the type links in the shell delivery,
+- [x] Docs: rename the version and the type links in the shell delivery,
       viewer, viewer namespace, Changes serving, comparison, runtime,
       serialization, and format version pages, and in the viewer's
       `docs/api/README.md` and `docs/concepts/README.md`. Remove the status
       lines.
-- [ ] Add the variant rule, the parent's `detail` request, and the type
+- [x] Add the variant rule, the parent's `detail` request, and the type
       rename to `docs/guides/start/upgrade.md`. Remove its sentence that the
       entry detail stays version 2. Update the `mokly-model` README.
-- [ ] Run the targeted tests and `cargo xtask check --suite repository`.
-      Commit and push.
+- [x] Run the targeted tests and `cargo xtask check --suite repository`.
+      Commit and push. Decision 1 kept entry detail version 3 because
+      `origin/main` had no earlier dedup version raise.
+      Evidence is in `.context/usage-list-in-parent-detail/milestone-3-*.log`.
 
 ## Milestone 4: Smoke tests and measurements
 

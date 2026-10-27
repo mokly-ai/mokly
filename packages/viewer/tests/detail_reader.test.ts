@@ -49,7 +49,8 @@ test("the detail version gate runs before any other field is read", () => {
     null,
     [],
     { schemaVersion: 1 },
-    { schemaVersion: 3 },
+    { schemaVersion: 2 },
+    { schemaVersion: 4 },
     { schemaVersion: 0, entry: "not an entry" },
     { ...current("guide"), schemaVersion: "1" },
   ])
@@ -58,7 +59,7 @@ test("the detail version gate runs before any other field is read", () => {
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "detail" &&
-        error.supported === 2,
+        error.supported === 3,
     );
 });
 
@@ -72,6 +73,25 @@ test("visual details require a unique control order and other kinds omit it", ()
   const page = current("guide");
   page.controlOrder = [];
   rejects(page, /control order/);
+});
+
+test("version 3 permits a current variant without workspace lists", () => {
+  const variant = current("components/action/default");
+  assert.equal((variant.workspace as Raw).usedBy, undefined);
+  assert.equal((variant.workspace as Raw).affected, undefined);
+  assert.ok(readEntryDetail(variant).workspace);
+  const old = current("components/action");
+  old.schemaVersion = 2;
+  assert.throws(
+    () => readEntryDetail(old),
+    (error) => error instanceof MoklyVersionError && error.supported === 3,
+  );
+});
+
+test("removed visual details require both workspace lists", () => {
+  const missing = removed();
+  delete (missing.workspace as Raw).usedBy;
+  rejects(missing, /removed visual details require workspace lists/);
 });
 
 test("a current detail has deployment and revision, a removed one generation and snapshot", () => {

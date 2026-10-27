@@ -7,7 +7,7 @@ import {
   workspaceDetailRequest,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV3 } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellDataSource } from "./data_source.js";
@@ -65,7 +65,7 @@ export function routeDetailRequests(
 
 /** The outcome of loading one detail against the installed index. */
 export type DetailOutcome =
-  | { kind: "accepted"; detail: EntryDetailV2; index: CatalogueReadModel }
+  | { kind: "accepted"; detail: EntryDetailV3; index: CatalogueReadModel }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
   | { kind: "failed" };
@@ -106,7 +106,7 @@ export type RefreshOutcome =
   | {
       kind: "accepted";
       index: CatalogueReadModel;
-      details: readonly (readonly [DetailRequest, EntryDetailV2])[];
+      details: readonly (readonly [DetailRequest, EntryDetailV3])[];
     }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
@@ -171,7 +171,7 @@ export function routeKey(route: ShellRoute): string {
 
 /** Whether every request of a route has an accepted detail. */
 function routeReady(
-  held: ReadonlyMap<string, EntryDetailV2>,
+  held: ReadonlyMap<string, EntryDetailV3>,
   requests: readonly DetailRequest[],
 ): boolean {
   return requests.every((request) => held.has(detailKey(request)));
@@ -180,7 +180,7 @@ function routeReady(
 /** What the delivery of one route's details is decided from. */
 export interface RouteDeliveryInput {
   /** The details that the installed snapshot holds. */
-  details: ReadonlyMap<string, EntryDetailV2>;
+  details: ReadonlyMap<string, EntryDetailV3>;
   /** The keys of the requested details whose last load failed. */
   failed: ReadonlySet<string>;
   /** Whether the route's last publication refresh failed. */

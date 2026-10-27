@@ -6,7 +6,7 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It explains 
 
 `MoklyViewer` reads two shapes of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md): the
-catalogue index, read model v8, and one entry detail v2 per entry.
+catalogue index, read model v8, and one entry detail v3 per entry.
 
 | Prop     | Accepts                                                 | Rule                                                                                |
 | -------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -157,7 +157,7 @@ instance regions in the live page from them.
 
 ## Live controls
 
-Entry detail v2 supplies control declaration order. The Props tab follows it
+Entry detail v3 supplies control declaration order. The Props tab follows it
 for editable fields and saved values. Saved props remain visible while the
 detail loads.
 

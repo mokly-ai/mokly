@@ -6,7 +6,7 @@ import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";
@@ -115,7 +115,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
     new URL("/view/components/action/default/", "https://catalogue.example"),
   );
   const requests = routeDetailRequests(index, route);
-  const details: (readonly [DetailRequest, EntryDetailV2])[] = [];
+  const details: (readonly [DetailRequest, EntryDetailV3])[] = [];
   for (const request of requests)
     details.push([
       request,

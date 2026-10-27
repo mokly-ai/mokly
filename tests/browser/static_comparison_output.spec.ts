@@ -22,6 +22,39 @@ test("the native comparison copy remains usable after its two-commit source repo
   expect(index.base).toBe("fixture-base");
   expect(index.comparisonUrl).toMatch(/\/generations\/[a-f0-9]{64}\/$/);
   expect(index.baseCommit).toMatch(/^[a-f0-9]{40}$/);
+  const parentDetail = (await (
+    await request.get(
+      `${baseURL}/mokly-viewer/entries/${comparisonPaths.component}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  const variantDetail = (await (
+    await request.get(
+      `${baseURL}/mokly-viewer/entries/${comparisonPaths.changedVariant}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  expect(parentDetail.workspace?.usedBy).toBeDefined();
+  expect(variantDetail.workspace?.usedBy).toBeUndefined();
+  expect(variantDetail.workspace?.affected).toBeUndefined();
+  const removed = index.removedEntries.find(
+    (record: { entry: { path: string } }) =>
+      record.entry.path === comparisonPaths.removedVariant,
+  )! as { snapshotId: string };
+  const removedDetail = (await (
+    await request.get(
+      `${baseURL}/${index.comparisonUrl}entries/${comparisonPaths.removedVariant}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  expect(removed.snapshotId).toMatch(/^[a-f0-9]{64}$/u);
+  expect(removedDetail.workspace?.usedBy).toEqual([]);
+  expect(removedDetail.workspace?.affected).toEqual(
+    parentDetail.workspace?.affected,
+  );
   expect(
     index.screens.find(
       (entry: { path: string }) => entry.path === comparisonPaths.unchanged,

@@ -64,6 +64,11 @@ test("a live publication updates Used by on a component variant without a page l
 }) => {
   const variant = changes.paths.changedVariant;
   await page.goto(`/view/${variant}/`);
+  const variantDetail = await (
+    await page.request.get(`/mokly-viewer/entries/${variant}.json`)
+  ).json();
+  expect(variantDetail.workspace.usedBy).toBeUndefined();
+  expect(variantDetail.workspace.affected).toBeUndefined();
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
   await expect(

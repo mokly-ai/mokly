@@ -94,13 +94,13 @@ test("shared Serve comparison fixture retains affected consumers and moved neste
       await request.get("/mokly-viewer/entries/branch/consumers/badge.json")
     ).json(),
   );
-  expectBadgeAffected(badge.workspace!.affected);
+  expectBadgeAffected(badge.workspace!.affected!);
   const card = readEntryDetail(
     await (
       await request.get(`/mokly-viewer/entries/${changes.paths.component}.json`)
     ).json(),
   );
-  expect(card.workspace!.affected.map((link) => link.entryPath)).toContain(
+  expect(card.workspace!.affected!.map((link) => link.entryPath)).toContain(
     changes.paths.consumer,
   );
   const consumer = readEntryDetail(

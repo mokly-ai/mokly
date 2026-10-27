@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components

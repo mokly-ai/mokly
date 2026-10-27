@@ -2,13 +2,13 @@ import fs from "node:fs/promises";
 
 import { expect } from "@playwright/test";
 
-import type { CatalogueReadModel, EntryDetailV2 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
 import { designLibrary } from "./design_library_inventory.js";
 
 let index: CatalogueReadModel;
-const details = new Map<string, EntryDetailV2>();
+const details = new Map<string, EntryDetailV3>();
 test.beforeAll(async ({ request, baseURL }) => {
   index = (await (
     await request.get(`${baseURL}/mokly-viewer/index.json`)
@@ -18,7 +18,7 @@ test.beforeAll(async ({ request, baseURL }) => {
   )) {
     const detail = (await (
       await request.get(`${baseURL}/mokly-viewer/entries/${entry.path}.json`)
-    ).json()) as EntryDetailV2;
+    ).json()) as EntryDetailV3;
     details.set(entry.path, detail);
   }
 });

@@ -1,7 +1,5 @@
 # Shell Delivery And Read Model Routes
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -20,9 +18,9 @@ rewrite rules.
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
 | `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v8                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v2                                        |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v3                                        |
 | `/mokly-viewer/diffs/generations/<generation>/`                                              | live      | absent                                  | the generation root: 204 while Serve retains it            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v2 of a removed entry's historical record |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v3 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
 | `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
@@ -79,7 +77,7 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v2 type](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).

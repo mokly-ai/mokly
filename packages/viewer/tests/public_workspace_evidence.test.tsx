@@ -120,6 +120,7 @@ test("a removed component variant keeps its own workspace lists", () => {
         comparisonEligible: false,
       },
     ],
+    affected: [],
   };
   rawDetails.removed[snapshotId] = removedDetail;
   const index = readCatalogueIndex(rawIndex);

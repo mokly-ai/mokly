@@ -11,7 +11,7 @@ import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
   CatalogueUsage,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
@@ -71,7 +71,7 @@ export interface EvidenceRuntimeProbe extends EvidenceProbe {
 /** Mount the new registry owners with the same observable fixture controls. */
 export function startEvidenceHarness(
   index: CatalogueReadModel,
-  details: readonly (readonly [DetailRequest, EntryDetailV2])[],
+  details: readonly (readonly [DetailRequest, EntryDetailV3])[],
   origin: string,
   cross: boolean,
   sibling: "ready" | "pending" | "unavailable",

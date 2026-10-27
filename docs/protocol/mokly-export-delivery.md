@@ -1,7 +1,5 @@
 # Static Delivery
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Hosting Contract
 
 Deploy the output directory's contents as the HTTP(S) origin's document root.

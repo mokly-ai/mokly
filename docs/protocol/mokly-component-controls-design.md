@@ -1,7 +1,5 @@
 # Component Controls Design
 
-Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
-
 ## Controls Panel
 
 The controls artboards show the component page with its saved-variant strip,
