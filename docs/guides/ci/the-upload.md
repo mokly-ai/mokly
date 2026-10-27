@@ -108,11 +108,12 @@ content received for an unfinished or expired upload. Each stored Blob must
 match its declared digest and size. A gzip body must decode within its declared
 file size, and the service checks its decoded digest and size before storage.
 The service lists gzip only when it decodes gzip Blobs for the whole upload.
-An integer declared size above 64 MiB or a path above 1,024 UTF-8 bytes receives
-`413`; malformed values and path grammar receive `400` or `422`. The service commits only when every listed digest is
-present and answers `409` until then. It keeps the first publication completed
-for a revision and config path. Before exposure, it checks that the credential
-is allowed to publish for the repository named by the manifest.
+An integer declared size above 64 MiB or a path above 1,024 UTF-8 bytes
+receives `413`; malformed values and path grammar receive `400` or `422`.
+The service commits only when every listed digest is present and answers `409`
+until then. It keeps the first publication completed for a revision and config
+path. Before exposure, it checks that the credential is allowed to publish for
+the repository named by the manifest.
 
 Receivers accept only regular files. They reject symlinks, hard links,
 devices, FIFOs, sparse files and other special entries in the plan archive,

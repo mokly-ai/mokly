@@ -20,7 +20,7 @@ use crate::snapshot::Prepared;
 
 use super::support::{active, artifact, file, inventory, publication, response, settings};
 
-fn prepared_with_file(path: &str, bytes: Bytes) -> Prepared {
+pub(super) fn prepared_with_file(path: &str, bytes: Bytes) -> Prepared {
     let base = artifact(false);
     let files = base
         .files
@@ -37,7 +37,7 @@ fn prepared_with_file(path: &str, bytes: Bytes) -> Prepared {
     Prepared::new(&artifact).unwrap()
 }
 
-fn plan_response(
+pub(super) fn plan_response(
     expected_digest: &str,
     encodings: Option<serde_json::Value>,
 ) -> crate::http::Response {
@@ -57,7 +57,7 @@ fn plan_response(
     }
 }
 
-fn client(http: Unimock, reporter: Arc<Unimock>, clock: Arc<Unimock>) -> Client {
+pub(super) fn client(http: Unimock, reporter: Arc<Unimock>, clock: Arc<Unimock>) -> Client {
     Client {
         http: Arc::new(http),
         clock,
@@ -137,77 +137,6 @@ async fn gzip_blob_is_smaller_decodes_and_counts_decoded_bytes() {
         .sum::<u64>()
         + 8192;
     assert_eq!(progress.lock().unwrap()[0].size, expected_size);
-}
-
-async fn send_one(encodings: Option<serde_json::Value>, bytes: Bytes) -> (Bytes, Encoding) {
-    let prepared = prepared_with_file("static/blob.bin", bytes);
-    let digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/blob.bin")
-        .unwrap()
-        .sha256
-        .clone();
-    let planned = plan_response(&digest, encodings);
-    let captured = Arc::new(Mutex::new(None));
-    let observed = Arc::clone(&captured);
-    let http = Unimock::new((
-        HttpMock::send
-            .next_call(matching!((request, _) if request.step == Step::Plan))
-            .answers_arc(Arc::new(move |_, _, _| {
-                let response = planned.clone();
-                Box::pin(async { Ok(response) })
-            })),
-        HttpMock::send
-            .next_call(matching!((request, _) if request.step == Step::Blob))
-            .answers_arc(Arc::new(move |_, request, _| {
-                *observed.lock().unwrap() = Some((request.body.clone(), request.encoding));
-                Box::pin(async { Ok(response(204)) })
-            })),
-        HttpMock::send
-            .next_call(matching!((request, _) if request.step == Step::Complete))
-            .answers(&|_, _, _| Box::pin(async { Ok(response(201)) })),
-    ));
-    client(http, super::support::reporter(), super::support::clock())
-        .publish(&prepared, &settings(1), &active())
-        .await
-        .unwrap();
-    captured.lock().unwrap().take().unwrap()
-}
-
-#[tokio::test]
-async fn unusable_plan_encoding_stays_raw_for_compressible_bytes() {
-    let bytes = Bytes::from(vec![b'a'; 8192]);
-    for encodings in [
-        Some(json!("gzip")),
-        Some(json!(["br"])),
-        Some(json!(null)),
-        None,
-    ] {
-        assert_eq!(
-            send_one(encodings, bytes.clone()).await,
-            (bytes.clone(), Encoding::Identity)
-        );
-    }
-}
-
-#[tokio::test]
-async fn a_gzip_plan_keeps_incompressible_bytes_raw() {
-    let mut value = 0x1234_5678_u32;
-    let mut bytes = Vec::with_capacity(8192);
-    while bytes.len() < 8192 {
-        value ^= value << 13;
-        value ^= value >> 17;
-        value ^= value << 5;
-        bytes.extend_from_slice(&value.to_le_bytes());
-    }
-    bytes.truncate(8192);
-    let bytes: Bytes = bytes.into();
-    assert_eq!(
-        send_one(Some(json!(["gzip"])), bytes.clone()).await,
-        (bytes, Encoding::Identity)
-    );
 }
 
 #[tokio::test]

@@ -342,15 +342,29 @@ after 180 seconds with exit 124 before Plan.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
-- [ ] Run the targeted tests: `cargo test -p mokly-publish`,
+Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
+`.context/gzip-blob-uploads/milestone5-repository-gate-rerun.log`, and
+`.context/gzip-blob-uploads/milestone5-complete-gate.log`.
+
+- [x] Apply the Milestone 4 review fixes before the verification gate.
+      Keep the README sentence, receiver guide paragraph, and evidence record
+      aligned.
+- [x] Capture the rich progress label under a pseudo-terminal, because a
+      forced-rich pipe shows no progress frames. `examples/basic` with
+      `--no-changes` and the gzip listing showed
+      `Uploading 1120 of 1120 files · 32.2 MiB`, the decoded size, while
+      the Blob request bodies were 3,946,510 bytes. Evidence:
+      `.context/gzip-blob-uploads/pty-smoke-typescript.txt` and
+      `pty-smoke-stats.json`.
+- [x] Run the targeted tests: `cargo test -p mokly-publish`,
       `cargo test -p mokly-cli`, the new Node test,
       `npm test -- tests/static_publication.test.ts`,
       `npm test -- tests/installed_receiver_fixtures.test.ts`,
       `npm test -- tests/markdown_links.test.ts`, and
       `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
