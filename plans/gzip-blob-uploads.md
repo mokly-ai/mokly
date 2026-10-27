@@ -365,10 +365,19 @@ Evidence: `.context/gzip-blob-uploads/milestone5-targeted.log`,
 - [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1: .context/gzip-blob-uploads/review-1.md. Findings 1 to 4 were
+    fixed in 4ed44a88.
+  - 5. New gzip unit tests duplicate their helpers. Severity Low, effort
+       Small. Recommended: B, move the shared helpers into _tests_/support.rs.
+  - Follow-up: give `tests/exchange_tests.rs` the same fixed clock through
+    `tests/support/`, so that no exchange integration test depends on the
+    real date. Effort Medium. Covers finding 1. Previous examples:
+    tests/exchange_tests.rs uses SystemClock with the fixed expiry
+    2099-01-01.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
