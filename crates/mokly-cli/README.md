@@ -1,7 +1,5 @@
 # mokly-cli
 
-Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
-
 `mokly-cli` provides the `mokly` binary and is the composition root of the
 Mokly Rust core. It owns argument parsing and terminal presentation, and it
 wires the other core crates into the `serve`, `build`, and `publish` commands.

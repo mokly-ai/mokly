@@ -8,4 +8,5 @@ mod warning_tests;
 mod watch_tests;
 
 mod fixture;
+mod startup_edit_tests;
 mod startup_tests;

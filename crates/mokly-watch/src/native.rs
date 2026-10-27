@@ -140,6 +140,15 @@ impl Observer for NativeObserver {
     fn rescan(&self, plan: &Plan) -> Result<()> {
         self.update(plan, true)
     }
+    fn covers(&self, plan: &Plan) -> bool {
+        let Ok(needed) = native_scan::directories(self.tree.as_ref(), plan) else {
+            return false;
+        };
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        state
+            .as_ref()
+            .is_some_and(|state| needed.is_subset(&state.directories))
+    }
     async fn changed(&self) {
         self.inbox.changed().await;
     }
@@ -202,3 +211,7 @@ mod native_registration_tests;
 #[cfg(test)]
 #[path = "_tests_/native_recovery_tests.rs"]
 mod native_recovery_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_coverage_tests.rs"]
+mod native_coverage_tests;

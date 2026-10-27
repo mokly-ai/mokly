@@ -267,32 +267,36 @@ Emit the counts of the D3 answer at the end of the five phases.
 Prepare a second time only when a new root reaches a directory that the
 active watcher did not observe.
 
-- [ ] Write the failing tests first in
-      `crates/mokly-watch/src/_tests_/native_registration_tests.rs`: the
+- [x] Write the failing tests first in a new
+      `crates/mokly-watch/src/_tests_/native_coverage_tests.rs`: the
       observer covers a plan whose root directories it registered. It does
-      not cover a plan whose root reaches an unregistered directory. It
-      covers nothing after `close`.
-- [ ] Add the coverage method to `Observer` in
+      not cover a plan whose root reaches an unregistered directory. A
+      failed walk and a closed observer cover nothing.
+- [x] Add the coverage method to `Observer` in
       `crates/mokly-watch/src/observer.rs`. Implement it in `NativeObserver`
       from the root walk that registration uses.
-- [ ] Write the failing tests first in
+- [x] Write the failing tests first in
       `crates/mokly-cli/src/_tests_/serve_watch_tests.rs`: changed roots
       that the active observer covers attach a new observer without a
       recheck. Changed roots that it does not cover set the recheck.
-- [ ] Set `recheck` from the coverage in `candidate` of
+- [x] Set `recheck` from the coverage in `candidate` of
       `crates/mokly-cli/src/serve_watch.rs`. Keep the new observer for
       changed roots. Update the module comment of `serve_preparation.rs`.
-- [ ] Add a process test under `crates/mokly-cli/tests/serve_js/` for an
-      edit during startup. A PostCSS plugin reads a file under a directory
+- [x] Add a process test in a new
+      `crates/mokly-cli/tests/serve_js/startup_edit_tests.rs` for an edit
+      during startup. A PostCSS plugin reads a file under a directory
       that it reports, signals, and waits for a gate file. The test edits
       the file, then writes the gate.
-  - [ ] Covered directory: readiness serves the old CSS, then a rebuild
+  - [x] Covered directory: readiness serves the old CSS, then a rebuild
         serves the new CSS.
-  - [ ] Directory outside every observed directory: the second preparation
+  - [x] Directory outside every observed directory: the second preparation
         runs, and readiness serves the new CSS.
-- [ ] Remove the status lines of `docs/protocol/mokly-watch.md`,
+- [x] Remove the status lines of `docs/protocol/mokly-watch.md`,
       `docs/protocol/mokly-build-warnings.md`, `crates/mokly-watch/README.md`,
       and `crates/mokly-cli/README.md`.
+- [x] Confirm that the covered process test fails under the old rule, which
+      prepared again on every root change. It waited at readiness until its
+      30 s deadline.
 
 ## Milestone 5: Measurement after the change
 

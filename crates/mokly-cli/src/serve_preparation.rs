@@ -1,4 +1,4 @@
-//! Startup repeats discovery after new watch targets attach, before readiness.
+//! Startup prepares again before readiness when new watch roots reach unwatched directories.
 
 use std::path::Path;
 use std::sync::Arc;

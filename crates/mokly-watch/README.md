@@ -1,7 +1,5 @@
 # mokly-watch
 
-Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
-
 `mokly-watch` observes catalogue inputs for watched Serve. The CLI combines
 its events with manual rebuild requests. `mokly-graph` owns render keys and
 `mokly-server` owns atomic publication. Build and publish create no observer.

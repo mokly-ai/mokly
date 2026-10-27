@@ -1,7 +1,5 @@
 # Build Warnings
 
-Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
-
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is

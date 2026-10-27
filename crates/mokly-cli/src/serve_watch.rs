@@ -70,6 +70,7 @@ pub(super) struct State {
 pub struct CandidateWatch {
     pub(super) plan: Plan,
     pub(super) observer: Arc<dyn Observer>,
+    /// The new roots reach a directory that the active observer did not watch.
     pub(super) recheck: bool,
 }
 
@@ -99,7 +100,7 @@ impl WatchedInputs {
 impl WatchInputs for WatchedInputs {
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch> {
         let plan = plan(prepared)?;
-        let (recheck, old, previous) = {
+        let (changed, old, previous) = {
             let current = self.state.lock().unwrap_or_else(|e| e.into_inner());
             (
                 current.plan.roots != plan.roots,
@@ -107,18 +108,22 @@ impl WatchInputs for WatchedInputs {
                 current.plan.clone(),
             )
         };
-        let observer = if recheck {
-            self.factory.attach(&plan)?
-        } else {
-            let mut attachment = plan.clone();
-            attachment.extend_required(&previous);
-            watch_result(old.replace(&attachment))?;
-            old
-        };
+        if changed {
+            let observer = self.factory.attach(&plan)?;
+            let recheck = !old.covers(&plan);
+            return Ok(CandidateWatch {
+                plan,
+                observer,
+                recheck,
+            });
+        }
+        let mut attachment = plan.clone();
+        attachment.extend_required(&previous);
+        watch_result(old.replace(&attachment))?;
         Ok(CandidateWatch {
             plan,
-            observer,
-            recheck,
+            observer: old,
+            recheck: false,
         })
     }
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()> {
