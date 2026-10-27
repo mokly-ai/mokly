@@ -10,10 +10,12 @@ use clap::{Parser, Subcommand};
 use crate::application::{Application, Xtask};
 use crate::artifacts::{DefaultArtifacts, SystemArtifactFiles};
 use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
-use crate::check::runner::DefaultCheckRunner;
+use crate::check::runner::{Auditors, DefaultCheckRunner};
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
+use crate::length::protocol_audit::SystemProtocolCapAuditor;
+use crate::length::source_audit::SystemSourceFileLengthAuditor;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::clients::github::SystemGithub;
@@ -32,7 +34,10 @@ use crate::remote::scripts::SystemScripts;
 use crate::remote::snapshot::contracts::Snapshot;
 use crate::remote::snapshot::filesystem::SystemSnapshotFiles;
 use crate::remote::snapshot::system::SystemSnapshot;
+use crate::remote::source_fingerprint::SourceTreeFingerprint;
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
+use crate::source_tree::command::{SourceTreeRequest, SystemSourceTreeCommand};
+use crate::source_tree::system::SystemTree;
 
 #[derive(Debug, Parser)]
 #[command(name = "xtask", about = "Mokly repository automation")]
@@ -85,6 +90,8 @@ pub(crate) enum Command {
         #[arg(long)]
         all: bool,
     },
+    /// Print the source-tree fingerprint of this checkout.
+    SourceTree(SourceTreeRequest),
 }
 
 /// Parse arguments, compose real dependencies, and return a process exit code.
@@ -114,10 +121,15 @@ pub(crate) fn main() -> ExitCode {
         selector,
         check_runner: Arc::new(DefaultCheckRunner::new(
             command_runner,
-            Arc::clone(&rust_file_length_auditor),
+            Auditors {
+                rust_file_length: Arc::clone(&rust_file_length_auditor),
+                source_file_length: Arc::new(SystemSourceFileLengthAuditor),
+                protocol_caps: Arc::new(SystemProtocolCapAuditor),
+            },
             workspace.clone(),
         )),
         rust_file_length_auditor,
+        source_tree: Arc::new(SystemSourceTreeCommand),
         remote_runner: Arc::new(DefaultRemoteRunner {
             dependencies: dependencies.clone(),
         }),
@@ -157,7 +169,10 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
         workspace: workspace.clone(),
     });
     let git: Arc<dyn Git + Send + Sync> = scripts.clone();
-    let fingerprint: Arc<dyn Fingerprint + Send + Sync> = scripts.clone();
+    let fingerprint: Arc<dyn Fingerprint + Send + Sync> = Arc::new(SourceTreeFingerprint {
+        tree: Arc::new(SystemTree),
+        interrupt: Arc::clone(&interrupt),
+    });
     let aggregate: Arc<dyn Aggregate + Send + Sync> = scripts;
     let blacksmith: Arc<dyn Blacksmith + Send + Sync> = Arc::new(SystemBlacksmith {
         process: Arc::clone(&process),
@@ -204,3 +219,7 @@ fn workspace_root() -> Result<PathBuf> {
 #[cfg(test)]
 #[path = "_tests_/cli_tests.rs"]
 mod cli_tests;
+
+#[cfg(test)]
+#[path = "_tests_/source_tree_cli_tests.rs"]
+mod source_tree_cli_tests;

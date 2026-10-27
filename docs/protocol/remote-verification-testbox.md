@@ -89,8 +89,8 @@ independent `static-delivery` command without a shard.
 default or `strict`. The wrapper accepts that option only with the repository
 suite and passes it to `cargo xtask check`. The command name stays
 `repository`. Invalid arguments fail before any suite starts.
-An invalid `--expect` value fails with the same error in the wrapper and in
-the fingerprint script. Each script follows that error with its own usage line.
+The probe command and the wrapper reject a malformed `--expect` value before
+they read Git or files. Each error names only its own command's arguments.
 
 Static delivery runs on its own box. It builds the source and checks the
 example through static HTTP and file URLs. Both modes must pass.
@@ -108,8 +108,12 @@ Without it, the box uses its default toolchain. Merge `main` into the branch
 before remote verification. Run this probe from the snapshot directory:
 
 ```bash
-blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/source-tree.mjs --expect <fingerprint> --print-head"
+blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/refresh-source-mtimes.mjs && cargo xtask source-tree --expect <fingerprint> --print-head"
 ```
+
+The probe refreshes copied modification times before `cargo xtask` builds, as
+the [base sync contract](./remote-verification-base.md#sync-source-and-probe)
+requires.
 
 The probe uses `--wait-timeout 10m`. Xtask does not retry it.
 Read whole lines that match `^sha256:[0-9a-f]{64}$` for the fingerprint or
@@ -162,9 +166,9 @@ Do not send the local org token or saved CLI credentials to the box.
 
 ## Source-Tree Fingerprint
 
-`node scripts/verification/source-tree.mjs` computes the fingerprint locally
-and on every box with the same algorithm. Run it from the repository root. It
-prints `sha256:` followed by a lowercase hex SHA-256 digest and a newline.
+The checkout, the snapshot, the probe, and the wrapper use the same algorithm.
+`cargo xtask source-tree` prints the fingerprint of the checkout that holds it:
+`sha256:` followed by a lowercase hex SHA-256 digest and a newline.
 
 The digest covers every index path and every non-ignored untracked path: its
 repository-relative path bytes, its mode, and its content. A regular file has
@@ -184,8 +188,8 @@ nested repositories still fail. Never silently omit them. Other read errors
 fail.
 
 `--expect <fingerprint>` requires the computed value to match exactly.
-A mismatch returns nonzero. Both scripts include the expected and actual
-fingerprints in the mismatch error. `--print-head` adds the full lowercase local
+A mismatch returns nonzero. The probe command and the wrapper include the
+expected and actual fingerprints in the mismatch error. `--print-head` adds the full lowercase local
 `HEAD` SHA on a separate line after the fingerprint. Read failures return
 nonzero. The probe checks that SHA independently from the digest.
 

@@ -76,6 +76,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
                 ReporterExecutorMock.each_call(matching!(_)).returns(()),
             )),
             interrupt,
+            source_tree: Arc::new(Unimock::new(())),
             rust_file_length_auditor: unused,
             workspace: PathBuf::from("/workspace"),
         };
@@ -102,6 +103,7 @@ fn executor_emits_one_result_and_never_calls_the_runner() {
         remote_runner: unused.clone(),
         check_runner: unused.clone(),
         interrupt: unused.clone(),
+        source_tree: Arc::new(Unimock::new(())),
         rust_file_length_auditor: unused,
         environment: Arc::new(Unimock::new(
             EnvironmentGetMock
@@ -182,6 +184,7 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
             reporter: Arc::new(Unimock::new(
                 ReporterExecutorMock.each_call(matching!(_)).returns(()),
             )),
+            source_tree: Arc::new(Unimock::new(())),
             rust_file_length_auditor: unused,
             workspace: PathBuf::from("/workspace"),
         };

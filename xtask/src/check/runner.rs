@@ -4,10 +4,12 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::command::{CommandRunner, CommandSpec};
-use crate::error::Result;
+use crate::error::{Error, Result};
+use crate::length::protocol_audit::ProtocolCapAuditor;
+use crate::length::source_audit::SourceFileLengthAuditor;
 use crate::rust_file_length::RustFileLengthAuditor;
 
-use super::commands::{browser_test_command, commands_for};
+use super::commands::{Step, browser_test_command, commands_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 
 /// Runs complete or selected repository verification.
@@ -19,10 +21,20 @@ pub(crate) trait CheckRunner: Send + Sync {
     fn source_file_length(&self, all: bool) -> Result<()>;
 }
 
+/// The repository audits that run inside xtask instead of as subprocesses.
+pub(crate) struct Auditors {
+    /// Rust source length below `xtask/` and `crates/`.
+    pub(crate) rust_file_length: Arc<dyn RustFileLengthAuditor>,
+    /// Changed TypeScript, JavaScript, and protocol page length.
+    pub(crate) source_file_length: Arc<dyn SourceFileLengthAuditor>,
+    /// Protocol document caps against the comparison commit.
+    pub(crate) protocol_caps: Arc<dyn ProtocolCapAuditor>,
+}
+
 /// Verification implementation backed by injected side-effect boundaries.
 pub(crate) struct DefaultCheckRunner {
     command_runner: Arc<dyn CommandRunner>,
-    rust_file_length_auditor: Arc<dyn RustFileLengthAuditor>,
+    auditors: Auditors,
     workspace: PathBuf,
 }
 
@@ -30,12 +42,12 @@ impl DefaultCheckRunner {
     /// Construct the repository check runner.
     pub(crate) fn new(
         command_runner: Arc<dyn CommandRunner>,
-        rust_file_length_auditor: Arc<dyn RustFileLengthAuditor>,
+        auditors: Auditors,
         workspace: PathBuf,
     ) -> Self {
         Self {
             command_runner,
-            rust_file_length_auditor,
+            auditors,
             workspace,
         }
     }
@@ -49,13 +61,27 @@ impl DefaultCheckRunner {
         shard: Option<Shard>,
         dependency_audit: DependencyAudit,
     ) -> Result<()> {
-        for command in commands_for(suite, shard, dependency_audit) {
-            self.run_command(command)?;
+        for step in commands_for(suite, shard, dependency_audit) {
+            match step {
+                Step::Command(command) => self.run_command(command)?,
+                Step::SourceFileLength => self.source_file_length(false)?,
+                Step::Ratchets(command) => self.run_ratchets(command)?,
+            }
         }
         if suite == VerificationSuite::Repository {
-            self.rust_file_length_auditor.run(&self.workspace)?;
+            self.auditors.rust_file_length.run(&self.workspace)?;
         }
         Ok(())
+    }
+
+    /// Run every ratchet before reporting the first failure.
+    fn run_ratchets(&self, command: CommandSpec) -> Result<()> {
+        let caps = self.auditors.protocol_caps.run(&self.workspace);
+        let others = self.run_command(command);
+        match caps {
+            Err(source) => Err(Error::Length { source }),
+            Ok(()) => others,
+        }
     }
 
     fn run_command(&self, command: CommandSpec) -> Result<()> {
@@ -66,12 +92,10 @@ impl DefaultCheckRunner {
 
 impl CheckRunner for DefaultCheckRunner {
     fn source_file_length(&self, all: bool) -> Result<()> {
-        let mut command =
-            CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]);
-        if all {
-            command = command.args(["--all"]);
+        match self.auditors.source_file_length.run(&self.workspace, all) {
+            Ok(()) => Ok(()),
+            Err(source) => Err(Error::Length { source }),
         }
-        self.run_command(command)
     }
 
     /// Runs one selected suite, or every local suite in order. In the complete

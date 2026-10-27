@@ -151,7 +151,7 @@ pub(crate) enum GithubRunState {
     Other,
 }
 
-/// Working-tree identity script.
+/// Working-tree source fingerprint.
 #[cfg_attr(test, unimock::unimock(api = [FingerprintReadMock]))]
 pub(crate) trait Fingerprint: Send + Sync {
     /// Compute the local source fingerprint.

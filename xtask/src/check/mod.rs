@@ -5,6 +5,10 @@ pub(crate) mod request;
 pub(crate) mod runner;
 
 #[cfg(test)]
+#[path = "_tests_/audit_steps_tests.rs"]
+mod audit_steps_tests;
+
+#[cfg(test)]
 #[path = "_tests_/check_tests.rs"]
 mod check_tests;
 #[cfg(test)]
@@ -14,3 +18,7 @@ mod dependency_audit_tests;
 #[cfg(test)]
 #[path = "_tests_/native_tests.rs"]
 mod native_tests;
+
+#[cfg(test)]
+#[path = "_tests_/runner_support.rs"]
+mod runner_support;

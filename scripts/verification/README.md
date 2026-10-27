@@ -21,8 +21,9 @@ Public test commands and strict evidence rules live in the
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
-  `runRepositoryRatchets`, which runs every maintainability ratchet of the
-  Repository suite.
+  `runRepositoryRatchets`, which runs the Node maintainability ratchets of the
+  Repository suite. `xtask` runs the protocol document cap ratchet first, in
+  the same step.
 - [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
   Testbox.
 
@@ -149,9 +150,10 @@ and dependency preparation used by the other commands. It builds with
 `npm run build` and then runs `npm run test:delivery:prepared`. Build failures,
 signals, and either delivery failure produce a nonzero command result.
 
-The remote command runs [`refresh-source-mtimes.mjs`](./refresh-source-mtimes.mjs)
-before this wrapper. It refreshes every regular copied path that differs from
-the warmup base, so the first Cargo build cannot reuse a stale native binary.
+The readiness probe runs [`refresh-source-mtimes.mjs`](./refresh-source-mtimes.mjs)
+before `cargo xtask source-tree`, and each remote command runs it before this
+wrapper. It refreshes every regular copied path that differs from the warmup
+base, so the first Cargo build cannot reuse a stale native binary.
 
 No browser command also runs delivery. The remote plan gives static delivery
 its own seventh Testbox and requires its exit result. Browser and viewer

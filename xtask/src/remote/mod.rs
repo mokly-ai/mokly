@@ -20,6 +20,7 @@ pub(crate) mod runner;
 pub(crate) mod runtime;
 pub(crate) mod scripts;
 pub(crate) mod snapshot;
+pub(crate) mod source_fingerprint;
 mod suites;
 mod verdict;
 
@@ -33,4 +34,4 @@ mod git_adapter_support;
 
 #[cfg(test)]
 #[path = "_tests_/git_test_runner.rs"]
-mod git_test_runner;
+pub(crate) mod git_test_runner;

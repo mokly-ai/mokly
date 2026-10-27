@@ -6,7 +6,9 @@ use std::path::PathBuf;
 use thiserror::Error;
 
 use crate::check::request::VerificationSuite;
+use crate::length;
 use crate::remote::error;
+use crate::source_tree;
 
 /// Result returned by xtask operations.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -93,6 +95,18 @@ pub(crate) enum Error {
         path: String,
         /// Originating operating-system error.
         source: io::Error,
+    },
+    /// The source-tree fingerprint failed.
+    #[error("[xtask/check] {source}")]
+    SourceTree {
+        /// Original source-tree fingerprint error.
+        source: source_tree::error::Error,
+    },
+    /// A length audit or the protocol cap ratchet failed.
+    #[error("[xtask/check] {source}")]
+    Length {
+        /// Original length audit error.
+        source: length::error::Error,
     },
     /// Rust files exceeded the workspace line limit.
     #[error("[xtask/rust-file-length] files exceed 300 lines:\n{details}")]

@@ -10,6 +10,7 @@ use crate::error::Error;
 
 use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
+use super::runner_support::unused_auditors;
 
 #[test]
 fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
@@ -34,7 +35,7 @@ fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
             ));
             let runner = DefaultCheckRunner::new(
                 command_runner,
-                Arc::new(Unimock::new(())),
+                unused_auditors(),
                 PathBuf::from("/workspace"),
             );
             let request = CheckRequest::new(suite, None, mode).expect("valid audit selection");
@@ -92,7 +93,7 @@ fn rust_advisory_failure_stops_both_audit_modes_before_other_checks() {
         )));
         let runner = DefaultCheckRunner::new(
             command_runner,
-            Arc::new(Unimock::new(())),
+            unused_auditors(),
             PathBuf::from("/workspace"),
         );
         let request = CheckRequest::new(Some(VerificationSuite::Repository), None, Some(mode))

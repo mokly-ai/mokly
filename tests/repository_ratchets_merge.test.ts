@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -9,9 +9,6 @@ import { pathToFileURL } from "node:url";
 const moduleUrl = pathToFileURL(
   path.resolve("scripts/verification/ratchets/git.mjs"),
 ).href;
-const lengthScript = path.resolve(
-  "scripts/verification/source-file-length.mjs",
-);
 
 async function fixture(context: { after(cleanup: () => Promise<void>): void }) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-ratchet-merge-"));
@@ -56,20 +53,11 @@ console.log(JSON.stringify({ base: git.requireBase(), files: git.changedFiles(["
   );
 }
 
-function checkLength(root: string) {
-  return spawnSync(process.execPath, [lengthScript], {
-    cwd: root,
-    encoding: "utf8",
-  });
-}
-
 test("normal and main-merge ratchets use their respective comparison commits", async (context) => {
   const { root, git, base, mainTip } = await fixture(context);
   assert.equal(inspect(root).base, base);
-  assert.equal(checkLength(root).status, 0);
   git("merge", "--no-commit", "--no-ff", "origin/main");
   assert.deepEqual(inspect(root), { base: mainTip, files: [] });
-  assert.equal(checkLength(root).status, 0);
 
   const next = git(
     "commit-tree",
@@ -81,9 +69,6 @@ test("normal and main-merge ratchets use their respective comparison commits", a
   );
   git("update-ref", "refs/remotes/origin/main", next);
   assert.throws(() => inspect(root), /origin\/main moved during the merge/u);
-  const length = checkLength(root);
-  assert.equal(length.status, 1);
-  assert.match(length.stderr, /origin\/main moved during the merge/u);
 });
 
 test("merging another branch keeps the normal merge-base rule", async (context) => {
@@ -96,7 +81,6 @@ test("merging another branch keeps the normal merge-base rule", async (context) 
   git("checkout", "-q", "feature");
   git("merge", "--no-commit", "--no-ff", "other");
   assert.equal(inspect(root).base, base);
-  assert.equal(checkLength(root).status, 0);
 });
 
 test("merging a local main ahead of origin/main does not claim main moved", async (context) => {
@@ -113,5 +97,4 @@ test("merging a local main ahead of origin/main does not claim main moved", asyn
     "docs/protocol/local.md",
     "docs/protocol/main.md",
   ]);
-  assert.equal(checkLength(root).status, 0);
 });

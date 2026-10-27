@@ -115,19 +115,6 @@ export class GitWorkspace {
     ]);
   }
 
-  baseFiles(root) {
-    const base = this.requireBase();
-    return this.#paths([
-      "ls-tree",
-      "-r",
-      "--name-only",
-      "-z",
-      base,
-      "--",
-      root,
-    ]);
-  }
-
   readBase(path) {
     return this.readRevision(this.requireBase(), path);
   }

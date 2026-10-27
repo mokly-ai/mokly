@@ -9,6 +9,8 @@ mod policies_tests;
 mod publish_action_tests;
 mod release_tags_tests;
 mod release_tests;
+mod remote_state_commands;
+mod remote_state_tests;
 #[cfg(unix)]
 mod required_guard_tests;
 mod runner_sizes_tests;

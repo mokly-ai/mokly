@@ -16,12 +16,23 @@ use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 use crate::remote::snapshot::contracts::{
     Ownership, SnapshotCreateMock, SnapshotHandle, SnapshotRemoveMock,
 };
+use crate::source_tree;
 
 /// Preserve the operation identity without performing any I/O.
 fn failure(operation: Operation) -> Error {
     Error::Io {
         operation,
         source: std::io::Error::other("test failure"),
+    }
+}
+
+/// The read failure that the in-process fingerprint returns.
+fn fingerprint_failure() -> Error {
+    Error::SourceTree {
+        source: source_tree::error::Error::Read {
+            path: "/workspace".to_owned(),
+            source: std::io::Error::other("fingerprint test failure"),
+        },
     }
 }
 
@@ -77,7 +88,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
                     .each_call(matching!(_))
                     .answers_arc(Arc::new(move |_, _| {
                         if stage == 1 {
-                            Err(failure(Operation::Fingerprint))
+                            Err(fingerprint_failure())
                         } else {
                             Ok(format!("sha256:{}", "a".repeat(64)))
                         }
@@ -141,9 +152,17 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
         }
         .select(Executor::Remote)
         .unwrap();
-        assert!(matches!(
-            runner.run(DependencyAudit::Baseline),
-            Err(Failure::Unavailable(Error::Io { .. }))
-        ));
+        let result = runner.run(DependencyAudit::Baseline);
+        if stage == 1 {
+            assert!(matches!(
+                result,
+                Err(Failure::Unavailable(Error::SourceTree { .. }))
+            ));
+        } else {
+            assert!(matches!(
+                result,
+                Err(Failure::Unavailable(Error::Io { .. }))
+            ));
+        }
     }
 }

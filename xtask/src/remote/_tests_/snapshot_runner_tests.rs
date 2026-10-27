@@ -122,13 +122,7 @@ fn preparation_failures_remove_snapshots_before_any_warmup() {
                     ..
                 })),
             )
-            | (
-                Case::FingerprintFailure,
-                Err(Failure::Unavailable(Error::Io {
-                    operation: Operation::Fingerprint,
-                    ..
-                })),
-            ) => {}
+            | (Case::FingerprintFailure, Err(Failure::Unavailable(Error::SourceTree { .. }))) => {}
             (_, result) => panic!("{case:?}: {result:?}"),
         }
         let events = fixture.events.lock().unwrap();
