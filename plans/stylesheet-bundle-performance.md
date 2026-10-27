@@ -83,10 +83,11 @@ not committed. Findings:
    store. Each record holds its own copy of the PostCSS context's module read
    evidence and a stamp of it. That evidence has about 551 module paths with
    two versions each and 503 file identities. The store charges about 1.7 MB
-   for each record. One attempt makes 39 records, about 66 MB. When a record does not
-   fit, the store removes all records. So the second startup attempt found no
-   record for 38 of 39 roots. The attempt-local store also cleared, which
-   bundled 35 roots again later: 3 in the background pass and 32 in Changes.
+   for each record. One attempt makes 39 records, about 66 MB. When a record
+   does not fit, the store removes all records. So the second startup attempt
+   found no record for any of its 39 roots. The attempt-local store also
+   cleared, which bundled 35 roots again later: 3 in the background pass and
+   32 in Changes.
 4. With the bound raised to 512 MiB, the second startup attempt made 39
    shared hits and no `css.bundle` span. Its validation fell from 1.5 s to
    0.4 s and its graph preparation from 2.5 s to 0.9 s.
@@ -157,9 +158,10 @@ full layout of each decision.
   and cache inserts. The first failed root in root order gives the error,
   as today.
 - With option B of decision 2, the PostCSS adapter caches the raw sidecar
-  result before it releases its cache lock. The read inventory runs outside the lock, and a second short
-  lock stores the processed record. Requests of one context still reach the
-  sidecar one at a time, and equal inputs still make one `processCss` call.
+  result before it releases its cache lock. The read inventory runs outside
+  the lock, and a second short lock stores the processed record. Requests of
+  one context still reach the sidecar one at a time, and equal inputs still
+  make one `processCss` call.
 - Bundling has no warnings. The `Bundle` type carries none, and the dependency
   usage records are ordered sets. The output check compares the generation:
   routes, CSS bytes, keys, sources, and warnings.
