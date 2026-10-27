@@ -264,3 +264,7 @@ impl ResourceObserver for WatchedInputs {
 #[cfg(test)]
 #[path = "_tests_/serve_watch_tests.rs"]
 mod serve_watch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_watch_coverage_tests.rs"]
+mod serve_watch_coverage_tests;

@@ -40,10 +40,10 @@ fn config(dir: &str) -> ResolvedConfig {
         }],
     }
 }
-fn plan(dir: &str) -> Plan {
+pub(super) fn plan(dir: &str) -> Plan {
     Plan::new(&config(dir), &[], &[], &BTreeSet::new()).unwrap()
 }
-fn catalogue() -> PreparedCatalogue {
+pub(super) fn catalogue() -> PreparedCatalogue {
     PreparedCatalogue {
         model: CatalogueModel {
             entries: vec![],
@@ -62,7 +62,7 @@ fn catalogue() -> PreparedCatalogue {
         warnings: vec![],
     }
 }
-fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
+pub(super) fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
     PreparedServe {
         config: config(dir),
         generation: Arc::new(generation),
@@ -75,7 +75,7 @@ fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
         },
     }
 }
-fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<WatchedInputs> {
+pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<WatchedInputs> {
     Arc::new(WatchedInputs {
         factory: Arc::new(factory),
         ready: Arc::new(Notify::new()),
@@ -146,50 +146,6 @@ fn failed_root_attachment_retains_the_active_observer_and_plan() {
     assert!(watch.candidate(&prepared("next", generation)).is_err());
     assert!(Arc::ptr_eq(&old, &watch.state.lock().unwrap().observer));
     assert_eq!(watch.plan().roots, plan("specs").roots);
-}
-
-fn generation() -> Unimock {
-    Unimock::new((
-        RenderGenerationMock::catalogue
-            .next_call(matching!())
-            .returns(catalogue()),
-        RenderGenerationMock::stylesheet_directories
-            .next_call(matching!())
-            .returns(vec![]),
-        RenderGenerationMock::watch_files
-            .next_call(matching!())
-            .returns(BTreeSet::new()),
-    ))
-}
-
-#[test]
-fn changed_roots_attach_a_new_observer_and_recheck_only_when_uncovered() {
-    for covered in [true, false] {
-        let active = Arc::new(Unimock::new(
-            ObserverMock::covers
-                .next_call(
-                    matching!((plan) if plan.roots.contains(std::path::Path::new("/repo/next"))),
-                )
-                .returns(covered),
-        ));
-        let next: Arc<dyn Observer> = Arc::new(Unimock::new(()));
-        let factory = Unimock::new(
-            ObserversMock::attach
-                .next_call(
-                    matching!((plan) if plan.roots.contains(std::path::Path::new("/repo/next"))),
-                )
-                .returns(Ok(next.clone())),
-        );
-        let watch = watch(active.clone(), factory);
-        let candidate = watch.candidate(&prepared("next", generation())).unwrap();
-        assert_eq!(candidate.recheck, !covered);
-        assert!(Arc::ptr_eq(&candidate.observer, &next));
-        assert!(Arc::ptr_eq(
-            &watch.state.lock().unwrap().observer,
-            &(active as Arc<dyn Observer>)
-        ));
-        assert_eq!(watch.plan().roots, plan("specs").roots);
-    }
 }
 
 #[tokio::test]
