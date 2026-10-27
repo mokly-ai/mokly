@@ -398,8 +398,10 @@ The user answered the open review findings 5 and 6 on 2026-10-27.
       gzip unit test files.
 - [x] User decision 6 (2026-10-27): B. Run each fixture case of
       `tests/installed_receiver_fixtures.test.ts` as a named subtest.
-- [ ] Run the checks and the complete gate, commit, push, and update the
+- [x] Run the checks and the complete gate, commit, push, and update the
       pull request description.
+  - Evidence: `.context/gzip-blob-uploads/m6-complete-gate.log`. The complete
+    gate passed 7 of 7 suites at `b8d47d5c`.
 
 ## Post-merge follow-up (non-blocking)
 
