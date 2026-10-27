@@ -1,10 +1,8 @@
 # Design Mockup Navigation Links
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page is part of the [design mockup links
-contract](./mokly-design-links.md). That page owns the scope, the authoring
-rules, the canonical destinations, and the verification of every design link.
+contract](./mokly-design-links.md). That page owns the scope, the link
+behavior, and the canonical destinations of every design link.
 This page lists the destinations of the navigation controls and of the screen
 variants.
 
@@ -33,23 +31,25 @@ variants.
 
 Folder rows and folder-only crumbs are not link targets: a folder row only
 expands or collapses, and a folder crumb opens the folder's own page only when
-one exists ([folder rules](./mokly-folders.md#rows-and-clicks)). Keep the design
-tree's existing groups as text or native disclosure markup, give leaves explicit
-paths, and give any added home crumb a distinct label and the home destination.
+one exists ([folder rules](./mokly-folders.md#rows-and-clicks)). The depicted
+tree's groups are text or native disclosure markup. Its leaves link to
+explicit paths. A depicted home crumb has a distinct label and the home
+destination.
 
 The home drawer depicts the canonical home state; closing it returns home. The
 separately authored document drawer keeps its document as described below. An
 icon-only close control needs an accessible label. Do not imply a preserved
 origin screen or simulate closing a drawer by linking back to the open state.
 
-Inspector data and links must describe the depicted subject. Share typed
-Welcome/Details metadata rather than rendering Welcome's own path, tags, and
-description under every screen. Removed screens have no live product target or
-live-use-case link; their inspector names the previous version's base commit.
-Related-doc labels without a portable public document stay plain text; there is
-no document publishing pipeline.
+Inspector data and links must describe the depicted subject. Each screen's
+inspector shows its own subject's path, tags, and description, not Welcome's.
+Removed screens have no live product target or live-use-case link; their
+inspector names the previous version's base commit. Related-doc labels
+without a portable public document stay plain text. A related doc that names
+a document links to that document's design destination, as the product's
+Related docs row does under the [documents contract](./mokly-documents.md).
 
-The page designs extend this contract with explicit document destinations.
+The page designs have explicit document destinations.
 `design/browse/pages/view` and `design/browse/pages/details` pair the
 closed/open inspector; `design/browse/pages/navigation` opens the document's
 drawer and closes back to its view. Its page row targets
@@ -60,10 +60,10 @@ real document links to `example/screens/welcome`. The removed-page state keeps a
 flat row and returns to catalogue home without inventing parents.
 
 `design/browse/publication/catalogue` omits filter and comparison controls.
-`design/browse/publication/changes` offers the existing Welcome comparison
+`design/browse/publication/changes` offers the Welcome comparison
 destinations; its Changes action opens `design/changes/diff-controls/current`.
-Unsupported combinations stay depictions. These six states keep their own typed
-navigation records; none borrows another subject's inspector or drawer identity.
+Unsupported combinations stay depictions. None of these six states borrows
+another subject's inspector or drawer identity.
 
 ## Screen Variants
 

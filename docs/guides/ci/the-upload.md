@@ -150,5 +150,5 @@ and connection, then retry.
 
 A failed publish leaves the complete local build where it was written, so you
 can look at exactly what would have been sent, and running it again resumes
-from what the service already stored. The full contract is published under
-Reference as the catalogue upload document.
+from what the service already stored. The
+[upload reference](/docs/reference/upload/) holds the full contract.

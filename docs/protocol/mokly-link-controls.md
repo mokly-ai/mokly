@@ -1,7 +1,5 @@
 # Styled Catalogue Link Controls
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Authoring Contract
 
 A link control is one rendered element that Mokly adapts into a catalogue
@@ -40,7 +38,7 @@ component elements and never reach props, and a component element's control is
 the root element its render produces.
 
 The target and fragment grammars of the
-[navigation contract](./mokly-navigation.md) apply in every form. The control
+[logical link rules](./mokly-navigation.md#logical-catalogue-links) apply in every form. The control
 may be one HTML `a`, `button`, `div`, or `span`, with text, icons, and other
 non-interactive content. It must be exactly one root element, with no
 non-whitespace sibling text. Plain `div` and `span` roots support clickable
@@ -123,8 +121,7 @@ Ordinary unmarked buttons and metadata-only
 
 ## Adaptation
 
-Adaptation runs on the composed tree, after the renderer and before
-logical-link rewriting, for screen, component, and page documents alike. In an
+Adaptation applies to screen, component, and page documents alike. In an
 HTML body the element that carries `to` is the control. In a sidecar render,
 `MockLink asChild` wraps the child in a `mokly-link` marker pair under the
 markers rule of the [comparison contract](./mokly-comparison.md#markers); the
@@ -145,7 +142,9 @@ An active control becomes one native HTML anchor. Child content, classes,
 inline styles, ids, labels, and other applicable attributes stay intact.
 Button roles and button-only form attributes are removed. The logical `href`
 goes through the target, fragment, viewport, scheme, portable URL, and
-Browse-marker rules of the navigation contract and the final checks of
+Browse-marker rules of the
+[logical link contract](./mokly-logical-links.md#composition) and the final
+checks of
 [link validation](./mokly-link-validation.md).
 
 Only a document with an active adapted control receives package-owned CSS, as
@@ -184,10 +183,4 @@ disabled state to make navigation work.
 
 The package has no consumer component-library or React Native Web runtime
 dependency. A consumer renderer needs no navigation HTML transformer of its
-own and keeps theme wrapping and style collection. Verification covers the
-default anchor, typed and untyped misuse, the HTML and React forms, native and
-custom controls, disabled and busy states, ambiguous and malformed markup,
-target validation, light and dark at both viewports, page callbacks and custom
-renderers, and browser checks of pointer and keyboard navigation in
-script-free Browse and use-case frames, focus visibility, disabled behaviour,
-standalone document links, and comparison snapshot links.
+own and keeps theme wrapping and style collection.

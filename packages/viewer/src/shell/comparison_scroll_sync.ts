@@ -54,6 +54,11 @@ interface Layer {
   transform: string;
 }
 
+/**
+ * The browser's frame scheduler and a `ResizeObserver` of the shell's realm.
+ * Pane documents are sandboxed without scripts, so the observer that watches
+ * their root and body belongs to the parent.
+ */
 const browserEnvironment: ComparisonScrollEnvironment = {
   ...browserFrameScheduler,
   observeSizes: (changed) => new ResizeObserver(() => changed()),

@@ -1,7 +1,5 @@
 # Component Change Attribution
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Changes Membership
 
 Changes counts directly changed entries, components and component variants
@@ -36,8 +34,8 @@ owns the membership list. This page states how a component edit is attributed.
 | Import from a stylesheet            | The same rule, using the changed imported stylesheet                                                        | The same affected-consumer rule       |
 | JavaScript import into a bundle     | The same rule, joining equal changed rules across bundles                                                   | The same affected-consumer rule       |
 
-The [CSS rule contract](./mokly-css-attribution-rules.md) defines containment,
-identity, and examples. A component row through a linked stylesheet requires
+The [CSS rule contract](./mokly-css-attribution-rules.md) defines containment
+and identity. A component row through a linked stylesheet requires
 own-page matches kept after the nested-component test; inclusive nested
 regions stay part of the entry's own containment; consumer-instance matches
 alone never change the component. On a component page, a wrapper-only or
@@ -73,16 +71,15 @@ is inferred.
 ## One Classification Policy
 
 Serve's background classification, the selected comparison, watched updates,
-`build`, and `publish` use one materiality policy and one classifier over the
-same composed trees, so Changes rows, counts, on-demand results, and built
-output agree. Every catalogue, with or without registered components, follows
-it. The classifier reads the catalogue model and the render
-cache of both sides; it generates no snapshot and copies no asset. Opening All
-or Changes, navigating, changing viewport or scheme in Current, and a watch
-notification generate no comparison. Classification is cached by the head and
-base document keys and the resolved base commit, and a source, configuration,
-stylesheet, resource, or base ref change that affects its inputs invalidates
-it.
+`build`, and `publish` apply the same materiality policy to the same composed
+trees, so Changes rows, counts, on-demand results, and built output agree.
+Every catalogue, with or without registered components, follows it.
+Registering an unrelated component in a catalogue without components must not
+add an unchanged screen or component to Changes. Classification generates no
+snapshot and copies no asset. Opening All or Changes, navigating, changing
+viewport or scheme in Current, and a watch notification generate no
+comparison. A source, configuration, stylesheet, resource, or base ref change
+that affects the inputs of a classification invalidates its result.
 
 The comparison artifact is the review result v8 of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
@@ -147,9 +144,8 @@ view is owned by the entry. A component-owned record leaves the view
 `unchanged` and the entry affected; an `ignored-only` view follows the
 [materiality rule](./mokly-comparison.md#materiality). An `unchanged` or
 `ignored-only` view keeps its `ignoredIds` and adds no implementation-impact
-or owned-resource evidence. The decision reads the render cache and needs no
-snapshot, so Serve's background classification and the complete comparison
-produce equal records for one view.
+or owned-resource evidence. Serve's background classification and the
+complete comparison produce equal records for one view.
 
 ## Rendered Resources And Styles
 
@@ -187,11 +183,12 @@ Equal rules join proof across documents
 with different owners. Kept own-page matches give component reasons; a kept
 exact-instance match can still prove an implementation change with unchanged
 caller inputs. Unresolved rules keep entry ownership. Owned, ownerless head,
-and linked CSS share one reducer, including one excluded source record when
-none of its changed rules applies on a view.
-Mokly derives no stylesheet ownership from files: a renderer `resources` record for
-a stylesheet is ignored with the stylesheet-owner warning after the public
-path checks, and a component's `stylesheets` declaration controls links only.
+and linked CSS follow the same evidence rules, including the one excluded
+source record of a view where none of the source's changed rules applies.
+Mokly derives no stylesheet ownership from files. A renderer `resources` record
+for a stylesheet supplies no CSS evidence and raises the `stylesheet-owner`
+warning of the [rendering contract](./mokly-rendering.md#renderer-module). A
+component's `stylesheets` declaration controls links only.
 Adding or removing a declaration changes material only when the composed
 document changes or when rule or resource evidence changes. Starting or
 stopping a child is a parent usage change; a child's link adds no consumer
@@ -209,23 +206,11 @@ Every classification path uses the same unfiltered and kept own-page sets:
 background classification, the selected comparison, `build`, and `publish`.
 CSS stays eligible through actual resource discovery in the composed trees
 regardless of ownership. Snapshots keep the actual styles, fonts, and images;
-nothing strips styles or whole documents to suppress consumer rows.
+nothing strips styles or whole documents to suppress consumer rows. Component
+styling stays visibly changed in an affected screen's comparison.
 
 ## Sides
 
 The [validation contract](./mokly-component-review-validation.md#sides)
 defines the sides, the pairing of components and variants, and the missing
 side rules.
-
-## Required Evidence
-
-Behaviour tests establish agreement between Changes rows and count, selected
-comparisons, watched updates, and built output. They cover every row of the
-tables above, repeated, nested, and empty instances, caller-owned slots,
-invalid markers, prop edits with an unchanged render, both viewports and
-schemes, owned and unowned head styles, shared rendered-resource ownership,
-independent screen edits, a base that fails validation, removed consumers,
-and concurrent watched updates. Component styling must stay visibly changed in
-an affected screen's comparison. Registering an unrelated component in a
-catalogue without components must not add an unchanged screen or component to
-Changes.

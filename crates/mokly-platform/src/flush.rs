@@ -8,6 +8,12 @@ use std::path::Path;
 use crate::error::{IoResult, Result};
 
 /// Flush operations used before publishing a completed cache entry.
+///
+/// Linux flushes the entry's filesystem once with `syncfs`. Other Unix hosts
+/// use plain `fsync` per file and directory, with no drive-cache barrier: the
+/// caller's completion receipt then uses `sync_all`, which on macOS is
+/// `F_FULLFSYNC` and flushes the drive cache for the whole entry. Windows
+/// flushes each file and has no directory flush.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = FlushMock))]
 pub trait Flush: Send + Sync {
     /// Flush the containing filesystem once; false requests the per-file fallback.

@@ -1,3 +1,9 @@
+/**
+ * The PostCSS worker's `--require` preload. On the main thread it wraps the
+ * file, descriptor, sharing and module-load boundaries before any consumer
+ * preload runs. Native scanners, memory maps, helper processes, other workers
+ * and custom loaders still read unobserved, so evidence stays `incomplete`.
+ */
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 

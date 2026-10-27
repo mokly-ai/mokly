@@ -16,6 +16,8 @@ pub(crate) const DEFAULT_GLOBS: [&str; 7] = [
 ];
 
 /// Compile safe globs, validating the original and every brace alternative.
+/// `*` stays in one path segment, and backslash escaping is off on every platform
+/// because globset's default for it differs between Unix and Windows.
 pub(crate) fn compile(patterns: &[String]) -> Result<GlobSet, String> {
     let mut builder = GlobSetBuilder::new();
     let mut seen = BTreeSet::new();

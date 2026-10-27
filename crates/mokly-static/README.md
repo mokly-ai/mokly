@@ -2,8 +2,9 @@
 
 `mokly-static` assembles complete static catalogues from a validated render
 generation. Use it from the CLI for local builds and the private build used
-by publish. It shares output formats with `mokly-model` and has no dependency
-on the upload client.
+by publish. It reads documents from `mokly-graph` and comparison results from
+`mokly-compare`. It shares output formats with `mokly-model` and has no
+dependency on the upload client in `mokly-publish`.
 
 ## Responsibilities
 
@@ -11,7 +12,7 @@ on the upload client.
 - Capture comparison documents, resources, removed records, and preview metadata.
 - Insert bounded inspector metadata into current document heads.
 - Validate package module requests against the exact browser inventory.
-- Compute deterministic deployment identities and finalize ownership v3.
+- Compute deterministic deployment identities and finalize the ownership marker.
 - Reserve output and use exclusive moves for capture, installation, and recovery.
 - Detect changed selected inputs before installation. Missing unrelated files and
   unreadable unrelated paths do not fail a build.
@@ -21,14 +22,17 @@ on the upload client.
 `CatalogueAssembler` implements `dyn Assembler`. It consumes a render generation
 and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the inspector wire boundary.
 Other ranges and links stay inspectable. Inspector failures carry a typed reason
-and the document route. It builds canonical index v7 and detail
-v1 files with revision zero and no live capability. The shared model writer
-adds publication metadata when requested and writes the ownership marker last.
-Ready Changes supplies review v8, detail-root reasons, view evidence, workspace lists,
-and removed records from the same comparison result. Snapshot v4 stays private. Both pinned graph sides
-supply immutable documents and resources. Removed details carry their historical
-snapshot ID and generation; removed page and document previews carry metadata v3.
-`mokly-compare::projection_removed` owns these records, details, and metadata.
+and the document route. It builds the canonical index and entry detail files
+with revision zero and no live capability. The
+[format inventory](../../docs/protocol/mokly-format-versions.md) gives their
+versions. The shared model writer adds publication metadata when requested and
+writes the ownership marker last. Ready Changes supplies the review result,
+detail-root reasons, view evidence, workspace lists, and removed records from
+the same comparison result. The change snapshot stays private. Both pinned
+graph sides supply immutable documents and resources. Removed details carry
+their historical snapshot ID and generation. Removed page and document
+previews carry typed preview metadata. `mokly_compare::projection_removed`
+owns these records, details, and metadata.
 The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.
 The comparison inventory is finalized before deployment identity. Disabled or
@@ -37,7 +41,7 @@ The strict index reader runs before installation and retains its diagnostic on f
 Publication takes its base ref, commit, and comparison path from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and
-`mokly-platform::Rename` boundaries. It accepts missing, empty, or owned output.
+`mokly_platform::rename::Rename` boundaries. It accepts missing, empty, or owned output.
 It validates the captured backup before installation. Cleanup removes only the
 validated old files and empty directories. A destination that appears during
 installation or recovery survives. Cleanup errors retain their recovery paths. On Windows, directory identity
@@ -88,7 +92,8 @@ npx mokly build --config examples/basic/mokly.config.json --no-changes --out ../
 ```
 
 Deploy the output contents as an HTTP origin's document root. Configure MIME
-types, directory indexes, revalidation, and `X-Content-Type-Options: nosniff`.
+types, directory indexes, revalidation, and `X-Content-Type-Options: nosniff`
+under the [static delivery contract](../../docs/protocol/mokly-export-delivery.md).
 
 ## Development
 
@@ -105,10 +110,26 @@ exercise retained recovery bytes through debug-only fault adapters.
 
 ### Key Code
 
-- [Assembly](./src/assembly.rs), [comparison generation writer](./src/comparison_output.rs),
-  and [deployment identity](./src/identity.rs).
-- [Output transaction](./src/transaction.rs) and [ownership checks](./src/ownership.rs).
-- [Source fingerprints](./src/fingerprint.rs) and [inspector](./src/inspector.rs).
+- [`src/assembly.rs`](./src/assembly.rs) defines `Assembler` and
+  `CatalogueAssembler`, which capture every document and reached resource of
+  a generation into one `Artifact`.
+- [`src/changes.rs`](./src/changes.rs) defines `ChangeState`, the retained
+  comparison state that assembly reads.
+- [`src/transaction.rs`](./src/transaction.rs) defines `Transactions`,
+  `Transaction`, and `OutputTransactions`, which reserve, stage, install, and
+  recover the output directory.
+- [`src/filesystem.rs`](./src/filesystem.rs) defines `Files` and
+  `SystemFiles`, the non-following filesystem boundary of the transaction.
+- [`src/identity.rs`](./src/identity.rs) provides `finalize`, which stamps the
+  deterministic deployment identity.
+- [`src/fingerprint.rs`](./src/fingerprint.rs) defines `CapturedTree`, which
+  records selected input digests and checks them before installation.
+- [`src/inspector.rs`](./src/inspector.rs) provides `inject`, which writes the
+  inspector metadata into a document head.
+- [`src/modules.rs`](./src/modules.rs) provides `validate`, which checks
+  package module requests against the browser inventory.
+- [`src/error.rs`](./src/error.rs) defines `Error`, the typed static-output
+  failure with its retained recovery paths.
 
 ### Related Docs
 
@@ -116,3 +137,7 @@ exercise retained recovery bytes through debug-only fault adapters.
 - [Output safety](../../docs/protocol/mokly-export-safety.md).
 - [Recovery](../../docs/protocol/mokly-export-recovery.md).
 - [Deployment identity](../../docs/protocol/mokly-export-browser.md).
+- [Static delivery](../../docs/protocol/mokly-export-delivery.md).
+- [Static ownership](../../docs/protocol/mokly-export-ownership.md).
+- [Format inventory](../../docs/protocol/mokly-format-versions.md).
+- [Rust core architecture](../../docs/architecture/rust-core.md).

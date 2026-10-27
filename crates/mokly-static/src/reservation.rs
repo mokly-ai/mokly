@@ -18,6 +18,10 @@ struct Marker<'a> {
     output: &'a str,
 }
 
+/// Admits one writer with an atomic `mkdir` of `locks/` plus the output
+/// basename in the namespace beside the output. The caller passes the native
+/// real path and the basename stays unmodified, so the output filesystem's own
+/// case and alias rules decide which outputs share a lock.
 pub(crate) fn acquire(files: &dyn Files, output: &Path) -> Result<PathBuf> {
     let parent = output.parent().ok_or_else(|| Error::Destination {
         path: output.into(),
@@ -78,6 +82,11 @@ fn check_namespace(files: &dyn Files, namespace: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Removes a finished reservation. A non-following stat refuses any backup
+/// entry, also a dangling symlink. Only the private stage is removed
+/// recursively. The marker is unlinked and the reservation removed with
+/// `rmdir`, so a later unowned entry is never swept away. An absent
+/// reservation is a no-op.
 pub(crate) fn cleanup(files: &dyn Files, root: &Path) -> Result<()> {
     if files.entry(root)?.is_none() {
         return Ok(());

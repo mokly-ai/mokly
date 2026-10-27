@@ -1,5 +1,11 @@
 import type { Box } from "../client/frame_adapter.js";
-/** SVG mask union preserves overlaps; only validated numeric geometry enters markup. */
+/**
+ * SVG mask union preserves overlaps; only validated numeric geometry enters
+ * markup. The host after the body resets every presentation property inline
+ * with `!important`, and the SVG lives in its shadow root, so consumer CSS
+ * cannot restyle it, redraws stay outside the document's mutation observer
+ * (no redraw loop), and body measurements exclude it.
+ */
 export const drawOverlay = (
   layer: HTMLElement,
   boxes: readonly Box[],

@@ -1,7 +1,5 @@
 # npm Release Management
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management
@@ -34,7 +32,7 @@ The `@mokly/mokly` component also owns the literal documentation version in
 `generic` `extra-files`. Each version-bearing region is bounded by the Release
 Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
-those literals with the `@mokly/mokly` package version; root tests reject drift.
+those literals with the `@mokly/mokly` package version.
 
 The root release manifest entry owns the shared release version. The historical
 viewer entry retains its independent release baseline. Runtime and packaging
@@ -80,19 +78,9 @@ the CLI, native packages, and viewer. The release workflow then:
    dependencies with lifecycle scripts disabled, and rechecks archives and tags.
    It runs no Rust build, package build, or consumer smoke. Missing or invalid
    archives stop publication instead of causing a privileged rebuild.
-7. Queries npm. A recognized missing-version response (`E404` or `ETARGET`)
-   permits a publish; any other lookup failure stops the workflow. An existing
-   version must byte-for-byte match the checked report and commit or the
-   workflow fails.
-8. Publishes the platform packages, then the shared-version viewer, then the CLI.
-   Each registry verification completes before the next publication starts.
-9. Downloads the registry artifact and rechecks integrity, shasum, file
-   inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
-   signatures/provenance. Because npm metadata and tarball endpoints may become
-   consistent at different times, recognized missing-version or stale dist-tag
-   responses retry the complete check after 2, 4, 8, and 16 seconds, then every
-   30 seconds until the cumulative delay reaches five minutes. Content,
-   provenance, and unexpected transport failures remain fail-closed.
+7. Queries npm, publishes, and verifies each registry artifact in the
+   [publication order](./npm-release.md#release-build-matrix-and-publication-order):
+   the platform packages, then the shared-version viewer, then the CLI.
 
 Publishing occurs in the workflow invocation that creates the CLI release.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
@@ -128,13 +116,6 @@ credential in the `RELEASE_PLEASE_TOKEN` secret so release PR events trigger
 normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
 follow-on workflow events created with that token, so maintainers must verify
 the release PR's required checks when using the fallback.
-
-Before this workflow reaches the default branch, the read-only release-check
-workflow runs on a push to `rebuild/ci-release-check`. A later manual dispatch
-can run the same check after the workflow reaches the default branch. It pins
-all five native builds and the seven-package pack, archive recheck, and clean
-consumer smoke to the pushed commit. It has no publication job, npm environment,
-OIDC permission, inherited secret, or registry write.
 
 ## Release Recovery
 
@@ -180,8 +161,8 @@ the reserved `0.0.0` version, which no coordinated release publishes, under the
 
 ## Registry Operations And Evidence
 
-Registry bootstrap history, maintainer setup, retained release evidence, and
-the related documentation follow the separate
+Package registration, maintainer setup, retained release evidence, and the
+related documentation follow the separate
 [npm release operations contract](./npm-release-operations.md).
 
 ## Current External Requirements
@@ -196,8 +177,7 @@ changes over time:
 - [release-please action](https://github.com/googleapis/release-please-action)
 - [release-please manifest and workspace plugins](https://github.com/googleapis/release-please/blob/v17.6.0/docs/manifest-releaser.md)
 
-As rechecked on 15 September 2026, npm trusted publishing requires Node 22.14 or
-newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust`
+npm trusted publishing requires Node 22.14 or newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust`
 management, including allowed-action permissions added in 11.15. The package
 must already exist before a trust relationship can be configured. The workflow's
 npm 11.21.0 satisfies publishing and also meets the `npm trust` minimum; trust

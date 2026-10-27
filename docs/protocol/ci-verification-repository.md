@@ -4,30 +4,36 @@ Continuation of [CI Verification](./ci-verification.md).
 
 ## Repository Boundary
 
-The repository suite
-starts with the live npm lockfile audit, Rust advisory audit, and generated
-TypeScript byte-identity check, then Prettier, ESLint,
-changed source/protocol file-length audit, Rust formatting, workspace Clippy
-with warnings denied, Clippy with warnings denied for the `mokly-cli`
-`design-matrix` feature, viewer and sidecar package builds, Rust tests and the Rust file-length audit. The
-[test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
-checks to ESLint under `tests/`. The suite compiles and lints the
-feature-gated design matrix target but does not run it; the nightly
+The repository suite runs these checks in this order:
+
+1. The live npm dependency audit, in baseline or strict mode.
+2. The Rust advisory audit.
+3. The generated TypeScript byte-identity check.
+4. Prettier.
+5. ESLint.
+6. The changed-file source and protocol [length audit](#length-audits).
+7. The four [repository ratchets](./verification-ratchets.md): JavaScript and
+   TypeScript file length, protocol document caps, unused internal exports,
+   and public package exports.
+8. Rust formatting.
+9. Workspace Clippy with warnings denied.
+10. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
+11. The `@mokly/viewer` build, then the `@mokly/mokly` build.
+12. The Rust tests of every crate.
+13. The Rust file-length audit.
+
+The suite compiles and lints the feature-gated design matrix target but does
+not run it; the nightly
 [Design Attribution Matrix](./ci-workflow.md#design-attribution-matrix) runs
 it. Leaving that target to the nightly run alone was rejected, because a
-compile error then stays hidden until the nightly run fails. The live
-dependency audit defaults to baseline mode for local checks, ordinary pull
-requests, and every push. New findings or exception issues fail; inherited
-issues print as notices. Report, input, and registry errors always fail.
-`--dependency-audit strict` selects strict mode for this suite or the complete
-gate. An explicit mode flag with any other suite returns a typed error before
-subprocesses start. Release Please and dependency update pull requests select
-strict mode; the scheduled `main` audit and read-only release preparation also stay
-strict. The [baseline contract](./dependency-audit-baseline.md) defines the
-mode selection and comparison rules. Reviewed path and expiry
-rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+compile error then stays hidden until the nightly run fails.
 
-The Rust audit follows [Dependency Security](./dependency-security.md).
+The [baseline audit contract](./dependency-audit-baseline.md#xtask-and-ci-selection)
+selects the npm audit mode and defines its comparison rules. Report, input,
+and registry errors fail in both modes. Reviewed path and expiry rules follow
+[Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+
+The Rust audit follows [Dependency Security](./dependency-security.md#rust-advisory-audit).
 It fails on vulnerabilities and audit errors in both npm audit modes.
 
 Generated TypeScript must match the Rust-owned types byte for byte. Missing,
@@ -38,29 +44,40 @@ The repository and native suites build `@mokly/viewer` then `@mokly/mokly`
 before `cargo test --workspace`. The real sidecar smoke tests require these
 fresh package outputs on every host, including a clean checkout.
 
-The Rust file-length auditor runs inside `xtask` rather than as a
-subprocess in the command list; it has the same failure semantics as the
-listed commands. The source/protocol auditor is an xtask-invoked Node command:
-it checks files changed against fetched `origin/main`, plus working-tree and
-untracked files. It covers all repository TypeScript/JavaScript extensions
-(`.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.mts`, `.cts`) and
-`docs/protocol` Markdown. There are no directory exclusions beyond
-Git-ignored untracked files; tracked files remain in scope. Every xtask
-subprocess starts at the workspace root, even when xtask starts elsewhere.
-Use `cargo xtask source-file-length-lint --all` to audit every scoped file
-instead of only the changed set. Source modules have a 300-line limit;
-protocol pages have a 250-line limit or their exact reviewed cap in
-`xtask/protocol-document-caps.json`. The independent ratchets are
-additional gates under [Repository Verification Ratchets](./verification-ratchets.md).
-During an uncommitted merge, the changed-file audit uses the resolved tree
-against `origin/main`; outside a merge, it uses the branch-point diff and
+Every xtask subprocess starts at the workspace root, even when xtask starts
+elsewhere.
+
+## Length Audits
+
+The changed-file length audit checks the files changed against fetched
+`origin/main`, plus working-tree and untracked files. It covers every
+repository TypeScript and JavaScript file (`.ts`, `.tsx`, `.js`, `.jsx`,
+`.mjs`, `.cjs`, `.mts`, `.cts`) and the Markdown under `docs/protocol`. There
+are no directory exclusions beyond Git-ignored untracked files. Tracked files
+remain in scope. During an uncommitted merge, the audit compares the resolved
+tree with `origin/main`. Outside a merge, it uses the branch-point diff and the
 working-tree changes.
+
+Source modules have a 300-line limit. Protocol pages have a 250-line limit or
+their exact reviewed cap in `xtask/protocol-document-caps.json`. When that file
+is absent, every protocol page has the 250-line limit. The
+[protocol document cap ratchet](./verification-ratchets.md#protocol-document-caps)
+defines the cap table. `cargo xtask source-file-length-lint` runs this audit
+alone. Use `--all` to audit every scoped file instead of only the changed set.
+
+The Rust file-length audit checks every Rust file under `xtask/` and `crates/`
+on every run. Each file has a 300-line limit, with no ratchet and no override.
+`cargo xtask rust-file-length-lint` runs it alone. A finding fails the suite
+like a failed command.
+
+## ESLint Rules
 
 ESLint carries the repository's source-level rules beyond style. The local
 `mokly` plugin provides `no-directory-literals` for Mokly-owned directory
 names, `no-artifact-path-literals` for comparison artifact paths under the
 [artifact path contract](./mokly-artifact-paths.md), and
 `no-late-fixture-teardown` and `no-eager-fixture-setup` for test fixture
-ownership under [CI suite evidence](./ci-suite-evidence.md). The PostCSS
-access restrictions and the test-timing guard are also ESLint rules. A rule
-that must scan every file belongs here, in `npm run lint`, not in a Node test.
+ownership under [CI suite evidence](./ci-suite-evidence.md). The
+[test-timing guard](./ci-test-timing.md#eslint-guard) is also an ESLint rule.
+A rule that must scan every file belongs here, in `npm run lint`, not in a Node
+test.

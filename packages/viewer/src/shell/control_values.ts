@@ -95,7 +95,9 @@ export function controlDraft(target: ControlTarget): ControlDraft {
 
 /**
  * Validate the complete draft with the profile validator and the controls'
- * own bounds, including the zero-based step, without generating code.
+ * own bounds, including the zero-based step, without generating code. The
+ * draft is merged into a fresh copy of the decoded saved props, so the props
+ * without a control get the same whole-set validation.
  */
 export function validateControlDraft(
   target: ControlTarget,

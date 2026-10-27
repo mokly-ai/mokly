@@ -28,8 +28,6 @@ component, or a Storybook story. Mokly renders every screen at mobile and
 desktop sizes, in light and dark, and shows which screens changed between two
 Git commits.
 
-Status: In progress under the [Rust rebuild plan](./plans/rust-rebuild.md).
-
 Run Mokly locally while you build, write the same catalogue as static files,
 or embed its viewer in another React application. Mokly owns the catalogue;
 your repository keeps ownership of its UI, data, styling, and rendering
@@ -160,8 +158,9 @@ follow the command, for example `mokly build --config tools/mokly.config.json`.
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. Warnings print on standard error without changing the exit status;
 `--strict` turns them into a failed command. No command writes into the
-repository: `build` writes its output directory, which Git must ignore, and
-the caches live in the operating system's cache directory. `publish` requires
+repository: `build` writes its output directory and the
+`.mokly-export-reservations/` directory, which Git must ignore, and the
+caches live in the operating system's cache directory. `publish` requires
 a clean Git checkout.
 
 Detailed command references:
@@ -253,7 +252,6 @@ independently from the preview colour scheme; see the
 - [Paths, roots, and identity](./docs/protocol/mokly-paths.md)
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Rust core architecture](./docs/architecture/rust-core.md)
-- [Render pipeline](./docs/architecture/build-pipeline.md)
 - [Package and consumer boundary](./docs/architecture/package-boundary.md)
 - [Implementation plans](./plans/)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures

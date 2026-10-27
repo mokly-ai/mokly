@@ -1,7 +1,5 @@
 # Theming
 
-Status: In progress under the [Rust rebuild plan](../../../../plans/rust-rebuild.md).
-
 This page belongs to the [`@mokly/viewer` README](../../README.md). It explains the interface appearance, the accent properties, and the preferences that the standalone shell stores.
 
 `theme` accepts `"auto"`, `"light"`, or `"dark"`. Auto is the default and

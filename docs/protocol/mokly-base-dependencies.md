@@ -1,10 +1,9 @@
 # Base Dependencies
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page defines dependency preparation for the [comparison sides](./mokly-comparison.md#sides).
-[Base preparation](./mokly-base-preparation.md) owns sources, cache bounds,
-leases, cancellation, and completion.
+[Base preparation](./mokly-base-preparation.md) owns sources and cancellation.
+The [base cache](./mokly-base-cache.md) owns cache bounds, leases, and
+completion.
 
 ## Dependency Identity
 
@@ -19,12 +18,11 @@ not walk ignored trees, nested clones or submodules. Dependency trees under
 governing paths. There is no application-specific list of excluded build
 directories.
 
-Each working input must be a confined regular file. Equal working and base
-bytes reuse the base identity without a Git process. Hash the remaining
-confined paths in one `hash-object --stdin-paths` call, without writing objects,
-and compare their Git clean identities with the corresponding base blob ids.
-This applies line ending and
-clean-filter conversion. Equal identities use the converted base bytes in the
+Each working input must be a confined regular file. A working input whose
+bytes equal the base blob bytes has the base identity. Mokly compares the Git
+clean identity of every other working input with the corresponding base blob
+id. That comparison writes no Git objects. The clean identity applies line
+ending and clean-filter conversion. Equal identities use the converted base bytes in the
 input set. A changed file or path set differs. Clean normalization is for
 dependency identity. Checkout conversion supplies the base render and
 resource bytes before dependency selection.
@@ -170,8 +168,8 @@ can read an inherited secret such as `MOKLY_TOKEN`, `GITHUB_TOKEN`, or
 
 Mokly removes every other inherited variable. Windows matches a variable name
 without case. A private registry whose token comes only from the environment,
-for example `NODE_AUTH_TOKEN` or a user `.npmrc` that reads `${NPM_TOKEN}`, no
-longer authenticates in a base install, so that base uses the fallback tier
+for example `NODE_AUTH_TOKEN` or a user `.npmrc` that reads `${NPM_TOKEN}`, does
+not authenticate in a base install, so that base uses the fallback tier
 with the install-failed reason. Yarn Classic needs rules that npm does not
 have, because its configuration files can move folders that it creates: Mokly
 fixes its working folder, cache, global, link, modules, and offline cache
@@ -187,8 +185,8 @@ stays off.
 | Yarn Berry 4       | `install --immutable --mode=skip-build` by default; omit `--mode=skip-build` when enabled; disable telemetry and shared mirrors |
 
 All install caches, logs, stores, module directories, and installation state
-stay inside the private entry. Remove temporary download caches before byte
-counting and durability synchronization. Installed pnpm links continue to
+stay inside the private entry. The retained entry keeps no temporary download
+cache. Installed pnpm links continue to
 resolve inside their private `node_modules` store. Yarn node modules use the
 same selected-directory mapping as npm. Yarn path redirection is disabled.
 Yarn Berry reads no project environment file: Mokly replaces Berry's
@@ -212,18 +210,14 @@ directory or relative PATH entry never supplies the manager. Unsupported
 launchers fall back.
 
 Version discovery and every selected install share one monotonic deadline.
-Size supervision walks the whole private entry at most once per second.
-Vanished files or directories do not stop the install. Only a failed spawn
-or unavailable executable has the typed command-unavailable result. Tests
-use fake time, local archives, and a local registry. No test uses the internet.
+The byte bound applies while an install runs. Vanished files or directories
+do not stop the install. Only a failed spawn or unavailable executable has the
+typed command-unavailable result.
 
-The result carries third-party `node_modules`, the install lease when needed,
-the complete sidecar `ModuleResolution`, and typed repository root paths.
-Package roots name configuration ancestors, then explicit package roots,
-all inside the selected tier, in Node's order. Repository roots include the working repository root
-in every tier and the copied base repository root inside a tier-two install.
-Core `moduleResolution.dependencyRoot` names the selected installation repository.
-The sidecar maps repository sources back to its source root. Other settings keep their values. Retain the install and extraction leases while bundling.
+Base package roots name the configuration ancestors, then the explicit package
+roots, all inside the selected tier, in Node's order. Repository roots include
+the working repository root in every tier and the copied base repository root
+inside a tier-two install. Other module resolution settings keep their values.
 Cancellation stops preparation and never becomes a fallback warning.
 
 A fallback returns a configuration-subject `base-dependencies` warning. Use

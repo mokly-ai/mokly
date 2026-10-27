@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -24,19 +22,13 @@ catalogue decisions, caching, invalidation, comparison, and output.
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.
 - Recycle after 500 renders or over 1 GiB of resident memory across the sidecar
-  and its Node descendants. Exclude native helpers when its executable is known.
-  Allow one request per fresh worker. After a memory recycle, double completed
-  requests before the replacement's first memory check, capped at 500. Reset
-  after a sample at or below the bound. Report one line per pressure episode
-  when a replacement's first check is still over the bound. Finish in-flight
-  work before recycling. Reload generations on demand; see [memory sampling](./mokly-sidecar-memory.md).
+  and its Node descendants, under the [memory sampling](./mokly-sidecar-memory.md)
+  rules. Finish in-flight work before recycling. Reload generations on demand.
 - `shutdown` drains in-flight work; the binary kills survivors after two seconds.
 
-A sidecar never outlives its binary. Linux spawns set `PR_SET_PDEATHSIG` to
-`SIGKILL` from a persistent launch thread and check for an earlier parent exit.
-On every platform a separate watchdog thread owns the parent pipe and checks
-parent identity. Pipe closure or parent death terminates even a blocked render.
-PostCSS children use the same protection, including on the historical side.
+A sidecar never outlives its binary, on every platform. Pipe closure or parent
+death terminates even a blocked render. PostCSS children use the same
+protection, including on the historical side.
 
 ## Transport
 
@@ -77,24 +69,20 @@ render result, bindings, entry context, usage drafts, and slot inputs. Page resu
 
 ## Definitions
 
-The core serializes description across clones of one runtime.
-
 `describe` returns every exported definition with its handle and a
 `diagnostics` list and generation warnings. The [definition transport](./mokly-sidecar-definitions.md)
 defines typed metadata, raw authored schemas, and source-attributed authoring
 errors. These errors keep their own codes and do not invalidate the transport.
-The core validates schemas with its single `jsonschema` validator before it
+The core validates schemas with its single schema validator before it
 registers definitions or starts a render.
 
 ## Bundling
 
-`bundle` compiles an unevaluated in-memory esbuild generation. Its id hashes
-module paths, imports, non-CSS source and loader bytes, and the core's optional
-evaluation digest for resolved configuration and CSS Modules; entry and stories lists; preview and renderer;
-the configuration directory; repository roots; module resolution settings;
-the installed React version; the real source root; and the selected real
-dependency roots. Equal head and base sources have separate generations,
-class maps, and bindings. The binary uses the id in each fragment key. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release) define replay and release.
+`bundle` compiles an unevaluated in-memory generation and returns its id. A
+change to any input that can change the compiled code or its evaluation gives
+a new id. Equal head and base sources have separate generations, class maps, and
+bindings. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release)
+define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,
 and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
@@ -176,10 +164,9 @@ render fails the screen with `html-slot`.
 ## Storybook
 
 A story file is a `*.stories.{ts,tsx,js,jsx}` file matched by a root. The
-sidecar loads the consumer's `.storybook/preview` annotations with
-`setProjectAnnotations` immediately before each composition, composes each
-story without passing the annotations a second time to `composeStories` from
-`@storybook/react`, and renders it with `renderToStaticMarkup`. The story id
+sidecar applies the consumer's `.storybook/preview` annotations once to each
+story, composes the story with `@storybook/react`, and renders it to static
+markup. The story id
 is the file path, `#`, and the export name, and `describe` lists every story
 of the generation. A stories file becomes one component entry at the path derived
 from the file: the meta's `args` are its props, the schema is inferred from

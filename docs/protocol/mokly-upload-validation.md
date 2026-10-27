@@ -27,7 +27,7 @@ The catalogue service does not support this Mokly version. Update the service an
 | Retryable status after five attempts                                            | 408, 429, 500, 502–504 | `upload-failed`                   |
 | Other non-2xx or 2xx, redirect, or invalid response                             | any other              | `upload-failed`                   |
 | Command cancellation classified under Accounting And Output                     | local                  | cancellation `upload-failed`      |
-| Any non-cancellation local error, including a build recovery failure            | local                  | its existing category and message |
+| Any non-cancellation local error, including a build recovery failure            | local                  | its own category and message      |
 
 Local validation uses the same categories. Other local typed failures keep
 their categories, and no request follows a build failure. Unexpected

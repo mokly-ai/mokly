@@ -22,6 +22,11 @@ function ChangedMark() {
   return <span className="ce-view-changed" aria-hidden="true" />;
 }
 
+/**
+ * Native form state drives these controls: scoped `:has()` rules in the
+ * design CSS read the select and the switch, so no script runs, even in
+ * Browse's sandboxed frames.
+ */
 export function ViewControlsView({
   selection,
   highlight,

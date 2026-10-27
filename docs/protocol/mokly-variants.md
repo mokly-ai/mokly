@@ -1,7 +1,5 @@
 # Variants
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Boundary
 
 A variant records one entry with one deliberate shift: the same kind, the same
@@ -16,8 +14,8 @@ inside its parent, its path is the parent's path plus its slug, and the
 catalogue model and the read model record the parent's path as `variantOf`.
 It has its own views, its own Changes row, and its own comparison result.
 Everything that addresses an entry by path addresses a variant the same way,
-including `mock:` links and use-case steps. This document adds no link grammar,
-query parameter, or comparison schema.
+including `mock:` links and use-case steps. Variants have no link grammar,
+query parameter, or comparison schema of their own.
 
 Light and dark are not variants. Color scheme is a view axis selected by the
 appearance switch, and a viewport is likewise a view. Per-view change
@@ -69,9 +67,8 @@ variants, and the catalogue model flattens them. A component needs no variant:
 its page renders its own props first, then each variant.
 
 Fresh variant literals in direct calls keep excess-key checks. Generic
-inference can accept extra top-level keys; `satisfies ScreenInput` or an
-explicit input annotation checks them statically. Registry preparation rejects
-every unknown field regardless of TypeScript inference.
+inference can accept extra top-level keys. Registry preparation rejects every
+unknown field regardless of TypeScript inference.
 
 A variant's document routes derive from its own path under the
 [artifact path contract](./mokly-artifact-paths.md); the parent's path is the
@@ -110,13 +107,13 @@ final parent path; no provisional label is used.
 If a parent's own definition is invalid, preparation reports that parent's
 root-cause violations without also reporting a relationship violation for each
 child. Nesting is exactly one level deep because a variant cannot declare
-variants; there is no authored parent reference to misname. For a component
-parent, preparation validates the metadata first and the component definition
-only when the metadata is valid. A parent that fails either check keeps those
-parent violations, and no child's props or slots are validated against it; the
-parent stays present for the relationship rules and the inheritance checks
-above. Once both parent validations succeed, preparation validates each
-variant's merged props and slots against the parent exactly once.
+variants; there is no authored parent reference to misname. A component
+parent with invalid metadata reports no violation of its component definition.
+A parent that fails either check keeps those parent violations, and no child's
+props or slots are validated against it; the parent stays present for the
+relationship rules and the inheritance checks above. Once both parent checks
+succeed, each variant's merged props and slots are validated against the parent
+exactly once.
 
 Every other rule of a valid parent's kind applies unchanged: path and tag
 grammar, color-scheme subsets, reciprocal use-case membership, prop validation against the schema, and source attribution to the
@@ -151,8 +148,9 @@ targets the variant's own view for the source viewport and color scheme with
 the light fallback, and the marker carries the variant path. A
 use-case step references a screen variant through `screenPath` like any
 screen, and the variant's `useCasePaths` must list that use case. Logical
-fragments are validated against the variant's own documents. Nothing in the
-[navigation contract](./mokly-navigation.md) changes.
+fragments are validated against the variant's own documents. The
+[navigation contract](./mokly-navigation.md) applies to a variant like any
+other entry.
 
 ## Navigation, Changes, And Viewer Projection
 
@@ -162,24 +160,6 @@ aggregate Changes behavior, removed-variant order and breadcrumbs, Dark
 availability, and public Viewer parity. The public model carries `variantOf`
 exactly on variants and places current variants in their parent's tree node;
 catalogue v7 readers validate those relationships.
-
-## Verification
-
-Coverage must prove:
-
-- flattening, derived paths, inheritance and overrides, and every rejected
-  shape, for `defineScreen`, `defineComponent`, and the HTML forms;
-- catalogue model and read model emission and validation of `variantOf` for
-  both kinds and hierarchy exposure;
-- rendering, link rewriting, fragment validation, and use-case steps that
-  address a variant;
-- the tree markup, disclosure persistence, `Collapse all`, search, the
-  active-row invariant, Back and Forward, the drawer, and the built shell
-  without a server;
-- variant-only edits, aggregate marks, landing on the first changed variant,
-  count behavior, removed variants under surviving and deleted parents, and
-  variants paired through a moved parent;
-- the public projection and reader round trip with the conformance fixture.
 
 ## Related Docs
 

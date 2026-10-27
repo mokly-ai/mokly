@@ -1,12 +1,10 @@
 # Comparison Tree Model
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 The [comparison contract](./mokly-comparison.md) uses the following tree model.
 
-Comparison walks over rendered and canonical trees use explicit stacks.
-Canonical equality, move fingerprints, and destruction do not consume native
-stack space in proportion to rendered depth. This rule covers rendered trees.
+A deeply nested rendered tree never aborts comparison. Canonical equality,
+move fingerprints, and tree release work at any rendered depth. This rule
+covers rendered trees.
 Authored-input parsing, props, schemas, and CSS follow their own contracts.
 
 Both sides of a view are the trees the core composed; a sidecar fragment is
@@ -28,8 +26,8 @@ Formatting clones that the adoption agency algorithm creates and elements that
 the parser implies take their position in the tree; nothing refers to the
 token that created them.
 
-The core serializes and re-parses composed content with the HTML5 algorithm
-before it derives usage or comparison ownership. Content moved by that parser
+Usage and comparison ownership derive from the tree that the HTML5 parsing
+algorithm builds from the composed bytes. Content moved by that parser
 produces `html-foster-parented`, naming the component element and its parent.
 An instance, slot, or ignore marker pair that no longer shares one parent
 loses its region. Its nodes belong to the enclosing region; a split ignore
@@ -41,18 +39,17 @@ also loses its region; the repair remains a warning.
 An HTML `plaintext` start tag consumes the rest of a document. Foreign-content
 `plaintext` elements do not activate this mode. HTML integration points retain
 their HTML parsing rules. Serialization omits the HTML `plaintext` end tag
-and the end tags of ancestors entered before it. A parser repair pass turns
-formatting clones inside it and nodes moved after it into the literal payload
-that the browser receives. The repaired tree and its bytes stay stable on
+and the end tags of ancestors entered before it. Formatting clones inside it
+and nodes moved after it become part of the literal payload that the browser
+receives. The repaired tree and its bytes stay stable on
 further parse/serialize passes, including repair of annotated composed content.
 Serialization writes text raw throughout plaintext mode, including formatting
 clones and later nodes. Authored characters and entity spellings stay literal.
 Plaintext on a component's own page retains its root range and ready Usage
 through repair, even though plaintext consumes the trailing root boundary.
 The parsed element must confirm the predicted HTML plaintext start. If it
-does not, composition retries with all text escaped so authored text stays inert.
-The retry re-annotates the source with plaintext prediction disabled, so end
-tags, region markers, and repair identities remain available for restoration.
+does not, composition escapes all text so authored text stays inert. That
+output keeps its end tags and region markers.
 Inside HTML `noscript`, raw text escapes every case-insensitive `</noscript` to `&lt;/noscript`, preserving case but changing authored characters to prevent browser markup activation.
 Serialization omits private markers and attributes inside plaintext mode. Other
 HTML text modes follow the parser-context namespace, including component grafts

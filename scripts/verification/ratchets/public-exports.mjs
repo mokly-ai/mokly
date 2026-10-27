@@ -9,7 +9,7 @@ import { expandedPublicExports } from "./public-export-surface.mjs";
 
 const RELEASE_CONFIG = "release-please-config.json";
 const RELEASE_MANIFEST = ".release-please-manifest.json";
-const RELEASE_NOTES = "docs/protocol/npm-release-notes.md";
+const RELEASE_NOTES = "docs/guides/start/upgrade.md";
 
 /** Compare published package exports with their newest reachable releases. */
 export function auditPublicPackageExports(repositoryRoot, git) {
@@ -150,7 +150,7 @@ function removalFindings({ current, notes, packageName, released, tag }) {
         notedRemovals += 1;
       } else {
         findings.push(
-          `${specifier} was removed since ${tag}; name the removed subpath as an exact inline code span in npm-release-notes.md`,
+          `${specifier} was removed since ${tag}; name the removed subpath as an exact inline code span in docs/guides/start/upgrade.md`,
         );
       }
       continue;
@@ -161,7 +161,7 @@ function removalFindings({ current, notes, packageName, released, tag }) {
         notedRemovals += 1;
       } else {
         findings.push(
-          `${specifier} removed export ${name} since ${tag}; name the removed export as an exact inline code span in npm-release-notes.md`,
+          `${specifier} removed export ${name} since ${tag}; name the removed export as an exact inline code span in docs/guides/start/upgrade.md`,
         );
       }
     }

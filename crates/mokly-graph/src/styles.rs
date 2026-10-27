@@ -16,6 +16,10 @@ use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{Result, invalid};
 use crate::types::ResourcePlan;
 
+/// Compiled stylesheet `match` globs, in configuration order.
+/// `literal_separator` keeps `*` and `?` inside one path segment. Backslash escaping is
+/// off on every platform, because globset turns it on by default only where `\` is not
+/// a path separator, so the same pattern would match differently on Windows.
 pub(crate) struct Matchers(Vec<GlobMatcher>);
 
 impl Matchers {
@@ -40,6 +44,10 @@ impl Matchers {
     }
 }
 
+/// Collect one root per local configured stylesheet, declared component stylesheet,
+/// and module CSS root. A declared file becomes a stylesheet node like a configured
+/// one: an edit changes the node's input key, and changed delivered CSS changes the
+/// keys of the views that link it.
 pub(crate) fn roots(
     config: &ResolvedConfig,
     inputs: &DeliveryInputs,

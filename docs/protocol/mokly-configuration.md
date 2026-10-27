@@ -1,7 +1,5 @@
 # Mokly Configuration Contract
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.
@@ -35,10 +33,11 @@ following contract:
   package roots, aliases, conditions, fields, extensions, and loaders that the
   [sidecar](./mokly-sidecar.md) bundles with;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
-  base;
+  base, defaulting to `origin/main`;
 - `review.baseInstallScripts`: whether base dependency installs run lifecycle
   scripts, defaulting to false;
-- `watch`: additional authored inputs and static assets for watched Serve.
+- `watch`: additional authored inputs and static assets for watched Serve,
+  and the watch debounce `watch.debounceMs` in milliseconds, defaulting to 75.
 
 The resolved config has one repository root, one sorted resolved source-file
 set across every root, and normalized repo-relative POSIX paths. No field names
@@ -57,76 +56,18 @@ initializer or documented example, not hidden in runtime logic.
 
 ## Shape
 
-The normative configuration shape is:
-
-```ts
-type ColorScheme = "dark" | "light";
-
-type SharedStylesheet = string; // a stylesheet, or the "$componentStylesheets" token
-
-type ModuleLoader =
-  | "base64"
-  | "binary"
-  | "css"
-  | "dataurl"
-  | "empty"
-  | "file"
-  | "js"
-  | "json"
-  | "jsx"
-  | "text"
-  | "ts"
-  | "tsx";
-
-interface RootConfig {
-  dir: string; // config-relative directory inside repoRoot
-  files?: readonly string[]; // the default globs of the root field contract
-  path?: string; // prefix for every derived path; none by default
-  transparent?: readonly string[]; // directory names removed from paths
-}
-
-interface MoklyConfig {
-  colorSchemes?: readonly ColorScheme[]; // ["light"]
-  roots?: readonly RootConfig[]; // [{ dir: "specs" }]
-  repoRoot?: string; // config directory
-  renderer?: string;
-  postcss?: string; // config-relative PostCSS module
-  moduleResolution?: {
-    aliases?: Readonly<Record<string, string>>;
-    conditions?: readonly string[];
-    loaders?: Readonly<Record<string, ModuleLoader>>;
-    mainFields?: readonly string[];
-    packageRoots?: readonly string[];
-    resolveExtensions?: readonly string[];
-  };
-  stylesheets?: readonly {
-    match: string;
-    stylesheets: readonly SharedStylesheet[];
-    lightStylesheets?: readonly string[];
-    darkStylesheets?: readonly string[];
-  }[];
-  review?: {
-    base?: string; // origin/main; merge base with HEAD
-    baseInstallScripts?: boolean; // false; use lifecycle scripts for base installs
-  };
-  watch?: {
-    debounceMs?: number; // 75
-    rules?: readonly {
-      action: "ignore" | "rebuild" | "reload";
-      paths: readonly string[];
-    }[];
-  };
-}
-```
+The shipped [configuration schema](../../packages/mokly/config.schema.json)
+defines the normative shape: every field, its type, and its accepted values.
+The rules below define how Mokly resolves and applies the fields.
 
 Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`, module
 resolution package roots, and local stylesheet paths) are config-relative.
 `roots[].files` globs are relative to their root; `watch.rules[].paths` are
 repository-relative POSIX globs; a stylesheet `match` matches catalogue
 entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
-`*` does not cross `/`, and `**` can cross directories. Stylesheet matchers use
-`globset` brace alternatives and character classes directly, with backslash
-escaping disabled. Root-file validation and expansion apply to `roots[].files`.
+`*` does not cross `/`, and `**` can cross directories. Stylesheet matchers
+accept brace alternatives and character classes. A backslash does not escape
+a character. Root-file validation and expansion apply to `roots[].files`.
 An extglob opening (`@(`, `!(`, `+(`, `*(`, or `?(`) outside a character class
 produces one `stylesheet-extglob` configuration warning per matcher. Its message is:
 
@@ -135,7 +76,7 @@ stylesheet match <JSON-quoted-pattern> uses unsupported extglob syntax. Use brac
 ```
 
 The warning leaves matching unchanged. Normal [strict warning handling](./mokly-build-warnings.md#strict-mode) applies.
-Stylesheet matchers compile once per generation; the first matching rule applies.
+The first matching stylesheet rule applies.
 HTTP(S) stylesheet URLs are allowed. `colorSchemes` is a non-empty,
 duplicate-free subset of `"light" | "dark"` that must include `"light"`; it
 defaults to `["light"]` and normalizes to light-first order.

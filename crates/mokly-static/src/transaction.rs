@@ -30,6 +30,11 @@ pub trait Transaction: Send + Sync {
     /// Write immutable bytes, validate, then install after the caller drains rendering.
     fn stage(&self, artifact: &Artifact, cancellation: &dyn Cancellation) -> Result<()>;
     /// Commit the prepared stage; all recovery is settled before returning.
+    ///
+    /// Installation rechecks the output location and its ownership, then checks
+    /// cancellation, before it moves the old output to `backup`. It checks
+    /// cancellation again after it validates that backup. The commit rename and
+    /// the cleanup after it never consult cancellation.
     fn install(&self, cancellation: &dyn Cancellation) -> Result<()>;
     /// Abandon a pre-installation operation and clean its stage exactly once.
     fn abandon(&self) -> Result<()>;
@@ -158,6 +163,9 @@ impl Transaction for OutputTransaction {
         self.boundary.inputs.extend(inputs);
         self.recheck()
     }
+    /// Validates the whole artifact first, then writes it into `stage/` inside
+    /// the reservation. The reservation sits beside the output on the same
+    /// filesystem, so the install is a same-filesystem rename.
     #[tracing::instrument(name = "output.stage", skip_all, err)]
     fn stage(&self, artifact: &Artifact, cancellation: &dyn Cancellation) -> Result<()> {
         artifact::validate(artifact)?;

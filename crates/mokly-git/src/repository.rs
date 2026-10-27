@@ -85,6 +85,9 @@ pub(crate) struct GitRepository {
 }
 
 impl Repositories for GitRepositories {
+    /// Compares the canonical configured directory with the canonical
+    /// `rev-parse --show-toplevel` result. A symlink alias of the root passes;
+    /// a subdirectory or another checkout fails with both paths.
     fn open(&self, root: &Path) -> Result<Arc<dyn Repository>> {
         let configured = self.disk.canonicalize(root)?;
         let repository = GitRepository {

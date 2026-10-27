@@ -23,6 +23,9 @@ use crate::serve_changes::Source;
 use crate::serve_changes_base::{AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies};
 
 impl Source {
+    /// Resolve HEAD and the selected base to commits and return their merge base.
+    /// While both commits stay the same, it returns the cached merge base without running
+    /// `merge-base` again, and the equal result keeps the current classification.
     pub(super) fn references_native(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
         let runner = self.services.git.runner(cancel);
         let mut cached = self
