@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::remote::contracts::{Fingerprint, InterruptRequestedMock};
 use crate::remote::error::Error;
-use crate::source_tree::error::Error as SourceTreeError;
+use crate::source_tree;
 use crate::source_tree::records::fingerprint_records;
 use crate::source_tree::system::{TreeIndexMock, TreeUntrackedMock};
 
@@ -56,7 +56,7 @@ fn an_interrupt_cancels_the_fingerprint_before_any_read() {
 #[test]
 fn a_read_failure_keeps_its_typed_source_tree_error() {
     let tree = Unimock::new(TreeIndexMock.next_call(matching!(_)).answers(&|_, _| {
-        Err(SourceTreeError::GitCommand {
+        Err(source_tree::error::Error::GitCommand {
             command: "git ls-files --stage -z".to_owned(),
             stderr: "fatal: not a git repository".to_owned(),
         })
@@ -69,7 +69,7 @@ fn a_read_failure_keeps_its_typed_source_tree_error() {
     assert!(matches!(
         error,
         Error::SourceTree {
-            source: SourceTreeError::GitCommand { .. }
+            source: source_tree::error::Error::GitCommand { .. }
         }
     ));
     assert_eq!(

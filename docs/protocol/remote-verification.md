@@ -152,8 +152,9 @@ The [identity contract](./remote-verification-base.md#identity-output-and-file)
 defines the summary's base field and the identity file. Suite reports keep the
 CI report schema.
 Print `aggregate=passed` or `aggregate=failed` in the summary.
-On aggregate or fingerprint read failure, print a warning first.
-Then print that command's captured stdout and stderr with the executor prefix.
+On aggregate failure, print a warning first. Then print that command's
+captured stdout and stderr with the executor prefix. On a fingerprint read
+failure, print a warning that holds the read error.
 Describe command termination as `exit <code>` or `a signal`.
 Use `[xtask/check]` for the outer error wrapper.
 An embedded error keeps its own `[xtask/<area>]` prefix. Remote execution

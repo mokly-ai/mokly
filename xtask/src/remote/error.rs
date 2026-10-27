@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use thiserror::Error;
 
 use crate::remote::contracts::{Output, RequiredProgram};
+use crate::source_tree;
 
 /// Remote verification result.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -170,7 +171,7 @@ pub(crate) enum Error {
     #[error("[xtask/remote] {source}")]
     SourceTree {
         /// Original fingerprint error.
-        source: crate::source_tree::error::Error,
+        source: source_tree::error::Error,
     },
     /// The user interrupted the check; only a final result carries this count.
     #[error("[xtask/remote] verification interrupted; cleanup={cleanup} boxes remain")]

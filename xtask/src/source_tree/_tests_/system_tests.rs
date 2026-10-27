@@ -44,6 +44,14 @@ fn entries_report_files_executables_links_directories_and_other_types() {
         tree.entry(&root.join("socket")).unwrap(),
         Some(Entry::Other)
     );
+    for mode in [0o614, 0o641] {
+        fs::set_permissions(root.join("file"), fs::Permissions::from_mode(mode)).unwrap();
+        assert_eq!(
+            tree.entry(&root.join("file")).unwrap(),
+            Some(Entry::File { executable: true }),
+            "mode {mode:o}"
+        );
+    }
 }
 
 #[test]

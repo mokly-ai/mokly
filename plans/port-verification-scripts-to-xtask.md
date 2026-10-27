@@ -234,11 +234,46 @@ in `.context/port-verification-scripts-to-xtask/`. Gate evidence:
 - [ ] Add the map from each Node case of Milestones 5 to 7 to its Rust
       test, or the reason that it stays in Node, under
       `.context/port-verification-scripts-to-xtask/`.
+  - [x] Round 1, the fingerprint: `decisions-2026-10-27/case-map.md`.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Round 1, review 3 of 2026-10-27, of commit `2e9da5a2`: fixed findings
+    2, 4, 5, and 6. It also fixed finding 1 with option C, because decision
+    3 B keeps every assertion of the Node tests. Report:
+    `.context/port-verification-scripts-to-xtask/review-3.md`.
+  - 3. The fingerprint's Git variable removal has no test. Severity Low,
+       effort Medium. Recommended: B, build every `xtask` Git command with
+       the one tested command builder.
+  - 7. The fingerprint format check has three copies. Severity Low, effort
+       Small. Recommended: A, let the remote parser use the fingerprint
+       format of the `source_tree` module.
+  - Decision for the user: enable the `unused_crate_dependencies` lint for
+    the `xtask` binary, the blocked wider fix of review 3 finding 4. Effort
+    Small. Previous example: review 1 finding 4, option B.
+  - Outside the review scope: `xtask/src/length/git.rs:199`: the length
+    audit's Git helper removes the Git repository variables without a test.
+    Separate branch.
+  - Outside the review scope: `docs/protocol/remote-verification.md:181`:
+    the page names the source file `xtask/src/remote/error.rs`. Separate
+    branch.
+  - Outside the review scope: `xtask/README.md:50`: the README says that
+    every subprocess starts at the workspace root, but the probes, the suite
+    commands, and the snapshot fingerprint start in the snapshot directory.
+    Separate branch.
+  - Outside the review scope: `tests/browser/viewer_inspection_ownership.spec.ts`,
+    "postMessage obsolete labels success preserves frame replacement pick",
+    failed with `Timeout 10000ms exceeded while waiting on the predicate` in
+    remote gate `20261027T105758Z-135390` and passed in the hosted CI run of
+    the same commit. Suspected source: a race between the label reply and
+    the disposal of the replaced frame. Separate branch.
+  - Outside the review scope: `tests/browser/large_watch.spec.ts`, "large
+    watch delivers browser evidence for react", failed with `Test timeout of
+300000ms exceeded` in the same gate and in three hosted CI runs of
+    2026-10-26, and passed on each rerun. User decision 105 accepts rare
+    timeouts. Separate branch.
 - [ ] Update the pull request description with the applied decisions, and
       mark the pull request ready for review.

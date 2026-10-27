@@ -4,17 +4,25 @@
 use std::io::{self, Write};
 use std::path::Path;
 
+use clap::Args;
+
 use super::error::{Error, Result};
 use super::records::{SourceFingerprint, lowercase_hex};
 use super::scan::read_source_tree;
 use super::system::{SystemTree, TreeSystem};
 
-/// One `cargo xtask source-tree` request.
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// One `cargo xtask source-tree` request, parsed from its arguments.
+#[derive(Args, Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SourceTreeRequest {
-    /// The fingerprint that the working tree must have.
+    /// Fail unless the fingerprint equals this value.
+    #[arg(
+        long = "expect",
+        value_name = "FINGERPRINT",
+        value_parser = SourceFingerprint::parse
+    )]
     pub(crate) expected: Option<SourceFingerprint>,
-    /// Whether to print the checkout's `HEAD` after the fingerprint.
+    /// Print the checkout's HEAD after the fingerprint.
+    #[arg(long)]
     pub(crate) print_head: bool,
 }
 
@@ -31,14 +39,18 @@ pub(crate) struct SystemSourceTreeCommand;
 impl SourceTreeCommand for SystemSourceTreeCommand {
     fn run(&self, root: &Path, request: &SourceTreeRequest) -> Result<()> {
         let output = source_tree_output(&SystemTree, root, request)?;
-        let mut stdout = io::stdout().lock();
-        match stdout
-            .write_all(output.as_bytes())
-            .and_then(|()| stdout.flush())
-        {
-            Ok(()) => Ok(()),
-            Err(source) => Err(Error::Output { source }),
-        }
+        write_output(&output, &mut io::stdout().lock())
+    }
+}
+
+/// Write the command output to `target` and flush it.
+fn write_output(output: &str, target: &mut dyn Write) -> Result<()> {
+    match target
+        .write_all(output.as_bytes())
+        .and_then(|()| target.flush())
+    {
+        Ok(()) => Ok(()),
+        Err(source) => Err(Error::Output { source }),
     }
 }
 

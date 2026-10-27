@@ -9,7 +9,7 @@ use crate::remote::error::{Error, Operation, Result};
 use crate::remote::git_identity::{BaseLookup, CommitSha};
 use crate::remote::process::{Process, Request};
 
-/// Script adapter consumed through distinct Git, fingerprint and aggregate traits.
+/// Script adapter consumed through distinct Git and aggregate traits.
 pub(crate) struct SystemScripts {
     /// Process host.
     pub(crate) process: Arc<dyn Process + Send + Sync>,

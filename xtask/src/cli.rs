@@ -36,9 +36,7 @@ use crate::remote::snapshot::filesystem::SystemSnapshotFiles;
 use crate::remote::snapshot::system::SystemSnapshot;
 use crate::remote::source_fingerprint::SourceTreeFingerprint;
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
-use crate::source_tree::command::SystemSourceTreeCommand;
-use crate::source_tree::error::Error as SourceTreeError;
-use crate::source_tree::records::SourceFingerprint;
+use crate::source_tree::command::{SourceTreeRequest, SystemSourceTreeCommand};
 use crate::source_tree::system::SystemTree;
 
 #[derive(Debug, Parser)]
@@ -93,19 +91,7 @@ pub(crate) enum Command {
         all: bool,
     },
     /// Print the source-tree fingerprint of this checkout.
-    SourceTree {
-        /// Fail unless the fingerprint equals this value.
-        #[arg(long, value_name = "FINGERPRINT", value_parser = parse_fingerprint)]
-        expect: Option<SourceFingerprint>,
-        /// Print the checkout's HEAD after the fingerprint.
-        #[arg(long)]
-        print_head: bool,
-    },
-}
-
-/// Accept only the exact fingerprint format before any Git or file read.
-fn parse_fingerprint(value: &str) -> std::result::Result<SourceFingerprint, SourceTreeError> {
-    SourceFingerprint::parse(value)
+    SourceTree(SourceTreeRequest),
 }
 
 /// Parse arguments, compose real dependencies, and return a process exit code.

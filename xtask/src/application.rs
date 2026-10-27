@@ -15,7 +15,7 @@ use crate::remote::error;
 use crate::remote::reporting::warning;
 use crate::remote::runner::{Failure, RemoteRunner};
 use crate::rust_file_length::RustFileLengthAuditor;
-use crate::source_tree::command::{SourceTreeCommand, SourceTreeRequest};
+use crate::source_tree::command::SourceTreeCommand;
 
 /// Side-effecting xtask application boundary.
 pub(crate) trait Xtask: Send + Sync {
@@ -124,16 +124,10 @@ impl Xtask for Application {
                 self.rust_file_length_auditor.run(&self.workspace)
             }
             Command::SourceFileLengthLint { all } => self.check_runner.source_file_length(all),
-            Command::SourceTree { expect, print_head } => {
-                let request = SourceTreeRequest {
-                    expected: expect,
-                    print_head,
-                };
-                match self.source_tree.run(&self.workspace, &request) {
-                    Ok(()) => Ok(()),
-                    Err(source) => Err(Error::SourceTree { source }),
-                }
-            }
+            Command::SourceTree(request) => match self.source_tree.run(&self.workspace, &request) {
+                Ok(()) => Ok(()),
+                Err(source) => Err(Error::SourceTree { source }),
+            },
         }
     }
 }

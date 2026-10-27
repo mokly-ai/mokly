@@ -12,6 +12,7 @@ use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
 use crate::remote::snapshot::contracts::{
     Ownership, SnapshotCreateMock, SnapshotHandle, SnapshotRemoveMock,
 };
+use crate::source_tree;
 
 use super::snapshot_runner_client::client;
 
@@ -68,7 +69,7 @@ fn failure(operation: Operation) -> Error {
 /// The read failure that the in-process fingerprint returns.
 fn fingerprint_failure() -> Error {
     Error::SourceTree {
-        source: crate::source_tree::error::Error::Read {
+        source: source_tree::error::Error::Read {
             path: "/workspace".to_owned(),
             source: std::io::Error::other("fingerprint test failure"),
         },

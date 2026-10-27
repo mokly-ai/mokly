@@ -1,5 +1,6 @@
 //! The `cargo xtask source-tree` output over a mocked boundary.
 
+use std::io::{self, Write};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -11,7 +12,7 @@ use crate::source_tree::system::{
     Entry, TreeEntryMock, TreeHeadMock, TreeIndexMock, TreeReadFileMock, TreeUntrackedMock,
 };
 
-use super::{SourceTreeRequest, source_tree_output};
+use super::{SourceTreeRequest, source_tree_output, write_output};
 
 const ROOT: &str = "/repository";
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
@@ -106,4 +107,36 @@ fn a_head_that_is_not_one_full_lowercase_sha_fails() {
             "[xtask/source-tree] expected a full lowercase HEAD SHA"
         );
     }
+}
+
+/// Standard output after the reader closed it.
+struct Closed;
+
+impl Write for Closed {
+    fn write(&mut self, _: &[u8]) -> io::Result<usize> {
+        Err(io::Error::from(io::ErrorKind::BrokenPipe))
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+#[test]
+fn the_output_reaches_standard_output_unchanged() {
+    let mut written = Vec::new();
+    write_output("sha256:abc\nhead\n", &mut written).unwrap();
+    assert_eq!(written, b"sha256:abc\nhead\n");
+}
+
+#[test]
+fn a_closed_standard_output_fails_with_the_typed_write_error() {
+    let error = write_output("sha256:abc\n", &mut Closed).unwrap_err();
+    assert!(matches!(error, Error::Output { .. }));
+    assert!(
+        error
+            .to_string()
+            .starts_with("[xtask/source-tree] could not write the fingerprint: "),
+        "{error}"
+    );
 }

@@ -11,6 +11,7 @@ use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
+use crate::source_tree;
 
 use super::harness_client_tests::client;
 use super::harness_clock_tests::clock;
@@ -277,7 +278,7 @@ fn build(case: Case, stuck: bool) -> Harness {
 /// The read failure that the in-process fingerprint returns.
 fn fingerprint_failure() -> Error {
     Error::SourceTree {
-        source: crate::source_tree::error::Error::Read {
+        source: source_tree::error::Error::Read {
             path: "/workspace".to_owned(),
             source: std::io::Error::other("fingerprint test failure"),
         },

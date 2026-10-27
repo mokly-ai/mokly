@@ -9,6 +9,8 @@ use std::path::Path;
 
 use crate::source_tree::command::{SourceTreeRequest, source_tree_output};
 use crate::source_tree::error::Error;
+use crate::source_tree::records::SourceFingerprint;
+use crate::source_tree::scan::read_source_tree;
 use crate::source_tree::system::SystemTree;
 
 use super::tree_fixture::TreeFixture;
@@ -143,9 +145,7 @@ fn an_unpushed_commit_and_the_same_uncommitted_change_have_the_same_fingerprint(
     );
     fs::write(fixture.path("file.txt"), "same change\n").unwrap();
     fs::write(peer.join("file.txt"), "same change\n").unwrap();
-    let uncommitted = crate::source_tree::scan::read_source_tree(&SystemTree, &peer)
-        .unwrap()
-        .to_string();
+    let uncommitted = read_source_tree(&SystemTree, &peer).unwrap().to_string();
     fixture.git(&["add", "file.txt"]);
     fixture.git(&["commit", "-q", "-m", "test: unpushed change"]);
     assert_eq!(
@@ -203,9 +203,7 @@ fn the_command_prints_the_fingerprint_and_the_real_head() {
     let fingerprint = fixture.fingerprint().unwrap();
     let head = fixture.git(&["rev-parse", "HEAD"]);
     let request = SourceTreeRequest {
-        expected: Some(
-            crate::source_tree::records::SourceFingerprint::parse(&fingerprint).unwrap(),
-        ),
+        expected: Some(SourceFingerprint::parse(&fingerprint).unwrap()),
         print_head: true,
     };
     assert_eq!(

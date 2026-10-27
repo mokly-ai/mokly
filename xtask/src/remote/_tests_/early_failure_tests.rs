@@ -16,6 +16,7 @@ use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 use crate::remote::snapshot::contracts::{
     Ownership, SnapshotCreateMock, SnapshotHandle, SnapshotRemoveMock,
 };
+use crate::source_tree;
 
 /// Preserve the operation identity without performing any I/O.
 fn failure(operation: Operation) -> Error {
@@ -28,7 +29,7 @@ fn failure(operation: Operation) -> Error {
 /// The read failure that the in-process fingerprint returns.
 fn fingerprint_failure() -> Error {
     Error::SourceTree {
-        source: crate::source_tree::error::Error::Read {
+        source: source_tree::error::Error::Read {
             path: "/workspace".to_owned(),
             source: std::io::Error::other("fingerprint test failure"),
         },
