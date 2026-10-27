@@ -1,7 +1,5 @@
 # Remote Verification: Base Commit Sync
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Base Commit
@@ -10,26 +8,24 @@ Use the local `refs/remotes/origin/*` refs to find a pushed ancestor of the
 checkout's `HEAD`. Never fetch inside xtask. Accept Git commit identities only
 as full 40-character lowercase hex SHAs read from Git output.
 
-1. Read `HEAD` with `git rev-parse HEAD`.
-2. List origin refs with
-   `git for-each-ref --format=%(refname) %(symref) refs/remotes/origin/`.
-   Pass the complete format as one argument. Skip symbolic refs, including
-   `refs/remotes/origin/HEAD`, so they do not add duplicate candidates.
-3. For each remaining ref, run `git merge-base HEAD <ref>`.
-   Exit 1 means no common ancestor; skip that ref. Other command failures
-   fail preparation. Deduplicate the returned SHAs.
-4. If no candidates exist, return no base. Otherwise run
-   `git merge-base --independent <candidate>...` to remove candidates that
-   are ancestors of another candidate.
-5. If `refs/remotes/origin/main` exists and shares history with `HEAD`, read
-   `M = git merge-base HEAD refs/remotes/origin/main`. Keep only candidates
-   for which `git merge-base --is-ancestor M <candidate>` exits 0.
-   M, or a candidate that contains M, always remains. Exit 1 excludes a
-   candidate. Other failures fail preparation. Without a shared main history,
-   keep the independent candidates unchanged.
-6. For each remaining candidate, read the nonnegative ahead count with
-   `git rev-list --count <candidate>..HEAD`. Select the lowest count.
-   Break a count tie with the smallest SHA in byte order.
+Select the base with these rules:
+
+1. Skip symbolic refs, including `refs/remotes/origin/HEAD`, so they do not
+   add duplicate candidates.
+2. Each remaining ref that shares history with `HEAD` adds its merge base with
+   `HEAD` as a candidate. A ref without a common ancestor adds nothing.
+   Duplicate candidates count once.
+3. Drop each candidate that is an ancestor of another candidate. No candidate
+   means no base.
+4. When `refs/remotes/origin/main` shares history with `HEAD`, let M be their
+   merge base. Keep only the candidates that contain M. M, or a candidate that
+   contains M, always remains. Without a shared main history, keep the
+   candidates unchanged.
+5. Select the candidate with the lowest ahead count: the number of commits
+   from the candidate to `HEAD`. Break a count tie with the smallest SHA in
+   byte order.
+
+A Git failure other than a missing common ancestor fails preparation.
 
 If an origin ref contains `HEAD`, the selected base is `HEAD` and ahead is 0.
 Stacked branches can use another pushed branch as their base.
@@ -38,10 +34,8 @@ pushed branch tip. A base B is an ancestor of checkout `HEAD` and contains M,
 so `git merge-base B origin/main` equals M. This preserves the checkout's
 comparison base for repository ratchets and the baseline dependency audit.
 
-Pass Git SHAs, refs and paths as separate process arguments.
-Never put Git data in a shell command string.
-If GitHub no longer has a selected commit, the sync probe fails.
-Use the existing preparation fallback; do not fetch or change the base mid-run.
+If GitHub does not have a selected commit, the sync probe fails.
+Use the preparation fallback; do not fetch or change the base mid-run.
 
 ## Snapshot Worktree
 
@@ -55,61 +49,31 @@ for the snapshot and temporary index:
 
 Allocate these paths under the checkout's ignored `.context/` directory.
 The index path must be absolute and must not select the checkout's index.
-Create `.context/verification-snapshots/` before the first index write.
 If either run-specific path already exists, fail preparation. Never reuse it
 or delete it. Reserve the run name with exclusive directory creation.
-Check the index path again before the first Git write. Leave it absent so
-Git creates a valid index. Mark that path as owned immediately before the
-first `read-tree` request. Track directory ownership before the next operation. Partial-build
-cleanup removes only resources this run acquired, also after a raced collision.
-Run these three commands from the checkout root. Set `GIT_INDEX_FILE` to the
-temporary index only on these process requests:
+Partial-build cleanup removes only resources this run acquired, also after a
+raced collision.
 
-```bash
-git read-tree HEAD
-git add -A
-git write-tree
-```
-
-`read-tree` seeds the temporary index with tracked paths from `HEAD`.
-`add -A` captures current content, deletions, additions, renames, file modes,
-symbolic links and non-ignored untracked files. It includes working-tree
-content for staged paths. Existing tracked paths stay included when an ignore
-rule matches them. `write-tree` returns the tree SHA; validate it as Git data.
-
-Create the linked worktree from the checkout root:
-
-```bash
-git -c core.hooksPath=/dev/null worktree add --detach <snapshot> <base>
-```
-
-Disabling hooks prevents a developer's `post-checkout` hook from running there.
-Run these commands from the snapshot root, without `GIT_INDEX_FILE`:
-
-```bash
-git read-tree -u --reset <tree>
-git read-tree <base>
-```
-
-The first command installs the checkout tree. The second resets only the
-snapshot index to the base. The snapshot's `HEAD` remains the base.
-Every source difference is now unstaged or untracked for CLI sync.
+The snapshot holds the checkout's working tree: current content, deletions,
+additions, renames, file modes, symbolic links and non-ignored untracked
+files. It includes working-tree content for staged paths. Existing tracked
+paths stay included when an ignore rule matches them. The snapshot's `HEAD`
+and index are the base, so every source difference is unstaged or untracked
+for CLI sync. A developer's `post-checkout` hook must not run in the snapshot.
 The checkout's `HEAD`, index, files and status stay unchanged.
-A detached checkout `HEAD` follows the same steps.
+A detached checkout `HEAD` follows the same rules.
 After removal, its worktree list and reflog must also match their initial state.
 
-All snapshot build Git requests use `cancellable: false`.
-A killed worktree-add process can leave a locked admin entry that prune cannot
-remove. Check the interrupt flag immediately after construction finishes.
-An interrupt removes the snapshot and prevents warmup and local fallback.
-Keep process environment overrides typed. Retain secret removal and input redaction.
-Apply the [child environment rule](./ci-verification-security.md#child-environment):
-remove Git repository variables before applying the temporary index override.
+An interrupt never stops the snapshot build part way, because a killed
+`git worktree add` can leave a locked admin entry that prune cannot remove.
+An interrupt during the build takes effect when the build ends: it removes the
+snapshot and prevents warmup and local fallback. Snapshot Git requests follow
+the [child environment rule](./ci-verification-security.md#child-environment).
 
 Compute the source-tree fingerprint from the checkout and from the snapshot.
 Require equal values before warmup. A mismatch fails preparation.
 The [fingerprint contract](./remote-verification-testbox.md#source-tree-fingerprint)
-continues to own the algorithm and unsupported file types.
+owns the algorithm and unsupported file types.
 
 ### Known Limit
 
@@ -135,8 +99,7 @@ Keep local aggregation, logs and reports under the checkout root too.
 Each probe must return the checkout fingerprint and the selected base SHA.
 The [Testbox probe](./remote-verification-testbox.md#readiness-and-sync-probe)
 defines the command, readiness bound, parsing and all-box barrier.
-The wrapper changes only to stage the synced tree under the
-[box index rule](#box-index). Keep strict report runners and aggregate schema unchanged.
+The wrapper stages the synced tree under the [box index rule](#box-index).
 Suite reports therefore name the box `HEAD`, which is the base.
 Run the aggregate with that same base and exactly five downloaded reports.
 The final fingerprint check reads the checkout, so it detects local edits
@@ -167,7 +130,7 @@ Append `base=<base>` and `cleanup=<count>` to the remote summary line.
 The cleanup count names boxes neither stopped nor proven completed.
 
 Write `.context/verification-logs/remote/<run>/identity.json` before warmup.
-Use a typed struct with these fields, in this order:
+It holds these fields, in this order:
 
 | Field         | JSON type | Value                               |
 | ------------- | --------- | ----------------------------------- |
@@ -178,13 +141,12 @@ Use a typed struct with these fields, in this order:
 | `fingerprint` | String    | Validated checkout `sha256:` digest |
 
 Use UTF-8 JSON with two-space indentation and one final newline.
-Serialize the struct, or use a pure formatter over its validated fields.
-Tests must check the exact bytes. Keep this file with the logs after cleanup.
+Keep this file with the logs after cleanup.
 Do not put it in the report directory; the aggregate accepts suite reports only.
 
 ## Executor Decision And Fallback
 
-The availability policy uses a `Base` check after Blacksmith access.
+The base check runs after the Blacksmith access checks.
 No shared origin history selects local mode in `auto`, with one warning:
 
 ```text
@@ -204,14 +166,14 @@ writes it to standard error. `cargo xtask executor` writes it to standard output
 local: a pushed base commit is unavailable
 ```
 
-A failed Git lookup uses the same local reason and its typed command warning.
-Explicit remote mode returns that command error. Never infer no history from
-command failure text.
+A failed Git lookup selects local mode with the same reason and a warning that
+carries the command error. Explicit remote mode returns that command error.
+Never infer no history from command failure text.
 
 `cargo xtask executor` performs this lookup without building a snapshot.
 `MOKLY_TESTBOX_REF` selects the warmup workflow ref only.
 It changes neither the fingerprint nor the base commit.
-Snapshot build, fingerprint or probe failures follow the existing
+Snapshot build, fingerprint or probe failures follow the
 [preparation fallback](./remote-verification.md#executor-selection).
 Snapshot removal errors only warn. They do not change the verification result
 or the box cleanup count. Box cleanup failures and interrupts still prevent fallback.
@@ -219,23 +181,20 @@ or the box cleanup count. Box cleanup failures and interrupts still prevent fall
 ## Snapshot Cleanup
 
 Remove the snapshot and temporary index on success, preparation failure,
-interrupt and panic unwind. Track them before construction can leave partial
-state. Use the cleanup guard or a sibling guard with the same unwind protection.
-The guard must never panic while another panic unwinds the runner.
+interrupt and panic unwind, also after a partial build. Cleanup during a panic
+unwind must not panic again.
 
-From the checkout root, remove the worktree and prune its admin entry:
+Cleanup removes the snapshot worktree, its admin entry, and the temporary index
+file. It attempts every step even if an earlier step fails, also when the
+snapshot path is already gone. A failed step prints one warning for the run.
+The warning includes the manual cleanup commands:
 
 ```bash
-git worktree remove --force --force <snapshot>
-git worktree prune
+git worktree remove --force --force <snapshot>; git worktree prune; rm -f <index>
 ```
 
-Use `cancellable: false` for both Git requests. Always run prune, also when
-the snapshot path is already gone or removal fails. Remove the temporary index
-file too. Attempt each cleanup step even if an earlier step fails.
-A failed step prints one warning for the run. Include the manual worktree
-removal, prune and index-file removal commands. It never fails the check.
-Preserve the log and report directories. Box cleanup still follows the
+A cleanup warning never fails the check. Preserve the log and report
+directories. Box cleanup still follows the
 [cleanup contract](./remote-verification-cleanup.md).
 
 ## Related Docs

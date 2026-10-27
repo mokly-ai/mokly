@@ -1,7 +1,5 @@
 # Large Consumer Fixture
 
-Status: In progress under the [Rust rebuild plan](../../../plans/rust-rebuild.md).
-
 The generator makes HTML and React catalogues with the same entry paths,
 viewports, colour schemes, component variants, slots, pages, flows,
 Markdown documents, CSS imports, and images. React uses Firna and React Native Web.
@@ -36,11 +34,10 @@ and runs an isolated install. Only the host native package needs a built binary.
 Other native archives carry their available metadata and remain optional.
 Their platform selectors prevent installation on the host. Local overrides
 keep all five targets in the consumer lockfile without registry publication.
-Full isolated setup must finish below 60000 ms and stay below 1.5 GiB sampled
-RSS for the setup harness and its descendants. Both limits are exclusive.
-Setup includes generation, package archives, npm, and Git. Product builds
-finish before the setup clock and RSS sampler start. Workspace reuse has no
-isolated-setup budget. Setup writes its result and samples to `.context/setup.json`,
+Full isolated setup has a time budget and a sampled-RSS budget, which the
+[Budgets section of the timings contract](../../../docs/protocol/mokly-timings.md#budgets)
+defines. Product builds finish before the setup clock and RSS sampler start.
+Workspace reuse has no isolated-setup budget. Setup writes its result and samples to `.context/setup.json`,
 also when installation or a budget fails. A budget failure exits unsuccessfully
 after preserving the complete fixture record. Setup time is separate from Serve.
 
@@ -74,7 +71,11 @@ For ordinary development, reuse a generated configuration with
 `npx mokly serve --config .context/large-html/mokly.config.json`.
 
 The harness needs `ps`, Chrome (or `PLAYWRIGHT_CHANNEL`), and a Unix host.
-It samples aggregate RSS. `--memory-stop-kib` defaults to 1750000; use 0 to
+It samples RSS every 50 ms. It reports the largest sum for the CLI shim, the
+core, and the sidecar descendants, and the largest sum for the whole harness
+tree, including the browser. These are samples, not exact operating system
+high-water marks. Chrome runs with at most two renderer processes and without
+GPU acceleration. `--memory-stop-kib` defaults to 1750000; use 0 to
 disable it. React Serve needs a larger stop on a machine with more memory.
 Do not raise the stop on a shared machine without sufficient capacity.
 A safety stop records failure and keeps completed measurements and diagnostics.
@@ -83,8 +84,9 @@ benchmark, workspace mode builds that binary and installs it in the host
 native package. Isolated generation builds it before packing, outside setup
 timing. An installed fixture verifies its recorded binary digest before Serve.
 Each startup result records the release profile, target, source, and digest.
-The opt-in benchmark fails at or above 5000 ms for HTML or 15000 ms for React,
-for both cold and warm startup.
+The opt-in benchmark fails when cold or warm startup reaches the `usableMs`
+budget of its variant in the
+[timings contract](../../../docs/protocol/mokly-timings.md#budgets).
 
 Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
@@ -101,8 +103,7 @@ from the fixture record and rejects overrides. It accepts scenario, sidecar,
 memory-stop, and sidecar-timeout flags. Each scenario prints a progress line.
 Both commands warn if Git does not confirm that `--root` is ignored.
 Each fixture's `.context/` holds its setup record, logs, timing records, and
-`measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture)
-and [reference capture procedure](../../../docs/protocol/rust-rebuild-procedures.md#reference-capture).
+`measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture).
 
 Build reports include input-capture and recheck spans, retained private source
 payload, per-root CSS preparation, and bracketing RSS samples. These are
@@ -112,3 +113,21 @@ Programmatic build probes can pass `{ buildChanges: false }` to `benchmark`
 to isolate current-source preparation from comparison work.
 They can set `buildDeadlineMs` for an observation that needs a longer build wait.
 The report records the chosen deadline. It changes no acceptance or memory budget.
+
+### Key Code
+
+- [`scripts/large/cli.ts`](../../../scripts/large/cli.ts) is the entry of
+  `npm run fixture:large` and `npm run benchmark:large`, which reads the
+  options and runs `generate` or `benchmark`.
+- [`generate.ts`](./generate.ts) holds `generateLargeFixture`, which writes the
+  HTML or React catalogue.
+- [`dimensions.ts`](./dimensions.ts) holds `largeSize`, which checks the size
+  options and supplies their defaults.
+- [`scripts/large/setup.ts`](../../../scripts/large/setup.ts) holds
+  `prepareFixture`, which generates, installs, and commits one fixture and
+  records its setup.
+- [`scripts/large/benchmark.ts`](../../../scripts/large/benchmark.ts) holds
+  `benchmark`, which runs the selected scenarios on a prepared fixture.
+- [`scripts/large/setup_budget.ts`](../../../scripts/large/setup_budget.ts)
+  and [`scripts/large/startup_budget.ts`](../../../scripts/large/startup_budget.ts)
+  apply the setup and startup budgets.

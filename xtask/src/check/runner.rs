@@ -52,6 +52,9 @@ impl DefaultCheckRunner {
         }
     }
 
+    /// Runs the suite's commands in order. The repository suite then runs the
+    /// Rust file-length audit in this process, not as a subprocess; a failed
+    /// audit fails the suite like a failed command.
     fn run_suite(
         &self,
         suite: VerificationSuite,
@@ -95,6 +98,9 @@ impl CheckRunner for DefaultCheckRunner {
         }
     }
 
+    /// Runs one selected suite, or every local suite in order. In the complete
+    /// gate the Browser step skips its own `npm run build` and reuses the Viewer
+    /// suite's build, then also runs the `test:delivery:prepared` check.
     fn run(&self, request: CheckRequest) -> Result<()> {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard, request.dependency_audit);

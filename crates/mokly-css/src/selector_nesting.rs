@@ -4,6 +4,9 @@ use std::result;
 
 use cssparser_next::{ParseError, Parser, Token};
 
+/// Replace each `&` with `:is(parent)`, or prefix that as an ancestor when there is none.
+/// The recursion follows nested blocks, which cssparser 0.38 caps at 75 levels, so a
+/// deeper selector returns `None` and the caller keeps it unresolved.
 pub(crate) fn combine(selector: &str, parent: Option<&str>) -> Option<String> {
     let Some(parent) = parent else {
         return Some(selector.into());

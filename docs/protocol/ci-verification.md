@@ -1,20 +1,16 @@
 # CI Verification
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local
 executor runs the local suites sequentially in one checkout. Native runs only
-when selected. The local gate starts with the live
-baseline workspace audit, which fails on new issues and reports inherited ones
-as notices. `--dependency-audit strict` selects strict mode for the complete
-gate or the repository suite;
-[baseline auditing](./dependency-audit-baseline.md) owns the CLI and CI mode
-rules. The complete gate can instead run on Testboxes under the
+when selected. The local gate starts with the live workspace dependency audit.
+[Baseline auditing](./dependency-audit-baseline.md#xtask-and-ci-selection)
+owns the `--dependency-audit` modes and their selection in CLI and CI. The
+complete gate can instead run on Testboxes under the
 [remote verification contract](./remote-verification.md). Only active reviewed
-path exceptions cover findings;
-[dependency security](./dependency-security.md) defines their UTC expiry and
+path exceptions cover findings.
+[Dependency security](./dependency-security.md) defines their UTC expiry and
 31-day limit. A selected suite is partial evidence and never claims a complete
 pass. CI's validated aggregate is complete evidence for its exact tree.
 [Release evidence](./npm-release-evidence.md) defines reuse.
@@ -31,22 +27,24 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/4
 ```
 
-`--shard INDEX/TOTAL` uses one-based positive integers, requires
-`INDEX <= TOTAL`, limits both values to JavaScript's maximum safe integer, and
-is valid only with `browser`. Browser sharding is delegated to Playwright's
-`--shard`. Omitting `--shard` runs the complete selected suite. Unknown suites,
-malformed shards, missing values, and attempts to shard the repository or
-viewer suite fail before any subprocess starts.
+`--shard INDEX/TOTAL` is valid only with `browser`. Both values are one-based
+positive integers no larger than JavaScript's maximum safe integer, and
+`INDEX` must not exceed `TOTAL`. A shard runs one weighted whole-file
+partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
+not Playwright's count-based `--shard` selection. Omitting `--shard` runs the
+complete selected suite. Unknown suites, malformed shards, missing values, and
+attempts to shard the repository or viewer suite fail before any subprocess
+starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Live audit first: baseline for ordinary pull requests, pushes, and local checks; strict for release and dependency update pull requests. Prettier; ESLint; the JavaScript and TypeScript, protocol, and Rust file-length audits; the protocol-cap, unused-internal-export, unused-member, and public-package-export ratchets; the public API report check; Rust formatting; workspace Clippy with warnings denied; the Rust tests of every crate. |
-| Viewer           | The viewer typecheck, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard.                                                                                                                                                          |
-| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                                                                |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                                                                                                                      |
-| Required CI      | Evaluate the result and evidence from the runtime profile job, the repository job, the viewer job and every browser shard on each runtime selected for the event, and both native platforms.                                                                                                                                                                                                                                                      |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                                                                          |
+| Viewer           | The TypeScript typecheck of every project, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
+| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                            |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                  |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, and of both native platforms. Validate the viewer and browser report evidence.                                                  |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
@@ -61,20 +59,10 @@ Viewer and Browser build the binary and viewer bundle first through
 tree, or a packed archive. Serve renders the example catalogue from its sources
 into the render cache, and the tests read nothing back from the repository.
 
-File-length, protocol-cap, and unused-internal-export ratchets use
-`git merge-base HEAD origin/main`; the public-package-export ratchet instead
-uses the newest matching release tags reachable from `HEAD`. The
-[owning contract](./verification-ratchets.md) defines the module extensions,
-shrink-only baselines, and recursive `docs/protocol/**` scan excluding
-`fixtures/`.
-
-The repository suite also runs the workspace-root source and protocol length
-audit. It covers changed TypeScript and JavaScript files, changed protocol
-Markdown, and non-ignored untracked files. Protocol pages over 250 lines use
-only the exact reviewed caps in `xtask/protocol-document-caps.json`;
-`cargo xtask source-file-length-lint --all` audits every scoped file. This is in
-addition to the repository ratchets. The full scope and failure semantics are in
-[Repository Gate And Length Audits](./ci-verification-repository.md).
+The [repository ratchets](./verification-ratchets.md) define their comparison
+commits, scopes, and shrink-only baselines. The
+[length audits](./ci-verification-repository.md#length-audits) define the
+source, protocol, and Rust file limits and their scope.
 
 ESLint derives global ignores from `.gitignore` before adding its broader
 ESLint-only ignores. Ignored build, cache, report, and tool scratch paths cannot
@@ -89,8 +77,9 @@ todos. Node test files stay outside Playwright's `tests/browser/` directory.
 Playwright matches only `**/*.spec.ts` in its one `chromium` project.
 
 The strict runners skip the build, reject arguments other than the optional
-browser shard, and fail when the build output is missing. Xtask builds once per
-gate and calls only the strict runners.
+browser shard, and fail when the build output is missing. The Viewer and
+Browser suites run their Node and Playwright tests only through the strict
+runners.
 
 ## Deterministic Test Repository Inputs
 
@@ -121,9 +110,9 @@ and ends with a non-whitespace character, and contains no newline. Examples
 include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 `feat(publish)!: upload catalogue content deltas`.
 
-This type list is fixed. A tooling test asserts the list directly; it does not
-derive policy from Git history, remote-tracking references, or the commit
-examples in the shared `git-commit` skill.
+This type list is fixed. It does not derive from Git history,
+remote-tracking references, or the commit examples in the shared `git-commit`
+skill.
 
 An invalid title exits unsuccessfully and prints exactly:
 
@@ -149,10 +138,8 @@ local xtask suites and hosted jobs share them.
 Node test and Playwright inventories are discovered on the executing runtime,
 not fixed in advance. Browser discovery asks Playwright; an empty suite fails. A
 failed browser discovery reports the load errors from Playwright's JSON output
-as well as its standard error. Browser error assertions accept only Chrome's
-report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
-`about:srcdoc`) blocked a script, as the browser suite's console notice rule
-defines.
+as well as its standard error. Browser error assertions follow the
+[browser error rule](./ci-suite-evidence.md#browser-errors).
 
 Each suite report records the commit SHA, runtime, suite, optional shard,
 complete discovered file inventory, assigned file inventory, observed executed

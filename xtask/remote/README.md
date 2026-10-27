@@ -134,7 +134,7 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   command errors and bounded cleanup details for the Blacksmith, GitHub, and
   SSH adapters, and [`disconnect.rs`](../src/remote/clients/disconnect.rs)
   owns the socket identity and the SSH close.
-- [`../scripts/verification/testbox-suite.mjs`](../../scripts/verification/testbox-suite.mjs)
+- [`../../scripts/verification/testbox-suite.mjs`](../../scripts/verification/testbox-suite.mjs)
   is the suite wrapper on each box. It still checks the fingerprint with
   [`source-tree.mjs`](../../scripts/verification/source-tree.mjs).
   [`src/source_tree/scan.rs`](../src/source_tree/scan.rs) computes the

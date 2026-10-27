@@ -50,21 +50,19 @@ cargo xtask check --executor remote
 ```
 
 It needs `blacksmith`, `rsync`, and `ssh`, and `BLACKSMITH_ORG_TOKEN` or the
-current CLI login. The default `auto` executor selects remote mode when the
-token and every availability check pass; `--executor local` and a selected
-`--suite` stay local. The
+current CLI login. The
+[executor selection rules](../../docs/protocol/remote-verification.md) define
+when the default `auto` executor selects remote mode. The
 [base sync](../../docs/protocol/remote-verification-base.md) and
 [cleanup](../../docs/protocol/remote-verification-cleanup.md) contracts define
 checkout preservation, run identity, and the box lifecycle.
 
 `npm run dependencies:check` runs the strict audit of every workspace
 dependency category from the lockfile, and `--baseline` reports issues already
-present at the comparison commit as notices. Baseline mode is the default for
-`cargo xtask check`, ordinary pull requests, and pushes; Release Please,
-dependency update pull requests, release publishing, and the daily `main`
-audit stay strict. See the
-[baseline audit](../../docs/protocol/dependency-audit-baseline.md),
-[dependency update pull request](../../docs/protocol/dependency-audit-update-pr.md),
+present at the comparison commit as notices. The
+[baseline audit](../../docs/protocol/dependency-audit-baseline.md) contract
+defines which jobs use each mode. See also the
+[dependency update pull request](../../docs/protocol/dependency-audit-update-pr.md)
 and [dependency security](../../docs/protocol/dependency-security.md) contracts.
 
 `npm run dependencies:check:rust` installs the pinned Rust advisory tool and
@@ -76,32 +74,40 @@ Pull request titles use Conventional Commits and at most 72 Unicode code
 points; see the
 [title contract](../../docs/protocol/ci-verification.md#pull-request-title-contract).
 
-### Key code
+### Key Code
 
-- `crates/mokly-model` — every shared shape, the prop schema profile, and the
-  generated TypeScript types.
-- `crates/mokly-catalogue` and `crates/mokly-html` — discovery, the catalogue
-  model, HTML screens and components, and document composition.
-- `crates/mokly-sidecar` and `packages/mokly/sidecar` — the render sidecar
-  protocol and the Node process that runs React, pages, and stories.
-- `crates/mokly-css`, `crates/mokly-graph`, and `crates/mokly-compare` —
+- [`crates/mokly-model`](../../crates/mokly-model/README.md) — holds every
+  shared shape, the prop schema profile, and the source of the generated
+  TypeScript types.
+- [`crates/mokly-catalogue`](../../crates/mokly-catalogue/README.md) and
+  [`crates/mokly-html`](../../crates/mokly-html/README.md) — discover the
+  sources, build the catalogue model, and compose HTML screens, components,
+  and documents.
+- [`crates/mokly-sidecar`](../../crates/mokly-sidecar/README.md),
+  [`packages/mokly/src/sidecar.ts`](../../packages/mokly/src/sidecar.ts), and
+  [`packages/mokly/src/sidecar`](../../packages/mokly/src/sidecar) — hold the
+  render sidecar protocol and the Node process that renders React, pages, and
+  stories.
+- [`crates/mokly-css`](../../crates/mokly-css/README.md),
+  [`crates/mokly-graph`](../../crates/mokly-graph/README.md), and
+  [`crates/mokly-compare`](../../crates/mokly-compare/README.md) — handle
   stylesheets and attribution, the render graph and cache, and comparison.
-- `crates/mokly-server`, `crates/mokly-watch`, `crates/mokly-static`, and
-  `crates/mokly-publish` — Serve, the watcher, the static build, and the
-  upload exchange.
-- `crates/mokly-cli` — the `mokly` binary and its terminal output.
-- [`packages/viewer`](../../packages/viewer/README.md) — the React shell, the
-  index and detail readers, navigation, frames, and inspection.
-- [`xtask/src/remote`](../../xtask/src/remote) — the Testbox gate, report
-  downloads, logs, and interrupt cleanup.
-- [`scripts/verification`](../../scripts/verification) — the verification scripts
-  that CI and the gate share.
-- [`scripts/release/inspect-native.mjs`](../../scripts/release/inspect-native.mjs) —
-  verifies the packed target and its TLS dependencies. Packed manifest
-  inspection rejects `MOKLY_TEST_` bytes in every native archive. Runtime
-  inspection uses `readelf` on Linux, `otool` on macOS, and `dumpbin` on Windows.
+- [`crates/mokly-server`](../../crates/mokly-server/README.md),
+  [`crates/mokly-watch`](../../crates/mokly-watch/README.md),
+  [`crates/mokly-static`](../../crates/mokly-static/README.md), and
+  [`crates/mokly-publish`](../../crates/mokly-publish/README.md) — provide
+  Serve, the watcher, the static build, and the upload exchange.
+- [`crates/mokly-cli`](../../crates/mokly-cli/README.md) — builds the `mokly`
+  binary and its terminal output.
+- [`packages/viewer`](../../packages/viewer/README.md) — holds the React shell,
+  the index and detail readers, navigation, frames, and inspection.
+- [`xtask/src/remote`](../../xtask/src/remote) — runs the Testbox gate, the
+  report downloads, the logs, and the interrupt cleanup.
+- [`scripts/verification`](../../scripts/verification) — holds the
+  verification scripts that CI and the gate share.
+- [`scripts/release/inspect-native.mjs`](../../scripts/release/inspect-native.mjs)
+  — checks the packed package of one native target and its TLS dependencies.
 - [`scripts/verification/process-owner-snapshot.mjs`](../../scripts/verification/process-owner-snapshot.mjs)
-  — validates ownership during concurrent cleanup and rejects persistent
-  broken owner and process records.
-- [`examples/basic`](../../examples/basic/README.md) — the reference consumer and
-  design catalogue.
+  — checks the owner and process records of concurrent cleanup.
+- [`examples/basic`](../../examples/basic/README.md) — is the reference
+  consumer and the design catalogue.

@@ -1,7 +1,5 @@
 # Sidecar Definition Transport
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 The [render sidecar](./mokly-sidecar.md) evaluates the entry modules and
 stories of one bundle generation. Its `describe` result has `screens`,
 `pages`, `useCases`, `folders`, `components`, `stories`, `diagnostics`, and
@@ -9,8 +7,9 @@ stories of one bundle generation. Its `describe` result has `screens`,
 Each definition has a `handle`: the repository-relative file path, `#`, and
 export name. Its optional `sourcePath` is the module that created the definition,
 which can differ from the exporting module in the handle. Installed packages have no attributed
-source path. The generated TypeScript modules under
-`packages/mokly/src/generated/sidecar/` define the wire fields.
+source path. The
+[generated TypeScript modules](../../packages/mokly/src/generated/sidecar/)
+define the wire fields.
 
 ## Schema Boundary
 
@@ -21,8 +20,8 @@ Unsupported keywords, wrong schema types, and
 missing component schemas therefore fail `component-schema`. They do not
 fail `sidecar-protocol`, and they do not replace a healthy sidecar.
 
-The core owns the one schema validator on `jsonschema`. The sidecar does not
-run a second schema validator. The [component diagnostics](./mokly-components.md#diagnostics)
+The core owns the one schema validator. The sidecar does not run a second
+schema validator. The [component diagnostics](./mokly-components.md#diagnostics)
 and [entry props](./mokly-entry-props.md#validation) contracts own the codes.
 
 ## Authoring Diagnostics

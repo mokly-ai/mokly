@@ -5,6 +5,12 @@ import type {
 } from "../client/frame_adapter.js";
 import { isEntryPath } from "../navigation/logical.js";
 /** Small, shared validators; no DOM or server dependency enters the wire schema. */
+
+/**
+ * The message limit in UTF-8 bytes. Outgoing fields are validated ASCII, so a
+ * sender may compare a message's character count; `boundedJson` still
+ * measures every incoming string in UTF-8 bytes.
+ */
 export const BYTE_LIMIT = 262144;
 const KEY = /^[a-f0-9]{64}$/;
 const RANGE = /^r-\d+$/;

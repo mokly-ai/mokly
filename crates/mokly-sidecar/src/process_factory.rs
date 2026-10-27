@@ -60,6 +60,9 @@ impl NodeFactory {
 }
 
 impl WorkerFactory for NodeFactory {
+    /// Start one Node sidecar with the canonical source directory as its working
+    /// directory and `PWD`. `dunce::canonicalize` avoids the Windows `\\?\` verbatim form
+    /// that `std::fs::canonicalize` returns, which many Node tools do not handle.
     fn spawn(&self, launch: &Launch) -> Result<Spawned> {
         if !matches!(fs::metadata(&launch.entry), Ok(metadata) if metadata.is_file()) {
             return Err(Error::Unavailable {

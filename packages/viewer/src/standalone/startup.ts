@@ -112,6 +112,11 @@ interface Controller {
   bind(): void;
   choose(theme: ViewerTheme): void;
   applyRoute(scheme: "dark" | "light" | undefined): void;
+  /**
+   * Drop one handle. The last release removes the system-theme listener and
+   * every bound selector listener, so a later installation cannot duplicate
+   * callbacks or storage writes.
+   */
   release(): void;
 }
 const CONTROLLERS = new WeakMap<object, Controller>();

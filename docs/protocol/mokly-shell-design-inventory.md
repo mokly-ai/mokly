@@ -1,7 +1,5 @@
 # Shell Design Inventory
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Inventory
 
 The design screens are authored in `examples/basic/specs/design/` and
@@ -11,9 +9,7 @@ rendered as each entry's path-derived `index.<viewport>.html` views under the
 together define the complete set of Mokly shell design screens and match the
 example's catalogue index. The Entry column names each
 screen by its complete path under the [path contract](./mokly-paths.md). The Folder column is the resolved titles of
-its folders below the `Design` folder. Update the owning
-inventory when design entries change and verify exact agreement with the
-example's catalogue index. A destination without a standalone screen stays in
+its folders below the `Design` folder. A destination without a standalone screen stays in
 its feature contract.
 
 | Entry                                                         | Folder                                                               | State                                                         |
@@ -98,9 +94,6 @@ its feature contract.
 
 The six entries marked as variants are variants of `design/browse/views/screen` and
 stay under that entry in authored order rather than becoming folder members.
-The empty `design-browse-tags` (Tag states) folder is absent from
-navigation; Welcome still presents its variants. The other Shell states
-entries, including `design/browse/states/tag-filter`, keep their folder titles.
 
 Additional owning groups keep each page at no more than five screens:
 
@@ -134,7 +127,7 @@ Additional owning groups keep each page at no more than five screens:
   [removed previews](./mokly-removed-previews.md) fixes. Served and built
   previews are identical, so no static-delivery variant is designed.
 - `design/browse/publication/catalogue` and `design/browse/publication/changes` specify
-  review omitted and included, using the existing Welcome stage.
+  review omitted and included, using the Welcome stage.
 - `design/browse/variants/variant-selected`, `design/browse/variants/variant-changes`,
   `design/browse/variants/variant-removed`, `design/browse/variants/variant-reparented`, and
   `design/browse/variants/changed-views` specify a screen's variants: the
@@ -182,7 +175,7 @@ Additional owning groups keep each page at no more than five screens:
   Auto/Light/Dark interface appearance from
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
   both schemes, so the outer Appearance control moves between its two rendered
-  views at the same entry. Existing light-interface entries keep their paths.
+  views at the same entry.
 
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
@@ -206,7 +199,7 @@ the rendered screen area.
 
 The `design/components/**` entries extend this catalogue with
 component pages, comparisons, affected screens, inspection, controls, and edge
-states. The browser inventory reads the catalogue index and covers every owning screen. Its entry inventory and target visual rules live in
+states. Its entry inventory and target visual rules live in
 the [component design contract](./mokly-component-design.md).
 
 Navigation inside these design artboards uses native `MockLink` anchors. The

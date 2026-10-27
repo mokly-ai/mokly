@@ -28,6 +28,11 @@ export class GitWorkspace {
     this.base = undefined;
   }
 
+  /**
+   * The one comparison commit of the ratchets and the baseline dependency
+   * audit: the merge base of HEAD and the target, or the target itself while
+   * an uncommitted merge of exactly that target is in progress.
+   */
   requireBase() {
     if (this.base) return this.base;
     this.#run(["rev-parse", "--verify", "HEAD^{commit}"]);

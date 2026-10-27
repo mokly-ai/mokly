@@ -1,7 +1,5 @@
 # A guide for agents
 
-Status: In progress under the [Rust rebuild plan](./plans/rust-rebuild.md).
-
 Mokly builds app-independent static mockup catalogues, serves them for
 development browsing, and renders visual comparisons. The Rust core is a
 Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
@@ -103,10 +101,17 @@ the rule. Rules for one application, package, or feature live in the
 - [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
   contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
-- Read the
-  [Rust rebuild procedures](./docs/protocol/rust-rebuild-procedures.md)
-  before you capture references from the previous backend or close a rebuild
-  milestone.
+- A protocol, architecture, or README page whose behaviour is not
+  implemented yet starts with one line below its title:
+  `Status: In progress under the [plan name](link to the plan).` That line
+  is the page's only plan link. Remove it when the behaviour is implemented.
+  The guides under `docs/guides` ship with the npm package, describe the
+  released product, and carry no status line.
+- A page names an earlier format number or a removed input only where its
+  rule needs the name: a version gate that rejects the number, a
+  removed-input warning, or a migration step in a guide.
+- No test asserts the words of a protocol page. Tests check the code against
+  its own behaviour. Guide tests compare parsed guide tables with the code.
 
 ## Product
 
@@ -125,10 +130,9 @@ the rule. Rules for one application, package, or feature live in the
 
 - App independence, generated-output safety, server and watcher lifecycle,
   comparison behaviour, and protocol alignment.
-- The end-state rule in the
-  [documentation policy](./docs/protocol/documentation-policy.md): a page
-  describes intended behaviour only, with a `Status: In progress` line when it
-  is not implemented yet.
+- The end-state rule: a page describes the intended behaviour only, with the
+  status line of the repository rules while that behaviour is not
+  implemented.
 
 ## Status
 

@@ -1,7 +1,5 @@
 # Static Build Recovery
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page supplements the [static build contract](./mokly-export.md). The same
 rules apply to `mokly build` and to the private build that `mokly publish`
 runs. No CLI option or JavaScript API is introduced.
@@ -9,7 +7,7 @@ runs. No CLI option or JavaScript API is introduced.
 ## Captured Ownership And Installation
 
 1. Before rendering, record whether the output is absent or a real directory,
-   with its exact device, inode, and birth-time identity. Validate ownership
+   with the filesystem identity of that directory. Validate ownership
    and verify that identity again before accepting the reservation. Revalidate
    both identity and ownership before capture; initial absence never
    authorizes a directory that appears later, even if empty or correctly
@@ -22,10 +20,9 @@ runs. No CLI option or JavaScript API is introduced.
    grant ownership of its contents.
 3. On validation, cancellation, or installation failure, restore only a real
    backup directory and only if the destination is still observed as absent.
-   Use an OS-enforced no-replace rename without deleting or clearing the
-   destination first. Any destination appearing during the operation,
-   including an empty directory, makes recovery fail without being
-   overwritten.
+   Restoration never deletes or clears the destination first. Any destination
+   appearing during the operation, including an empty directory, makes
+   recovery fail without being overwritten.
 4. If restoration is unsafe or fails, preserve the destination and the backup
    and name the recovery path. Never automatically restore a captured symlink
    or regular file over a destination. A successful restoration preserves all
@@ -42,55 +39,45 @@ earlier output must not claim that it restored an earlier build.
 ## Exclusive Rename Boundary
 
 All three moves (output to backup, stage to output, backup to output) use the
-same exclusive rename boundary. The filesystem decides absence and rename in
-one operation; a non-following stat followed by a replacing rename is not
-equivalent. Do not emulate this by copying entries into a visible directory,
-by a shell `mv`, or by retrying a failed exclusive rename with an ordinary
-rename.
+same exclusive rename boundary. Each move is atomic and never replaces an
+existing destination of any kind. The filesystem decides absence and rename in
+one operation. Decision: a check followed by a replacing rename, a copy of
+entries into a visible directory, a shell `mv`, and a retry of a failed
+exclusive rename with an ordinary rename were rejected. Each of them can
+replace a destination that appears during the move. There is no
+cross-filesystem copy fallback.
 
-The platform crate of the [Rust core](../architecture/rust-core.md#crates)
-provides the primitive: Linux `renameat2(RENAME_NOREPLACE)`, macOS
-`renamex_np(RENAME_EXCL)`, and Windows `MoveFileExW` without replacement or
-copy flags. Paths must be absolute and NUL-free; Windows paths use the
-wide-character, namespaced form. Capture uses the same primitive, so an
+The boundary works on Linux, macOS, and Windows. It moves a complete
+directory and accepts Unicode paths. Capture uses the same boundary, so an
 unsupported platform or filesystem fails before existing output is moved. No
 JavaScript bridge and no consumer toolchain is involved: the binary of the
-platform package makes the call itself. There is no cross-filesystem copy
-fallback.
+platform package makes the move itself.
 
-The rename and the immediate capture of the OS error are one synchronous call,
-with no asynchronous hop between them. The build drains that commit operation
-as described above. This guarantees no replacement of a competing destination,
-not a filesystem compare-and-swap of source identity: validate source identity
-before capture and again on the captured backup, restoring substitutions when
-safe.
-
-Primary references:
-[Linux rename semantics](https://www.kernel.org/doc/html/latest/filesystems/vfs.html),
-[Apple rename flags](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/stdio.h),
-and [Windows MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw).
+The boundary guarantees that no competing destination is replaced. It is not
+a filesystem compare-and-swap of the source identity. Validate the source
+identity before capture and again on the captured backup, and restore a
+substitution when that is safe.
 
 ## Bounded Cleanup
 
 After installation, validate the backup again and keep that exact validated
-file and directory list for deletion. Unlink only those files, remove known
-child directories deepest first with non-recursive removal, remove the marker
-last, then remove the backup root non-recursively. Do not pass a captured
-backup to a recursive removal operation. Unlisted additions during deletion
-stop directory removal and survive for recovery.
+file and directory list for deletion. Delete only the files and directories of
+that list. The backup keeps its marker until every other listed entry is
+gone, and the backup root goes last. Unlisted additions during deletion stop
+directory removal and survive for recovery.
 
 Cleanup can partially remove owned files after the commit point. Its error
 must say that the new site is installed and name the remaining backup; it must
 not imply that the retained backup is necessarily a complete old site.
 
-Final reservation cleanup uses a non-following stat to recognize every
-existing backup entry, including dangling symlinks, and refuses to delete it.
-Only the private stage may be removed recursively. The transaction marker is
-unlinked individually and the reservation directory is removed
-non-recursively, so a backup or other unowned entry appearing after the
-initial check cannot be swept away. The owned parent namespace metadata stays
-as the [safety contract](./mokly-export-safety.md) specifies. Retrying cleanup
-after the reservation is already absent is a successful no-op.
+Final reservation cleanup recognizes every existing backup entry, including a
+dangling symlink, and refuses to delete it. Only the private stage may be
+removed recursively. Beyond the stage, cleanup removes only the transaction
+marker and the then empty reservation directory. A backup or other unowned
+entry that appears after the initial check survives. The owned parent
+namespace metadata stays as the [safety contract](./mokly-export-safety.md)
+specifies. Retrying cleanup after the reservation is already absent is a
+successful no-op.
 
 Reservations coordinate Mokly writers, not unrelated editors. Consumers must
 not mutate the private reservation namespace. These checks preserve detected
@@ -125,16 +112,15 @@ transaction applies it.
 
 ### Pre-installation Window
 
-The pre-installation window ends immediately before installation begins. Its
-boundary treats the command's signal as fired only after the process has
-consumed every signal the operating system already delivered. If a covered
-step fails while the signal is not yet observed, the boundary drains pending
-signal notifications once more and checks again, without a wall-clock delay.
-That extra check closes the race in which Ctrl+C stops a sidecar or a Git
-process and its failure reaches the core before the signal handler runs.
+The pre-installation window ends immediately before installation begins. When
+a covered step settles, Mokly first takes in every signal that the operating
+system has already delivered, without a wall-clock delay. If the command's
+signal is then set, the step's result is a cancellation. So a failure that
+Ctrl+C causes in a sidecar or a Git process is a cancellation, even when it
+reaches the core before the signal handler runs.
 
-Both `mokly build` and `mokly publish` install their signal handlers before
-configuration loading. The window covers these operations:
+For both `mokly build` and `mokly publish`, the window covers these
+operations:
 
 1. Configuration loading, base resolution, and the base side's source extraction.
 2. Catalogue validation and rendering.
@@ -149,9 +135,8 @@ configuration loading. The window covers these operations:
 output transaction stays outside it, because its failures carry separate
 reservation recovery guarantees.
 
-If the signal is set after that check, the failure is a cancellation. Marking
-an error as a cancellation keeps the original failure as its diagnostic cause.
-`MOKLY_DIAGNOSTIC=1` shows that cause chain. `mokly build` prints `build cancelled` with `build-invalid`, while
+Marking an error as a cancellation keeps the original failure as its
+diagnostic cause. `MOKLY_DIAGNOSTIC=1` shows that cause chain. `mokly build` prints `build cancelled` with `build-invalid`, while
 `mokly publish` prints the publication-cancelled output. This window is the
 only place where cancellation may be inferred from the command signal. It is
 safe because installation has not begun: no backup or reservation holds the
@@ -187,16 +172,3 @@ For example, if cancellation occurs during installation and restoring the
 earlier output fails, `mokly publish` prints the rollback error naming the
 retained backup. It does not print the publication-cancelled line. All of
 these failed commands exit with status 1.
-
-## Verification
-
-Tests inject mutations immediately before capture, after capture, during
-backup deletion, and during final reservation cleanup. Cover restoration
-conflicts, dangling backup links, partial setup, and exact primary and
-secondary cause identity. Exercise late empty and marker-owned destinations,
-disappeared or substituted initial output, and empty conflicts exactly at both
-install and restore calls. Platform primitive tests run on Linux, macOS, and
-Windows and prove complete directory moves, Unicode paths, and no replacement
-of every destination kind. Real subprocess CLI tests assert exit status and
-standard error for rollback, backup-cleanup, cancellation-plus-cleanup, and
-cleanup-only failures.

@@ -9,12 +9,13 @@ use walkdir::WalkDir;
 
 use super::pages::{GUIDE_SECTIONS, GUIDES, guides_root, without_fenced_code};
 
-const EXPECTED: [&str; 33] = [
+const EXPECTED: [&str; 34] = [
     "start/install",
     "start/configure",
     "start/your-first-screen",
     "start/build",
     "start/serve",
+    "start/upgrade",
     "authoring/config",
     "authoring/screens",
     "authoring/components",
@@ -79,7 +80,7 @@ fn the_guide_tree_contains_the_exact_guide_reading_order() {
         .map(Result::unwrap)
         .filter(|entry| entry.file_type().is_file())
         .count();
-    assert_eq!(files, 33);
+    assert_eq!(files, 34);
 }
 
 #[test]

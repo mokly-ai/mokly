@@ -51,7 +51,12 @@ function shareHandles(list: unknown): void {
   }
 }
 
-/** Sharing invalidates cursor assumptions; it never changes the helper or worker call. */
+/**
+ * Sharing invalidates cursor assumptions; it never changes the helper or
+ * worker call. A descriptor handed to a child process or transferred to a
+ * worker loses its cursor, and an untrusted worker, a loader registration or
+ * a native addon makes every cursor opaque.
+ */
 export function observeDescriptorSharing(): void {
   const watchdog = new URL("./parent-watchdog.js", import.meta.url).href;
   const consumerPreloads = [

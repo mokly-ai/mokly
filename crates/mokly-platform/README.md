@@ -2,7 +2,9 @@
 
 `mokly-platform` isolates operating-system primitives for the Mokly core.
 Use its traits for output transactions, cache locks, and child-tree ownership.
-It depends on no other workspace crate.
+`mokly-git`, `mokly-sidecar`, and `mokly-compare` own child processes through
+it. `mokly-static` moves output with its exclusive rename. It depends on no
+other workspace crate.
 
 ## Responsibilities
 
@@ -32,13 +34,13 @@ implementation starts the child suspended, attaches a kill-on-close job, and
 resumes its primary thread. This keeps descendants inside the job from their
 first instruction. It requests a console break for
 graceful termination, and terminates the job for forceful cancellation.
-The runner must kill and reap a child if attachment fails. The runner owns
-shutdown deadlines and pipe draining.
+The caller, such as the `mokly-git` runner, must kill and reap a child if
+attachment fails. The caller owns shutdown deadlines and pipe draining.
 
 `Flush` uses one Linux `syncfs` for a filesystem. Its per-file fallback uses
 plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data
-file. Windows flushes individual files. The cache coordinator publishes its
-completion receipt only after data synchronization.
+file. Windows flushes individual files. The `mokly-compare` cache coordinator
+publishes its completion receipt only after data synchronization.
 
 The FFI is isolated in the Unix, Windows and flush modules. Each unsafe call documents
 its pointer, handle, or process-identity requirements.
@@ -46,13 +48,18 @@ its pointer, handle, or process-identity requirements.
 ## Quick Start
 
 ```rust
-use mokly_platform::locks::{Locks, SystemLocks};
 use std::path::Path;
 
-let locks: &dyn Locks = &SystemLocks;
-let held = locks.try_lock(Path::new("/tmp/mokly-example.lock"))?;
-# Ok::<(), mokly_platform::error::Error>(())
+use mokly_platform::error::Result;
+use mokly_platform::locks::{FileLock, Locks, SystemLocks};
+
+fn hold_lock(path: &Path) -> Result<Box<dyn FileLock>> {
+    let locks: &dyn Locks = &SystemLocks;
+    locks.try_lock(path)
+}
 ```
+
+The lock stays held until the caller drops the returned guard.
 
 ## Development
 
@@ -62,17 +69,26 @@ cargo clippy -p mokly-platform --all-targets -- -D warnings
 ```
 
 Real OS tests live in `tests/` and use isolated temporary directories.
+Consumers enable the `mock` feature to use every public trait with unimock.
 
 ### Key Code
 
-- [Flush](./src/flush.rs), [rename](./src/rename.rs), [locks](./src/locks.rs), and
-  [process groups](./src/processes.rs).
-- [Unix adapter](./src/unix.rs) and [Windows adapter](./src/windows.rs).
+- [`src/rename.rs`](./src/rename.rs) defines `Rename` and `SystemRename`,
+  which move a file or directory only when the destination is absent.
+- [`src/locks.rs`](./src/locks.rs) defines `Locks` and `SystemLocks`, which
+  acquire nonblocking shared and exclusive `FileLock` guards.
+- [`src/processes.rs`](./src/processes.rs) defines `ProcessGroups` and
+  `SystemProcessGroups`, which configure a child before spawn and return a
+  `ProcessGroup` guard that terminates or kills the whole tree.
+- [`src/flush.rs`](./src/flush.rs) defines `Flush` and `SystemFlush`, which
+  flush a filesystem, a file, or a directory before a cache entry is published.
+- [`src/error.rs`](./src/error.rs) defines `Error`, the typed failure that
+  every trait returns.
+- [`src/unix.rs`](./src/unix.rs) and [`src/windows.rs`](./src/windows.rs) hold
+  the Unix and Windows FFI calls behind these traits.
 
 ### Related Docs
 
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Runtime shutdown](../../docs/protocol/mokly-runtime.md#shutdown).
 - [Static output recovery](../../docs/protocol/mokly-export-recovery.md).
-
-Consumers enable the `mock` feature to use every public trait with unimock.

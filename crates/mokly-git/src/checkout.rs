@@ -23,6 +23,9 @@ impl Cancellation for Active {
 }
 
 impl GitRepository {
+    /// Reads one batch after checkout conversion. The batch is written to its
+    /// private directory and read back, and that directory is removed when this
+    /// call returns, before the caller reads the next batch.
     pub(crate) fn checkout_read(
         &self,
         commit: &ObjectId,
@@ -115,6 +118,10 @@ fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
     Ok(())
 }
 
+/// Converted files of one batch in a private temporary directory, removed on
+/// drop. Unfiltered blobs of a batch up to 48 MiB come from one `cat-file`
+/// batch read. Filtered blobs, and every blob of a larger batch, stream straight
+/// to disk, so a large file never has to fit in memory.
 pub(crate) struct Checkout {
     _root: tempfile::TempDir,
     files: BTreeMap<RepoPath, PathBuf>,

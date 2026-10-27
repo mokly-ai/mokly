@@ -69,8 +69,8 @@ The Node baseline of 2026-10-26 is in
 
 Contract owners:
 
-- [Documentation policy](../docs/protocol/documentation-policy.md#checks):
-  a repository test checks every local link and anchor.
+- [Repository rules](../AGENTS.md#repository-rules): a repository test checks
+  every local link and anchor.
 - [Deterministic test repository inputs](../docs/protocol/ci-test-repository-inputs.md).
 - [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md).
 - [CI test timing](../docs/protocol/ci-test-timing.md): the `xtask` tests
@@ -196,9 +196,11 @@ Evidence: `case-map.md` and `fault-injection.md` in
   - Outside the review scope: `docs/protocol/ci-workflow.md:220`: the page
     says the policy test requires full-history checkouts in CI and preview
     jobs, but the check covers `ci.yml` only. Separate branch.
+    - [x] Resolved on `main` by #218, which removed the sentence.
   - Outside the review scope: `docs/protocol/mokly-guides.md:171`: the page
     says root tests never match prose with regular expressions, but the
     guide copy and version tests match phrases in guide prose. Separate
     branch.
+    - [x] Resolved on `main` by #218, which removed the sentence.
 - [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.

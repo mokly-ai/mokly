@@ -1,7 +1,5 @@
 # API reference
 
-Status: In progress under the [Rust rebuild plan](../../../../plans/rust-rebuild.md).
-
 This page belongs to the [`@mokly/viewer` README](../../README.md). It lists the props, the handle methods, and the package entry points.
 
 ## `<MoklyViewer>`
@@ -65,8 +63,8 @@ accepts exactly one format number and rejects every other with a typed
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
 The embedded viewer reports the same failure through `onError` with code
 `version`. The
-[version gates](../../../../docs/protocol/mokly-viewer-namespace.md#version-matrix)
-list every boundary.
+[format version inventory](../../../../docs/protocol/mokly-format-versions.md#version-inventory)
+lists every boundary.
 
 `@mokly/viewer/data` exports the path functions and the directory names
 `GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` of the

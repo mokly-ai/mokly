@@ -1,7 +1,5 @@
 # Remote Verification
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Executor Selection
 
 `cargo xtask check` accepts `--executor auto|local|remote`. The flag overrides
@@ -28,26 +26,14 @@ The first terminating result decides the executor. The missing-key row lets
 | Warmup, readiness or sync probe fails          | Stop warmed boxes; then local       | Stop warmed boxes; then error   |
 | All checks pass                                | Remote                              | Remote                          |
 
-Look up the base from local origin refs with these command forms:
+The [base rule](./remote-verification-base.md#base-commit) selects the base
+from the local origin refs. It defines symbolic-ref exclusion, common-history
+handling, the main merge-base filter and the tie-break. It also defines the
+no-base warning. This lookup does not fetch.
 
-```bash
-git for-each-ref '--format=%(refname) %(symref)' refs/remotes/origin/
-git merge-base HEAD <origin-ref>
-git merge-base --independent <candidate>...
-git merge-base HEAD refs/remotes/origin/main
-git merge-base --is-ancestor <main-merge-base> <candidate>
-git rev-list --count <candidate>..HEAD
-```
-
-The [base rule](./remote-verification-base.md#base-commit) defines symbolic-ref
-exclusion, common-history handling, the main merge-base filter and the tie-break.
-It also defines the no-base warning. This lookup does not fetch.
-
-Detect `blacksmith`, `rsync` and `ssh` by searching `PATH` for an executable
-file. Do not run those programs to detect them. Run `blacksmith --version`
-only after finding the CLI. Look up all three programs in that order.
-Name every missing program in one diagnostic, with its install hint.
-For a missing CLI, print:
+A program is missing when `PATH` holds no executable file of that name. One
+diagnostic names every missing program, in the order `blacksmith`, `rsync`,
+`ssh`, each with its install hint. For a missing CLI, print:
 
 ```bash
 curl -fsSL https://get.blacksmith.sh | sh
@@ -59,13 +45,10 @@ operating system's package manager. Xtask never installs these tools.
 Local fallback is allowed only before the first remote suite command starts.
 After that boundary, every execution or evidence failure fails the check.
 One check must never mix local and remote suite results.
-Use a typed unavailable result for preparation failures before any suite.
-Use a typed failed result after the execution boundary.
 An interrupt or failed preparation cleanup must never start local fallback.
-Before local fallback after an armed signal handler, release the handler.
-After release, SIGINT, SIGTERM or SIGHUP ends xtask at once with exit status 130.
-Read the interrupt flag again after release. A signal received before release
-prevents fallback.
+A signal that arrives before local fallback starts prevents the fallback.
+During local fallback, SIGINT, SIGTERM or SIGHUP ends xtask at once with exit
+status 130.
 
 `cargo xtask executor` accepts the same `--executor` flag and mode precedence.
 It uses the same availability checks.
@@ -82,21 +65,15 @@ standard error. Each line starts with `[xtask/executor]` followed by a space.
 
 ## Key And CLI Handling
 
-Read the supplied key only from `BLACKSMITH_ORG_TOKEN`.
-Send it to `blacksmith auth login --api-token -` on standard input.
-Login saves the key in `~/.blacksmith/credentials`.
-It replaces any saved login for the same organization.
-Never put it in arguments, logs, remote commands or reports.
-The CLI does not read that variable itself. The org token selects its own
-organization. Validate access with `blacksmith testbox list` after login.
+The [security contract](./ci-verification-security.md#testbox-key-and-secret-boundary)
+defines how xtask reads `BLACKSMITH_ORG_TOKEN`, logs in with it, and keeps it
+secret. The CLI does not read that variable itself. The org token selects its
+own organization. Validate access with `blacksmith testbox list` after login.
 Do not use `blacksmith auth status` as proof of working credentials.
 
 Set `BLACKSMITH_DISABLE_AUTO_UPDATE=1` for every Blacksmith CLI call.
 Print the CLI version. Developers install the CLI themselves.
 The Conductor cloud snapshot supplies the CLI, `rsync` and `ssh`.
-It must not contain `~/.blacksmith/credentials`.
-The [security contract](./ci-verification-security.md#testbox-key-and-secret-boundary)
-defines the local key and remote secret boundary.
 
 ## Environment Variables
 
@@ -147,6 +124,8 @@ completed after all cleanup attempts does not fail the check. The
 defines its warning. A stop that succeeds on a retry does not fail the check.
 Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
+Remote runs cover the Linux Node 22.15.0 profile only. Native macOS and Windows
+tests and the Node 24 release profile run in hosted CI.
 
 The default warmup command for each box is:
 
@@ -170,33 +149,24 @@ Write each command's standard output and standard error to
 For each failed command, print the last 60 log lines and the log path.
 The summary lists command durations and box IDs. Preserve logs after cleanup.
 The [identity contract](./remote-verification-base.md#identity-output-and-file)
-adds the base field and identity file without changing the suite report schema.
+defines the summary's base field and the identity file. Suite reports keep the
+CI report schema.
 Print `aggregate=passed` or `aggregate=failed` in the summary.
 On aggregate or fingerprint read failure, print a warning first.
 Then print that command's captured stdout and stderr with the executor prefix.
 Describe command termination as `exit <code>` or `a signal`.
 Use `[xtask/check]` for the outer error wrapper.
-One function formats every warning line that embeds an error.
-An embedded error keeps the `[xtask/<module>]` prefix of its defining module.
-Errors defined in `xtask/src/remote/error.rs` use `[xtask/remote]`.
+An embedded error keeps its own `[xtask/<area>]` prefix. Remote execution
+errors use `[xtask/remote]`.
 Reporter lines keep `[xtask/executor]`. No output line repeats a prefix.
 Apply the key secrecy rule to diagnostics and captured output.
 Cleanup warnings follow the
 [command error-text rule](./remote-verification-cleanup.md#command-error-text).
-They keep one redacted diagnostic line of at most 200 characters in the typed
-error. A failed close warns once and does not fail the check by itself.
+Each keeps one redacted diagnostic line of at most 200 characters.
+A failed close warns once and does not fail the check by itself.
 A missing control directory or socket prints
 `information: no shared SSH connection for <box-id>` once.
 A socket that disappears during a failed close prints no close output.
-
-## Out Of Scope
-
-- Remote execution for a selected `--suite`.
-- A selected base commit that GitHub no longer has.
-- Reusing boxes between checks.
-- Native macOS and Windows tests. They run in hosted CI.
-- The Node 24 release profile. It runs in hosted CI.
-- Changes to the report schema or release evidence acceptance.
 
 ## Related Docs
 

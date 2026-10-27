@@ -1,31 +1,21 @@
 # Npm Release Operations
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This document supplements the [CI and npm release contract](./npm-release.md)
 with package registration, maintainer setup, and the evidence each release
 keeps.
 
 ## Mokly Registry Bootstrap
 
-npm trusted publishing can be configured only after a package exists on the
-registry, so every package's first publication is a reviewed interactive
-bootstrap publication, and every later publication uses OIDC through the
-release workflow. The [bootstrap record](./npm-bootstrap.md) owns the
-procedure: a fresh isolated checkout of an explicit reviewed full commit SHA,
-`npm ci`, the package's own pack, source identity recorded beside the archive
-hashes, and the registry read-back. `@mokly/mokly` and `@mokly/viewer` are
-registered under that record; each `@mokly/native-<target>` package is
-registered the same way before the first release that publishes it. The former
-unscoped `mokabook` package is reserved and is not a publication target; the
-scope does not rename the `mokly` executable. Never repeat a registration,
-republish a registered version, or unpublish to undo one. Verify each package's
-own trusted publisher before its next release; one package's trust
-configuration is not evidence for another.
+Every package's first publication is a reviewed interactive registration
+under the [bootstrap contract](./npm-bootstrap.md), which owns the registered
+packages, the registration procedure, and its rules. Every later publication
+uses OIDC through the release workflow. The former unscoped `mokabook` package
+is reserved and is not a publication target; the scope does not rename the
+`mokly` executable.
 
 ## Maintainer Setup
 
-Before enabling publish, maintainers must configure and verify:
+Publishing requires this configuration, and maintainers verify it:
 
 - repository Actions may create pull requests, and the default workflow token
   has only the permissions declared in each workflow;
@@ -49,9 +39,8 @@ Before enabling publish, maintainers must configure and verify:
   invoke the manual retry with the shared CLI and viewer tags.
 
 No long-lived npm write token is stored in GitHub Actions. See
-[GitHub publishing protections](./npm-github-protections.md) for exact setup,
-read-back verification, merge-authorized publishing policy, and credential
-blockers.
+[GitHub publishing protections](./npm-github-protections.md) for the required
+protection state, its read-back, and the merge-authorized publishing policy.
 
 ## Release Evidence
 

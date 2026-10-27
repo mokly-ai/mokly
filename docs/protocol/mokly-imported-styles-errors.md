@@ -1,7 +1,5 @@
 # Imported Stylesheet Diagnostics
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
@@ -24,8 +22,8 @@ origin. Only `{detail}` may carry raw tool text.
 | Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
 | Plugin name resolution or factory failure                  | `could not load PostCSS plugin {plugin} from {config-path}: {detail}; install and configure it in the consumer repository`                |
 
-`{index}` is zero-based. Rust configuration validation checks the module
-suffix, path, and file before any sidecar starts. Other configuration errors keep their messages under the
+`{index}` is zero-based. Configuration validation checks the module suffix,
+path, and file before any sidecar starts. Other configuration errors keep their messages under the
 [configuration contract](./mokly-configuration.md).
 
 ## Build (`build-invalid`)

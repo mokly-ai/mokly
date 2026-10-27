@@ -12,6 +12,8 @@ pub(crate) struct Scope {
     pub(crate) relational: bool,
 }
 
+/// Broaden one nested selector. The recursion follows nested blocks, which cssparser
+/// 0.38 caps at 75 levels, so a deeper function argument is unresolved.
 pub(crate) fn broaden_nested(source: &str, parent_anchor: bool) -> Scope {
     walk(&mut Parser::new(source), false, parent_anchor)
 }

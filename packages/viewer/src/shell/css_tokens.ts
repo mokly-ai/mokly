@@ -6,8 +6,8 @@ import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
  * The Light half of the one semantic palette, recorded in
  * `docs/protocol/mokly-viewer-palette.md`. Every themed role is declared here
  * and redeclared in `css_theme.ts`, so a role can never exist in one
- * appearance only. Values carry the contract's three Light corrections:
- * `--chrome-muted` is `#676e6a`, control boundaries use the new
+ * appearance only. The contract's role use sets three Light values:
+ * `--chrome-muted` is `#676e6a`, control boundaries use
  * `--chrome-control-edge`, and an invalid field borders `--mbk-danger-ink`.
  */
 export const SHELL_TOKENS_CSS = `

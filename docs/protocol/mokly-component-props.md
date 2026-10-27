@@ -1,7 +1,5 @@
 # Component Prop Schema
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Schema
 
 `defineComponent` requires a `propSchema` that describes every data prop,
@@ -66,11 +64,11 @@ or without visible output; nothing is silently omitted.
 
 ## Authoring Types And Slots
 
-TypeScript types are derived from the literal schema with `json-schema-to-ts`,
-so the schema is written `as const`: `string`, `number`, `integer`,
-`boolean`, and `null` map to their types, `enum`, `const`, and `oneOf` to
-literal unions, `array` to readonly arrays, `object` to its declared required
-and optional properties, and `anyOf` to a union of its members. `render`,
+TypeScript types are derived from the literal schema, so the schema is
+written `as const`: `string`, `number`, `integer`, `boolean`, and `null` map
+to their types, `enum`, `const`, and `oneOf` to literal unions, `array` to
+readonly arrays, `object` to its declared required and optional properties,
+and `anyOf` to a union of its members. `render`,
 `props`, the `Component` wrapper, and `variants[].props` as a `Partial` share
 that derived type. A consumer annotation must be compatible with it and
 cannot replace it. Runtime validation applies even when TypeScript accepts a
@@ -90,36 +88,24 @@ props, saved variants, the schema, or a later render. Adapters map
 schema-defined `enum`, `const`, or `string` preset values to consumer
 callbacks or icons inside their own code.
 
-Validation runs when the registry accepts a definition, on every saved
-variant before any render starts, on every wrapper invocation before its
-adapter runs, and on the fully merged props of a live control edit. Index and
-detail readers decode and validate recorded props against the serialized
-schema before trusting a props key or a usage record.
-The JavaScript wrapper pre-check uses the same profile as the viewer.
-The Rust core rechecks every returned instance against its registered schema.
+Validation runs when Mokly accepts a definition, on every saved variant
+before any render starts, on every wrapper invocation before its adapter
+runs, and on the fully merged props of a live control edit. Index and detail
+readers decode and validate recorded props against the serialized schema
+before trusting a props key or a usage record. The wrapper, the viewer, and
+the core apply the same profile. The core validates every instance that a
+render returns against the registered schema of its component.
 
 ## Canonical Wire Props
 
 Plain JSON numbers cannot preserve negative zero. The read model, the entry
 detail, the comparison records, and the instance markers therefore carry
-data values in the tagged representation below, compatible with the
-`reviewMaterialKey` value encoding. The inspector decodes these values for
-display rather than exposing tuple tags to users.
-
-```ts
-type ComponentWirePrimitive =
-  | readonly ["null"]
-  | readonly ["boolean", boolean]
-  | readonly ["number", string]
-  | readonly ["string", string];
-
-type ComponentWireValue =
-  | ComponentWirePrimitive
-  | readonly ["array", readonly ComponentWireValue[]]
-  | readonly ["object", readonly (readonly [string, ComponentWireValue])[]];
-
-type ComponentWireProps = Readonly<Record<string, ComponentWireValue>>;
-```
+data values in a tagged representation, compatible with the
+`reviewMaterialKey` value encoding. The generated
+[`ComponentWireValue`](../../packages/viewer/src/generated/catalogue/ComponentWireValue.ts)
+type defines the tagged form of one value. `ComponentWireProps` maps each prop
+name to one tagged value. The inspector decodes these values for display
+rather than exposing tuple tags to users.
 
 Number strings are exactly the shortest round-trip decimal form, as
 JavaScript's `String(value)` produces, except negative zero is `"-0"`.
@@ -133,12 +119,11 @@ schema and reserved-key rules.
 
 `propsKey` is the lowercase 64-hex SHA-256 returned by
 `reviewMaterialKey(normalizedDataProps)`; it is the `props` digest of the
-instance marker in the [comparison contract](./mokly-comparison.md#markers)
-and one part of the fragment cache key. Readers recompute it from decoded,
-validated props and reject mismatches. Encoding then decoding preserves every
-allowed value, including negative zero and nested optional properties. A
-schema change is a component metadata change even when the resulting props
-key is identical.
+instance marker in the [comparison contract](./mokly-comparison.md#markers).
+Readers recompute it from decoded, validated props and reject mismatches.
+Encoding then decoding preserves every allowed value, including negative zero
+and nested optional properties. A schema change is a component metadata
+change even when the resulting props key is identical.
 
 ## Controls And Shared Validation
 
@@ -157,7 +142,7 @@ both sets of constraints.
 An optional declared prop may be missing from every saved props set because
 its type comes from the schema. A control that names an undeclared prop or a
 slot fails `component-controls`. Uneditable props receive the same complete
-validation and hashing as controlled ones. A live edit is applied to a fresh
-copy of the shown entry's props, then validated and encoded under this one
-policy before the sidecar renders it. One schema profile governs the registry,
-saved variants, wrapper calls, live controls, and readers.
+validation and hashing as controlled ones. A live edit leaves the shown
+entry's saved props unchanged. Its props are validated and encoded under this
+one policy before the sidecar renders them. One schema profile governs the
+registry, saved variants, wrapper calls, live controls, and readers.
