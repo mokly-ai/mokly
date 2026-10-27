@@ -65,25 +65,20 @@ cargo test -p mokly-cli --test design_behaviour_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
-Process recovery tests are Node tests under the repository `tests/` folder.
-They start the debug binary through
-[`tests/helpers/static_publication.ts`](../../../tests/helpers/static_publication.ts)
-and set faults through
-[`tests/helpers/static_faults.ts`](../../../tests/helpers/static_faults.ts):
+Process recovery tests are the Rust test binary `recovery_tests`. Its module
+folder [`recovery/`](./recovery) holds one file for each concern:
 
-- [`static_recovery_process.test.ts`](../../../tests/static_recovery_process.test.ts)
-  injects filesystem failures.
-- [`static_recovery_signals.test.ts`](../../../tests/static_recovery_signals.test.ts)
-  sends `SIGINT` at signal gates.
-- [`static_recovery_paths.test.ts`](../../../tests/static_recovery_paths.test.ts)
-  checks the printed recovery paths.
-- [`static_signal_readiness.test.ts`](../../../tests/static_signal_readiness.test.ts)
-  checks the readiness markers and the abort regression.
-- [`static_fault_seam.test.ts`](../../../tests/static_fault_seam.test.ts) holds
-  the compiler probe and the signal-session probe.
+- [`process_tests.rs`](./recovery/process_tests.rs) injects filesystem
+  failures.
+- [`signals_tests.rs`](./recovery/signals_tests.rs) sends `SIGINT` at signal
+  gates and holds the signal-session probe.
+- [`paths_tests.rs`](./recovery/paths_tests.rs) checks the printed recovery
+  paths.
+- [`fault_seam_tests.rs`](./recovery/fault_seam_tests.rs) holds the compiler
+  probe.
 
 ```bash
-npm test -- tests/static_recovery_signals.test.ts
+cargo test -p mokly-cli --test recovery_tests
 ```
 
 These tests use the [debug fault adapters](../src/test_faults/mod.rs).
