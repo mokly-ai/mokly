@@ -7,8 +7,8 @@ use mokly_graph::types::RenderSummary;
 
 use mokly_model::canonical;
 
-use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES};
-use crate::comparison_capture::{CapturedGeneration, capture_with_bound};
+use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES, DEFAULT_HEAD_CAPTURE_BYTES};
+use crate::comparison_capture::{CaptureSide, CapturedGeneration, capture_with_bound};
 use crate::comparison_types::Comparison;
 
 use super::support::{self, Probe};
@@ -16,6 +16,7 @@ use super::support::{self, Probe};
 #[test]
 fn exact_byte_bound_is_never_exceeded() {
     assert_eq!(DEFAULT_BASE_CAPTURE_BYTES, 256 * 1024 * 1024);
+    assert_eq!(DEFAULT_HEAD_CAPTURE_BYTES, DEFAULT_BASE_CAPTURE_BYTES);
     let mut budget = Budget::new(256);
     assert!(budget.retain(200));
     assert!(!budget.retain(57));
@@ -42,7 +43,7 @@ fn zero_and_partial_captures_fall_back_with_identical_review_bytes() {
             ..Default::default()
         });
         let source = support::generation("base", 4, probe.clone(), 128);
-        let before = capture_with_bound(source.clone(), bound).unwrap();
+        let before = capture_with_bound(source.clone(), bound, CaptureSide::Base).unwrap();
         if bound < fixed {
             assert!(Arc::ptr_eq(&source, &before));
         }

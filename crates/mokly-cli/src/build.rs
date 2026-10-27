@@ -209,6 +209,10 @@ impl CatalogueBuild {
 #[path = "_tests_/build_tests.rs"]
 mod build_tests;
 
+#[cfg(test)]
+#[path = "_tests_/build_capture_tests.rs"]
+mod build_capture_tests;
+
 /// Build computes Changes once and keeps the result for the static writer.
 #[derive(Clone, Debug)]
 pub enum BuildChanges {

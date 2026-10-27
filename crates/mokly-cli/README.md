@@ -55,10 +55,11 @@ reports each warning once under the
 Shutdown follows the [runtime shutdown order](../../docs/protocol/mokly-runtime.md).
 
 `build` validates the catalogue, renders every view into the bounded process
-cache, and computes Changes unless `--no-changes` is set. After output
+cache, and captures the head once during the build check under its separate
+256 MiB bound. It computes Changes unless `--no-changes` is set. After output
 admission, it pins the selected base before catalogue validation and
-rendering. `PreparedBuild` passes the same comparison result to the terminal,
-the static index, the generation writer, and the publication metadata.
+rendering. Changes, the static index, the generation writer, and publication
+metadata read the captured head and the same comparison result.
 Viewer modules are validated before consumer rendering. Invalid package
 scripts retain their path and parser position in a viewer-package failure.
 `mokly-static` writes the output through its exclusive output transaction. The
@@ -67,11 +68,13 @@ the Changes outcomes, and recovery. Build preparation owns the single
 strict-warning check for both `build` and `publish`.
 
 `publish` validates credentials and the committed clean checkout before it
-calls the CLI-owned `StaticOutput` adapter. The adapter runs the same output
-transaction as `build` in a private directory outside the repository and
-returns the installed bytes to one cached upload preparation. `mokly-publish`
-owns the exchange. The [upload contract](../../docs/protocol/mokly-upload.md)
-owns the checkout checks, the private directory, and its cleanup.
+calls the CLI-owned `StaticOutput` adapter. It uses the same build check and
+head capture as `build` before Changes and output read the captured head. The
+adapter runs the same output transaction as `build` in a private directory
+outside the repository and returns the installed bytes to one cached upload
+preparation. `mokly-publish` owns the exchange. The
+[upload contract](../../docs/protocol/mokly-upload.md) owns the checkout
+checks, the private directory, and its cleanup.
 
 Build and publish install signal handling before command work. Cancellation
 reaches Git, cache waits, installation, source reads, graph planning,

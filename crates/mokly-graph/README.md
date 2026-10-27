@@ -69,9 +69,10 @@ documents. Each requested fragment is still checked in every destination view,
 including cache hits. Concurrent checks of one destination share its active
 render.
 
-`collect_comparison` streams complete base validation to an ordered
+`collect_comparison` streams complete side validation to an ordered
 `ComparisonCollector`. Each view composes once, including when the artifact
-cache retains nothing. Validation keeps only cross-view facts between batches.
+cache retains nothing. The build head capture and the base capture use this
+validation path. Validation keeps only cross-view facts between batches.
 It preserves aggregate failures and warning order. Inputs stay provisional
 until the final anchor and output-name checks succeed. Batches use the
 generation's existing render pool and sidecar count, with at most one

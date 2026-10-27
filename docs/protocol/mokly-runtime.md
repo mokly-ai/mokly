@@ -45,10 +45,19 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache is bounded at 256 MiB. Serve and `build` read it. Changes
-captures the base within 256 MiB and reads the head from the render cache.
-Base capture misses use the pinned source; evicted head documents render
-again on the head root. The base-side extraction cache and the dependency install cache live in the
+The render cache is bounded at 256 MiB. Serve reads the head from it. Changes
+captures the base within 256 MiB. Base capture misses use the pinned source.
+`build` and `publish` capture the head once during the build check, within their
+own 256 MiB bound. Changes, the output, and the comparison output read that
+capture. An evicted head document renders again on the head root.
+Decision: the head reuses the base capture, so a build renders each head
+document once. A larger render cache, bounded render batches, and a reordered
+build were rejected. No fixed cache bound fits every catalogue, batches still
+render each document several times, and a reorder changes the build's stage
+order.
+Decision: each side has its own bound. A shared bound was rejected, because the
+head is captured first and could leave no room for the base.
+The base-side extraction cache and the dependency install cache live in the
 operating system's cache directory under a key derived from the repository
 path, each with its own byte bound; the terminal names that directory, and
 deleting it is safe. No cache is in the repository.
@@ -78,11 +87,12 @@ process.
 ## Build
 
 `mokly build` runs discovery and validation, renders every view of every
-entry, reports warnings, and writes the static site into the directory `--out`
-names, `mokly-static/` at the repository root by default, which Git must
-ignore. It writes the shell stub per route, the index, one detail per entry,
-every document, the comparison generation, the viewer bundle, styles, and
-fonts under the [static build contract](./mokly-export.md) and the
+entry, captures the head during the build check for Changes and output, reports
+warnings, and writes the static site into the directory `--out` names,
+`mokly-static/` at the repository root by default, which Git must ignore. It
+writes the shell stub per route, the index, one detail per entry, every
+document, the comparison generation, the viewer bundle, styles, and fonts
+under the [static build contract](./mokly-export.md) and the
 [static delivery contract](./mokly-export-delivery.md). An error fails the
 command before any file is written. With `--strict`, a warning fails it too.
 The output transaction stages the whole site, replaces the output directory

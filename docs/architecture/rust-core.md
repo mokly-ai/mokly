@@ -88,8 +88,9 @@ render graph: one node per output, keyed by the hash of its inputs
 composed documents, one per view, kept in the render cache
         |
         +---- serve:   documents on request, live updates on change
-        +---- build:   every document and the shell routes into `--out`
-        `---- Changes: the same graph over the base commit's sources
+        +---- build:   renders and captures every view once, then writes shell
+                         routes into `--out`
+        `---- Changes: base capture and comparison over the base commit's sources
 ```
 
 1. The [configuration](../protocol/mokly-configuration.md) names the roots,
@@ -109,9 +110,12 @@ composed documents, one per view, kept in the render cache
    fragment with its collected styles. The core grafts the fragments, places
    the styles, rewrites `mock:` links, and assembles the document under the
    [document safety rules](../protocol/mokly-document-safety.md).
-4. Serve, `build`, and Changes read the same documents. The
-   [comparison contract](../protocol/mokly-comparison.md) reads the
-   ownership tree that composition keeps with each document.
+4. Serve reads composed documents from the render cache. `build` and `publish`
+   render and retain a bounded head capture during the build check. Changes,
+   static output, and comparison output read that capture. An uncaptured head
+   document uses the head source, which renders it again only after render-cache
+   eviction. The [comparison contract](../protocol/mokly-comparison.md) reads
+   the ownership tree that composition keeps with each document.
 
 ## Render Graph
 
@@ -123,12 +127,16 @@ and renders again only the fragments whose generation changed. A component
 rendered with the same props on many screens renders once.
 
 No node is written to the repository. The render cache is process memory,
-bounded by bytes and evicted least recently used. Serve, `build`, and the head
-side of Changes read it. The base-side extraction cache and the dependency
-install cache live outside the repository, in the operating system's cache
-directory under a key derived from the repository path. Each has its own byte
-bound. The terminal names that directory, and deleting it is safe. `publish`
-builds into its own directory outside the repository and uploads.
+bounded by bytes and evicted least recently used. Serve reads head documents
+from it. `build` and `publish` capture the head during the build check under a
+separate 256 MiB bound, then Changes and output read that capture. The base
+side of Changes has its own 256 MiB capture bound. An uncaptured head document
+uses the head source, which renders it again only after render-cache eviction.
+The base-side extraction cache and the dependency install cache live outside the
+repository, in the operating system's cache directory under a key derived from
+the repository path. Each has its own byte bound. The terminal names that
+directory, and deleting it is safe. `publish` builds into its own directory
+outside the repository and uploads.
 
 ## Shell Delivery
 
@@ -163,10 +171,11 @@ Comparison works on trees, never on text offsets. The
 ## Memory Bounds
 
 - Comparison data lives in the core, outside the sidecar's JavaScript heap. A
-  view's trees are discarded when its comparison ends. Each comparison result
-  holds at most one base capture, with its own byte budget, separate from the
-  render cache. Inputs above the budget render again from the pinned base
-  sources.
+  view's trees are discarded when its comparison ends. Each result holds at
+  most one base capture, with its own byte budget, separate from the render
+  cache. A build result also holds one head capture with its own 256 MiB bound.
+  Inputs above a side's budget read that side's sources: the pinned base
+  sources for the base, and the head sources for the head.
 - Parsed CSS, the render cache, the base-side extraction cache, and the
   dependency cache are bounded by bytes. A dependency install has a time
   limit.

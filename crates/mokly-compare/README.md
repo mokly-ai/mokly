@@ -87,15 +87,16 @@ paths.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 `Comparison::capture_base` validates and captures the base through one ordered
-collector. Each base view supplies its validated document and closure without
-a second render. `Comparison::compare_prepared` classifies that prepared base.
-An uncaptured fallback also uses that entry point, so a summary that exceeds
-the capture bound does not start another pass. The capture keeps exact
-document bytes, generated CSS, and trusted annotations in compressed form.
-Inputs that do not fit the capture budget read from the pinned source. Head
-reads use the bounded render cache and render again on the head root after
-eviction. Each result holds at most one base capture, writes no files, and
-retains no parsed page set. The
+collector. `Comparison::capture_head` uses the same collector for the build
+head. Each view supplies its validated document and closure without a second
+render. `Comparison::compare_prepared` classifies the prepared base and head.
+An uncaptured fallback uses the source generation, so a summary that exceeds
+the capture bound does not start another pass. The capture keeps exact document
+bytes, generated CSS, and trusted annotations in compressed form. Inputs that
+do not fit the capture budget read from their side's source. Serve head reads
+use the bounded render cache and render again on the head root only after
+cache eviction. Build head reads use the head capture. Each result holds at
+most one base capture, and a build result also holds one head capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -112,9 +113,11 @@ private capture codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. The retained result
-holds the bounded base capture, the original cached head generation, view
-states, reasons, ownership records, and immutable historical metadata.
+Removed previews read the same pinned base generation. Serve retains the
+original cached head generation and one bounded base capture. Build retains the
+captured head and the bounded base capture. Both
+results keep view states, reasons, ownership records, and immutable historical
+metadata.
 
 `Lookup` indexes kind-aware, case-folded identities once per projection batch
 under the [branch-point lookup contract](../../docs/protocol/mokly-branch-point-lookup.md).

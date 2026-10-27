@@ -65,9 +65,12 @@ its files are installed. Its Serve duration includes queue time.
 | `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                                     |
 
 Review spans use the same session, role, and parent context as their caller:
-under `changes.classify` in Serve and under `output.write` in `build`. A
-repeated discovery for the same side, route, content digest, and exclusion
-identity is a defect. A contained parse or selector failure in
+under `changes.classify` in Serve and under `output.write` in `build`. The
+`review.capture-side` span carries `side`, with `base` for the base generation
+and `head` for the head generation. Build and publish emit the head capture
+under `output.write` before `changes.classify`. The base capture appears under
+`review.base-tree`. A repeated discovery for the same side, route, content
+digest, and exclusion identity is a defect. A contained parse or selector failure in
 `review.css-analysis` returns unresolved evidence with status `ok`; an
 escaping error ends the span with `error`. The spans log no paths,
 selectors, CSS, or document text.
@@ -94,12 +97,12 @@ including failed compilations. Replay and evaluation-only reuse add no
 
 `review.capture-side` starts with status `error` and records `ok` only after
 successful work. Completed captures emit counts, including a zero-view capture
-when no input fits. `views` counts retained base documents. `uncapturedViews`
-counts base documents that use pinned-source fallback. These counts sum to the
-number of base documents, including on reuse. `encodedBytes`
-counts compressed document and CSS payloads. `retainedBytes` adds the
-capture's metadata, closures, generated digests, route keys, and conservative
-container charges. The separate 256 MiB capture bound applies to that total,
+when no input fits. `views` counts retained documents on `side`.
+`uncapturedViews` counts documents that use that side's source fallback. These
+counts sum to the number of documents on that side, including on reuse.
+`encodedBytes` counts compressed document and CSS payloads. `retainedBytes` adds
+the capture's metadata, closures, generated digests, route keys, and
+conservative container charges. Each side has a separate 256 MiB capture bound
 beside the render cache. These charges are not measured RSS. Serve can hold an
 accepted capture while building its replacement.
 

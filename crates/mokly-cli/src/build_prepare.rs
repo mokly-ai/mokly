@@ -60,6 +60,25 @@ impl CatalogueBuild {
                 return Err(BuildError::Static { source });
             }
         }
+        let generation = match self.changes.capture_head(generation) {
+            Ok(generation) => generation,
+            Err(mokly_compare::error::Error::Graph { source }) => {
+                return Err(BuildError::Rendering {
+                    source: Box::new(source),
+                    warnings: prepared.warnings.clone(),
+                });
+            }
+            Err(source) => {
+                return Err(BuildError::Rendering {
+                    source: Box::new(mokly_graph::error::GraphError::Internal(
+                        mokly_graph::error::InternalError::Provider {
+                            source: Box::new(source),
+                        },
+                    )),
+                    warnings: prepared.warnings.clone(),
+                });
+            }
+        };
         let rendered = match generation.render_all() {
             Ok(summary) => summary,
             Err(source) => {
