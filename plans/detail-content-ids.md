@@ -1,8 +1,8 @@
 # Detail Content Ids
 
 Status: Active. On branch `conductor/dedup-1-detail-content-ids`, no pull
-request yet. The plan closes when its PR merges. Decisions 1 to 4 are open,
-and every milestone waits for them.
+request yet. The plan closes when its PR merges. The user answered the
+decisions on 2026-10-27.
 
 `build` stamps one `deploymentId` into the catalogue index and into every
 current entry detail. The id is a SHA-256 over every output file, so any edit
@@ -21,10 +21,11 @@ investigation "Hash-Based Content Caching". That workspace holds the other
 options and their evidence. Option A removes `deploymentId` from the details.
 Each detail carries its own content id, `detailId`, and the index lists that
 id for each entry. The shell compares the two ids where it compared
-`deploymentId`. Three related changes have their own workspaces: "dedup 2"
-compresses blob uploads, "dedup 3" keeps a component's usage list only in its
-parent detail, and "dedup 4" writes a before snapshot only when it differs
-from the after snapshot.
+`deploymentId`. A small deployment file then lets an old tab notice a new
+version. Three related changes have their own workspaces: "dedup 2" compresses
+blob uploads, "dedup 3" keeps a component's usage list only in its parent
+detail, and "dedup 4" writes a before snapshot only when it differs from the
+after snapshot.
 
 The index and the ownership marker still change with each publication, and
 this plan keeps that. It adds no fence for documents, and it does not change
@@ -35,59 +36,90 @@ Contract owners:
 
 - [Catalogue serialization](../docs/protocol/mokly-catalogue-serialization.md)
   and [format versions](../docs/protocol/mokly-format-versions.md).
-- [Shell delivery](../docs/protocol/mokly-shell-delivery.md) and the
-  [embeddable viewer](../docs/protocol/mokly-viewer.md).
+- [Shell delivery](../docs/protocol/mokly-shell-delivery.md), the
+  [embeddable viewer](../docs/protocol/mokly-viewer.md), and the
+  [viewer namespace](../docs/protocol/mokly-viewer-namespace.md).
 - [Static build browser and identity](../docs/protocol/mokly-export-browser.md)
   and [static delivery](../docs/protocol/mokly-export-delivery.md).
 - [Comparison generation and serving](../docs/protocol/mokly-comparison-serving.md).
 - The [upgrade guide](../docs/guides/start/upgrade.md).
 
+## Decisions
+
+The user answered on 2026-10-27, with the reasons of the chosen
+recommendations. An old tab loaded the catalogue before the host installed a
+new version.
+
+1. How an old tab notices a new version: D, proposed by the user. Details get
+   content-only ids, and a static build writes `mokly-viewer/deployment.json`
+   with the `deploymentId`. Rejected: A, those ids alone, because an old tab
+   can show an old record above new documents. B, an id over the record and the
+   detail, and C, B and the viewer files, because they miss cases or upload
+   more. Reason: D keeps today's reload in every case and saves the most.
+2. An old tab whose comparison generation is gone: closed by decision 1 D,
+   because the shell checks the deployment file before each generation
+   request. Neither option applies.
+3. Format numbers when the dedup changes merge in any order: B, one new number
+   per format between two releases. Rejected: A, each change raises the
+   numbers on `main`, because the merge order then sets the numbers and renames
+   the types and fixtures again.
+4. Removed entries' details: B. They carry `detailId` instead of `generation`,
+   and the generation name hashes its files as they are. Rejected: A, keep
+   `generation`, because each removed detail then uploads again with each
+   publication and the shell keeps two checks.
+
 ## Design
 
-- `detailId` is 64 lowercase hex characters: the SHA-256 of canonical JSON.
-  With decision 1 B, the input is a two-element array of the entry's index
-  record and its detail. Each `detailId` in the input is 64 zeros, so the id
-  does not depend on itself. A current detail's `revision` is 0 in the input,
-  so Serve keeps an id across publications, and `build` and Serve agree.
+- `detailId` is 64 lowercase hex characters: the SHA-256 of the detail's
+  canonical JSON with `detailId` as 64 zeros and, on a current detail,
+  `revision` as 0. So the id does not depend on itself, Serve keeps an id
+  across publications, and `build` and Serve agree. Equal content gives an
+  equal id in every build.
 - Every index record carries `detailId` in its shared entry fields. A current
   record names its detail under `mokly-viewer/entries/`. A removed record names
-  the removed entry's detail in the comparison generation (decision 4).
+  the removed entry's detail in the comparison generation.
 - Every detail carries `detailId` and no `deploymentId`. A current entry's
   detail keeps `revision`. A removed entry's detail keeps `snapshotId` and
-  loses `generation` (decision 4).
+  loses `generation`.
+- `build` writes `mokly-viewer/deployment.json` with `schemaVersion` 1 and the
+  `deploymentId` of the index. The deployment identity excludes the file,
+  because the file holds the id. The ownership marker lists it. Serve writes
+  and answers no such file, because its event stream announces each version.
+
+A viewer of a static catalogue, standalone or embedded, fetches the deployment
+file with each detail request of a page change, at the same time. It fetches
+it again before it opens a comparison or a removed entry. Another
+`deploymentId` gives the replaced status: a full page load in the standalone
+shell, one `onError` in an embedded host. A missing or unreadable file changes
+nothing, so a broken file cannot start a reload loop.
 
 The shell checks a current entry's detail in this order:
 
 1. A `revision` that differs from the index: request the index once more, as
    today.
 2. A `detailId` that differs from the id of the index record: another
-   deployment replaced the files. The standalone shell performs a full page
-   load, and an embedded host receives one `onError`.
+   deployment replaced the files. This catches a version that the host
+   installed between the deployment file request and the detail request.
 3. Another `identity`, kind, view list, or control order: the unavailable
    state, as today.
 
 The revision check comes first, because in Serve a detail of a newer
-publication has a new id. Step 2 still comes before step 3, so another
-deployment wins over another identity. A removed entry's detail needs the
-index identity and a removed record with its path, `snapshotId`, and
-`detailId`. Otherwise it is unavailable, because generation files never
-change. A held detail stays on a new index that lists its id, and for a
-current entry also its revision.
+publication has a new id. A removed entry's detail needs the index identity
+and a removed record with its path, `snapshotId`, and `detailId`. Otherwise it
+is unavailable, because generation files never change. A held detail stays on
+a new index that lists its id, and for a current entry also its revision.
 
-The index keeps `deploymentId` in `build` and in Serve. In Serve it is the
-process id: the event stream sends it, and the shell compares it on each
-message, after a revision refetch, and on each publication refresh. It also
-binds the live render capability and the publication guards of Serve. A build
-stamps the hash of its files. A static shell reads that hash only when it
-requests the index again, and only decision 2 B adds such a request.
-`mokly publish` reads only `base` and `baseCommit` from the index, and Mokly
-Cloud skips the field.
+The index keeps `deploymentId`. In Serve it is the process id that the event
+stream sends and the shell compares, and it binds the live render capability
+and the publication guards. In a static build it is the hash of the files,
+which the shell compares with the deployment file. `mokly publish` and Mokly
+Cloud do not read it.
 
-The generation writer stamps each removed detail's id into the detail and its
-removed record. Then it names the generation with the hash of its files as
-they are. Next, `finalize` stamps each current detail's id into the detail and
-its record. Last, it computes `deploymentId` with only the index's own field
-zeroed. No step depends on its own output.
+In `build`, the generation writer stamps each removed detail's id into the
+detail and its record, then names the generation with the hash of its files.
+`finalize` stamps each current id into the detail and its record, computes
+`deploymentId` with only the index's own field zeroed, and writes the
+deployment file. No step depends on its own output.
 
 Serve computes the id of each new or changed detail in each publication. It
 writes the index in the same step, because the index lists the ids. An
@@ -95,107 +127,69 @@ unchanged detail keeps its id and its encoded bytes, and Serve still supplies
 `revision` when it answers. A usage completion now also writes the index once
 per publication. Milestone 5 measures that cost.
 
-For the measured heading edit, the projected upload is 15 files with 2.75 MB,
-88% less. The index and the marker are 2.68 MB of that, and "dedup 2" covers
-them.
-
-An old tab now accepts a detail that a new deployment kept, because its content
-is the same. Decisions 1 and 2 set how an old tab still notices a new version.
+For the measured heading edit, the projected upload is 16 files with 2.75 MB,
+88% less. The index and the marker are 2.68 MB of that.
 
 Rejected designs: a file hash that the shell checks, because Serve writes
-`revision` into the bytes. A separate map of ids, because the record field
-follows `documentKey` and also serves removed records.
+`revision` into the bytes, and a separate map of ids in the index.
 
 ## Format Versions And Merge Order
 
 Each reader accepts one version. The serialization contract requires a new
-number for a removal, a required addition, or a changed meaning. This plan
-adds a required `detailId` and removes `deploymentId` from the details.
-Release 0.17.0, which the open PR #219 prepares, contains index v8 and detail
-v2. After it, this plan needs index v9 and detail v3. Every other format keeps
-its number.
+number for a removal, a required addition, or a changed meaning. Release
+0.17.0, which the open PR #219 prepares, contains index v8 and detail v2.
+After it, this plan needs index v9, detail v3, and the new deployment file v1.
+Every other format keeps its number.
 
-"dedup 3" and "dedup 4" can also change these formats, and the four changes
-can merge in any order. Decision 3 sets the rule. With option B, each format
-takes one new number between two releases:
+Under decision 3, each format takes one new number between two releases. The
+first change that merges after a release raises the number of each format that
+it changes. A later change in the same release window keeps that number and
+adds its shape to it. It also keeps the raised type name, fixture names, reader
+gates, and format rows when it resolves its conflicts. If 0.17.0 has not
+shipped when this plan merges, the index keeps 8.
 
-- The first change that merges after a release raises the number of each
-  format that it changes.
-- A later change in the same release window keeps a number that `main`
-  already raised since the last release, and adds its shape to it.
-- The `EntryDetailV3` type, the fixture names, the reader gates, and the
-  format table change once per release. A later change keeps them when it
-  resolves its conflicts.
-- If 0.17.0 has not shipped when this plan merges, the index keeps 8.
-
-The id covers every field, so the other changes need no change to the id rule.
-They edit the same projections, generation writer, and Node identity helper.
-The change that merges second keeps both rules there.
+The id covers every field, so "dedup 3" and "dedup 4" need no change to the id
+rule. They edit the same projections, generation writer, and Node identity
+helper. The change that merges second keeps both rules there.
 
 ## Mokly Cloud
 
-On `main` at `7bf81f0`, the receiver parses the upload envelope, the marker,
-and review v6, but not the index. The branch
-`conductor/adopt-mokly-without-reviewjson`, with the plan
-`plans/mokly-catalogue-index-adoption.md`, adds an index v8 parser. It
-requires version 8 exactly, reads only the Changes fields, and skips the
-others. It never reads `deploymentId` or a detail. So this plan needs one
-receiver change: the version gate and the fixtures move to the index number of
-the release. The app embeds `MoklyViewer` and gets the new fences with the
-matching `@mokly/viewer`. A Plan lists only the hashes that the project has not
-stored, and a referenced file is never collected.
-
-## Open Decisions
-
-Asked on 2026-10-27. The message to the user gives the background.
-
-1. What the detail id covers. Severity Medium, effort Large. A: the detail
-   only, so an old tab can show an old title over new content. B: the entry's
-   index record and its detail. C: B and the viewer files, so each viewer
-   change uploads every detail again. D, proposed by the user on 2026-10-27:
-   A, plus `mokly-viewer/deployment.json` with the `deploymentId`, outside the
-   id's hash. A static shell fetches it with each detail request and before
-   each generation request. Another id reloads the page. Recommended: D.
-2. An old tab whose comparison generation is gone. Severity Medium, effort
-   Medium. A: accept the unavailable state until the reader reloads. B: in a
-   static build, a failed detail or generation request makes the shell request
-   the index again, and another `deploymentId` gives a full page load or one
-   `onError`. Recommended: B. Decision 1 D closes this decision.
-3. Format numbers when the dedup changes merge in any order. Severity Medium,
-   effort Small. A: each change raises the numbers on `main`, so a second
-   detail change gives v4. B: one new number per format between two releases.
-   Recommended: B.
-4. Content ids for removed entries' details. Severity Low, effort Large. A:
-   keep `generation`, so each removed detail uploads again when any snapshot
-   changes. B: `detailId` replaces `generation`, and the generation name hashes
-   its files as they are. Recommended: B.
+On `main` at `7bf81f0`, the receiver does not parse the index. The branch
+`conductor/adopt-mokly-without-reviewjson` and its plan
+`plans/mokly-catalogue-index-adoption.md` add an index v8 parser. It requires
+version 8, reads only the Changes fields, and never reads `deploymentId` or a
+detail. So the receiver needs only its version gate and fixtures moved to the
+release's index number. It checks only the index and the comparison paths, so
+it should accept the deployment file. The app gets the new checks with the
+matching `@mokly/viewer`.
 
 ## Milestone 1: Documentation and protocol
 
 Write the requirements and the decisions in force for the code milestones.
 Add the status line of the repository rules to each changed protocol page.
 
-- [ ] Record the answers to decisions 1 to 4 with the date. Update the design
+- [x] Record the answers to decisions 1 to 4 with the date. Update the design
       and the TODOs below to the chosen options.
 - [ ] `mokly-catalogue-serialization.md`: add a detail identity section with
       the id input and the decision in force. Reject a deployment id in each
       detail, because any edit changed every detail. Keep `deploymentId` as an
       index field, and name the new fields in the version paragraph.
 - [ ] `mokly-shell-delivery.md`: the `detailId` fields, the current and
-      removed detail fields, the fence order and its reason, held details,
-      unchanged ids in Serve publications, the identity, the route table, and
-      the fail-closed table. Split the page if it passes 250 lines.
-- [ ] `mokly-export-browser.md`: the deployment identity with only the
-      index's field zeroed, the generation name (decision 4), and the old-tab
-      rule (decisions 1 and 2).
-- [ ] `mokly-export-delivery.md`: the static navigation rule. A detail that
-      keeps its id keeps its bytes and validators across deployments.
-- [ ] `mokly-comparison-serving.md`: the removed detail fields and the old-tab
-      rule. `mokly-viewer.md`: the embedded fences and `EntryDetailV3`.
-- [ ] `mokly-format-versions.md`: the index and detail rows, the rejection
-      rule, the Mokly Cloud sentence, and the rule of decision 3.
+      removed detail fields, the deployment file route and check, the fence
+      order and its reason, held details, unchanged ids in Serve publications,
+      the identity, and the fail-closed table. Split it if it passes 250 lines.
+- [ ] `mokly-export-browser.md`: the deployment identity without the
+      deployment file and with only the index's field zeroed, the generation
+      name, and the deployment file.
+- [ ] `mokly-export-delivery.md`: static navigation with the deployment file,
+      and revalidation for it. An unchanged detail keeps its validators.
+- [ ] `mokly-comparison-serving.md`: the removed detail fields and the check
+      before generation requests. `mokly-viewer.md`: the embedded checks and
+      `EntryDetailV3`. `mokly-viewer-namespace.md`: the new public path.
+- [ ] `mokly-format-versions.md`: the index, detail, and deployment file rows,
+      the rejection rule, the Mokly Cloud sentence, and the rule of decision 3.
 - [ ] Align the sentences in `mokly-upload.md`, `mokly-export.md`, and
-      `mokly-comparison.md` that name the stamped details, the index row, or
+      `mokly-comparison.md` that name the stamped details, the output files, or
       the detail type. Change nothing that stays true.
 - [ ] Add an upgrade section to `docs/guides/start/upgrade.md`. Update
       `packages/viewer/docs/deployment/README.md` and
@@ -205,10 +199,32 @@ Add the status line of the repository rules to each changed protocol page.
 ## Milestone 2: Mokly Cloud handoff
 
 - [ ] Send the Mokly Cloud workspace "Adopt Mokly without review.json" the
-      index and detail numbers of the release, the Milestone 1 docs, and the
-      one receiver change. Record the message here.
+      index and detail numbers of the release, the deployment file, and the
+      Milestone 1 docs. Ask it to confirm that its receiver and hosting accept
+      and serve the file. Record the message here.
 
-## Milestone 3: Content ids in every writer and reader
+## Milestone 3: The deployment file
+
+The details still carry `deploymentId` here, so both checks run and the
+product works at the end.
+
+- [ ] Model: the deployment file type and its version constant. Run
+      `cargo xtask generate-types`.
+- [ ] Static build: write the file after the identity, and keep it out of the
+      identity hash.
+- [ ] Viewer: the file reader and the check of the design in the data
+      controller and the comparison and removed-entry loaders. Keep
+      `data_controller.ts` under 300 lines.
+- [ ] Rust tests: the file bytes, its exclusion from the identity, and its
+      ownership entry.
+- [ ] Viewer tests with a fake source: one file request per page change, one
+      before a comparison, the replaced status on another id, nothing on a
+      failed file, and no request in Serve.
+- [ ] Node tests: `tests/helpers/static_identity.ts` skips the file.
+- [ ] Browser spec: the host replaces an old tab's generation. Opening a
+      comparison then reloads the page and shows it.
+
+## Milestone 4: Content ids in every writer and reader
 
 Each reader accepts one version, so the writers and the readers change in one
 milestone.
@@ -237,9 +253,9 @@ milestone.
   - [ ] A removed detail keeps its bytes when an unrelated snapshot changes.
   - [ ] A usage completion keeps the bytes and the id of an unchanged detail,
         and the new index lists the new id of the changed detail.
-- [ ] Node tests: `tests/helpers/static_identity.ts` recomputes the ids, the
-      generation name, and the deployment id. Update the static publication,
-      Changes contents, and comparison tests.
+- [ ] Node tests: the identity helper recomputes the ids, the generation name,
+      and the deployment id. Update the static publication, Changes contents,
+      and comparison tests.
 - [ ] Node test: build two screens with a base commit, edit one, and build
       again. The other detail keeps identical bytes, the edited one changes,
       and each index lists the ids of its details.
@@ -247,32 +263,17 @@ milestone.
       second Plan does not list the unchanged detail as missing.
 - [ ] Viewer tests: the readers, each fence step, the removed fence, and held
       details. Rename `catalogue_v8_fixture.ts`.
-- [ ] Browser specs: keep `static_deployment.spec.ts`. In
-      `static_comparison_deployment.spec.ts`, the next deployment changes the
-      clicked entry's record but not its documents. An old tab accepts an
-      unchanged entry without a reload.
+- [ ] Browser specs: `static_deployment.spec.ts` and
+      `static_comparison_deployment.spec.ts` pass unchanged. Their old tabs
+      now reload through the deployment file.
 - [ ] Update the READMEs of `crates/mokly-model`, `crates/mokly-static`,
       `crates/mokly-server`, and `packages/viewer/src/shell`.
-
-## Milestone 4: Recovery after a replaced generation
-
-Only for decision 2 B.
-
-- [ ] In a static build with an index URL, a failed detail or generation
-      request makes the shell request the index once more. Another
-      `deploymentId` gives the replaced status. Otherwise the state stays
-      unavailable. Keep `data_controller.ts` under 300 lines.
-- [ ] Viewer tests: one index request per failure, the replaced status on
-      another id, and no request in Serve or with an index object.
-- [ ] Browser spec: after the host replaces an old tab's generation, opening
-      an unchanged entry's comparison reloads the page and shows it.
-- [ ] Remove the status lines of Milestone 1. With decision 2 A, do this at
-      the end of Milestone 3.
+- [ ] Remove the status lines that Milestone 1 added.
 
 ## Milestone 5: Measurement and smoke tests
 
 - [ ] Repeat the measurement in `.context/deployment-id-detail-ids/`. Expect
-      about 15 new files and 2.75 MB. Add one line with the result.
+      about 16 new files and 2.75 MB. Add one line with the result.
 - [ ] Measure the Serve completion publications on the large React fixture
       before and after with `--debug-timings`. Propose a decision if a
       publication becomes much slower.
