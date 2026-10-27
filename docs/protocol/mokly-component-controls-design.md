@@ -1,5 +1,7 @@
 # Component Controls Design
 
+Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
+
 ## Controls Panel
 
 The controls artboards show the component page with its saved-variant strip,
@@ -54,9 +56,11 @@ between the published Default and Disabled examples keeps both views read-only.
 While no live descriptor is installed, the fields are read-only under
 `Preparing to edit props…`; a refetch keeps the installed capability, so the
 fields stay editable. When editing cannot start, `Editing could not start.`
-offers Try again, which fetches the live descriptor again. Until the entry's
-detail arrives, the tab shows `Loading props…` and no fields; a failed load
-shows `Props couldn’t be loaded.` with Try again. A removed entry, a
+offers Try again, which fetches the live descriptor again. Until all route
+details arrive, the tab shows `Loading props…` and no fields. A current
+component variant waits for its own detail and its parent's detail. A failed
+load shows `Props couldn’t be loaded.` with Try again after all route details
+settle. A removed entry, a
 component without declared controls, and an entry without props show read-only
 text, not fields. Merged props that fail as a whole highlight no field; the
 alert names the failure, and the heading's Reset is the one action. An expired

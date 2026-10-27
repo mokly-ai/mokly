@@ -1,5 +1,7 @@
 # Live catalogue evidence updates
 
+Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
+
 ## Revisions and publication
 
 Serve has one update model: the publications and the event stream of the
@@ -71,13 +73,15 @@ current state.
 ## Navigation races
 
 In-shell navigation commits the route from the installed index at once and
-fetches the destination's detail; it announces its pending and settled state.
-A refresh waits for pending navigation, and a detail response for a route other than the current one is discarded and
-repeated for the current destination. A refresh and a navigation adopt the same pair of index and
-detail, so neither can install a detail that disagrees with the index. A
-same-document history action or a sibling-variant navigation cancels obsolete
-requests and releases a refresh waiting on them. Only the current navigation
-commits.
+fetches the destination's details, including a current component variant's
+parent detail. It announces its pending and settled state. A refresh waits for
+pending navigation. It discards detail responses that the current route does
+not need and fetches the current destination's details. A refresh and a
+navigation adopt the same index and route details, so no detail can disagree
+with the index. A same-document history action or a sibling-variant navigation
+cancels only obsolete requests and releases a refresh waiting on them. Sibling
+variants reuse their parent's held or pending detail at the same revision.
+Only the current navigation commits.
 
 ## Workspace evidence
 
@@ -88,13 +92,15 @@ catalogue has been checked." and never shows a zero-consumer result.
 One unavailable view keeps every Used by list unavailable until the next
 render generation.
 
-The detail's `workspace` updates comparison eligibility,
-Details evidence, and the complete Used by and Affected lists in place. While
-the detail is in flight the Usage panel shows the loading copy of the
-on-demand contract without counts, an empty state, or rows; a failed or
-rejected read shows its failure copy with retry; the shell never derives a
-list from an incomplete record or shows a zero-consumer result it has not
-received. Temporary props, the current instance selection, inspector
+The route details' workspaces update comparison eligibility, Details evidence,
+and the complete Used by and Affected lists in place. A current component
+variant reads both lists from its parent's workspace. Only that workspace
+proves that its lists are complete. While any route detail is in flight the
+Usage panel shows the loading copy of the on-demand contract without counts,
+an empty state, or rows. A failed or rejected read shows its failure copy with
+retry after all route details settle. The shell never derives a list from an
+incomplete record or shows a zero-consumer result it has not received.
+Temporary props, the current instance selection, inspector
 disclosure, highlight state, and authenticated preview documents stay intact
 across an update. Usage updates keep matching link elements and change only
 the affected sections and rows, so an update cannot interrupt a keyboard

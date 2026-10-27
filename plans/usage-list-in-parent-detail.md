@@ -199,25 +199,25 @@ version 3 type wait for Milestone 3, because the link check needs that file.
 
 - [x] Record the user's answers to the open decisions in this plan, with the
       date.
-- [ ] `mokly-shell-delivery.md`: add the placement rule, its decision, and
+- [x] `mokly-shell-delivery.md`: add the placement rule, its decision, and
       the rejected copies to Entry Detail. Add the parent's detail and its
       fence to Fetch And Fences. Add the unavailable rule of Decision 2 to
       Fetch And Fences, Updates In Serve, and Fail-Closed Rules.
-- [ ] `mokly-component-explorer.md`: a variant page shows its parent's lists.
+- [x] `mokly-component-explorer.md`: a variant page shows its parent's lists.
       Usage shows `Loading usage…` until those details arrive.
-- [ ] `mokly-viewer.md`: the viewer also calls `detail` with the parent's
+- [x] `mokly-viewer.md`: the viewer also calls `detail` with the parent's
       path of a current variant. A current variant shows its parent's Used by
       and Affected lists.
-- [ ] `mokly-export-delivery.md` Static Navigation: a navigation fetches the
+- [x] `mokly-export-delivery.md` Static Navigation: a navigation fetches the
       destination's details, and the parent's detail carries a variant's
       lists. `mokly-live-evidence.md` Navigation races and Workspace
       evidence: the details of the route, not one detail.
-- [ ] `mokly-component-controls.md` and `mokly-component-controls-design.md`:
+- [x] `mokly-component-controls.md` and `mokly-component-controls-design.md`:
       Props waits for the route's details.
-- [ ] `mokly-format-versions.md`: the entry detail row, and the Decision 1
+- [x] `mokly-format-versions.md`: the entry detail row, and the Decision 1
       rule that changes between two releases share one raise, with option B
       as the rejected alternative.
-- [ ] Add the status line below the title of each page above.
+- [x] Add the status line below the title of each page above.
       `mokly-component-usage-records.md` needs no change, because every
       variant keeps its view usage.
 - [ ] Run `npx prettier --check` on the changed files and

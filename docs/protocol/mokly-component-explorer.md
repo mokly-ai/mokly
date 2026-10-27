@@ -1,5 +1,7 @@
 # Component Pages And Screen Inspection
 
+Status: In progress under the [usage lists in the parent detail plan](../../plans/usage-list-in-parent-detail.md).
+
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components
@@ -98,7 +100,10 @@ above the canvas. Props contains the supplied values, and Usage contains Used
 by screens and components. These lists come from the `workspace` of the
 [entry detail](./mokly-shell-delivery.md#entry-detail): `usedBy`, `affected`,
 `relatedComponents`, and `inputChanges`. A changed component also exposes
-Affected screens. Removed consumers link to their Removed state; their
+Affected screens. A current component variant shows its parent's Used by and
+Affected lists from the parent's detail. Its related changed components and
+input changes stay specific to its own views. A removed variant shows its own
+lists. Removed consumers link to their Removed state; their
 comparison evidence stays in Details. Lists distinguish direct and transitive
 use and show actual instance and view counts without counting reused flow
 frames as additional screen uses. Empty lists have explicit empty states. The
@@ -107,11 +112,12 @@ shared layout and native mockup behaviour; runtime keyboard focus and Escape
 handling belong to the shell.
 
 The index carries no usage, so no cross-route list is derived from it. Until
-the entry detail arrives, the Usage panel shows `Loading usage…` with no
-counts, list headings, rows, or empty state. A detail that fails to load or is
+all route details arrive, the Usage panel shows `Loading usage…` with no
+counts, list headings, rows, or empty state. A current component variant waits
+for its own detail and its parent's detail. A detail that fails to load or is
 rejected leaves the entry unavailable with a retry control under the shell
-delivery contract; retry preserves the inspector disclosure and local edits.
-Only a ready detail may show the zero-consumer state.
+delivery contract. Retry preserves the inspector disclosure and local edits.
+Only a ready detail with a complete workspace may show the zero-consumer state.
 
 ## Components In The Screen Inspector
 
