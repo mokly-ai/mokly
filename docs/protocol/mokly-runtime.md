@@ -45,8 +45,9 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache is bounded at 256 MiB. Serve reads the head from it. Changes
-captures the base within 256 MiB. Base capture misses use the pinned source.
+The render cache is bounded at 256 MiB. Both sides read it, and equal keys
+share one entry. Serve reads the head from it. Changes captures the base
+within 256 MiB. Base capture misses use the pinned source.
 `build` and `publish` capture the head once during the build check, within their
 own 256 MiB bound. Changes, the output, and the comparison output read that
 capture. An evicted head document renders again on the head root.

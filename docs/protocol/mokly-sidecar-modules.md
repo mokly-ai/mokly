@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: In progress under the [per-entry render keys plan](../../plans/per-entry-render-keys.md).
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -114,6 +116,12 @@ evaluation is a protocol failure. A changed map uses a new evaluation digest
 and retains the old generation until its final graph or request releases it.
 An evaluation-only change reuses compiled code without another compilation.
 Replays never compile the current filesystem for an old generation.
+
+The bundle keeps the authored name of every function and class, also when
+two modules declare the same top-level name. A function's `name` and its
+stack frame names show the authored name. Decision: names stay authored, so
+a module outside a definition's imports cannot change its render. A guide
+note alone was rejected, because a cached render could then stay stale.
 
 The sidecar performs no file writes. A resolution diagnostic names the logical module and the
 authored importer location. It does not expose another checkout, a dependency

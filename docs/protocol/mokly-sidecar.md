@@ -1,5 +1,7 @@
 # Render Sidecar
 
+Status: In progress under the [per-entry render keys plan](../../plans/per-entry-render-keys.md).
+
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
@@ -81,7 +83,15 @@ registers definitions or starts a render.
 `bundle` compiles an unevaluated in-memory generation and returns its id. A
 change to any input that can change the compiled code or its evaluation gives
 a new id. Equal head and base sources have separate generations, class maps, and
-bindings. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release)
+bindings. Render cache keys never contain a generation id. They use the
+[render input keys](./mokly-watch.md#invalidation-through-the-render-graph),
+so equal head and base inputs share cache entries under the
+[runtime contract](./mokly-runtime.md#render-graph-and-cache), and a cache miss
+renders with its own side's generation. A selected dependency installation is
+part of the key, so a base with its own installation shares no entry.
+Decision: equal inputs share entries across sides. A side marker in every key
+was rejected, because the base would render every unchanged view again.
+[Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release)
 define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,

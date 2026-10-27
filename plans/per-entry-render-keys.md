@@ -246,26 +246,27 @@ records inside the phase.
 State the render input contract and the decisions, with a status line on
 each page until its behaviour is implemented.
 
-- [ ] Update the render graph section of `docs/architecture/rust-core.md`:
+- [x] Update the render graph section of `docs/architecture/rust-core.md`:
       a JavaScript definition's keys use its module's render input key, the
       input list in summary, the unsupported inputs, and the cross-side rule
       of decision 1.
-- [ ] Update the invalidation section of `docs/protocol/mokly-watch.md`: a
+- [x] Update the invalidation section of `docs/protocol/mokly-watch.md`: a
       JavaScript edit rebundles once and re-renders only the definitions
       whose render input key moved, with one rule for each input kind of the
       design table. Update the watch input table.
-- [ ] Update the bundling section of `docs/protocol/mokly-sidecar.md`:
+- [x] Update the bundling section of `docs/protocol/mokly-sidecar.md`:
       generations, class maps, and bindings stay per side, and render cache
       keys follow decision 1. Keep the page under 250 lines.
-- [ ] Update the render graph and cache section of
+- [x] Update the render graph and cache section of
       `docs/protocol/mokly-runtime.md`: both sides share the render cache,
-      equal keys share entries in both directions under decision 1, and a
-      cached document carries no side-specific warning.
-- [ ] Update the authoring and evaluation section of
+      and equal keys share entries under decision 1. The page has 248 of its
+      250 lines, so it gets no status line. Milestone 5 adds the rule that a
+      cached document carries no side-specific warning, with its fix.
+- [x] Update the authoring and evaluation section of
       `docs/protocol/mokly-sidecar-modules.md` under decision 4.
-- [ ] Leave the crate READMEs and the guides to the milestones that change
+- [x] Leave the crate READMEs and the guides to the milestones that change
       the code, because they describe released behaviour and entry points.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
 ## Milestone 2: Stable bundle names
@@ -352,8 +353,9 @@ Let equal head and base inputs share render cache entries under decision 1.
       sidecar with the base generation.
 - [ ] Under decision 2 A, add a test that a base with its own installation
       gets keys that differ from the head's.
-- [ ] Remove the status lines of `docs/protocol/mokly-sidecar.md` and
-      `docs/protocol/mokly-runtime.md`.
+- [ ] Add the rule that a cached document carries no side-specific warning
+      to `docs/protocol/mokly-runtime.md`, within its 250 lines.
+- [ ] Remove the status line of `docs/protocol/mokly-sidecar.md`.
 
 ## Milestone 6: Measurement and output check
 
