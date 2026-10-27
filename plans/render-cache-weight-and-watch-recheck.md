@@ -28,7 +28,7 @@ the prepared catalogue has watch roots that the first watch plan did not
 have, startup prepares the whole catalogue a second time before readiness.
 On `examples/basic` the second preparation takes 2.5 to 2.9 s.
 
-Decision 1 keeps the 256 MiB bound, unless the answer to D4 changes it. The
+Decision 1 keeps the 256 MiB bound, unless the answer to D2 changes it. The
 change does not change the eviction order, the background pass (perf 3),
 CSS bundling (perf 5), per-entry render keys (perf 4), or base retention
 across edits (perf 6).
@@ -48,13 +48,13 @@ the preparation and no recheck runs.
 
 Open decisions, asked on 2026-10-27:
 
-- D1, the record multiplier. Recommended: two.
-- D2, the shape and the names of the count fields. Recommended: one
+- D1, the record multiplier. Recommended: B, two.
+- D2, the eviction acceptance of item 4 under the 256 MiB bound.
+  Recommended: A, keep the bound and amend the acceptance.
+- D3, the shape and the names of the count fields. Recommended: A, one
   `render.cache` counts record for each phase.
-- D3, a correction of decision 2, which cannot remove the recheck.
-  Recommended: the coverage rule of the design below.
-- D4, the eviction acceptance of item 4 under the 256 MiB bound.
-  Recommended: keep the bound and amend the acceptance.
+- D4, a correction of decision 2, which cannot remove the recheck.
+  Recommended: B, the coverage rule of the design below.
 
 ## Corrections To The Item Text
 
@@ -147,7 +147,7 @@ the timing layer cannot read it. The timing layer reads the cache
 statistics when one of the five phases starts. When the phase closes, it
 emits one counts record before the phase's end record. The record carries
 the hits, misses, and evictions between the start and the end, and the
-charged bytes and entries at the end. Under D2 option A the record has the
+charged bytes and entries at the end. Under D3 option A the record has the
 stage `render.cache`, the phase span as `parentId`, and the phase's stage as
 `phase`. A failed phase also emits its record. The counts cover every cache
 operation of the process during the phase, so a parent phase also counts
@@ -155,7 +155,7 @@ its nested phases and concurrent foreground work. The counts code lives in
 a new module beside the timing layer, so the layer's file stays under the
 file cap and its `css.bundle` code stays as perf 5 expects.
 
-Watch recheck, under D3 option B. The watch `Observer` reports whether it
+Watch recheck, under D4 option B. The watch `Observer` reports whether it
 already registers every directory that the roots of a plan need.
 `NativeObserver` compares the root walk of the plan with its registered
 directories. A candidate whose roots changed still attaches a new observer,
@@ -186,12 +186,12 @@ State the count record, the readiness rule, and the charge, so that the
 review can check the code against them.
 
 - [ ] Update `docs/protocol/mokly-timings.md`: the `render.cache` counts
-      record of the D2 answer, its five phases, and its fields. Say that
+      record of the D3 answer, its five phases, and its fields. Say that
       the counts cover the whole process during the phase, and that charged
       bytes are an estimate under the runtime bound, not measured memory.
       Keep the `serve.background` counts record as it is.
 - [ ] Update "Watch Targets And Readiness" in `docs/protocol/mokly-watch.md`
-      with the readiness rule of the D3 answer.
+      with the readiness rule of the D4 answer.
 - [ ] Update `crates/mokly-graph/README.md`: the cache charges the usage,
       instance, and slot records at the D1 multiple of their JSON length.
 - [ ] Update `crates/mokly-watch/README.md`: the observer reports whether it
@@ -219,7 +219,7 @@ Charge the records at the D1 multiple. No other charge changes.
 
 ## Milestone 3: Cache counts in the timing records
 
-Emit the counts of the D2 answer at the end of the five phases.
+Emit the counts of the D3 answer at the end of the five phases.
 
 - [ ] Write the failing tests first in a new
       `crates/mokly-cli/src/_tests_/cache_trace_tests.rs`, with a mocked
@@ -280,7 +280,7 @@ above.
       `.context/render-cache-weight-and-watch-recheck/`.
 - [ ] Confirm the acceptance: one `catalogue.validate` and one
       `graph.prepare` before `serve.ready`, zero evictions in
-      `serve.background`, and the D4 outcome for `review.compare-views` and
+      `serve.background`, and the D2 outcome for `review.compare-views` and
       the `sidecar.render` count.
 
 ## Milestone 6: Verification, commit, review, and pull request
