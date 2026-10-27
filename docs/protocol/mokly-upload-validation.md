@@ -1,7 +1,5 @@
 # Catalogue Upload Validation v3
 
-Status: In progress under the [Gzip Blob uploads plan](../../plans/gzip-blob-uploads.md).
-
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
 categories, upload limits, and receiver validation.

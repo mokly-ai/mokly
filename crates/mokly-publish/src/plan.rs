@@ -5,10 +5,11 @@ use std::collections::BTreeSet;
 use mokly_model::output::validation::{RESPONSE_LIMIT, hexadecimal, timestamp};
 use mokly_model::versions::PLAN_EXCHANGE;
 use serde::Deserialize;
+use serde::de::IgnoredAny;
 use url::Url;
 
 use crate::error::{Error, Result};
-use crate::http::{Body, Response, is_json};
+use crate::http::{Body, Encoding, Response, is_json};
 use crate::settings::Settings;
 
 /// Validated receiver Plan. Its paths are opaque to the client.
@@ -24,6 +25,8 @@ pub struct Plan {
     pub blob_url: String,
     /// Same-origin completion URL.
     pub complete_url: Url,
+    /// Encoding offered for Blob bodies in this Plan round.
+    pub blob_encoding: Encoding,
 }
 
 #[derive(Deserialize)]
@@ -34,6 +37,32 @@ struct Document {
     missing: Vec<String>,
     blob_url: String,
     complete_url: String,
+    #[serde(default)]
+    blob_encodings: Option<BlobEncodings>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum BlobEncodings {
+    List(Vec<BlobEncoding>),
+    Other(IgnoredAny),
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum BlobEncoding {
+    Name(String),
+    Other(IgnoredAny),
+}
+
+impl BlobEncodings {
+    fn offers_gzip(&self) -> bool {
+        matches!(
+            self,
+            Self::List(items)
+                if items.iter().any(|item| matches!(item, BlobEncoding::Name(name) if name == "gzip"))
+        )
+    }
 }
 
 #[derive(Deserialize)]
@@ -83,6 +112,15 @@ impl Plan {
             missing: document.missing,
             blob_url: document.blob_url,
             complete_url: settings.receiver_url(&document.complete_url)?,
+            blob_encoding: if document
+                .blob_encodings
+                .as_ref()
+                .is_some_and(BlobEncodings::offers_gzip)
+            {
+                Encoding::Gzip
+            } else {
+                Encoding::Identity
+            },
         };
         plan.blob_target(&"0".repeat(64), settings)?;
         Ok(plan)

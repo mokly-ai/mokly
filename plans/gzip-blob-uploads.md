@@ -254,56 +254,63 @@ receiver change. Its plan and pull request live in that repository.
         release with `cargo xtask mokly-fixtures`.
   - [x] Tests: a stored gzip Blob, the raw path, the length rule, a body
         that decodes past the declared size, invalid gzip, and the switch.
-- [ ] Create the Conductor workspace in `mokly-ai/mokly-cloud` with the
+- [x] Create the Conductor workspace in `mokly-ai/mokly-cloud` with the
       brief. Record the workspace here.
+  - Created on 2026-10-27: workspace "Gzip Blob uploads receiver"
+    (`conductor://workspace?id=9ff1fc19-2bcf-4b98-8698-9a030c177545`), one
+    Codex session with the brief in
+    `.context/gzip-blob-uploads/cloud-brief.md`. Its agent plans the receiver
+    change and waits for the user's approval.
 
 ## Milestone 3: Gzip Blob bodies in the CLI
 
 Parse the field, encode Blob bodies, and send them. The Plan archive,
 Complete, accounting, and the summary keep their behaviour.
 
-- [ ] `crates/mokly-publish/src/plan.rs`: parse `blobEncodings` with a
+Evidence: `.context/gzip-blob-uploads/milestone-3-verification-2026-10-27.md`.
+
+- [x] `crates/mokly-publish/src/plan.rs`: parse `blobEncodings` with a
       typed lenient deserializer into `Plan`. Any other shape counts as
       absent.
-- [ ] Add a module for the Blob body. A pure function takes the file bytes
+- [x] Add a module for the Blob body. A pure function takes the file bytes
       and the round's encoding. It returns the body and its encoding under
       decision 1.
-- [ ] `crates/mokly-publish/src/http.rs`: add the encoding to `Request`.
+- [x] `crates/mokly-publish/src/http.rs`: add the encoding to `Request`.
       Plan and Complete use none. `ReqwestHttp` sets `Content-Encoding: gzip`
       on an encoded Blob.
-- [ ] `crates/mokly-publish/src/exchange.rs`: encode on the blocking pool
+- [x] `crates/mokly-publish/src/exchange.rs`: encode on the blocking pool
       before `requests.send`, and observe cancellation while the job waits.
-- [ ] `crates/mokly-publish/src/error.rs`: add an `InternalError` variant
+- [x] `crates/mokly-publish/src/error.rs`: add an `InternalError` variant
       for an encoding or blocking-task failure.
-- [ ] Update every `Request` construction in the tests.
-- [ ] Rust unit tests, with unimock and the fake clock:
-  - [ ] Body: compressible bytes give gzip that decodes to the same bytes,
+- [x] Update every `Request` construction in the tests.
+- [x] Rust unit tests, with unimock and the fake clock:
+  - [x] Body: compressible bytes give gzip that decodes to the same bytes,
         twice the same. Seeded random bytes, empty, and tiny files stay raw.
         Without the listing, every file stays raw.
-  - [ ] Fixtures: `fixtures_tests.rs` checks each Plan case's
+  - [x] Fixtures: `fixtures_tests.rs` checks each Plan case's
         `blobEncoding`.
-  - [ ] Gzip path: each encoded Blob decodes to bytes with the URL digest.
+  - [x] Gzip path: each encoded Blob decodes to bytes with the URL digest.
         The incompressible file is raw.
-  - [ ] Raw path: no Blob carries an encoding when the Plan has no field.
-  - [ ] Retries: a gzip Blob answered 503, then 204, sends equal bodies and
+  - [x] Raw path: no Blob carries an encoding when the Plan has no field.
+  - [x] Retries: a gzip Blob answered 503, then 204, sends equal bodies and
         equal encodings, from captured inputs.
-  - [ ] Re-plans: a gzip round followed by a round without the field sends
+  - [x] Re-plans: a gzip round followed by a round without the field sends
         raw bodies. Two gzip rounds send equal bodies.
-  - [ ] Progress: `<size>` counts the decoded bytes when gzip is in use.
-  - [ ] Cancellation while an encoding is pending gives `Error::Cancelled`
+  - [x] Progress: `<size>` counts the decoded bytes when gzip is in use.
+  - [x] Cancellation while an encoding is pending gives `Error::Cancelled`
         and no Blob request.
-- [ ] Rust integration tests with reqwest and the local server:
-  - [ ] A receiver that lists gzip gets `content-encoding: gzip` with a body
+- [x] Rust integration tests with reqwest and the local server:
+  - [x] A receiver that lists gzip gets `content-encoding: gzip` with a body
         shorter than the file that decodes to the installed bytes. Without
         the listing, it gets raw bodies and no header.
-  - [ ] `tests/fixture_server_tests.rs` checks each Plan case's
+  - [x] `tests/fixture_server_tests.rs` checks each Plan case's
         `blobEncoding` across the HTTP boundary.
-- [ ] Update `crates/mokly-publish/README.md`: the Blob encoding under
+- [x] Update `crates/mokly-publish/README.md`: the Blob encoding under
       `## What This Crate Does`, and the new module under `### Key Code`.
-- [ ] Update `docs/guides/ci/the-upload.md`: the blobs, what the receiver
+- [x] Update `docs/guides/ci/the-upload.md`: the blobs, what the receiver
       must do, and the size in counts and cancellation.
-- [ ] Remove the status lines from both protocol pages.
-- [ ] Run `cargo test -p mokly-publish` and `cargo test -p mokly-cli`.
+- [x] Remove the status lines from both protocol pages.
+- [x] Run `cargo test -p mokly-publish` and `cargo test -p mokly-cli`.
 
 ## Milestone 4: End-to-end test, smoke test, and measurement
 

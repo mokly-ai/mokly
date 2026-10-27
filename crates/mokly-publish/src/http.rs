@@ -6,7 +6,7 @@ use bytes::Bytes;
 use futures_util::future::BoxFuture;
 use mokly_model::output::validation::RESPONSE_LIMIT;
 use reqwest::header::{
-    ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, HeaderValue, RETRY_AFTER,
+    ACCEPT, AUTHORIZATION, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE, HeaderValue, RETRY_AFTER,
 };
 use reqwest::{Certificate, Client, Method, redirect, retry};
 use thiserror::Error;
@@ -25,6 +25,16 @@ pub enum Step {
     Complete,
 }
 
+/// Content encoding applied to a Blob request body.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum Encoding {
+    /// Send the exact file bytes without content encoding.
+    #[default]
+    Identity,
+    /// Send one gzip member that decodes to the file bytes.
+    Gzip,
+}
+
 /// A prepared request. Its URL is checked again before every attempt.
 #[derive(Clone)]
 pub struct Request {
@@ -34,6 +44,8 @@ pub struct Request {
     pub url: Url,
     /// Immutable request snapshot; empty for Complete.
     pub body: Bytes,
+    /// Content encoding for the request body.
+    pub encoding: Encoding,
     /// At most 120 seconds, shortened at upload expiry.
     pub timeout: Duration,
 }
@@ -139,7 +151,13 @@ impl Http for ReqwestHttp {
                 Step::Plan => outgoing
                     .header(CONTENT_TYPE, "application/gzip")
                     .header(ACCEPT, "application/json"),
-                Step::Blob => outgoing.header(CONTENT_TYPE, "application/octet-stream"),
+                Step::Blob => {
+                    let outgoing = outgoing.header(CONTENT_TYPE, "application/octet-stream");
+                    match request.encoding {
+                        Encoding::Identity => outgoing,
+                        Encoding::Gzip => outgoing.header(CONTENT_ENCODING, "gzip"),
+                    }
+                }
                 Step::Complete => outgoing.header(ACCEPT, "application/json"),
             };
             let Ok(mut incoming) = outgoing.body(request.body.clone()).send().await else {

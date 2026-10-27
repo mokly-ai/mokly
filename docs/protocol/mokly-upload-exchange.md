@@ -1,7 +1,5 @@
 # Catalogue Upload Exchange v1
 
-Status: In progress under the [Gzip Blob uploads plan](../../plans/gzip-blob-uploads.md).
-
 ## Boundary
 
 The [CLI and manifest contract](./mokly-upload.md) owns repository metadata; the
