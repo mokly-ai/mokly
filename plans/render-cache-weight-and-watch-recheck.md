@@ -106,26 +106,48 @@ eight sidecars, OS cache directory warm. The raw records and the scripts are
 under `.context/perf/`. The summary is
 `.context/render-cache-weight-and-watch-recheck/baseline.md`.
 
-Before, at `a9dd1e81`. A range gives the values of two runs.
+Before is the base binary at `a9dd1e81`, after is the branch at
+`a94e2c9b`. A range gives the warm runs: four before and three after. The
+first after run had a cold base extraction, because `HEAD` had moved, and is
+left out. The React rows compare an interleaved pair of each, because the
+machine drifted during the day.
 
-| Measure                                            | `examples/basic`   | After one edit | React fixture |
-| -------------------------------------------------- | ------------------ | -------------- | ------------- |
-| `serve.ready`                                      | 13.2 to 13.8 s     |                | 6.5 s         |
-| `catalogue.validate`, `graph.prepare` before ready | 2 and 2            |                | 1 and 1       |
-| second preparation before ready                    | 2.8 to 2.9 s       |                | none          |
-| `serve.background`                                 | 12.3 to 13.4 s     | 14.9 s         | 1.8 s         |
-| `changes.classify`                                 | 55.5 to 55.9 s     | 71.1 s         | 9.0 to 9.2 s  |
-| `review.base-tree`                                 | 32.9 to 33.6 s     | 50.4 s         | 8.7 to 8.9 s  |
-| `review.capture-side`                              | 5.1 to 5.3 s       | 5.0 s          | 1.0 to 1.3 s  |
-| `review.compare-views`                             | 21.4 to 21.8 s     | 19.7 s         | 0.25 s        |
-| `sidecar.render` count, whole run                  | 2,110 to 2,181     | 4,267          | 324           |
-| `css.bundle` count, union                          | 152, 9.7 to 10.3 s | 193, 20.7 s    | 12, 0.26 s    |
-| `watch.action`                                     |                    | 10.1 s         |               |
-| edit to the end of the second classification       |                    | 96.2 s         |               |
+| Measure on `examples/basic`                        | Before             | After             |
+| -------------------------------------------------- | ------------------ | ----------------- |
+| `serve.ready`                                      | 12.5 to 13.8 s     | 9.4 to 10.8 s     |
+| `catalogue.validate`, `graph.prepare` before ready | 2 and 2            | 1 and 1           |
+| second preparation before ready                    | 2.8 to 3.1 s       | none              |
+| `serve.background`                                 | 11.5 to 13.4 s     | 10.6 to 12.6 s    |
+| evictions in `serve.background`                    | 913, measured      | 0                 |
+| `changes.classify`                                 | 50.9 to 58.6 s     | 34.8 to 46.0 s    |
+| `review.base-tree`                                 | 32.9 to 37.8 s     | 27.9 to 37.6 s    |
+| `review.capture-side`                              | 4.3 to 5.3 s       | 3.9 to 5.1 s      |
+| `review.compare-views`                             | 17.2 to 21.8 s     | 6.0 to 7.4 s      |
+| `sidecar.render` count, whole run                  | 2,085 to 2,182     | 1,461 to 1,474    |
+| `css.bundle` count, union                          | 152, 9.7 to 11.1 s | 114, 7.0 to 9.3 s |
+| `watch.action`, two edit runs                      | 10.1 to 10.5 s     | 10.1 to 10.2 s    |
+| `serve.background` after the edit                  | 14.1 to 14.9 s     | 13.2 to 15.2 s    |
+| `changes.classify` after the edit                  | 71.1 to 76.9 s     | 54.5 to 69.7 s    |
+| `review.compare-views` after the edit              | 19.7 to 21.8 s     | 5.8 to 8.2 s      |
+| edit to the end of the second classification       | 96.2 to 101.5 s    | 78.0 to 95.0 s    |
 
-The cold run of `examples/basic` gave `serve.ready` 12.7 s,
-`changes.classify` 121.7 s, `review.compare-views` 18.7 s, and 1,996
-sidecar renders.
+| Measure on the React fixture | Before         | After              |
+| ---------------------------- | -------------- | ------------------ |
+| `serve.ready`                | 7.4 to 7.7 s   | 7.6 to 7.9 s       |
+| `serve.background`           | 1.9 s          | 2.0 to 2.1 s       |
+| `changes.classify`           | 10.3 to 10.9 s | 9.9 to 10.1 s      |
+| `review.capture-side`        | 1.2 to 1.3 s   | 1.2 s              |
+| `review.compare-views`       | 0.29 s         | 0.27 to 0.34 s     |
+| `sidecar.render` count       | 324            | 324                |
+| `css.bundle` count, union    | 12, 0.30 s     | 12, 0.27 to 0.29 s |
+
+The 913 evictions come from the experiment build at the old charge. After
+the change, the cache evicts 742 entries while the base renders, and the
+compare step misses 763 lookups, as decision D2 accepted. After an edit, the
+second background pass evicts about 1,550 entries, because Changes filled
+the cache. The React fixture evicts nothing in any phase. The cold run of
+`examples/basic` at `a9dd1e81` gave `serve.ready` 12.7 s, `changes.classify`
+121.7 s, and 1,996 sidecar renders.
 
 The multiplier measurement used an experiment build. It reports the cache
 counts, the resident size, and the live heap at the start and the end of
@@ -303,16 +325,19 @@ active watcher did not observe.
 Measure the branch with the same method and compare it with the table
 above.
 
-- [ ] Build the release binary and the packages with the shared method.
-- [ ] Run the warm serve run twice, the edit run once, and the React fixture
-      twice. Rerun a pair that differs by more than ten percent.
-- [ ] Add the after values to the table in this plan. Save the records under
+- [x] Build the release binary and the packages with the shared method.
+- [x] Run the warm serve run twice, the edit run once, and the React fixture
+      twice. Rerun a pair that differs by more than ten percent. The base
+      tree phase varied by up to 35 %, so the base binary ran again beside
+      the branch, two warm runs, one edit run, and two React runs.
+- [x] Add the after values to the table in this plan. Save the records under
       `.context/perf/` and the summary under
       `.context/render-cache-weight-and-watch-recheck/`.
-- [ ] Confirm the acceptance: one `catalogue.validate` and one
+- [x] Confirm the acceptance: one `catalogue.validate` and one
       `graph.prepare` before `serve.ready`, zero evictions in
       `serve.background`, and the D2 outcome for `review.compare-views` and
-      the `sidecar.render` count.
+      the `sidecar.render` count. Evidence:
+      `.context/render-cache-weight-and-watch-recheck/after.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
