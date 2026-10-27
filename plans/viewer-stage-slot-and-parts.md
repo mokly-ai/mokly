@@ -68,19 +68,22 @@ Contract owners:
 
 ## Decisions
 
-The eight decisions below are open. The plan asked for them on 2026-10-27.
-Each one shows the recommended option. The design and the milestones assume
-that option. Another answer changes the milestones that the decision names.
+The plan asked for the eight decisions below on 2026-10-27. The user answered
+Decisions 1, 7, and 8 the same day. Decisions 2 to 6 stay open, and the user
+asked for more detail on Decisions 2, 3, 4, and 6. Each open decision shows the
+recommended option. The design and the milestones assume that option. Another
+answer changes the milestones that the decision names.
 
-1. **Composition model, High.** Recommended: A.
+1. **Composition model, High.** Decided: A, by the user on 2026-10-27.
    - A: One root element. Every part renders inside it, in any host layout.
    - B: A provider without an element. Parts render anywhere in the host page,
      and each part has its own style and event scope.
    - C: Regions only. The entry layout stays internal.
-   - Reason: one element keeps one style scope, one event delegate, one focus
-     target, and one marker layer. B needs new mechanics for each of them. C
-     does not meet the request. Affects Milestones 1, 3, and 4.
-2. **Link addresses, High.** Recommended: B.
+   - Reason: one element keeps one event delegate, one focus target, and one
+     marker layer. B needs new mechanics for each of them. C does not meet the
+     request. The styles are scoped to each part, under the review decisions
+     below. Affects Milestones 1, 3, and 4.
+2. **Link addresses, High.** Open. Recommended: B.
    - A: Full addresses only in a static render. The browser keeps
      root-absolute links.
    - B: Full addresses at the artifact origin root in every render of an
@@ -93,7 +96,7 @@ that option. Another answer changes the milestones that the decision names.
    - Scope: the request asks for the scope of A, full addresses in a static
      render. B goes further, because it also changes the browser links of
      every embedded host.
-3. **Entry details in a static render, High.** Recommended: A.
+3. **Entry details in a static render, High.** Open. Recommended: A.
    - A: In a static render, the viewer calls `detail` during the render and
      uses each entry detail object that it returns.
    - B: A new `details` prop of entry details that the host holds.
@@ -104,7 +107,7 @@ that option. Another answer changes the milestones that the decision names.
      up-front entry data, and chose option H. Options A and B here also give a
      static render entry data, but beside the stage slot of option H. The user
      decides whether that rejection covers them.
-4. **Stage overlay placement, Medium.** Recommended: A.
+4. **Stage overlay placement, Medium.** Open. Recommended: A.
    - A: The overlay renders inside the stage part, and CSS places it over the
      stage canvas. Its content remounts when the selection moves to another
      workspace.
@@ -113,17 +116,18 @@ that option. Another answer changes the milestones that the decision names.
    - C: The overlay stays beside the main area, and CSS anchor positioning
      places it.
    - Reason: A gives one placement for both renders and removes the
-     measurement. B keeps two placements. C needs CSS anchor positioning in
-     every browser of every host. Affects Milestones 1, 4, and 9.
-5. **Inspection and markers with a host stage, Medium.** Recommended: A, as the
-   request recommends.
+     measurement. B keeps two placements. C needs CSS anchor positioning,
+     which Chrome 125, Safari 26, and Firefox 147 support. Older versions,
+     such as Firefox ESR 140, do not. Affects Milestones 1, 4, and 9.
+5. **Inspection and markers with a host stage, Medium.** Open. Recommended: A,
+   as the request recommends.
    - A: Inspection is unavailable. Highlight components is disabled with a
      reason, and no instance event fires. The highlight, scroll, and pick
      handle methods reject, and every marker reports `unavailable`.
    - B: A new API through which the host stage reports instance boxes.
    - Reason: instance geometry exists only inside Mokly's own frames. Affects
      Milestones 1, 2, and 5.
-6. **Comparison modes with a host stage, Medium.** Recommended: A, as the
+6. **Comparison modes with a host stage, Medium.** Open. Recommended: A, as the
    request recommends.
    - A: The mode group stays, and the stage function receives the selected
      mode. No comparison loads, and Scroll together is absent.
@@ -131,18 +135,20 @@ that option. Another answer changes the milestones that the decision names.
    - C: The viewer loads the comparison and gives its documents to the host.
    - Reason: the host keeps the reader's mode choice, and Scroll together moves
      only the viewer's own panes. Affects Milestones 1, 2, 3, and 5.
-7. **Device frames, Medium.** Recommended: A, as the request recommends.
+7. **Device frames, Medium.** Decided: B, by the user on 2026-10-27. The plan
+   had recommended A.
    - A: Export `MoklyDeviceFrame`, the labelled phone or browser frame of one
      viewport.
    - B: Export the bare `MoklyPhoneFrame` and `MoklyBrowserFrame` chrome.
    - C: No export. The host copies the design.
-   - Reason: one component follows the selected viewport and keeps the label
-     and the preview scheme surface. Affects Milestones 1, 5, and 7.
-8. **Stability promise, Low.** Recommended: A.
+   - Result: the host places each frame and labels it if it wants. Each frame
+     still takes the colour scheme of its screen, so the status band and the
+     screen surface stay readable. Affects Milestones 1, 5, and 7.
+8. **Stability promise, Low.** Decided: A, by the user on 2026-10-27.
    - A: One promise for every export. The documented props, composition rules,
      and behaviour are the API. A breaking change ships only in a minor
      release, with an upgrade note.
-   - B: Promise A for the root, the region parts, and the device frame. The
+   - B: Promise A for the root, the region parts, and the device frames. The
      entry parts and the tab parts are experimental.
    - Reason: the package is pre-1.0 and already follows rule A. One tier is
      simpler for hosts. Affects Milestones 1 and 8.
@@ -150,6 +156,26 @@ that option. Another answer changes the milestones that the decision names.
 The plan also makes three choices that a review can change: the flat `Mokly*`
 export names, the `stage` prop on the root, and a warning without a throw for a
 misplaced part.
+
+On 2026-10-27 the user also answered these items of the plan review:
+
+- **Review 1 finding 2: B.** Each part is its own style scope. Host layout
+  elements between the parts get no viewer styles. Rejected: A, which let them
+  get the viewer's base rules, such as `box-sizing`.
+- **Review 1 finding 4: A.** In a static render, a throw from `detail` reaches
+  the host's React error handling. A detail that fails its checks shows the
+  browser's failure state without Try again. No event callback fires.
+  Rejected: B, every failure shows the failure state, and C, every failure
+  throws.
+- **Review 1 finding 5: B.** Two named test helpers, one for the browser's
+  first render with pending details and one for a static render with object
+  details. Rejected: A, pending details in the one helper.
+- **Review 1 finding 6: B.** One static render check that both
+  `npm run package:smoke` and the release consumer smoke call. Rejected: A, a
+  push to the release check branch.
+- **Review 2, wider fix of finding 5: B.** The Markdown link check covers every
+  Markdown file under `packages/`. Rejected: A, the rule that each package page
+  is named `README.md`.
 
 ## Design
 
@@ -218,15 +244,17 @@ interface ViewerSlots {
 | `MoklyStageOverlay`                                                           | `pointerEvents`, `children`                                          | Host content over the stage canvas                                                                                 | `MoklyStage`                   |
 | `MoklyInspector`                                                              | None                                                                 | The details panel, which has the Details, Components, Props, and Usage tabs for a screen or component              | `MoklyMain`                    |
 | `MoklyEntryDetails`, `MoklyInstanceList`, `MoklyPropsPanel`, `MoklyUsageList` | None                                                                 | The body of the Details, Components, Props, or Usage tab                                                           | `MoklyMain`                    |
-| `MoklyDeviceFrame`                                                            | `viewport`, `children`, `address`, `colorScheme`                     | A labelled phone or browser frame with the preview scheme surface, the address copy, and expand                    | The root, also in slot content |
+| `MoklyPhoneFrame`                                                             | `children`, `colorScheme`                                            | The phone chrome: bezel, notch, status band, screen surface, and home pill                                         | The root, also in slot content |
+| `MoklyBrowserFrame`                                                           | `children`, `address`, `colorScheme`                                 | The browser window chrome: lights, the address pill with copy, expand, and the viewport surface                    | The root, also in slot content |
 
 `start` and `end` take host content before and after a part, as the matching
 slots of `MoklyViewer` do today. `MoklyEntryHeader` takes `end` after its view
 controls. `MoklyMain` lays out the selected entry with its `children`, or with
 the default entry layout when it has none. The same `children` serve every
-entry kind. Home and the not-found view do not render them. The root entry
-also exports `ViewerStage`, `ViewerStageContext`, `ComparisonMode`,
-`MoklyViewerRootProps`, and the props type of each part.
+entry kind. Home and the not-found view do not render them. The two frames
+draw no viewport label, and their `colorScheme` defaults to the selected
+scheme. The root entry also exports `ViewerStage`, `ViewerStageContext`,
+`ComparisonMode`, `MoklyViewerRootProps`, and the props type of each part.
 
 `MoklyViewer` renders the root with its default layout: the top bar with
 `topBarStart` and `topBarEnd`, the catalogue with `railStart` and `railEnd`,
@@ -241,13 +269,13 @@ renders the same internal parts in its own root.
 2. The entry parts render inside `MoklyMain`. `MoklyStageOverlay` renders
    inside `MoklyStage`.
 3. A root holds one `MoklyMain`. It holds at most one of each other part,
-   except `MoklySlot` and `MoklyDeviceFrame`.
+   except `MoklySlot`, `MoklyPhoneFrame`, and `MoklyBrowserFrame`.
 4. The host owns the layout elements between the root and the parts. Viewer
-   styles do not reach them.
+   styles do not reach them, because each part is its own style scope.
 5. Host content, such as text, controls, and links, goes in a part's slot prop
    or in a `MoklySlot`. Viewer styles and link handling do not reach it.
-6. A part does not render inside slot content. The exception is
-   `MoklyDeviceFrame`, which takes back the viewer's styles there.
+6. A part does not render inside slot content. The exception is the two
+   frames, which keep their own styles there.
 7. A part outside its required ancestor renders nothing. It logs one console
    warning that names the part and the ancestor.
 8. The root fills its container, which needs a definite height. Each part
@@ -289,6 +317,11 @@ Behaviour across parts, in every layout that follows these rules:
 - Part markers do not use Mokly's reserved document names: `data-mokly-link*`,
   `mokly-instance`, and `mokly-` comments. Hosts render the viewer inside
   Mokly screens.
+- Each part's element is a style scope root. The scope of a part ends at a
+  nested part and at slot content. The root's scope holds only the root's own
+  elements: the skip link, the layers, and the status region.
+- A rule that reads root state, such as the drawer, the theme, or the expanded
+  frame, reaches the root through an ancestor selector of the part's scope.
 
 ### Static Rendering
 
@@ -302,6 +335,9 @@ Behaviour across parts, in every layout that follows these rules:
   detail of each step screen of a use case.
 - The viewer adopts each entry detail object under the detail fences. A URL or
   a promise leaves the parts that need that detail in their loading state.
+- A throw from `detail` reaches the host's React error handling. A detail that
+  fails its fences shows the browser's failure state for that case, without
+  Try again. No event callback fires in a static render.
 - With a host stage and object details, no part shows a loading state.
 - Without a host stage, the viewer's own stage renders frames with full `src`
   addresses. The previous-version preview and the comparison panes show their
@@ -350,8 +386,9 @@ viewer contract is at its exact cap of 396 lines, so split it first.
       browser" with the static render rule, and link the new pages.
   - [ ] The `detail` paragraph: the viewer also calls `detail` during a static
         render.
-  - [ ] The theming paragraph: scoped styles exclude slot content, except a
-        `MoklyDeviceFrame` inside it.
+  - [ ] The theming paragraph: each part is its own style scope. Scoped
+        styles exclude host layout elements and slot content, except a frame
+        part inside slot content.
   - [ ] The root entry item says that a React host renders the viewer in the
         browser. Add that it can also render it statically.
   - [ ] The sentence "Every delivery renders the shell from data in the
@@ -366,11 +403,11 @@ viewer contract is at its exact cap of 396 lines, so split it first.
       Decisions 1 and 8 in force.
 - [ ] Add `mokly-viewer-stage.md`: the stage function and its context, the
       `undefined` rule, and what a host stage loads. Add comparison modes,
-      inspection, markers, the device frame, and the stage overlay, with
+      inspection, markers, the two frame parts, and the stage overlay, with
       Decisions 4 to 7 in force.
 - [ ] Add `mokly-viewer-static-render.md`: what a static render shows, the
-      `detail` rule, determinism, link addresses, and the gate tests, with
-      Decisions 2 and 3 in force. Record hydration as rejected.
+      `detail` rule and its failures, determinism, link addresses, and the gate
+      tests, with Decisions 2 and 3 in force. Record hydration as rejected.
 - [ ] `mokly-viewer-markers.md`: a host stage has no frame, so each marker is
       `unavailable`.
 - [ ] `mokly-component-explorer.md`: a host stage disables Highlight
@@ -382,8 +419,9 @@ viewer contract is at its exact cap of 396 lines, so split it first.
 - [ ] `docs/architecture/package-boundary.md` and `rust-core.md`: Serve and
       `build` render the shell in the browser. A React host can render the
       viewer statically.
-- [ ] `npm-release.md`: the release consumer smoke also renders the installed
-      viewer statically.
+- [ ] `npm-release.md` and `packed-consumer-smoke.md`: the release consumer
+      smoke and `npm run package:smoke` also render the installed viewer
+      statically, through one shared check.
 - [ ] `docs/protocol/README.md`: list the five new pages under Viewer.
 - [ ] Give each page that this milestone adds or changes this plan's status
       line. Where a page has the stale line of the completed Rust rebuild plan,
@@ -462,6 +500,14 @@ becomes the default assembly of the public parts.
 - [ ] Add `MoklySlot` and the public parts over the internal parts. Each part
       checks its required ancestor and marks its element. A misplaced part
       renders nothing and warns once.
+- [ ] Make each part its own style scope in the scoped stylesheet. A part's
+      scope ends at a nested part and at slot content. The root rules apply
+      only to the root's own elements.
+  - [ ] Rewrite the rules that read root state, such as the drawer, the theme,
+        and the expanded frame, so that each part scope reaches the root
+        through an ancestor selector.
+  - [ ] Browser check: a host layout element between parts keeps its own
+        `box-sizing`, margins, and link colour.
 - [ ] Key the CSS between parts on part markers, not on the wrappers of the
       default layout. Examples are `.mbk-workspace [hidden]` and
       `:has(.mbk-workspace)`.
@@ -508,19 +554,21 @@ Add the host stage under Decisions 5, 6, and 7.
         reject as for a missing instance.
   - [ ] `startPick` rejects at once without `onPickStart`.
   - [ ] Each marker reports `unavailable`.
-- [ ] Add `MoklyDeviceFrame` over `PhoneFrame`, `BrowserFrame`, and the frame
-      label. It draws the preview scheme surface, and its browser bar copies
-      the address and expands.
-- [ ] Let `MoklyDeviceFrame` take back the viewer's styles inside slot content.
-      Its style scope holds the device chrome rules and none of the root rules.
+- [ ] Export `MoklyPhoneFrame` and `MoklyBrowserFrame` over `PhoneFrame` and
+      `BrowserFrame`, without the viewport label, under Decision 7.
+  - [ ] Each frame takes `colorScheme` for its screen surface and status band,
+        and the selected scheme is the default.
+  - [ ] The browser frame takes `address`. Its bar copies the address and
+        expands the frame.
+  - [ ] Inside slot content, each frame keeps its styles as a part scope.
 - [ ] Node tests: the context for every entry kind, a variant, a removed
       record, and each viewport, scheme, and mode. Test `undefined` and `null`,
-      no frame or comparison markup with a host stage, and the device frame.
+      no frame or comparison markup with a host stage, and both frame parts.
 - [ ] Browser specs:
   - [ ] A host stage makes no frame, comparison, or preview request.
   - [ ] A mode switch and a selection change call `stage` with the new context.
   - [ ] Markers report `unavailable`, and the handle methods reject.
-  - [ ] A host device frame copies its address and expands.
+  - [ ] A host browser frame copies its address and expands.
 - [ ] Smoke test: an embedded host with a host stage in Chrome.
 
 ## Milestone 6: Static Rendering And Link Addresses
@@ -540,6 +588,14 @@ Make static rendering a supported behaviour under Decisions 2 and 3.
       evidence links, the Props link, and flow step links.
 - [ ] Remove the reads of browser globals, time, and random values from render
       paths.
+- [ ] Apply the failure rules of review 1 finding 4: a throw from `detail`
+      reaches the host, a detail that fails its fences shows the failure state
+      without Try again, and no event callback fires.
+- [ ] Split `embeddedMarkup` in `packages/viewer/tests/presentation_v7_helpers.tsx`
+      into two named helpers. One renders the browser's first render with
+      pending details. The other renders a static render with object details.
+      Move each assertion of the four test files that use it to the helper
+      whose premise it checks.
 - [ ] Node tests in a new `packages/viewer/tests/static_render.test.tsx`.
       Render `MoklyViewer` and every part with `renderToStaticMarkup` from the
       protocol fixtures, for every entry kind, with and without a host stage.
@@ -548,6 +604,8 @@ Make static rendering a supported behaviour under Decisions 2 and 3.
         fragment.
   - [ ] The overlay and `emptyState` are not hidden.
   - [ ] Two renders give the same HTML.
+  - [ ] A throw from `detail`, a failed fence, and a URL result each give
+        their stated result, and no event callback fires.
 - [ ] Browser tests: an unmodified click on a full-address link still proposes
       the selection, and a modified click opens the address. Update the
       embedded tests that expect root-absolute links.
@@ -560,29 +618,34 @@ Prove in the release that the published archive renders statically.
 - [ ] Read the `rust` skill. Add a CLI integration test under
       `crates/mokly-cli/tests/` with a fixture catalogue of two React screens.
   - [ ] The first screen renders `MoklyViewer` from the protocol fixtures with
-        host slots, a host stage in `MoklyDeviceFrame` parts, and the scoped
-        stylesheet.
+        host slots, a host stage in `MoklyPhoneFrame` and `MoklyBrowserFrame`
+        parts, and the scoped stylesheet.
   - [ ] The second screen renders a custom layout of the parts.
   - [ ] `mokly build --strict` must succeed. The document URL policy, the
         reserved names, and the imported stylesheet rules then accept the HTML.
   - [ ] The repository suite runs the test on every pull request, release pull
         requests included.
-- [ ] Extend the release consumer smoke under `scripts/release/`. It renders
-      `MoklyViewer` and every part with `react-dom/server` from the installed
-      archive. It fails on loading copy or on a root-absolute address.
+- [ ] Add one static render check under `scripts/` that the release consumer
+      smoke under `scripts/release/` and `npm run package:smoke` both call. It
+      renders `MoklyViewer` and every part with `react-dom/server` from the
+      installed archive. It fails on loading copy or on a root-absolute
+      address.
+- [ ] Run `npm run package:smoke`, so that the new check runs before merge.
 
 ## Milestone 8: Package README And API Docs
 
+- [ ] Extend `tests/markdown_links.test.ts` to every Markdown file under
+      `packages/`, and fix each broken link that it then finds. Update the
+      sentence in `AGENTS.md` that names the scope of the check.
 - [ ] `packages/viewer/README.md`: the static rendering promise, a link to the
       examples page, and the part entry points under its Key Code section.
       Remove "renders only in the browser". The README has 285 lines, so keep
       it at or below 300.
 - [ ] Add the examples page as `packages/viewer/docs/{topic}/README.md`, like
-      the other package pages, so that the Markdown link check reads it. It
-      holds a stage slot example and a custom layout example.
+      the other package pages. It holds a stage slot example and a custom
+      layout example.
 - [ ] Split `packages/viewer/src/shell/README.md` by area before it grows. It
-      has 515 lines. Name each new page `README.md`, so that the Markdown link
-      check reads it.
+      has 515 lines.
 - [ ] The shell README describes the entry provider, the part files, and the
       static render rule.
 - [ ] `packages/viewer/docs/api/README.md`: `slots.stage`, `MoklyViewerRoot`,
@@ -625,26 +688,14 @@ on the minor stream.
   - Two reviews of the plan ran on 2026-10-27. Review 1 fixed its findings 1
     and 7 to 11, and review 2 fixed its findings 2, 3, 5, 6, and 7. The
     reports are `review-1.md` and `review-2.md` in
-    `.context/viewer-stage-slot-and-parts/`. These items stay open for the
-    user.
-  - Review 1 finding 2: Rule 4 conflicts with the root style scope. Severity
-    Medium, effort Small. Recommended: A, state that host layout elements in
-    the root get the viewer's base rules.
+    `.context/viewer-stage-slot-and-parts/`. The Decisions section records the
+    items that the user answered. These items stay open for the user.
   - Review 1 finding 3: Three allowed layouts have no behaviour. Severity
-    Medium, effort Medium. Recommended: B, CSS keyed on part markers and a slot
-    context, tested in Milestone 4.
-  - Review 1 finding 4: Static render detail failures are unspecified.
-    Severity Medium, effort Small. Recommended: A, a throw reaches the host, a
-    fence failure shows the failure state, and no callback fires.
-  - Review 1 finding 5: Milestone 6 flips the first-render tests. Severity
-    Medium, effort Small. Recommended: B, one named test helper for each
-    render.
-  - Review 1 finding 6: The extended release smoke never runs before merge.
-    Severity Medium, effort Medium. Recommended: B, one check that
-    `npm run package:smoke` also runs.
+    Medium, effort Medium. Recommended: C, CSS on part markers, and a part in
+    slot content keeps its styles and its link handling.
   - Review 2 finding 1: Overlapping and repeated parts have no result.
-    Severity Medium, effort Small. Recommended: A, a second part of one kind
-    renders nothing and warns once.
+    Severity Medium, effort Medium. Recommended: B, the inspector and the
+    header take their inner parts as children, and a real repeat warns once.
   - Review 1 finding 12: The plan does not hold work for the decisions.
     Severity Low, effort Small. Recommended: A, Milestone 1 starts after the
     answers.
@@ -654,9 +705,6 @@ on the minor stream.
   - Follow-up: run `design_adoption.spec.ts` in the mockup check of
     `AGENTS.md`. Effort Small. Covers review 2 finding 2. Previous examples:
     review 1 finding 10.
-  - Follow-up: extend the Markdown link check to every Markdown file under
-    `packages/`. Effort Small. Covers review 2 finding 5. Previous examples:
-    the F9b README split in `plans/rust-rebuild.md`.
   - `docs/protocol/mokly-viewer.md`: a route change does not discard the
     inspector tab, which the root store keeps. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked. Put its
@@ -673,7 +721,8 @@ The 24 mockups under `docs/mockups/src/entries/product/viewer`:
   catalogue origin, and a `detail` function that returns fixture detail
   objects. It passes the cloud controls as slots and adds `slots.stage`.
 - For a ready publication, `slots.stage` returns a sample screen inside
-  `MoklyDeviceFrame` parts. For an empty, loading, error, build, or access
+  `MoklyPhoneFrame` and `MoklyBrowserFrame` parts. For an empty, loading,
+  error, build, or access
   state, it returns one cloud card.
 - Both HTML patches go. The links are full addresses at `baseUrl`, and the
   overlay is visible.
@@ -694,7 +743,7 @@ The app:
 
 1. Should a static render start in a comparison mode or with the inspector open
    on a tab? Neither is public state today, so a mockup cannot show them.
-2. Should `MoklyDeviceFrame` also draw the component canvas and the document
+2. Should the frame parts also include the component canvas and the document
    pane?
 3. Should viewer links point at host routes? That is option C of Decision 2, a
    later change.
