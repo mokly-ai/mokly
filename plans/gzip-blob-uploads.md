@@ -44,39 +44,35 @@ Contract owners:
 - The [mokly-publish README](../crates/mokly-publish/README.md).
 - The [CI upload guide](../docs/guides/ci/the-upload.md).
 
-## Open decisions
+## Decisions
 
-The user answers these before Milestone 1 starts. The milestones assume the
-recommended option of each decision.
+The user answered all three on 2026-10-27, each with the recommended option.
 
-1. Raw bytes for files that gzip does not make smaller. Recommended: B.
-   - A. Gzip every Blob when the Plan lists gzip. Incompressible files grow.
-     64 MiB of random bytes grows by 10,588 bytes and passes the 64 MiB
-     Blob ceiling.
-   - B. Gzip each Blob, and send the gzip body only when it is smaller than
-     the file. Otherwise send the exact bytes without `Content-Encoding`. No
-     list is necessary. A receiver can then reject an encoded body that is
-     larger than the declared size.
-   - C. Skip gzip for a list of compressed media types, such as PNG, JPEG,
-     WebP, and WOFF2, and apply B to the rest. This saves CPU time on media
-     files, but the code and the protocol must keep the list.
-2. Bytes that the rich progress `<size>` counts. Recommended: A.
-   - A. Count the decoded file bytes, as today. The Plan archive already
-     travels compressed and counts its files' raw bytes.
-   - B. Count the bytes that the requests send. The label then needs every
-     missing Blob compressed before the first frame. This changes the
-     terminal contract.
-   - C. Show both values in the label. This changes the terminal contract.
-3. Owner of the Mokly Cloud change. Recommended: A.
-   - A. Milestone 2 creates a Conductor workspace in `mokly-ai/mokly-cloud`
-     with a brief. Its plan and pull request own the receiver change. The
-     review.json removal used this method on 2026-10-26.
-   - B. Milestone 2 writes the brief only. The user names the owner and
-     starts the work.
-   - C. Start the receiver work after the release of this change.
+Decision 1 (2026-10-27): B. Gzip each Blob, and send the gzip body only when
+it is smaller than the file. Otherwise send the exact bytes without
+`Content-Encoding`. A receiver can then reject an encoded body that is larger
+than the declared size. Rejected: A, gzip every Blob, because files that do
+not compress grow: 64 MiB of random bytes grows by 10,588 bytes and passes
+the 64 MiB Blob ceiling. Rejected: C, skip a list of compressed media types
+such as PNG, JPEG, WebP, and WOFF2, because the code and the protocol must
+keep the list. Reason: one rule with no list, and no body is ever larger than
+its file.
 
-The summary line counts marker entries, not bytes. The encoding does not
-change `<uploaded>` or `<unchanged>`.
+Decision 2 (2026-10-27): A. The rich progress `<size>` keeps counting the
+decoded file bytes. Rejected: B, count the bytes that the requests send,
+because the label would need every missing Blob compressed before the first
+frame. Rejected: C, show both values. Both change the terminal contract.
+Reason: the Plan archive already travels compressed and counts its files'
+raw bytes. The summary line counts marker entries, not bytes, so the
+encoding does not change `<uploaded>` or `<unchanged>`.
+
+Decision 3 (2026-10-27): A. Milestone 2 creates a Conductor workspace in
+`mokly-ai/mokly-cloud` with a brief. That workspace's plan and pull request
+own the receiver change. Rejected: B, write only the brief and let the user
+name an owner. Rejected: C, start the receiver work after the release.
+Reason: the receiver work can start from this branch's protocol docs, as the
+review.json removal did on 2026-10-26, and its phase 2 still waits for the
+release.
 
 ## Design
 
@@ -105,7 +101,8 @@ change `<uploaded>` or `<unchanged>`.
   member: flate2 `GzBuilder`, `mtime(0)`, no file name, and
   `Compression::default()`. This is level 6, the level of the Plan archive.
   Level 9 is 0.3 % smaller and needs 1.3 times the CPU time.
-- Decision 1 sets when the encoded body replaces the file bytes.
+- Under decision 1, the CLI sends the gzip body only when it is smaller than
+  the file. Otherwise it sends the exact bytes without `Content-Encoding`.
 - `Content-Type` stays `application/octet-stream`. `Content-Length` is the
   body length. Only an encoded body has `Content-Encoding: gzip`.
 - The marker digest and size always describe the decoded file bytes. The
@@ -136,10 +133,9 @@ change `<uploaded>` or `<unchanged>`.
 
 - A receiver lists `gzip` only when it decodes gzip Blobs for the whole
   upload, until the upload expires.
-- Under decision 1 B, a gzip Blob's `Content-Length` is at most the
-  declared size. The receiver checks this before it reads the body and
-  answers 400 otherwise. Under decision 1 A, the bound is the 64 MiB Blob
-  ceiling.
+- Under decision 1, a gzip Blob's `Content-Length` is at most the declared
+  size. The receiver checks this before it reads the body and answers 400
+  otherwise.
 - The receiver decodes the body as a stream and stops after the declared
   size plus one byte. This is the decoded-size limit.
 - Invalid gzip data, a decoded size other than the declared size, or a
@@ -190,7 +186,7 @@ answers 400 to any `Content-Encoding`, which the CLI reports as
 State the requirements and the decisions in force, and add the fixture
 cases, so that the CLI work and the Mokly Cloud work share one contract.
 
-- [ ] Write the answers to the three open decisions into this plan, with
+- [x] Write the answers to the three open decisions into this plan, with
       the date.
 - [ ] Update `docs/protocol/mokly-upload-exchange.md`. Add the status line
       below the title.
@@ -204,8 +200,8 @@ cases, so that the CLI work and the Mokly Cloud work share one contract.
         1 with its decision in force. The marker describes the decoded
         bytes, and each attempt sends the same request. A 400 also covers
         invalid gzip and a decoded mismatch.
-  - [ ] Accounting And Output: `<size>` counts the bytes of decision 2. Add
-        its decision in force.
+  - [ ] Accounting And Output: `<size>` counts the decoded file bytes. Add
+        the decision in force of decision 2.
   - [ ] Keep the page at 250 lines or fewer. If it passes 250, move
         Accounting And Output to its own page. Then update the four links to
         `#accounting-and-output`.
@@ -229,8 +225,8 @@ cases, so that the CLI work and the Mokly Cloud work share one contract.
 
 ## Milestone 2: Mokly Cloud handoff
 
-Give the receiver change its own owner under decision 3. The receiver plan
-and pull request live in `mokly-ai/mokly-cloud`.
+Under decision 3, a Conductor workspace in `mokly-ai/mokly-cloud` owns the
+receiver change. Its plan and pull request live in that repository.
 
 - [ ] Write `.context/gzip-blob-uploads/cloud-brief.md` against the protocol
       docs of this branch. Include:
@@ -249,8 +245,8 @@ and pull request live in `mokly-ai/mokly-cloud`.
         release with `cargo xtask mokly-fixtures`.
   - [ ] Tests: a stored gzip Blob, the raw path, the length rule, a body
         that decodes past the declared size, invalid gzip, and the switch.
-- [ ] Hand the brief to the owner of decision 3. Record the workspace or
-      the owner here.
+- [ ] Create the Conductor workspace in `mokly-ai/mokly-cloud` with the
+      brief. Record the workspace here.
 
 ## Milestone 3: Gzip Blob bodies in the CLI
 
@@ -284,7 +280,7 @@ Complete, accounting, and the summary keep their behaviour.
         equal encodings, from captured inputs.
   - [ ] Re-plans: a gzip round followed by a round without the field sends
         raw bodies. Two gzip rounds send equal bodies.
-  - [ ] Progress: `<size>` follows decision 2 when gzip is in use.
+  - [ ] Progress: `<size>` counts the decoded bytes when gzip is in use.
   - [ ] Cancellation while an encoding is pending gives `Error::Cancelled`
         and no Blob request.
 - [ ] Rust integration tests with reqwest and the local server:
