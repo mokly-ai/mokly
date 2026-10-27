@@ -220,7 +220,7 @@ version 3 type wait for Milestone 3, because the link check needs that file.
 - [x] Add the status line below the title of each page above.
       `mokly-component-usage-records.md` needs no change, because every
       variant keeps its view usage.
-- [ ] Run `npx prettier --check` on the changed files and
+- [x] Run `npx prettier --check` on the changed files and
       `node --import tsx --test tests/markdown_links.test.ts`. Commit and push.
 
 ## Milestone 2: Variant pages read the parent's lists
