@@ -92,10 +92,14 @@ test("the Testbox lockfile stamp holds only the lockfile digest and a newline", 
   );
 });
 
-test("Testbox sessions receive the job PATH only", async (context) => {
+test("Testbox sessions receive only the job PATH, Chromium, and the workflow env", async (context) => {
   const original = await testboxScript(
     "Expose job environment to Testbox sessions",
   );
+  const workflowEnv = Object.entries(
+    (await readTestboxWorkflow()).workflow.env ?? {},
+  ).map(([name, value]) => [name, String(value)] as const);
+  assert.ok(workflowEnv.length > 0, "the Testbox workflow must set its env");
   assert.ok(
     original.includes("/etc/environment"),
     "the step must write /etc/environment, which this test redirects",
@@ -113,6 +117,7 @@ test("Testbox sessions receive the job PATH only", async (context) => {
     '"$MOKLY_TESTBOX_ENVIRONMENT"',
   );
   const output = await runBash(`sudo() { "$@"; }\n${script}`, root, {
+    ...Object.fromEntries(workflowEnv),
     PATH: process.env.PATH,
     UNEXPORTED_SECRET: "must-not-leak",
     MOKLY_TESTBOX_ENVIRONMENT: file,
@@ -121,7 +126,8 @@ test("Testbox sessions receive the job PATH only", async (context) => {
   assert.equal(output.stderr, "");
   assert.equal(
     await fs.readFile(file, "utf8"),
-    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n`,
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n` +
+      workflowEnv.map(([name, value]) => `${name}=${value}\n`).join(""),
   );
 });
 

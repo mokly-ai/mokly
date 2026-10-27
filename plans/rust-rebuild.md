@@ -6286,9 +6286,13 @@ does not ask the user before the merge.
       2 to 8 vCPUs for a limited time, until the Rust build cache of #215 and
       the other CI speed work land. The Windows native job stays on 8 vCPUs.
       On 2026-10-27 the user chose 8 over 16 vCPUs for it, because with the
-      Rust build cache 16 vCPUs gave no speed-up. Measure the cached job times
-      on 2 vCPUs first. Update `docs/protocol/ci-workflow.md` and the runner
-      size test in the same change.
+      Rust build cache 16 vCPUs gave no speed-up. On 2026-10-27 the user also
+      asked that the remote gate's Testboxes match the CI suite jobs and stay
+      aligned, so that a remote gate takes the time and cost of CI. The
+      Testbox job therefore moves back with the Linux jobs. Measure the cached
+      job times on 2 vCPUs first. Update `docs/protocol/ci-workflow.md`,
+      `docs/protocol/remote-verification-testbox.md`, and the runner size test
+      in the same change.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate

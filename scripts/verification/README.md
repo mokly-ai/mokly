@@ -160,8 +160,12 @@ validates its own HTTP and file reports before returning success.
 [`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
 executes the lockfile stamp step and the environment step on Linux hosts with
 controlled inputs and asserts the written files. The environment run redirects
-`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
-pins are review-owned literals.
+`/etc/environment` to a temporary file and stubs `sudo`. It also requires the
+environment step to write every workflow `env` entry.
+[`tests/ci_testbox_alignment.test.ts`](../../tests/ci_testbox_alignment.test.ts)
+keeps the Testbox runner, workflow `env`, and Rust cache options equal to those
+of the CI suite jobs, and requires the Testbox cache to never save. Step order
+and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 
@@ -170,4 +174,5 @@ Pin each action to these immutable revisions. Keep the version comments.
 | `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
 | `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
 | `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
+| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3` |
 | `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |
