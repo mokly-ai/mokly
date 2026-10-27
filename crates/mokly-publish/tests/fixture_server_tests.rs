@@ -119,7 +119,7 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
             }
         }
     }
-    assert_eq!(index.load(Ordering::SeqCst), 67);
+    assert_eq!(index.load(Ordering::SeqCst), 74);
     server.finish().await;
 }
 

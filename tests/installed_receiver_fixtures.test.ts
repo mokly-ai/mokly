@@ -36,6 +36,7 @@ interface Case {
   contentType?: string | null;
   outcome?: string;
   viewerUrl?: string | null;
+  blobEncoding?: "gzip" | "identity";
 }
 const bytes = (value: unknown) => Buffer.from(JSON.stringify(value));
 test(
@@ -86,7 +87,7 @@ test(
       const uploads = JSON.parse(
         await fs.readFile(path.join(fixtures, "upload-plan-v1.json"), "utf8"),
       ) as { endpoint: string; marker: string[]; cases: Case[] };
-      assert.equal(uploads.cases.length, 67);
+      assert.equal(uploads.cases.length, 74);
       for (const entry of uploads.cases) {
         const body =
           entry.body === undefined
@@ -104,9 +105,9 @@ test(
             entry.name,
           );
         else if (entry.valid)
-          assert.doesNotThrow(
-            () =>
-              plan(body, uploads.endpoint, uploads.marker, status, contentType),
+          assert.equal(
+            plan(body, uploads.endpoint, uploads.marker, status, contentType),
+            entry.blobEncoding ?? "identity",
             entry.name,
           );
         else

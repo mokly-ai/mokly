@@ -73,7 +73,7 @@ fn every_plan_and_completion_fixture_matches_the_client_contract() {
         .map(|value| value.as_str().unwrap().to_owned())
         .collect();
     let cases = fixture["cases"].as_array().unwrap();
-    assert_eq!(cases.len(), 67);
+    assert_eq!(cases.len(), 74);
     for case in cases {
         let status = case["status"].as_u64().unwrap_or(200) as u16;
         let content_type = case

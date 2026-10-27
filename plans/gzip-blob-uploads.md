@@ -186,42 +186,48 @@ answers 400 to any `Content-Encoding`, which the CLI reports as
 State the requirements and the decisions in force, and add the fixture
 cases, so that the CLI work and the Mokly Cloud work share one contract.
 
+Evidence: `.context/gzip-blob-uploads/milestone-1-verification-2026-10-27.md`.
+
 - [x] Write the answers to the three open decisions into this plan, with
       the date.
-- [ ] Update `docs/protocol/mokly-upload-exchange.md`. Add the status line
+- [x] Update `docs/protocol/mokly-upload-exchange.md`. Add the status line
       below the title.
-  - [ ] Plan: add `blobEncodings` to the example. Add the field rule and the
+  - [x] Plan: add `blobEncodings` to the example. Add the field rule and the
         listing rule. Add the decision in force for keeping v1.
-  - [ ] Fixture paragraph: a valid Plan case can carry `blobEncoding`, with
+  - [x] Fixture paragraph: a valid Plan case can carry `blobEncoding`, with
         `gzip` or the default `identity`. The coverage includes the encoding
         rule.
-  - [ ] Blobs: the header block with `Content-Encoding: gzip` and
+  - [x] Blobs: the header block with `Content-Encoding: gzip` and
         `Content-Length` as the body length. Add the body rule of decision
         1 with its decision in force. The marker describes the decoded
         bytes, and each attempt sends the same request. A 400 also covers
         invalid gzip and a decoded mismatch.
-  - [ ] Accounting And Output: `<size>` counts the decoded file bytes. Add
+  - [x] Accounting And Output: `<size>` counts the decoded file bytes. Add
         the decision in force of decision 2.
-  - [ ] Keep the page at 250 lines or fewer. If it passes 250, move
+  - [x] Keep the page at 250 lines or fewer. If it passes 250, move
         Accounting And Output to its own page. Then update the four links to
         `#accounting-and-output`.
-- [ ] Update `docs/protocol/mokly-upload-validation.md`. Add the status line.
+- [x] Update `docs/protocol/mokly-upload-validation.md`. Add the status line.
       Add invalid Blob encoding to the 400 or 422 row. Add a limits row for
       a gzip Blob body and its decoded bytes. Add the receiver rules above to
       Receiver Validation.
-- [ ] Add about seven cases to `docs/protocol/fixtures/upload-plan-v1.json`:
+- [x] Add about seven cases to `docs/protocol/fixtures/upload-plan-v1.json`:
       `["gzip"]`, `["zstd","gzip"]`, `[null,1,"gzip"]` give `gzip`.
       `["br"]`, `["GZIP","gzip "]`, `"gzip"`, and `null` give `identity`.
-- [ ] Update the case counts in `crates/mokly-publish/src/_tests_/fixtures_tests.rs`
+- [x] Update the case counts in `crates/mokly-publish/src/_tests_/fixtures_tests.rs`
       and `tests/installed_receiver_fixtures.test.ts`.
-- [ ] Make `plan()` in `tests/helpers/receiver/upload.ts` return the
+- [x] Update the HTTP fixture count in
+      `crates/mokly-publish/tests/fixture_server_tests.rs` to 74.
+- [x] Make `plan()` in `tests/helpers/receiver/upload.ts` return the
       encoding. Check each case's `blobEncoding` in
       `tests/installed_receiver_fixtures.test.ts`.
-- [ ] Confirm that `mokly-upload.md`, `mokly-format-versions.md`, and
+- [x] Confirm that `mokly-upload.md`, `mokly-format-versions.md`, and
       `mokly-terminal-output.md` stay true. Change nothing that stays true.
-- [ ] Run `npm run format:check`, `npm test -- tests/markdown_links.test.ts`,
+- [x] Run `npm run format:check`, `npm test -- tests/markdown_links.test.ts`,
       `npm test -- tests/installed_receiver_fixtures.test.ts`, and
       `cargo test -p mokly-publish fixtures`. Commit and push.
+- [x] Run `npm test -- tests/receiver_plan_boundary.test.ts` and
+      `cargo test -p mokly-publish --test fixture_server_tests`.
 
 ## Milestone 2: Mokly Cloud handoff
 
