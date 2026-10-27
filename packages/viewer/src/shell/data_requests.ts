@@ -6,7 +6,11 @@ import {
   fenceDetail,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
+import type {
+  CatalogueReadModel,
+  DeploymentFileV1,
+  EntryDetailV2,
+} from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellDataSource } from "./data_source.js";
@@ -67,6 +71,24 @@ export type DetailOutcome =
   | { kind: "version"; error: MoklyVersionError }
   | { kind: "failed" };
 
+/** Start one optional static deployment check for a page change. */
+export function startDeploymentCheck(
+  source: ShellDataSource,
+  requests: readonly DetailRequest[],
+):
+  | {
+      controller: AbortController;
+      promise: Promise<DeploymentFileV1 | undefined>;
+    }
+  | undefined {
+  if (!source.loadDeployment || !requests.length) return undefined;
+  const controller = new AbortController();
+  return {
+    controller,
+    promise: source.loadDeployment(controller.signal).catch(() => undefined),
+  };
+}
+
 /**
  * Load one detail and apply its fence. On a revision mismatch the index is
  * requested once more; an index of another deployment, or a pair that still
@@ -77,9 +99,18 @@ export async function loadFencedDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
   signal: AbortSignal,
+  deployment?: Promise<DeploymentFileV1 | undefined>,
 ): Promise<DetailOutcome> {
   try {
-    const detail = await source.loadDetail(request, index, signal);
+    const [detail, deploymentFile] = await Promise.all([
+      source.loadDetail(request, index, signal),
+      deployment ?? Promise.resolve(undefined),
+    ]);
+    if (
+      deploymentFile !== undefined &&
+      deploymentFile.deploymentId !== index.deploymentId
+    )
+      return { kind: "deployment" };
     let fence = fenceDetail(index, request, detail);
     let installed = index;
     if (fence.kind === "revision") {

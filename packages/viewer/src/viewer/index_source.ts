@@ -8,6 +8,7 @@ import type { ShellDataSource } from "../shell/data_source.js";
 
 import {
   DeliveryFetchError,
+  loadDeploymentFile,
   loadDetailResult,
   loadIndexSource,
   sourceUrl,
@@ -112,5 +113,11 @@ export function embeddedDataSource(
     },
     deploymentChanged: () => events.deploymentChanged(),
     detailFailed: () => events.detailFailed(),
+    ...(loaded.index.live === undefined
+      ? {
+          loadDeployment: (signal: AbortSignal) =>
+            loadDeploymentFile(loaded.root, signal),
+        }
+      : {}),
   };
 }

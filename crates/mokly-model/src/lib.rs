@@ -7,6 +7,7 @@ pub mod canonical;
 pub mod catalogue;
 pub mod controls;
 pub mod data;
+pub mod deployment;
 pub mod detail_context;
 mod detail_validation;
 pub mod diagnostic;

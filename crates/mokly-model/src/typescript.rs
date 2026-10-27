@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use ts_rs::{Config, TS};
 
 use crate::catalogue::CatalogueModel;
+use crate::deployment::DeploymentFileV1;
 use crate::public_detail::{EntryDetailV2, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::snapshot::{CatalogueChangeSnapshotV4, RemovedPagePreview};
@@ -31,6 +32,7 @@ pub fn generate() -> String {
     }
     for (name, version) in [
         ("CatalogueIndexVersion", versions::CATALOGUE_INDEX),
+        ("DeploymentFileVersion", versions::DEPLOYMENT_FILE),
         ("EntryDetailVersion", versions::ENTRY_DETAIL),
         ("ChangeSnapshotVersion", versions::CHANGE_SNAPSHOT),
         ("LiveDescriptorVersion", versions::LIVE_DESCRIPTOR),
@@ -46,6 +48,7 @@ pub fn catalogue_modules() -> BTreeMap<String, String> {
     let mut modules = TypeModules::default();
     modules.add::<CatalogueModel>();
     modules.add::<CatalogueReadModel>();
+    modules.add::<DeploymentFileV1>();
     modules.add::<EntryDetailV2>();
     modules.add::<LiveDescriptorV3>();
     modules.add::<CatalogueChangeSnapshotV4>();

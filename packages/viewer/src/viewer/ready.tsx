@@ -27,6 +27,7 @@ import { embeddedDataSource } from "./index_source.js";
 import { viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedIndex } from "./sources.js";
+import { DeploymentChangedError } from "./sources.js";
 import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
@@ -103,10 +104,10 @@ function MountedViewer(
       () => root.current !== null,
     ),
   );
+  const [replacedDeployment] = useState(() => new DeploymentChangedError());
   const [initial] = useState(props.normalized);
   const [source] = useState(() => {
     // One failure object, so another deployment emits `onError` once.
-    const replacedDeployment = new Error("another deployment answered");
     return embeddedDataSource(props.index, props.loaded, props.detail, {
       deploymentChanged: () => report(replacedDeployment, "catalogue"),
       detailFailed: () => report(new EntryUnavailableError(), "catalogue"),
@@ -136,6 +137,7 @@ function MountedViewer(
           report(error, "comparison");
         },
         props.scrollTogether,
+        () => report(replacedDeployment, "catalogue"),
       ),
     [props.loaded, props.scrollTogether, report],
   );

@@ -3,6 +3,7 @@
 import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
+  DeploymentFileV1,
   EntryDetailV2,
   LiveDescriptorV3,
 } from "../catalogue/types.js";
@@ -21,6 +22,8 @@ export interface ShellDataSource {
     index: CatalogueReadModel,
     signal: AbortSignal,
   ): Promise<EntryDetailV2>;
+  /** Request the optional static deployment file. */
+  loadDeployment?(signal: AbortSignal): Promise<DeploymentFileV1 | undefined>;
   /**
    * Another deployment replaced the files or another server process answers.
    * The standalone shell performs a full page load; an embedded host is told

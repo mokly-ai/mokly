@@ -1,8 +1,14 @@
 /** Index and detail sources and the fetch rules of the shell delivery contract. */
 
+import { DEPLOYMENT_PATH } from "../catalogue/delivery_paths.js";
+import { readDeploymentFile } from "../catalogue/deployment_reader.js";
 import { readEntryDetail } from "../catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../catalogue/index_reader.js";
-import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
+import type {
+  CatalogueReadModel,
+  DeploymentFileV1,
+  EntryDetailV2,
+} from "../catalogue/types.js";
 
 /** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;
@@ -38,6 +44,17 @@ export function sourceUrl(value: string | URL): URL {
 /** The fetch function a source uses, injectable for tests. */
 export type JsonFetch = (input: URL, init: RequestInit) => Promise<Response>;
 
+/** One static deployment check. False means another deployment answered. */
+export type DeploymentCheck = (signal: AbortSignal) => Promise<boolean>;
+
+/** The result used to stop a comparison or preview after a replacement. */
+export class DeploymentChangedError extends Error {
+  constructor() {
+    super("another deployment answered");
+    this.name = "DeploymentChangedError";
+  }
+}
+
 /**
  * An ordinary same-origin GET without custom headers or credentials. A
  * redirect outside the origin, a failure status, or another content type fail.
@@ -59,6 +76,41 @@ export async function fetchJson(
   const value: unknown = await response.json();
   signal.throwIfAborted();
   return { value, url: final };
+}
+
+/** Read the optional deployment file. Unreadable files do not affect browsing. */
+export async function loadDeploymentFile(
+  root: URL,
+  signal: AbortSignal,
+  fetchImpl?: JsonFetch,
+): Promise<DeploymentFileV1 | undefined> {
+  try {
+    const { value } = await fetchJson(
+      new URL(DEPLOYMENT_PATH, root),
+      signal,
+      fetchImpl,
+    );
+    return readDeploymentFile(value);
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return undefined;
+  }
+}
+
+/** Build a deployment check for a static catalogue origin. */
+export function deploymentCheck(
+  root: URL,
+  expected: string,
+  fetchImpl: JsonFetch | undefined,
+  changed: () => void,
+): DeploymentCheck {
+  return async (signal) => {
+    const deployment = await loadDeploymentFile(root, signal, fetchImpl);
+    if (deployment === undefined || deployment.deploymentId === expected)
+      return true;
+    changed();
+    return false;
+  };
 }
 
 /** One validated index and the origin root its artifact paths resolve at. */

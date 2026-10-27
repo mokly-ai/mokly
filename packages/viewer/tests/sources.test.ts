@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readDeploymentFile } from "../src/catalogue/deployment_reader.js";
 import type { EntryDetailV2 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
 import {
   DeliveryFetchError,
+  loadDeploymentFile,
   fetchJson,
   loadDetailResult,
   loadIndexSource,
@@ -47,6 +49,43 @@ function fakeFetch(answer: (url: URL) => FakeAnswer) {
 }
 
 const signal = new AbortController().signal;
+
+test("deployment files accept one identity and ignore unreadable files", async () => {
+  const deploymentId = "a".repeat(64);
+  assert.deepEqual(readDeploymentFile({ schemaVersion: 1, deploymentId }), {
+    schemaVersion: 1,
+    deploymentId,
+  });
+  assert.equal(
+    readDeploymentFile({ schemaVersion: 2, deploymentId }),
+    undefined,
+  );
+  assert.equal(
+    readDeploymentFile({ schemaVersion: 1, deploymentId: "bad" }),
+    undefined,
+  );
+  const fetched = fakeFetch((url) =>
+    url.pathname === "/mokly-viewer/deployment.json"
+      ? { body: { schemaVersion: 1, deploymentId } }
+      : { status: 404, body: {} },
+  );
+  assert.deepEqual(
+    await loadDeploymentFile(new URL(`${ORIGIN}/`), signal, fetched.fetch),
+    { schemaVersion: 1, deploymentId },
+  );
+  assert.equal(
+    await loadDeploymentFile(
+      new URL(`${ORIGIN}/`),
+      signal,
+      fakeFetch(() => ({ status: 404, body: {} })).fetch,
+    ),
+    undefined,
+  );
+  assert.equal(
+    fetched.requests[0]!.url,
+    `${ORIGIN}/mokly-viewer/deployment.json`,
+  );
+});
 
 test("a source URL is HTTP(S) without userinfo or fragment", () => {
   assert.equal(sourceUrl(`${ORIGIN}/mokly-viewer/index.json`).origin, ORIGIN);

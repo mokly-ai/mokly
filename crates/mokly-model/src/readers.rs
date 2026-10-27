@@ -5,6 +5,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use thiserror::Error;
 
+use crate::deployment::DeploymentFileV1;
 use crate::detail_validation;
 use crate::namespace;
 use crate::public_detail::{EntryDetailV2, LiveDescriptorV3};
@@ -53,6 +54,18 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     let index = decode(text, "catalogue index", versions::CATALOGUE_INDEX)?;
     public_validation::validate(&index)?;
     Ok(index)
+}
+
+/// Decode the static deployment file after its version gate.
+pub fn deployment(text: &str) -> Result<DeploymentFileV1, ReadError> {
+    let deployment: DeploymentFileV1 = decode(text, "deployment file", versions::DEPLOYMENT_FILE)?;
+    if !public_validation::hash(&deployment.deployment_id) {
+        return Err(ReadError::Contract {
+            boundary: "deployment file",
+            message: ContractViolation::Identity,
+        });
+    }
+    Ok(deployment)
 }
 
 /// Decode an entry detail after its v2 gate.

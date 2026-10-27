@@ -53,6 +53,56 @@ test("navigation fetches the destination's detail and adopts it in one commit", 
   assert.equal(fixture.source.indexes.length, 0);
 });
 
+test("static navigation checks one deployment file per page change", async () => {
+  const index = indexFixture();
+  const fixture = controllerFixture(index, { static: true });
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source.detail(HOME).resolve(detailFixture({ path: HOME }));
+  await flush();
+  fixture.navigate("/view/guide/");
+  assert.equal(fixture.source.deployments.length, 1);
+  fixture.source.deployment().resolve({
+    schemaVersion: 1,
+    deploymentId: index.deploymentId,
+  });
+  fixture.source.detail("guide").resolve(detailFixture({ path: "guide" }));
+  await flush();
+  assert.equal(fixture.source.deployments.length, 1);
+});
+
+test("a changed static deployment reports replaced status", async () => {
+  const index = indexFixture();
+  const fixture = controllerFixture(index, { static: true });
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source.detail(HOME).resolve(detailFixture({ path: HOME }));
+  await flush();
+  fixture.navigate("/view/guide/");
+  fixture.source.deployment().resolve({
+    schemaVersion: 1,
+    deploymentId: OTHER,
+  });
+  await flush();
+  assert.equal(fixture.controller.replaced, true);
+  assert.equal(fixture.source.deploymentChanges, 1);
+  assert.equal(fixture.controller.failed.size, 0);
+});
+
+test("a failed static deployment file changes nothing", async () => {
+  const index = indexFixture();
+  const fixture = controllerFixture(index, { static: true });
+  fixture.navigate(`/view/${HOME}/`);
+  fixture.source.detail(HOME).resolve(detailFixture({ path: HOME }));
+  await flush();
+  fixture.navigate("/view/guide/");
+  fixture.source.deployment().reject(new Error("missing"));
+  fixture.source.detail("guide").resolve(detailFixture({ path: "guide" }));
+  await flush();
+  assert.equal(fixture.controller.replaced, false);
+  assert.ok(
+    fixture.controller.snapshot.details.has(detailKey({ path: "guide" })),
+  );
+});
+
 test("navigating away aborts the load the new route no longer wants", async () => {
   const fixture = controllerFixture(indexFixture());
   fixture.navigate(`/view/${HOME}/`);
@@ -211,6 +261,12 @@ test("a static index neither subscribes nor loads a descriptor", () => {
   assert.equal(fixture.live.descriptors.length, 0);
   assert.equal(fixture.controller.live, undefined);
   disconnect();
+});
+
+test("Serve does not request a deployment file", () => {
+  const fixture = controllerFixture(indexFixture(), { live: true });
+  fixture.navigate("/view/guide/");
+  assert.equal(fixture.source.deployments.length, 0);
 });
 
 test("the home route requests no detail", () => {

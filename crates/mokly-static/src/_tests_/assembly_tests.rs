@@ -192,16 +192,28 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
     let detail =
         readers::detail(std::str::from_utf8(files["mokly-viewer/entries/home.json"]).unwrap())
             .unwrap();
+    let deployment =
+        readers::deployment(std::str::from_utf8(files["mokly-viewer/deployment.json"]).unwrap())
+            .unwrap();
     assert_eq!(detail.deployment_id.as_ref(), Some(&index.deployment_id));
-    assert_eq!(index.revision, 0);
+    assert_eq!(deployment.deployment_id, index.deployment_id);
+    assert_eq!(deployment.schema_version, 1);
     assert_eq!(
-        Ownership::parse(files[".mokly-export-artifact"])
-            .unwrap()
-            .files
-            .len()
-            + 1,
-        files.len()
+        std::str::from_utf8(files["mokly-viewer/deployment.json"]).unwrap(),
+        format!(
+            "{{\n  \"deploymentId\": \"{}\",\n  \"schemaVersion\": 1\n}}\n",
+            index.deployment_id
+        )
     );
+    assert_eq!(index.revision, 0);
+    let ownership = Ownership::parse(files[".mokly-export-artifact"]).unwrap();
+    assert!(
+        ownership
+            .files
+            .iter()
+            .any(|entry| entry.path == "mokly-viewer/deployment.json")
+    );
+    assert_eq!(ownership.files.len() + 1, files.len());
 }
 
 #[test]

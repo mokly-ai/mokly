@@ -101,6 +101,22 @@ test("current details live under entries and removed ones under their generation
   );
 });
 
+test("static source reads the deployment file from the catalogue root", async () => {
+  const index = indexFixture();
+  const { win, requests } = fakeWindow({
+    "/mokly-viewer/deployment.json": {
+      schemaVersion: 1,
+      deploymentId: index.deploymentId,
+    },
+  });
+  const deployment = await standaloneDataSource(win).loadDeployment!(signal);
+  assert.deepEqual(deployment, {
+    schemaVersion: 1,
+    deploymentId: index.deploymentId,
+  });
+  assert.equal(requests[0]!.url, `${ORIGIN}/mokly-viewer/deployment.json`);
+});
+
 test("another deployment reloads the requested page", () => {
   const fake = fakeWindow({});
   const source = standaloneDataSource(fake.win);

@@ -51,11 +51,12 @@ fn type_generation_and_versions_are_stable() {
     assert_eq!(
         [
             versions::CATALOGUE_INDEX,
+            versions::DEPLOYMENT_FILE,
             versions::ENTRY_DETAIL,
             versions::REVIEW_RESULT,
             versions::CHANGE_SNAPSHOT,
             versions::LIVE_DESCRIPTOR
         ],
-        [8, 2, 8, 4, 3]
+        [8, 1, 2, 8, 4, 3]
     );
 }

@@ -211,7 +211,8 @@ controlled viewers report the frame error and wait for host-owned selection.
 
 `data_controller.ts` owns one shell root's data outside React: the installed
 index, the entry details whose fences accepted them, the publications of the
-event stream, and the live descriptor. `data_requests.ts` lists the details a
+event stream, and the live descriptor. Static sources also check the deployment
+file during navigation. `data_requests.ts` lists the details a
 route renders from (the routed entry's, plus each step screen's for a use
 case), loads one detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
@@ -340,7 +341,8 @@ because it has no base side. A Used by link opens Current.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and
-renders the shell chrome; `data_source.ts` reads the index and detail routes,
+renders the shell chrome; `data_source.ts` reads the index, deployment file,
+and detail routes,
 and `live_source.ts` the live descriptor, the event stream, and the render
 route of Serve. A publication commit rebuilds the navigation sections and
 reconciles the current disclosures and pre-filter baseline to exactly their

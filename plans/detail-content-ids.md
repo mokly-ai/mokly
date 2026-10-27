@@ -215,21 +215,22 @@ Add the status line of the repository rules to each changed protocol page.
 The details still carry `deploymentId` here, so both checks run and the
 product works at the end.
 
-- [ ] Model: the deployment file type and its version constant. Run
+- [x] Model: the deployment file type and its version constant. Run
       `cargo xtask generate-types`.
-- [ ] Static build: write the file after the identity, and keep it out of the
+- [x] Static build: write the file after the identity, and keep it out of the
       identity hash.
-- [ ] Viewer: the file reader and the check of the design in the data
+- [x] Viewer: the file reader and the check of the design in the data
       controller and the comparison and removed-entry loaders. Keep
       `data_controller.ts` under 300 lines.
-- [ ] Rust tests: the file bytes, its exclusion from the identity, and its
+- [x] Rust tests: the file bytes, its exclusion from the identity, and its
       ownership entry.
-- [ ] Viewer tests with a fake source: one file request per page change, one
+- [x] Viewer tests with a fake source: one file request per page change, one
       before a comparison, the replaced status on another id, nothing on a
       failed file, and no request in Serve.
-- [ ] Node tests: `tests/helpers/static_identity.ts` skips the file.
-- [ ] Browser spec: the host replaces an old tab's generation. Opening a
-      comparison then reloads the page and shows it.
+- [x] Node tests: `tests/helpers/static_identity.ts` skips the file.
+- [x] Browser spec: the host replaces an old tab's generation. Opening a
+      comparison then reloads the page and shows it. Evidence:
+      `.context/deployment-id-detail-ids/milestone-3-checks.log`.
 
 ## Milestone 4: Content ids in every writer and reader
 

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
+import { DeploymentChangedError } from "../viewer/sources.js";
+
 import { useComparisonEnvironment } from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";
 import {
@@ -192,6 +194,10 @@ export function useComparison({
           if (controller.signal.aborted || pendingRef.current !== operation)
             return;
           pendingRef.current = undefined;
+          if (error instanceof DeploymentChangedError) {
+            toggleBusy(false);
+            return;
+          }
           const latest = latestDemand.current;
           if (!latest || latest.scopeKey !== operation.scopeKey) return;
           const nextFailure = {

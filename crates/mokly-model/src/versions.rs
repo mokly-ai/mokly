@@ -2,6 +2,8 @@
 
 /// Public catalogue index version.
 pub const CATALOGUE_INDEX: u32 = 8;
+/// Static deployment file version.
+pub const DEPLOYMENT_FILE: u32 = 1;
 /// Per-entry detail version.
 pub const ENTRY_DETAIL: u32 = 2;
 /// In-memory material and resource review version; never written.

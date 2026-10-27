@@ -154,36 +154,37 @@ navigation, and before it opens a comparison or a removed entry. It uses the
 catalogue origin root in both standalone and embedded hosts. An unreadable or
 missing deployment file changes nothing.
 
-The deployment file is a separate static check for an old tab, so an unchanged
-detail keeps its bytes across deployments. The rejected alternative put an id
-over the index record and detail, because that misses a viewer-only deployment
-and a removed comparison.
+The separate deployment file checks old static tabs, so unchanged details keep
+their bytes across deployments. The rejected record-and-detail id misses
+viewer-only deployments and removed comparisons.
 
-It accepts a current entry's detail in this order: `revision` must equal the
-installed index, then `detailId` must equal the index record, then `identity`,
-kind, views, and control order must match. The revision check comes first,
-because a detail from a newer Serve publication has a new id. A revision
-mismatch refetches the index once. If the revision still disagrees, the entry
+Current detail fences check `revision`, then `detailId`, then identity and
+content. Revision comes first because newer Serve details have new ids. A revision mismatch
+refetches the index once. If the revision still disagrees, the entry
 shows its unavailable state with retry. If the revision matches but the
 `detailId` differs, the detail has replaced status in a static build and in
 Serve. The standalone shell performs a full page load, and an embedded host
 receives one `onError` and keeps its state. From then on the shell loads no
-index or detail, closes the event stream, and reports no later failure. If the
-id matches but identity, kind, views, or control order differs, the entry
-shows its unavailable state with retry. A use case shows that state only after
+index or detail, closes the event stream, and reports no later failure. An
+identity or content mismatch leaves the entry unavailable with retry. A use
+case shows that state only after
 each of its details has arrived, failed, or been replaced; until then its
 stage keeps loading, and an embedded host still receives the `onError` of each
-failure at once. Waiting routes keep loading, not unavailable, until a full
-page load or the host's `index` supplies new data. A removed detail is
-accepted only when `identity` equals the index, its path selects the index's
-removed record, and `snapshotId` and `detailId` equal that record. A held
-detail stays installed when a new index lists the same
-`detailId`; a current detail also keeps its `revision`.
+failure at once. A route that still waits
+for a detail has the replaced delivery status: in both hosts its stage keeps
+the loading state, never the unavailable state, until the new data arrives
+with the full page load or the `index` that the host supplies. A route whose
+details all arrived keeps them. A removed detail is accepted only when
+`identity` equals the index, its path selects the index's removed record, and
+`snapshotId` and `detailId` equal that record. Held details stay installed when
+a new index lists the same `detailId`; a current detail also keeps its
+`revision`.
 
 Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
 Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
+The shell keeps the index and the details for the page's lifetime.
 
 ## Updates In Serve
 

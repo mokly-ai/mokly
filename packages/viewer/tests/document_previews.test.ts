@@ -25,10 +25,15 @@ test("removed document descriptors and requests retain historical schemes", asyn
   );
   assert.ok(request);
   assert.ok(request.endpoint.pathname.endsWith("/previews/guide/index.json"));
+  let deploymentChecks = 0;
   const loaded = await requestPreview(
     data,
     request,
     {
+      deploymentCheck: async () => {
+        deploymentChecks += 1;
+        return true;
+      },
       fetch: async () => {
         const response = Response.json({
           schemaVersion: 3,
@@ -45,6 +50,7 @@ test("removed document descriptors and requests retain historical schemes", asyn
     new AbortController().signal,
   );
   assert.ok(loaded.content.kind === "document");
+  assert.equal(deploymentChecks, 1);
   assert.deepEqual(
     loaded.content.views.map((view) => [
       view.colorScheme,

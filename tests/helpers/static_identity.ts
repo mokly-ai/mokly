@@ -50,6 +50,7 @@ export async function checkIdentity(
     }
     if ([".mokly-export-artifact", "mokly-upload.json"].includes(file))
       continue;
+    if (file === "mokly-viewer/deployment.json") continue;
     let value = bytes.toString();
     if (
       file === "mokly-viewer/index.json" ||

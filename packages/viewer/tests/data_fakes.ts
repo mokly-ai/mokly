@@ -3,6 +3,7 @@
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
+  DeploymentFileV1,
   EntryDetailV2,
   LiveDescriptorV3,
 } from "../src/catalogue/types.js";
@@ -58,12 +59,17 @@ function pending<T, Input>(
 export class FakeDataSource implements ShellDataSource {
   readonly indexes: Pending<CatalogueReadModel, undefined>[] = [];
   readonly details: Pending<EntryDetailV2, DetailRequest>[] = [];
+  readonly deployments: Pending<DeploymentFileV1, undefined>[] = [];
+  readonly loadDeployment?: NonNullable<ShellDataSource["loadDeployment"]>;
   deploymentChanges = 0;
   readonly detailFailures: DetailRequest[] = [];
   live?: FakeLiveSource;
 
-  constructor(live = false) {
+  constructor(live = false, staticCatalogue = false) {
     if (live) this.live = new FakeLiveSource();
+    if (staticCatalogue)
+      this.loadDeployment = (signal) =>
+        pending(this.deployments, undefined, signal);
   }
 
   loadIndex(signal: AbortSignal): Promise<CatalogueReadModel> {
@@ -80,6 +86,16 @@ export class FakeDataSource implements ShellDataSource {
 
   deploymentChanged(): void {
     this.deploymentChanges += 1;
+  }
+
+  /** The oldest unanswered deployment-file request. */
+  deployment() {
+    const found = this.deployments.find(
+      (item) => !answered.has(item) && !item.signal.aborted,
+    );
+    if (!found) throw new Error("no pending deployment request");
+    answered.add(found);
+    return found;
   }
 
   detailFailed(request: DetailRequest): void {

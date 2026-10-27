@@ -1,9 +1,9 @@
 //! Version gates must run before any current-format payload decoding.
 
-use crate::readers::{ReadError, detail, index, live};
+use crate::readers::{ReadError, deployment, detail, index, live};
 
 #[test]
-fn all_three_boundaries_reject_versions_before_payloads() {
+fn all_versioned_boundaries_reject_versions_before_payloads() {
     for version in [0, 1, 2, 6, 7, 8, 999] {
         let text =
             format!(r#"{{"schemaVersion":{version},"identity":false,"entry":42,"render":null}}"#);
@@ -20,6 +20,21 @@ fn all_three_boundaries_reject_versions_before_payloads() {
     for text in ["{}", r#"{"schemaVersion":"8"}"#, r#"{"schemaVersion":8.0}"#] {
         assert!(matches!(index(text), Err(ReadError::Version { .. })));
     }
+}
+
+#[test]
+fn deployment_file_gates_and_validates_its_identity() {
+    let id = "a".repeat(64);
+    let text = format!(r#"{{"schemaVersion":1,"deploymentId":"{id}"}}"#);
+    assert_eq!(deployment(&text).unwrap().deployment_id, id);
+    assert!(matches!(
+        deployment(r#"{"schemaVersion":2,"deploymentId":42}"#),
+        Err(ReadError::Version { .. })
+    ));
+    assert!(matches!(
+        deployment(r#"{"schemaVersion":1,"deploymentId":"bad"}"#),
+        Err(ReadError::Contract { .. })
+    ));
 }
 
 #[test]
