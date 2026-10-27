@@ -13,10 +13,8 @@ control, and host configuration. `build` uploads nothing, fetches nothing from
 Git, and performs no commit, push, npm publication, or hosting-account
 operation. `publish` is the one command that uploads: it runs this same build
 into its own private directory outside the repository, then runs the
-[upload exchange](./mokly-upload.md). Nothing reads the output back. Build and
-publish read rendered head bytes from the head capture, or from the head source
-only after render-cache eviction. No command writes into the repository except
-`build` into its output directory.
+[upload exchange](./mokly-upload.md). Nothing reads the output back. No
+command writes into the repository except `build` into its output directory.
 
 ## Command
 

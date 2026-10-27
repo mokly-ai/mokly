@@ -111,11 +111,8 @@ of Serve never reruns the analysis and never recomputes a smaller
 changed-component set from the selected entry alone.
 
 The analysis renders no document and generates no snapshot. Every entry's
-evidence uses the own-page matches of the whole catalogue. Serve reads head
-documents from the render cache. `build` and `publish` read the head capture,
-with source fallback after render-cache eviction. Base documents use the
-bounded base capture or pinned-source fallback. A cache eviction changes only
-the time that the analysis takes, never its records. The shell's
+evidence uses the own-page matches of the whole catalogue. A cache eviction
+changes only the time that the analysis takes, never its records. The shell's
 exact text and grouping are in
 [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 

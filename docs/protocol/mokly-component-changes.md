@@ -144,10 +144,8 @@ view is owned by the entry. A component-owned record leaves the view
 `unchanged` and the entry affected; an `ignored-only` view follows the
 [materiality rule](./mokly-comparison.md#materiality). An `unchanged` or
 `ignored-only` view keeps its `ignoredIds` and adds no implementation-impact
-or owned-resource evidence. The decision reads the rendered head, from the
-render cache in Serve or from the head capture in `build`, and needs no
-snapshot, so Serve's background classification and the complete comparison
-produce equal records for one view.
+or owned-resource evidence. Serve's background classification and the
+complete comparison produce equal records for one view.
 
 ## Rendered Resources And Styles
 

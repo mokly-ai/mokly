@@ -113,8 +113,9 @@ private capture codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. Serve retains the original cached head generation and one bounded base
-capture. Build retains the captured head and the bounded base capture. Both
+Removed previews read the same pinned base generation. Serve retains the
+original cached head generation and one bounded base capture. Build retains the
+captured head and the bounded base capture. Both
 results keep view states, reasons, ownership records, and immutable historical
 metadata.
 

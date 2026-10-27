@@ -38,13 +38,29 @@ command with an error fails with `build-invalid`. Non-fatal findings are
 
 ## Render Graph And Cache
 
-The [render graph and cache contract](./mokly-render-cache.md#render-graph)
-defines the render graph, render cache, side captures, and their bounds. Serve
-reads head documents from the render cache. `build` and `publish` capture the
-head once during the build check under a separate 256 MiB bound. Changes,
-output, and comparison output read that capture. An uncaptured head document
-is read from the head source, which renders it again only after render-cache
-eviction.
+The [architecture page](../architecture/rust-core.md#render-graph) describes
+the render graph. A screen or component renders once per view, that is per
+viewport and colour scheme. A page renders once. A Markdown document renders
+once per enabled colour scheme. A watched change renders again only the
+outputs whose inputs changed, and a component rendered with the same props on
+many screens renders once.
+
+The render cache is bounded at 256 MiB. Serve reads the head from it. Changes
+captures the base within 256 MiB. Base capture misses use the pinned source.
+`build` and `publish` capture the head once during the build check, within their
+own 256 MiB bound. Changes, the output, and the comparison output read that
+capture. An evicted head document renders again on the head root.
+Decision: the head reuses the base capture, so a build renders each head
+document once. A larger render cache, bounded render batches, and a reordered
+build were rejected. No fixed cache bound fits every catalogue, batches still
+render each document several times, and a reorder changes the build's stage
+order.
+Decision: each side has its own bound. A shared bound was rejected, because the
+head is captured first and could leave no room for the base.
+The base-side extraction cache and the dependency install cache live in the
+operating system's cache directory under a key derived from the repository
+path, each with its own byte bound; the terminal names that directory, and
+deleting it is safe. No cache is in the repository.
 
 ## Serve
 
@@ -70,13 +86,13 @@ process.
 
 ## Build
 
-`mokly build` runs discovery and validation, renders every view, and captures
-the head once during the build check under a separate 256 MiB bound. It reports
-warnings and writes the static site into the directory `--out`
-names, `mokly-static/` at the repository root by default, which Git must
-ignore. It writes the shell stub per route, the index, one detail per entry,
-every document, the comparison generation, the viewer bundle, styles, and
-fonts under the [static build contract](./mokly-export.md) and the
+`mokly build` runs discovery and validation, renders every view of every
+entry, captures the head during the build check for Changes and output, reports
+warnings, and writes the static site into the directory `--out` names,
+`mokly-static/` at the repository root by default, which Git must ignore. It
+writes the shell stub per route, the index, one detail per entry, every
+document, the comparison generation, the viewer bundle, styles, and fonts
+under the [static build contract](./mokly-export.md) and the
 [static delivery contract](./mokly-export-delivery.md). An error fails the
 command before any file is written. With `--strict`, a warning fails it too.
 The output transaction stages the whole site, replaces the output directory

@@ -124,7 +124,6 @@ The development server, on-demand rendering, the watcher, live controls, termina
 - [CLI Help And Version Bytes](./mokly-terminal-help.md)
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
-- [Mokly Render Graph And Cache](./mokly-render-cache.md)
 - [On-demand Serve](./mokly-on-demand.md)
 - [Startup Diagnostics And Scale Fixtures](./mokly-timings.md)
 - [Watch Runtime And Recovery](./mokly-watch-runtime.md)

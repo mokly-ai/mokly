@@ -174,7 +174,8 @@ Comparison works on trees, never on text offsets. The
   view's trees are discarded when its comparison ends. Each result holds at
   most one base capture, with its own byte budget, separate from the render
   cache. A build result also holds one head capture with its own 256 MiB bound.
-  Inputs above a side's budget use that side's source after cache eviction.
+  Inputs above a side's budget read that side's sources: the pinned base
+  sources for the base, and the head sources for the head.
 - Parsed CSS, the render cache, the base-side extraction cache, and the
   dependency cache are bounded by bytes. A dependency install has a time
   limit.

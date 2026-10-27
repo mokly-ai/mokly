@@ -6,10 +6,8 @@ Continuation of [Static Build](./mokly-export.md).
 
 `build` selects output from its render generation: rendered views, pages,
 document scheme files, document resources of the closure, bundled stylesheets,
-and opaque assets. HTML and CSS bytes come from the head capture. When the
-capture does not keep a document or stylesheet, `build` reads it from the head
-source, which renders it again only after render-cache eviction. An opaque
-asset follows the capture rule of the [asset delivery contract](./mokly-imported-styles-assets.md#validation-and-the-render-cache).
+and opaque assets. An opaque asset follows the capture rule of the
+[asset delivery contract](./mokly-imported-styles-assets.md#validation-and-the-render-cache).
 `build` never scans an output directory to find files or reads installed
 output back. Entry segments such as `coverage`, `dist`, `node_modules`, and
 `README` do not make those files private. Ancestor directories are derived from that set to
@@ -32,10 +30,7 @@ to add a file to the inventory.
 ## Public Files And Package Boundary
 
 Write every rendered HTML document, bundled stylesheet, and opaque asset
-beneath `static/mokly-generated/`. Use head-capture bytes for build HTML and
-CSS. For an uncaptured document or stylesheet, `build` reads the head source,
-which renders it again only after render-cache eviction. Copy only the authored
-closure beneath
+beneath `static/mokly-generated/`. Copy only the authored closure beneath
 `static/`, keeping its repository-relative paths.
 No stale output and no unreferenced authored file participates.
 Imported CSS and PostCSS sources stay private; scoped npm asset URLs are

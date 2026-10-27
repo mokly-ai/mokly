@@ -46,9 +46,8 @@ the measuring machine. New evidence goes under `.context/build-head-capture/`.
 
 Contract owners:
 
-- [Runtime contract](../docs/protocol/mokly-runtime.md), build.
-- [Render graph and cache contract](../docs/protocol/mokly-render-cache.md),
-  render graph, render cache, side captures, and both decisions.
+- [Runtime contract](../docs/protocol/mokly-runtime.md), render graph, render
+  cache, side captures, both decisions, and build.
 - [Timings contract](../docs/protocol/mokly-timings.md), `review.capture-side`.
 - [Components contract](../docs/protocol/mokly-components.md), rendering and
   read model.
@@ -213,5 +212,7 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
   - Outside the scope: `scripts/large/`. A build of the old binary took 2.3
     times longer through the benchmark harness than in a direct run. Separate
     branch.
+- [x] Fold the head capture rule back into the runtime contract after the #218
+      merge, and keep main's source-neutral text in the other protocol docs.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.

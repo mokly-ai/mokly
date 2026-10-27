@@ -183,10 +183,8 @@ placeholders, and the enclosing ignore scope, and grafts the returned fragment
 with its collected styles under the [sidecar contract](./mokly-sidecar.md).
 The component's own page renders its own props first and then each variant,
 with the component as the root instance, at every viewport and effective
-colour scheme, with the configured and declared stylesheets. Serve reads head
-documents from the render cache. `build` and `publish` read the head capture,
-with source fallback after render-cache eviction. Changes reads the captured
-head in build and the render cache in Serve. Nothing is written to the
+colour scheme, with the configured and declared stylesheets. Serve, `build`,
+and Changes use the same rendered documents. Nothing is written to the
 repository.
 
 The read model gives a component entry `propSchema`, `props` in the wire form,

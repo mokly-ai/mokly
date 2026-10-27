@@ -18,18 +18,16 @@ this contract.
 
 The analysis takes two inputs for one stylesheet on one view:
 
-- The stylesheet's delivered bytes on both sides. Serve reads generated head
-  CSS from the render cache. `build` and `publish` read generated head CSS from
-  the head capture. On the head side, a public file comes from the working
+- The stylesheet's delivered bytes on both sides. On the head side, these are
+  a stylesheet bundle that Mokly delivers or a public file of the working
   tree. On the base side, these are the same delivery from the base commit,
   and public files use the base-side source under
   [Sides](./mokly-comparison.md#sides). A side that lacks the stylesheet
   contributes an empty stylesheet after the verified-deletion check of the
   [Changes contract](./mokly-changes.md#resources); an invalid read never
   becomes an empty stylesheet.
-- The head's composed document from the render cache in Serve or the head
-  capture in `build` and `publish`, and the base's from its bounded capture or
-  pinned-source fallback, with ownership and ignore regions attached under the
+- Both sides' composed documents of the view, with ownership and ignore
+  regions attached under the
   [tree model](./mokly-comparison.md#tree-model). A view that one side lacks
   contributes no tree.
 
