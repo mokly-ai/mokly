@@ -79,7 +79,10 @@ In CI, the Repository job's Rust build cache restores
 key hashes the tool lockfile and this installer. A new pin or lock therefore
 misses the cache, and the next `main` run saves the new tool.
 `tests/ci_rust_cache.test.ts` imports the directory and lockfile paths from
-the installer to keep the workflow aligned.
+the installer to keep the workflow aligned. It checks that every CI cargo job
+restores the Rust build cache, that only `main` saves it, that Testboxes never
+save it, and that the audit tool key covers the tool inputs. It also checks the
+CI build settings and that the release workflows use no build cache.
 
 The installer returns the exact installed executable. The wrapper runs the
 live workspace advisory query with it on every invocation, including cache

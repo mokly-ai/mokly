@@ -22,14 +22,18 @@ const REMOTE_GATE_SUITES: Readonly<Record<string, RegExp>> = {
 };
 /** Suites whose CI jobs share the Rust build cache that Testboxes restore. */
 const SHARED_CACHE_SUITES = ["viewer", "browser", "static-delivery"];
+/** Variables that change Rust builds; the cache key hashes these prefixes. */
+const RUST_BUILD_VARIABLE = /^(?:CARGO|CC|CFLAGS|CXX|CMAKE|RUST)/u;
 
 interface WorkflowStep {
+  readonly env?: Readonly<Record<string, unknown>>;
   readonly run?: string;
   readonly uses?: string;
   readonly with?: Readonly<Record<string, unknown>>;
 }
 
 interface WorkflowJob {
+  readonly env?: Readonly<Record<string, unknown>>;
   readonly "runs-on"?: unknown;
   readonly steps?: readonly WorkflowStep[];
 }
@@ -64,6 +68,27 @@ test("Testboxes build Rust with the CI workflow environment", async () => {
     "ci.yml must set its build environment at workflow level",
   );
   assert.deepEqual((await readWorkflow(TESTBOX_WORKFLOW)).env, ci.env);
+});
+
+test("CI suite jobs and Testboxes set Rust build variables only in the workflow env", async () => {
+  const ci = await readWorkflow(CI_WORKFLOW);
+  const owners = [
+    ...Object.keys(REMOTE_GATE_SUITES).map(
+      (suite) => [`the CI ${suite} job`, suiteJob(ci, suite)] as const,
+    ),
+    [
+      "the Testbox job",
+      testboxJob(await readWorkflow(TESTBOX_WORKFLOW)),
+    ] as const,
+  ];
+  for (const [owner, job] of owners)
+    for (const env of [job.env, ...(job.steps ?? []).map((step) => step.env)])
+      for (const name of Object.keys(env ?? {}))
+        assert.doesNotMatch(
+          name,
+          RUST_BUILD_VARIABLE,
+          `${owner} must set ${name} in the workflow env, which the Testbox copies`,
+        );
 });
 
 test("Testboxes restore the CI suite cache after the toolchain and never save it", async () => {

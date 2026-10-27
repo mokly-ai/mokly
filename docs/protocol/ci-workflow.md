@@ -192,8 +192,9 @@ artifact. This workflow is optional. `Required CI` does not depend on it.
 [Testbox workflow contract](./remote-verification-testbox.md#workflow) defines
 its triggers, job, step order, and action revisions. Its Node.js version equals
 the version of the CI native jobs. Its npm and Rust setup equals the setup of
-the CI repository job. Its runner, workflow `env`, and Rust build cache equal
-those of the CI suite jobs. It restores that cache and never saves it.
+the CI repository job. Its runner and workflow `env` equal those of the CI
+suite jobs. It restores the Rust build cache of the CI viewer, browser, and
+static-delivery jobs and never saves it.
 `Required CI` does not depend on this workflow. The
 hosted CI graph and its release profile keep their required jobs.
 

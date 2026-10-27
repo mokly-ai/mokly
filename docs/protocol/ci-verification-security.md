@@ -48,12 +48,12 @@ Only CI runs on `main` save a Rust build cache. Pull requests, including fork
 pull requests, restore the `main` copy and never save. Testboxes restore the
 cache of the CI viewer, browser, and static-delivery jobs and never save. They
 run unreviewed local trees, even when their workflow runs on `main`. The cache
-scopes each
-entry to its branch, so no pull request can change what `main` or another pull
-request restores. A restored cache is the job's private copy. Cargo rebuilds
-every artifact whose inputs differ, so cache state never changes a check
-result. The release, release-check, release-prepare, and native bootstrap
-workflows use no build cache, so no published binary holds cached build output.
+scopes each entry to its branch, so no pull request can change what `main` or
+another pull request restores. A restored cache is the job's private copy.
+Cargo rebuilds every artifact whose inputs differ, so cache state never changes
+a check result. The release, release-check, release-prepare, and native
+bootstrap workflows use no build cache, so no published binary holds cached
+build output.
 
 CI builds Rust without debug info and without incremental compilation.
 Without debug info, the test build takes about a third less time and each
@@ -64,10 +64,6 @@ sccache alone saves about the same time, but it needs storage secrets, fork
 pull requests build without it, and every holder of a write key could change
 what CI reads. Its GitHub Actions store also bypasses the runner provider's
 colocated cache and exceeds GitHub's cache upload rate limit on a cold run.
-
-A tooling test checks that every CI cargo job restores the cache, that only
-`main` saves it, and that the audit tool key covers the tool inputs. It also
-checks the CI build settings and that the release workflows use no build cache.
 
 ## Testbox Key And Secret Boundary
 
@@ -91,8 +87,9 @@ The Testbox workflow uses no secrets and has only `contents: read` permission.
 Its full-history checkout sets `persist-credentials: false`.
 The repository is public. Boxes fetch pushed commits without a token.
 Send source files and verification inputs, not the local org key or credential
-files. Write only the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` entries for
-Testbox sessions in `/etc/environment`. Do not forward the caller's environment.
+files. Write only the job `PATH`, `PLAYWRIGHT_CHANNEL=chromium`, and the
+workflow `env` entries for Testbox sessions in `/etc/environment`. Do not
+forward the caller's environment.
 
 GitHub Actions always uses local execution for the complete gate.
 An explicit remote request there fails. This boundary also applies to release

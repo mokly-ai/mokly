@@ -110,7 +110,8 @@ test("Testbox sessions receive only the job PATH, Chromium, and the workflow env
   const file = path.join(root, "environment");
   await fs.writeFile(
     file,
-    "LANG=en_US.UTF-8\nPATH=old\nKEEP=value\nPATH=duplicate\n",
+    "LANG=en_US.UTF-8\nPATH=old\nKEEP=value\nPATH=duplicate\n" +
+      workflowEnv.map(([name]) => `${name}=stale\n`).join(""),
   );
   const script = original.replaceAll(
     "/etc/environment",
