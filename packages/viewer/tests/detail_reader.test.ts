@@ -49,7 +49,7 @@ test("the detail version gate runs before any other field is read", () => {
     null,
     [],
     { schemaVersion: 1 },
-    { schemaVersion: 3 },
+    { schemaVersion: 2 },
     { schemaVersion: 0, entry: "not an entry" },
     { ...current("guide"), schemaVersion: "1" },
   ])
@@ -58,7 +58,7 @@ test("the detail version gate runs before any other field is read", () => {
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "detail" &&
-        error.supported === 2,
+        error.supported === 3,
     );
 });
 
@@ -74,10 +74,10 @@ test("visual details require a unique control order and other kinds omit it", ()
   rejects(page, /control order/);
 });
 
-test("a current detail has deployment and revision, a removed one generation and snapshot", () => {
+test("a current detail has revision, a removed one snapshot and no deployment fence", () => {
   const withGeneration = current("product/browse/home");
   withGeneration.generation = HASH;
-  rejects(withGeneration, /current and removed fences are exclusive/);
+  assert.doesNotThrow(() => readEntryDetail(withGeneration));
   const withoutRevision = current("product/browse/home");
   delete withoutRevision.revision;
   rejects(withoutRevision, /current and removed fences are exclusive/);
@@ -92,7 +92,7 @@ test("a current detail has deployment and revision, a removed one generation and
   rejects(removedWithoutSnapshot, /current and removed fences are exclusive/);
   const removedDeployment = removed();
   removedDeployment.deploymentId = HASH;
-  rejects(removedDeployment, /current and removed fences are exclusive/);
+  assert.doesNotThrow(() => readEntryDetail(removedDeployment));
 });
 
 test("views, the workspace and entry evidence belong to their kinds", () => {

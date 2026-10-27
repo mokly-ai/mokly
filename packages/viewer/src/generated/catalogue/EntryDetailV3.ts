@@ -9,27 +9,23 @@ import type { ViewEvidence } from "./ViewEvidence.js";
 import type { Workspace } from "./Workspace.js";
 
 // prettier-ignore
-export type EntryDetailV2 = {
+export type EntryDetailV3 = {
 /**
- * Must equal 2; readers gate it first.
+ * Must equal 3; readers gate it first.
  */
-schemaVersion: 2,
+schemaVersion: 3,
 /**
  * Catalogue identity equal to the installed index.
  */
 identity: CatalogueIdentity,
 /**
- * Current entries only, equal to the index.
+ * Content id of this detail.
  */
-deploymentId?: string,
+detailId: string,
 /**
  * Current entries only, equal to the index.
  */
 revision?: number,
-/**
- * Removed entries only, comparison generation.
- */
-generation?: string,
 /**
  * Entry identity and optional historical snapshot.
  */

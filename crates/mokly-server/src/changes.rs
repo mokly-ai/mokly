@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed};
+use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication};
 use mokly_model::public_metadata::ChangesStatus;
@@ -176,13 +177,25 @@ pub(crate) fn project(
         let historical = comparison_metadata::base(accepted, current)?;
         next.index.removed_entries =
             compared(projection_removed::records(&accepted.result, historical))?;
+        let ids = comparison_metadata::detail_ids(accepted, current)?;
+        for record in &mut next.index.removed_entries {
+            if let Some(id) = ids.get(record.entry.path()) {
+                record.entry.set_detail_id(id);
+            }
+        }
         next.index.comparison_url = Some(routes::comparison_generation(&accepted.id));
     }
     changes_detail::apply(&mut next)?;
+    for (path, detail) in &mut next.details {
+        let detail = Arc::make_mut(detail);
+        detail.detail_id =
+            canonical::detail_id(detail).map_err(|source| InternalError::Model { source })?;
+        projection::set_detail_id(&mut next.index, path, &detail.detail_id);
+        detail.revision = Some(next.index.revision);
+    }
     let mut schemas = UsageSchemas::new(&next.index.components);
     for (path, detail) in &mut next.details {
         let detail = Arc::make_mut(detail);
-        detail.revision = Some(next.index.revision);
         next.files.insert(
             viewer(&format!("entries/{path}.json")),
             ValidatedDetails.encode(detail, &next.index, &mut schemas)?,

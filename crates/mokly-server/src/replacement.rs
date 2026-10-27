@@ -3,9 +3,10 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
@@ -18,7 +19,7 @@ use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
 
 pub(crate) fn reuse_usage(
-    details: &mut BTreeMap<String, EntryDetailV2>,
+    details: &mut BTreeMap<String, EntryDetailV3>,
     index: &CatalogueReadModel,
     keys: &BTreeMap<String, String>,
     previous: Option<&Snapshot>,
@@ -65,26 +66,37 @@ pub(crate) fn reuse_usage(
 }
 
 pub(crate) fn encode_details(
-    details: BTreeMap<String, EntryDetailV2>,
-    index: &CatalogueReadModel,
+    mut details: BTreeMap<String, EntryDetailV3>,
+    index: &mut CatalogueReadModel,
     previous: Option<&Snapshot>,
     files: &mut BTreeMap<String, RevisionFile>,
     encoder: &dyn DetailEncoder,
-) -> Result<BTreeMap<String, Arc<EntryDetailV2>>> {
+) -> Result<BTreeMap<String, Arc<EntryDetailV3>>> {
     let mut result = BTreeMap::new();
+    for (path, detail) in details.iter_mut() {
+        if let Some(previous) = previous
+            && let Some(old) = previous.details.get(path)
+        {
+            detail.revision = old.revision;
+            detail.detail_id = old.detail_id.clone();
+        } else {
+            detail.revision = Some(index.revision);
+            detail.detail_id = canonical::detail_id(detail)
+                .map_err(|source| crate::error::InternalError::Model { source })?;
+        }
+        mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
+    }
     let mut schemas = UsageSchemas::new(&index.components);
     for (path, mut detail) in details {
         let route = viewer(&format!("entries/{path}.json"));
         if let Some(previous) = previous
             && let (Some(old), Some(bytes)) =
                 (previous.details.get(&path), previous.files.get(&route))
+            && detail == **old
         {
-            detail.revision = old.revision;
-            if detail == **old {
-                files.insert(route, bytes.clone());
-                result.insert(path, old.clone());
-                continue;
-            }
+            files.insert(route, bytes.clone());
+            result.insert(path, old.clone());
+            continue;
         }
         detail.revision = Some(index.revision);
         files.insert(route, encoder.encode(&detail, index, &mut schemas)?);

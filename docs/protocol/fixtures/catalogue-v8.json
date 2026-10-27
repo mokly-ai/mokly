@@ -68,7 +68,8 @@
           "documentKey": "56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb",
           "viewport": "desktop"
         }
-      ]
+      ],
+      "detailId": "9046f1bc9466659c748ef682abe8c666f2eae43b92eb19207e2ca3663a5a7b10"
     },
     {
       "changes": {
@@ -133,7 +134,8 @@
           "documentKey": "e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee",
           "viewport": "desktop"
         }
-      ]
+      ],
+      "detailId": "ed0f981aba36445db2e1aba10466fe27550c5729937c045083d9def604ac1b8c"
     }
   ],
   "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -159,7 +161,8 @@
       "kind": "document",
       "path": "product",
       "tags": [],
-      "title": "Product overview"
+      "title": "Product overview",
+      "detailId": "98a8e098a53d1ad14c1a696f19c4a82925eeefce5dc028675b38c4d560cb1dbb"
     }
   ],
   "identity": {
@@ -182,7 +185,8 @@
       "kind": "page",
       "path": "guide",
       "tags": [],
-      "title": "Guide"
+      "title": "Guide",
+      "detailId": "c4644fb2a4fc7d41b343f502f9c56708fb1871f95f2b0541e6beb9315fb2b389"
     }
   ],
   "removedEntries": [
@@ -202,7 +206,8 @@
         "kind": "page",
         "path": "product/removed-page",
         "tags": [],
-        "title": "Removed page"
+        "title": "Removed page",
+        "detailId": "0018c5c4836c02220734c81aeba54fb05b3af18b55d108d1596a83f8c7920a84"
       },
       "folderTitles": ["Product overview"],
       "preview": {
@@ -256,7 +261,8 @@
             "documentKey": "24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9",
             "viewport": "desktop"
           }
-        ]
+        ],
+        "detailId": "d9936fe1ed0ed26ee40505fac40d7055232c9824c3bf9d3fc4e1839546f44f1d"
       },
       "folderTitles": ["Product overview", "Browse"],
       "parentTitle": "Home",
@@ -314,7 +320,8 @@
           "documentKey": "33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0",
           "viewport": "desktop"
         }
-      ]
+      ],
+      "detailId": "5936bb68e8f3693d75c20ec13d88af64e1b9d5b036e8a6412a433a7f6ad9fe13"
     },
     {
       "changes": {
@@ -360,7 +367,8 @@
           "documentKey": "e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83",
           "viewport": "desktop"
         }
-      ]
+      ],
+      "detailId": "4ddbe51c08c8b57d8ed3ef1da688ad84f44e144ee1e6f3e091630470e422d86c"
     },
     {
       "changes": {
@@ -407,7 +415,8 @@
           "documentKey": "5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0",
           "viewport": "desktop"
         }
-      ]
+      ],
+      "detailId": "faf2e204400cb9db56ae96bdc850d0ecba698174cb429d11bff58599bbcd686b"
     }
   ],
   "tree": [
@@ -494,7 +503,8 @@
         }
       ],
       "tags": [],
-      "title": "Tour"
+      "title": "Tour",
+      "detailId": "ba2b7f9a219f3e7701002f0401047a2ac9605b8693edbdd173055c93c8013f9f"
     }
   ]
 }

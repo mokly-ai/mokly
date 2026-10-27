@@ -141,7 +141,7 @@ test("another deployment keeps the stage loading until the host replaces the ind
       subtree: true,
     });
     const host = window.viewerHarness.start("one");
-    host.details["home"] = { ...host.details["home"]!, deploymentId };
+    host.details["home"] = { ...host.details["home"]!, detailId: deploymentId };
   }, other);
   const errors = () =>
     page.evaluate(() =>

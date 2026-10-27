@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::axes::EntryKind;
-use crate::public_detail::EntryDetailV2;
+use crate::public_detail::EntryDetailV3;
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
@@ -13,28 +13,26 @@ use crate::usage_schemas::UsageSchemas;
 
 /// Decode and validate a current entry detail against the installed index.
 /// Historical callers supply their base-side component schemas to `usage_context`.
-pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV2, ReadError> {
+pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV3, ReadError> {
     let detail = readers::detail(text)?;
     validate(&detail, index)?;
     Ok(detail)
 }
 
 /// Validate the current fence, kind, view order, evidence readiness, and usage.
-pub fn validate(detail: &EntryDetailV2, index: &CatalogueReadModel) -> Result<(), ReadError> {
+pub fn validate(detail: &EntryDetailV3, index: &CatalogueReadModel) -> Result<(), ReadError> {
     validate_with(detail, index, &mut UsageSchemas::new(&index.components))
 }
 
 /// Validate all usage against publication-local compiled schemas.
 pub fn validate_with(
-    detail: &EntryDetailV2,
+    detail: &EntryDetailV3,
     index: &CatalogueReadModel,
     schemas: &mut UsageSchemas<'_>,
 ) -> Result<(), ReadError> {
     if detail.identity.id != index.identity.id
         || detail.identity.title != index.identity.title
-        || detail.deployment_id.as_ref() != Some(&index.deployment_id)
         || detail.revision != Some(index.revision)
-        || detail.generation.is_some()
         || detail.entry.snapshot_id.is_some()
     {
         return Err(invalid(ContractViolation::DetailFence));
@@ -70,6 +68,9 @@ pub fn validate_with(
     let Some((entry, visual)) = entry else {
         return Err(invalid(ContractViolation::DetailKind));
     };
+    if detail.detail_id != entry.detail_id {
+        return Err(invalid(ContractViolation::DetailFence));
+    }
     if detail.reasons.is_some()
         != matches!(
             entry.changes,

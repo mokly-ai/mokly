@@ -29,6 +29,7 @@ expression: "canonical::to_string(&decoded).unwrap()"
           "kind": "number"
         }
       },
+      "detailId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -88,6 +89,7 @@ expression: "canonical::to_string(&decoded).unwrap()"
           "kind": "number"
         }
       },
+      "detailId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "details": {
         "description": "",
         "relatedDocs": [],

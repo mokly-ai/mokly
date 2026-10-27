@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
@@ -36,7 +36,7 @@ function route(path: string): ShellRoute {
 /** A source that answers from scripts and records every request. */
 function scripted(
   indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV2 | Error,
+  detail: (request: DetailRequest) => EntryDetailV3 | Error,
 ) {
   const calls = { indexes: 0, details: [] as DetailRequest[] };
   const source: ShellDataSource = {
@@ -57,7 +57,7 @@ function scripted(
   return { source, calls };
 }
 
-function revised(path: string, revision: number): EntryDetailV2 {
+function revised(path: string, revision: number): EntryDetailV3 {
   return { ...detailFixture({ path }), revision };
 }
 
@@ -147,7 +147,7 @@ test("a revision mismatch refetches the index exactly once", async () => {
 
 test("another deployment in a detail or a refetched index is reported", async () => {
   const request = { path: "guide" };
-  const detail = { ...detailFixture(request), deploymentId: OTHER };
+  const detail = { ...detailFixture(request), detailId: OTHER };
   const moved = scripted([indexFixture()], () => detail);
   assert.deepEqual(
     await loadFencedDetail(moved.source, indexFixture(), request, signal),
@@ -159,7 +159,7 @@ test("another deployment in a detail or a refetched index is reported", async ()
   });
   const replaced = scripted([index], () => ({
     ...revised("guide", 1),
-    deploymentId: OTHER,
+    detailId: OTHER,
   }));
   assert.deepEqual(
     await loadFencedDetail(replaced.source, indexFixture(), request, signal),
@@ -174,7 +174,7 @@ test("a rejected, failed or newer-format detail does not install", async () => {
   );
   assert.deepEqual(
     await loadFencedDetail(wrong.source, indexFixture(), request, signal),
-    { kind: "failed" },
+    { kind: "deployment" },
   );
   const failed = scripted([indexFixture()], () => new Error("offline"));
   assert.deepEqual(

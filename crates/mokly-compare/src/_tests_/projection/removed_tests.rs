@@ -126,12 +126,11 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
     )));
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let index = projection_index::base_index(&result, &state).unwrap();
-    let mut details = projection_removed::details(&result, &index, &"f".repeat(64)).unwrap();
+    let mut details = projection_removed::details(&result, &index).unwrap();
     assert_eq!(details.len(), 1);
     let detail = &details["removed"];
-    assert!(detail.deployment_id.is_none());
+    assert!(detail.detail_id.is_empty());
     assert!(detail.revision.is_none());
-    assert_eq!(detail.generation.as_deref(), Some("f".repeat(64).as_str()));
     assert_eq!(
         detail.entry.snapshot_id.as_deref(),
         Some(result.snapshot.removed_entries[0].snapshot_id.as_str())

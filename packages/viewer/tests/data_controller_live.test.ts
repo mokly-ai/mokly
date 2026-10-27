@@ -166,9 +166,11 @@ test("a refresh from another deployment replaces the catalogue", async () => {
 test("a replacement ends the live connection, so no message or retry loads an index", async () => {
   const fixture = connected();
   fixture.navigate(`/view/${HOME}/`);
-  fixture.source
-    .detail(HOME)
-    .resolve({ ...detailFixture({ path: HOME }), deploymentId: OTHER });
+  fixture.source.detail(HOME).resolve({
+    ...detailFixture({ path: HOME }),
+    revision: 1,
+    detailId: OTHER,
+  });
   await flush();
   assert.equal(fixture.controller.replaced, true);
   // The stream closes, so a later message of the installed deployment

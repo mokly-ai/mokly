@@ -113,7 +113,7 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
     let detail: Value =
         serde_json::from_str(&get(&host, "/mokly-viewer/entries/home.json").await).unwrap();
     assert_eq!(detail["revision"], second["revision"]);
-    assert_eq!(detail["deploymentId"], second["deploymentId"]);
+    assert!(detail.get("deploymentId").is_none());
     assert!(
         get(&host, "/static/mokly-generated/home/index.mobile.html")
             .await

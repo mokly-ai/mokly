@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::{CatalogueChanges, CatalogueEntry};
 use mokly_model::review::{ReviewEntry, ReviewKind, ReviewResultV8, ReviewState, ReviewView};
@@ -54,7 +54,7 @@ pub fn build_configured(
 fn public_review(site: &Path) -> ReviewResultV8 {
     let index: CatalogueReadModel =
         serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
-    let detail = |path: &str| -> EntryDetailV2 {
+    let detail = |path: &str| -> EntryDetailV3 {
         serde_json::from_slice(
             &fs::read(site.join(format!("mokly-viewer/entries/{path}.json"))).unwrap(),
         )
@@ -99,7 +99,7 @@ fn public_review(site: &Path) -> ReviewResultV8 {
 }
 
 /// One current entry as its index record and its detail publish it.
-fn record(kind: ReviewKind, entry: &CatalogueEntry, detail: &EntryDetailV2) -> ReviewEntry {
+fn record(kind: ReviewKind, entry: &CatalogueEntry, detail: &EntryDetailV3) -> ReviewEntry {
     let views: Vec<_> = detail
         .views
         .iter()
@@ -131,7 +131,7 @@ fn record(kind: ReviewKind, entry: &CatalogueEntry, detail: &EntryDetailV2) -> R
 }
 
 /// The changed components that a consumer's detail names as affecting it.
-fn consumers(detail: &EntryDetailV2, kind: ConsumerKind) -> Vec<AffectedConsumer> {
+fn consumers(detail: &EntryDetailV3, kind: ConsumerKind) -> Vec<AffectedConsumer> {
     detail
         .workspace
         .iter()

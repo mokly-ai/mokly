@@ -1,7 +1,7 @@
 //! A current detail is valid only within one exact index fence and view set.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use crate::read_contract::ContractViolation;
 use crate::readers;
 use crate::readers::ReadError;
@@ -17,7 +17,7 @@ fn control_order_names_every_editable_prop_once() {
     ))
     .unwrap();
     let fixtures: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../docs/protocol/fixtures/entry-details-v2.json"
+        "../../../../docs/protocol/fixtures/entry-details-v3.json"
     ))
     .unwrap();
     let mut detail =
@@ -52,13 +52,12 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         }
     }
     let screen = &index.screens[0];
-    let detail = EntryDetailV2 {
-        schema_version: 2,
+    let detail = EntryDetailV3 {
+        schema_version: 3,
         control_order: Some(screen.visual.controls.keys().cloned().collect()),
         identity: index.identity.clone(),
-        deployment_id: Some(index.deployment_id.clone()),
+        detail_id: screen.entry.detail_id.clone(),
         revision: Some(index.revision),
-        generation: None,
         entry: DetailEntry {
             path: screen.entry.path.clone(),
             kind: EntryKind::Screen,
@@ -92,7 +91,7 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         let mut candidate = detail.clone();
         match mutation {
             0 => candidate.identity.id = "0".repeat(64),
-            1 => candidate.deployment_id = Some("f".repeat(64)),
+            1 => candidate.detail_id = "f".repeat(64),
             2 => candidate.revision = Some(index.revision + 1),
             3 => candidate.entry.kind = EntryKind::Component,
             4 => {

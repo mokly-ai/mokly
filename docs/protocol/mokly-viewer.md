@@ -1,14 +1,13 @@
 # Embeddable Mokly Viewer
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
 `>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the
-[generated types](../../packages/viewer/src/generated/catalogue/) of the model.
+[generated types](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
+of the model.
 The package has four entry points:
 
 - The root React entry exports `MoklyViewer`, its types, the frame adapters,

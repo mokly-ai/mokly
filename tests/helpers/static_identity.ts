@@ -36,26 +36,13 @@ export async function checkIdentity(
     const file = name.replaceAll("\\", "/");
     if (file.startsWith(prefix)) {
       const relative = file.slice(prefix.length);
-      let value = bytes.toString();
-      if (relative.startsWith("entries/")) {
-        const detail = JSON.parse(value) as Record<string, Json>;
-        assert.equal(detail.generation, generation);
-        detail.generation = "0".repeat(64);
-        value = canonical(detail);
-      }
-      comparison.push([
-        relative,
-        digest(relative.startsWith("entries/") ? value : bytes),
-      ]);
+      comparison.push([relative, digest(bytes)]);
     }
     if ([".mokly-export-artifact", "mokly-upload.json"].includes(file))
       continue;
     if (file === "mokly-viewer/deployment.json") continue;
     let value = bytes.toString();
-    if (
-      file === "mokly-viewer/index.json" ||
-      file.startsWith("mokly-viewer/entries/")
-    ) {
+    if (file === "mokly-viewer/index.json") {
       const document = JSON.parse(value) as Record<string, Json>;
       document.deploymentId = "0".repeat(64);
       value = canonical(document);

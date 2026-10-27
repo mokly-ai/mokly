@@ -1,7 +1,5 @@
 # Tree Comparison And Changes
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head
@@ -208,7 +206,7 @@ reasons, views, and component variants grouped under their parent. Every
 evidence record names its owner. Serve, the static build, and publication
 project the same snapshot. The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/)
+and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 types define the index and the detail.
 
 `ignoredIds` lists the sorted unique ids of paired ignore regions removed for

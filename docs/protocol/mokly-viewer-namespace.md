@@ -1,7 +1,5 @@
 # Portable Viewer Namespace And Version Gates
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.

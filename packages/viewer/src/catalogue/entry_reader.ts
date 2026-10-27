@@ -146,6 +146,7 @@ function common(input: Record<string, unknown>): CatalogueEntry {
   const details = object(input.details);
   return {
     path: entryPath(input.path),
+    detailId: hash(input.detailId),
     title: text(input.title),
     tags: array(input.tags).map(tag),
     ...(input.previousPath === undefined

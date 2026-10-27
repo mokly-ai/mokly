@@ -1,7 +1,5 @@
 # Combined Path And Output Format Versions
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                       |
@@ -54,7 +52,7 @@ components and variants, including the HTML and YAML file kinds of the
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
 Resource owners exclude CSS. The read model v8 is the model's public form. The
-[generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
+[generated TypeScript types](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 are the normative shapes.
 
 ## Rejection Before Interpretation

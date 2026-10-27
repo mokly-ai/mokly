@@ -33,6 +33,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
         {
           kind: "use-case",
           path: "tour",
+          detailId: catalogue.screens[0]!.detailId,
 
           title: "Tour",
           tags: [],

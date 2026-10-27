@@ -26,7 +26,7 @@ export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/r
 export const screenPath = `mokly-viewer/diffs/generations/${GENERATION}/entries/removed-screen.json`;
 
 /**
- * The entry detail v2 of a removed screen with these captured views, which
+ * The entry detail v3 of a removed screen with these captured views, which
  * names this snapshot id and, by default, the screen `removed-screen`.
  */
 export function removedDetail(
@@ -35,9 +35,9 @@ export function removedDetail(
   path = "removed-screen",
 ) {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     identity: { id: "c".repeat(64), title: "Mokly" },
-    generation: GENERATION,
+    detailId: "d".repeat(64),
     entry: { kind: "screen", path, snapshotId },
     reasons: [{ kind: "removed" }],
     views: views.map((view) => ({

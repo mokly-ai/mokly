@@ -4,7 +4,7 @@ import test from "node:test";
 import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
 
-import { rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
 test("removed document descriptors and requests retain historical schemes", async () => {
   const data = readPreviewDescriptor(
@@ -94,7 +94,7 @@ test("a removed screen's preview reads its removed detail inside the generation"
     ([, candidate]) => candidate.entry.kind === "screen",
   )!;
   const path = detail.entry.path;
-  const root = `mokly-viewer/diffs/generations/${detail.generation!}/`;
+  const root = indexFixture().comparisonUrl!;
   const data = {
     path,
     kind: "screen" as const,

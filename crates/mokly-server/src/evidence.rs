@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
+use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
@@ -111,11 +112,19 @@ pub(crate) fn complete(
     };
     next.lease = Arc::new(RevisionLease::default());
     next.index.revision = revision;
+    for path in &dirty {
+        if let Some(detail) = next.details.get_mut(path) {
+            let detail = Arc::make_mut(detail);
+            detail.detail_id = canonical::detail_id(detail)
+                .map_err(|source| crate::error::InternalError::Model { source })?;
+            mokly_model::projection::set_detail_id(&mut next.index, path, &detail.detail_id);
+            detail.revision = Some(revision);
+        }
+    }
     let mut schemas = UsageSchemas::new(&next.index.components);
     for path in dirty {
         if let Some(detail) = next.details.get_mut(&path) {
             let detail = Arc::make_mut(detail);
-            detail.revision = Some(revision);
             next.files.insert(
                 viewer(&format!("entries/{path}.json")),
                 encoder.encode(detail, &next.index, &mut schemas)?,

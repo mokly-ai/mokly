@@ -148,8 +148,9 @@ detail carries `detailId` and `revision`; a removed detail carries `detailId`
 and `snapshotId`. Details no longer carry `deploymentId` or `generation`.
 
 Static builds also write `mokly-viewer/deployment.json` with schema version 1.
-The TypeScript type `EntryDetailV2` becomes `EntryDetailV3`, and
+The TypeScript type is `EntryDetailV3`, and
 `readEntryDetail` reads version 3 only.
+The removed public type `EntryDetailV2` is no longer exported.
 The standalone shell and an embedded viewer use it to detect a replaced static
 deployment. Serve does not write or answer this file. A missing or unreadable
 file does not change viewer state. Update the viewer and any receiver that

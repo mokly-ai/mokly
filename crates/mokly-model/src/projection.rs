@@ -11,7 +11,7 @@ use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::error::{InternalError, Result};
 use crate::material::digest;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::*;
@@ -161,7 +161,7 @@ pub fn pending_details(
     model: &CatalogueModel,
     index: &CatalogueReadModel,
     keys: &[ViewKey],
-) -> BTreeMap<String, EntryDetailV2> {
+) -> BTreeMap<String, EntryDetailV3> {
     let by_path = key_index(keys);
     model
         .entries
@@ -185,12 +185,11 @@ pub fn pending_details(
             views.sort_by_key(|view| (view.viewport, view.color_scheme));
             (
                 entry.metadata.path.clone(),
-                EntryDetailV2 {
+                EntryDetailV3 {
                     schema_version: versions::ENTRY_DETAIL,
                     identity: index.identity.clone(),
-                    deployment_id: Some(index.deployment_id.clone()),
+                    detail_id: String::new(),
                     revision: Some(index.revision),
-                    generation: None,
                     entry: DetailEntry {
                         path: entry.metadata.path.clone(),
                         kind: entry.content.kind(),
@@ -212,6 +211,41 @@ pub fn pending_details(
             )
         })
         .collect()
+}
+
+/// Copy each current detail's content id into its shared index record.
+pub fn set_detail_ids(index: &mut CatalogueReadModel, details: &BTreeMap<String, EntryDetailV3>) {
+    for entry in index
+        .screens
+        .iter_mut()
+        .map(|entry| &mut entry.entry)
+        .chain(index.components.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.pages.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.documents.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.use_cases.iter_mut().map(|entry| &mut entry.entry))
+    {
+        if let Some(detail) = details.get(&entry.path) {
+            entry.detail_id = detail.detail_id.clone();
+        }
+    }
+}
+
+/// Copy one detail id into the shared index record named by its path.
+pub fn set_detail_id(index: &mut CatalogueReadModel, path: &str, detail_id: &str) {
+    for entry in index
+        .screens
+        .iter_mut()
+        .map(|entry| &mut entry.entry)
+        .chain(index.components.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.pages.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.documents.iter_mut().map(|entry| &mut entry.entry))
+        .chain(index.use_cases.iter_mut().map(|entry| &mut entry.entry))
+    {
+        if entry.path == path {
+            entry.detail_id = detail_id.to_owned();
+            break;
+        }
+    }
 }
 
 fn key_index(keys: &[ViewKey]) -> BTreeMap<&str, Vec<&ViewKey>> {

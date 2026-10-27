@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::projection::{self, ViewKey};
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::review::{
     EntryChangeReason, ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewResultV8, ReviewState,
 };
@@ -159,7 +159,7 @@ fn record(state: ReviewState, before: Option<&str>, after: bool) -> ReviewEntry 
     }
 }
 
-fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV2> {
+fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV3> {
     let catalogue = model(vec![entry("sample", EntryKind::Screen, None)]);
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let keys = [ViewKey {
@@ -192,19 +192,14 @@ fn view_states_ignore_ids_and_the_base_address_reach_a_current_detail() {
 
 #[test]
 fn added_and_removed_details_carry_no_base_address() {
-    for (state, before, after, generation) in [
-        (ReviewState::Added, None, true, None),
-        (
-            ReviewState::Removed,
-            Some("sample"),
-            false,
-            Some("c".repeat(64)),
-        ),
+    for (state, before, after) in [
+        (ReviewState::Added, None, true),
+        (ReviewState::Removed, Some("sample"), false),
     ] {
         let mut result = comparison(classified("sample", EntryKind::Screen, state));
         result.review.entries = vec![record(state, before, after)];
         let mut details = viewed_details();
-        details.get_mut("sample").unwrap().generation = generation;
+        details.get_mut("sample").unwrap().revision = after.then_some(0);
         projection_detail::apply_evidence(&mut details, &result);
         let detail = serde_json::to_value(&details["sample"]).unwrap();
         assert!(detail.get("before").is_none(), "{state:?}");

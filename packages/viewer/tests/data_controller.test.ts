@@ -156,7 +156,7 @@ test("a detail from another deployment is reported once and keeps loading", asyn
   fixture.navigate("/view/guide/");
   fixture.source
     .detail("guide")
-    .resolve({ ...detailFixture({ path: "guide" }), deploymentId: OTHER });
+    .resolve({ ...detailFixture({ path: "guide" }), detailId: OTHER });
   await flush();
   assert.equal(fixture.source.deploymentChanges, 1);
   assert.equal(fixture.commits.length, 0);
@@ -176,9 +176,11 @@ test("a step that fails after another deployment answered leaves the use case re
     (item) => item.input.path !== "tour",
   );
   assert.equal(steps.length, 2);
-  fixture.source
-    .detail("tour")
-    .resolve({ ...detailFixture({ path: "tour" }), deploymentId: OTHER });
+  fixture.source.detail("tour").resolve({
+    ...detailFixture({ path: "tour" }),
+    revision: 0,
+    detailId: OTHER,
+  });
   await flush();
   assert.equal(fixture.controller.replaced, true);
   assert.equal(fixture.source.deploymentChanges, 1);
@@ -206,9 +208,11 @@ test("a step that fails first is reported at once while the use case waits for i
   // while the use case detail and the other step still load.
   assert.deepEqual(fixture.source.detailFailures, [{ path: HOME }]);
   assert.deepEqual(deliveryOf(fixture, route), { status: "loading" });
-  fixture.source
-    .detail("tour")
-    .resolve({ ...detailFixture({ path: "tour" }), deploymentId: OTHER });
+  fixture.source.detail("tour").resolve({
+    ...detailFixture({ path: "tour" }),
+    revision: 0,
+    detailId: OTHER,
+  });
   await flush();
   assert.deepEqual(deliveryOf(fixture, route), { status: "replaced" });
   assert.equal(fixture.source.deploymentChanges, 1);
@@ -229,9 +233,11 @@ test("a failed refresh keeps a use case loading while its details load", async (
   assert.equal(fixture.controller.refreshFailed, routeKey(route));
   assert.deepEqual(deliveryOf(fixture, route), { status: "loading" });
   // A detail of another deployment then replaces the catalogue.
-  fixture.source
-    .detail("tour")
-    .resolve({ ...detailFixture({ path: "tour" }), deploymentId: OTHER });
+  fixture.source.detail("tour").resolve({
+    ...detailFixture({ path: "tour" }),
+    revision: 1,
+    detailId: OTHER,
+  });
   await flush();
   assert.deepEqual(deliveryOf(fixture, route), { status: "replaced" });
 });

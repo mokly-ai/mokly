@@ -9,7 +9,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "count",
       "disabled"
     ],
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "f87898ef4798c1b3df318063c6a64266bf68b449629507ae5591a7187e7d0d46",
     "entry": {
       "kind": "component",
       "path": "components/button"
@@ -19,7 +19,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -57,7 +57,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "count",
       "disabled"
     ],
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "2b288a58173bec5dcbaa610cb832eddf42784915fdd6207bddac88dc28b48ed0",
     "entry": {
       "kind": "component",
       "path": "components/button/disabled"
@@ -67,7 +67,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -104,7 +104,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title",
       "ignored"
     ],
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "10e94b3666bb0290f647be99ee7e03331793fd8aab28ce94852cc2fcdca8123e",
     "entry": {
       "kind": "component",
       "path": "components/card"
@@ -114,7 +114,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -147,7 +147,7 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "guide": {
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "5aaaec146e398650a2e155ecc4a509e3f82002f4174016d3563735638896131c",
     "entry": {
       "kind": "document",
       "path": "guide"
@@ -157,7 +157,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": []
   },
   "home": {
@@ -166,7 +166,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "visible",
       "resource"
     ],
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "ef621c383dd0650de0a1fed19362e141780eb6b9f3da24ca2c31fc7b3b4b4dc2",
     "entry": {
       "kind": "screen",
       "path": "home"
@@ -176,7 +176,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -214,7 +214,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "visible",
       "resource"
     ],
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "9ca3025dde51b03346aabcf2a2b69bbd56c4dcc9fd8e360e09ae3931a769cb6a",
     "entry": {
       "kind": "screen",
       "path": "home/hidden"
@@ -224,7 +224,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -257,7 +257,7 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "page": {
-    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "detailId": "c021e7903e3172c509963ac3d6b143061573a8e7f1d853b8ea7baa9a62a153be",
     "entry": {
       "kind": "page",
       "path": "page"
@@ -267,7 +267,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": []
   }
 }

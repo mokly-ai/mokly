@@ -1,7 +1,5 @@
 # Static Build
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Scope
 
 `mokly build` validates the catalogue, renders every view in memory, and

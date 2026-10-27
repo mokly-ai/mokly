@@ -1,7 +1,5 @@
 # Static Delivery
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Hosting Contract
 
 Deploy the output directory's contents as the HTTP(S) origin's document root.

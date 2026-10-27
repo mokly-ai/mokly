@@ -4,7 +4,7 @@ import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
-  EntryDetailV2,
+  EntryDetailV3,
   LiveDescriptorV3,
 } from "../catalogue/types.js";
 import type {
@@ -21,7 +21,7 @@ export interface ShellDataSource {
     request: DetailRequest,
     index: CatalogueReadModel,
     signal: AbortSignal,
-  ): Promise<EntryDetailV2>;
+  ): Promise<EntryDetailV3>;
   /** Request the optional static deployment file. */
   loadDeployment?(signal: AbortSignal): Promise<DeploymentFileV1 | undefined>;
   /**

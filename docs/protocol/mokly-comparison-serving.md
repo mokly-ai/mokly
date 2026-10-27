@@ -1,7 +1,5 @@
 # Comparison Generation And Serving
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Generation And Serving
 
 A comparison generation is an immutable set of files under

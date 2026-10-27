@@ -1,7 +1,5 @@
 # Static Build Browser And Identity
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 This page supplements [Static Delivery](./mokly-export-delivery.md) with the
 standalone browser inventory and the deployment identity algorithm that the
 [shell delivery contract](./mokly-shell-delivery.md#identity) names.

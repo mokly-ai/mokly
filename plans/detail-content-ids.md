@@ -237,46 +237,48 @@ product works at the end.
 Each reader accepts one version, so the writers and the readers change in one
 milestone.
 
-- [ ] Model: add `detailId` to the shared entry fields. Rename `EntryDetailV2`
+- [x] Model: add `detailId` to the shared entry fields. Rename `EntryDetailV2`
       to `EntryDetailV3` without `deploymentId` and `generation`. Raise the
       version constants under decision 3.
-- [ ] Model: add one id function beside the canonical encoder for `build` and
+- [x] Model: add one id function beside the canonical encoder for `build` and
       Serve. The readers require a 64-hex `detailId`. A current detail has
       `revision` and no `snapshotId`, and a removed detail has the opposite.
       The detail context compares `detailId` with the record.
-- [ ] Static build: `finalize` and the generation writer follow the design.
+- [x] Static build: `finalize` and the generation writer follow the design.
       The removed details lose their generation input.
-- [ ] Serve: the projector, the usage completion, and the Changes projection
+- [x] Serve: the projector, the usage completion, and the Changes projection
       compute the ids, encode the index after the details, and keep the bytes
       of an unchanged detail. Keep each Rust file under 300 lines.
-- [ ] Viewer: the readers of the new versions, the public `EntryDetailV3`
+- [x] Viewer: the readers of the new versions, the public `EntryDetailV3`
       type, the fence order in `detail_fences.ts`, and the held-detail rule in
       `data_commit.ts`.
-- [ ] Run `cargo xtask generate-types`. Rename the protocol fixtures, fill
+- [x] Run `cargo xtask generate-types`. Rename the protocol fixtures, fill
       them with real ids, and update the 14 files that name them.
-- [ ] Rust tests for the id function, the readers, the detail context, the
+- [x] Rust tests for the id function, the readers, the detail context, the
       identity, the generation, Serve, and the HTTP snapshots, with these:
-  - [ ] Finalize, change one detail, and finalize again. The other detail
+  - [x] Finalize, change one detail, and finalize again. The other detail
         keeps its bytes and its id, and its record lists the same id.
-  - [ ] A removed detail keeps its bytes when an unrelated snapshot changes.
-  - [ ] A usage completion keeps the bytes and the id of an unchanged detail,
+  - [x] A removed detail keeps its bytes when an unrelated snapshot changes.
+  - [x] A usage completion keeps the bytes and the id of an unchanged detail,
         and the new index lists the new id of the changed detail.
-- [ ] Node tests: the identity helper recomputes the ids, the generation name,
+- [x] Node tests: the identity helper recomputes the ids, the generation name,
       and the deployment id. Update the static publication, Changes contents,
       and comparison tests.
-- [ ] Node test: build two screens with a base commit, edit one, and build
+- [x] Node test: build two screens with a base commit, edit one, and build
       again. The other detail keeps identical bytes, the edited one changes,
       and each index lists the ids of its details.
-- [ ] Node test: publish twice to the test exchange with one edit between. The
+- [x] Node test: publish twice to the test exchange with one edit between. The
       second Plan does not list the unchanged detail as missing.
-- [ ] Viewer tests: the readers, each fence step, the removed fence, and held
-      details. Rename `catalogue_v8_fixture.ts`.
-- [ ] Browser specs: `static_deployment.spec.ts` and
+- [x] Viewer tests: the readers, each fence step, the removed fence, and held
+      details. Keep `catalogue_v8_fixture.ts` because the index remains v8
+      when `v0.17.0` has no tag.
+- [x] Browser specs: `static_deployment.spec.ts` and
       `static_comparison_deployment.spec.ts` pass unchanged. Their old tabs
       now reload through the deployment file.
-- [ ] Update the READMEs of `crates/mokly-model`, `crates/mokly-static`,
+- [x] Update the READMEs of `crates/mokly-model`, `crates/mokly-static`,
       `crates/mokly-server`, and `packages/viewer/src/shell`.
-- [ ] Remove the status lines that Milestone 1 added.
+- [x] Remove the status lines that Milestone 1 added.
+      Evidence: `.context/deployment-id-detail-ids/milestone-4-checks.log`.
 
 ## Milestone 5: Measurement and smoke tests
 

@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::public_index::CatalogueReadModel;
-use mokly_model::{readers, routes};
+use mokly_model::{canonical, readers, routes};
 
 use crate::assets::File;
 use crate::changes::Accepted;
@@ -20,14 +20,7 @@ pub(crate) fn base(accepted: &Accepted, current: &Snapshot) -> Result<CatalogueR
 
 pub(crate) fn files(accepted: &Accepted, current: &Snapshot) -> Result<BTreeMap<String, File>> {
     let result = &accepted.result;
-    let historical = base(accepted, current)?;
-    let mut details = compared(projection_removed::details(
-        result,
-        &historical,
-        &accepted.id,
-    ))?;
-    projection_removed::workspaces(&mut details);
-    compared(projection_workspace::apply(&mut details, result))?;
+    let details = detail_map(accepted, current)?;
     let mut files = BTreeMap::new();
     for (path, detail) in details {
         let file = encode(&detail)?;
@@ -40,6 +33,37 @@ pub(crate) fn files(accepted: &Accepted, current: &Snapshot) -> Result<BTreeMap<
         files.insert(routes::comparison_preview(&preview.path), encode(&preview)?);
     }
     Ok(files)
+}
+
+pub(crate) fn detail_ids(
+    accepted: &Accepted,
+    current: &Snapshot,
+) -> Result<BTreeMap<String, String>> {
+    let details = detail_map(accepted, current)?;
+    details
+        .into_iter()
+        .map(|(path, detail)| {
+            let id = canonical::detail_id(&detail)
+                .map_err(|source| crate::error::InternalError::Model { source })?;
+            Ok((path, id))
+        })
+        .collect()
+}
+
+fn detail_map(
+    accepted: &Accepted,
+    current: &Snapshot,
+) -> Result<BTreeMap<String, mokly_model::public_detail::EntryDetailV3>> {
+    let result = &accepted.result;
+    let historical = base(accepted, current)?;
+    let mut details = compared(projection_removed::details(result, &historical))?;
+    projection_removed::workspaces(&mut details);
+    compared(projection_workspace::apply(&mut details, result))?;
+    for detail in details.values_mut() {
+        detail.detail_id = canonical::detail_id(detail)
+            .map_err(|source| crate::error::InternalError::Model { source })?;
+    }
+    Ok(details)
 }
 
 pub(crate) fn compared<T>(result: mokly_compare::error::Result<T>) -> Result<T> {

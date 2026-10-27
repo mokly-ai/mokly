@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::EntryKind;
 use mokly_model::projection;
-use mokly_model::public_detail::{EntryDetailV2, Workspace};
+use mokly_model::public_detail::{EntryDetailV3, Workspace};
 use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
 use mokly_model::snapshot::RemovedPagePreview;
 use mokly_model::versions;
@@ -47,14 +47,13 @@ pub fn records(
 }
 
 /// Build removed details from base plans and render usage, even without classified views.
-/// The caller supplies the generation identity, or its hash preimage placeholder.
+/// The caller assigns the content id after the detail content is complete.
 /// Workspaces stay absent; the caller supplies them only after proving their inputs.
 /// A missing planned document or historical entry fails instead of inventing usage.
 pub fn details(
     result: &ComparisonResult,
     historical: &CatalogueReadModel,
-    generation: &str,
-) -> Result<BTreeMap<String, EntryDetailV2>> {
+) -> Result<BTreeMap<String, EntryDetailV3>> {
     let mut details = projection::pending_details(
         &result.before.catalogue().model,
         historical,
@@ -89,9 +88,8 @@ pub fn details(
         let detail = details
             .get_mut(path)
             .ok_or_else(|| Error::RemovedRecord { path: path.into() })?;
-        detail.deployment_id = None;
+        detail.detail_id.clear();
         detail.revision = None;
-        detail.generation = Some(generation.into());
         detail.entry.snapshot_id = Some(removed.snapshot_id.clone());
         for plan in plans.get(path).into_iter().flatten() {
             let artifact = result.before.render(&plan.route).compare()?;
@@ -130,7 +128,7 @@ pub fn previews(result: &ComparisonResult) -> Vec<RemovedPagePreview> {
 
 /// Initialize comparison workspaces after historical usage has been proved.
 /// Removed screens and component parents and variants share this policy in every host.
-pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV2>) {
+pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV3>) {
     for detail in details.values_mut() {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
             detail.workspace = Some(Workspace {

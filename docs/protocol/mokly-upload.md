@@ -1,7 +1,5 @@
 # Catalogue Upload v3
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Boundary
 
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`

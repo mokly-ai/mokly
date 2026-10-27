@@ -3,13 +3,13 @@
 use std::collections::BTreeMap;
 
 use crate::axes::EntryKind;
-use crate::public_detail::{EntryDetailV2, UsageLink, VisualKind, Workspace};
+use crate::public_detail::{EntryDetailV3, UsageLink, VisualKind, Workspace};
 use crate::public_index::CatalogueReadModel;
 use crate::usage::{CatalogueUsage, ComponentInputOwner};
 
 /// Omit unproven lists; install complete consumers once all visual usage is ready.
 pub fn workspaces(
-    details: &BTreeMap<String, &EntryDetailV2>,
+    details: &BTreeMap<String, &EntryDetailV3>,
     index: &CatalogueReadModel,
 ) -> BTreeMap<String, Workspace> {
     let ready = details

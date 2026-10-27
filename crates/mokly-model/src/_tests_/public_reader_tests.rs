@@ -3,7 +3,7 @@
 use serde_json::{Value, json};
 
 use crate::canonical;
-use crate::readers::{ReadError, detail, index};
+use crate::readers::{detail, index};
 
 pub(super) fn empty_index() -> Value {
     json!({"schemaVersion":8,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
@@ -11,7 +11,7 @@ pub(super) fn empty_index() -> Value {
 }
 
 pub(super) fn metadata(path: &str) -> Value {
-    json!({"path":path,"title":"Home","tags":[],"details":{"description":"","relatedDocs":[],"sourcePath":"specs/home.screen.html"},"changes":{"status":"disabled"}})
+    json!({"path":path,"detailId":"c".repeat(64),"title":"Home","tags":[],"details":{"description":"","relatedDocs":[],"sourcePath":"specs/home.screen.html"},"changes":{"status":"disabled"}})
 }
 
 pub(super) fn screen(path: &str, parent: Option<&str>) -> Value {
@@ -85,14 +85,11 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
 
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let mut value = json!({"schemaVersion":2,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    let mut value = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
     assert!(detail(&value.to_string()).is_ok());
     value["generation"] = json!("c".repeat(64));
-    assert!(matches!(
-        detail(&value.to_string()),
-        Err(ReadError::Contract { .. })
-    ));
-    value.as_object_mut().unwrap().remove("deploymentId");
+    assert!(detail(&value.to_string()).is_err());
+    value.as_object_mut().unwrap().remove("generation");
     value.as_object_mut().unwrap().remove("revision");
     value["entry"]["snapshotId"] = json!("d".repeat(64));
     assert!(detail(&value.to_string()).is_ok());

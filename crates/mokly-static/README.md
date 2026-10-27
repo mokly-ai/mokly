@@ -32,8 +32,8 @@ generation root, detail-root reasons, each view's state, ignore ids, and
 evidence, the base side, workspace lists, and removed records from the same
 comparison result. The review result and the change snapshot stay private; no
 generation file holds them. Both pinned graph sides supply immutable documents
-and resources. Removed details carry their historical snapshot ID and
-generation. Removed page and document previews carry typed preview metadata.
+and resources. Removed details carry their historical snapshot ID and content
+id. Removed page and document previews carry typed preview metadata.
 `mokly_compare::projection_removed` owns these records, details, and metadata.
 The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.

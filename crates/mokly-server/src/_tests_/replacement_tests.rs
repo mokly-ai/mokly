@@ -30,7 +30,8 @@ fn unchanged_details_share_payload_and_encoded_bytes_across_rebuilds() {
         .collect();
     let mut files = BTreeMap::new();
     let encoder = Unimock::new(());
-    let reused = encode_details(details, &index, Some(&origin), &mut files, &encoder).unwrap();
+    let mut index = index;
+    let reused = encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
     assert_eq!(reused.len(), origin.details.len());
     for (path, detail) in reused {
         assert!(Arc::ptr_eq(&detail, &origin.details[&path]));
@@ -58,7 +59,9 @@ fn one_changed_detail_encodes_once_at_both_catalogue_sizes() {
                 }),
         );
         let mut files = BTreeMap::new();
-        let result = encode_details(details, &index, Some(&origin), &mut files, &encoder).unwrap();
+        let mut index = index;
+        let result =
+            encode_details(details, &mut index, Some(&origin), &mut files, &encoder).unwrap();
         assert_eq!(result.len(), count);
         assert!(!Arc::ptr_eq(
             &result["screen-0"],

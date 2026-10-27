@@ -20,6 +20,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     },
     details,
     documentKey: "1".repeat(64),
+    detailId: "2".repeat(64),
     path: "removed-page",
     kind: "page" as const,
     tags: [],

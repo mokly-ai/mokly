@@ -101,6 +101,6 @@ $schema?: string, };
 
 export type CatalogueIndexVersion = 8;
 export type DeploymentFileVersion = 1;
-export type EntryDetailVersion = 2;
+export type EntryDetailVersion = 3;
 export type ChangeSnapshotVersion = 4;
 export type LiveDescriptorVersion = 3;

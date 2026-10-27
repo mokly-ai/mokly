@@ -71,6 +71,7 @@ export function publishedScreen(
     colorSchemes: ["light"],
     controls: {},
     details: entryDetails(title, `specs/${path}.mockup.tsx`),
+    detailId: hash(`detail:${path}`),
     kind: "screen",
     path,
     propSchema: { additionalProperties: false, type: "object" },
@@ -93,6 +94,7 @@ export function publishedDocument(
     changes: readyChanges(change),
     colorSchemes: ["light"],
     details: entryDetails(title, `specs/${path}.md`),
+    detailId: hash(`detail:${path}`),
     documentKeys: [
       { colorScheme: "light", documentKey: hash(`${path}:light`) },
     ],
@@ -112,6 +114,7 @@ export function publishedPage(
   return {
     changes: readyChanges(change),
     details: entryDetails(title, `specs/${path}.mockup.tsx`),
+    detailId: hash(`detail:${path}`),
     documentKey: hash(path),
     kind: "page",
     path,
@@ -132,6 +135,7 @@ export function publishedUseCase(
   return {
     changes: readyChanges("unmodified"),
     details: entryDetails(title, `specs/${path}.mockup.tsx`),
+    detailId: hash(`detail:${path}`),
     kind: "use-case",
     path,
     steps: steps.map((screenPath) => ({ screenPath })),
@@ -156,6 +160,7 @@ export function publishedComponent(
     },
     controls: {},
     details: entryDetails(title, `specs/${path}.mockup.tsx`),
+    detailId: hash(`detail:${path}`),
     kind: "component",
     path,
     propSchema: { additionalProperties: false, properties: {}, type: "object" },

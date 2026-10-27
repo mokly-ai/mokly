@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type { EntryDetailV2 } from "../src/catalogue/types.js";
+import type { EntryDetailV3 } from "../src/catalogue/types.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
@@ -15,8 +15,8 @@ const REMOVED_PAGE =
 
 function current(
   path: string,
-  edit?: (detail: EntryDetailV2) => void,
-): EntryDetailV2 {
+  edit?: (detail: EntryDetailV3) => void,
+): EntryDetailV3 {
   const detail = rawDetailFixtures().current[path]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -24,8 +24,8 @@ function current(
 
 function removed(
   snapshotId: string,
-  edit?: (detail: EntryDetailV2) => void,
-): EntryDetailV2 {
+  edit?: (detail: EntryDetailV3) => void,
+): EntryDetailV3 {
   const detail = rawDetailFixtures().removed[snapshotId]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -72,7 +72,7 @@ test("detail keys separate current and removed requests", () => {
   );
 });
 
-test("a current detail needs the index identity, deployment and revision", () => {
+test("a current detail needs the index identity, detail id and revision", () => {
   const index = indexFixture();
   const request = { path: "product/browse/home" };
   const identity = current(request.path, (detail) => {
@@ -82,7 +82,7 @@ test("a current detail needs the index identity, deployment and revision", () =>
     kind: "rejected",
   });
   const deployment = current(request.path, (detail) => {
-    detail.deploymentId = OTHER;
+    detail.detailId = OTHER;
   });
   assert.deepEqual(fenceDetail(index, request, deployment), {
     kind: "deployment",
@@ -106,7 +106,7 @@ test("a current detail must describe the requested index entry", () => {
   assert.equal(
     fenceDetail(index, { path: "product/browse/details" }, current("guide"))
       .kind,
-    "rejected",
+    "deployment",
   );
   assert.equal(
     fenceDetail(index, { path: "missing" }, current("guide")).kind,
@@ -121,7 +121,7 @@ test("a current detail must describe the requested index entry", () => {
   );
   assert.equal(
     fenceDetail(index, { path: "product/browse/home" }, removed(RETIRED)).kind,
-    "rejected",
+    "revision",
   );
 });
 
@@ -154,18 +154,18 @@ test("usage must fit the index's components and the entry kind", () => {
   );
 });
 
-test("a removed detail needs the index identity, generation and snapshot", () => {
+test("a removed detail needs the index identity, detail id and snapshot", () => {
   const index = indexFixture();
   const path = "product/browse/home/retired";
   assert.equal(
     fenceDetail(index, { path, snapshotId: RETIRED }, removed(RETIRED)).kind,
     "accepted",
   );
-  const generation = removed(RETIRED, (detail) => {
-    detail.generation = OTHER;
+  const detailId = removed(RETIRED, (detail) => {
+    detail.detailId = OTHER;
   });
   assert.equal(
-    fenceDetail(index, { path, snapshotId: RETIRED }, generation).kind,
+    fenceDetail(index, { path, snapshotId: RETIRED }, detailId).kind,
     "rejected",
   );
   assert.equal(
@@ -190,7 +190,7 @@ test("a removed detail needs the index identity, generation and snapshot", () =>
   );
 });
 
-test("a removed detail is not accepted once its comparison is replaced", () => {
+test("a removed detail uses its published detail id", () => {
   const replaced = indexFixture((raw) => {
     raw.comparisonUrl = `mokly-viewer/diffs/generations/${OTHER}/`;
   });
@@ -200,6 +200,6 @@ test("a removed detail is not accepted once its comparison is replaced", () => {
       { path: "product/browse/home/retired", snapshotId: RETIRED },
       removed(RETIRED),
     ).kind,
-    "rejected",
+    "accepted",
   );
 });

@@ -1,178 +1,26 @@
 //! Assembly consumes only the injected generation, source closure, and package inventory.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::Arc;
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
-use mokly_catalogue::discovery::Inventory;
-use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_graph::cache::Artifact;
-use mokly_graph::key::NodeKey;
-use mokly_graph::types::{DocumentPlan, RenderGenerationMock};
-use mokly_html::{composition::Composed, parse};
-use mokly_model::axes::ColorScheme;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::canonical;
-use mokly_model::catalogue::{
-    CatalogueModel, EntryContent, EntryMetadata, ModelEntry, SourceLocation,
-};
 use mokly_model::output::ownership::Ownership;
 use mokly_model::output::validation::digest;
 use mokly_model::readers;
-use mokly_model::usage::CatalogueUsage;
-use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::assembly::{Assembler, Assembly, CatalogueAssembler};
-use crate::changes::ChangeState;
+use super::assembly_support::{
+    assembler, config, empty_assembler, graph_with_key, plan, prepared, request,
+};
+use crate::assembly::Assembler;
 use crate::error::Error;
-use mokly_compare::comparison_types::ComparisonResult;
-use mokly_model::public_metadata::ChangesStatus;
-
-struct Disabled;
-impl ChangeState for Disabled {
-    fn status(&self) -> ChangesStatus {
-        ChangesStatus::Disabled
-    }
-    fn base(&self) -> Option<&str> {
-        None
-    }
-    fn ready(&self) -> Option<&ComparisonResult> {
-        None
-    }
-}
 use crate::transaction::CancellationMock;
-
-fn config() -> ResolvedConfig {
-    ResolvedConfig {
-        input: Config::default(),
-        file: "/repo/mokly.config.json".into(),
-        repo_root: "/repo".into(),
-        authored_inputs: vec![],
-        roots: vec![],
-    }
-}
-fn prepared() -> PreparedCatalogue {
-    PreparedCatalogue {
-        model: CatalogueModel {
-            entries: vec![ModelEntry {
-                metadata: EntryMetadata {
-                    path: "home".into(),
-                    title: "Home".into(),
-                    description: String::new(),
-                    tags: vec![],
-                    rationale: None,
-                    related_docs: vec![],
-                    moved_from: None,
-                    moved_from_source: None,
-                    variant_of: None,
-                    is_index: false,
-                    source: SourceLocation {
-                        path: "specs/home.page.html".into(),
-                        line: 1,
-                        column: 1,
-                        export: None,
-                    },
-                    root_index: 0,
-                },
-                content: EntryContent::Page,
-            }],
-            sources: vec![],
-            folders: vec![],
-            color_schemes: vec![ColorScheme::Light],
-        },
-        inventory: Inventory::default(),
-        templates: BTreeMap::new(),
-        documents: BTreeMap::new(),
-        slot_fragments: BTreeMap::new(),
-        elements: BTreeMap::new(),
-        javascript: Default::default(),
-        dependency_directories: Default::default(),
-        deferred_modules: vec![],
-        warnings: vec![],
-    }
-}
-fn plan(entry: usize) -> BTreeMap<String, DocumentPlan> {
-    BTreeMap::from([(
-        "home/index.html".into(),
-        DocumentPlan {
-            route: "home/index.html".into(),
-            key: NodeKey("a".repeat(64)),
-            resource_key: "a".repeat(64),
-            entry,
-            viewport: None,
-            color_scheme: ColorScheme::Light,
-            stylesheets: vec![],
-        },
-    )])
-}
-fn request<'a>(
-    config: &'a ResolvedConfig,
-    generation: &'a dyn mokly_graph::types::RenderGeneration,
-) -> Assembly<'a> {
-    Assembly {
-        config,
-        generation,
-        config_path: "mokly.config.json".into(),
-        directory: "/repo/site".into(),
-        viewer: vec![],
-        changes: &Disabled,
-        publication: None,
-    }
-}
-
-fn graph_with_key(key: &str) -> Unimock {
-    let mut plans = plan(0);
-    plans.get_mut("home/index.html").unwrap().key = NodeKey(key.into());
-    Unimock::new((
-        RenderGenerationMock::catalogue
-            .each_call(matching!())
-            .returns(prepared()),
-        RenderGenerationMock::plans
-            .each_call(matching!())
-            .returns(plans),
-        RenderGenerationMock::render
-            .next_call(matching!("home/index.html"))
-            .returns(Ok(Arc::new(Artifact {
-                bytes: vec![],
-                document: Some(Composed {
-                    tree: parse::document("<h1>Home</h1>"),
-                    usage: CatalogueUsage::Ready {
-                        instances: vec![],
-                        slots: vec![],
-                        ranges: vec![],
-                    },
-                    warnings: vec![],
-                    resources: vec![],
-                    components: vec![],
-                    links: vec![],
-                }),
-                fragment: None,
-                content_type: "text/html".into(),
-            }))),
-        RenderGenerationMock::resource_routes
-            .next_call(matching!())
-            .returns(Vec::<String>::new()),
-        RenderGenerationMock::public_files
-            .next_call(matching!())
-            .returns(BTreeSet::<String>::new()),
-    ))
-}
-
-fn source_tree() -> Unimock {
-    Unimock::new(
-        SourceTreeMock::project
-            .next_call(matching!((path) if *path == Path::new("/repo/site")))
-            .returns(Ok(None)),
-    )
-}
 
 #[test]
 fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
     let graph = graph_with_key(&"a".repeat(64));
-    let assembler: &dyn Assembler = &CatalogueAssembler {
-        tree: Arc::new(source_tree()),
-    };
+    let assembler: &dyn Assembler = &assembler();
     let cancellation = Unimock::new(
         CancellationMock::requested
             .each_call(matching!())
@@ -197,7 +45,7 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
     let deployment =
         readers::deployment(std::str::from_utf8(files["mokly-viewer/deployment.json"]).unwrap())
             .unwrap();
-    assert_eq!(detail.deployment_id.as_ref(), Some(&index.deployment_id));
+    assert_eq!(detail.detail_id, index.pages[0].entry.detail_id);
     assert_eq!(deployment.deployment_id, index.deployment_id);
     assert_eq!(deployment.schema_version, 1);
     assert_eq!(
@@ -227,10 +75,6 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
         .map(|(path, bytes)| {
             let canonical = if *path == "mokly-viewer/index.json" {
                 canonical::to_string(&zeroed).unwrap().into_bytes()
-            } else if path.starts_with("mokly-viewer/entries/") {
-                let mut detail = readers::detail(std::str::from_utf8(bytes).unwrap()).unwrap();
-                detail.deployment_id = Some("0".repeat(64));
-                canonical::to_string(&detail).unwrap().into_bytes()
             } else {
                 bytes.to_vec()
             };
@@ -267,9 +111,7 @@ fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
                     .returns(plan(9)),
             ))
         };
-        let assembler: &dyn Assembler = &CatalogueAssembler {
-            tree: Arc::new(Unimock::new(())),
-        };
+        let assembler = empty_assembler();
         let error = assembler
             .assemble(request(&config(), &graph), &Unimock::new(()))
             .unwrap_err();
@@ -284,9 +126,7 @@ fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
 #[test]
 fn malformed_published_index_preserves_the_reader_diagnostic() {
     let graph = graph_with_key("bad");
-    let assembler: &dyn Assembler = &CatalogueAssembler {
-        tree: Arc::new(source_tree()),
-    };
+    let assembler: &dyn Assembler = &assembler();
     let cancellation = Unimock::new(
         CancellationMock::requested
             .each_call(matching!())

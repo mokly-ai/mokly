@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::review::{ReviewEntryAddress, ReviewState};
 use mokly_model::review_affected::{
     AffectedConsumer, AffectedConsumerAddress, AffectedInstance, AffectedUsageEvidence,
@@ -79,7 +79,7 @@ fn project(result: &mut ComparisonResult) -> BTreeMap<String, (bool, Vec<String>
     projection_workspace::apply(&mut current, result).unwrap();
     current
         .into_iter()
-        .filter_map(|(path, detail): (String, EntryDetailV2)| {
+        .filter_map(|(path, detail): (String, EntryDetailV3)| {
             let workspace = detail.workspace?;
             let related = workspace
                 .related_components

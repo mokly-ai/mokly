@@ -1,7 +1,5 @@
 # Shell Delivery And Read Model Routes
 
-Status: In progress under the [detail content ids plan](../../plans/detail-content-ids.md).
-
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -81,7 +79,7 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/)
+The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).
