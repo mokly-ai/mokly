@@ -68,10 +68,10 @@ Contract owners:
 
 ## Decisions
 
-The plan asked for the eight decisions below on 2026-10-27. The user answered
-Decisions 1, 7, and 8 the same day. Decisions 2 to 6 stay open, and the user
-asked for more detail on Decisions 2, 3, 4, and 6. Each open decision shows the
-recommended option. The design and the milestones assume that option. Another
+The plan asked for the decisions below on 2026-10-27. The user answered
+Decisions 1, 7, 8, and 9 the same day. Decisions 2 to 6 stay open. The user
+asked for more detail on Decisions 2, 3, 4, 6, and 7. Each open decision shows
+the recommended option. The design and the milestones assume that option. Another
 answer changes the milestones that the decision names.
 
 1. **Composition model, High.** Decided: A, by the user on 2026-10-27.
@@ -152,9 +152,9 @@ answer changes the milestones that the decision names.
      entry parts and the tab parts are experimental.
    - Reason: the package is pre-1.0 and already follows rule A. One tier is
      simpler for hosts. Affects Milestones 1 and 8.
-9. **Shape of the host content props, Low.** Open since 2026-10-27, when the
-   user asked whether the `slots` object is an anti-pattern and then whether
-   flat props are better. Recommended: C.
+9. **Shape of the host content props, Low.** Decided: C, by the user on
+   2026-10-27. The user had asked whether the `slots` object is an
+   anti-pattern.
    - A: `slots` holds the host content and the `stage` function.
    - B: `slots` holds only host content. `stage` is its own prop on
      `MoklyViewer`, as on `MoklyViewerRoot`.
@@ -168,8 +168,8 @@ answer changes the milestones that the decision names.
      parts. `stage` stands beside the other behaviour props. The break is cheap
      while Mokly Cloud upgrades. The removal of the public `ViewerSlots` type
      needs a line in the npm release notes. The request put `stage` in
-     `ViewerSlots`, so B, C, and D change the request. The design text shows
-     A until the user answers. Affects Milestones 1, 4, 5, 8, and 9.
+     `ViewerSlots`, so C changes the request. Affects Milestones 1, 4, 5, 8,
+     and 9.
 
 The plan also makes three choices that a review can change: the flat `Mokly*`
 export names, the `stage` prop on the root, and a warning without a throw for a
@@ -194,6 +194,16 @@ On 2026-10-27 the user also answered these items of the plan review:
 - **Review 2, wider fix of finding 5: B.** The Markdown link check covers every
   Markdown file under `packages/`. Rejected: A, the rule that each package page
   is named `README.md`.
+- **Review 1 finding 3: C.** With no catalogue part, every menu button hides.
+  `MoklyMenuButton` opens the drawer from a host's own header. With no menu
+  button, the catalogue stays a column. A part can render inside slot content.
+  Rejected: A, the top bar and the catalogue together and a rejection of parts
+  in slot content, and B, CSS fallbacks with a part in slot content that
+  renders nothing.
+- **Review 2 finding 1: B.** `MoklyInspector` and `MoklyEntryHeader` take their
+  inner parts as children. A real repeat of a part renders nothing and warns.
+  Rejected: A, the warning without the children, because a host could not
+  move one tab body into its own panel.
 
 ## Design
 
@@ -217,8 +227,15 @@ interface ViewerStageContext {
   fragment?: string;
 }
 type ViewerStage = (context: ViewerStageContext) => ReactNode;
-interface ViewerSlots {
-  // The seven slots of today stay.
+interface MoklyViewerProps {
+  // The other props of today stay. Flat props replace `slots`.
+  topBarStart?: ReactNode;
+  topBarEnd?: ReactNode;
+  railStart?: ReactNode;
+  railEnd?: ReactNode;
+  emptyState?: ReactNode;
+  sidePanel?: { content: ReactNode; width: CSSProperties["width"] };
+  stageOverlay?: { content: ReactNode; pointerEvents: "none" | "auto" };
   stage?: ViewerStage;
 }
 ```
@@ -247,27 +264,30 @@ interface ViewerSlots {
 
 ### Exported Parts
 
-| Export                                                                        | Props                                                                | Renders                                                                                                            | Placement                      |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
-| `MoklyViewerRoot`                                                             | The `MoklyViewer` props without `slots`, plus `stage` and `children` | The viewer element, skip link, marker and label layers, and status region. Loading and failure replace `children`. | The host page                  |
-| `MoklySlot`                                                                   | `children`, `className`, `style`                                     | A host-owned container                                                                                             | The root                       |
-| `MoklyTopBar`                                                                 | `start`, `end`                                                       | The menu button, brand, search, tag picker, and preview scheme switch                                              | The root                       |
-| `MoklyCatalogueNav`                                                           | `start`, `end`                                                       | The catalogue rail, which is a drawer below the layout breakpoint                                                  | The root                       |
-| `MoklyMain`                                                                   | `emptyState`, `children`                                             | The `main` region: home, the not-found view, or the selected entry                                                 | The root, once                 |
-| `MoklyEntryHeader`                                                            | `controls`, `end`                                                    | Breadcrumbs, title, path chip, status, and the view controls when `controls` is not `false`                        | `MoklyMain`                    |
-| `MoklyViewControls`                                                           | None                                                                 | The viewport, Dark preview, and Highlight components controls                                                      | `MoklyMain`                    |
-| `MoklyVariantBar`                                                             | None                                                                 | The saved variants of a component                                                                                  | `MoklyMain`                    |
-| `MoklyComparisonToolbar`                                                      | None                                                                 | The mode group, Scroll together, and Refresh                                                                       | `MoklyMain`                    |
-| `MoklyStage`                                                                  | `children`                                                           | The stage canvas, the edit status, the inspection masks, and its overlays                                          | `MoklyMain`                    |
-| `MoklyStageOverlay`                                                           | `pointerEvents`, `children`                                          | Host content over the stage canvas                                                                                 | `MoklyStage`                   |
-| `MoklyInspector`                                                              | None                                                                 | The details panel, which has the Details, Components, Props, and Usage tabs for a screen or component              | `MoklyMain`                    |
-| `MoklyEntryDetails`, `MoklyInstanceList`, `MoklyPropsPanel`, `MoklyUsageList` | None                                                                 | The body of the Details, Components, Props, or Usage tab                                                           | `MoklyMain`                    |
-| `MoklyPhoneFrame`                                                             | `children`, `colorScheme`                                            | The phone chrome: bezel, notch, status band, screen surface, and home pill                                         | The root, also in slot content |
-| `MoklyBrowserFrame`                                                           | `children`, `address`, `colorScheme`                                 | The browser window chrome: lights, the address pill with copy, expand, and the viewport surface                    | The root, also in slot content |
+| Export                                                                        | Props                                                                         | Renders                                                                                                            | Placement                      |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `MoklyViewerRoot`                                                             | The `MoklyViewer` props without the seven host content props, plus `children` | The viewer element, skip link, marker and label layers, and status region. Loading and failure replace `children`. | The host page                  |
+| `MoklySlot`                                                                   | `children`, `className`, `style`                                              | A host-owned container                                                                                             | The root                       |
+| `MoklyTopBar`                                                                 | `start`, `end`                                                                | The menu button, brand, search, tag picker, and preview scheme switch                                              | The root                       |
+| `MoklyCatalogueNav`                                                           | `start`, `end`                                                                | The catalogue rail, which is a drawer below the layout breakpoint                                                  | The root                       |
+| `MoklyMenuButton`                                                             | None                                                                          | The menu button that opens the catalogue drawer below the layout breakpoint                                        | The root                       |
+| `MoklyMain`                                                                   | `emptyState`, `children`                                                      | The `main` region: home, the not-found view, or the selected entry                                                 | The root, once                 |
+| `MoklyEntryHeader`                                                            | `children`, `end`                                                             | Breadcrumbs, title, path chip, status, and its `children` in the action area, by default `MoklyViewControls`       | `MoklyMain`                    |
+| `MoklyViewControls`                                                           | None                                                                          | The viewport, Dark preview, and Highlight components controls                                                      | `MoklyMain`                    |
+| `MoklyVariantBar`                                                             | None                                                                          | The saved variants of a component                                                                                  | `MoklyMain`                    |
+| `MoklyComparisonToolbar`                                                      | None                                                                          | The mode group, Scroll together, and Refresh                                                                       | `MoklyMain`                    |
+| `MoklyStage`                                                                  | `children`                                                                    | The stage canvas, the edit status, the inspection masks, and its overlays                                          | `MoklyMain`                    |
+| `MoklyStageOverlay`                                                           | `pointerEvents`, `children`                                                   | Host content over the stage canvas                                                                                 | `MoklyStage`                   |
+| `MoklyInspector`                                                              | `children`                                                                    | The details panel. For a screen or component, each child tab body is one tab, and the default is all four tabs.    | `MoklyMain`                    |
+| `MoklyEntryDetails`, `MoklyInstanceList`, `MoklyPropsPanel`, `MoklyUsageList` | None                                                                          | The body of the Details, Components, Props, or Usage tab                                                           | `MoklyMain`                    |
+| `MoklyPhoneFrame`                                                             | `children`, `colorScheme`                                                     | The phone chrome: bezel, notch, status band, screen surface, and home pill                                         | The root, also in slot content |
+| `MoklyBrowserFrame`                                                           | `children`, `address`, `colorScheme`                                          | The browser window chrome: lights, the address pill with copy, expand, and the viewport surface                    | The root, also in slot content |
 
 `start` and `end` take host content before and after a part, as the matching
-slots of `MoklyViewer` do today. `MoklyEntryHeader` takes `end` after its view
-controls. `MoklyMain` lays out the selected entry with its `children`, or with
+props of `MoklyViewer` do. `MoklyEntryHeader` takes `end` after its action
+area. When a part's `children` are `undefined`, the part keeps its default
+inner parts. `null` leaves the area empty. Every part can also render inside
+slot content. `MoklyMain` lays out the selected entry with its `children`, or with
 the default entry layout when it has none. The same `children` serve every
 entry kind. Home and the not-found view do not render them. The two frames
 draw no viewport label, and their `colorScheme` defaults to the selected
@@ -276,8 +296,8 @@ scheme. The root entry also exports `ViewerStage`, `ViewerStageContext`,
 
 `MoklyViewer` renders the root with its default layout: the top bar with
 `topBarStart` and `topBarEnd`, the catalogue with `railStart` and `railEnd`,
-the main part with `emptyState`, and the `sidePanel` slot. Its default stage
-holds the `stageOverlay` slot as a `MoklyStageOverlay`. The standalone shell
+the main part with `emptyState`, and the `sidePanel` content. Its default
+stage holds the `stageOverlay` content as a `MoklyStageOverlay`. The standalone shell
 renders the same internal parts in its own root.
 
 ### Composition Rules
@@ -287,13 +307,15 @@ renders the same internal parts in its own root.
 2. The entry parts render inside `MoklyMain`. `MoklyStageOverlay` renders
    inside `MoklyStage`.
 3. A root holds one `MoklyMain`. It holds at most one of each other part,
-   except `MoklySlot`, `MoklyPhoneFrame`, and `MoklyBrowserFrame`.
+   except `MoklySlot`, `MoklyPhoneFrame`, and `MoklyBrowserFrame`. In the
+   browser, a second part of one kind renders nothing and warns once. A root
+   without `MoklyMain` also warns once.
 4. The host owns the layout elements between the root and the parts. Viewer
    styles do not reach them, because each part is its own style scope.
 5. Host content, such as text, controls, and links, goes in a part's slot prop
    or in a `MoklySlot`. Viewer styles and link handling do not reach it.
-6. A part does not render inside slot content. The exception is the two
-   frames, which keep their own styles there.
+6. A part can render inside slot content. It keeps its own styles there. The
+   nearest part or slot decides whether the viewer handles a link click.
 7. A part outside its required ancestor renders nothing. It logs one console
    warning that names the part and the ancestor.
 8. The root fills its container, which needs a definite height. Each part
@@ -307,9 +329,11 @@ Behaviour across parts, in every layout that follows these rules:
 - The root's status region announces each committed navigation.
 - The root handles Escape for the tag picker, the expanded frame, and the open
   inspector. It is also the focus target of a pick.
-- Below the layout breakpoint, the top bar's menu button opens the catalogue
-  part as a drawer over the root, below the top bar part. A layout with the
-  catalogue part therefore puts the top bar part at the top edge of the root.
+- Below the layout breakpoint, a menu button opens the catalogue part as a
+  drawer over the root, below the top bar part when the root has one. The top
+  bar holds a menu button, and `MoklyMenuButton` places one anywhere else.
+- With no catalogue part, every menu button hides. With no menu button, the
+  catalogue part stays a column below the breakpoint.
 - Below the layout breakpoint, the inspector part is a bottom sheet over its
   nearest positioned container. `MoklyMain` is positioned. The sheet and the
   desktop divider size against that container.
@@ -400,7 +424,8 @@ viewer contract is at its exact cap of 396 lines, so split it first.
         `mokly-viewer.md` entry from `xtask/protocol-document-caps.json`.
   - [ ] Update every link to a moved anchor.
 - [ ] `mokly-viewer.md`: list `MoklyViewerRoot`, the parts, and their types in
-      the root entry. Add `stage` to `ViewerSlots`. Replace "renders only in the
+      the root entry. Replace `slots` and `ViewerSlots` with the flat host
+      content props, and add `stage`. Replace "renders only in the
       browser" with the static render rule, and link the new pages.
   - [ ] The `detail` paragraph: the viewer also calls `detail` during a static
         render.
@@ -515,9 +540,20 @@ becomes the default assembly of the public parts.
 - [ ] Add `MoklyViewerRoot` with the source, selection, failure, and handle
       logic of `MoklyViewer`. `MoklyViewer` renders the root and the default
       layout.
+- [ ] Replace `slots` on `MoklyViewer` with the flat host content props, under
+      Decision 9. Move every host in the repository to them, such as the
+      browser harness and the release browser smoke.
 - [ ] Add `MoklySlot` and the public parts over the internal parts. Each part
       checks its required ancestor and marks its element. A misplaced part
       renders nothing and warns once.
+- [ ] Apply review 1 finding 3 C: add `MoklyMenuButton`. Through CSS on part
+      markers, every menu button hides without a catalogue part, and the
+      catalogue stays a column without a menu button.
+- [ ] Let a part render inside slot content. The click handler picks the
+      nearest part or slot to decide who owns a link.
+- [ ] Apply review 2 finding 1 B: `MoklyInspector` and `MoklyEntryHeader` take
+      their inner parts as children. In the browser, a second part of one kind
+      renders nothing and warns once, and a root without `MoklyMain` warns.
 - [ ] Make each part its own style scope in the scoped stylesheet. A part's
       scope ends at a nested part and at slot content. The root rules apply
       only to the root's own elements.
@@ -540,6 +576,9 @@ becomes the default assembly of the public parts.
 - [ ] Node tests: each part renders inside a root from the fixture catalogue. A
       misplaced part renders nothing and warns once. The default assembly
       keeps the slot behaviour of `embedded_viewer_render.test.tsx`.
+- [ ] Tests for each new rule: no catalogue part, no top bar with and without
+      `MoklyMenuButton`, a part inside slot content, a tab body outside the
+      inspector, a repeated part, and a root without `MoklyMain`.
 - [ ] Browser spec for a custom layout: the catalogue on the right, the
       inspector beside the stage, and host content in `MoklySlot`.
   - [ ] It checks the drawer, the skip link, Escape, announcements, and the
@@ -558,7 +597,7 @@ Tags: ui
 Add the host stage under Decisions 5, 6, and 7.
 
 - [ ] Add `ViewerStage`, `ViewerStageContext`, `ComparisonMode`, the root's
-      `stage` prop, and `ViewerSlots.stage`.
+      `stage` prop, and the `stage` prop of `MoklyViewer`.
 - [ ] The entry provider calls `stage` during its render. A result that is not
       `undefined` shows a host stage. No frame mounts, and no comparison or
       previous-version request starts.
@@ -666,7 +705,8 @@ Prove in the release that the published archive renders statically.
       has 515 lines.
 - [ ] The shell README describes the entry provider, the part files, and the
       static render rule.
-- [ ] `packages/viewer/docs/api/README.md`: `slots.stage`, `MoklyViewerRoot`,
+- [ ] `packages/viewer/docs/api/README.md`: the flat host content props and
+      `stage`, `MoklyViewerRoot`,
       each part with its props and placement, `ViewerStageContext`, and the
       stability promise.
 - [ ] `packages/viewer/docs/concepts/README.md`: host stages, custom layouts,
@@ -684,7 +724,9 @@ on the minor stream.
 
 - [ ] Add a "Viewer Stage And Parts Release Note" to
       `docs/protocol/npm-release-notes.md`. It lists the new exports,
-      `slots.stage`, static rendering, and the upgrade steps for hosts.
+      the flat host content props and `stage`, static rendering, and the
+      upgrade steps for hosts. It names the removed `ViewerSlots` type in its
+      own code span, as the export ratchet requires.
 - [ ] The note names the behaviour changes: full link addresses in embedded
       roots, the overlay inside the stage with its remount, and `emptyState`
       inside `main`.
@@ -708,12 +750,6 @@ on the minor stream.
     reports are `review-1.md` and `review-2.md` in
     `.context/viewer-stage-slot-and-parts/`. The Decisions section records the
     items that the user answered. These items stay open for the user.
-  - Review 1 finding 3: Three allowed layouts have no behaviour. Severity
-    Medium, effort Medium. Recommended: C, CSS on part markers, and a part in
-    slot content keeps its styles and its link handling.
-  - Review 2 finding 1: Overlapping and repeated parts have no result.
-    Severity Medium, effort Medium. Recommended: B, the inspector and the
-    header take their inner parts as children, and a real repeat warns once.
   - Review 1 finding 12: The plan does not hold work for the decisions.
     Severity Low, effort Small. Recommended: A, Milestone 1 starts after the
     answers.
@@ -737,8 +773,9 @@ The 24 mockups under `docs/mockups/src/entries/product/viewer`:
   supports.
 - The mockup passes the fixture index object, a `baseUrl` at the sample
   catalogue origin, and a `detail` function that returns fixture detail
-  objects. It passes the cloud controls as slots and adds `slots.stage`.
-- For a ready publication, `slots.stage` returns a sample screen inside
+  objects. It passes the cloud controls as host content props, such as
+  `topBarEnd`, and adds `stage`.
+- For a ready publication, `stage` returns a sample screen inside
   `MoklyPhoneFrame` and `MoklyBrowserFrame` parts. For an empty, loading,
   error, build, or access
   state, it returns one cloud card.
@@ -747,9 +784,9 @@ The 24 mockups under `docs/mockups/src/entries/product/viewer`:
 
 The app:
 
-- `MoklyViewer` with the same slots keeps working. `MoklyViewerRoot` and the
-  parts serve a layout that the slots cannot give.
-- The cloud cards that replace the package today can sit in `slots.stage`,
+- `MoklyViewer` keeps working after the move from `slots` to flat props.
+  `MoklyViewerRoot` and the parts serve a layout that those props cannot give.
+- The cloud cards that replace the package today can sit in `stage`,
   inside the real viewer chrome.
 - Viewer links become full catalogue addresses under Decision 2. A modified
   click opens the catalogue's own page. A private catalogue cannot load there
