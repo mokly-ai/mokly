@@ -6,13 +6,12 @@ use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::axes::EntryKind;
-use mokly_model::readers;
 use mokly_model::review::{EntryChangeReason, ReviewKind, ReviewState};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes::{ChangeCancellation, ChangeToken};
 use crate::comparison_capture::{Capturer, SnapshotCapture};
-use crate::comparison_support::{accepted, compact};
+use crate::comparison_support::accepted;
 use crate::error::ServerError;
 
 fn graph(bytes: &'static [u8], resource: &'static [u8]) -> Arc<dyn RenderGeneration> {
@@ -65,26 +64,7 @@ fn selection_keeps_side_bytes_and_reads_no_other_entry() {
     assert_eq!(files["snapshots/before/image.png"].bytes, "old-image");
     assert_eq!(files["snapshots/after/image.png"].bytes, "new-image");
     assert!(!files.keys().any(|path| path.contains("unused")));
-    let review =
-        readers::review(std::str::from_utf8(&files["review.json"].bytes).unwrap()).unwrap();
-    assert_eq!(review.entries.len(), 1);
-    assert!(review.affected.is_empty());
-    assert!(review.diagnostics.is_empty());
-}
-
-#[test]
-fn a_selection_writes_its_review_result_in_the_compact_form() {
-    let accepted = accepted(
-        graph(b"<p>before</p>", b"old-image"),
-        graph(b"<p>after</p>", b"new-image"),
-    );
-    let capture: &dyn Capturer = &SnapshotCapture;
-    let files = capture
-        .capture(&accepted, "sample", false, Arc::new(ChangeToken::default()))
-        .unwrap();
-    let text = std::str::from_utf8(&files["review.json"].bytes).unwrap();
-    assert_eq!(text, compact(&readers::review(text).unwrap()));
-    assert_eq!(text.matches('\n').count(), 1);
+    assert!(files.keys().all(|path| path.starts_with("snapshots/")));
 }
 
 #[test]
@@ -108,7 +88,7 @@ fn cancelled_or_unknown_selections_never_read_a_graph() {
 }
 
 #[test]
-fn added_side_never_reads_the_base_and_component_parent_omits_variants() {
+fn added_side_never_reads_the_base_and_component_parent_captures_only_its_own_views() {
     for component in [false, true] {
         let mut accepted = accepted(Arc::new(Unimock::new(())), graph(b"<p>added</p>", b"new"));
         let result = &mut Arc::get_mut(&mut accepted).unwrap().result;
@@ -138,11 +118,12 @@ fn added_side_never_reads_the_base_and_component_parent_omits_variants() {
                 .keys()
                 .any(|path| path.starts_with("snapshots/before/"))
         );
-        let review =
-            readers::review(std::str::from_utf8(&files["review.json"].bytes).unwrap()).unwrap();
-        assert_eq!(review.entries.len(), 1);
-        assert!(review.entries[0].before.is_none());
-        assert!(review.entries[0].variants.is_none());
+        assert!(!files.keys().any(|path| path.contains("variant")));
+        assert!(
+            files
+                .keys()
+                .all(|path| path.starts_with("snapshots/after/"))
+        );
     }
 }
 
@@ -181,16 +162,10 @@ fn removed_components_capture_the_before_side_and_removed_screens_use_previews()
             "<p>removed component</p>"
         );
         assert!(
-            !files
+            files
                 .keys()
-                .any(|path| path.starts_with("snapshots/after/"))
+                .all(|path| path.starts_with("snapshots/before/"))
         );
-        let review =
-            readers::review(std::str::from_utf8(&files["review.json"].bytes).unwrap()).unwrap();
-        assert_eq!(review.entries.len(), 1);
-        assert!(review.entries[0].before.is_some());
-        assert!(review.entries[0].after.is_none());
-        assert_eq!(review.entries[0].state, ReviewState::Removed);
     }
 }
 
@@ -229,9 +204,6 @@ fn a_current_screen_wins_over_a_removed_component_at_the_same_path() {
     let files = capture
         .capture(&accepted, "sample", false, Arc::new(ChangeToken::default()))
         .unwrap();
-    let review =
-        readers::review(std::str::from_utf8(&files["review.json"].bytes).unwrap()).unwrap();
-    assert_eq!(review.entries[0].kind, ReviewKind::Screen);
     assert_eq!(
         files["snapshots/after/mokly-generated/sample/index.mobile.html"].bytes,
         "<p>current screen</p>"

@@ -16,7 +16,7 @@ fn fixture() -> (
     Vec<crate::public_records::CatalogueComponent>,
 ) {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     let component = &index.components[0];

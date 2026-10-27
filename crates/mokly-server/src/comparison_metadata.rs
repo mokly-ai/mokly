@@ -1,4 +1,4 @@
-//! Encode the shared historical projection without capturing snapshot documents.
+//! Encode the removed details and previews without capturing snapshot documents.
 
 use std::collections::BTreeMap;
 
@@ -9,7 +9,7 @@ use mokly_model::{readers, routes};
 use crate::assets::File;
 use crate::changes::Accepted;
 use crate::error::{InternalError, Result, ServerError};
-use crate::snapshot::{Snapshot, encode, encode_review};
+use crate::snapshot::{Snapshot, encode};
 
 pub(crate) fn base(accepted: &Accepted, current: &Snapshot) -> Result<CatalogueReadModel> {
     let result = &accepted.result;
@@ -28,7 +28,7 @@ pub(crate) fn files(accepted: &Accepted, current: &Snapshot) -> Result<BTreeMap<
     ))?;
     projection_removed::workspaces(&mut details);
     compared(projection_workspace::apply(&mut details, result))?;
-    let mut files = BTreeMap::from([("review.json".into(), encode_review(&result.review)?)]);
+    let mut files = BTreeMap::new();
     for (path, detail) in details {
         let file = encode(&detail)?;
         if let Err(source) = readers::detail(&String::from_utf8_lossy(&file.bytes)) {

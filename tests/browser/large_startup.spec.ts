@@ -63,8 +63,7 @@ test("startup completes with real previews while full Serve requires available C
             assert.ok(result.bytes > 0);
             assert.equal(typeof result.propsMs, "number");
             assert.equal("changesReadyMs" in result, false);
-            assert.equal("reviewAvailableMs" in result, false);
-            assert.equal("review" in result, false);
+            assert.equal("summary" in result, false);
             assert.ok(
               context
                 .pages()

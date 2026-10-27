@@ -91,6 +91,8 @@ export function screenVariantCatalogue(
   return {
     ...model,
     changesStatus: "ready",
+    // Ready Changes names the pinned base commit.
+    baseCommit: "b".repeat(40),
     screens: [
       ...model.screens.slice(0, parentIndex),
       { ...parent, changes: unmodified },

@@ -93,14 +93,24 @@ test("a removed native component opens a comparison with only its before side", 
     expect(removed.entry.kind).toBe("component");
     expect(removed.preview).toBeUndefined();
     const response = await page.request.get(
-      `${fixture.url}/mokly-viewer/diffs/review.json?path=widget`,
+      `${fixture.url}/mokly-viewer/diffs/selection?path=widget`,
     );
-    expect(response.ok()).toBe(true);
-    const review = await response.json();
-    expect(review.entries).toHaveLength(1);
-    expect(review.entries[0].state).toBe("removed");
-    expect(review.entries[0].before.path).toBe("widget");
-    expect(review.entries[0].after).toBeUndefined();
+    expect(response.status()).toBe(204);
+    expect(response.url()).toMatch(/\/generations\/selected-[^/]+\/$/u);
+    const detail = await (
+      await page.request.get(
+        `${fixture.url}/${index.comparisonUrl!}entries/widget.json`,
+      )
+    ).json();
+    expect(detail.entry).toEqual({
+      kind: "component",
+      path: "widget",
+      snapshotId: removed.snapshotId,
+    });
+    expect(detail.reasons).toEqual([{ kind: "removed" }]);
+    expect(detail.views.length).toBeGreaterThan(0);
+    for (const view of detail.views) expect(view.state).toBe("removed");
+    expect(detail.before).toBeUndefined();
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
     await page.goto(
@@ -120,7 +130,7 @@ test("a removed native component opens a comparison with only its before side", 
     ).toHaveCount(0);
     expect(
       requests.filter(
-        (url) => new URL(url).pathname === "/mokly-viewer/diffs/review.json",
+        (url) => new URL(url).pathname === "/mokly-viewer/diffs/selection",
       ),
     ).toEqual([]);
   } finally {

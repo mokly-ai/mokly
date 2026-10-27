@@ -110,6 +110,17 @@ impl Comparisons for MemoryComparisons {
         }
     }
 
+    fn renew(&self, generation: &str) -> bool {
+        self.collect();
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        let now = self.clock.milliseconds();
+        state
+            .bundles
+            .get_mut(generation)
+            .map(|bundle| bundle.touched = now)
+            .is_some()
+    }
+
     fn collect(&self) {
         let current = self.publications.current();
         comparison_store::collect(

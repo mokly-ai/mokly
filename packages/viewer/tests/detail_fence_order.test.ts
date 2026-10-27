@@ -10,7 +10,7 @@ import type {
 import { loadFencedDetail } from "../src/shell/data_requests.js";
 import type { ShellDataSource } from "../src/shell/data_source.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v7_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
 const HOME = "product/browse/home";
 const OTHER = "b2".repeat(32);

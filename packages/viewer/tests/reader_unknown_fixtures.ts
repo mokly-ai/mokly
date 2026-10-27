@@ -8,7 +8,7 @@ import type {
   EntryDetailV2,
 } from "../src/catalogue/types.js";
 
-import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v8_fixture.js";
 
 type Raw = Record<string, unknown>;
 

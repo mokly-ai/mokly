@@ -8,21 +8,12 @@ use mokly_model::output::artifact::File;
 use mokly_model::output::validation::digest;
 use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::public_index::CatalogueReadModel;
-use mokly_model::review::ReviewResultV8;
 use serde::Serialize;
 
 use crate::error::{InternalError, Result};
 
 pub(crate) fn json<T: Serialize>(value: &T) -> Result<Vec<u8>> {
     match canonical::to_string(value) {
-        Ok(value) => Ok(value.into_bytes()),
-        Err(source) => Err(InternalError::Model { source }.into()),
-    }
-}
-
-/// A comparison's `review.json`: canonical JSON in its compact form.
-pub(crate) fn review(value: &ReviewResultV8) -> Result<Vec<u8>> {
-    match canonical::to_compact_string(value) {
         Ok(value) => Ok(value.into_bytes()),
         Err(source) => Err(InternalError::Model { source }.into()),
     }

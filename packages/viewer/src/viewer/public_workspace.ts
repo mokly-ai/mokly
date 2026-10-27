@@ -20,6 +20,7 @@ import type {
 } from "../shell/workspace_data.js";
 
 import { displayEntry } from "./projection.js";
+import { publicComparedEntry } from "./public_compared.js";
 import { shownReasons } from "./public_reasons.js";
 import { publicParent, publicVariants } from "./public_variants.js";
 import {
@@ -138,6 +139,7 @@ export function publicWorkspace(
       : undefined;
   const workspaceStatus = selectedVariant?.status ?? entryStatus;
   const resourceEvidence = publishedResourceEvidence(original.views);
+  const compared = publicComparedEntry(original, held);
   const componentRecords = original.views.some(
     (view) =>
       view.resourceEvidence !== undefined &&
@@ -196,6 +198,7 @@ export function publicWorkspace(
     ...(reasons ? { reasons } : {}),
     ...(componentRecords ? { componentRecords } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
+    ...(compared ? { compared } : {}),
   };
 }
 

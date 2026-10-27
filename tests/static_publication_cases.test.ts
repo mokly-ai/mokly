@@ -58,8 +58,9 @@ test(
         assert.match(result.stdout, /Published Mokly catalogue/);
         if (change === "unrelated") {
           assert.deepEqual(server.attempts, previousBlobAttempts);
-          // The Plan archive still carries the new publication metadata.
-          assert.match(result.stdout, /1 file uploaded/);
+          // The Plan archive still carries the new publication metadata and
+          // the catalogue index.
+          assert.match(result.stdout, /2 files uploaded/);
         }
       }
       assert.equal(server.metadata[0]?.configPath, "tools/mokly.config.json");

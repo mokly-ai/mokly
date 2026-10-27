@@ -7,7 +7,7 @@ import { readLiveDescriptor } from "../src/catalogue/live_reader.js";
 import type { ComponentRenderRequest } from "../src/components/render_types.js";
 import { readRenderResponse } from "../src/standalone/live_render.js";
 
-import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v8_fixture.js";
 import {
   extendEverywhere,
   richDetails,

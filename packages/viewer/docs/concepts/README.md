@@ -6,7 +6,7 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It explains 
 
 `MoklyViewer` reads two shapes of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md): the
-catalogue index, read model v7, and one entry detail v2 per entry.
+catalogue index, read model v8, and one entry detail v2 per entry.
 
 | Prop     | Accepts                                                 | Rule                                                                                |
 | -------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |

@@ -3,8 +3,7 @@
 //! consumers unaffected, and a removed component keeps its former consumers.
 
 use std::fs;
-use std::iter;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
 
@@ -22,8 +21,8 @@ fn badge(extra: &str) -> String {
     )
 }
 
-/// Build against the fixture base and read the published review result.
-fn review(root: &Path) -> Value {
+/// Build against the fixture base and return the static output directory.
+fn build(root: &Path) -> PathBuf {
     let output = run(root, &["build"]);
     assert_eq!(
         output.status.code(),
@@ -31,29 +30,25 @@ fn review(root: &Path) -> Value {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let site = root.join("mokly-static");
-    let index: Value =
-        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
-    serde_json::from_slice(&fs::read(site.join(index["comparisonUrl"].as_str().unwrap())).unwrap())
-        .unwrap()
+    root.join("mokly-static")
 }
 
-/// The review record of one entry or saved variant.
-fn entry<'a>(review: &'a Value, path: &str) -> &'a Value {
-    review["entries"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .flat_map(|entry| {
-            iter::once(entry).chain(entry["variants"].as_array().into_iter().flatten())
-        })
-        .find(|entry| entry["path"] == path)
-        .unwrap()
+/// The published detail of one current entry or saved variant.
+fn detail(site: &Path, path: &str) -> Value {
+    serde_json::from_slice(
+        &fs::read(site.join(format!("mokly-viewer/entries/{path}.json"))).unwrap(),
+    )
+    .unwrap()
+}
+
+/// The changed components that one entry's detail names as affecting it.
+fn related(site: &Path, path: &str) -> Value {
+    detail(site, path)["workspace"]["relatedComponents"].clone()
 }
 
 /// Each view's scheme and state, in view order.
-fn states(entry: &Value) -> Vec<(&str, &str)> {
-    entry["views"]
+fn states(detail: &Value) -> Vec<(&str, &str)> {
+    detail["views"]
         .as_array()
         .unwrap()
         .iter()
@@ -67,7 +62,7 @@ fn states(entry: &Value) -> Vec<(&str, &str)> {
 }
 
 #[test]
-fn a_component_that_loses_dark_lists_removed_views_without_affected_consumers() {
+fn a_component_that_loses_dark_keeps_its_light_views_without_affected_consumers() {
     let source = badge("");
     let directory = base(&[
         ("mokly.config.json", LIGHT_AND_DARK),
@@ -79,21 +74,16 @@ fn a_component_that_loses_dark_lists_removed_views_without_affected_consumers() 
         "specs/badge.component.html",
         &badge("colorSchemes: [light]\n"),
     );
-    let review = review(directory.path());
+    let site = build(directory.path());
     // A lost view has no head counterpart, so it proves no render impact.
-    assert_eq!(review["affected"], json!([]));
-    let badge = entry(&review, "badge");
+    assert_eq!(related(&site, "home"), json!([]));
+    let badge = detail(&site, "badge");
     assert_eq!(badge["reasons"], json!([{"kind": "metadata"}]));
     assert_eq!(
-        states(badge),
-        [
-            ("light", "unchanged"),
-            ("dark", "removed"),
-            ("light", "unchanged"),
-            ("dark", "removed"),
-        ]
+        states(&badge),
+        [("light", "unchanged"), ("light", "unchanged")]
     );
-    assert_eq!(entry(&review, "home")["reasons"], json!([]));
+    assert!(detail(&site, "home").get("reasons").is_none());
 }
 
 #[test]
@@ -104,13 +94,13 @@ fn a_variant_that_gains_dark_lists_added_views_without_affected_consumers() {
         ("specs/home.screen.html", HOME),
     ]);
     write(directory.path(), "mokly.config.json", LIGHT_AND_DARK);
-    let review = review(directory.path());
+    let site = build(directory.path());
     // A gained view has no base counterpart, so it proves no render impact.
-    assert_eq!(review["affected"], json!([]));
-    let bold = entry(&review, "badge/bold");
+    assert_eq!(related(&site, "home"), json!([]));
+    let bold = detail(&site, "badge/bold");
     assert_eq!(bold["reasons"], json!([{"kind": "metadata"}]));
     assert_eq!(
-        states(bold),
+        states(&bold),
         [
             ("light", "unchanged"),
             ("dark", "added"),
@@ -133,30 +123,17 @@ fn a_removed_component_keeps_its_former_consumer_affected() {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<main><i>New</i></main>",
     );
-    let review = review(directory.path());
-    assert_eq!(
-        entry(&review, "badge")["reasons"],
-        json!([{"kind": "removed"}])
-    );
+    let site = build(directory.path());
+    let index: Value =
+        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
+    let generation = site.join(index["comparisonUrl"].as_str().unwrap());
+    let removed: Value =
+        serde_json::from_slice(&fs::read(generation.join("entries/badge.json")).unwrap()).unwrap();
+    assert_eq!(removed["reasons"], json!([{"kind": "removed"}]));
     // A removed component exists on one side, so its base views prove impact
     // and its former consumer stays affected through the base usage.
-    let affected = review["affected"].as_array().unwrap();
-    assert_eq!(affected.len(), 1);
-    assert_eq!(affected[0]["changedComponentId"], "badge");
     assert_eq!(
-        affected[0]["consumer"],
-        json!({"kind": "screen", "path": "home"})
+        related(&site, "home"),
+        json!([{"path": "badge", "title": "Badge"}])
     );
-    let evidence: Vec<_> = affected[0]["evidence"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|item| {
-            (
-                item["side"].as_str().unwrap(),
-                item["context"]["viewport"].as_str().unwrap(),
-            )
-        })
-        .collect();
-    assert_eq!(evidence, [("before", "mobile"), ("before", "desktop")]);
 }

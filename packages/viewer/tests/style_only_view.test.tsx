@@ -10,10 +10,9 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { parseReviewResult } from "../src/review/result_validation.js";
 import type {
+  ComparedEntry,
   EntryChangeReason,
-  ReviewEntry,
   ReviewView,
 } from "../src/review/types.js";
 import { selectedComparisonViews } from "../src/shell/comparison_selection.js";
@@ -139,31 +138,19 @@ const MOBILE_DARK: ComparisonPresentation = {
   requestedColorScheme: "dark",
 };
 
-/**
- * The selected mobile heading of one loaded entry, as the panes render it,
- * on the entry's own route or the route of a variant it groups.
- */
+/** The selected mobile heading of one compared entry, as the panes render it. */
 function heading(
-  entry: ReviewEntry,
-  route = entry.path,
+  entry: ComparedEntry,
+  kind: "component" | "screen",
   presentation = MOBILE,
 ): string | undefined {
-  const result = parseReviewResult({
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [entry],
-    affected: [],
-    diagnostics: [],
-  });
-  const kind = entry.kind === "component" ? "component" : "screen";
   const loaded = {
-    result,
-    url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`,
+    url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`,
   };
-  const views = selectedComparisonViews(loaded, presentation, kind, route);
+  const views = selectedComparisonViews(loaded, presentation, entry);
   const markup = renderToStaticMarkup(
     <ComparisonViews
-      entryId={route}
+      entryId={entry.path}
       entryKind={kind}
       presentation={presentation}
       presentations={new Map()}
@@ -177,86 +164,63 @@ function heading(
 function changedEntry(
   kind: "component" | "screen",
   reasons: EntryChangeReason[],
-): ReviewEntry {
-  const side = {
-    path: kind === "component" ? "card" : "home",
-    title: kind === "component" ? "Card" : "Home",
-    props: {},
-    ...(kind === "component" ? { suppliedSlots: [] } : {}),
-  };
+): ComparedEntry {
+  const path = kind === "component" ? "card" : "home";
   const owner = kind === "component" ? { kind, path: "card" } : page;
   return {
-    kind,
-    path: side.path,
-    title: side.title,
-    before: side,
-    after: side,
-    state: "changed",
-    included: true,
+    path,
+    basePath: path,
     reasons,
     views: [view([rule(SHEET, "matched", owner)])],
-    ...(kind === "component" ? { variants: [] } : {}),
   };
 }
 
 test("the pane heading takes its noun from the wording of the entry kind", () => {
   assert.equal(
-    heading(changedEntry("screen", [dependency(SHEET)])),
+    heading(changedEntry("screen", [dependency(SHEET)]), "screen"),
     "Mobile · Styles this screen uses changed",
   );
   assert.equal(
-    heading(changedEntry("component", [dependency(SHEET)])),
+    heading(changedEntry("component", [dependency(SHEET)]), "component"),
     "Mobile · Styles this variant uses changed",
   );
   assert.equal(
     heading(
       changedEntry("component", [dependency(SHEET), { kind: "metadata" }]),
+      "component",
     ),
     "Mobile · Variant changed",
   );
 });
 
 test("a variant's heading reads the variant's own reasons, not its parent's", () => {
-  const side = (path: string, title: string) => ({
-    path,
-    title,
-    props: {},
-    suppliedSlots: [],
-  });
-  const variant: ReviewEntry = {
-    kind: "component",
+  const variant: ComparedEntry = {
     path: "card/compact",
-    title: "Compact",
-    before: side("card/compact", "Compact"),
-    after: side("card/compact", "Compact"),
-    state: "changed",
-    included: true,
+    basePath: "card/compact",
     reasons: [dependency(SHEET)],
     views: [
       view([rule(SHEET, "matched", { kind: "component", path: "card" })]),
     ],
   };
-  const parent: ReviewEntry = {
-    kind: "component",
+  const parent: ComparedEntry = {
     path: "card",
-    title: "Card",
-    before: side("card", "Card"),
-    after: side("card", "Card"),
-    state: "unchanged",
-    included: true,
+    basePath: "card",
     reasons: [{ kind: "implementation" }],
     views: [view(undefined, "unchanged")],
-    variants: [variant],
   };
   assert.equal(
-    heading(parent, "card/compact"),
+    heading(variant, "component"),
     "Mobile · Styles this variant uses changed",
+  );
+  assert.equal(
+    heading(parent, "component"),
+    "Mobile · No changes to this variant",
   );
 });
 
 test("a stylesheet for dark views only keeps the style heading on light views", () => {
   const dark = "static/dark.css";
-  const entry: ReviewEntry = {
+  const entry: ComparedEntry = {
     ...changedEntry("screen", [dependency(dark), dependency(SHEET)]),
     views: [
       view([rule(dark, "excluded"), rule(SHEET)]),
@@ -264,6 +228,6 @@ test("a stylesheet for dark views only keeps the style heading on light views", 
     ],
   };
   const styles = "Mobile · Styles this screen uses changed";
-  assert.equal(heading(entry), styles);
-  assert.equal(heading(entry, entry.path, MOBILE_DARK), styles);
+  assert.equal(heading(entry, "screen"), styles);
+  assert.equal(heading(entry, "screen", MOBILE_DARK), styles);
 });

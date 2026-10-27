@@ -40,9 +40,10 @@ async function expectShownStatus(
 test("a dark-only change marks the views it hides and opens on one", async ({
   page,
 }) => {
-  const reviews: string[] = [];
+  const diffs: string[] = [];
   page.on("request", (request) => {
-    if (request.url().endsWith("/review.json")) reviews.push(request.url());
+    if (request.url().includes("/mokly-viewer/diffs/"))
+      diffs.push(request.url());
   });
   await page.goto(`/view/${comparisonPaths.darkOnly}/?comparison=side`);
   const scheme = page.getByLabel("Appearance", { exact: true });
@@ -67,7 +68,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
     "aria-pressed",
     "true",
   );
-  expect(reviews).toEqual([]);
+  expect(diffs).toEqual([]);
 
   await scheme.selectOption("dark");
   await expect(page.locator("body")).toHaveAttribute(
@@ -121,10 +122,10 @@ test("a dark-only change marks the views it hides and opens on one", async ({
 test("a light fallback rejects an ineligible comparison deep link", async ({
   page,
 }) => {
-  const reviews: string[] = [];
+  const diffs: string[] = [];
   page.on("request", (request) => {
     if (request.url().includes("/mokly-viewer/diffs/"))
-      reviews.push(request.url());
+      diffs.push(request.url());
   });
   await page.goto(
     `/view/${comparisonPaths.unchanged}/?viewport=mobile&scheme=dark&comparison=side`,
@@ -146,7 +147,7 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     "aria-pressed",
     "true",
   );
-  expect(reviews).toEqual([]);
+  expect(diffs).toEqual([]);
 });
 
 test("component comparisons follow changed variants while added variants stay current", async ({

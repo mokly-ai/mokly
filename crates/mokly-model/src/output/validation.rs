@@ -17,6 +17,8 @@ pub const FILE_COUNT_LIMIT: usize = 20_000;
 pub const MARKER: &str = ".mokly-export-artifact";
 /// Root upload metadata path.
 pub const MANIFEST: &str = "mokly-upload.json";
+/// The catalogue index, the third Plan file, which carries the build's Changes.
+pub const INDEX: &str = "mokly-viewer/index.json";
 
 /// SHA-256 of the exact supplied bytes.
 pub fn digest(bytes: &[u8]) -> String {

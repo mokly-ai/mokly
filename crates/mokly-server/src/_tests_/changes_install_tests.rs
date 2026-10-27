@@ -108,13 +108,10 @@ async fn ready_metadata_starts_retention_after_projection_finishes() {
     let current = publications.current();
     assert_eq!(current.index.changes_status, ChangesStatus::Ready);
     let id = &current.changes.as_ref().unwrap().id;
-    let file = store.file(id, "review.json").await.unwrap();
+    let retained = store.renew(id);
     assert!(now.load(Ordering::SeqCst) >= 60_000);
     store.stop().await;
-    assert!(
-        file.is_some(),
-        "the newly advertised generation already expired"
-    );
+    assert!(retained, "the newly advertised generation already expired");
 }
 
 #[test]

@@ -1,4 +1,4 @@
-/** The protocol's index v7 and entry detail v2 fixtures as the shell reads them. */
+/** The protocol's catalogue index and entry detail fixtures as the shell reads them. */
 
 import fs from "node:fs";
 
@@ -35,7 +35,7 @@ function fixtureJson(name: string): unknown {
 /** A fresh, mutable copy of the index fixture before validation. */
 export function rawIndexFixture(): CatalogueReadModel {
   return structuredClone(
-    fixtureJson("catalogue-v7.json"),
+    fixtureJson("catalogue-v8.json"),
   ) as CatalogueReadModel;
 }
 

@@ -186,7 +186,7 @@ test(
         string,
         unknown
       >;
-      for (const schemaVersion of [1, 3, "2"])
+      for (const schemaVersion of [1, 2, 4, "3"])
         assert.throws(
           () => upload(bytes({ ...envelope, schemaVersion })),
           /unsupported-version/u,

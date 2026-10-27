@@ -4,6 +4,7 @@ import type { EntryDetailV2, InputChange } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import type {
+  ComparedEntry,
   EntryChangeReason,
   ViewResourceEvidence,
 } from "../review/types.js";
@@ -71,6 +72,8 @@ export interface WorkspaceData {
   removed: boolean;
   relatedComponents: readonly { path: string; title: string }[];
   inputChanges: readonly InputChange[];
+  /** The routed entry's comparison facts, while its detail carries ready views. */
+  compared?: ComparedEntry;
 }
 
 /**

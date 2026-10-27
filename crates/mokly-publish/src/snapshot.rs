@@ -8,11 +8,13 @@ use bytes::Bytes;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::ownership::Ownership;
 use mokly_model::output::upload::UploadMetadata;
-use mokly_model::output::validation::{FILE_COUNT_LIMIT, FILE_LIMIT, MANIFEST, MARKER, digest};
+use mokly_model::output::validation::{
+    FILE_COUNT_LIMIT, FILE_LIMIT, INDEX, MANIFEST, MARKER, digest,
+};
 
 use crate::archive::plan_archive;
 use crate::error::{Error, OutputResult, Result};
-use crate::review::ReviewIdentity;
+use crate::index_identity::IndexIdentity;
 
 /// Immutable output with its prepared upload, retained together by the CLI adapter.
 #[derive(Clone)]
@@ -107,25 +109,19 @@ impl Prepared {
             }
             blobs.insert(entry.sha256.clone(), file.bytes.clone());
         }
-        let mut plan_files = vec![(*manifest).clone(), (*marker).clone()];
-        match &metadata.comparison_path {
-            Some(path) => {
-                let review = by_path.get(path.as_str()).ok_or(Error::InvalidBundle)?;
-                let identity = ReviewIdentity::parse(&review.bytes)?;
-                if Some(&identity.base_commit) != metadata.base_sha.as_ref() {
-                    return Err(Error::InvalidBundle);
-                }
-                plan_files.push((*review).clone());
-            }
-            None => {
-                if by_path
+        let index = by_path.get(INDEX).ok_or(Error::InvalidBundle)?;
+        let identity = IndexIdentity::parse(&index.bytes)?;
+        let compared = metadata.base_sha.is_some();
+        if identity.base_commit != metadata.base_sha
+            || (compared && identity.base != metadata.base_ref)
+            || (!compared
+                && by_path
                     .keys()
-                    .any(|path| path.starts_with("mokly-viewer/diffs/"))
-                {
-                    return Err(Error::InvalidBundle);
-                }
-            }
+                    .any(|path| path.starts_with("mokly-viewer/diffs/")))
+        {
+            return Err(Error::InvalidBundle);
         }
+        let plan_files = vec![(*manifest).clone(), (*marker).clone(), (*index).clone()];
         let archive = plan_archive(&plan_files)?.into();
         Ok(Self {
             directory: artifact.directory.clone(),

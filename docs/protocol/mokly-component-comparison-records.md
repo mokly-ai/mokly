@@ -3,15 +3,15 @@
 ## Normative Result
 
 The [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)
-owns the review result v8 envelope, its view record, and its rule evidence.
-This page defines the entry records, the affected-consumer records, and the
-diagnostics inside that envelope. The generated
-[`ReviewEntry`](../../packages/viewer/src/generated/catalogue/ReviewEntry.ts),
-[`AffectedConsumer`](../../packages/viewer/src/generated/catalogue/AffectedConsumer.ts),
-and
-[`ReviewDiagnostic`](../../packages/viewer/src/generated/catalogue/ReviewDiagnostic.ts)
-types define their shapes. The side address of a screen or a component carries
-its merged props in the props codec of the
+owns the in-memory review result v8 envelope, its view record, and its rule
+evidence. This page defines the entry records, the affected-consumer records,
+and the diagnostics inside that envelope. The model crate's `ReviewEntry`,
+`AffectedConsumer`, and `ReviewDiagnostic` types define their shapes. The
+[entry detail](./mokly-shell-delivery.md#entry-detail) publishes a screen or
+component entry's `before` address, whose shape is the generated
+[`ReviewEntryAddress`](../../packages/viewer/src/generated/catalogue/ReviewEntryAddress.ts)
+type, and each view's `state`, `ignoredIds`, and evidence. The side address of
+a screen or a component carries its merged props in the props codec of the
 [catalogue read model](./mokly-catalogue.md).
 
 ## Sides And Pairing

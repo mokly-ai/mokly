@@ -28,7 +28,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 /** A screen variant, a component, and its variant that Changes does not list. */
 const SCREEN = "product/browse/home/empty";

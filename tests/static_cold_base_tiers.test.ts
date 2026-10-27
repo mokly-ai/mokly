@@ -4,7 +4,6 @@ import path from "node:path";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
-import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 
 import {
   coldBaseFixture,
@@ -154,15 +153,9 @@ for (const { tier, title } of cases) {
     assert.equal(index.changesStatus, "ready");
     assert.equal(index.base, "HEAD");
     assert.ok(index.comparisonUrl);
-    const review = parseReviewResult(
-      JSON.parse(
-        await fs.readFile(path.join(output, index.comparisonUrl), "utf8"),
-      ),
-    );
-    assert.equal(review.schemaVersion, 8);
-    assert.equal(review.baseCommit, base);
-    assert.deepEqual(review.diagnostics, []);
-    assert.deepEqual(review.entries, []);
+    assert.equal(index.schemaVersion, 8);
+    assert.equal(index.baseCommit, base);
+    assert.deepEqual([...index.screens, ...index.components], []);
     const welcome = index.pages.find((entry) => entry.path === "welcome");
     assert.ok(welcome);
     assert.equal(welcome.title, "Welcome");
@@ -186,7 +179,7 @@ for (const { tier, title } of cases) {
         ["welcome", { status: "ready", kind: "unmodified", included: false }],
       ],
     );
-    const prefix = path.posix.dirname(index.comparisonUrl);
+    const prefix = index.comparisonUrl.slice(0, -1);
     for (const side of ["before", "after"]) {
       for (const [entry, text] of [
         ["welcome", "Welcome"],

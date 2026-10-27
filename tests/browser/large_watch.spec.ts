@@ -51,13 +51,12 @@ for (const variant of ["html", "react"] as const) {
           typeof edit.frameNavigations === "number" &&
             edit.frameNavigations > 0,
         );
-        assert.equal(object(edit.review).baseCommit, fixture.baseline);
+        assert.equal(object(edit.summary).baseCommit, fixture.baseline);
         for (const key of [
           "publicationMs",
           "frameReloadMs",
           "indexReadyMs",
           "changesReadyMs",
-          "reviewAvailableMs",
         ])
           assert.equal(typeof edit[key], "number");
       }

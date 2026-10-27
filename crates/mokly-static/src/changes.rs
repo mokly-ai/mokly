@@ -27,15 +27,10 @@ pub struct PublicationInput {
 }
 
 impl PublicationInput {
-    pub(crate) fn metadata(
-        &self,
-        changes: &dyn ChangeState,
-        path: Option<&str>,
-    ) -> Result<UploadMetadata> {
-        let comparison = changes.ready().zip(path).map(|(ready, path)| Comparison {
+    pub(crate) fn metadata(&self, changes: &dyn ChangeState) -> Result<UploadMetadata> {
+        let comparison = changes.ready().map(|ready| Comparison {
             base_ref: ready.snapshot.base_ref.clone(),
             base_sha: ready.snapshot.base_commit.clone(),
-            path: path.into(),
         });
         match self.identity.metadata(&BuildInventory {
             config_path: self.config_path.clone(),

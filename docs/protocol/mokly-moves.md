@@ -162,7 +162,7 @@ reporter when the classification generation is accepted. Superseded generations
 stay silent. `build` and `publish` report them during comparison. Plain
 mode writes the exact diagnostic and a newline; rich mode uses the bounded
 diagnostic presentation of [terminal output](./mokly-terminal-output.md).
-They are not fields of `review.json` or public catalogue JSON. A build without
+They are not fields of the review result, the index, or the details. A build without
 Changes publishes no inferred or authored `previousPath`.
 
 Complete and selected comparisons keep each side's actual spelling and source

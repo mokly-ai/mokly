@@ -12,8 +12,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import { parseReviewResult } from "../src/review/result_validation.js";
-import type { EntryChangeReason, ReviewResult } from "../src/review/types.js";
+import type { EntryChangeReason } from "../src/review/types.js";
 import { catalogueSelectionEntry } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { mergeWorkspaceEvidence } from "../src/shell/workspace_evidence_merge.js";
@@ -26,7 +25,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const HOME = "product/browse/home";
 const ACTION = "components/action";
@@ -78,36 +77,6 @@ function workspace(
 /** How often one complete fragment appears in the markup. */
 function count(markup: string, fragment: string): number {
   return markup.split(fragment).length - 1;
-}
-
-/** A selected comparison whose screen entry repeats the detail's reason. */
-function loadedHome(): ReviewResult {
-  const view = (viewport: "mobile" | "desktop") => ({
-    viewport,
-    colorScheme: "light",
-    state: "changed",
-    ignoredIds: [],
-  });
-  const address = { path: HOME, title: "Home", props: {} };
-  return parseReviewResult({
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [
-      {
-        kind: "screen",
-        path: HOME,
-        title: "Home",
-        before: address,
-        after: address,
-        state: "changed",
-        included: true,
-        reasons: [{ kind: "material" }],
-        views: [view("mobile"), view("desktop")],
-      },
-    ],
-    affected: [],
-    diagnostics: [],
-  });
 }
 
 test("Details show the detail's reasons before a comparison loads", () => {
@@ -167,8 +136,9 @@ test("a removed snapshot's Details read its removed reason once", () => {
 test("a loaded comparison and Current keep each reason once", () => {
   const data = workspace(HOME);
   const current = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
+  assert.ok(data.compared);
   const loaded = renderToStaticMarkup(
-    <WorkspaceEvidence data={data} loaded={loadedHome()} />,
+    <WorkspaceEvidence compared data={data} />,
   );
   assert.equal(count(loaded, MATERIAL), 1);
   assert.equal(count(loaded, "<h3>Comparison details</h3>"), 1);

@@ -147,7 +147,7 @@ fn component_metadata_reasons_preserve_the_own_view_aggregate_in_comparison_sele
 }
 
 #[test]
-fn ready_projection_sets_its_pinned_ref_without_replacing_the_live_fence() {
+fn ready_projection_sets_its_pinned_ref_and_commit_without_replacing_the_live_fence() {
     let input = entry("entry", EntryKind::Screen, None);
     let result = result(
         vec![input.clone()],
@@ -158,9 +158,11 @@ fn ready_projection_sets_its_pinned_ref_without_replacing_the_live_fence() {
     publication.changes_status = ChangesStatus::Unavailable;
     publication.live_generation = Some("f".repeat(64));
     let mut index = projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
+    assert!(index.base_commit.is_none());
     projection_index::apply(&mut index, &result);
     assert_eq!(index.changes_status, ChangesStatus::Ready);
     assert_eq!(index.base.as_deref(), Some("base"));
+    assert_eq!(index.base_commit, Some(result.review.base_commit.clone()));
     assert_eq!(index.live.unwrap().generation, "f".repeat(64));
     assert!(index.comparison_url.is_none());
 }
