@@ -106,6 +106,8 @@ function projectView(
   return {
     ...view,
     usage: held.usage,
+    ...(held.state ? { state: held.state } : {}),
+    ...(held.ignoredIds ? { ignoredIds: held.ignoredIds } : {}),
     ...(held.resourceEvidence
       ? { resourceEvidence: held.resourceEvidence }
       : {}),

@@ -28,10 +28,9 @@ details under the [fetch rules](./mokly-shell-delivery.md#fetch-and-fences)
 of the shell delivery contract and applies the stored or system appearance
 before its first render, so no pre-paint script exists.
 Removed-content requests are limited to the generation that the index's
-`comparisonUrl` names: the removed entry's detail, the generation's
-`review.json` for a removed screen's views, the preview metadata of a removed
-page or document, and the snapshot documents beneath that generation's
-permitted sides. There is no parallel vanilla Browse or preview runtime.
+`comparisonUrl` names: the removed entry's detail, the preview metadata of a
+removed page or document, and the snapshot documents beneath that
+generation's permitted sides. There is no parallel vanilla Browse or preview runtime.
 
 The inspector is `client/inspector.js`: React-free, at the 9,216-byte cap of
 the [published inspector contract](./mokly-published-inspector.md). It runs
@@ -42,11 +41,10 @@ identity as required below.
 
 ## Deployment Identity
 
-A comparison generation identifies only its own files: `review.json`, the
-removed entries' details, the snapshots, their resources, and the previews.
-Its directory name is a 64-hex SHA-256 of its inventory. Use generation-relative
-file paths and canonical JSON for metadata, with `review.json` in its compact
-form. Set only each removed detail's top-level
+A comparison generation identifies only its own files: the removed entries'
+details, the snapshots, their resources, and the previews. Its directory name
+is a 64-hex SHA-256 of its inventory. Use generation-relative file paths and
+canonical JSON for metadata. Set only each removed detail's top-level
 `generation` to 64 zeros for hashing. Hash each file, sort the `[path, sha256]`
 pairs in UTF-16 order, then hash the canonical JSON array. Stamp that result
 into the removed details. This removes the identity's self-reference; one

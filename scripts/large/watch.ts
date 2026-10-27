@@ -2,7 +2,7 @@
 import { expect } from "@playwright/test";
 import type { BrowserContext, Frame, Page } from "@playwright/test";
 
-import { availableReview, firstScreen } from "./changes.js";
+import { changesSummary, firstScreen } from "./changes.js";
 import {
   changedEntries,
   changesVisible,
@@ -51,16 +51,7 @@ async function measureEdit(
     (start) => performance.now() - start,
     beginning,
   );
-  const review = await availableReview(
-    page,
-    fixture,
-    ready,
-    WATCH_BROWSER_TIMEOUT_MS,
-  );
-  const reviewAvailableMs = await page.evaluate(
-    (start) => performance.now() - start,
-    beginning,
-  );
+  const summary = changesSummary(fixture, ready);
   if (!changedEntries(ready.index).some((entry) => entry.path === edit.target))
     throw new Error(`Changes did not include ${edit.target}`);
   return {
@@ -77,8 +68,7 @@ async function measureEdit(
     frameReloadMs,
     indexReadyMs: ready.indexReceivedMs - beginning,
     changesReadyMs,
-    reviewAvailableMs,
-    review,
+    summary,
     changedEntries: changedEntries(ready.index).length,
   };
 }

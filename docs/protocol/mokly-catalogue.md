@@ -7,11 +7,12 @@ catalogue boundary. The catalogue model has no version, because it lives in
 memory and nothing writes it. Both catalogue kinds, with and without
 registered components, use the same versions, with globally unique entry
 paths. The catalogue renders from sources. Usage derives from the composed
-trees. The private catalogue change snapshot pairs the review result with the
-base commit. The [shell delivery contract](./mokly-shell-delivery.md)
-delivers the read model as the catalogue index v7, which carries no per-view
-usage or resource evidence, plus one entry detail per entry. Accepted move
-pairs carry `previousPath` in review records and in the read model.
+trees. The private catalogue change snapshot pairs the in-memory review result
+with the base commit. The [shell delivery contract](./mokly-shell-delivery.md)
+delivers the read model as the catalogue index, which carries no per-view
+usage or resource evidence, plus one entry detail per entry. No file carries
+the review result. Accepted move pairs carry `previousPath` in review records
+and in the read model.
 
 ## Location And Types
 
@@ -40,7 +41,11 @@ have no current files; their historical documents come only from their
 `preview` descriptor. `comparisonUrl` is a `PublicPath`: an
 artifact-root-relative POSIX file path, without a leading slash, origin, query
 or hash. A reader resolves it against the source's origin root, not the JSON
-directory or host app URL. A current component parent
+directory or host app URL. `comparisonUrl` names a comparison generation's
+root, `mokly-viewer/diffs/generations/<generation>/`, and ends with `/`; the
+generation's removed details, previews and snapshots resolve against it.
+`baseCommit` is the full lowercase hexadecimal merge base that Changes pinned,
+present exactly while `changesStatus` is `ready`. A current component parent
 has its own views, rendered from its own props, and its page shows them first. `previousPath` is
 present exactly on entries the
 [move contract](./mokly-moves.md) paired with an entry of the base commit.

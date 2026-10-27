@@ -1,6 +1,6 @@
 /**
  * Details of an entry that only changed components affect, on the live
- * path: the published index and entry detail, then a loaded comparison.
+ * path: the published index and the entry detail.
  */
 
 import assert from "node:assert/strict";
@@ -13,8 +13,6 @@ import type {
   CatalogueReadModel,
   EntryDetailV2,
 } from "../src/catalogue/types.js";
-import { parseReviewResult } from "../src/review/result_validation.js";
-import type { ReviewResult } from "../src/review/types.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
@@ -24,7 +22,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const SCREEN = "product/browse/home/empty";
 const SHARED = "Changed components that this screen uses affect its preview.";
@@ -32,13 +30,10 @@ const NO_CHANGES = "No changes to this screen.";
 const ACTION = { path: "components/action", title: "Action" } as const;
 
 /** The routed screen's Details after one edit of its index record and detail. */
-function details(
-  edit: {
-    changes?: CatalogueReadModel["screens"][number]["changes"];
-    detail?: (detail: EntryDetailV2) => void;
-  },
-  loaded?: ReviewResult,
-): string {
+function details(edit: {
+  changes?: CatalogueReadModel["screens"][number]["changes"];
+  detail?: (detail: EntryDetailV2) => void;
+}): string {
   const index = rawIndexFixture();
   const record = index.screens.find(({ path }) => path === SCREEN)!;
   if (edit.changes) record.changes = edit.changes;
@@ -64,9 +59,7 @@ function details(
     undefined,
     "main",
   );
-  return renderToStaticMarkup(
-    <WorkspaceEvidence data={data} {...(loaded ? { loaded } : {})} />,
-  );
+  return renderToStaticMarkup(<WorkspaceEvidence data={data} />);
 }
 
 /** The detail of a screen that uses changed Action. */
@@ -164,74 +157,4 @@ test("an unaffected unchanged screen keeps its no-changes line", () => {
   const markup = details({});
   assert.ok(!markup.includes(SHARED), markup);
   assert.ok(markup.endsWith(`<p>${NO_CHANGES}</p></section>`), markup);
-});
-
-test("a loaded review that lists the screen as affected explains the change", () => {
-  const side = { path: SCREEN, title: "Empty", props: {} };
-  const action = { ...ACTION, props: {}, suppliedSlots: [] };
-  const loaded = parseReviewResult({
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [
-      {
-        kind: "component",
-        path: ACTION.path,
-        title: ACTION.title,
-        before: action,
-        after: action,
-        state: "changed",
-        included: true,
-        reasons: [{ kind: "material" }],
-        views: [
-          {
-            viewport: "mobile",
-            colorScheme: "light",
-            state: "changed",
-            ignoredIds: [],
-          },
-        ],
-        variants: [],
-      },
-      {
-        kind: "screen",
-        path: SCREEN,
-        title: "Empty",
-        before: side,
-        after: side,
-        state: "unchanged",
-        included: false,
-        reasons: [],
-        views: [
-          {
-            viewport: "mobile",
-            colorScheme: "light",
-            state: "unchanged",
-            ignoredIds: [],
-          },
-        ],
-      },
-    ],
-    affected: [
-      {
-        changedComponentId: ACTION.path,
-        consumer: { kind: "screen", path: SCREEN },
-        evidence: [
-          {
-            side: "after",
-            context: {
-              kind: "screen",
-              entry: side,
-              viewport: "mobile",
-              colorScheme: "light",
-            },
-            via: [{ componentId: ACTION.path, instanceKey: "a".repeat(64) }],
-          },
-        ],
-      },
-    ],
-    diagnostics: [],
-  });
-  const markup = details({}, loaded);
-  assert.ok(markup.includes(`<p>${SHARED}</p>`), markup);
-  assert.ok(!markup.includes(NO_CHANGES), markup);
 });

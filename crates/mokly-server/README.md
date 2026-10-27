@@ -48,7 +48,11 @@ to typed consumers.
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
 usage first, then Changes classification against one pinned merge base. They
 yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. Workspace lists stay absent until all
+cannot publish into a replacement. Ready state installs the generation root,
+the base commit, Changes membership, moved paths, removed records, and per-view
+states, ignore ids, and evidence in one revision. Included details carry
+classification reasons and their base side even without a workspace.
+Workspace lists stay absent until all
 consumer usage is proven. One unavailable view keeps every Used by list absent
 until the next generation. Failed views publish unavailable usage without
 inventing empty consumers. `mokly-model` projects every status from retained
@@ -62,11 +66,12 @@ the CLI shares those leases with base-side sidecar admission.
 
 `MemoryComparisons` implements `dyn Comparisons`, the store of the
 [selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
-Classification generations start with the review result and removed details.
-Selected captures project that review onto one screen or component entry and
-copy only its view closures. A variant selection retains its component parent
-in the review JSON for evidence ownership, and it captures only the selected
-variant's documents. Historical routes capture the removed entry from the same
+Classification generations start with the removed details. Selected captures
+find one screen, component, or variant in the retained review and copy only
+its view closures; they hold no JSON. A variant selection captures only the
+selected variant's documents. The selection route redirects to the root of the
+captured generation, and a GET or HEAD of a retained root renews its idle
+window with 204. Historical routes capture the removed entry from the same
 pinned base. Captures preserve original document bytes. `FrozenResources`
 retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a

@@ -57,7 +57,7 @@ test(
         assert.ok(!(result.stdout + result.stderr).includes("private/a=="));
         const received = server.completedInventories.at(-1)!;
         const metadata = upload(received.get("mokly-upload.json")!);
-        for (const field of ["baseRef", "baseSha", "comparisonPath"])
+        for (const field of ["baseRef", "baseSha"])
           assert.equal(metadata[field], null);
         const index = readCatalogueIndex(
           JSON.parse(received.get("mokly-viewer/index.json")!.toString()),

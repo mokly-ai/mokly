@@ -4,7 +4,7 @@ import { readEntryDetail } from "../catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../catalogue/index_reader.js";
 import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
 
-/** The catalogue index v7 as an object, or its absolute HTTP(S) URL. */
+/** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;
 /** One entry detail v2 as an object, or its URL on the artifact origin. */
 export type DetailResult = EntryDetailV2 | string | URL;

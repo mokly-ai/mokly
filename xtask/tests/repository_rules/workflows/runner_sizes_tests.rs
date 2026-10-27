@@ -8,6 +8,22 @@ use crate::support::{jobs, read_yaml, steps, truthy, workflow_files};
 
 /// npm trusted publishing creates provenance only on GitHub-hosted runners.
 const PROVENANCE_PUBLISH_RUNNER: &str = "ubuntu-24.04";
+/// Linux jobs above the smallest tier: the design matrix, CI Rust builds, and
+/// the Testbox job, which runs the same suites on the same runner as CI.
+const LARGER_LINUX_RUNNERS: [(&str, &str); 6] = [
+    (
+        "design-attribution.yml:design-attribution",
+        "blacksmith-8vcpu-ubuntu-2404",
+    ),
+    ("ci.yml:repository", "blacksmith-8vcpu-ubuntu-2404"),
+    ("ci.yml:viewer", "blacksmith-8vcpu-ubuntu-2404"),
+    ("ci.yml:browser", "blacksmith-8vcpu-ubuntu-2404"),
+    ("ci.yml:static-delivery", "blacksmith-8vcpu-ubuntu-2404"),
+    (
+        "blacksmith-testbox.yml:testbox",
+        "blacksmith-8vcpu-ubuntu-2404",
+    ),
+];
 /// CI's Windows native job compiles and tests the whole Rust workspace.
 const CI_WINDOWS_NATIVE_RUNNER: &str = "blacksmith-8vcpu-windows-2025";
 /// Workflows whose native build matrix may run `darwin-x64` on Intel macOS.
@@ -40,8 +56,11 @@ fn workflows_use_the_smallest_blacksmith_tiers_and_publish_to_npm_from_github_ho
             let runs_on = job["runs-on"]
                 .as_str()
                 .unwrap_or_else(|| panic!("{context} runner"));
-            if context == "design-attribution.yml:design-attribution" {
-                assert_eq!(runs_on, "blacksmith-8vcpu-ubuntu-2404");
+            if let Some((_, larger)) = LARGER_LINUX_RUNNERS
+                .iter()
+                .find(|(name, _)| *name == context)
+            {
+                assert_eq!(runs_on, *larger, "{context} runner");
                 continue;
             }
             if publishes_with_provenance(job) {

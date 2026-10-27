@@ -7,16 +7,20 @@ Changes baseline, for the shell of Serve, of a static build and of an embedded
 
 ## Requests
 
-`previewEndpoint` uses the catalogue's advertised `comparisonUrl` for a screen
-and `previewMetadataPath(path)` for a page or document. Pages use the light
+`previewEndpoint` resolves the descriptor to one address inside the
+comparison generation that the catalogue's `comparisonUrl` names: the removed
+entry's detail, `entries/{path}.json`, for a screen, and
+`previewMetadataPath(path)` for a page or document. Pages use the light
 `snapshotDocumentPath`, and Markdown documents use each historical scheme.
-Selection loads only the requested document scheme. Before it accepts either
-kind, `requestPreview` recomputes the selected historical identity from the
-metadata's baseline commit. This keeps a late response or Retry from replacing
-an open historical record after the baseline changes. `renewPreview` extends a
-live generation's retention before reusing it, exactly as comparisons do.
-`advertisedPreviewPaths` describes the documented embedded fetch set for tests
-and has no runtime consumer.
+Selection loads only the requested document scheme. A screen uses only the
+detail's views whose state is `removed`. Before it accepts a screen,
+`requestPreview` compares the detail's `snapshotId` with the selected one.
+Before it accepts a page or document, it recomputes the selected historical
+identity from the metadata's baseline commit. This keeps a late response or
+Retry from replacing an open historical record after the baseline changes.
+`renewPreview` extends a live generation's retention before reusing it,
+exactly as comparisons do. `advertisedPreviewPaths` describes the documented
+embedded fetch set for tests and has no runtime consumer.
 
 ## Presentation
 

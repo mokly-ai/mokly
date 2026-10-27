@@ -48,7 +48,7 @@ pub enum ReadError {
     },
 }
 
-/// Decode a catalogue index after its v7 gate.
+/// Decode a catalogue index after its version gate.
 pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     let index = decode(text, "catalogue index", versions::CATALOGUE_INDEX)?;
     public_validation::validate(&index)?;
@@ -168,6 +168,10 @@ pub fn change_snapshot(text: &str) -> Result<CatalogueChangeSnapshotV4, ReadErro
 #[cfg(test)]
 #[path = "_tests_/review_reader_tests.rs"]
 mod review_reader_tests;
+
+#[cfg(test)]
+#[path = "_tests_/review_rule_tests.rs"]
+mod review_rule_tests;
 
 #[cfg(test)]
 #[path = "_tests_/snapshot_reader_tests.rs"]

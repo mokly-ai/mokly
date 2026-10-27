@@ -6,7 +6,7 @@ use crate::canonical;
 use crate::readers::{ReadError, detail, index};
 
 pub(super) fn empty_index() -> Value {
-    json!({"schemaVersion":7,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
+    json!({"schemaVersion":8,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
         "changesStatus":"disabled","comparisonUrl":null,"tree":[],"screens":[],"pages":[],"documents":[],"useCases":[],"components":[],"removedEntries":[]})
 }
 

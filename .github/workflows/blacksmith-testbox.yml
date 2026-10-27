@@ -14,10 +14,14 @@ on:
         type: string
 permissions:
   contents: read
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
 jobs:
   testbox:
     name: Testbox
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 30
     steps:
       - name: Check out repository
@@ -40,6 +44,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: false
       - name: Install dependencies
         run: npm ci
       - name: Build native artifacts
@@ -52,7 +62,13 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Expose job environment to Testbox sessions
         run: |
-          sudo sed -i '/^PATH=/d; /^PLAYWRIGHT_CHANNEL=/d' /etc/environment
-          printf 'PATH=%s\nPLAYWRIGHT_CHANNEL=chromium\n' "$PATH" | sudo tee -a /etc/environment >/dev/null
+          sudo sed -i -E '/^(PATH|PLAYWRIGHT_CHANNEL|CARGO_INCREMENTAL|CARGO_PROFILE_DEV_DEBUG|CARGO_PROFILE_TEST_DEBUG)=/d' /etc/environment
+          printf '%s=%s\n' \
+            PATH "$PATH" \
+            PLAYWRIGHT_CHANNEL chromium \
+            CARGO_INCREMENTAL "${CARGO_INCREMENTAL:?}" \
+            CARGO_PROFILE_DEV_DEBUG "${CARGO_PROFILE_DEV_DEBUG:?}" \
+            CARGO_PROFILE_TEST_DEBUG "${CARGO_PROFILE_TEST_DEBUG:?}" |
+            sudo tee -a /etc/environment >/dev/null
       - name: Run Testbox
         uses: useblacksmith/run-testbox@5ca05834db1d3813554d1dd109e5f2087a8d7cbc # v2

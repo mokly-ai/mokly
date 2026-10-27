@@ -9,9 +9,8 @@ import {
   SCREEN_STYLE_COPY,
 } from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
 import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
-import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type {
-  ReviewEntry,
+  ComparedEntry,
   ReviewView,
   ViewResourceEvidence,
 } from "../packages/viewer/dist/review/types.js";
@@ -101,8 +100,8 @@ test("paths and selectors render as text, including generated bundle paths", () 
 test("classification and a loaded comparison merge into one file and one paragraph", () => {
   const data = screenWorkspace([evidence("mobile", "light", outsideRules)]);
   data.reasons = [{ kind: "dependency", path: RULES }];
-  const loaded = loadedScreen([view("mobile", "light", outsideRules)]);
-  const markup = render(data, undefined, loaded);
+  data.compared = screenEntry([view("mobile", "light", outsideRules)]);
+  const markup = render(data, undefined, true);
   assert.equal(markup.split(`<li>${RULES}<p>`).length - 1, 1);
   assert.equal(markup.split(SCREEN_STYLE_COPY.outside).length - 1, 1);
   assert.equal(markup.split(">.heading</code>").length - 1, 1);
@@ -250,42 +249,26 @@ function componentWorkspace(
   } as unknown as WorkspaceData;
 }
 
-/** The screen `home`, changed by the stylesheet its views keep. */
-function screenEntry(views: ReviewView[]): ReviewEntry {
-  const side = { path: "home", title: "Home", props: {} };
+/** The screen `home`'s compared views, changed by the stylesheet they keep. */
+function screenEntry(views: ReviewView[]): ComparedEntry {
   return {
-    kind: "screen",
     path: "home",
-    title: "Home",
-    before: side,
-    after: side,
-    state: "changed",
-    included: true,
+    basePath: "home",
     reasons: [{ kind: "dependency", path: RULES }],
     views,
   };
 }
 
-function loadedScreen(views: ReviewView[]) {
-  return parseReviewResult({
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [screenEntry(views)],
-    affected: [],
-    diagnostics: [],
-  });
-}
-
 function render(
   data: WorkspaceData,
   variantPath?: string,
-  loaded?: ReturnType<typeof parseReviewResult>,
+  compared = false,
 ): string {
   return renderToStaticMarkup(
     createElement(WorkspaceEvidence, {
+      compared,
       data,
       ...(variantPath ? { variantPath } : {}),
-      ...(loaded ? { loaded } : {}),
     }),
   );
 }

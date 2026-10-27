@@ -1,12 +1,10 @@
 /**
  * Where changed components affect an entry whose own content is unchanged:
- * the component-owned records its views keep, the review's affected records
- * that name its views, and the views whose usage holds a changed component.
+ * the component-owned records its views keep, and the views whose usage holds
+ * a changed component that the entry's detail names.
  */
 
 import type { ResourceEvidence, RuleEvidence } from "../catalogue/types.js";
-
-import type { ReviewEntry, ReviewResult } from "./types.js";
 
 /** One view's records: an entry detail's view evidence or a review view. */
 interface ViewRecords {
@@ -35,29 +33,6 @@ export function keepsComponentRecord(view: ViewRecords): boolean {
   );
 }
 
-/**
- * Whether the review's affected records name the entry: evidence whose
- * context is the entry's view on that evidence's side, so a moved entry
- * matches its previous path on the before side. With `axes`, only evidence
- * of that view counts.
- */
-export function affectedEntry(
-  result: ReviewResult,
-  entry: Pick<ReviewEntry, "after" | "before" | "kind">,
-  axes?: ViewAxes,
-): boolean {
-  return result.affected.some((record) =>
-    record.evidence.some(
-      ({ context, side }) =>
-        context.kind === entry.kind &&
-        context.entry.path === entry[side]?.path &&
-        (axes === undefined ||
-          (context.viewport === axes.viewport &&
-            context.colorScheme === axes.colorScheme)),
-    ),
-  );
-}
-
 /** One view's axes and the component instances its usage records. */
 interface ViewUsage extends ViewAxes {
   readonly usage?: {
@@ -72,8 +47,7 @@ export function viewAxesKey({ viewport, colorScheme }: ViewAxes): string {
 
 /**
  * The keys of the views whose usage holds an instance of one of the changed
- * `components`, which the entry detail names. A selected comparison in Serve
- * omits the affected records, so these views still name the shared change.
+ * `components`, which the entry detail names.
  */
 export function viewsUsingComponents(
   views: readonly ViewUsage[],

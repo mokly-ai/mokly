@@ -4,6 +4,8 @@ import test from "node:test";
 import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
 
+import { rawDetailFixtures } from "./catalogue_v8_fixture.js";
+
 test("removed document descriptors and requests retain historical schemes", async () => {
   const data = readPreviewDescriptor(
     JSON.stringify({
@@ -15,7 +17,7 @@ test("removed document descriptors and requests retain historical schemes", asyn
     }),
   );
   assert.ok(data);
-  const comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
+  const comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/`;
   const request = previewEndpoint(
     data,
     { comparisonUrl },
@@ -78,4 +80,60 @@ test("removed document descriptors and requests retain historical schemes", asyn
       readPreviewDescriptor(JSON.stringify({ ...data, colorSchemes })),
       undefined,
     );
+});
+
+test("a removed screen's preview reads its removed detail inside the generation", async () => {
+  const fixtures = rawDetailFixtures();
+  const [snapshotId, detail] = Object.entries(fixtures.removed).find(
+    ([, candidate]) => candidate.entry.kind === "screen",
+  )!;
+  const path = detail.entry.path;
+  const root = `mokly-viewer/diffs/generations/${detail.generation!}/`;
+  const data = {
+    path,
+    kind: "screen" as const,
+    title: "Retired",
+    catalogueIdentity: detail.identity.id,
+    snapshotId,
+    published: { kind: "screen" as const },
+  };
+  const request = previewEndpoint(
+    data,
+    { comparisonUrl: root },
+    "https://example.test",
+  );
+  assert.ok(request);
+  assert.equal(
+    request.endpoint.href,
+    `https://example.test/${root}entries/${path}.json`,
+  );
+  assert.equal(request.generation.href, `https://example.test/${root}`);
+  const fetch = async (payload: unknown) => {
+    const response = Response.json(payload);
+    Object.defineProperty(response, "url", { value: request.endpoint.href });
+    return response;
+  };
+  const loaded = await requestPreview(
+    data,
+    request,
+    { fetch: () => fetch(detail) },
+    new AbortController().signal,
+  );
+  assert.ok(loaded.content.kind === "screen");
+  assert.deepEqual(
+    loaded.content.views.map((view) => new URL(view.url).pathname),
+    detail.views.map(
+      (view) =>
+        `/${root}snapshots/before/mokly-generated/${path}/index.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+    ),
+  );
+  await assert.rejects(
+    requestPreview(
+      { ...data, snapshotId: "c".repeat(64) },
+      request,
+      { fetch: () => fetch(detail) },
+      new AbortController().signal,
+    ),
+    /The previous version is unavailable/,
+  );
 });

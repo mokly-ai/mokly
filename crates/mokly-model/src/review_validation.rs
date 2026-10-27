@@ -269,7 +269,7 @@ fn digest(value: &str) -> bool {
 fn commit(value: &str) -> bool {
     matches!(value.len(), 40 | 64) && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
-fn ignore_id(value: &str) -> bool {
+pub(crate) fn ignore_id(value: &str) -> bool {
     !value.is_empty()
         && value.split('-').all(|part| {
             !part.is_empty()

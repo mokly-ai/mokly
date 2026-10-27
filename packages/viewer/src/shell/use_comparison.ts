@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
-import { MoklyVersionError } from "../catalogue/version_error.js";
-
 import { useComparisonEnvironment } from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";
 import {
@@ -33,7 +31,6 @@ interface LoadedState {
 interface FailureState {
   key: string;
   message: string;
-  versionError?: MoklyVersionError;
 }
 
 interface PendingOperation {
@@ -45,7 +42,6 @@ interface PendingOperation {
 export interface ComparisonController {
   busy: boolean;
   failure?: string;
-  versionError?: MoklyVersionError;
   loaded?: LoadedComparison;
   mode: ComparisonMode;
   presentation?: ComparisonPresentation;
@@ -198,18 +194,13 @@ export function useComparison({
           pendingRef.current = undefined;
           const latest = latestDemand.current;
           if (!latest || latest.scopeKey !== operation.scopeKey) return;
-          const versionError =
-            error instanceof MoklyVersionError ? error : undefined;
           const nextFailure = {
             key: latest.key,
-            message: versionError
-              ? versionError.message
-              : environment.reportError
-                ? "Comparison unavailable"
-                : error instanceof Error
-                  ? error.message
-                  : "Comparison unavailable",
-            ...(versionError ? { versionError } : {}),
+            message: environment.reportError
+              ? "Comparison unavailable"
+              : error instanceof Error
+                ? error.message
+                : "Comparison unavailable",
           };
           loadedRef.current = undefined;
           failureRef.current = nextFailure;
@@ -281,9 +272,6 @@ export function useComparison({
     busy,
     mode,
     ...(currentFailure ? { failure: currentFailure.message } : {}),
-    ...(currentFailure?.versionError
-      ? { versionError: currentFailure.versionError }
-      : {}),
     ...(demand && currentLoaded ? { loaded: currentLoaded } : {}),
     ...(demand && currentPresentation
       ? { presentation: currentPresentation }

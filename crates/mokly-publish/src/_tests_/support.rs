@@ -9,7 +9,7 @@ use mokly_git::command::CancellationMock;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
-use mokly_model::output::validation::digest;
+use mokly_model::output::validation::{INDEX, digest};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
@@ -34,10 +34,6 @@ pub(super) fn inventory(comparison: bool) -> BuildInventory {
         comparison: comparison.then(|| Comparison {
             base_ref: "origin/main".to_owned(),
             base_sha: "b".repeat(40),
-            path: format!(
-                "mokly-viewer/diffs/generations/{}/review.json",
-                "c".repeat(64)
-            ),
         }),
     }
 }
@@ -51,9 +47,13 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
         file("static/same.txt", b"one"),
         file("static/two.txt", b"two"),
     ];
-    if let Some(comparison) = &inventory.comparison {
-        files.push(file(&comparison.path, &serde_json::to_vec(&json!({"schemaVersion":8,"baseCommit":comparison.base_sha,"entries":[],"affected":[],"diagnostics":[]})).unwrap()));
-    }
+    let index = match &inventory.comparison {
+        Some(comparison) => {
+            json!({"schemaVersion":8,"base":comparison.base_ref,"baseCommit":comparison.base_sha,"changesStatus":"ready"})
+        }
+        None => json!({"schemaVersion":8,"base":"origin/main","changesStatus":"unavailable"}),
+    };
+    files.push(file(INDEX, &serde_json::to_vec(&index).unwrap()));
     Artifact::finalize(
         PathBuf::from("/private/publish"),
         files,

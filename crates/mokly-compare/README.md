@@ -135,9 +135,12 @@ sidecar pool, and cancellation.
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
 classification onto current or historical public records of the same retained
-catalogue state, with every published record classified.
-`projection_detail::apply_evidence` supplies included entry reasons and
-resource evidence for current and removed details. `projection_workspace::apply`
+catalogue state, with every published record classified, and names the base
+commit. `projection_detail::apply_evidence` supplies included entry reasons,
+each view's state, ignore ids, and resource evidence, and a current screen's or
+component's base side, for current and removed details. These records carry
+every public fact of the review result, which no file holds.
+`projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
 An absent workspace stays absent until the caller proves usage.
 `projection_removed` assembles historical records, details with base usage,

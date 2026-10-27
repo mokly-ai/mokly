@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use crate::axes::EntryKind;
 use crate::public_detail::EntryDetailV2;
 use crate::public_index::CatalogueReadModel;
-use crate::public_metadata::{CatalogueChanges, ComparisonSelection};
+use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
 use crate::readers::{self, ReadError};
 use crate::usage_context;
@@ -77,6 +77,12 @@ pub fn validate_with(
         )
     {
         return Err(invalid(ContractViolation::DetailReasonsPresence));
+    }
+    if detail.before.is_some()
+        != (visual.is_some()
+            && matches!(entry.changes, CatalogueChanges::Ready { kind, .. } if kind != ChangeKind::Added))
+    {
+        return Err(invalid(ContractViolation::DetailComparison));
     }
     if let Some(visual) = visual {
         let Some(order) = &detail.control_order else {

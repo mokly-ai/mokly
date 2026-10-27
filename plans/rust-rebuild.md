@@ -6128,7 +6128,7 @@ does not ask the user before the merge.
       limit for local gates in the delegate rules to 3 hours; B, find the
       slowest suite and reduce its cost. Recommended: B.
 
-- [ ] Resolve user item 189 (product, the wider fix of 187): a comparison
+- [x] Resolve user item 189 (product, the wider fix of 187): a comparison
       `review.json` grows with every rule record of every added or changed
       view, and each record repeats the full stylesheet path. A static host
       with a per-file limit, such as Cloudflare Pages with 25 MiB, then
@@ -6138,6 +6138,14 @@ does not ask the user before the merge.
       reference (a new review format version; Large); C, split
       `review.json` into files per entry (a new format version; Large).
       Recommended: B.
+  - The 2026-10-26 discussion added two options. D keeps a small
+    `review.json` summary for receivers only. E removes `review.json`: the
+    index and the entry details carry its data, and the Plan request sends
+    the index. Mokly Cloud reads `review.json` on its server but still
+    parses review v6 only, so it must change in either case.
+  - User decision 189 (2026-10-26): E. The
+    [remove the review file plan](./remove-review-json.md) carries out the
+    work, including the Mokly Cloud change.
 
 - [x] Resolve user item 190 (PR #200 strict audit): three `undici`
       advisories and a stale `braces` exception failed the strict
@@ -6281,6 +6289,19 @@ does not ask the user before the merge.
       mutex. A test that fails while it holds the lock poisons the mutex, and
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
+
+- [ ] Follow-up (Low, cost, not a user item): move the Linux CI jobs that
+      compile Rust back to 2 vCPUs. On 2026-10-26 the user raised them from
+      2 to 8 vCPUs for a limited time, until the Rust build cache of #215 and
+      the other CI speed work land. The Windows native job stays on 8 vCPUs.
+      On 2026-10-27 the user chose 8 over 16 vCPUs for it, because with the
+      Rust build cache 16 vCPUs gave no speed-up. On 2026-10-27 the user also
+      asked that the remote gate's Testboxes match the CI suite jobs and stay
+      aligned, so that a remote gate takes the time and cost of CI. The
+      Testbox job therefore moves back with the Linux jobs. Measure the cached
+      job times on 2 vCPUs first. Update `docs/protocol/ci-workflow.md`,
+      `docs/protocol/remote-verification-testbox.md`, and the runner size test
+      in the same change.
 
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate

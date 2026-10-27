@@ -22,7 +22,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 export const BASE = "origin/main";
 

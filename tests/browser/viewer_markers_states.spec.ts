@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
-import { missingResourceNotice } from "./document_error_allowance.js";
+import { generationDocumentsNotice } from "./document_error_allowance.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerState,
@@ -28,8 +28,9 @@ for (const cross of [false, true]) {
     allowBrowserError,
   }) => {
     allowBrowserError(
-      missingResourceNotice(
-        `${cross ? fixture.frames.url : fixture.host.url}/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
+      generationDocumentsNotice(
+        `${cross ? fixture.frames.url : fixture.host.url}/mokly-viewer/diffs/generations/${"a".repeat(64)}/`,
+        404,
       ),
     );
     await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
@@ -82,7 +83,8 @@ for (const cross of [false, true]) {
       const host = window.viewerHarness.get("one");
       const index = structuredClone(host.props.index) as CatalogueReadModel;
       index.changesStatus = "ready";
-      index.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
+      index.baseCommit = "b".repeat(40);
+      index.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/`;
       for (const entry of [...index.screens, ...index.components])
         entry.changes = {
           status: "ready",

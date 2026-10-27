@@ -22,15 +22,18 @@ export async function staticFramesLoaded(page: Page, source: RegExp) {
   }
 }
 
-/** Observe actual browser requests across navigation, history, and fake-clock work. */
-export function staticRequests(page: Page) {
+/**
+ * Observe actual browser requests across navigation, history, and fake-clock
+ * work. `missing` lists the URLs that a spec removed from the copy on purpose.
+ */
+export function staticRequests(page: Page, missing: readonly string[] = []) {
   const urls: string[] = [];
   const failed: string[] = [];
   page.on("request", (request) => {
     urls.push(request.url());
   });
   page.on("response", (response) => {
-    if (response.status() >= 400)
+    if (response.status() >= 400 && !missing.includes(response.url()))
       failed.push(`${response.status()} ${response.url()}`);
   });
   return {
@@ -39,7 +42,7 @@ export function staticRequests(page: Page) {
       expect(failed, "every requested file exists").toEqual([]);
       expect(
         urls.filter((url) =>
-          /\/mokly-viewer\/(?:events|live\.json|components\/renders?|diffs\/review\.json)(?:[/?]|$)/u.test(
+          /\/mokly-viewer\/(?:events|live\.json|components\/renders?|diffs\/selection)(?:[/?]|$)/u.test(
             url,
           ),
         ),

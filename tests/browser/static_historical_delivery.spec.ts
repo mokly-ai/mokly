@@ -30,10 +30,7 @@ for (const width of [390, 1280]) {
     }) => {
       const directory = copiedComparisonDirectory();
       const before = await files(directory);
-      const { index, generation, reviewUrl } = await deliveryIndex(
-        request,
-        baseURL!,
-      );
+      const { index, generation } = await deliveryIndex(request, baseURL!);
       const removed = index.removedEntries.find(
         (entry) => entry.entry.path === entryPath,
       )!;
@@ -55,16 +52,18 @@ for (const width of [390, 1280]) {
         "data-mokly-preview-source",
         documentUrl,
       );
-      const metadataUrl =
-        metadata === "page"
-          ? `${generation}previews/${entryPath}/index.json`
-          : reviewUrl;
-      expect(traffic.urls.filter((url) => url === metadataUrl)).toHaveLength(1);
-      expect(
-        traffic.urls.filter(
-          (url) => url === `${generation}entries/${entryPath}.json`,
-        ),
-      ).toHaveLength(1);
+      // A page's preview reads its metadata; a screen's preview reads the
+      // removed detail that Details also reads.
+      const detailUrl = `${generation}entries/${entryPath}.json`;
+      if (metadata === "page")
+        expect(
+          traffic.urls.filter(
+            (url) => url === `${generation}previews/${entryPath}/index.json`,
+          ),
+        ).toHaveLength(1);
+      expect(traffic.urls.filter((url) => url === detailUrl)).toHaveLength(
+        metadata === "page" ? 1 : 2,
+      );
       expect(traffic.urls.filter((url) => url === documentUrl)).toHaveLength(1);
       expect(
         traffic.urls.filter((url) => url.includes("/snapshots/after/")),

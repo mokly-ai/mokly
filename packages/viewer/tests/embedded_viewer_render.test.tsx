@@ -3,8 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { MoklyVersionError } from "../src/catalogue/version_error.js";
-import { ComparisonFailure, reviewReload } from "../src/shell/diffs.js";
+import { ComparisonFailure } from "../src/shell/diffs.js";
 import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
@@ -12,7 +11,7 @@ import {
   detailPairs,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -219,7 +218,7 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
 });
 
 test("an index of another version shows the version headline without an action", () => {
-  const index = { ...fixture, schemaVersion: 8 } as unknown as typeof fixture;
+  const index = { ...fixture, schemaVersion: 9 } as unknown as typeof fixture;
   const html = embeddedMarkup({ index });
   assert.match(
     html,
@@ -250,39 +249,11 @@ test("the embedded viewer is one busy status line while its index loads", () => 
   );
 });
 
-test("a rejected review shows the headline; only the standalone shell offers Reload", () => {
-  const failure = (reload?: () => void) =>
-    renderToStaticMarkup(
-      <ComparisonFailure
-        details="Unsupported Mokly review version 9; this viewer supports version 8."
-        {...(reload ? { reload } : {})}
-        retry={() => undefined}
-        versionError={new MoklyVersionError("review", 9, 8)}
-      />,
-    );
-  assert.match(
-    failure(),
-    /^<p role="alert">This catalogue needs a compatible viewer<\/p><details data-comparison-failure="">/,
-  );
-  assert.match(
-    failure(() => undefined),
-    /^<p role="alert">This catalogue needs a compatible viewer <button class="mbk-empty-link" data-diff-reload="" type="button">Reload<\/button><\/p>/,
-  );
-  assert.doesNotMatch(
-    failure(() => undefined),
-    /Try again/,
-  );
+test("a comparison that could not load offers Try again", () => {
   assert.match(
     renderToStaticMarkup(
       <ComparisonFailure details="offline" retry={() => undefined} />,
     ),
     /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
   );
-});
-
-test("only the standalone shell's context offers Reload for a rejected review", () => {
-  const reload = () => undefined;
-  assert.equal(reviewReload({ embedded: false }, reload), reload);
-  assert.equal(reviewReload({ embedded: true }, reload), undefined);
-  assert.equal(reviewReload(undefined, reload), undefined);
 });

@@ -74,11 +74,10 @@ for (const change of ["theme", "viewport"] as const)
     const expired = generationOf(
       (await page.locator(after).getAttribute(PANE_SOURCE))!,
     );
-    const review = `${expired}review.json`;
     allowBrowserError(
-      responseFailure(changes.url, new URL(review).pathname, 404),
+      responseFailure(changes.url, new URL(expired).pathname, 404),
     );
-    const removal = await removeGeneration(page, review, page.locator(panes));
+    const removal = await removeGeneration(page, expired, page.locator(panes));
 
     if (change === "theme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -126,11 +125,10 @@ test("snapshot recovery keeps the selected saved variant", async ({
   const expired = generationOf(
     (await page.locator(after).getAttribute(PANE_SOURCE))!,
   );
-  const review = `${expired}review.json`;
   allowBrowserError(
-    responseFailure(changes.url, new URL(review).pathname, 404),
+    responseFailure(changes.url, new URL(expired).pathname, 404),
   );
-  const removal = await removeGeneration(page, review, page.locator(panes));
+  const removal = await removeGeneration(page, expired, page.locator(panes));
   await chooseViewport(page, "mobile");
   await expect(page.locator(after)).toHaveAttribute(
     PANE_SOURCE,
@@ -159,9 +157,11 @@ for (const change of ["scheme", "viewport"] as const)
     const record = index.removedEntries.find(
       ({ entry }) => entry.path === changes.paths.removedScreen,
     )!;
-    const review = new URL(index.comparisonUrl!, changes.url).href;
+    const root = new URL(index.comparisonUrl!, changes.url).href;
+    // A removed screen's preview renews its removed detail in the generation.
+    const detail = `${root}entries/${record.entry.path}.json`;
     allowBrowserError(
-      responseFailure(changes.url, new URL(review).pathname, 404),
+      responseFailure(changes.url, new URL(detail).pathname, 404),
     );
     const selections = selectedRequests(page);
     const failed = failedSnapshots(page);
@@ -174,12 +174,13 @@ for (const change of ["scheme", "viewport"] as const)
     );
     const metadata: string[] = [];
     page.on("request", (request) => {
-      if (request.url() === review) metadata.push(request.method());
+      if (request.url() === detail) metadata.push(request.method());
     });
     const removal = await removeGeneration(
       page,
-      review,
+      root,
       page.locator(previews),
+      detail,
     );
 
     if (change === "scheme") await chooseScheme(page, "dark");
@@ -197,9 +198,7 @@ for (const change of ["scheme", "viewport"] as const)
     );
     // The preview reacquired its advertised generation before it asked the
     // generation for any document of the new view.
-    expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(
-      review.replace(/review\.json$/u, ""),
-    );
+    expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(root);
     expect(removal.renewed()).toBe(true);
     expect(removal.refused()).toEqual([]);
     expect(metadata).toEqual(["HEAD", "GET"]);

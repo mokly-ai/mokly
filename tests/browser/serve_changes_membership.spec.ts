@@ -49,7 +49,7 @@ test("native Changes publishes moved and removed entries with matching counts", 
     ).toBeVisible();
     const detail = await (
       await page.request.get(
-        `${fixture.url}/${index.comparisonUrl!.replace("review.json", "entries/retired.json")}`,
+        `${fixture.url}/${index.comparisonUrl!}entries/retired.json`,
       )
     ).json();
     expect(detail.revision).toBeUndefined();
@@ -60,7 +60,7 @@ test("native Changes publishes moved and removed entries with matching counts", 
     );
     expect(
       requests.filter(
-        (url) => new URL(url).pathname === "/mokly-viewer/diffs/review.json",
+        (url) => new URL(url).pathname === "/mokly-viewer/diffs/selection",
       ),
     ).toEqual([]);
   } finally {

@@ -21,7 +21,7 @@ for (const viewport of ["mobile", "desktop", "both"] as const) {
         ).json();
         expect(index.changesStatus).toBe("ready");
         expect(index.comparisonUrl).toMatch(
-          /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/,
+          /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/$/,
         );
         expect(index).not.toHaveProperty("live");
         const requests = staticRequests(page);
@@ -45,10 +45,7 @@ for (const viewport of ["mobile", "desktop", "both"] as const) {
           await expect(panes).toHaveAttribute("data-compare-mode", mode);
           const frames = panes.locator("iframe[data-mokly-comparison-frame]");
           await expect(frames).toHaveCount(2);
-          const generation = new URL(index.comparisonUrl, baseURL).href.replace(
-            /review\.json$/,
-            "",
-          );
+          const generation = new URL(index.comparisonUrl, baseURL).href;
           const file = `index.${paneViewport}${scheme === "dark" ? ".dark" : ""}.html`;
           for (const [side, title, text] of [
             ["before", "Before", "Before screen"],
@@ -134,10 +131,8 @@ test("a copied comparison reload keeps its non-null generation URL and loads the
   const after = await (await request.get(indexUrl)).json();
   expect(after.comparisonUrl).toBe(before.comparisonUrl);
   expect(after.deploymentId).toBe(before.deploymentId);
-  expect(
-    requests.urls.filter(
-      (url) => url === new URL(before.comparisonUrl, baseURL).href,
-    ),
-  ).toHaveLength(2);
+  // Each load reads the same generation's pane documents once.
+  for (const address of source)
+    expect(requests.urls.filter((url) => url === address)).toHaveLength(2);
   requests.assert();
 });

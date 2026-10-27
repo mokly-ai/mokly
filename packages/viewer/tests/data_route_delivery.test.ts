@@ -7,7 +7,7 @@ import {
 } from "../src/catalogue/detail_fences.js";
 import { routeDetailDelivery } from "../src/shell/data_requests.js";
 
-import { detailFixture } from "./catalogue_v7_fixture.js";
+import { detailFixture } from "./catalogue_v8_fixture.js";
 
 const TOUR = { path: "tour" };
 const STEP = { path: "product/browse/home" };
