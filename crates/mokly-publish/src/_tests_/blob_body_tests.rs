@@ -11,18 +11,7 @@ use crate::error::Error;
 use crate::http::Encoding;
 use crate::runtime::CancellationMock;
 
-fn random_bytes(length: usize) -> Bytes {
-    let mut value = 0x1234_5678_u32;
-    let mut bytes = Vec::with_capacity(length);
-    while bytes.len() < length {
-        value ^= value << 13;
-        value ^= value >> 17;
-        value ^= value << 5;
-        bytes.extend_from_slice(&value.to_le_bytes());
-    }
-    bytes.truncate(length);
-    bytes.into()
-}
+use super::support::seeded_bytes;
 
 #[test]
 fn compressible_bytes_are_gzip_and_decode_exactly() {
@@ -41,7 +30,7 @@ fn compressible_bytes_are_gzip_and_decode_exactly() {
 
 #[test]
 fn incompressible_empty_and_tiny_bytes_stay_identity() {
-    for input in [random_bytes(4096), Bytes::new(), Bytes::from_static(b"x")] {
+    for input in [seeded_bytes(4096), Bytes::new(), Bytes::from_static(b"x")] {
         let (body, encoding) = encode(&input).unwrap();
         assert_eq!(encoding, Encoding::Identity);
         assert_eq!(body, input);

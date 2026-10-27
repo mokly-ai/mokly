@@ -3,65 +3,24 @@
 use std::sync::{Arc, Mutex};
 
 use bytes::Bytes;
-use mokly_model::output::artifact::Artifact;
-use mokly_model::output::validation::{MANIFEST, MARKER};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::exchange::{Client, Exchange};
-use crate::http::{Body, Encoding, HttpMock, Step};
+use crate::exchange::Exchange;
+use crate::http::{Encoding, HttpMock, Step};
 use crate::snapshot::Prepared;
 
-use super::support::{active, artifact, file, inventory, publication, response, settings};
-
-fn prepared() -> (Prepared, Bytes) {
-    let base = artifact(false);
-    let bytes: Bytes = vec![b'z'; 8192].into();
-    let files = base
-        .files
-        .into_iter()
-        .filter(|file| file.path != MANIFEST && file.path != MARKER)
-        .chain(std::iter::once(file("static/replan.bin", &bytes)))
-        .collect();
-    let artifact = Artifact::finalize(
-        base.directory,
-        files,
-        Some(publication().metadata(&inventory(false)).unwrap()),
-    )
-    .unwrap();
-    (Prepared::new(&artifact).unwrap(), bytes)
-}
-
-fn plan(digest: &str, encodings: Option<serde_json::Value>) -> crate::http::Response {
-    let mut document = json!({
-        "schemaVersion": 1,
-        "upload": {"id": "upload-1", "expiresAt": "2030-09-26T13:00:00.000Z"},
-        "missing": [digest],
-        "blobUrl": "https://api.example.com/blobs/{sha256}",
-        "completeUrl": "https://api.example.com/complete"
-    });
-    if let Some(encodings) = encodings {
-        document["blobEncodings"] = encodings;
-    }
-    crate::http::Response {
-        body: Body::Bytes(serde_json::to_vec(&document).unwrap().into()),
-        ..response(200)
-    }
-}
+use super::support::{
+    active, client, digest_for, plan_with_encoding, prepared_with_file, response, settings,
+};
 
 async fn run(second_encoding: Option<serde_json::Value>) -> (Vec<(Bytes, Encoding)>, Bytes) {
-    let (prepared, file) = prepared();
-    let digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/replan.bin")
-        .unwrap()
-        .sha256
-        .clone();
+    let file: Bytes = vec![b'z'; 8192].into();
+    let prepared: Prepared = prepared_with_file("static/replan.bin", file.clone());
+    let digest = digest_for(&prepared, "static/replan.bin");
     let plans = Arc::new(Mutex::new(vec![
-        plan(&digest, Some(json!(["gzip"]))),
-        plan(&digest, second_encoding),
+        plan_with_encoding([digest.clone()].into(), Some(json!(["gzip"]))),
+        plan_with_encoding([digest].into(), second_encoding),
     ]));
     let completions = Arc::new(Mutex::new(0));
     let bodies = Arc::new(Mutex::new(Vec::new()));
@@ -87,14 +46,10 @@ async fn run(second_encoding: Option<serde_json::Value>) -> (Vec<(Bytes, Encodin
                 }
             })),
     );
-    Client {
-        http: Arc::new(http),
-        clock: super::support::clock(),
-        reporter: super::support::reporter(),
-    }
-    .publish(&prepared, &settings(1), &active())
-    .await
-    .unwrap();
+    client(http, super::support::reporter(), super::support::clock())
+        .publish(&prepared, &settings(1), &active())
+        .await
+        .unwrap();
     (Arc::try_unwrap(bodies).unwrap().into_inner().unwrap(), file)
 }
 

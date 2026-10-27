@@ -9,20 +9,15 @@ use unimock::{MockFn, Unimock, matching};
 use crate::exchange::Exchange;
 use crate::http::{Encoding, HttpMock, Step};
 
-use super::gzip_exchange_tests::{client, plan_response, prepared_with_file};
-use super::support::{active, response, settings};
+use super::support::{
+    active, client, digest_for, plan_with_encoding, prepared_with_file, response, seeded_bytes,
+    settings,
+};
 
 async fn send_one(encodings: Option<serde_json::Value>, bytes: Bytes) -> (Bytes, Encoding) {
     let prepared = prepared_with_file("static/blob.bin", bytes);
-    let digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/blob.bin")
-        .unwrap()
-        .sha256
-        .clone();
-    let planned = plan_response(&digest, encodings);
+    let digest = digest_for(&prepared, "static/blob.bin");
+    let planned = plan_with_encoding([digest].into(), encodings);
     let captured = Arc::new(Mutex::new(None));
     let observed = Arc::clone(&captured);
     let http = Unimock::new((
@@ -67,16 +62,7 @@ async fn unusable_plan_encoding_stays_raw_for_compressible_bytes() {
 
 #[tokio::test]
 async fn a_gzip_plan_keeps_incompressible_bytes_raw() {
-    let mut value = 0x1234_5678_u32;
-    let mut bytes = Vec::with_capacity(8192);
-    while bytes.len() < 8192 {
-        value ^= value << 13;
-        value ^= value >> 17;
-        value ^= value << 5;
-        bytes.extend_from_slice(&value.to_le_bytes());
-    }
-    bytes.truncate(8192);
-    let bytes: Bytes = bytes.into();
+    let bytes = seeded_bytes(8192);
     assert_eq!(
         send_one(Some(json!(["gzip"])), bytes.clone()).await,
         (bytes, Encoding::Identity)

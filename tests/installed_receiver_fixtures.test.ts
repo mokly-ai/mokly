@@ -42,7 +42,7 @@ const bytes = (value: unknown) => Buffer.from(JSON.stringify(value));
 test(
   "independent reader validates ownership and upload fixtures from the packed package",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await fs.mkdtemp(
       path.join(os.tmpdir(), "mokly-installed-receiver-"),
     );
@@ -71,51 +71,77 @@ test(
       ) as { cases: Case[] };
       assert.equal(markers.cases.length, 57);
       for (const entry of markers.cases) {
-        if (entry.valid)
-          assert.doesNotThrow(
-            () => ownership(bytes(entry.document)),
-            entry.name,
-          );
-        else
-          assert.throws(
-            () => ownership(bytes(entry.document)),
-            (error: unknown) =>
-              error instanceof Error && error.message === entry.rejection,
-            entry.name,
-          );
+        await context.test(entry.name, () => {
+          if (entry.valid)
+            assert.doesNotThrow(
+              () => ownership(bytes(entry.document)),
+              entry.name,
+            );
+          else
+            assert.throws(
+              () => ownership(bytes(entry.document)),
+              (error: unknown) =>
+                error instanceof Error && error.message === entry.rejection,
+              entry.name,
+            );
+        });
       }
       const uploads = JSON.parse(
         await fs.readFile(path.join(fixtures, "upload-plan-v1.json"), "utf8"),
       ) as { endpoint: string; marker: string[]; cases: Case[] };
       assert.equal(uploads.cases.length, 74);
-      for (const entry of uploads.cases) {
-        const body =
-          entry.body === undefined
-            ? bytes(entry.document)
-            : Buffer.from(entry.body);
-        const status = entry.status ?? 200;
-        const contentType =
-          entry.contentType === undefined
-            ? "application/json"
-            : entry.contentType;
-        if (entry.step === "complete")
+      for (const entry of uploads.cases.filter(
+        (entry) => entry.step !== "complete",
+      )) {
+        await context.test(entry.name, () => {
+          const body =
+            entry.body === undefined
+              ? bytes(entry.document)
+              : Buffer.from(entry.body);
+          const status = entry.status ?? 200;
+          const contentType =
+            entry.contentType === undefined
+              ? "application/json"
+              : entry.contentType;
+          if (entry.valid)
+            assert.equal(
+              plan(body, uploads.endpoint, uploads.marker, status, contentType),
+              entry.blobEncoding ?? "identity",
+              entry.name,
+            );
+          else
+            assert.throws(
+              () =>
+                plan(
+                  body,
+                  uploads.endpoint,
+                  uploads.marker,
+                  status,
+                  contentType,
+                ),
+              entry.name,
+            );
+        });
+      }
+      for (const entry of uploads.cases.filter(
+        (entry) => entry.step === "complete",
+      )) {
+        await context.test(entry.name, () => {
+          const body =
+            entry.body === undefined
+              ? bytes(entry.document)
+              : Buffer.from(entry.body);
+          const status = entry.status ?? 200;
+          const contentType =
+            entry.contentType === undefined
+              ? "application/json"
+              : entry.contentType;
           assert.deepEqual(
             complete(body, status, contentType),
             { outcome: entry.outcome, viewerUrl: entry.viewerUrl ?? null },
             entry.name,
           );
-        else if (entry.valid)
-          assert.equal(
-            plan(body, uploads.endpoint, uploads.marker, status, contentType),
-            entry.blobEncoding ?? "identity",
-            entry.name,
-          );
-        else
-          assert.throws(
-            () =>
-              plan(body, uploads.endpoint, uploads.marker, status, contentType),
-            entry.name,
-          );
+        });
       }
     } finally {
       await fs.rm(root, { recursive: true, force: true });

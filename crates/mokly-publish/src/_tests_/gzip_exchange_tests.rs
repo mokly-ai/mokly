@@ -3,67 +3,21 @@
 use std::io::Read;
 use std::sync::{Arc, Mutex};
 
-use bytes::Bytes;
 use flate2::read::GzDecoder;
-use mokly_model::output::artifact::Artifact;
-use mokly_model::output::validation::{MANIFEST, MARKER, digest};
+use mokly_model::output::validation::digest;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::accounting::Progress;
 use crate::completion::Outcome;
 use crate::error::Error;
-use crate::exchange::{Client, Exchange};
+use crate::exchange::Exchange;
 use crate::http::{Encoding, HttpMock, Step};
 use crate::runtime::{CancellationMock, ClockMock, ReporterMock};
-use crate::snapshot::Prepared;
 
-use super::support::{active, artifact, file, inventory, publication, response, settings};
-
-pub(super) fn prepared_with_file(path: &str, bytes: Bytes) -> Prepared {
-    let base = artifact(false);
-    let files = base
-        .files
-        .into_iter()
-        .filter(|file| file.path != MANIFEST && file.path != MARKER)
-        .chain(std::iter::once(file(path, &bytes)))
-        .collect();
-    let artifact = Artifact::finalize(
-        base.directory,
-        files,
-        Some(publication().metadata(&inventory(false)).unwrap()),
-    )
-    .unwrap();
-    Prepared::new(&artifact).unwrap()
-}
-
-pub(super) fn plan_response(
-    expected_digest: &str,
-    encodings: Option<serde_json::Value>,
-) -> crate::http::Response {
-    let mut document = json!({
-        "schemaVersion": 1,
-        "upload": {"id": "upload-1", "expiresAt": "2026-09-26T13:00:00.000Z"},
-        "missing": [expected_digest],
-        "blobUrl": "https://api.example.com/blobs/{sha256}",
-        "completeUrl": "https://api.example.com/complete"
-    });
-    if let Some(encodings) = encodings {
-        document["blobEncodings"] = encodings;
-    }
-    crate::http::Response {
-        body: crate::http::Body::Bytes(serde_json::to_vec(&document).unwrap().into()),
-        ..response(200)
-    }
-}
-
-pub(super) fn client(http: Unimock, reporter: Arc<Unimock>, clock: Arc<Unimock>) -> Client {
-    Client {
-        http: Arc::new(http),
-        clock,
-        reporter,
-    }
-}
+use super::support::{
+    active, client, digest_for, plan_with_encoding, prepared_with_file, response, settings,
+};
 
 fn clock_with_retry() -> Unimock {
     Unimock::new((
@@ -80,17 +34,10 @@ fn clock_with_retry() -> Unimock {
 #[tokio::test]
 async fn gzip_blob_is_smaller_decodes_and_counts_decoded_bytes() {
     let prepared = prepared_with_file("static/compressible.bin", vec![b'a'; 8192].into());
-    let expected_digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/compressible.bin")
-        .unwrap()
-        .sha256
-        .clone();
+    let expected_digest = digest_for(&prepared, "static/compressible.bin");
     let captured = Arc::new(Mutex::new(Vec::new()));
     let observed = Arc::clone(&captured);
-    let planned = plan_response(&expected_digest, Some(json!(["gzip"])));
+    let planned = plan_with_encoding([expected_digest.clone()].into(), Some(json!(["gzip"])));
     let http = Unimock::new((
         HttpMock::send
             .next_call(matching!((request, _) if request.step == Step::Plan))
@@ -142,15 +89,8 @@ async fn gzip_blob_is_smaller_decodes_and_counts_decoded_bytes() {
 #[tokio::test]
 async fn retry_reuses_the_same_gzip_body_and_encoding() {
     let prepared = prepared_with_file("static/retry.bin", vec![b'b'; 8192].into());
-    let digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/retry.bin")
-        .unwrap()
-        .sha256
-        .clone();
-    let planned = plan_response(&digest, Some(json!(["gzip"])));
+    let digest = digest_for(&prepared, "static/retry.bin");
+    let planned = plan_with_encoding([digest].into(), Some(json!(["gzip"])));
     let captured = Arc::new(Mutex::new(Vec::new()));
     let observed = Arc::clone(&captured);
     let attempts = Arc::new(Mutex::new(0));
@@ -198,15 +138,8 @@ async fn retry_reuses_the_same_gzip_body_and_encoding() {
 #[tokio::test]
 async fn ready_cancellation_during_gzip_sends_no_blob_request() {
     let prepared = prepared_with_file("static/cancel.bin", vec![b'c'; 8192].into());
-    let digest = prepared
-        .ownership
-        .files
-        .iter()
-        .find(|entry| entry.path == "static/cancel.bin")
-        .unwrap()
-        .sha256
-        .clone();
-    let planned = plan_response(&digest, Some(json!(["gzip"])));
+    let digest = digest_for(&prepared, "static/cancel.bin");
+    let planned = plan_with_encoding([digest].into(), Some(json!(["gzip"])));
     let http = Unimock::new(
         HttpMock::send
             .next_call(matching!((request, _) if request.step == Step::Plan))
