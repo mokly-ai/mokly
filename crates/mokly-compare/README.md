@@ -46,7 +46,9 @@ not fill the source-byte LRU.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
-needs files on disk. `DiskCache` keeps the source and dependency namespaces
+needs files on disk. Its `review.base-extraction` span times the source key,
+the cache lookup, and a build, and records `action`: `reuse` for a complete
+entry and `extract` for a build. `DiskCache` keeps the source and dependency namespaces
 under the directory that `SystemLocations` selects, with OS locks for
 namespace mutation and entry leases. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the

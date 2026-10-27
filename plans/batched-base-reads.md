@@ -233,14 +233,16 @@ State the batch conversion requirements before the code changes.
 
 Make the extraction visible before its time changes.
 
-- [ ] Emit `review.base-extraction` from `CachedExtraction` in
+- [x] Emit `review.base-extraction` from `CachedExtraction` in
       `crates/mokly-compare/src/extraction.rs`. Start with status `error` and
       record `ok` after success. Record `action`.
-- [ ] Allow the stage in `crates/mokly-cli/src/serve_trace_stages.rs`.
-- [ ] Tests: a `mokly-compare` test reads the span and its `action` for a
-      cache hit and for a build, with a mocked cache. A `mokly-cli` trace test
-      checks that the stage reaches the timing output.
-- [ ] Update `crates/mokly-compare/README.md`.
+- [x] Allow the stage in `crates/mokly-cli/src/serve_trace_stages.rs`.
+- [x] Tests: `crates/mokly-cli/src/_tests_/extraction_trace_tests.rs` runs
+      `CachedExtraction` with a mocked cache and repository under the timing
+      layer. It checks `action` for a cache hit and for a build, and the
+      `error` status without an action for a failure. `mokly-compare` has no
+      span test harness, so the CLI test covers the span end to end.
+- [x] Update `crates/mokly-compare/README.md`.
 
 ## Milestone 3: Batched conversion
 

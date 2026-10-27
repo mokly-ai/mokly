@@ -37,6 +37,7 @@ pub(super) fn stage(name: &str) -> bool {
             | "changes.classify"
             | "review.base-commit"
             | "review.base-tree"
+            | "review.base-extraction"
             | "review.base-dependencies"
             | "review.compare-views"
             | "review.capture-side"

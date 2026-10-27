@@ -238,6 +238,10 @@ where
 mod capture_trace_tests;
 
 #[cfg(test)]
+#[path = "_tests_/extraction_trace_tests.rs"]
+mod extraction_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/serve_trace_tests.rs"]
 mod serve_trace_tests;
 
