@@ -1,7 +1,5 @@
 # Mokly Render Graph And Cache
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Render Graph
 
 Every output is a node of the content-addressed render graph that the
@@ -18,8 +16,9 @@ The render cache is process memory. It is bounded by bytes and evicted least
 recently used. Serve reads head documents from the render cache. An evicted
 head document renders again on the head root. `build` and `publish` capture the
 head once during the build check under a separate 256 MiB bound. Changes,
-output, and comparison output read that capture. A head document that does not
-fit is not captured, and it renders again from the head source.
+output, and comparison output read that capture. An uncaptured head document is
+read from the head source, which renders it again only after render-cache
+eviction.
 
 Changes captures the base within 256 MiB in Serve and in `build`. A base capture
 miss uses the pinned source.

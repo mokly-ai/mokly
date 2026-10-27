@@ -48,6 +48,8 @@ Contract owners:
 
 - [Runtime contract](../docs/protocol/mokly-runtime.md), render graph and
   cache, and build.
+- [Render graph and cache contract](../docs/protocol/mokly-render-cache.md),
+  render graph, render cache, side captures, and both decisions.
 - [Timings contract](../docs/protocol/mokly-timings.md), `review.capture-side`.
 - [Components contract](../docs/protocol/mokly-components.md), rendering and
   read model.
@@ -192,5 +194,17 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] 1. No test guards the render-once requirement. Severity Low, effort
+        Small. Recommended: A, assert in
+        `tests/static_capture_timing.test.ts` that every core
+        `render.document` record has a `review.capture-side` ancestor.
+  - [ ] Outside the scope: `docs/protocol/*.md` and `AGENTS.md`. Most pages
+        still carry the completed-plan status line. Separate branch.
+  - [ ] Outside the scope: `docs/protocol/mokly-timings.md:219`. The render
+        cache budget row links to capture bounds without a render-cache byte
+        bound. Separate branch.
+  - [ ] Outside the scope: `docs/architecture/rust-core.md:170`. The
+        architecture page names a code constant instead of only a component.
+        Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.

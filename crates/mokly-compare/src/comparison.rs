@@ -47,7 +47,8 @@ impl Comparison for Engine {
 }
 
 impl Engine {
-    /// Classify after the caller has validated and captured the comparison inputs.
+    /// Classify after the caller validated and captured the base. The head is a
+    /// build capture, or an original generation that `render_all` validates.
     pub(crate) fn compare_captured(
         &self,
         request: &ComparisonRequest,
