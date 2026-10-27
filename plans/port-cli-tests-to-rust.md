@@ -216,10 +216,12 @@ Evidence: `.context/port-cli-tests-to-rust/harness.md`.
 - [x] Run a manual CI run of the branch and check that both native jobs pass
       within their limits.
   - Evidence: `.context/port-cli-tests-to-rust/ci-runs.md`.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-  - Blocked: the remote Repository suite needs more than the 30-minute
-    Testbox job limit. Every suite passed on its own. Open decision for the
-    user. Evidence: `.context/port-cli-tests-to-rust/ci-runs.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+  - The remote Repository suite first needed more than the 30-minute Testbox
+    limit. On 2026-10-27, #216 moved the Testboxes to the 8-vCPU CI runner at
+    the user's request. That resolves decision 5 without a change on this
+    branch. The remote gate then passed. Evidence:
+    `.context/port-cli-tests-to-rust/ci-runs.md`.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Apply the user decisions of 2026-10-27 on review findings 1 to 4: the
       edge check, the coverage record, the design links contract, and the
