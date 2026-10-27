@@ -237,22 +237,22 @@ receiver change. Its plan and pull request live in that repository.
 - [x] Apply the Milestone 1 protocol wording fixes before writing the cloud
       brief. The receiver handoff depends on the corrected rejection and
       accounting rules.
-- [ ] Write `.context/gzip-blob-uploads/cloud-brief.md` against the protocol
+- [x] Write `.context/gzip-blob-uploads/cloud-brief.md` against the protocol
       docs of this branch. Include:
-  - [ ] The listing behind a configuration switch that is off by default:
+  - [x] The listing behind a configuration switch that is off by default:
         `blobEncodings` on `PlanResponse` in `crates/mkc-api/src/upload_plan.rs`.
-  - [ ] The Blob handler in `crates/mkc-api/src/upload_blob.rs`. Accept
+  - [x] The Blob handler in `crates/mkc-api/src/upload_blob.rs`. Accept
         `gzip`, which it rejects today. Apply the `Content-Length` rule.
         Decode within the decoded-size limit. Check the decoded length, then
         store through `store_blob`. Keep the drain path for durable blobs.
-  - [ ] The upload memory reservation for the encoded and the decoded bytes.
-  - [ ] Its docs: `docs/protocol/publication-upload-exchange.md`, the
+  - [x] The upload memory reservation for the encoded and the decoded bytes.
+  - [x] Its docs: `docs/protocol/publication-upload-exchange.md`, the
         ingest memory budget, and the Blob description in
         `crates/mkc-api/src/contract/uploads.rs`.
-  - [ ] A check that its edge forwards encoded request bodies unchanged.
-  - [ ] The two phases, the rollback rule, and the fixture refresh from the
+  - [x] A check that its edge forwards encoded request bodies unchanged.
+  - [x] The two phases, the rollback rule, and the fixture refresh from the
         release with `cargo xtask mokly-fixtures`.
-  - [ ] Tests: a stored gzip Blob, the raw path, the length rule, a body
+  - [x] Tests: a stored gzip Blob, the raw path, the length rule, a body
         that decodes past the declared size, invalid gzip, and the switch.
 - [ ] Create the Conductor workspace in `mokly-ai/mokly-cloud` with the
       brief. Record the workspace here.
