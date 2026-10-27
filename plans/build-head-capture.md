@@ -1,7 +1,7 @@
 # Build Head Capture
 
-Status: Active. On branch `calummoore/change-detection-performance`, no pull
-request yet. The plan closes when its PR merges.
+Status: Active. [PR #220](https://github.com/mokly-ai/mokly/pull/220) is open.
+The plan closes when its PR merges.
 
 `build` and `publish` render every head document five times: the build
 check, the Changes pre-render, the Changes entry loop, the output loop, and
@@ -214,5 +214,5 @@ Evidence: `.context/build-head-capture/output-diff.txt`,
     branch.
 - [x] Fold the head capture rule back into the runtime contract after the #218
       merge, and keep main's source-neutral text in the other protocol docs.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
