@@ -135,11 +135,12 @@ navigation. Do not equate these two contexts.
 
 - Before wiring controls, record failing semantic assertions for missing home,
   navigation, miniature-screen, flow-reference, and example-button links.
-- Verify expected control destinations against the served example's catalogue
-  index in both viewports, plus every light/dark example-button output. Detect
-  wrong subjects, self-links masquerading as transitions, folder/absent
-  destinations, duplicate/nested focus targets, and inactive controls becoming
-  links.
+- Verify expected control destinations against the catalogue index of a strict
+  static build of the example in both viewports, plus every light/dark
+  example-button output. Detect wrong subjects, self-links masquerading as
+  transitions, folder/absent destinations, duplicate/nested focus targets, and
+  inactive controls becoming links. The check reads a static build, not Serve:
+  both render the same catalogue, and the browser suite covers Serve.
 - Check the canonical existing-design inventory against the catalogue index's
   complete design-screen set, including exact paths. Keep destinations without
   an owning screen separate from that inventory so omissions and drift are

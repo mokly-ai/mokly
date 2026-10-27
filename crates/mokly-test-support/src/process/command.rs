@@ -6,12 +6,27 @@ use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use tempfile::TempDir;
+
+use crate::publication::temporary_root;
 use crate::workspace;
 
 use super::running::{Finished, Running};
 
 /// The standard-output prefix of the private build that `mokly publish` reports.
 pub const PUBLISH_BUILD: &str = "Mokly publish build: ";
+
+/// The variables from which the binary finds its cache folder on each platform.
+const CACHE_VARIABLES: [&str; 3] = ["XDG_CACHE_HOME", "HOME", "LOCALAPPDATA"];
+
+thread_local! {
+    /// The cache folder of the test that runs on this thread. Every invocation of the test
+    /// shares it, and the folder is removed when the test's thread ends.
+    static CACHE: TempDir = tempfile::Builder::new()
+        .prefix("mokly-test-cache-")
+        .tempdir_in(temporary_root())
+        .expect("the test cache folder is created");
+}
 
 /// Builds invocations of the `mokly` command: the native binary or a Node shim.
 #[derive(Clone, Debug)]
@@ -40,7 +55,8 @@ impl Mokly {
     /// Prepare `mokly {args}` in `root` with the output mode `mode`.
     ///
     /// The child inherits the test environment without its `MOKLY_` variables.
-    /// It gets the output mode. The native binary also gets the package root
+    /// It gets the output mode and the test's own cache folder, so that no run
+    /// writes to the user's cache. The native binary also gets the package root
     /// and the viewer bundle of the checkout, which a shim finds itself.
     pub fn command(&self, root: &Path, args: &[&str], mode: &str) -> Invocation {
         let mut command = Command::new(&self.program);
@@ -51,6 +67,10 @@ impl Mokly {
             }
         }
         command.env("MOKLY_OUTPUT", mode);
+        let cache = CACHE.with(|cache| cache.path().to_path_buf());
+        for name in CACHE_VARIABLES {
+            command.env(name, &cache);
+        }
         if self.shim.is_none() {
             command
                 .env("MOKLY_PACKAGE_ROOT", workspace::package_root())
@@ -108,3 +128,7 @@ impl Invocation {
         self.spawn().wait()
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/command_tests.rs"]
+mod command_tests;

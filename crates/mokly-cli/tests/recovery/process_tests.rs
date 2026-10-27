@@ -7,7 +7,7 @@ use std::path::Path;
 use mokly_test_support::files::tree;
 
 use super::support::{
-    causes, export_category, fault_command, installed_bytes, joined, normalized, one_final_newline,
+    causes, exact_edges, export_category, fault_command, installed_bytes, joined, normalized,
     output_directory, private_outputs, recovery_fixture, recovery_path, reservation, unsafe_entry,
 };
 
@@ -118,7 +118,7 @@ fn failures_report_their_causes(verb: &str, mode: &str) {
         assert_eq!(removals, if kept { 0 } else { 1 });
         if mode == "plain" {
             let name = format!("{verb}_plain_{}", fault.replace([',', '-'], "_"));
-            one_final_newline(&result.stderr);
+            exact_edges(&result.stderr);
             insta::assert_snapshot!(name, normalized(&result.stderr, path, &output, verb));
         }
     }

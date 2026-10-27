@@ -29,7 +29,9 @@ document, so the script check accepts that one script and no consumer script.
 
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including
-HTML, React, and stylesheet edits.
+HTML, React, and stylesheet edits. Every invocation that `mokly-test-support`
+prepares gets the cache folder of its test, which all runs of that test share,
+so no test writes to the user's cache.
 The design attribution matrix copies the example sources into temporary Git
 fixtures with fully registered base and head commits. It pins stylesheet links,
 rule and resource records, changed entries, and affected consumers. Independent

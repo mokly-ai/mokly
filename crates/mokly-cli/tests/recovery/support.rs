@@ -94,10 +94,14 @@ pub(super) fn private_outputs(verb: &str, output: &Path) -> Outputs {
     outputs
 }
 
-/// Check the end of a report that a snapshot ignores: exactly one final newline.
-pub(super) fn one_final_newline(report: &str) {
+/// Check the edges of a report that a snapshot ignores, as an exact compare does: no leading
+/// line break, no carriage return, and one final newline directly after visible text.
+pub(super) fn exact_edges(report: &str) {
+    let body = report
+        .strip_suffix('\n')
+        .unwrap_or_else(|| panic!("no final newline: {report:?}"));
     assert!(
-        report.ends_with('\n') && !report.ends_with("\n\n"),
+        !report.starts_with('\n') && !report.contains('\r') && !body.ends_with(char::is_whitespace),
         "{report:?}"
     );
 }

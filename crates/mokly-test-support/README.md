@@ -26,7 +26,10 @@ receiver.
 
 `process::Mokly` builds invocations of one binary. A child inherits the test
 environment without its `MOKLY_` variables, then gets the package root, the
-viewer bundle, and the output mode. Threads capture both streams while the
+viewer bundle, and the output mode. `XDG_CACHE_HOME`, `HOME`, and
+`LOCALAPPDATA` point to one temporary cache folder per test thread, which all
+runs of the test share and which is removed when the test ends. A test can set
+its own value on the invocation. Threads capture both streams while the
 child runs, so that a receiver can wait for the private build directory that
 `mokly publish` reports. A hang guard stops a child that never exits. A child
 that leads its own process group is stopped with its whole group, because a

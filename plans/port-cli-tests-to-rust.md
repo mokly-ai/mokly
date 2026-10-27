@@ -21,6 +21,23 @@ macOS and Windows coverage and CI time. Rejected: A, keep the tests in Node;
 C, also keep one Node contract test that reads the ported outputs with the
 viewer readers. Reason: the user prefers tests in Rust where possible.
 
+Coverage changes of decision 1 B: on Linux, the ported tests run in the
+Repository job with Node 24. Only the macOS and Windows native jobs run them
+with the lowest supported Node, 22.15. The base-tier tests are Unix-only, so no
+job runs them on Windows. The Node originals never ran on Windows either.
+
+User decisions on the review findings, 2026-10-27:
+
+- Finding 1, A: check the report edges that a snapshot ignores next to each
+  recovery snapshot. Rejected: B, escaped snapshots, which are hard to read;
+  C, a shared exact-text snapshot helper, which only later ports would use.
+- Finding 2, A: record the coverage changes above. Rejected for now: B, a
+  Linux run on Node 22.15, and C, Windows base tiers.
+- Finding 3, A: the design links contract names a strict static build of the
+  example instead of Serve. Rejected: B, a second check through Serve.
+- Finding 4, B: every invocation of a test gets that test's own cache folder,
+  which its runs share. Rejected: A, cache variables in each fixture.
+
 Not covered: the Node tests of TypeScript code, the browser UI specs, and the
 Node tooling tests. User decisions 2 B and 3 B move the repository file rules
 and the scripts that `xtask` calls to `xtask` under their own plans. User
@@ -202,6 +219,9 @@ Evidence: `.context/port-cli-tests-to-rust/harness.md`.
     Testbox job limit. Every suite passed on its own. Open decision for the
     user. Evidence: `.context/port-cli-tests-to-rust/ci-runs.md`.
 - [x] Commit with Conventional Commits and push the branch.
+- [x] Apply the user decisions of 2026-10-27 on review findings 1 to 4: the
+      edge check, the coverage record, the design links contract, and the
+      test's own cache folder.
 - [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
