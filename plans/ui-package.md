@@ -24,8 +24,8 @@ type. The viewer depends on the package at the exact shared version and
 bundles its CSS into `shell.css` and `styles.css`, so hosts and deliveries
 import one stylesheet as before. The design library renders a registered
 component through the package where the package provides it. The plan moves
-the first three components: the icons, the appearance selector, and the
-comparison toolbar. The remaining presentational components move in later
+the first slice: the icons, the change mark, the appearance selector, and
+the comparison toolbar. The remaining presentational components move in later
 plans, one slice each. The embedded selector transform, the shell tokens, and
 the store design stay as they are.
 
@@ -37,22 +37,40 @@ keeping the design library's own copies, because two implementations need
 tests to stay aligned and still drift. Reason: one implementation serves the
 product and its mockups, and the mockup copies and their stylesheets go away.
 
+Decision 3 (2026-10-27, the user): the DOM test tier is option A,
+`happy-dom` and `@testing-library/react` as root dev dependencies. Rejected:
+B, `jsdom` with Testing Library, because it is slower and heavier with the
+same gaps. Rejected: C, no DOM tier, because every interaction regression in
+a package component would then need a browser spec. Reason: the package holds
+exactly the components that a DOM in Node can test, and happy-dom is the
+fastest such DOM.
+
+Decision 4 (2026-10-27, the user): the boundary lints are option A, rules in
+the existing ESLint configuration with no new dependency. In a workspace every
+package is symlinked into the root `node_modules`, so an undeclared import of
+`@mokly/viewer` from the package resolves and typechecks, and a relative
+import into the viewer source fails only at build time. The lints close both
+gaps at edit time. Rejected: B, `dependency-cruiser`, because its extra value,
+whole-graph cycle checks, layer rules at scale, and a graph output, belongs to
+the later layer work, and it costs a dependency, its own resolution config,
+and its own gate command. Rejected: C, convention only, because the isolation
+that motivates the package would erode on the first convenient import.
+Reason: `eslint-plugin-import-x` is installed and already has every rule the
+boundary needs.
+
+Decision 5 (2026-10-27, the user): file names in `packages/ui` are option A,
+kebab-case such as `top-bar.tsx`, which exports `TopBar`. Rejected: B,
+PascalCase, because a case-only rename is invisible to Git on a default macOS
+disk and then fails on Linux. Rejected: C, snake_case like the rest of the
+repository, because the subpath exports, the CSS file beside each component,
+and the design library the package replaces all use kebab-case. Reason: the
+file name matches the published subpath, and a lint holds the convention.
+
 Open decisions, asked on 2026-10-27. The plan uses the recommended option in
 each TODO and names the TODO that another answer changes.
 
 - Decision 2: the package name. A `@mokly/ui`. B `@mokly/viewer-ui`.
   C `@mokly/components`. Recommended A.
-- Decision 3: the DOM test tier. A `happy-dom` and
-  `@testing-library/react` as dev dependencies. B `jsdom` and
-  `@testing-library/react`. C no DOM tier, string-rendered tests only.
-  Recommended A. C removes the Testing Library TODOs of milestones 2 and 3.
-- Decision 4: the boundary lints. A a local ESLint rule for file names and
-  `import-x/no-restricted-paths` zones, no new dependency.
-  B `dependency-cruiser` with a rule file. C no lint, convention only.
-  Recommended A. C removes the lint TODO of milestone 2.
-- Decision 5: file names in `packages/ui`. A kebab-case, `top-bar.tsx`.
-  B PascalCase, `TopBar.tsx`. C snake_case like the rest of the repository.
-  Recommended A.
 - Decision 6: the cascade layer. A package rules in `@layer mokly.components`,
   so an unlayered host rule or shell layout rule wins without specificity
   games. B unlayered rules at a fixed position in the concatenation, as today.
@@ -112,7 +130,7 @@ check the code against them.
       `packages/ui/tests/`.
 - [ ] Update `AGENTS.md`: the package list, the test roots, the build order,
       the Product section, and the kebab-case file name rule of
-      `packages/ui` (decision 5).
+      `packages/ui` from decision 5.
 - [ ] Write `packages/ui/README.md` with the sections of the documentation
       skill: Responsibilities, What This Package Does, Quick Start,
       Development, Key Code, Related Docs. Update the Responsibilities,
@@ -152,14 +170,22 @@ the release, with no component in it yet. The product does not change.
       `styles.css` and include it in `shell.css` and in the embedded
       `styles.css`. Add the case to the existing styles test: the embedded
       transform wraps a `@layer` block in `@scope` unchanged.
-- [ ] Add the boundary lints (decision 4): a local rule under
-      `scripts/eslint/` that requires kebab-case file names under
-      `packages/ui/src` and `packages/ui/tests`, and
-      `import-x/no-restricted-paths` zones: `packages/ui/src` imports only
-      `react`, `react-dom`, and itself; `packages/viewer` imports the package
-      by subpath only; nothing under `packages/ui` imports
-      `packages/viewer/src`.
-- [ ] Add the DOM test tier (decision 3): install `happy-dom` and
+- [ ] Add the boundary lints of decision 4 to `eslint.config.js`:
+  - [ ] `import-x/no-extraneous-dependencies` for `packages/ui/src` with
+        `packageDir` set to the package, so a component imports only what
+        `packages/ui/package.json` declares: `react` and `react-dom`. This
+        is the rule that the workspace symlinks make necessary.
+  - [ ] `import-x/no-relative-packages` for `packages/ui` and
+        `packages/viewer`, so neither package reaches the other by a
+        relative path.
+  - [ ] `import-x/no-restricted-paths` for `packages/viewer` with a zone
+        that forbids `packages/ui/src`, beside the `exports` map that already
+        limits the viewer to the published subpaths.
+  - [ ] A local rule under `scripts/eslint/`, like the four rules there,
+        that requires kebab-case file names under `packages/ui/src` and
+        `packages/ui/tests` (decision 5). Cover each rule with a case in
+        the ESLint rule tests, as the timing lint does.
+- [ ] Add the DOM test tier of decision 3: install `happy-dom` and
       `@testing-library/react` as root dev dependencies with `npm install`,
       so that the manifest and the lockfile change together. Add
       `packages/ui/tests/dom.ts`, which registers one happy-dom window per
@@ -175,8 +201,8 @@ the release, with no component in it yet. The product does not change.
 
 Tags: ui
 
-Move the icons, the appearance selector, and the comparison toolbar with
-their CSS. Markup and class names do not change, so the viewer's
+Move the icons, the change mark, the appearance selector, and the comparison
+toolbar with their CSS. Markup and class names do not change, so the viewer's
 string-rendered tests and the browser specs keep passing. The screens do not
 change, and the approved artboards stay the reference, so no mockup precedes
 this milestone. Milestone 4 adopts the package components in the mockups
@@ -186,6 +212,10 @@ after they exist.
       `src/shell/icons.tsx` and `src/shell/workspace_icons.tsx` to
       `packages/ui/src/icons/icons.tsx`, exported as `@mokly/ui/icons`. The
       viewer imports them from there.
+- [ ] `change-mark`: move `src/shell/view_changed_mark.tsx` to
+      `packages/ui/src/change-mark/change-mark.tsx` with the ids and the
+      wording it reads from `src/shell/view_marks.ts`. The appearance
+      selector renders it.
 - [ ] `appearance-selector`: move `src/shell/appearance.tsx` to
       `packages/ui/src/appearance-selector/appearance-selector.tsx`. The two
       context reads become props: the id prefix, today from
