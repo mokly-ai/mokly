@@ -1,5 +1,7 @@
 # Build Warnings
 
+Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
+
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
@@ -153,8 +155,9 @@ make a successful preparation attempt failed. The next attempt after a
 successful repair starts with an empty seen set. Resource-only reloads keep
 the current scope.
 
-When preparation repeats after changed watch roots attach, success reports
-only the final pass's warnings. A failure of the second pass or its recheck
+When preparation repeats under the
+[readiness rule](./mokly-watch.md#watch-targets-and-readiness), success
+reports only the final pass's warnings. A failure of the second pass or its recheck
 also retains the first pass's warnings. A fatal Serve error flushes the
 current attempt's pending records before its diagnostic only when
 cancellation has not been requested. Cancelled attempts emit no warnings.

@@ -28,10 +28,9 @@ the prepared catalogue has watch roots that the first watch plan did not
 have, startup prepares the whole catalogue a second time before readiness.
 On `examples/basic` the second preparation takes 2.5 to 2.9 s.
 
-Decision 1 keeps the 256 MiB bound, unless the answer to D2 changes it. The
-change does not change the eviction order, the background pass (perf 3),
-CSS bundling (perf 5), per-entry render keys (perf 4), or base retention
-across edits (perf 6).
+Decision 1 and D2 keep the 256 MiB bound. The change does not change the
+eviction order, the background pass (perf 3), CSS bundling (perf 5),
+per-entry render keys (perf 4), or base retention across edits (perf 6).
 
 ## Decisions
 
@@ -46,15 +45,31 @@ Decision 2 (2026-10-27, user): item 7 option A. Run discovery first and seed
 the first watch plan with the discovered roots, so that the roots match after
 the preparation and no recheck runs.
 
-Open decisions, asked on 2026-10-27:
+Decisions D1 to D4 were asked on 2026-10-27. The user answered on
+2026-10-27: apply the recommendations.
 
-- D1, the record multiplier. Recommended: B, two.
-- D2, the eviction acceptance of item 4 under the 256 MiB bound.
-  Recommended: A, keep the bound and amend the acceptance.
-- D3, the shape and the names of the count fields. Recommended: A, one
-  `render.cache` counts record for each phase.
-- D4, a correction of decision 2, which cannot remove the recheck.
-  Recommended: B, the coverage rule of the design below.
+- D1, the record multiplier: B, two. Rejected: A, one, and C, an estimate
+  from the record fields. Reason: two is the closest small multiple to the
+  measured live heap, and one gives the same gain with a lower estimate. C
+  must follow every change to the record types.
+- D2, the eviction acceptance: A, keep the 256 MiB bound and amend the
+  acceptance. Rejected: B, a 384 MiB bound, because it changes decision 1
+  and the runtime contract, and C, evict base entries before head entries,
+  because it overlaps perf 6. The amended acceptance: zero evictions in
+  `serve.background`, a compare step of about 6 s, about 650 fewer sidecar
+  renders, and one `catalogue.validate` and one `graph.prepare` before
+  `serve.ready`. The post-merge follow-up keeps the head in the cache while
+  the base renders.
+- D3, the count fields: A, one `render.cache` counts record for each phase.
+  Rejected: B, fields on each phase's own counts record, because it renames
+  the existing `cacheHits` and loses the counts of a failed review phase,
+  and C, totals since the process started, because every reader must
+  subtract. Reason: one shape serves all five phases.
+- D4, the recheck: B, the coverage rule. It supersedes decision 2. Rejected:
+  A, decision 2 as written, because discovery reports no roots, C, a narrow
+  stylesheet recheck, because it changes the code of perf 5, and D, no
+  recheck, because an edit during startup could stay unseen. Reason: B
+  removes the second preparation of `examples/basic` and loses no edit.
 
 ## Corrections To The Item Text
 
@@ -185,22 +200,26 @@ Contract owners:
 State the count record, the readiness rule, and the charge, so that the
 review can check the code against them.
 
-- [ ] Update `docs/protocol/mokly-timings.md`: the `render.cache` counts
+- [x] Update `docs/protocol/mokly-timings.md`: the `render.cache` counts
       record of the D3 answer, its five phases, and its fields. Say that
       the counts cover the whole process during the phase, and that charged
       bytes are an estimate under the runtime bound, not measured memory.
       Keep the `serve.background` counts record as it is.
-- [ ] Update "Watch Targets And Readiness" in `docs/protocol/mokly-watch.md`
+- [x] Update "Watch Targets And Readiness" in `docs/protocol/mokly-watch.md`
       with the readiness rule of the D4 answer.
-- [ ] Update `crates/mokly-graph/README.md`: the cache charges the usage,
+- [x] Update `crates/mokly-graph/README.md`: the cache charges the usage,
       instance, and slot records at the D1 multiple of their JSON length.
-- [ ] Update `crates/mokly-watch/README.md`: the observer reports whether it
+- [x] Update `crates/mokly-watch/README.md`: the observer reports whether it
       already observes the root directories of a plan.
-- [ ] Update `crates/mokly-cli/README.md`: each command creates one render
+- [x] Update `crates/mokly-cli/README.md`: each command creates one render
       cache at its composition root and shares it with the timing layer.
-- [ ] Confirm that the render cache section of `docs/protocol/mokly-runtime.md`
+- [x] Update the repeated preparation rule of
+      `docs/protocol/mokly-build-warnings.md` to point to the readiness rule.
+- [x] Confirm that the render cache section of `docs/protocol/mokly-runtime.md`
       stays true. Change nothing that stays true.
-- [ ] Record the answers to D1 to D4 in this plan, with the date.
+- [x] Record the answers to D1 to D4 in this plan, with the date.
+- [x] Add the status line of this plan to each page above whose new rule is
+      not implemented yet.
 
 ## Milestone 2: Record charges
 
@@ -216,6 +235,7 @@ Charge the records at the D1 multiple. No other charge changes.
 - [ ] Run the tests of `mokly-graph`, `mokly-compare`, `mokly-render`, and
       `mokly-server`. A test that expected an eviction from the old
       multiplier keeps its intent with a smaller bound or a larger record.
+- [ ] Remove the status line of `crates/mokly-graph/README.md`.
 
 ## Milestone 3: Cache counts in the timing records
 
@@ -237,6 +257,7 @@ Emit the counts of the D3 answer at the end of the five phases.
 - [ ] Add the counts to the timing layer in a new
       `crates/mokly-cli/src/serve_trace_cache.rs`.
 - [ ] Update the existing trace tests for the new layer field.
+- [ ] Remove the status line of `docs/protocol/mokly-timings.md`.
 
 ## Milestone 4: Startup recheck
 
@@ -266,6 +287,9 @@ active watcher did not observe.
         serves the new CSS.
   - [ ] Directory outside every observed directory: the second preparation
         runs, and readiness serves the new CSS.
+- [ ] Remove the status lines of `docs/protocol/mokly-watch.md`,
+      `docs/protocol/mokly-build-warnings.md`, `crates/mokly-watch/README.md`,
+      and `crates/mokly-cli/README.md`.
 
 ## Milestone 5: Measurement after the change
 
@@ -298,3 +322,10 @@ above.
 - [ ] Open the pull request when every other milestone TODO is ticked. Put
       the before and after table in its body and its link in the status
       paragraph.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Keep the head entries in the render cache while the base renders, so
+      that the compare step renders no head document again. Decision D2
+      left 640 to 740 evictions on `examples/basic`. Owner: perf 6 or a
+      later workspace.

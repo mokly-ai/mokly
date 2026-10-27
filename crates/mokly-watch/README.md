@@ -1,5 +1,7 @@
 # mokly-watch
 
+Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
+
 `mokly-watch` observes catalogue inputs for watched Serve. The CLI combines
 its events with manual rebuild requests. `mokly-graph` owns render keys and
 `mokly-server` owns atomic publication. Build and publish create no observer.
@@ -25,7 +27,10 @@ remain observable.
 
 `NativeObserver` implements `dyn Observer` over the platform `notify`
 backend. It attaches nonrecursive directory watches after a confined walk.
-It replaces the native observer only when effective roots change. Exact
+It replaces the native observer only when effective roots change.
+`covers` reports whether its registrations already hold every directory that
+the roots of a plan need. Serve uses it to decide whether a candidate with
+changed roots must prepare again. Exact
 inputs extend registrations without repeating the root walk. `dyn WatchFactory`
 and `dyn DirectoryWatch` own native handle creation and batched updates.
 Existing paths remain attached. Linux and Windows renew replaced directories. Failed attachments recheck

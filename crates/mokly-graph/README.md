@@ -1,5 +1,7 @@
 # mokly-graph
 
+Status: In progress under the [render cache weight and watch recheck plan](../../plans/render-cache-weight-and-watch-recheck.md).
+
 `mokly-graph` plans and evaluates catalogue renders for Mokly. Depend on it
 from Serve, comparison, or static output. It uses `mokly-catalogue` for
 prepared definitions, `mokly-html` for composition, and `mokly-css` for
@@ -61,6 +63,9 @@ requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence, including registry ownership in documents and fragments.
+The charge is an estimate of retained memory. Usage, instance, and slot
+records count at twice their JSON length. `stats` reports the charged bytes,
+the retained entries, and the hit, miss, and eviction counts.
 It evicts by access order. Oversized artifacts return to the caller without
 retention. Plans keep recipes rather than a complete set of parsed documents.
 Eviction changes work only. Cross-view anchor checks retain successful
