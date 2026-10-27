@@ -201,10 +201,14 @@ Add the status line of the repository rules to each changed protocol page.
 
 ## Milestone 2: Mokly Cloud handoff
 
-- [ ] Send the Mokly Cloud workspace "Adopt Mokly without review.json" the
+- [x] Send the Mokly Cloud workspace "Adopt Mokly without review.json" the
       index and detail numbers of the release, the deployment file, and the
       Milestone 1 docs. Ask it to confirm that its receiver and hosting accept
       and serve the file. Record the message here.
+  - Sent on 2026-10-27 to session `51e31014-7fd5-4552-bc6b-4ec555022572` of
+    workspace `1b603283-dbbe-448f-a720-705e5b13bc8e`. The brief is
+    `.context/deployment-id-detail-ids/cloud-handoff.md`. The answer comes to
+    the user in that session.
 
 ## Milestone 3: The deployment file
 
