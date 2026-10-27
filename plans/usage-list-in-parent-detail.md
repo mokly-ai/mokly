@@ -352,9 +352,13 @@ version.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
-- [ ] Merge `origin/main` under the `git-merge` skill. Apply Decision 1 when
-      another dedup change merged first.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Check `origin/main` under the `git-merge` skill. It was already an
+      ancestor at `a9dd1e81`, so no merge was needed.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The first gate found one branch-caused browser assertion and one
+      report-process failure. The browser assertion passed after its version
+      fixture fix. The final complete gate passed all seven suites.
+      Evidence is in `.context/usage-list-in-parent-detail/milestone-5-*.log`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
