@@ -48,3 +48,9 @@ fn deeply_nested_item_does_not_hide_a_later_gzip_offer() {
     let plan = parse(&value).unwrap();
     assert_eq!(plan.blob_encoding, Encoding::Gzip);
 }
+
+#[test]
+fn punctuation_inside_a_nested_item_does_not_split_the_list() {
+    let plan = parse(r#"[{"a":[1,"]"]},"gzip"]"#).unwrap();
+    assert_eq!(plan.blob_encoding, Encoding::Gzip);
+}

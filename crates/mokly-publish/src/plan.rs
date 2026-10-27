@@ -88,11 +88,7 @@ impl Plan {
             missing: document.missing,
             blob_url: document.blob_url,
             complete_url: settings.receiver_url(&document.complete_url)?,
-            blob_encoding: if document
-                .blob_encodings
-                .as_ref()
-                .is_some_and(|raw| offers_gzip(raw.get()))
-            {
+            blob_encoding: if document.blob_encodings.as_deref().is_some_and(offers_gzip) {
                 Encoding::Gzip
             } else {
                 Encoding::Identity
@@ -123,74 +119,12 @@ impl Plan {
     }
 }
 
-fn offers_gzip(raw: &str) -> bool {
-    let bytes = raw.as_bytes();
-    let mut index = 0;
-    skip_whitespace(bytes, &mut index);
-    if bytes.get(index) != Some(&b'[') {
-        return false;
-    }
-    index += 1;
-    loop {
-        skip_whitespace(bytes, &mut index);
-        if bytes.get(index) == Some(&b']') {
-            return false;
-        }
-        let start = index;
-        let Some(end) = item_end(bytes, &mut index) else {
-            return false;
-        };
-        if serde_json::from_slice::<String>(&bytes[start..end])
-            .ok()
-            .is_some_and(|value| value == "gzip")
-        {
-            return true;
-        }
-        skip_whitespace(bytes, &mut index);
-        match bytes.get(index) {
-            Some(b',') => index += 1,
-            Some(b']') => return false,
-            _ => return false,
-        }
-    }
-}
-
-fn skip_whitespace(bytes: &[u8], index: &mut usize) {
-    while bytes.get(*index).is_some_and(u8::is_ascii_whitespace) {
-        *index += 1;
-    }
-}
-
-fn item_end(bytes: &[u8], index: &mut usize) -> Option<usize> {
-    let start = *index;
-    let mut depth = 0usize;
-    let mut quoted = false;
-    let mut escaped = false;
-    while let Some(byte) = bytes.get(*index).copied() {
-        if quoted {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == b'"' {
-                quoted = false;
-            }
-        } else {
-            match byte {
-                b'"' => quoted = true,
-                b'[' | b'{' => depth = depth.checked_add(1)?,
-                b']' | b'}' if depth > 0 => depth -= 1,
-                b',' | b']' if depth == 0 => {
-                    let mut end = *index;
-                    while end > start && bytes[end - 1].is_ascii_whitespace() {
-                        end -= 1;
-                    }
-                    return Some(end);
-                }
-                _ => {}
-            }
-        }
-        *index += 1;
-    }
-    None
+/// Keep each item raw so an item serde_json cannot decode is ignored and never
+/// fails the Plan.
+fn offers_gzip(raw: &RawValue) -> bool {
+    serde_json::from_str::<Vec<Box<RawValue>>>(raw.get()).is_ok_and(|items| {
+        items
+            .iter()
+            .any(|item| serde_json::from_str::<String>(item.get()).is_ok_and(|name| name == "gzip"))
+    })
 }
