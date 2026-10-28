@@ -171,6 +171,13 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
    test-only hook in product code, because C and D need none. Rejected: E, a
    single-flight helper, because it has one user today. Reason: C fails when
    the check is removed or moved before the lock.
+8. Step A acceptance in a slower machine state, decided on 2026-10-28 under
+   the user's rule: A, accept step A as measured and move a per-context memo
+   of the PostCSS module read inventory to step B. Rejected: B, add the memo
+   in step A, because step B already keeps one copy of the module evidence
+   for each context and would rework the same path. Reason: the floor is
+   the serial PostCSS chain, which no step A change removes, and the
+   acceptance holds in the faster state and in the cold pairs.
 
 ## Design
 
@@ -288,27 +295,63 @@ Evidence: `.context/perf/probe-a2.jsonl` and `.context/perf/probe-a3.jsonl`.
 
 ## Milestone 4: Output check and measurement, step A
 
-- [ ] Run the mockup check: `npm run build`, then build `examples/basic` with
-      `--strict` into `.context/perf5-parallel-stylesheets/after-a`. Build it
-      with the `a9dd1e81` binary into a second directory. Compare the two
-      directories byte for byte, and record each difference with its reason.
-- [ ] Smoke test: run `npm run dev`, open one screen of each stylesheet
+- [x] Run the mockup check: `npm run build`, then build `examples/basic` with
+      `--strict` into `.context/example-after-a2-pinned`, because the output
+      check rejects a nested directory under
+      `.context/perf5-parallel-stylesheets/`. Build it with the `a9dd1e81`
+      binary into `.context/example-before-pinned`, both at the same HEAD
+      with `--base` pinned to `a9dd1e81`. Compare the two directories byte for
+      byte, and record each difference with its reason.
+  - 2,382 files on each side, no difference. The first check without a
+    pinned base differed only in `baseCommit` and `deploymentId`, because
+    `origin/main` and the repository HEAD had moved between the two builds.
+- [x] Smoke test: run `npm run dev`, open one screen of each stylesheet
       group, and check that its CSS applies. Save a screenshot under
       `.context/perf5-parallel-stylesheets/`.
-- [ ] Measure with the shared method: cold and warm serve, the edit run, and
+  - Four pages load every stylesheet with rules and no failed response. The
+    welcome screen carries the Tailwind `note-title` utility.
+- [x] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Check the acceptance: the `css.bundle` union inside
       one startup `graph.prepare` is under 0.8 s. Add one line for each
       catalogue below.
+  - The machine speed drifted during the day, so every number below comes
+    from interleaved runs of the `a9dd1e81` binary and the step A binary.
+  - `examples/basic`, final binary, three warm pairs: `css.bundle` union in
+    the two startup preparations 1.11 s and 1.54 s before, 0.85 s and
+    0.81 s after; each run 0.70 to 0.97 s. `graph.prepare` 1.78 s and
+    2.50 s before, 1.07 s and 1.06 s after. `serve.ready` 17.14 s to
+    15.14 s, `changes.classify` 68.56 s to 60.87 s.
+  - `examples/basic`, final binary, two cold pairs: `css.bundle` union in the
+    startup preparations 1.07 s and 1.41 s, then 0.84 s and 1.08 s before,
+    0.76 s and 0.81 s, then 0.76 s and 0.66 s after.
+  - `examples/basic`, binary before the review fixes, three warm pairs in a
+    faster machine state: 1.06 s and 1.25 s before, 0.61 s and 0.55 s after.
+  - The acceptance holds in the faster machine state and in the cold pairs.
+    In the slowest warm set the median sits at 0.81 to 0.85 s. Each PostCSS
+    round trip then took 19 to 27 ms under parallel load against 17 ms
+    serial, and the chain of 35 round trips is the floor. Decision 8.
+  - Edit run, two pairs: `watch.action` 12.32 s and 9.07 s before, 11.74 s
+    and 9.95 s after. The second classification took about 10 s longer
+    after in both pairs, but its base planning, which this change does not
+    touch, grew by the same share.
+  - React fixture, 13 interleaved pairs: `serve.background` median 2.15 s
+    before, 2.21 s after, within the sidecar render noise.
+
+Evidence: `.context/perf5-parallel-stylesheets/step-a-measurements.md`,
+`.context/perf5-parallel-stylesheets/output-diff-final.txt`, and the
+`smoke-*.png` screenshots there.
 
 ## Milestone 5: Verification, commit, review, and pull request, step A
 
-- [ ] Run the targeted tests: `cargo test -p mokly-graph`,
+- [x] Run the targeted tests: `cargo test -p mokly-graph`,
       `cargo test -p mokly-render`, `cargo test -p mokly-cli`,
       `npm test -- tests/markdown_links.test.ts`, and `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+  - The complete gate passed remotely at `98ac863d`: 7 of 7 commands and 5
+    of 5 reports, every suite passed.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -324,9 +367,26 @@ Evidence: `.context/perf/probe-a2.jsonl` and `.context/perf/probe-a3.jsonl`.
   - Outside the scope: `crates/mokly-graph/src/session_collection.rs`, the
     base comparison capture can fill every render worker with jobs that
     wait at the admission gate. Separate branch.
+  - Round 2 at `98ac863d`: the fixes of round 1 are correct, and the early
+    stop covers only roots that have not started. Two findings, both
+    confirmed and both waiting for the user:
+  - 4. Running roots repeat a failed PostCSS request. Severity Medium,
+       effort Medium. Recommended: E, keep each failed input for the context
+       and give a timeout or crash that used its retry to every waiting
+       request.
+  - 5. Root keys now depend on PostCSS request order. Severity Low, effort
+       Small. Recommended: D, hash each stylesheet's output key into the
+       generation key in place of its input key.
+  - Open, inside the scope: a plugin that keeps state across the
+    stylesheets of one context can now emit different CSS between runs,
+    because the request order of a context is no longer fixed.
+  - Open, inside the scope: the protected-file diagnostic can name a
+    different stylesheet between runs, because request order decides which
+    roots list a local file that a plugin loads late.
 
-Evidence: `.context/perf5-parallel-stylesheets/review-a1.md` and
-`.context/perf5-parallel-stylesheets/validity-a1.md`.
+Evidence: `.context/perf5-parallel-stylesheets/review-a1.md`,
+`.context/perf5-parallel-stylesheets/validity-a1.md`, and
+`.context/perf5-parallel-stylesheets/review-a2.md`.
 
 - [ ] Open the step A pull request with the before and after table. Put its
       link in the status paragraph.
