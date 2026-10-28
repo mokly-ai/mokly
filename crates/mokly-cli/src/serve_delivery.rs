@@ -6,6 +6,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Common;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
+use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_server::background::{Background, UsagePass};
@@ -57,6 +58,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
             progress: input.progress,
             refreshes: input.reporter,
             cache_announced: Arc::new(false.into()),
+            extraction_snapshots: Arc::new(ProcessSnapshots::default()),
             warnings: input.warnings,
             runtime: input.services.runtime.clone(),
             git: input.git,

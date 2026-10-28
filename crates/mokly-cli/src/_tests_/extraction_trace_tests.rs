@@ -115,3 +115,35 @@ fn a_failed_extraction_keeps_the_error_status_and_no_action() {
     assert_eq!(spans[1]["status"], "error");
     assert!(spans[1].get("action").is_none());
 }
+
+fn existing(repository: Unimock, cache: Unimock) -> mokly_compare::error::Result<Option<Lease>> {
+    let extraction: &dyn Extraction = &CachedExtraction {
+        repository: Arc::new(repository),
+        cache: Arc::new(cache),
+        files: 10,
+    };
+    extraction.existing(&ObjectId::parse(&"c".repeat(40)).unwrap())
+}
+
+#[test]
+fn a_lookup_without_a_build_records_reuse_only_for_a_complete_entry() {
+    for (found, action) in [(true, Some("reuse")), (false, None)] {
+        let records = capture(|| {
+            let repository = Unimock::new(
+                RepositoryMock::source_key
+                    .next_call(matching!(_))
+                    .returns(Ok("a".repeat(64))),
+            );
+            let cache = Unimock::new(
+                CacheMock::lease
+                    .next_call(matching!(Kind::Sources, _))
+                    .answers_arc(Arc::new(move |_, _, _| Ok(found.then(lease)))),
+            );
+            assert_eq!(existing(repository, cache).unwrap().is_some(), found);
+        });
+        let spans = spans(&records);
+        assert_eq!(spans.len(), 2);
+        assert_eq!(spans[1]["status"], "ok");
+        assert_eq!(spans[1].get("action").and_then(Value::as_str), action);
+    }
+}

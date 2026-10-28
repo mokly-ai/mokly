@@ -1,6 +1,6 @@
 //! Bundle only changed JavaScript and isolate class maps across retained graphs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
@@ -173,6 +173,7 @@ fn finish(
             resolution_digests: bundle.render.resolution_digests.clone(),
             class_map_digests: bundle.render.class_map_digests.clone(),
             runtime_packages: bundle.render.runtime_packages.clone(),
+            unattributed: BTreeSet::new(),
             resolution_files: bundle
                 .stamp
                 .files

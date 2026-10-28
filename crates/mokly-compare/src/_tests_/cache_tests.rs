@@ -16,16 +16,16 @@ use crate::cache_types::{
 use crate::error::Error;
 use crate::locations::{OnceReporter, plain_line, repository_key};
 
-fn key() -> String {
+pub(super) fn key() -> String {
     "a".repeat(40)
 }
-fn receipt() -> Receipt {
+pub(super) fn receipt() -> Receipt {
     Receipt {
         bytes: 1025,
         used: 7,
     }
 }
-fn locks() -> Unimock {
+pub(super) fn locks() -> Unimock {
     Unimock::new((
         LocksMock::try_lock
             .each_call(matching!(_))

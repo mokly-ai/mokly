@@ -32,7 +32,7 @@ pub(super) fn dependency(consumer: &Consumer, version: &str, value: &str) {
 }
 
 /// Every document key of a fresh preparation, by entry path and view.
-fn keys(consumer: &Consumer) -> BTreeMap<String, String> {
+pub(super) fn keys(consumer: &Consumer) -> BTreeMap<String, String> {
     let generation = consumer.generation(consumer.prepare().unwrap());
     generation
         .plans()
@@ -42,7 +42,10 @@ fn keys(consumer: &Consumer) -> BTreeMap<String, String> {
 }
 
 /// The entries with a view whose key changed, appeared, or disappeared.
-fn moved(before: &BTreeMap<String, String>, after: &BTreeMap<String, String>) -> BTreeSet<String> {
+pub(super) fn moved(
+    before: &BTreeMap<String, String>,
+    after: &BTreeMap<String, String>,
+) -> BTreeSet<String> {
     let routes: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     routes
         .into_iter()

@@ -16,6 +16,8 @@ use crate::error::{GitResult, Result};
 pub trait Extraction: Send + Sync {
     /// Acquire a leased source root keyed by commit.
     fn acquire(&self, commit: &ObjectId) -> Result<Lease>;
+    /// Lease the complete extraction of `commit` when one exists, without a build.
+    fn existing(&self, commit: &ObjectId) -> Result<Option<Lease>>;
 }
 
 /// Git source extraction coordinator.
@@ -82,6 +84,24 @@ impl Extraction for CachedExtraction {
                 "reuse"
             },
         );
+        span.record("status", "ok");
+        Ok(lease)
+    }
+
+    /// Times the source key and the lookup as a `review.base-extraction` span,
+    /// whose `action` is `reuse` when a complete entry exists.
+    fn existing(&self, commit: &ObjectId) -> Result<Option<Lease>> {
+        let span = tracing::info_span!(
+            "review.base-extraction",
+            status = "error",
+            action = tracing::field::Empty
+        );
+        let _scope = span.enter();
+        let key = self.repository.source_key(commit).base()?;
+        let lease = self.cache.lease(Kind::Sources, &key)?;
+        if lease.is_some() {
+            span.record("action", "reuse");
+        }
         span.record("status", "ok");
         Ok(lease)
     }

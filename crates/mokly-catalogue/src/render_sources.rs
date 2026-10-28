@@ -40,6 +40,9 @@ pub struct JavaScriptGeneration {
     pub class_map_digests: BTreeMap<String, String>,
     /// Names of the packages that the sidecar loads at render time and does not bundle.
     pub runtime_packages: BTreeSet<String>,
+    /// Handles of the definitions that the unattributed API made, whose declaring module
+    /// the sidecar does not report.
+    pub unattributed: BTreeSet<String>,
 }
 
 /// A JavaScript definition's rendering operation.
