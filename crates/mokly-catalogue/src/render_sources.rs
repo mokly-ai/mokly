@@ -31,6 +31,15 @@ pub struct JavaScriptGeneration {
     pub module_digests: BTreeMap<String, Option<String>>,
     /// Logical module paths and ordered imports, including dependencies.
     pub modules: BTreeMap<String, Vec<String>>,
+    /// Digest of the bundle settings without the source root, the selected dependency
+    /// directories, and the resolved runtime packages, shared by every render input key.
+    pub environment: String,
+    /// Present resolution files by logical name without the installed-input prefix.
+    pub resolution_digests: BTreeMap<String, String>,
+    /// CSS Modules stylesheet path to the digest of its class map.
+    pub class_map_digests: BTreeMap<String, String>,
+    /// Names of the packages that the sidecar loads at render time and does not bundle.
+    pub runtime_packages: BTreeSet<String>,
 }
 
 /// A JavaScript definition's rendering operation.

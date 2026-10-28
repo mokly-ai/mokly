@@ -12,7 +12,7 @@ reference. Each input maps to the render graph node it feeds:
 | ---------------------------------------------------------------------------------------------------------------- | --------------------------------- |
 | the configuration file                                                                                           | config                            |
 | HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root | entry source                      |
-| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports               | bundle generation                 |
+| entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports               | bundle generation, render inputs  |
 | the consumer PostCSS module and the file and directory dependencies `processCss` reports                         | stylesheet bundle                 |
 | configured stylesheets, imported CSS, their nested imports, and the assets they reference                        | stylesheet bundle                 |
 | fonts, images, embedded documents, and other files in the public closure of a composed document                  | the documents that reference them |
@@ -43,10 +43,9 @@ document, fragment, and stylesheet bundle survives:
 - An edit to an HTML screen recomputes its documents. An edit to an HTML
   component recomputes the component node and the documents that use it.
 - An edit to a JavaScript module rebundles once, through one `bundle`
-  request, and re-renders only the fragments whose generation changed; the
-  old generation is disposed after adoption and its final graph or request
-  releases it. An HTML-only edit
-  never rebundles.
+  request. It re-renders only the definitions whose render input key moved,
+  under the rules below. The old generation is disposed after adoption, and
+  its final graph or request releases it. An HTML-only edit never rebundles.
 - An edit to a configured or imported stylesheet, or to a PostCSS dependency,
   recomputes the stylesheet bundle. Documents depend on its emitted CSS and
   generated asset digests. Equal output keeps their document keys.
@@ -54,6 +53,40 @@ document, fragment, and stylesheet bundle survives:
   it and clears their resource evidence.
 - A configuration change reloads the configuration under the
   [runtime continuation](./mokly-watch-runtime.md#configuration-changes).
+
+Each entry module has one render input key. Its fragment and document keys
+use that key instead of the whole bundle. The key moves when one of these
+inputs changes, and only then:
+
+- the consumed bytes or the ordered imports of a module in its closure: the
+  entry module and every module that it imports, directly or through other
+  modules;
+- the closure of the renderer module, for an entry module, or of the
+  Storybook preview, for a stories file;
+- the class map of a CSS Module in the closure. A stylesheet edit that keeps
+  every class map moves only stylesheet keys;
+- the path or title of a definition that a closure module exports or
+  declares, also when an entry module only re-exports it;
+- a `package.json` or `tsconfig.json` candidate in the directory of a
+  closure module or of its parents, up to its source or dependency root. A
+  resolution file outside all of these directories, such as the React
+  manifest, moves every key;
+- the bundle settings, the selected dependency installation, or the
+  resolved path of a package that the sidecar loads at render time, such as
+  React. These move every key. Such a package other than React counts
+  through its path only, and its manifest only on a closure module's
+  directory chain, because only some sides read that manifest.
+
+When the module graph does not name the configured renderer, every entry
+module uses the whole bundle as its key. When it does not name the Storybook
+preview, every stories file does.
+
+A render reads only its imports, its props and slots, and its render
+context. A module side effect of one entry module that changes another entry
+module's render is unsupported: import the setup module from each entry
+module that needs it. A render that reads files, environment variables, the
+clock, or random values is also unsupported. Such a render keeps its first
+result until its key moves.
 
 Every completed action publishes one revision under the
 [Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Nothing is

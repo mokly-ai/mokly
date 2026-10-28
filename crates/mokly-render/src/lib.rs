@@ -23,6 +23,7 @@ mod postcss_nested;
 mod postcss_read_inventory;
 mod postcss_scan;
 mod postcss_turns;
+mod render_environment;
 pub mod runtime;
 pub mod side;
 mod source_evidence;

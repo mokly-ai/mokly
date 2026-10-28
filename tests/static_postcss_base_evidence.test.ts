@@ -125,6 +125,9 @@ return '<!doctype html><html><head><title>Home</title></head><body>Home</body></
       );
       await git(root, "add", ".");
       await git(root, "commit", "-qm", "base package witness");
+      // Equal head and base inputs share one render, so the head page differs and
+      // the base renders its own page, the document callback that the check guards.
+      await fs.appendFile(path.join(root, "specs/home.mockup.ts"), "// head\n");
       const args = ["--base=HEAD", "--sidecars=1", "--out=.context/site"];
       const stable = await command(root, "build", args).result;
       assert.equal(stable.code, 0, stable.stderr);

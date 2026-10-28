@@ -66,8 +66,8 @@ impl ArtifactWorker for Session {
             .collect(route, &document.tree, &document.resources)
     }
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let artifact = self.raw(route)?;
-        let document = artifact
+        let composed = self.raw(route)?;
+        let document = composed
             .document
             .as_ref()
             .ok_or_else(|| invalid(route, "document has no composed tree"))?;
@@ -83,7 +83,7 @@ impl ArtifactWorker for Session {
                 });
             }
         };
-        let artifact = with_closure_warnings(artifact, &closure);
+        let artifact = with_closure_warnings(composed.clone(), &closure);
         let document = artifact
             .document
             .as_ref()
@@ -94,9 +94,11 @@ impl ArtifactWorker for Session {
                 warnings: document.warnings.clone(),
             });
         }
+        // Both sides share cache entries, so the entry keeps only the composition.
+        // Each read adds the closure warnings of its own side's sources.
         self.state
             .cache
-            .insert(self.state.plans[route].key.clone(), artifact.clone());
+            .insert(self.state.plans[route].key.clone(), composed);
         self.state
             .public_files
             .lock()
