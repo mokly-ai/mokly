@@ -102,7 +102,7 @@ names the normalized repository-relative path.
 `ResolvedConfig::repository_path(&self, value: &str) -> Option<String>` joins
 a config-relative value to the configuration directory, removes the segments
 with the shared `mokly_catalogue::config::normalize`, and returns the
-repository-relative POSIX path. The configuration directory itself is the
+repository-relative POSIX path. The repository root itself is the
 empty string, as in `package_roots()`. The method returns `None` when the
 path leaves `repo_root`. Loading rejects such a configured value, and
 declaration validation rejects such a declared stylesheet. So a consumer that
@@ -302,11 +302,39 @@ The failures before the fix are in
 - [x] After #227 merges, tick items 167, 169, 170, and 182 in
       `plans/rust-rebuild.md`, with the user decisions, their dates, and a
       link to this plan.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 at `b4a288cd` found two Low findings, and the validity check
+    confirmed both. The fix round applies finding 2. Report:
+    `.context/normalize-config-relative-paths/review-1.md`.
+  - 1. Completed plan still lists the fixed renderer item. Severity Low,
+       effort Small. Recommended: D, mark the renderer half of the #227
+       follow-up and its `bundle_inputs.rs` line fixed in
+       `plans/per-entry-render-keys.md`, and replace the preview half with
+       one new open user item for modules that a symbolic link reaches. The
+       review recommended A, and the options check changed it to D.
+  - Outside the scope: `crates/mokly-catalogue/src/config.rs:144` and
+    `crates/mokly-catalogue/src/config_paths.rs:202`. When `repoRoot` goes
+    through a symbolic link, `roots[].dir` is checked against the lexical
+    link path, but the other fields are checked against the link target.
+    Separate branch.
+  - Outside the scope: `crates/mokly-render/src/stylesheets.rs:98-127` and
+    `crates/mokly-render/src/graph.rs:134`. A renderer configured through a
+    symbolic-link directory, such as `link/renderer.tsx`, keeps its link
+    path, but the module graph names its real path. So the renderer gets no
+    stylesheet root, and the build exits 0 without its stylesheet. Probe:
+    `.context/normalize-config-relative-paths/probe-linked-renderer.log`.
+    Separate branch.
+  - Outside the scope: `plans/build-head-capture.md`,
+    `plans/gzip-blob-uploads.md`, `plans/remove-review-json.md`,
+    `plans/batched-base-reads.md`, and `plans/stylesheet-bundle-performance.md`
+    say that their pull requests are open, but they merged. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
+
+The complete gate `cargo xtask check` passed on `b4a288cd`. Its log is
+`.context/normalize-config-relative-paths/gate.log`.
