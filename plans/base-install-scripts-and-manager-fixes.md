@@ -162,6 +162,12 @@ before the code changes. Item 153 text waits for its decision.
 Item 150. The Unix owner of a process tree finds and signals descendants in
 new sessions. Windows keeps its kill-on-close job.
 
+Stopped on 2026-10-28. The Codex delegate hit its usage limit, which resets
+on 2026-11-04, before it finished or committed. Under the coordinator's rule,
+this part waits. Its uncommitted work is in the local worktree branch
+`wt/base-install-150-process-tree` and in
+`.context/base-install-scripts-managers/stopped/item150-c1-partial.patch`.
+
 - [ ] Add failing tests first: a descendant in a new session survives a
       group kill and a terminate-then-kill on the current code.
 - [ ] Enumerate the descendants through parent links on Linux and macOS,
@@ -178,19 +184,23 @@ new sessions. Windows keeps its kill-on-close job.
 
 Items 155 and 158 in `mokly-compare`.
 
-- [ ] Add failing tests first: an install whose arguments do not start with
+- [x] Add failing tests first: an install whose arguments do not start with
       `install` keeps its scripts mode, and pnpm 10 and 11 abort on a tracked
       modules state that needs recreation.
-- [ ] Store the scripts mode on `Command`. Install commands carry the
+- [x] Store the scripts mode on `Command`. Install commands carry the
       effective mode. Version and Node probes carry scripts off.
       `manager_command::variables` reads the field.
-- [ ] Pass `--config.confirm-modules-purge=false` to pnpm 10 and 11 private
+- [x] Pass `--config.confirm-modules-purge=false` to pnpm 10 and 11 private
       installs only.
-- [ ] Prove pnpm 10.34.7, 11.20.0, and 12.14.0 in a Rust integration test with
+- [x] Prove pnpm 10.34.7, 11.20.0, and 12.14.0 in a Rust integration test with
       the pinned development CLIs, with and without `CI=true` in the parent
       environment.
-- [ ] Reword the code comments that say a lifecycle script cannot read an
+- [x] Reword the code comments that say a lifecycle script cannot read an
       inherited secret. A script does not receive it.
+- Commit `723ca0b6`. The Codex delegate stopped on its usage limit before
+  it committed. The orchestrator re-ran the crate tests, clippy, fmt, and the
+  file-length lint, ran the pnpm version matrix, and committed the work
+  unchanged. Matrix: `.context/base-install-scripts-managers/verify/`.
 
 ## Milestone 4: Typed scripts-off diagnostics
 
