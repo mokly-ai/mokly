@@ -303,9 +303,9 @@ This milestone applies decision 174 C.
 
 The READMEs describe the code of Milestones 3 to 5.
 
-- [ ] In the mokly-git README, state that `SystemDisk` resolves canonical
+- [x] In the mokly-git README, state that `SystemDisk` resolves canonical
       identities with `dunce`, and update the Key Code line of `disk.rs`.
-- [ ] In the mokly-compare README, state that the cache location check
+- [x] In the mokly-compare README, state that the cache location check
       compares both paths in one form, and update the Key Code line of
       `locations.rs`.
 - [ ] In the mokly-catalogue README, state that a configured path that

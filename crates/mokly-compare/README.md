@@ -58,7 +58,9 @@ entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
 lease a complete entry without a build, so base preparation can read an
 earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source and dependency namespaces
 under the directory that `SystemLocations` selects, with OS locks for
-namespace mutation and entry leases. The
+namespace mutation and entry leases. When `SystemLocations` checks that the
+cache lies outside the repository, it compares both paths in one form,
+without a Windows verbatim drive or network prefix. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
 location, the byte bounds, the receipts, the leases, and eviction. The CLI
 shares one `OnceReporter` across both namespaces and uses `plain_line` for the
@@ -224,8 +226,9 @@ development dependencies, and no test uses the internet.
 - [`src/extraction.rs`](./src/extraction.rs) defines `Extraction` and
   `CachedExtraction`, the on-demand commit extraction.
 - [`src/cache.rs`](./src/cache.rs) and
-  [`src/locations.rs`](./src/locations.rs) define `DiskCache` and
-  `SystemLocations`, the leased source and dependency caches.
+  [`src/locations.rs`](./src/locations.rs) define `DiskCache`, the leased
+  source and dependency caches, and `SystemLocations`, which selects their
+  directory.
 - [`src/dependencies.rs`](./src/dependencies.rs) and
   [`src/dependency_types.rs`](./src/dependency_types.rs) define
   `Dependencies`, `DependencyTiers`, `Request`, and `Resolved`, the dependency
