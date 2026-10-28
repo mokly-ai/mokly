@@ -205,7 +205,7 @@ fn a_file_that_reaches_its_own_deadline_names_itself() {
     ));
 }
 
-/// A store whose writes fail with a typed error, as a full disk would.
+/// A store whose writes fail as a full disk does: ENOSPC from the OS.
 struct FullDisk;
 
 impl crate::checkout_files::BatchFiles for FullDisk {
@@ -213,9 +213,9 @@ impl crate::checkout_files::BatchFiles for FullDisk {
         Ok(())
     }
     fn write(&mut self, _index: usize, _bytes: &[u8]) -> crate::error::Result<()> {
-        Err(Error::InvalidPath {
-            path: "no space left".into(),
-        })
+        Err(Error::Internal(crate::error::InternalError::Io {
+            source: std::io::Error::from_raw_os_error(28),
+        }))
     }
 }
 
@@ -227,7 +227,7 @@ fn copied(output: &mut (dyn std::io::Write + Send), bytes: &[u8]) -> crate::erro
 }
 
 #[test]
-fn a_failed_store_write_keeps_its_typed_error_in_both_paths() {
+fn a_failed_store_write_keeps_the_os_error_as_its_source_in_both_paths() {
     for entries in [
         vec![entry("a.txt", 'a')],
         vec![entry("a.txt", 'a'), entry("z.txt", 'd')],
@@ -247,7 +247,7 @@ fn a_failed_store_write_keeps_its_typed_error_in_both_paths() {
         ));
         let result = convert_entries(&repository, &commit(), &entries, &mut FullDisk, 1024);
         assert!(
-            matches!(&result, Err(Error::InvalidPath { path }) if path == "no space left"),
+            matches!(&result, Err(Error::Internal(crate::error::InternalError::Io { source })) if source.raw_os_error() == Some(28)),
             "{} files: {result:?}",
             entries.len()
         );

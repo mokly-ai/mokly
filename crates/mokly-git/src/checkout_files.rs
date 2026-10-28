@@ -6,12 +6,6 @@ use std::path::{Path, PathBuf};
 
 use crate::error::{Error, IoResult, Result};
 
-/// A conversion stream destination that keeps the typed failure that stopped it.
-pub(crate) trait Failing: Write + Send {
-    /// The typed failure that stopped the stream, which wins over the copy error.
-    fn failure(&mut self) -> Option<Error>;
-}
-
 /// The converted files of one conversion call, addressed by entry index.
 pub(crate) trait BatchFiles: Send {
     /// Start the file of the entry at `index`, replacing earlier bytes.
@@ -144,6 +138,12 @@ impl<'a> EntryWriter<'a> {
     pub(crate) fn written(&self) -> usize {
         self.written
     }
+
+    /// The typed store failure that stopped the stream, with the real OS
+    /// error as its source; it wins over the copy error.
+    pub(crate) fn failure(&mut self) -> Option<Error> {
+        self.failure.take()
+    }
 }
 
 impl Write for EntryWriter<'_> {
@@ -162,11 +162,5 @@ impl Write for EntryWriter<'_> {
 
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
-    }
-}
-
-impl Failing for EntryWriter<'_> {
-    fn failure(&mut self) -> Option<Error> {
-        self.failure.take()
     }
 }
