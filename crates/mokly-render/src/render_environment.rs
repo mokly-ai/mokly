@@ -1,6 +1,6 @@
 //! Bundle inputs that every render input key of one side shares, without a source root.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
@@ -34,6 +34,8 @@ pub(crate) struct RenderEnvironment {
     pub(crate) resolution_digests: BTreeMap<String, String>,
     /// Stylesheet path to the digest of its class map.
     pub(crate) class_map_digests: BTreeMap<String, String>,
+    /// Package names of the resolved runtime packages.
+    pub(crate) runtime_packages: BTreeSet<String>,
 }
 
 /// Every bundle setting except the source root, the entry lists, and the evaluation.
@@ -73,7 +75,21 @@ pub(crate) fn derive(
         environment: json_digest(&settings)?,
         resolution_digests,
         class_map_digests,
+        runtime_packages: compiled
+            .map(|compiled| compiled.peers.keys().map(|peer| package(peer)).collect())
+            .unwrap_or_default(),
     })
+}
+
+/// The package of a runtime package specifier, such as `@emotion/server` for
+/// `@emotion/server/create-instance`.
+fn package(specifier: &str) -> String {
+    let segments = if specifier.starts_with('@') { 2 } else { 1 };
+    specifier
+        .split('/')
+        .take(segments)
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 /// Keep present resolution files under the names that both sides give them.

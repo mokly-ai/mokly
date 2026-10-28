@@ -22,6 +22,7 @@ mod registry_matrix_tests;
 mod render_key_tests;
 mod render_tests;
 mod review_validation_tests;
+mod side_reuse_tests;
 mod slot_order_tests;
 mod source_alias_tests;
 mod supplier_containment_tests;

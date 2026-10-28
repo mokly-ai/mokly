@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: In progress under the [per-entry render keys plan](../../plans/per-entry-render-keys.md).
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and

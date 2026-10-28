@@ -172,6 +172,7 @@ fn finish(
             environment: bundle.render.environment.clone(),
             resolution_digests: bundle.render.resolution_digests.clone(),
             class_map_digests: bundle.render.class_map_digests.clone(),
+            runtime_packages: bundle.render.runtime_packages.clone(),
             resolution_files: bundle
                 .stamp
                 .files

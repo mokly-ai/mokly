@@ -7,13 +7,13 @@ use mokly_sidecar::methods::Call;
 use super::support::Consumer;
 
 /// The render keys fixture, with a dependency that only component C imports.
-fn consumer() -> Consumer {
+pub(super) fn consumer() -> Consumer {
     let consumer = Consumer::fixture("render-keys");
     dependency(&consumer, "1.0.0", "dep-1");
     consumer
 }
 
-fn dependency(consumer: &Consumer, version: &str, value: &str) {
+pub(super) fn dependency(consumer: &Consumer, version: &str, value: &str) {
     consumer.write(
         "specs/node_modules/dep/package.json",
         &format!(r#"{{ "name": "dep", "version": "{version}", "main": "index.js" }}"#),
@@ -56,7 +56,7 @@ fn append(consumer: &Consumer, path: &str, text: &str) {
     consumer.write(path, &format!("{original}{text}"));
 }
 
-fn render_calls(consumer: &Consumer) -> Vec<(String, String)> {
+pub(super) fn render_calls(consumer: &Consumer) -> Vec<(String, String)> {
     consumer
         .pool
         .calls

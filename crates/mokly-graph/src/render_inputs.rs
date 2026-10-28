@@ -67,7 +67,7 @@ impl RenderKeys {
         let shared: Vec<_> = generation
             .resolution_digests
             .iter()
-            .filter(|(name, _)| !chained.contains(name))
+            .filter(|(name, _)| !chained.contains(name) && !runtime_manifest(generation, name))
             .collect();
         let shared = text_digest(&json!([generation.environment, shared]))?;
         let preview = PREVIEWS
@@ -147,6 +147,25 @@ impl RenderKeys {
             .find_map(|module| self.modules.get(module))
             .unwrap_or(&self.fallback)
     }
+}
+
+/// Whether a name is the manifest of a runtime package other than React.
+///
+/// The environment identifies runtime packages by their resolved paths. Only React's
+/// manifest also enters every key, because both sides record it. A side can record the
+/// other manifests while it resolves them, so they count only on a module chain.
+fn runtime_manifest(generation: &JavaScriptGeneration, name: &str) -> bool {
+    name.strip_suffix("/package.json").is_some_and(|directory| {
+        generation
+            .runtime_packages
+            .iter()
+            .filter(|package| package.as_str() != "react")
+            .any(|package| {
+                directory
+                    .strip_suffix(package.as_str())
+                    .is_some_and(|prefix| prefix.ends_with("node_modules/"))
+            })
+    })
 }
 
 /// One digest per module: its path, its ordered imports, and its content value.

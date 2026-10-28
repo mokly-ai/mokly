@@ -73,7 +73,9 @@ inputs changes, and only then:
   manifest, moves every key;
 - the bundle settings, the selected dependency installation, or the
   resolved path of a package that the sidecar loads at render time, such as
-  React. These move every key.
+  React. These move every key. Such a package other than React counts
+  through its path only, and its manifest only on a closure module's
+  directory chain, because only some sides read that manifest.
 
 A render reads only its imports, its props and slots, and its render
 context. A module side effect of one entry module that changes another entry

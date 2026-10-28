@@ -93,6 +93,17 @@ From 2026-10-27 the user's rule is: a decision that comes up during the work
 does not stop it. The recommended option applies, and this section records
 it with its reason.
 
+7. Decision 7 (2026-10-28, found during milestone 5): the manifests of the
+   runtime packages other than React count only on a closure module's
+   directory chain, not in every key. A tier-one base records the manifests
+   of React DOM, Storybook, and Emotion while it resolves them, and the head
+   does not, so every JavaScript key differed between equal sides. Rejected:
+   keep them in every key, because no key would then ever match across
+   sides; and keep only the React manifests among the files on no chain,
+   because a naming gap would then under-invalidate. Reason: decision 2 A
+   already identifies those packages by their resolved paths, and both sides
+   record the React manifest.
+
 ## Corrections And Planning Findings
 
 - The live generation is in `crates/mokly-graph/src/graph.rs:273`, not in
@@ -362,21 +373,27 @@ an edit re-renders only the affected definitions.
 
 Let equal head and base inputs share render cache entries under decision 1.
 
-- [ ] Write a failing test first: a base read of a view that a head read
+- [x] Write a failing test first: a base read of a view that a head read
       cached first does not return the head's closure warnings, and a
       base-only `base-conversion` warning never reaches a later head read.
-- [ ] Cache composed documents without closure warnings in
+      The test is `crates/mokly-graph/tests/side_warning_tests.rs`. It
+      failed before the fix: the head reported the base's warning.
+- [x] Cache composed documents without closure warnings in
       `crates/mokly-graph/src/session_render.rs`, and add each side's
       closure warnings on its own read.
-- [ ] Add an integration test with a base extracted from the same commit: the
+- [x] Add an integration test with a base extracted from the same commit: the
       base keys equal the head keys, a base capture after a head render makes
       no sidecar render call, and an entry that differs renders on the base
-      sidecar with the base generation.
-- [ ] Under decision 2 A, add a test that a base with its own installation
+      sidecar with the base generation. The tests are in
+      `crates/mokly-render/tests/integration/side_reuse_tests.rs`.
+  - Finding: equal sides got different keys, because only the base records
+    the manifests of the runtime packages that it resolves. Decision 7
+    records the fix and its unit test.
+- [x] Under decision 2 A, add a test that a base with its own installation
       gets keys that differ from the head's.
-- [ ] Add the rule that a cached document carries no side-specific warning
+- [x] Add the rule that a cached document carries no side-specific warning
       to `docs/protocol/mokly-runtime.md`, within its 250 lines.
-- [ ] Remove the status line of `docs/protocol/mokly-sidecar.md`.
+- [x] Remove the status line of `docs/protocol/mokly-sidecar.md`.
 
 ## Milestone 6: Measurement and output check
 

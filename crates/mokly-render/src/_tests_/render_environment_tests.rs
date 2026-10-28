@@ -4,7 +4,7 @@ use mokly_sidecar::compiled::CompiledGeneration;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
 
-use super::{ClassMaps, derive, resolution};
+use super::{ClassMaps, derive, package, resolution};
 
 fn params(source_root: &str) -> Bundle {
     Bundle {
@@ -141,4 +141,14 @@ fn resolution_names_drop_the_installed_prefix_previews_and_absent_files() {
             ("package.json".to_owned(), "root".to_owned()),
         ])
     );
+}
+
+#[test]
+fn runtime_package_names_drop_subpaths_and_keep_scopes() {
+    assert_eq!(package("react-dom/server"), "react-dom");
+    assert_eq!(
+        package("@emotion/server/create-instance"),
+        "@emotion/server"
+    );
+    assert_eq!(package("react"), "react");
 }

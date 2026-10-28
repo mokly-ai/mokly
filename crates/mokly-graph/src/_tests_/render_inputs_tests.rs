@@ -244,3 +244,17 @@ fn handles_use_their_entry_module_key_and_unknown_modules_use_the_fallback() {
     assert_eq!(keys.module("specs/h.ts"), &fallback());
     assert_ne!(keys.module(S), keys.module(U));
 }
+
+#[test]
+fn runtime_package_manifests_outside_every_chain_leave_the_keys_but_react_moves_them() {
+    let moved = edit(|f| {
+        f.generation.runtime_packages = BTreeSet::from(["react".into(), "react-dom".into()]);
+        f.resolution("node_modules/react-dom/package.json");
+    });
+    assert_eq!(moved, BTreeSet::new());
+    let react = edit(|f| {
+        f.generation.runtime_packages = BTreeSet::from(["react".into()]);
+        f.resolution("node_modules/react/package.json");
+    });
+    assert_eq!(react, BTreeSet::from(EVERY));
+}
