@@ -430,7 +430,12 @@ in the same commits. Write each failing test first.
       delivered CSS change changes it.
 - [x] Run the `cargo test` suites of `mokly-graph`, `mokly-render`,
       `mokly-cli`, and `mokly-server`.
-- [ ] Commit, push, and wait for CI on PR #228.
+- [x] Commit, push, and wait for CI on PR #228.
+  - CI at `1ba9180a`: every job passed except Repository. It stopped at
+    `npm run dependencies:check:rust` on RUSTSEC-2026-0414 for
+    `pulldown-cmark` 0.13.4, which every branch now gets. The branch
+    `fix/cargo-audit-pulldown-cmark` fixes it. The later repository commands
+    passed locally.
 
 ## Milestone 7: Documentation and protocol, step B
 
