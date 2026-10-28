@@ -82,13 +82,14 @@ async function installedVersion(name) {
 }
 
 /**
- * Copy the example with the repository pages its documents link to, and
- * install the archives, not the workspace links. The copy keeps the
- * repository layout, so the configuration's `repoRoot`, the example's asset
- * outside its catalogue root, and those links resolve as they do here.
+ * Copy the example with the UI package sources its design mockups import by
+ * repository path and the repository pages its documents link to, and install
+ * the archives, not the workspace links. The copy keeps the repository layout,
+ * so the configuration's `repoRoot`, the example's asset outside its catalogue
+ * root, and those imports and links resolve as they do here.
  */
 async function install(consumer, packages) {
-  for (const directory of ["examples", "docs", "plans"])
+  for (const directory of ["examples", "packages/ui/src", "docs", "plans"])
     await fs.cp(
       path.join(repositoryRoot, directory),
       path.join(consumer, directory),

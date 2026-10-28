@@ -70,9 +70,11 @@ From the repository root, `npm run build` builds this package before the
 viewer. `npm run typecheck` includes it. Tests live under `tests/` and run with
 `npm test -- packages/ui/tests/<file>`. A test that mounts a component imports
 `tests/dom.ts` first, which registers a happy-dom window for Testing Library.
-File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`; a lint
-holds the rule. A component imports only `react`, `react-dom`, and the other
-components of this package by relative path; a lint holds that rule too.
+File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`. A lint
+checks the rule only for the JavaScript and TypeScript files under `src/` and
+`tests/` and for the directories that hold them. A component imports only
+`react`, `react-dom`, and the other components of this package by relative path;
+a lint holds that rule too.
 
 The design library under `examples/basic/specs/design/library` imports the
 appearance selector and the comparison toolbar, with their stylesheets, from

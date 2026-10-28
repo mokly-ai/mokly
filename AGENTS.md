@@ -115,8 +115,9 @@ the rule. Rules for one application, package, or feature live in the
 - No test asserts the words of a protocol page. Tests check the code against
   its own behaviour. Guide tests compare parsed guide tables with the code.
 - Files under `packages/ui` use kebab-case names, such as `top-bar.tsx`,
-  which exports `TopBar`. A lint holds the rule. The other packages keep
-  snake_case.
+  which exports `TopBar`. A lint checks the rule only for the JavaScript and
+  TypeScript files under `packages/ui/src` and `packages/ui/tests` and for the
+  directories that hold them. The other packages keep snake_case.
 
 ## Product
 

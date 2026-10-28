@@ -3,10 +3,11 @@
 `npm run package:smoke` builds first, then packs `@mokly/ui`, `@mokly/viewer`,
 `@mokly/mokly`, and the host's native package with `npm pack`, so the real
 `prepack` builds run. It installs the four archives into a scratch consumer
-outside the repository. The consumer holds a copy of `examples/`, with the
-`docs/` and `plans/` pages that the example's documents link to, in the
-repository layout. It also holds the example's own dependencies at the versions
-that the workspace installed.
+outside the repository. The consumer holds a copy of `examples/` and
+`packages/ui/src/`, with the `docs/` and `plans/` pages that the example's
+documents link to, in the repository layout. It needs the UI package sources
+because the design mockups import them by repository path. It also holds the
+example's own dependencies at the versions that the workspace installed.
 
 The smoke proves three things:
 
