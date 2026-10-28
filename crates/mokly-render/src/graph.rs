@@ -11,6 +11,8 @@ use mokly_graph::delivery_inputs::DeliveryInputs;
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
+use mokly_graph::key::NodeKey;
+use mokly_graph::render_inputs::{RenderInputs, RenderKeys};
 use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
@@ -130,8 +132,44 @@ impl JavaScriptGraph {
                 )
                 .as_bytes(),
             );
+            let renderer = config.input.renderer.as_ref().map(|renderer| {
+                relative(
+                    &config
+                        .file
+                        .parent()
+                        .unwrap_or(&config.repo_root)
+                        .join(renderer),
+                    &config.repo_root,
+                )
+            });
+            let declaring: BTreeMap<_, _> = catalogue
+                .model
+                .entries
+                .iter()
+                .filter_map(|entry| {
+                    let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
+                    Some((source.handle.clone(), entry.metadata.source.path.clone()))
+                })
+                .collect();
+            let keys = match RenderKeys::build(
+                &RenderInputs {
+                    generation,
+                    bindings: &catalogue.javascript.bindings,
+                    renderer: renderer.as_deref(),
+                    entries: &catalogue.javascript.entries,
+                    declarations: &declaring,
+                },
+                NodeKey(fingerprint),
+            ) {
+                Ok(keys) => Arc::new(keys),
+                Err(source) => {
+                    return Err(RenderError::Graph {
+                        source: Box::new(source),
+                    });
+                }
+            };
             fragments = Arc::new(MemoFragments::new(
-                fingerprint.clone(),
+                keys.clone(),
                 Arc::new(Fragments {
                     pool: self.runtime.pool.clone(),
                     generation: generation.id.clone(),
@@ -156,20 +194,10 @@ impl JavaScriptGraph {
                 })
                 .collect();
             let modules: Vec<_> = entry_modules.values().cloned().collect();
-            let renderer = config.input.renderer.as_ref().map(|renderer| {
-                relative(
-                    &config
-                        .file
-                        .parent()
-                        .unwrap_or(&config.repo_root)
-                        .join(renderer),
-                    &config.repo_root,
-                )
-            });
             inputs = DeliveryInputs {
                 resources: self.runtime.resources.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
-                fragment_generation: Some(fingerprint),
+                render_keys: Some(keys),
                 stylesheet_roots: stylesheets::roots(
                     &generation.modules,
                     renderer.as_deref(),

@@ -5,7 +5,9 @@ use mokly_catalogue::diagnostic::Warning;
 /// Captured by a document backend before any of its renders start.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWarningsMock))]
 pub trait RenderWarnings: Send + Sync {
-    /// Deliver retained warnings before returning a render result or failure.
+    /// Deliver a render's retained warnings, also on failure. Saved and temporary renders
+    /// deliver them before they return; the usage pass delivers a background render's
+    /// warnings after it returns, in catalogue order.
     fn report(&self, warnings: &[Warning], failed: bool);
 }
 

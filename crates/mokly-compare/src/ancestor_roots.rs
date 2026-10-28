@@ -16,6 +16,22 @@ pub fn directories(configuration_directory: &str) -> Vec<String> {
         })
 }
 
+/// Repository-relative package roots of one side: the configuration ancestors in Node's
+/// order, then each configured root that no ancestor already names. Head and base
+/// sides use this one rule, so equal configurations select equal roots.
+pub fn package_roots(
+    configuration_directory: &str,
+    configured: impl IntoIterator<Item = String>,
+) -> Vec<String> {
+    let mut roots = directories(configuration_directory);
+    for root in configured {
+        if !roots.contains(&root) {
+            roots.push(root);
+        }
+    }
+    roots
+}
+
 /// Logical graph prefix for one canonical selected dependency directory.
 pub fn logical(index: usize) -> String {
     if index == 0 {

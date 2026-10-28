@@ -45,8 +45,10 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache is bounded at 256 MiB. Serve reads the head from it. Changes
-captures the base within 256 MiB. Base capture misses use the pinned source.
+The render cache is bounded at 256 MiB. Both sides read it, and equal keys
+share one entry, which holds no warning of the side that read it. Serve reads
+the head from it. Changes captures the base within 256 MiB. Base capture
+misses use the pinned source.
 `build` and `publish` capture the head once during the build check, within their
 own 256 MiB bound. Changes, the output, and the comparison output read that
 capture. An evicted head document renders again on the head root.
@@ -68,9 +70,9 @@ deleting it is safe. No cache is in the repository.
 the port, and publishes its first state with `revision` `1`. The listening
 URL is reported only after validation passes. Before readiness, Serve
 renders no document. Documents render on first request under the
-[on-demand contract](./mokly-on-demand.md); the other views, the usage of
-every entry detail, and Changes follow in background work. Serve publishes changed
-state as a new revision under the
+[on-demand contract](./mokly-on-demand.md); the other views render in bounded
+background batches that fill the usage of every entry detail, and Changes
+follows. Serve publishes changed state as a new revision under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve). Serve
 watches the sources by default under the [watch contract](./mokly-watch.md);
 `--no-watch` serves one snapshot and computes the background evidence once.
