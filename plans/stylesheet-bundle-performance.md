@@ -554,11 +554,24 @@ Evidence: `.context/perf5-step-b/baseline-integration.log`.
 
 ## Milestone 10: Measurement, step B
 
-- [ ] Measure with the shared method: cold and warm serve, the edit run, and
+- [x] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Add an edit to one stylesheet. Check the acceptance:
       the rebuild after the JavaScript edit and the Changes classification
       have no `css.bundle` span, and the stylesheet edit bundles only the
       roots that import it. Add one line for each catalogue below.
+  - `examples/basic` against `3f44d8cc`: the rebuild after the JavaScript
+    edit made 0 `css.bundle` spans, against 2. Changes made 0 head-side
+    bundles, against 36 in every run. The stylesheet edit bundled its 4
+    importing roots, each with `stamp-mismatch`.
+  - `examples/basic` against `9ce75853`, after perf 4 merged: the rebuild
+    after the JavaScript edit made 0 spans, against 38, and its
+    `watch.action` took 2.54 s, against 4.04 s. The stylesheet edit made 4
+    spans, against 38. The output check found no byte difference.
+  - React fixture: no change. Its 12 roots fit in the bound on both sides.
+  - The base side still bundles its 39 roots in each classification,
+    because its runtime is new for each classification (perf 6).
+
+Evidence: `.context/perf5-step-b/step-b-measurements.md`.
 
 ## Milestone 11: Verification, commit, review, and pull request, step B
 
