@@ -51,6 +51,7 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
         .unwrap();
     assert_eq!(response.status(), 200);
     let current = harness.wait_revision(2).await;
+    assert!(String::from_utf8_lossy(&stream.chunk().await.unwrap().unwrap()).contains("id: 2\n"));
     assert_eq!(current.index.revision, 2);
     assert!(matches!(
         current.details["home"].views[0].usage,

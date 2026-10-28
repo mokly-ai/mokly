@@ -1,8 +1,7 @@
 /**
  * One comparison publishes the same records in a static build and in Serve:
  * the index's base commit, each compared entry's comparison facts, and the
- * removed entries' details in two-space JSON, byte for byte apart from the
- * name of the generation that holds them.
+ * removed entries' details in two-space JSON, byte for byte.
  */
 
 import assert from "node:assert/strict";
@@ -85,22 +84,13 @@ test(
         Object.keys(live.removed).sort(),
         built.index.removedEntries.map(({ entry }) => entry.path).sort(),
       );
-      const generation = (url: string | null) => url!.split("/").at(-2)!;
       for (const [entry, text] of Object.entries(live.removed)) {
         const file: string = await fs.readFile(
           path.join(built.output, comparison, "entries", `${entry}.json`),
           "utf8",
         );
         assert.ok(file.startsWith('{\n  "'), file.slice(0, 40));
-        // Serve's classification generation holds no snapshot, so only its name differs.
-        assert.equal(
-          text.replace(
-            generation(live.index.comparisonUrl),
-            generation(comparison),
-          ),
-          file,
-          entry,
-        );
+        assert.equal(text, file, entry);
       }
     } finally {
       await fs.rm(root, { recursive: true, force: true });

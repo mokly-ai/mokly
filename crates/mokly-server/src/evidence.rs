@@ -4,13 +4,12 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
-use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
 
-use crate::detail_encoding::DetailEncoder;
+use crate::detail_encoding::{DetailEncoder, detail_id};
 use crate::error::Result;
 use crate::revision::RevisionLease;
 use crate::snapshot::{Snapshot, checked_index};
@@ -115,8 +114,7 @@ pub(crate) fn complete(
     for path in &dirty {
         if let Some(detail) = next.details.get_mut(path) {
             let detail = Arc::make_mut(detail);
-            detail.detail_id = canonical::detail_id(detail)
-                .map_err(|source| crate::error::InternalError::Model { source })?;
+            detail.detail_id = detail_id(detail)?;
             mokly_model::projection::set_detail_id(&mut next.index, path, &detail.detail_id);
             detail.revision = Some(revision);
         }

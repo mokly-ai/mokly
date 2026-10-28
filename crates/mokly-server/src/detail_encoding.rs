@@ -1,5 +1,6 @@
 //! Validation and encoding boundary for changed detail payloads.
 
+use mokly_model::canonical;
 use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::usage_schemas::UsageSchemas;
@@ -7,6 +8,13 @@ use mokly_model::usage_schemas::UsageSchemas;
 use crate::error::{InternalError, Result};
 use crate::revision_file::RevisionFile;
 use crate::snapshot::encode;
+
+pub(crate) fn detail_id(detail: &EntryDetailV3) -> Result<String> {
+    match canonical::detail_id(detail) {
+        Ok(id) => Ok(id),
+        Err(source) => Err(InternalError::Model { source }.into()),
+    }
+}
 
 #[cfg_attr(test, unimock::unimock(api = DetailEncoderMock))]
 pub(crate) trait DetailEncoder: Send + Sync {

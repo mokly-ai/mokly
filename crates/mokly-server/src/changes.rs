@@ -7,7 +7,6 @@ use std::time::Duration;
 
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed};
-use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication};
 use mokly_model::public_metadata::ChangesStatus;
@@ -19,7 +18,7 @@ use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
 use crate::comparison_metadata::compared;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::{DetailEncoder, ValidatedDetails, detail_id};
 use crate::error::{InternalError, Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
@@ -188,8 +187,7 @@ pub(crate) fn project(
     changes_detail::apply(&mut next)?;
     for (path, detail) in &mut next.details {
         let detail = Arc::make_mut(detail);
-        detail.detail_id =
-            canonical::detail_id(detail).map_err(|source| InternalError::Model { source })?;
+        detail.detail_id = detail_id(detail)?;
         projection::set_detail_id(&mut next.index, path, &detail.detail_id);
         detail.revision = Some(next.index.revision);
     }

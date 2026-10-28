@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { readDeploymentFile } from "../src/catalogue/deployment_reader.js";
 import type { EntryDetailV3 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import { viewerComparisonEnvironment } from "../src/viewer/environment.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
 import {
   DeliveryFetchError,
@@ -240,4 +241,27 @@ test("an embedded detail source may answer with an object, a URL or a promise", 
   assert.equal(deployments, 1);
   assert.equal(failures, 1);
   assert.equal(source.live, undefined);
+});
+
+test("an embedded object index does not request the deployment file", () => {
+  const index = indexFixture();
+  const source = embeddedDataSource(
+    index,
+    { index, root: new URL(`${ORIGIN}/`) },
+    () => detailFixture({ path: "guide" }),
+    { deploymentChanged() {}, detailFailed() {} },
+  );
+  assert.equal(source.loadDeployment, undefined);
+});
+
+test("an embedded object index does not check deployment before comparison", () => {
+  const index = indexFixture();
+  const environment = viewerComparisonEnvironment(
+    { index, root: new URL(`${ORIGIN}/`) },
+    undefined,
+    undefined,
+    () => {},
+    false,
+  );
+  assert.equal(environment.deploymentCheck, undefined);
 });

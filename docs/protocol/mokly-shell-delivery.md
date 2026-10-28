@@ -148,9 +148,11 @@ details arrive. It does not request the deployment file on the first load. On
 navigation inside the shell it commits the route from the index at once and
 fetches the destination's details. A static catalogue requests
 `mokly-viewer/deployment.json` with each detail request from that in-shell
-navigation, and before it opens a comparison or a removed entry. It uses the
-catalogue origin root in both standalone and embedded hosts. An unreadable or
-missing deployment file changes nothing.
+navigation, and before it opens a comparison or a removed entry. An embedded
+viewer makes this request when it fetched the index from a URL. An object index
+does not request the file. The standalone shell keeps the check for static
+catalogues. Each check uses the catalogue origin root. An unreadable or missing
+deployment file changes nothing.
 
 The separate deployment file checks old static tabs, so unchanged details keep
 their bytes across deployments. The rejected record-and-detail id misses

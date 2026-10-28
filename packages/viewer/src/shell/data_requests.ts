@@ -101,22 +101,26 @@ export async function loadFencedDetail(
   signal: AbortSignal,
   deployment?: Promise<DeploymentFileV1 | undefined>,
 ): Promise<DetailOutcome> {
+  const deploymentResult = deployment?.catch(() => undefined);
+  const outcome = await loadDetailPair(source, index, request, signal);
+  if (outcome.kind === "accepted" || outcome.kind === "deployment")
+    return outcome;
+  const deploymentFile = await deploymentResult;
+  return deploymentFile !== undefined &&
+    deploymentFile.deploymentId !== index.deploymentId
+    ? { kind: "deployment" }
+    : outcome;
+}
+
+/** Read and fence a pair independently of the optional deployment check. */
+async function loadDetailPair(
+  source: ShellDataSource,
+  index: CatalogueReadModel,
+  request: DetailRequest,
+  signal: AbortSignal,
+): Promise<DetailOutcome> {
   try {
-    const [detailResult, deploymentResult] = await Promise.allSettled([
-      source.loadDetail(request, index, signal),
-      deployment ?? Promise.resolve(undefined),
-    ]);
-    const deploymentFile =
-      deploymentResult.status === "fulfilled"
-        ? deploymentResult.value
-        : undefined;
-    if (
-      deploymentFile !== undefined &&
-      deploymentFile.deploymentId !== index.deploymentId
-    )
-      return { kind: "deployment" };
-    if (detailResult.status === "rejected") throw detailResult.reason;
-    const detail = detailResult.value;
+    const detail = await source.loadDetail(request, index, signal);
     let fence = fenceDetail(index, request, detail);
     let installed = index;
     if (fence.kind === "revision") {

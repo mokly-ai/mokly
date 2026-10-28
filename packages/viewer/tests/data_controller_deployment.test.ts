@@ -7,6 +7,28 @@ import { flush } from "./data_fakes.js";
 
 const HOME = "product/browse/home";
 
+test("an accepted detail does not wait for deployment readiness", async () => {
+  const fixture = controllerFixture(indexFixture(), { static: true });
+  fixture.navigate("/view/guide/");
+  fixture.source.detail("guide").resolve(detailFixture({ path: "guide" }));
+  await flush();
+  assert.equal(fixture.commits.length, 1);
+});
+
+test("an accepted detail installs while deployment readiness is pending", async () => {
+  const fixture = controllerFixture(indexFixture(), { static: true });
+  fixture.navigate("/view/guide/");
+  fixture.source.detail("guide").resolve(detailFixture({ path: "guide" }));
+  await flush();
+  fixture.navigate("/view/tour/");
+  fixture.source.detail("tour").resolve(detailFixture({ path: "tour" }));
+  fixture.source.detail(HOME).resolve(detailFixture({ path: HOME }));
+  await flush();
+  assert.equal(fixture.commits.length, 3);
+  assert.equal(fixture.source.deployments.length, 1);
+  assert.equal(fixture.source.deployment().signal.aborted, false);
+});
+
 test("a use-case step click keeps its deployment check", async () => {
   const fixture = controllerFixture(indexFixture(), { static: true });
   fixture.navigate("/view/guide/");

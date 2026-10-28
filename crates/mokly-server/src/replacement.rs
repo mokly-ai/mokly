@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_model::canonical;
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
 use mokly_model::public_detail::EntryDetailV3;
@@ -12,7 +11,7 @@ use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
 
-use crate::detail_encoding::DetailEncoder;
+use crate::detail_encoding::{DetailEncoder, detail_id};
 use crate::error::Result;
 use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
@@ -84,13 +83,11 @@ pub(crate) fn encode_details(
             detail.detail_id = old.detail_id.clone();
             if detail != old.as_ref() {
                 detail.revision = Some(index.revision);
-                detail.detail_id = canonical::detail_id(detail)
-                    .map_err(|source| crate::error::InternalError::Model { source })?;
+                detail.detail_id = detail_id(detail)?;
             }
         } else {
             detail.revision = Some(index.revision);
-            detail.detail_id = canonical::detail_id(detail)
-                .map_err(|source| crate::error::InternalError::Model { source })?;
+            detail.detail_id = detail_id(detail)?;
         }
         mokly_model::projection::set_detail_id(index, path, &detail.detail_id);
     }

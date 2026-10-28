@@ -40,6 +40,7 @@ export function viewerComparisonEnvironment(
   reportError?: (error: unknown) => void,
   scrollTogether?: ScrollTogetherPreference,
   deploymentChanged?: () => void,
+  checkDeployment = true,
 ): ComparisonEnvironment {
   return {
     baseUrl: loaded.root,
@@ -48,7 +49,7 @@ export function viewerComparisonEnvironment(
       comparisonUrl: loaded.index.comparisonUrl,
     }),
     fetch: (input, init) => fetch(input, init),
-    ...(deploymentChanged && loaded.index.live === undefined
+    ...(checkDeployment && deploymentChanged && loaded.index.live === undefined
       ? {
           deploymentCheck: deploymentCheck(
             loaded.root,

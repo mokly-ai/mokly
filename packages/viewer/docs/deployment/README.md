@@ -37,9 +37,11 @@ define the complete path, header, sandbox, and CSP requirements.
   is immutable at its content-addressed path. A deployment file with another
   `deploymentId`, or a detail whose `detailId` is not listed by the index, makes
   the embedded viewer emit one `onError` and the standalone shell reload the
-  page. A static viewer checks the deployment file with each detail request of
-  an in-shell navigation and before comparison or removed-entry requests. It
-  does not request the file on the first load. A missing or unreadable file
+  page. An embedded viewer checks the deployment file only when it fetched the
+  index from a URL. It checks with each detail request of an in-shell navigation
+  and before comparison or removed-entry requests. An object index does not
+  request the file. The standalone shell keeps the check for static catalogues.
+  It does not request the file on the first load. A missing or unreadable file
   changes nothing.
 - **Content Security Policy:** removed previews and comparison panes render in
   viewer-owned, script-disabled `srcdoc` frames. A restrictive policy must

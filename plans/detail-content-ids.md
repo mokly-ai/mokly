@@ -355,27 +355,31 @@ deployment file answered 400 ms late. Evidence:
 
 - [x] Record the answers: finding 6 C, 7 E, 8 D, 9 A, 10 B, and 11 A, and
       decision 12 B.
-- [ ] CI failure: install a detail that arrives without waiting for the
+- [x] CI failure: install a detail that arrives without waiting for the
       deployment check, which still runs before a failure is reported. Add the
       failing controller test first. Make the browser test wait for an
       explicit readiness signal before it highlights. Record the pass counts.
-- [ ] Finding 6, C: one table-driven version-gate test for the index,
+      Evidence: `.context/deployment-id-detail-ids/ci-flake-delay-after.log`,
+      `ci-flake-normal-after.log`, and `review/fix-2-checks.log`.
+- [x] Finding 6, C: one table-driven version-gate test for the index,
       deployment file, detail, and live readers.
-- [ ] Finding 7, E: the step-first browser test answers the deployment file
+- [x] Finding 7, E: the step-first browser test answers the deployment file
       with 404, checks the loading stage and the alert again, and checks that
       the page load starts only after the held detail is released.
-- [ ] Finding 8, D: the shared Serve readiness helpers check that each served
+- [x] Finding 8, D: the shared Serve readiness helpers check that each served
       detail's `detailId` equals its index record. The Changes spec checks the
       removed entry.
-- [ ] Finding 9, A: restore the `id: 2` event-stream assertion.
-- [ ] Finding 10, B: one detail id helper in each crate, with no `map_err`.
-- [ ] Finding 11, A: compare the exact bytes in
+- [x] Finding 9, A: restore the `id: 2` event-stream assertion.
+- [x] Finding 10, B: one detail id helper in each crate, with no `map_err`.
+- [x] Finding 11, A: compare the exact bytes in
       `tests/comparison_record_bytes.test.ts`.
-- [ ] Decision 12, B: the viewer, its tests, and the shell delivery, viewer,
+- [x] Decision 12, B: the viewer, its tests, and the shell delivery, viewer,
       and viewer README docs.
 - [ ] After #223 merges, merge `origin/main` under the `git-merge` skill. Keep
       entry detail v3 and `EntryDetailV3` with both shapes, under decision 3.
-- [ ] Run the targeted tests and the complete gate, push, and wait for CI.
+- [x] Run the targeted tests and the complete gate, then commit and push.
+      Remote CI wait is outside this stop boundary.
+      Evidence: `.context/deployment-id-detail-ids/review/fix-2-checks.log`.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -137,7 +137,10 @@ function MountedViewer(
           report(error, "comparison");
         },
         props.scrollTogether,
-        () => report(replacedDeployment, "catalogue"),
+        typeof props.index === "string" || props.index instanceof URL
+          ? () => report(replacedDeployment, "catalogue")
+          : undefined,
+        typeof props.index === "string" || props.index instanceof URL,
       ),
     [props.loaded, props.scrollTogether, report],
   );

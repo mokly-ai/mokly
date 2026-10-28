@@ -127,6 +127,10 @@ async function settledRevision(
       detail.views.some((view) => view.usage.status === "pending")
     )
       return undefined;
+    const record = [...index.screens, ...index.components].find(
+      (candidate) => candidate.path === entry.path,
+    );
+    if (detail.detailId !== record?.detailId) return undefined;
   }
   return index.revision;
 }

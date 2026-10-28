@@ -82,8 +82,7 @@ fn finalize(
         .map(|file| (file.path.clone(), digest(&file.bytes)))
         .collect();
     for (path, detail) in details.iter_mut() {
-        detail.detail_id = canonical::detail_id(detail)
-            .map_err(|source| crate::error::InternalError::Model { source })?;
+        detail.detail_id = identity::detail_id(detail)?;
         hashes.push((
             format!("entries/{path}.json"),
             digest(&identity::json(detail)?),

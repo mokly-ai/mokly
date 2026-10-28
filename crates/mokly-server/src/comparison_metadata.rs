@@ -4,10 +4,11 @@ use std::collections::BTreeMap;
 
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::public_index::CatalogueReadModel;
-use mokly_model::{canonical, readers, routes};
+use mokly_model::{readers, routes};
 
 use crate::assets::File;
 use crate::changes::Accepted;
+use crate::detail_encoding::detail_id;
 use crate::error::{InternalError, Result, ServerError};
 use crate::snapshot::{Snapshot, encode};
 
@@ -43,8 +44,7 @@ pub(crate) fn detail_ids(
     details
         .into_iter()
         .map(|(path, detail)| {
-            let id = canonical::detail_id(&detail)
-                .map_err(|source| crate::error::InternalError::Model { source })?;
+            let id = detail_id(&detail)?;
             Ok((path, id))
         })
         .collect()
@@ -60,8 +60,7 @@ fn detail_map(
     projection_removed::workspaces(&mut details);
     compared(projection_workspace::apply(&mut details, result))?;
     for detail in details.values_mut() {
-        detail.detail_id = canonical::detail_id(detail)
-            .map_err(|source| crate::error::InternalError::Model { source })?;
+        detail.detail_id = detail_id(detail)?;
     }
     Ok(details)
 }

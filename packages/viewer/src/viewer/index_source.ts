@@ -113,7 +113,7 @@ export function embeddedDataSource(
     },
     deploymentChanged: () => events.deploymentChanged(),
     detailFailed: () => events.detailFailed(),
-    ...(loaded.index.live === undefined
+    ...(!isObjectSource(source) && loaded.index.live === undefined
       ? {
           loadDeployment: (signal: AbortSignal) =>
             loadDeploymentFile(loaded.root, signal),

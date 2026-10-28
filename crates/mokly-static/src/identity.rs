@@ -20,6 +20,13 @@ pub(crate) fn json<T: Serialize>(value: &T) -> Result<Vec<u8>> {
     }
 }
 
+pub(crate) fn detail_id(detail: &EntryDetailV3) -> Result<String> {
+    match canonical::detail_id(detail) {
+        Ok(id) => Ok(id),
+        Err(source) => Err(InternalError::Model { source }.into()),
+    }
+}
+
 /// Stamp one deterministic identity before ownership or publication metadata is added.
 pub fn finalize(
     index: &mut CatalogueReadModel,
@@ -27,8 +34,7 @@ pub fn finalize(
     other: &[File],
 ) -> Result<Vec<File>> {
     for detail in details.values_mut() {
-        detail.detail_id =
-            canonical::detail_id(detail).map_err(|source| InternalError::Model { source })?;
+        detail.detail_id = detail_id(detail)?;
     }
     projection::set_detail_ids(index, details);
     index.deployment_id = "0".repeat(64);

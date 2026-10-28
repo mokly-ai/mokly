@@ -133,7 +133,9 @@ fetch rules of the shell delivery contract: same origin, `credentials: "omit"`,
 no redirect outside the origin. A static viewer also reads
 `mokly-viewer/deployment.json` at the catalogue origin root with each detail
 request of an in-shell navigation and before a comparison or removed-entry
-request. It does not request the file on the first load.
+request when it fetched the index from a URL. An object index does not request
+the file. It does not request the file on the first load. The standalone shell
+keeps the same check for static catalogues.
 The viewer accepts a current detail only when its `revision`, then its
 `detailId`, then its identity and content fields match the installed index. It
 accepts a removed detail only when its identity, path record, `snapshotId`, and

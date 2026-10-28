@@ -68,14 +68,14 @@ pub fn deployment(text: &str) -> Result<DeploymentFileV1, ReadError> {
     Ok(deployment)
 }
 
-/// Decode an entry detail after its v2 gate.
+/// Decode an entry detail after its version gate.
 pub fn detail(text: &str) -> Result<EntryDetailV3, ReadError> {
     let detail: EntryDetailV3 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
     detail_validation::validate(&detail)?;
     Ok(detail)
 }
 
-/// Decode a live descriptor after its v3 gate.
+/// Decode a live descriptor after its version gate.
 pub fn live(text: &str) -> Result<LiveDescriptorV3, ReadError> {
     let live: LiveDescriptorV3 = decode(text, "live descriptor", versions::LIVE_DESCRIPTOR)?;
     if live.render.url != format!("/{}", namespace::viewer("components/render"))

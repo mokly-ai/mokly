@@ -29,6 +29,10 @@ export async function exampleReady(
           detail.views.some((view) => view.usage.status === "pending")
         )
           ready = false;
+        const record = [...index.screens, ...index.components].find(
+          (candidate) => candidate.path === entry.path,
+        );
+        if (detail.detailId !== record?.detailId) ready = false;
       }
       if (ready) {
         if (index.changesStatus !== "unavailable")

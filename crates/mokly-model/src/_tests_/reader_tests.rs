@@ -1,24 +1,56 @@
 //! Version gates must run before any current-format payload decoding.
 
 use crate::readers::{ReadError, deployment, detail, index, live};
+use crate::versions;
 
 #[test]
 fn all_versioned_boundaries_reject_versions_before_payloads() {
-    for version in [0, 1, 2, 6, 7, 8, 999] {
-        let text =
-            format!(r#"{{"schemaVersion":{version},"identity":false,"entry":42,"render":null}}"#);
-        if version != 8 {
-            assert!(matches!(index(&text), Err(ReadError::Version { .. })));
-        }
-        if version != 2 {
-            assert!(matches!(detail(&text), Err(ReadError::Version { .. })));
-        }
-        if version != 3 {
-            assert!(matches!(live(&text), Err(ReadError::Version { .. })));
-        }
+    enum Reader {
+        Index,
+        Deployment,
+        Detail,
+        Live,
     }
-    for text in ["{}", r#"{"schemaVersion":"8"}"#, r#"{"schemaVersion":8.0}"#] {
-        assert!(matches!(index(text), Err(ReadError::Version { .. })));
+    let readers = [
+        ("catalogue index", versions::CATALOGUE_INDEX, Reader::Index),
+        (
+            "deployment file",
+            versions::DEPLOYMENT_FILE,
+            Reader::Deployment,
+        ),
+        ("entry detail", versions::ENTRY_DETAIL, Reader::Detail),
+        ("live descriptor", versions::LIVE_DESCRIPTOR, Reader::Live),
+    ];
+    for (boundary, expected, reader) in readers {
+        for version in (0..expected).chain([expected + 1, 999]) {
+            let text = format!(
+                r#"{{"schemaVersion":{version},"identity":false,"entry":42,"render":null}}"#
+            );
+            let error = match reader {
+                Reader::Index => index(&text).map(|_| ()),
+                Reader::Deployment => deployment(&text).map(|_| ()),
+                Reader::Detail => detail(&text).map(|_| ()),
+                Reader::Live => live(&text).map(|_| ()),
+            };
+            assert!(matches!(
+                error,
+                Err(ReadError::Version { boundary: actual, expected: found, .. })
+                    if actual == boundary && found == expected
+            ));
+        }
+        for text in [
+            r#"{}"#,
+            r#"{"schemaVersion":"8"}"#,
+            r#"{"schemaVersion":8.0}"#,
+        ] {
+            let error = match reader {
+                Reader::Index => index(text).map(|_| ()),
+                Reader::Deployment => deployment(text).map(|_| ()),
+                Reader::Detail => detail(text).map(|_| ()),
+                Reader::Live => live(text).map(|_| ()),
+            };
+            assert!(matches!(error, Err(ReadError::Version { .. })));
+        }
     }
 }
 

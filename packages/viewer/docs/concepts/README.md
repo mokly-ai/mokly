@@ -15,11 +15,12 @@ record carries the detail's content `detailId`.
 | `index`  | A `CatalogueReadModel` object                           | Requires `baseUrl`, the origin root of the catalogue files                          |
 | `detail` | `(entryPath, snapshotId?) => detail, URL, or a promise` | Called once per entry the viewer does not hold; a URL must be on the origin root    |
 
-The viewer validates the index and each detail before it reads a field. A
-static catalogue also checks `mokly-viewer/deployment.json` at the catalogue
-origin root with each detail request of an in-shell navigation and before a
-comparison or removed-entry request. It does not request the file on the first
-load or from Serve. A missing or unreadable file changes nothing. It
+The viewer validates the index and each detail before it reads a field. An
+embedded viewer checks `mokly-viewer/deployment.json` only when its index came
+from a URL. It checks with each detail request of an in-shell navigation and
+before a comparison or removed-entry request. An object index does not request
+the file. The standalone shell keeps the same check for static catalogues. A
+missing or unreadable file changes nothing. It
 fetches a URL with a plain GET, `credentials: "omit"`, and no custom header, and
 it rejects a redirect outside the origin. When another deployment replaces the
 files, the viewer emits one `onError` and keeps its state. A React host
