@@ -2,8 +2,8 @@
 
 Status: Active. On branch
 `conductor/rust-rebuild-87-diagnostics-and-html-messages`, no pull request
-yet. The plan closes when its PR merges. The implementation waits for the
-open decisions below.
+yet. The plan closes when its PR merges. Items 1 and 128 wait for Cal, so
+Milestone 4 waits. All other milestones are in progress.
 
 The Rust rebuild plan keeps post-merge follow-ups about HTML diagnostics and
 warning text: user items 87, 138, and 128, the source offset maps, and six
@@ -25,11 +25,37 @@ Decisions recorded before this plan:
 - User decision 138 (2026-10-21): A, as work after the merge. The check on
   2026-10-28 found that the record's premise is out of date. `renderPage`
   already returns `warnings`, and the core removes the attributes itself.
-  Option C below reaches A's result without a wire change. Cal must confirm C.
+  Option C reaches A's result without a wire change.
 - User decision on the source offset maps (2026-10-28): C, the offset maps
   on a separate branch after PR #239. This branch is that branch.
 - Re-review finding 2 of the 2026-10-28 implementation review: the
   coordinator chose A on 2026-10-28. The last milestone records it.
+
+The coordinator's answers of 2026-10-28, after an independent review of the
+eight items at `origin/main` `c9d402cd` and at `7edaa44e`:
+
+- Finding 2: A. Also add one protocol sentence for the rule in force:
+  callback output fails on every duplicate attribute. Rejected: B, which
+  removes that failure.
+- Finding 3: A. The offset maps cover CR and CRLF line ends, which html5gum
+  turns into LF.
+- Finding 4: A. Delete the implementation sentence. Rejected: B, a new
+  sentence that repeats the one before it.
+- Finding 5: A. Delete the orphan comment. Rejected: B, which removes a
+  format check.
+- Item 138: C. It keeps Cal's choice A: the same code, the authored message,
+  one warning per page document and attribute, and the `--strict` count.
+  The core collects the removed names before the source checks, so the
+  warnings stay after a later failure, as with A. The message names the
+  first wrapper in document order, as authored bodies do. The subject is
+  `entry`, as for `.page.html` pages. Rejected: A, a TypeScript copy of the
+  rule and a wire change; B, no warning.
+- Item 87: B. The texts follow the contract forms and the product copy
+  rules, so they need no separate approval. Rejected: A, which keeps the
+  merged invocation lines; C, which changes both sides of the sidecar
+  boundary.
+- Items 1 and 128: open. Both recommended options add a build error, so
+  they wait for Cal.
 
 The managing session delegates the protocol docs, READMEs, and the guide to
 Claude Opus 5.5 1M at max effort, and the Rust work to Codex gpt-6.1-sol at
@@ -73,6 +99,18 @@ Shared files:
 
 ## Design
 
+Design calls of the managing session, 2026-10-28, under the decision test:
+
+- The invocation message puts the component path and the instance id before
+  the prop pointer, in the contract form of the schema keyword and control
+  messages. Reason: the line then reads from the outer name to the value.
+- The rule that callback output fails on every duplicate attribute goes into
+  the Document Checks of the link validation contract, beside the duplicate
+  navigation attribute rule. Reason: both rules guard one check.
+- The source offset maps anchor at html5gum's own chunk ends, instead of a
+  second character reference decoder. Reason: one decoder cannot drift from
+  another.
+
 ### Warning text (item 87)
 
 Every catalogue warning message that quotes a name uses one JSON quoting
@@ -106,6 +144,13 @@ attribute name, with the page's `entry` subject and the message of authored
 bodies. The warning stays with a reused document, like other composition
 warnings. The sidecar wire, the render records, and the TypeScript sidecar
 do not change. `--strict` counts the new warning.
+
+- The core parses the callback document and collects the removed names
+  before the page and source checks run. A later failure then keeps the
+  warnings, as the sidecar's own warnings do.
+- `ignore_checks::filter_tree` walks the tree in reverse document order. The
+  warning for one attribute names the first wrapper in document order that
+  carries it, as `templates.rs` does for authored bodies.
 
 ### Authored HTML checks (item 128 and finding 1)
 
@@ -163,47 +208,26 @@ screens contract, and delete the comment without a pattern from
 
 ## Open decisions
 
-Recommended options are in force only after Cal answers. "New gate" marks an
-option that adds a build error, a rejection, or stricter validation. "Removes
-functionality" marks an option that removes behaviour on `main`. Findings 1
-to 5 are new numbers of this plan. Items 87, 128, and 138 keep their user
-item numbers.
+These items wait for Cal. "New gate" marks an option that adds a build
+error, a rejection, or stricter validation. Findings 1 to 5 are numbers of
+this plan. Items 87, 128, and 138 keep their user item numbers. The other
+items have answers above.
 
-- Item 138, JavaScript page wrappers get no attribute warning. Severity
-  Medium, effort Medium (estimate) for C. Recommended: C, the core warns where
-  it removes the attributes. Alternatives: A, the user's 2026-10-21 choice,
-  sidecar transport, Large; B, no warning, Small (estimate). A and C: new
-  gate under `--strict`.
 - Item 128, saved variant slot element checks. Severity Medium (estimate),
   effort Small (estimate). Recommended: A, apply the body element checks.
-  Alternative: B, state that saved slots skip them. A: new gate.
+  Alternative: B, state that saved slots skip them. A: new gate. Blocks
+  Milestone 4.
 - Finding 1, reserved navigation names in authored HTML. Severity Low
   (estimate), effort Medium (estimate). Recommended: C, one validation rule
   for all authored HTML. Alternatives: A, rewording only; B, A plus value
-  evaluation on saved-slot `mokly-ignore-scope`. B and C: new gate.
-- Finding 2, duplicate callback attributes named as navigation attributes.
-  Severity Low, effort Small. Recommended: A, word by name. Alternative: B,
-  fail only navigation names and adapted elements, which removes
-  functionality.
-- Finding 3, CRLF and CR line ends shift `{{...}}` failure locations.
-  Severity Low, effort Small inside the offset maps. Recommended: A, cover
-  them in the offset maps.
-- Finding 4, a protocol sentence describes the implementation. Severity Low,
-  effort Small. Recommended: A, delete it. Alternative: B, replace it with a
-  requirement.
-- Finding 5, a `.prettierignore` comment without a pattern. Severity Low,
-  effort Small. Recommended: A, delete it. Alternative: B, ignore the
-  protocol fixtures again, which removes a format check.
-- Item 87, the missing warning messages. Severity Low, effort Medium for B.
-  Recommended: B. Alternatives: A, define the current messages, Small
-  (estimate); C, B plus the pointer form for `html-unused-props` and
-  `props-not-data`, Large.
+  evaluation on saved-slot `mokly-ignore-scope`. B and C: new gate. Blocks
+  Milestone 4.
 
 ## Milestone 1: Documentation and protocol
 
 The protocol docs state the requirements and the decisions for the answered
-options. Each TODO names the recommended option. If an answer differs, update
-the TODO before this milestone starts. Where Cal chose between options, the
+options. The doc changes for items 1 and 128 move to Milestone 4, because
+they wait for Cal. Where an answer chose between options, the
 page states the decision in force with the rejected alternative and the
 reason, in one or two sentences. Each changed page gets the line
 `Status: In progress under the [Diagnostics And HTML Messages](../../plans/diagnostics-and-html-messages.md) plan.`
@@ -214,25 +238,19 @@ below its title until its behaviour is implemented.
         message (item 87).
   - [ ] Unknown attributes on ignore wrappers in a page callback document
         warn once per page and attribute (item 138 C).
-  - [ ] A reserved navigation name fails in a body, a saved slot, and
-        callback output. Authored HTML fails with `html-attribute` at the
-        attribute or the slot field. Remove "a saved slot warns that the
-        name is rejected" (finding 1 C).
   - [ ] A `{{...}}` failure names the line and column of its own `{{`,
         also after character references, in attribute values, and with CRLF
         or CR line ends. A `{{` that a character reference produces names
         the start of that reference (offset maps, finding 3 A).
   - [ ] Delete "One parser and one renderer serve both." (finding 4 A).
-- [ ] `docs/protocol/mokly-html-components.md`: saved slot fragments use the
-      body checks, including forbidden and unknown elements and reserved
-      names. Each failure names the slot field (item 128 A, finding 1 C).
+- [ ] `docs/protocol/mokly-link-validation.md`: state the rule in force that
+      callback output fails on every duplicate attribute (finding 2 A).
 - [ ] `docs/protocol/mokly-entry-props.md`: define the saved-prop and the
       invocation messages (item 87 B).
 - [ ] `docs/protocol/mokly-component-controls.md`: define the
       `props-control-bounds` message (item 87 B).
 - [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
-      row names authored bodies, saved slots, and page callback documents
-      (item 138 C).
+      row names authored bodies and page callback documents (item 138 C).
 - [ ] Keep each page under 250 lines. Run `npm run format:check` and
       `node --import tsx --test tests/markdown_links.test.ts`.
 
@@ -284,8 +302,19 @@ Item 138 C and finding 2 A in `mokly-html`.
 
 ## Milestone 4: Authored HTML checks
 
-Item 128 A and finding 1 C in `mokly-catalogue` and `mokly-html`.
+Item 128 A and finding 1 C in `mokly-catalogue` and `mokly-html`. This
+milestone waits for Cal's answers on items 1 and 128. Do not start it before
+they arrive. If an answer differs, rewrite the TODOs first.
 
+- [ ] `docs/protocol/mokly-html-screens.md`: a reserved navigation name
+      fails in a body, a saved slot, and callback output. Authored HTML
+      fails with `html-attribute` at the attribute or the slot field. Remove
+      "a saved slot warns that the name is rejected" (finding 1 C).
+- [ ] `docs/protocol/mokly-html-components.md`: saved slot fragments use the
+      body checks, including forbidden and unknown elements and reserved
+      names. Each failure names the slot field (item 128 A, finding 1 C).
+- [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
+      row also names saved slots.
 - [ ] Tests that fail on `main`:
   - [ ] Catalogue tests: a saved slot with `script`, `html`, `head`,
         `body`, `base`, `mokly-foo`, or an unknown hyphenated element fails
@@ -307,8 +336,15 @@ Item 128 A and finding 1 C in `mokly-catalogue` and `mokly-html`.
       assertion that still holds:
       `reserved_navigation_warning_names_rejection_instead_of_ignoring`,
       `saved_slot_reserved_wrapper_attributes_stay_visible_to_composition`,
-      and `reserved_navigation_fields_remain_visible_and_fail_as_before`.
-      Record each changed expectation and its decision in the commit body.
+      `reserved_navigation_fields_remain_visible_and_fail_as_before`, and
+      `saved_variant_slots_keep_element_failures_deferred` in
+      `crates/mokly-catalogue/tests/ignore_attribute_tests.rs`, which locks
+      in the current item 128 behaviour. Record each changed expectation and
+      its decision in the commit body.
+- [ ] `docs/guides/authoring/components.md`: saved slot HTML follows the
+      body element rules (item 128 A).
+- [ ] `crates/mokly-catalogue/README.md` and `crates/mokly-html/README.md`:
+      the saved slot checks and the reserved-name rule.
 - [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
 
 ## Milestone 5: Source offset maps
@@ -332,14 +368,14 @@ The decided offset maps and finding 3 A in `mokly-catalogue`.
       slows by more than 2%, record maps only for the checks' sink.
 - [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
 
-## Milestone 6: READMEs, guide, and cleanup
+## Milestone 6: READMEs and cleanup
 
-- [ ] `crates/mokly-catalogue/README.md`: saved slot checks, reserved names,
-      source offset maps, and the warning formatter under Key Code.
-- [ ] `crates/mokly-html/README.md`: page callback warnings, reserved names,
-      and duplicate attribute text.
-- [ ] `docs/guides/authoring/components.md`: saved slot HTML follows the
-      body element rules (item 128 A).
+The README parts for items 1 and 128 move to Milestone 4.
+
+- [ ] `crates/mokly-catalogue/README.md`: source offset maps, and the warning
+      formatter and the JSON quoting helper under Key Code.
+- [ ] `crates/mokly-html/README.md`: page callback warnings, invocation
+      warnings, and duplicate attribute text.
 - [ ] Delete the comment without a pattern from `.prettierignore` (finding 5
       A).
 - [ ] Remove the status line from each protocol page whose behaviour is now
@@ -354,8 +390,11 @@ The decided offset maps and finding 3 A in `mokly-catalogue`.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
 - [ ] In `plans/rust-rebuild.md`, with the smallest edit:
-  - [ ] Tick items 87, 138, and 128, and the source offset maps follow-up,
-        as the answers resolve them.
+  - [ ] Tick items 87 and 138 and the source offset maps follow-up. Item
+        128 stays open until Cal answers.
+  - [ ] Under Cal's note of 2026-10-20 that the user still decides the final
+        warning text, add one line dated 2026-10-28: the contract forms and
+        the product copy rules now decide the final text.
   - [ ] Add one resolved line under each outside-scope line that this
         change fixes.
   - [ ] Under "Re-review finding 2", add: the coordinator chose A on
