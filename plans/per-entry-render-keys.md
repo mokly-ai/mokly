@@ -477,13 +477,19 @@ Let equal head and base inputs share render cache entries under decision 1.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
-- [ ] Run the targeted tests: `cargo test -p mokly-graph`,
+- [x] Run the targeted tests: `cargo test -p mokly-graph`,
       `cargo test -p mokly-render`, `cargo test -p mokly-catalogue`, the
       sidecar Node tests, `npm test -- tests/markdown_links.test.ts`, and
       `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch after each
+  - The first complete gate failed one viewer test:
+    `base PostCSS package witnesses reject changes before document callbacks`
+    asserted that a base page render runs while head and base inputs are
+    equal. Commit `9a07db7c` makes the head page differ, so the base still
+    renders its own page, and keeps every assertion.
+  - The second complete gate passed all seven suites on `9a07db7c`.
+- [x] Commit with Conventional Commits and push the branch after each
       milestone.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
