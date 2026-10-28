@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::iter;
 
 use globset::{GlobBuilder, GlobMatcher};
-use mokly_catalogue::config::normalize;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::types::StylesheetRoot;
 use mokly_html::tree;
@@ -47,7 +46,8 @@ impl Matchers {
 /// Collect one root per local configured stylesheet, declared component stylesheet,
 /// and module CSS root. A declared file becomes a stylesheet node like a configured
 /// one: an edit changes the node's input key, and changed delivered CSS changes the
-/// keys of the views that link it.
+/// keys of the views that link it. Local values without a repository path are skipped;
+/// loading and declaration validation reject them for normal inputs.
 pub(crate) fn roots(
     config: &ResolvedConfig,
     inputs: &DeliveryInputs,
@@ -63,7 +63,9 @@ pub(crate) fn roots(
             if external(path) || path.starts_with('$') {
                 continue;
             }
-            let logical = logical(config, path);
+            let Some(logical) = config.repository_path(path) else {
+                continue;
+            };
             roots.entry(logical.clone()).or_insert(StylesheetRoot {
                 path: logical.clone(),
                 stylesheets: vec![logical],
@@ -74,7 +76,9 @@ pub(crate) fn roots(
     }
     for paths in inputs.component_stylesheets.values() {
         for path in paths {
-            let logical = logical(config, path);
+            let Some(logical) = config.repository_path(path) else {
+                continue;
+            };
             roots.entry(logical.clone()).or_insert(StylesheetRoot {
                 path: logical.clone(),
                 stylesheets: vec![logical],
@@ -103,6 +107,8 @@ pub(crate) struct LinkInput<'a> {
     pub(crate) module: &'a str,
 }
 
+/// Build ordered stylesheet links. Local values without a repository path are skipped;
+/// loading and declaration validation reject them for normal inputs.
 pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
     let LinkInput {
         matchers,
@@ -143,11 +149,11 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         .iter()
         .chain(&specific)
         .filter(|path| !path.starts_with('$'))
-        .map(|path| {
+        .filter_map(|path| {
             if external(path) {
-                path.clone()
+                Some(path.clone())
             } else {
-                logical(config, path)
+                config.repository_path(path)
             }
         })
         .collect();
@@ -158,7 +164,11 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
             ordered.extend(
                 component_paths
                     .iter()
-                    .filter(|path| !configured.contains(&logical(config, path)))
+                    .filter(|path| {
+                        config
+                            .repository_path(path)
+                            .is_some_and(|logical| !configured.contains(&logical))
+                    })
                     .map(|path| (*path).clone()),
             );
             marker = true;
@@ -170,7 +180,11 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         ordered.extend(
             component_paths
                 .iter()
-                .filter(|path| !configured.contains(&logical(config, path)))
+                .filter(|path| {
+                    config
+                        .repository_path(path)
+                        .is_some_and(|logical| !configured.contains(&logical))
+                })
                 .map(|path| (*path).clone()),
         );
     }
@@ -178,18 +192,17 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
     for path in ordered {
         let href = if external(&path) {
             path
+        } else if let Some(logical) = config.repository_path(&path) {
+            routes::relative(route, &format!("styles/{logical}"))
         } else {
-            routes::relative(route, &format!("styles/{}", logical(config, &path)))
+            continue;
         };
         if !links.contains(&href) {
             links.push(href);
         }
     }
     for root in config
-        .input
-        .renderer
-        .as_ref()
-        .map(|renderer| logical(config, renderer))
+        .renderer()
         .into_iter()
         .chain(iter::once((*module).to_owned()))
     {
@@ -222,13 +235,4 @@ pub(crate) fn install(nodes: &mut [Node], stylesheets: &[String]) {
 
 fn external(value: &str) -> bool {
     value.starts_with("http://") || value.starts_with("https://")
-}
-
-fn logical(config: &ResolvedConfig, path: &str) -> String {
-    normalize(&config.file.parent().unwrap_or(&config.repo_root).join(path))
-        .strip_prefix(&config.repo_root)
-        .map_or_else(
-            |_| path.into(),
-            |path| path.to_string_lossy().replace('\\', "/"),
-        )
 }

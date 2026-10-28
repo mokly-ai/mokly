@@ -1,7 +1,37 @@
-//! Validate authored ignore identities after parsing has filtered wrapper attributes.
+//! Filter ignore-wrapper attributes before composition evaluates them, and validate ignore ids.
+
+use mokly_catalogue::html_tokens::reserved_navigation_attribute;
+use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
+use crate::tree::{Element, Node};
+
+/// Keep the wrapper attributes that the authored parse keeps: the catalogue rule and the
+/// reserved navigation names. Other elements keep all attributes.
+pub(crate) fn filter_attributes(element: &mut Element) {
+    let Element {
+        name, attributes, ..
+    } = element;
+    attributes.retain(|attribute| {
+        ignore_attribute_allowed(name, &attribute.name)
+            || reserved_navigation_attribute(attribute.name.as_bytes())
+    });
+}
+
+/// Filter the wrapper attributes of every element of a delivered tree, before any composition
+/// step reads it.
+pub(crate) fn filter_tree(nodes: &mut [Node]) {
+    let mut pending: Vec<_> = nodes.iter_mut().collect();
+    while let Some(node) = pending.pop() {
+        if let Node::Element(element) = node {
+            filter_attributes(element);
+        }
+        if let Some(children) = node.children_mut() {
+            pending.extend(children.iter_mut());
+        }
+    }
+}
 
 pub(crate) fn id(value: &str) -> Result<()> {
     if value.is_empty()

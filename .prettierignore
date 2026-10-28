@@ -9,6 +9,10 @@ playwright-report
 
 # Protocol fixtures keep their canonical bytes.
 
+# Parser fixtures keep their exact bytes.
+crates/mokly-html/tests/fixtures/differential
+crates/mokly-html/tests/fixtures/html5lib
+
 # release-please owns the changelog format
 CHANGELOG.md
 packages/viewer/CHANGELOG.md

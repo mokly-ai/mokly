@@ -3,9 +3,10 @@
 use std::collections::BTreeMap;
 
 use mokly_model::catalogue::SourceLocation;
+use mokly_model::prop_schema::PropSchema;
 use serde::Serialize;
 
-use mokly_model::prop_schema::PropSchema;
+use crate::html_input::{AuthoredHtml, HtmlOrigin, HtmlShape, line_and_column};
 
 /// A private authored body, retained outside catalogue JSON for composition.
 #[derive(Clone, Debug)]
@@ -29,6 +30,44 @@ pub struct SavedSlot {
     pub body: String,
     /// The source position of the `variants/{index}/slots/{name}` field.
     pub source: SourceLocation,
+}
+
+impl Template {
+    /// The authored body, read as a page document or as a fragment, without source positions.
+    pub fn html(&self) -> AuthoredHtml<'_> {
+        self.derived_html(&self.body)
+    }
+
+    /// The authored body with its source origin, so that the parse records source positions.
+    pub fn located_html(&self) -> AuthoredHtml<'_> {
+        let (line, column) = line_and_column(&self.source, self.body_offset);
+        let origin = HtmlOrigin {
+            path: &self.source_path,
+            line,
+            column,
+        };
+        AuthoredHtml::new(&self.body, self.shape(), Some(origin))
+    }
+
+    /// Text derived from the body, such as the body after prop substitution, without positions.
+    pub fn derived_html<'a>(&self, text: &'a str) -> AuthoredHtml<'a> {
+        AuthoredHtml::new(text, self.shape(), None)
+    }
+
+    fn shape(&self) -> HtmlShape {
+        if self.page {
+            HtmlShape::Document
+        } else {
+            HtmlShape::Fragment
+        }
+    }
+}
+
+impl SavedSlot {
+    /// The saved fragment, read as authored HTML without source positions.
+    pub fn html(&self) -> AuthoredHtml<'_> {
+        AuthoredHtml::new(&self.body, HtmlShape::Fragment, None)
+    }
 }
 
 /// Registry metadata needed before the first render.

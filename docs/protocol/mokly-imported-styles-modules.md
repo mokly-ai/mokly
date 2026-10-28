@@ -1,7 +1,5 @@
 # Imported Stylesheet CSS Modules
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
 
@@ -60,9 +58,24 @@ guard runs before scoping. `lightningcss` bundles the scoped text and is
 never a CSS Modules transform; browserslist targets are the consumer's
 PostCSS concern.
 
-The CSS Modules scanners give every stylesheet statement the same start and
-kind that `lightningcss` gives it. This includes a statement after an HTML
-comment token (`<!--` or `-->`), which cssparser skips.
+At every nesting level outside a descriptor block, the scoper reads each
+statement that the bundler keeps with the same start and kind. Before a
+stylesheet statement, both skip the HTML comment tokens `<!--` and `-->`. Text
+that the bundler drops or rejects can read as other statements for the scoper,
+and an `@value` that starts one of them fails. For example, in a rule list
+such as the stylesheet or a keyframes block, a `;` also ends a statement for
+the scoper, but the bundler ends a style rule or a keyframe only at its `{}`
+block. Aligning that boundary with the bundler was not chosen: no realistic
+stylesheet reaches it, and the change would alter the diagnostics of
+stylesheets that fail today.
+
+A descriptor block is the block of a declaration-only at-rule, such as
+`@font-face`. There, the scoper ends a statement that is not a custom property
+at its first `{}` block, as postcss does, but the bundler keeps a descriptor's
+text up to its `;`. So text that the bundler keeps can read as other
+statements for the scoper, and an `@value` that starts one of them fails.
+Ending those statements at the `;`, as the bundler does, was not chosen,
+because the scoper keeps the reading that postcss gives the same text.
 
 ### Composition And Exports
 

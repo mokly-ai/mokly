@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_graph::asset_delivery::AssetReadMock;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResourcesMock};
@@ -80,7 +81,7 @@ pub(super) fn source_calls(
                     content_type: "text/html".into(),
                     fragment: None,
                     document: Some(Composed {
-                        tree: parse::document("<!doctype html><p>saved</p>"),
+                        tree: parse::html(DeliveredHtml::document("<!doctype html><p>saved</p>")),
                         usage: CatalogueUsage::Unavailable,
                         warnings: vec![],
                         resources: vec![],

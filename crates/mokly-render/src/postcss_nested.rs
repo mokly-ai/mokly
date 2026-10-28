@@ -3,13 +3,13 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use mokly_catalogue::config::normalize;
 use mokly_css::resolver::ImportResolver;
 use mokly_css::{paths, syntax};
 use mokly_sidecar::results::{Dependency, DependencyKind};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{InternalError, RenderError, Result};
-use crate::postcss_inventory::normalize;
 use crate::side::SideInputs;
 
 pub(crate) struct Input<'a> {
