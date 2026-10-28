@@ -228,7 +228,7 @@ unrelated screen U, a stories file with a preview, and a renderer.
 | link target rename: T's declared path          | every JavaScript key             | HTML-only documents          |
 | renderer edit                                  | every JavaScript key but stories | stories, HTML-only documents |
 
-## Baseline
+## Measurements
 
 Release build of `a9dd1e81`, the merge base, on 2026-10-27, 8 cores, 8
 sidecars, warm OS cache. The `examples/basic` medians are over six first
@@ -254,6 +254,45 @@ logs are in `.context/perf/before-*`.
 The cold run gave `serve.ready` 19.8 s, `serve.background` 17.6 s, and
 `changes.classify` 138.9 s. The renders column counts `sidecar.render`
 records inside the phase.
+
+### Before and after
+
+On 2026-10-28 the merge-base binary and the branch binary at `d3b4714f`
+ran alternately in one period, so machine speed affects both alike. Medians
+of three warm runs, two edit runs, and two React runs.
+
+| Phase                                        | Before                | After            |
+| -------------------------------------------- | --------------------- | ---------------- |
+| `serve.ready`                                | 21.6 s                | 20.3 s           |
+| `serve.background`                           | 19.1 s, 554 renders   | 16.4 s, 554      |
+| `changes.classify`                           | 78.4 s                | 68.2 s           |
+| `review.base-tree`                           | 44.5 s                | 40.9 s           |
+| `review.capture-side`                        | 8.0 s, 549 renders    | 6.9 s, 549       |
+| `review.compare-views`                       | 30.7 s, 1,079         | 27.0 s, 712      |
+| `sidecar.render` count, whole run            | 2,182                 | 1,815            |
+| `css.bundle` count and union                 | 204, 17.2 s, see note | 152, 12.2 s      |
+| `watch.action` after one edit                | 18.2 s                | 16.4 s           |
+| `serve.background` after the edit            | 20.8 s, 554 renders   | 1.4 s, 4 renders |
+| `changes.classify` after the edit            | 99.4 s                | 100.5 s          |
+| edit to the end of the second classification | 138.4 s               | 118.4 s          |
+| `build` index keys changed by the edit       | 549 of 590            | 4 of 590         |
+| React: `serve.ready`                         | 11.4 s                | 11.7 s           |
+| React: `serve.background`                    | 3.3 s, 162 renders    | 3.1 s, 162       |
+| React: `changes.classify`                    | 15.5 s                | 13.9 s           |
+| React: `review.capture-side`                 | 1.9 s, 162 renders    | 0.2 s, 0 renders |
+| React: `sidecar.render` count, whole run     | 324                   | 162              |
+
+Note: the merge-base runs came from a worktree under `.context/perf/`, and
+there the base capture and the comparison bundled 52 more stylesheets. The
+first baseline in the main checkout bundled 152 stylesheets in 14.2 s, as
+the branch does. This change does not touch stylesheet bundling.
+
+A diagnostic run of the branch with a temporary 4 GiB render cache, which
+evicts nothing, gave on `examples/basic`: `changes.classify` 47.1 s,
+`review.capture-side` 0.7 s with 0 renders, `review.compare-views` 3.5 s
+with 0 renders, `changes.classify` after the edit 53.1 s, and 70.4 s from
+the edit to the end of the second classification. The run made 553
+`sidecar.render` calls in total.
 
 ## Milestone 1: Documentation and protocol
 
@@ -397,23 +436,41 @@ Let equal head and base inputs share render cache entries under decision 1.
 
 ## Milestone 6: Measurement and output check
 
-- [ ] Rebuild the release binary and the packages, then repeat the baseline
-      method on this branch on the same machine.
+- [x] Rebuild the release binary and the packages, then repeat the baseline
+      method on this branch on the same machine. Rerun when two runs differ
+      by more than ten percent. Save the records under `.context/perf/after-*`.
   - Finding: the first run used a tier-two base, because the new fixture's
     tracked `package.json` changed the repository's dependency identity.
-    The fixture now writes that file at test time. Rerun when two runs differ
-    by more than ten percent. Save the records under `.context/perf/after-*`.
-- [ ] Repeat the two `build` runs around the edit. Compare the index keys and
+    The fixture now writes that file at test time.
+  - Finding: a later run still shared nothing, because the runtime manifest
+    filter of decision 7 matched only the first dependency root. Commit
+    `d3b4714f` fixed it.
+  - Finding: the after runs ran in a slower period of the machine, with the
+    unchanged esbuild compile at 13.2 s instead of 9.5 s. A `keepNames` A/B
+    showed no compile cost. The final comparison therefore alternates the
+    merge-base binary and the branch binary, in
+    `.context/perf/ab2-*`.
+- [x] Repeat the two `build` runs around the edit. Compare the index keys and
       the rendered bytes with the baseline outputs. Expected: only the edited
       entry's keys move, and the rendered bytes match the baseline build.
-- [ ] Check the acceptance: `serve.background` after the edit renders only
+      Result: 4 of 590 keys move, and all 590 documents match the baseline
+      build byte for byte.
+- [x] Check the acceptance: `serve.background` after the edit renders only
       the moved views, and `review.capture-side` on the unchanged base makes
       about zero `sidecar.render` calls.
-- [ ] Smoke-test `npm run dev`: open a screen in the browser, edit its
+  - Met: `serve.background` after the edit renders 4 views in 1.4 s.
+  - Met on the React fixture: the base capture makes 0 renders in 0.2 s.
+  - Not met on `examples/basic` at the 256 MiB render cache: the cache
+    evicts the head's entries before the base capture reads them, so the
+    capture still makes 549 renders. With a temporary 4 GiB cache, it makes
+    0 renders in 0.7 s. perf 0 changes the cache weight.
+- [x] Smoke-test `npm run dev`: open a screen in the browser, edit its
       module, and check that the page shows the edit and that the served
       index changes only that entry's keys. Save a screenshot under
-      `.context/perf/`.
-- [ ] Add the after numbers to the baseline table as a second column.
+      `.context/perf/`. Result: a comment edit moved 4 of 590 served keys,
+      a visible edit to the shared module moved 13, and the page showed the
+      edit. Screenshots: `.context/perf/smoke/before.png` and `after.png`.
+- [x] Add the after numbers to the measurements.
 - [ ] Once perf 0's render cache counts are on `origin/main`, record the
       charged bytes of the render cache after the base render on
       `examples/basic`, for the orchestrator's follow-up on base entries.
