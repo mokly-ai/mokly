@@ -1,7 +1,7 @@
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import type { InstanceRef } from "../src/viewer/types.js";
 
@@ -23,7 +23,7 @@ declare global {
     readiness: ReadinessProbe;
     startReadiness(
       index: CatalogueReadModel,
-      details: readonly (readonly [DetailRequest, EntryDetailV2])[],
+      details: readonly (readonly [DetailRequest, EntryDetailV3])[],
       origin: string,
       cross: boolean,
       status: "pending" | "unavailable",

@@ -12,6 +12,7 @@ use mokly_css::types::{CssProcessor, IdentityProcessor, StylesheetBundler, Style
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
+use crate::postcss_turns::Turns;
 use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
@@ -68,6 +69,7 @@ pub(crate) fn compiler(
                 .unwrap_or(&config.repo_root)
                 .join(module),
             cache: runtime.css.clone(),
+            turns: Turns::default(),
         }) as Arc<dyn CssProcessor>,
         None => Arc::new(IdentityProcessor),
     };

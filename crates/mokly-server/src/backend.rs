@@ -4,16 +4,16 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
 use axum::body::Bytes;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::cache::Artifact;
-use mokly_graph::types::{RenderGeneration, TemporaryDocument};
+use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
-use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
 
 use crate::asset_streams::AssetStreams;
 use crate::assets::{File, content_type};
+use crate::backend_preview::ArtifactBytes;
 use crate::error::{Result, ServerError};
-use crate::preview::MAX_BYTES;
 use crate::public_read::{OpenedFile, PublicReader};
 use crate::warnings::RenderWarnings;
 
@@ -36,8 +36,12 @@ pub trait Documents: Send + Sync {
     fn asset(&self, _route: &str) -> Result<Option<OpenedFile>> {
         Ok(None)
     }
-    /// Render one background document without copying its response bytes.
-    fn background(&self, route: &str) -> Result<()>;
+    /// Render one background document without copying its response bytes. Its warnings
+    /// return unreported, and a failure keeps them, so the usage pass reports them in
+    /// catalogue order through [`Documents::report`].
+    fn background(&self, route: &str) -> Result<Vec<Warning>>;
+    /// Deliver a background render's warnings to the attempt that owns this backend.
+    fn report(&self, warnings: &[Warning], failed: bool);
     /// Completed usage, retained separately from evictable document trees.
     fn usage(&self, route: &str) -> Option<CatalogueUsage>;
     /// Read an already reached authored file through the live confinement boundary.
@@ -78,14 +82,18 @@ impl GraphDocuments {
             locks,
         }
     }
-    fn render(&self, route: &str) -> Result<Option<Arc<Artifact>>> {
+    /// Render a declared route and record its usage. A foreground render reports its
+    /// warnings here; a background render leaves them to the usage pass.
+    fn render(&self, route: &str, report: bool) -> Result<Option<Arc<Artifact>>> {
         let Some(lock) = self.locks.get(route) else {
             return Ok(None);
         };
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
         match self.generation.render(route) {
             Ok(artifact) => {
-                if let Some(document) = &artifact.document {
+                if let Some(document) = &artifact.document
+                    && report
+                {
                     self.warnings.report(&document.warnings, false);
                 }
                 if usage.is_none() {
@@ -101,87 +109,13 @@ impl GraphDocuments {
                 Ok(Some(artifact))
             }
             Err(source) => {
-                self.warnings.report(&source.warnings(), true);
+                if report {
+                    self.warnings.report(&source.warnings(), true);
+                }
                 usage.get_or_insert(CatalogueUsage::Unavailable);
                 Err(ServerError::Render { source })
             }
         }
-    }
-    fn preview_document(
-        &self,
-        route: &str,
-        rendered: TemporaryDocument,
-    ) -> Result<PreviewDocument> {
-        let mut files = BTreeMap::new();
-        let document = generated(route);
-        files.insert(
-            document.clone(),
-            File {
-                bytes: Bytes::from_owner(ArtifactBytes(rendered.artifact.clone())),
-                content_type: rendered.artifact.content_type.clone(),
-            },
-        );
-        let mut remaining = MAX_BYTES
-            .checked_sub(files.values().map(|file| file.bytes.len()).sum())
-            .ok_or(ServerError::PreviewCapacity)?;
-        for resource in rendered
-            .closure
-            .edges
-            .keys()
-            .filter_map(|path| path.strip_prefix(&format!("static/{GENERATED_DIRECTORY}/")))
-        {
-            let bytes = if resource.starts_with("assets/") {
-                match self.generation.open_asset(resource) {
-                    Ok(Some(mut asset)) => {
-                        if asset.length() > remaining as u64 {
-                            return Err(ServerError::PreviewCapacity);
-                        }
-                        asset.read_bytes().map(Some)
-                    }
-                    Ok(None) => self.generation.resource(resource),
-                    Err(source) => return Err(ServerError::Render { source }),
-                }
-            } else {
-                self.generation.resource(resource)
-            };
-            match bytes {
-                Ok(Some(bytes)) => {
-                    remaining = remaining
-                        .checked_sub(bytes.len())
-                        .ok_or(ServerError::PreviewCapacity)?;
-                    files.insert(
-                        generated(resource),
-                        File {
-                            bytes: bytes.into(),
-                            content_type: content_type(resource),
-                        },
-                    );
-                }
-                Ok(None) => {}
-                Err(source) => return Err(ServerError::Render { source }),
-            }
-        }
-        for path in rendered.closure.files {
-            let Some(file) = self.public.read(&path, remaining)? else {
-                return Err(ServerError::PreviewResource);
-            };
-            remaining = remaining
-                .checked_sub(file.bytes.len())
-                .ok_or(ServerError::PreviewCapacity)?;
-            files.insert(format!("static/{path}"), file);
-        }
-        let usage = rendered
-            .artifact
-            .document
-            .as_ref()
-            .map_or(CatalogueUsage::Unavailable, |document| {
-                document.usage.clone()
-            });
-        Ok(PreviewDocument {
-            files,
-            document,
-            usage,
-        })
     }
 }
 
@@ -199,7 +133,7 @@ impl Documents for GraphDocuments {
 
     fn generated(&self, route: &str) -> Result<Option<File>> {
         if self.locks.contains_key(route) {
-            return Ok(self.render(route)?.map(|artifact| File {
+            return Ok(self.render(route, true)?.map(|artifact| File {
                 bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
                 content_type: artifact.content_type.clone(),
             }));
@@ -220,17 +154,27 @@ impl Documents for GraphDocuments {
             Err(source) => Err(ServerError::Render { source }),
         }
     }
-    fn background(&self, route: &str) -> Result<()> {
+    fn background(&self, route: &str) -> Result<Vec<Warning>> {
         if self.locks.get(route).is_some_and(|state| {
             state
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
                 .is_some()
         }) {
-            return Ok(());
+            return Ok(Vec::new());
         }
-        self.render(route)?;
-        Ok(())
+        Ok(self
+            .render(route, false)?
+            .and_then(|artifact| {
+                artifact
+                    .document
+                    .as_ref()
+                    .map(|document| document.warnings.clone())
+            })
+            .unwrap_or_default())
+    }
+    fn report(&self, warnings: &[Warning], failed: bool) {
+        self.warnings.report(warnings, failed);
     }
     fn usage(&self, route: &str) -> Option<CatalogueUsage> {
         self.locks
@@ -270,10 +214,3 @@ mod backend_tests;
 #[cfg(test)]
 #[path = "_tests_/warning_hook_tests.rs"]
 mod warning_hook_tests;
-
-struct ArtifactBytes(Arc<Artifact>);
-impl AsRef<[u8]> for ArtifactBytes {
-    fn as_ref(&self) -> &[u8] {
-        &self.0.bytes
-    }
-}

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_cli::cancelled_work::CancellableWorkers;
+use mokly_cli::serial_stylesheets::SerialStylesheets;
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
 use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::comparison::Engine;
@@ -117,6 +118,7 @@ impl Source {
             sources: Arc::new(GitSourceFactory {
                 limits: Limits::default(),
                 batch_bytes: 48 * 1024 * 1024,
+                snapshots: self.services.extraction_snapshots.clone(),
             }),
             provider: Arc::new(AttemptBase {
                 warnings: self.pending.clone(),
@@ -162,7 +164,9 @@ impl Source {
     fn classification_runtime(&self, cancellation: Arc<CombinedCancel>) -> Arc<Runtime> {
         let mut runtime = (*self.services.runtime).clone();
         runtime.workers = Arc::new(CancellableWorkers {
-            inner: runtime.workers.clone(),
+            inner: Arc::new(SerialStylesheets {
+                inner: runtime.workers.clone(),
+            }),
             cancellation: cancellation.clone(),
         });
         runtime.pool = self.services.sidecars.pool(Some(cancellation));

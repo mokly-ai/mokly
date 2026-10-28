@@ -6,6 +6,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Common;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
+use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_server::background::{Background, UsagePass};
@@ -16,7 +17,6 @@ use mokly_server::comparison_store::MemoryComparisons;
 use mokly_server::diagnostics::Diagnostics;
 use mokly_server::entropy::Entropy;
 use mokly_server::error::{Result, ServerError};
-use mokly_server::foreground::Foreground;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::publication::SharedPublication;
 use mokly_server::snapshot::{Projector, Snapshot};
@@ -24,6 +24,7 @@ use mokly_server::work::Workers;
 
 use crate::serve_changes::ServeChanges;
 use crate::serve_git::GitWork;
+use crate::serve_pool::PoolScheduling;
 use crate::serve_progress::Progress;
 use crate::serve_reporter::GitRefresh;
 use crate::serve_services::ServeServices;
@@ -57,6 +58,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
             progress: input.progress,
             refreshes: input.reporter,
             cache_announced: Arc::new(false.into()),
+            extraction_snapshots: Arc::new(ProcessSnapshots::default()),
             warnings: input.warnings,
             runtime: input.services.runtime.clone(),
             git: input.git,
@@ -89,10 +91,11 @@ pub(super) fn create(
     entropy: Arc<dyn Entropy>,
     diagnostics: Arc<dyn Diagnostics>,
     watching: bool,
-    priority: Arc<dyn Foreground>,
+    sidecars: Arc<dyn PoolScheduling>,
 ) -> Delivery {
     let publications = Arc::new(SharedPublication::new(snapshot));
-    let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(priority));
+    let batch = background_batch(workers, sidecars.limit());
+    let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(sidecars));
     let comparisons = Arc::new(MemoryComparisons::new(
         Arc::new(MonotonicClock::default()),
         entropy.clone(),
@@ -101,6 +104,7 @@ pub(super) fn create(
         diagnostics.clone(),
     ));
     let background: Arc<dyn Background> = Arc::new(UsagePass {
+        batch,
         changes: Some(Arc::new(ChangesPass {
             publications: publications.clone(),
             comparisons: comparisons.clone(),
@@ -127,3 +131,13 @@ pub(super) fn create(
         app: Arc::new(app),
     }
 }
+
+/// The background pass renders no more views at once than Serve has workers or
+/// sidecar admission slots, so its renders never queue for a sidecar among themselves.
+fn background_batch(workers: u32, sidecars: usize) -> usize {
+    (workers as usize).min(sidecars).max(1)
+}
+
+#[cfg(test)]
+#[path = "_tests_/serve_delivery_tests.rs"]
+mod serve_delivery_tests;

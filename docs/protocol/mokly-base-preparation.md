@@ -25,6 +25,27 @@ an opaque public resource also uses bounded memory, whatever the size of the
 resource. The resource closure checks that each opaque resource is a confined
 regular file. Only HTML and CSS files need reference parsing.
 
+While a base preparation leases a complete extraction of the base commit,
+base reads use the files of that extraction, which hold the same
+checkout-converted bytes. A file that the extraction does not hold, such as a
+name that the host cannot store, reads through Git. A read uses an extraction
+file only while the file is unchanged since the process first leased that
+extraction. Base code, such as a PostCSS plugin, can change a file in the
+extraction, and that file then reads through Git, so base witnesses still
+compare with the pinned Git bytes. Decision: check each file against its first
+fingerprint in the process. Rejected: hashes through Git for every file,
+because that is the per-file cost that the extraction removes. Rejected: a
+content manifest in the cache entry, because it changes the cache format. A
+complete cache entry is trusted when the process first leases it, as the
+sidecar trusts it. Before it loads the base
+configuration, a preparation leases an existing complete extraction when the
+working configuration names a renderer or a PostCSS module. That lookup never
+builds an extraction. Decision: lease only an existing extraction before the
+configuration loads. Rejected: a build at that point, because a base that
+needs no sidecar would then get an extraction. Rejected: a switch only after
+the dependency step, because configuration and discovery would keep their Git
+reads.
+
 If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.
 The current build remains valid. Genuine Git command and object failures

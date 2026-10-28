@@ -256,7 +256,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   navigation events
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
   [`src/viewer/public_workspace.ts`](./src/viewer/public_workspace.ts) — the
-  routed workspace data and its projection from the index and entry detail
+  routed workspace data and its projection from the index, entry detail, and
+  parent detail for current component variant lists
 - [`src/shell/comparison_request.ts`](./src/shell/comparison_request.ts) — the
   generation root of a comparison: the pinned root a static catalogue names,
   or the root that Serve's selection redirects to and its renewal

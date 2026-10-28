@@ -1,5 +1,5 @@
 import type {
-  EntryDetailV2,
+  EntryDetailV3,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -10,7 +10,7 @@ import type {
 export interface ViewerHost {
   ref: { current: MoklyViewerHandle };
   props: MoklyViewerProps;
-  details: Record<string, EntryDetailV2>;
+  details: Record<string, EntryDetailV3>;
   events: { name: string; value: unknown }[];
   render(): void;
   setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;

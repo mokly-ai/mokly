@@ -11,8 +11,8 @@ fixed.
 | Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
 | `index.json`                                                 | the catalogue index v8                                          | Serve, output |
-| `entries/<entry path>.json`                                  | one entry detail v2 per current entry                           | Serve, output |
-| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v2 of a removed entry                          | Serve, output |
+| `entries/<entry path>.json`                                  | one entry detail v3 per current entry                           | Serve, output |
+| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v3 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
 | `diffs/generations/<generation>/`                            | the generation root, which renews a retained generation         | Serve only    |
 | `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |

@@ -24,7 +24,7 @@ pub struct Artifact {
 }
 
 impl Artifact {
-    /// Conservative retained-memory charge, including the tree and evidence.
+    /// Estimated retained-memory charge, including the tree and evidence.
     pub fn byte_cost(&self) -> usize {
         mem::size_of::<Self>()
             + self.bytes.capacity()
@@ -56,7 +56,7 @@ pub trait RenderCache: Send + Sync {
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>>;
     /// Retain a result when it fits. Oversized results still return to the caller.
     fn insert(&self, key: NodeKey, value: Arc<Artifact>);
-    /// Observe retained bytes and operation counts.
+    /// Observe charged bytes and operation counts.
     fn stats(&self) -> CacheStats;
 }
 
@@ -75,7 +75,7 @@ struct State {
 }
 
 impl MemoryCache {
-    /// Construct an empty cache with the supplied retained-byte bound.
+    /// Construct an empty cache with the supplied charged-byte bound.
     pub fn new(bytes: usize) -> Self {
         Self {
             bound: bytes,

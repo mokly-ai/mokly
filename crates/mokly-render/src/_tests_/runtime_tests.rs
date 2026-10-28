@@ -69,6 +69,8 @@ fn package_roots_reach_the_sidecar_in_normalized_form() {
             .iter()
             .map(PathBuf::from)
             .collect::<Vec<_>>(),
-        ["/repo/tools", "/repo", "/repo/packages/ui", "/repo"].map(PathBuf::from)
+        // The configured `..` repeats an ancestor, and the head keeps one copy as the
+        // base does.
+        ["/repo/tools", "/repo", "/repo/packages/ui"].map(PathBuf::from)
     );
 }

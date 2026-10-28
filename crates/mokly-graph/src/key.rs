@@ -21,8 +21,10 @@ pub enum NodeKind {
     HtmlComponent,
     /// CSS sources, assets, processor, and resolution inputs.
     Stylesheet,
-    /// Definition, props, axes, generation, and enclosing ignore state.
+    /// Definition, props, axes, render inputs, and enclosing ignore state.
     Fragment,
+    /// One entry module's closure, resolution files, bindings, and bundle environment.
+    RenderInputs,
     /// Entry, component, stylesheet, axis, resource, and config inputs.
     Document,
 }

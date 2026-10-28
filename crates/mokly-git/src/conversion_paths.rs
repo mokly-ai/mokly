@@ -1,4 +1,4 @@
-//! Batch raw blobs only when Git's effective settings prove checkout conversion is identity.
+//! Stream a raw blob only when Git's effective settings prove checkout conversion is identity.
 
 use std::collections::BTreeSet;
 

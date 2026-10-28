@@ -18,6 +18,7 @@ fn clean_hashes_batch_and_quote_unusual_paths() {
     let repository = GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
+        timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
         disk: Arc::new(Unimock::new(DiskMock::read.each_call(matching!(_, _, 100)).answers(&|_, _, _, _| Ok(Some(vec![]))).n_times(2))),
         runner: Arc::new(Unimock::new(RunnerMock::run.next_call(matching!((request) if request.args.last().unwrap() == "--stdin-paths" && request.stdin == b"\"./a/package.json\"\n\"./odd\\012\\\"\\\\\\303\\251/package.json\"\n")).returns(Ok(Output { stdout: format!("{object}\n{object}\n").into_bytes(), stderr: vec![] })))),
@@ -33,6 +34,7 @@ fn empty_or_nonregular_hash_candidates_start_no_git_process() {
     let repository = GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
+        timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
         runner: Arc::new(Unimock::new(())),
         disk: Arc::new(Unimock::new(

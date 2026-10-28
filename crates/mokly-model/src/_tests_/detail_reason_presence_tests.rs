@@ -1,7 +1,7 @@
 //! Current details follow their own index record's ready and included membership.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
@@ -11,7 +11,7 @@ use crate::usage::CatalogueUsage;
 
 use super::validate;
 
-fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV2) {
+fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV3) {
     let mut index = readers::index(include_str!(
         "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
@@ -62,8 +62,8 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
             })
             .collect()
     });
-    let detail = EntryDetailV2 {
-        schema_version: 2,
+    let detail = EntryDetailV3 {
+        schema_version: 3,
         control_order,
         identity,
         deployment_id: Some(deployment_id),

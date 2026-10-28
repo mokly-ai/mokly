@@ -194,8 +194,32 @@ impl Cache for DiskCache {
             }
         }
     }
+
+    /// Creates no directory, and reports the cache only when it leases an entry.
+    fn lease(&self, kind: Kind, key: &str) -> Result<Option<Lease>> {
+        if !valid_key(key) {
+            return Err(Error::UnsafeCache {
+                path: self.root.join(key),
+            });
+        }
+        let namespace = self.root.join(kind.directory());
+        if !self.storage.directory(&namespace.join("entries"))?
+            || !self.storage.directory(&namespace.join("locks"))?
+        {
+            return Ok(None);
+        }
+        let lease = self.hit(&namespace, key, self.capacity(kind))?;
+        if lease.is_some() {
+            self.reporter.opened(&self.root);
+        }
+        Ok(lease)
+    }
 }
 
 #[cfg(test)]
 #[path = "_tests_/cache_tests.rs"]
 mod cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_lease_tests.rs"]
+mod cache_lease_tests;

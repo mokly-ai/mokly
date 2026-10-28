@@ -175,6 +175,11 @@ contents of the package.
   reads framed requests from the binary and writes one response for each.
 - [`src/sidecar/session.ts`](./src/sidecar/session.ts) holds `Session`, which
   dispatches each sidecar request to its method.
+- [`src/sidecar/bundle.ts`](./src/sidecar/bundle.ts) holds `bundle`, which
+  compiles the catalogue modules. esbuild resolves most imports itself, and
+  [`src/sidecar/native-plan.ts`](./src/sidecar/native-plan.ts) classifies the
+  result. It plans a second compile when esbuild's own resolution would change
+  the bundle.
 - [`src/sidecar/postcss.ts`](./src/sidecar/postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes.
 - [`src/generated/sidecar`](./src/generated/sidecar) holds the request and

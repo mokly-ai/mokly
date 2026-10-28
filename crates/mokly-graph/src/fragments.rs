@@ -8,16 +8,17 @@ use mokly_model::material::props_key;
 
 use crate::cache::{Artifact, RenderCache};
 use crate::key::{NodeKind, key};
+use crate::render_inputs::RenderKeys;
 use crate::requests::{MemoryRequests, Requests};
 
 /// Adapter around one sidecar bundle generation; consume through `dyn FragmentRenderer`.
-/// A component fragment key covers the generation, handle, effective entry and saved
-/// slots, props, render kind, viewport, scheme, ignore scope, and supplied slots, so
-/// equal requests share one cached render. A page key covers the generation and handle.
+/// A component fragment key covers the render input key of the handle's entry module,
+/// the handle, effective entry and saved slots, props, render kind, viewport, scheme,
+/// ignore scope, and supplied slots, so equal requests share one cached render, also
+/// across generations and sides. A page key covers the render input key and handle.
 pub struct MemoFragments {
-    /// Fingerprint of the content-addressed sidecar bundle generation, including its
-    /// module graph, its class-map table digest, and its binding table.
-    pub generation: String,
+    /// Render input keys of the bundle's entry modules.
+    pub keys: Arc<RenderKeys>,
     /// The actual sidecar rendering boundary.
     pub renderer: Arc<dyn FragmentRenderer>,
     /// Shared byte-bounded process cache.
@@ -26,14 +27,14 @@ pub struct MemoFragments {
 }
 
 impl MemoFragments {
-    /// Bind a provider to one immutable sidecar generation.
+    /// Bind a provider to one immutable sidecar generation and its render input keys.
     pub fn new(
-        generation: String,
+        keys: Arc<RenderKeys>,
         renderer: Arc<dyn FragmentRenderer>,
         cache: Arc<dyn RenderCache>,
     ) -> Self {
         Self {
-            generation,
+            keys,
             renderer,
             cache,
             flights: Arc::new(MemoryRequests::default()),
@@ -61,20 +62,17 @@ impl FragmentRenderer for MemoFragments {
             "{}\n{}\n{:?}",
             request.entry_path, request.entry_title, request.saved_slots
         );
+        let inputs = self.keys.handle(&request.handle).0.as_bytes();
         let key = if matches!(&request.kind, RenderKind::Page) {
             key(
                 NodeKind::Fragment,
-                &[
-                    self.generation.as_bytes(),
-                    b"page",
-                    request.handle.as_bytes(),
-                ],
+                &[inputs, b"page", request.handle.as_bytes()],
             )
         } else {
             key(
                 NodeKind::Fragment,
                 &[
-                    self.generation.as_bytes(),
+                    inputs,
                     request.handle.as_bytes(),
                     effective.as_bytes(),
                     props.as_bytes(),

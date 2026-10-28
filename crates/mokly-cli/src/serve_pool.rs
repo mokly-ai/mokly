@@ -15,6 +15,8 @@ use mokly_sidecar::wire::MethodResult;
 pub(super) trait PoolScheduling: Foreground {
     /// Current work has priority; a base handle observes its attempt's cancellation.
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool>;
+    /// The number of sidecar calls that admission runs at once, at least one.
+    fn limit(&self) -> usize;
 }
 
 /// One foreground counter and request bound surround the shared process pool.
@@ -54,6 +56,9 @@ impl PoolScheduling for ServePool {
             gate: self.gate.clone(),
             base,
         })
+    }
+    fn limit(&self) -> usize {
+        self.gate.limit
     }
 }
 

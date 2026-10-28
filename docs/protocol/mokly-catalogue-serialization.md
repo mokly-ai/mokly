@@ -78,7 +78,7 @@ its `before` address are additive optional fields, so they keep the detail's
 number. The review result stays in memory under the
 [comparison contract](./mokly-comparison.md). The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 types are the normative shapes. A reader validates a document against them
 before use.
 
