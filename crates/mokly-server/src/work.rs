@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
 
 use async_trait::async_trait;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_model::data::Props;
 use tokio::sync::Semaphore;
 
@@ -28,8 +29,13 @@ pub fn parallelism(available: usize) -> u32 {
 #[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
 pub trait Work: Send + Sync {
-    /// Render one background document only when foreground admission is idle.
-    async fn background(&self, documents: Arc<dyn Documents>, route: String) -> Result<()>;
+    /// Render one background document only when foreground admission is idle, and
+    /// return its warnings unreported.
+    async fn background(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Vec<Warning>>;
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
     -> Result<Option<File>>;
@@ -61,6 +67,9 @@ pub struct Workers {
     pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     pub(crate) workers: Arc<Semaphore>,
+    /// One fair permit: queued background renders wait for admission one at a time, in
+    /// request order, so a worker freed between two polls cannot reorder them.
+    pub(crate) turn: Semaphore,
     /// Eight preview queue tickets server-wide. A page reuses its live ticket, so its
     /// superseded jobs never hold more than one.
     queued: Arc<Semaphore>,
@@ -84,6 +93,7 @@ impl Workers {
             diagnostics,
             parallelism,
             workers: Arc::new(Semaphore::new(parallelism as usize)),
+            turn: Semaphore::new(1),
             queued: Arc::new(Semaphore::new(8)),
             pages: Mutex::new(BTreeMap::new()),
             closed: AtomicBool::new(false),
@@ -93,35 +103,12 @@ impl Workers {
 
 #[async_trait]
 impl Work for Workers {
-    async fn background(&self, documents: Arc<dyn Documents>, route: String) -> Result<()> {
-        let permit = loop {
-            let changed = self.priority.changed.notified();
-            tokio::pin!(changed);
-            changed.as_mut().enable();
-            if self.closed.load(Ordering::SeqCst) {
-                return Ok(());
-            }
-            if self.priority.idle()
-                && let Ok(permit) = self.workers.clone().try_acquire_owned()
-            {
-                break permit;
-            }
-            changed.await;
-        };
-        let guard = self.priority.enter(false);
-        let parent = tracing::Span::current();
-        match tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| {
-                let _guard = guard;
-                let _permit = permit;
-                documents.background(&route)
-            })
-        })
-        .await
-        {
-            Ok(result) => result,
-            Err(source) => Err(InternalError::Task { source }.into()),
-        }
+    async fn background(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Vec<Warning>> {
+        self.background_render(documents, route).await
     }
     async fn generated(
         &self,
