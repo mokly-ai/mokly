@@ -80,6 +80,42 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
   expect(detail.reads()).toBe(1);
 });
 
+test("a variant Usage waits for its parent detail and reuses it for a sibling", async ({
+  page,
+}) => {
+  const detail = await holdDetail(page, "example/components/action");
+  await page.goto("/view/example/components/action/default/");
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  const usage = await openPanel(page, "Usage");
+  await expect.poll(() => detail.held.length).toBe(1);
+  await expect(usage).toHaveText("Loading usage…");
+  await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
+    "Loading preview…",
+  );
+
+  await detail.release();
+  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
+  for (const name of ["Welcome", "Details", "Toolbar"])
+    await expect(
+      usage.getByRole("link", { name, exact: true }).first(),
+    ).toBeVisible();
+  expect(detail.reads()).toBe(1);
+
+  const sibling = await holdDetail(page, "example/components/action/disabled");
+  await page
+    .getByRole("navigation", { name: "Saved variants" })
+    .getByRole("link", { name: "Disabled", exact: true })
+    .click();
+  await expect.poll(() => sibling.held.length).toBe(1);
+  await sibling.release();
+  await expect(page).toHaveURL(
+    /\/view\/example\/components\/action\/disabled\/$/u,
+  );
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
+  expect(detail.reads()).toBe(1);
+});
+
 test("an instance deep link selects its instance once the destination detail arrives", async ({
   page,
 }) => {

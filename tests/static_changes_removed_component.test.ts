@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
+import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";
@@ -48,9 +48,9 @@ test(
             kind: "removed",
             eligible: true,
           });
-        const detail = await json<EntryDetailV2>(
+        const detail = await json<EntryDetailV3>(
           built.output,
-          `${path.posix.dirname(built.index.comparisonUrl!)}/entries/${entry.path}.json`,
+          `${built.index.comparisonUrl!}entries/${entry.path}.json`,
         );
         assert.equal(detail.workspace?.comparisonEligible, true);
         assert.deepEqual(detail.reasons, [{ kind: "removed" }]);

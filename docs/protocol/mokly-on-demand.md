@@ -93,7 +93,7 @@ No comparison generation is assembled until the reader selects a diff or opens a
 removed entry. The [selected comparison contract](./mokly-selected-comparisons.md)
 owns the request, the capture, the retention, and the limits for a current
 screen or component. Removed component parents and variants use the advertised
-generation URL. Historical screens, pages, and documents use that generation
+generation root. Historical screens, pages, and documents use that generation
 under the [removed previews contract](./mokly-removed-previews.md). The static
 output of `build` carries one complete generation instead, under the
 [comparison serving contract](./mokly-comparison-serving.md).

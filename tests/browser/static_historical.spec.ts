@@ -86,10 +86,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
             : kind === "document"
               ? `index${scheme === "dark" ? ".dark" : ""}.html`
               : `index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
-        const generation = new URL(index.comparisonUrl, baseURL).href.replace(
-          /review\.json$/,
-          "",
-        );
+        const generation = new URL(index.comparisonUrl, baseURL).href;
         await expect(frame).toHaveAttribute(
           "data-mokly-preview-source",
           `${generation}snapshots/before/mokly-generated/${entryPath}/${file}`,

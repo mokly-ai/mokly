@@ -33,14 +33,15 @@ for (const variant of ["html", "react"] as const) {
       for (const result of report.results) {
         assert.ok("status" in result && result.status === "measured");
         assert.ok(
-          "review" in result &&
-            typeof result.review === "object" &&
-            result.review,
+          "summary" in result &&
+            typeof result.summary === "object" &&
+            result.summary,
         );
-        assert.ok("baseCommit" in result.review);
-        assert.equal(result.review.baseCommit, fixture.baseline);
-        assert.ok("included" in result.review && result.review.included === 0);
-        assert.ok("affected" in result.review && result.review.affected === 0);
+        assert.ok("baseCommit" in result.summary);
+        assert.equal(result.summary.baseCommit, fixture.baseline);
+        assert.ok(
+          "included" in result.summary && result.summary.included === 0,
+        );
         assert.ok(
           "basePreparation" in result &&
             typeof result.basePreparation === "object" &&

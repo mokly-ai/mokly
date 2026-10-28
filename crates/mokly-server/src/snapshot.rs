@@ -11,12 +11,11 @@ use mokly_model::catalogue::CatalogueModel;
 use mokly_model::error::ModelError;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication, ViewKey};
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
-use mokly_model::review::ReviewResultV8;
 use mokly_model::shell;
 
 use crate::assets::File;
@@ -40,7 +39,7 @@ pub struct Snapshot {
     /// Shared routes, assets, and backend for this generation.
     pub generation: Arc<Generation>,
     /// Validated payloads; their wire revision is supplied by this snapshot.
-    pub details: BTreeMap<String, Arc<EntryDetailV2>>,
+    pub details: BTreeMap<String, Arc<EntryDetailV3>>,
     /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
@@ -68,7 +67,7 @@ impl Snapshot {
     }
 
     /// Materialize one detail with this publication's revision for typed consumers.
-    pub fn detail(&self, path: &str) -> Option<EntryDetailV2> {
+    pub fn detail(&self, path: &str) -> Option<EntryDetailV3> {
         self.details.get(path).map(|detail| {
             let mut detail = detail.as_ref().clone();
             detail.revision = Some(self.index.revision);
@@ -229,11 +228,6 @@ impl Projector {
 
 pub(crate) fn encode(value: &impl serde::Serialize) -> Result<File> {
     json_file(canonical::to_string(value))
-}
-
-/// A comparison's `review.json`: canonical JSON in its compact form.
-pub(crate) fn encode_review(review: &ReviewResultV8) -> Result<File> {
-    json_file(canonical::to_compact_string(review))
 }
 
 fn json_file(text: std::result::Result<String, ModelError>) -> Result<File> {

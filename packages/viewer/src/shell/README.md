@@ -159,9 +159,11 @@ views changed compare as an affected-only entry does.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
-Numeric review version failures retain `MoklyVersionError` through the request
-and comparison controller. The failure surface shows the shared compatible-viewer
-message and separate version details; Current remains available.
+`comparison_request.ts` establishes a comparison's generation root: a
+pinned catalogue's advertised root without a request, or the root that
+Serve's selection endpoint redirects to, which a HEAD request renews. A failed
+request shows the comparison failure with Try again; Current remains
+available.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
@@ -210,8 +212,9 @@ controlled viewers report the frame error and wait for host-owned selection.
 `data_controller.ts` owns one shell root's data outside React: the installed
 index, the entry details whose fences accepted them, the publications of the
 event stream, and the live descriptor. `data_requests.ts` lists the details a
-route renders from (the routed entry's, plus each step screen's for a use
-case), loads one detail under the fences of the
+route renders from. A current component variant requests its own detail and
+its parent's detail. A use case also requests each step screen's detail. The
+module loads each detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
 and loads a publication refresh; `data_refresh.ts` runs one such refresh at a
 time for the controller and keeps the route whose refresh failed.
@@ -270,10 +273,12 @@ the resolved removed record and route.
 
 `workspace_data.ts` describes shell data. Its `entry` is always the exact
 routed screen, component parent, or component variant; component routes retain
-their parent schema separately for controls. The lists of a screen or component
-come from its entry detail's `workspace`, and every value is projected only
-from validated index and detail records: every catalogue of a delivery carries
-its published records. `comparison_views.tsx` renders
+their parent schema separately for controls. A screen or component parent reads
+its lists from its own detail. A current component variant reads Used by and
+Affected from its parent's detail, while its own detail supplies its other
+workspace facts. Every value is projected only from validated index and detail
+records: every catalogue of a delivery carries its published records.
+`comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 
@@ -302,13 +307,11 @@ design places, and the no-changes line follow, in that order.
 `entry_wording.ts` words for a screen or a component, in place of
 the no-changes line when Changes does not list the routed entry and changed
 components affect it, by the facts of `../review/shared_impact.ts`: the
-detail's related components, a component-owned record on a shown view, or the
-loaded review's `affected` evidence. The same facts give an unchanged view in
-`comparison_selection.ts` its "Components this screen uses changed" pane
-heading, and so does a view whose usage holds a changed component that the
-detail names: `workspace_context.tsx` collects those views with
-`viewsUsingComponents`, because a selected comparison in Serve carries no
-`affected` records. The heading names
+detail's related components or a component-owned record on a shown view.
+`comparison_selection.ts` gives an unchanged view its "Components this screen
+uses changed" pane heading when that view keeps a component-owned record, or
+when its usage holds a changed component that the detail names:
+`workspace_context.tsx` collects those views with `viewsUsingComponents`. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its
@@ -322,15 +325,17 @@ from the index record and its evidence record from the page's entry detail,
 and `page_evidence.tsx` renders them in the page's `details.tsx` panel with
 the page wording. `views.tsx` shows that status beside the page title.
 
-A view whose entry detail is not held carries `omitted` usage, and no list is
-derived from it: `use_workspace_data.ts` exposes loading until the routed
-detail is accepted, and the failed state with retry after a failed or rejected
-load, rather than publishing a partial or false-empty list. It keeps one
-entry-owned workspace object, so a publication that replaces the detail keeps
-loaded usage and local editor state. Its `detailDelivery` also holds back the
-Props fields in `workspace_props.tsx`, which shows `Loading props…` or the
-failed state with retry until the detail brings their declared order, so the
-fields never appear in the index's name order and then move.
+An entry detail that is not held carries `omitted` usage, and no list is
+derived from it. `use_workspace_data.ts` exposes loading until every detail
+the route needs is accepted. A current component variant therefore waits for
+its own and its parent's detail. It exposes the failed state with retry after a
+failed or rejected load, rather than publishing a partial or false-empty list.
+It keeps one entry-owned workspace object, so a publication that replaces the
+details keeps loaded usage and local editor state. Its `detailDelivery` also
+holds back the Props fields in `workspace_props.tsx`, which shows `Loading
+props…` or the failed state with retry until the route details bring their
+declared order, so the fields never appear in the index's name order and then
+move.
 `workspace_usage.tsx` keys each Usage row
 by its entry and removal state only, so a publication that changes a row's
 comparison eligibility keeps its link element and the focus on it. Its

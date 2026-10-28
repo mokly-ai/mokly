@@ -32,7 +32,7 @@ test("the standalone shell paints its loading state before the index arrives", (
 test("a version failure shows the one headline and Reload", () => {
   const html = renderToStaticMarkup(
     <VersionFailure
-      error={new MoklyVersionError("catalogue", 8, 7)}
+      error={new MoklyVersionError("catalogue", 9, 8)}
       reload={() => undefined}
     />,
   );

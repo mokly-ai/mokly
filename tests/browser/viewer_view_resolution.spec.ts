@@ -8,7 +8,7 @@ import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
 
-const comparisonUrl = `mokly-viewer/diffs/generations/${"c".repeat(64)}/review.json`;
+const comparisonUrl = `mokly-viewer/diffs/generations/${"c".repeat(64)}/`;
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 
 test.beforeAll(async () => {
@@ -26,6 +26,7 @@ function readyCatalogue(): CatalogueReadModel {
   return {
     ...source,
     changesStatus: "ready",
+    baseCommit: "b".repeat(40),
     comparisonUrl,
     screens: source.screens.map((entry) => ({ ...entry, changes })),
     pages: source.pages.map((entry) => ({ ...entry, changes })),

@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
-import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import { catalogueFixture, indexFixture } from "./catalogue_v8_fixture.js";
 
 /** The Details body of one current or removed entry of the edited fixture. */
 function details(path: string, edit: (index: CatalogueReadModel) => void) {

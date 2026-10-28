@@ -1,4 +1,4 @@
-//! Conservative accounting for every cache-retained parsed tree and record.
+//! Estimated accounting for every cache-retained parsed tree and record.
 
 use std::mem;
 
@@ -8,9 +8,12 @@ use mokly_html::links::Reference;
 use mokly_html::tree;
 use mokly_html::tree::{Node, RegionKind};
 
+/// Usage, instance, and slot records retain about twice their JSON length in memory.
+const RECORD_FACTOR: usize = 2;
+
 pub(crate) fn document(document: &Composed) -> usize {
-    let usage =
-        serde_json::to_vec(&document.usage).map_or(0, |bytes| bytes.len().saturating_mul(64));
+    let usage = serde_json::to_vec(&document.usage)
+        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
     mem::size_of::<Composed>()
         + nodes(&document.tree)
         + usage
@@ -42,10 +45,10 @@ pub(crate) fn document(document: &Composed) -> usize {
 }
 
 pub(crate) fn fragment(fragment: &Fragment) -> usize {
-    let instances =
-        serde_json::to_vec(&fragment.instances).map_or(0, |bytes| bytes.len().saturating_mul(64));
-    let slots =
-        serde_json::to_vec(&fragment.slots).map_or(0, |bytes| bytes.len().saturating_mul(64));
+    let instances = serde_json::to_vec(&fragment.instances)
+        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
+    let slots = serde_json::to_vec(&fragment.slots)
+        .map_or(0, |bytes| bytes.len().saturating_mul(RECORD_FACTOR));
     mem::size_of::<Fragment>()
         + fragment.html.capacity()
         + fragment
@@ -170,3 +173,7 @@ fn style_attribution(records: &Option<Vec<StyleAttribution>>) -> usize {
                 .sum::<usize>()
     })
 }
+
+#[cfg(test)]
+#[path = "_tests_/weight_tests.rs"]
+mod weight_tests;

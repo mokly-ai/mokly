@@ -8,11 +8,9 @@ import type {
   ResourceEvidence,
   RuleEvidence,
 } from "../packages/viewer/dist/catalogue/types.js";
-import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type {
+  ComparedEntry,
   EntryChangeReason,
-  ReviewEntry,
-  ReviewResult,
   ReviewView,
 } from "../packages/viewer/dist/review/types.js";
 import { viewEvidenceReasons } from "../packages/viewer/dist/review/view_evidence.js";
@@ -45,17 +43,16 @@ test("loaded comparison details merge with classification, deduplicate selectors
       }),
     },
   ];
-  const loaded = parseReviewResult(
-    review("home", [dependency(SHARED), dependency(UNUSED)], {
-      ignoredIds: ["chrome"],
-      rules: [
-        rule(SHARED, ".auth"),
-        rule(SHARED, ".global", "unresolved"),
-        rule(UNUSED, ".saved"),
-      ],
-    }),
-  );
-  const markup = renderEvidence(data, loaded);
+  data.reasons = [dependency(SHARED), dependency(UNUSED)];
+  data.compared = compared(data.reasons, {
+    ignoredIds: ["chrome"],
+    rules: [
+      rule(SHARED, ".auth"),
+      rule(SHARED, ".global", "unresolved"),
+      rule(UNUSED, ".saved"),
+    ],
+  });
+  const markup = renderEvidence(data, true);
   assert.match(markup, /Changed styles that apply to this screen:/);
   assert.match(markup, /This change can apply anywhere on the screen/);
   for (const selector of [".auth", ".global", ".saved"])
@@ -64,41 +61,30 @@ test("loaded comparison details merge with classification, deduplicate selectors
   assert.match(markup, /Excluded content: chrome/);
   assert.doesNotMatch(markup, /Examined and excluded|Shared component changes/);
   assert.equal(markup.split("<h3>Comparison details</h3>").length - 1, 1);
-  assert.equal(renderEvidence(data, loaded), markup);
+  assert.equal(renderEvidence(data, true), markup);
 });
 
 test("loaded view resources remain visible without classification", () => {
   const data = workspace();
   delete data.status;
-  const loaded = parseReviewResult(
-    review("home", [dependency("static/loaded.svg")], {
-      resources: [resource("static/loaded.svg")],
-    }),
-  );
-  const markup = renderEvidence(data, loaded);
+  data.compared = compared([dependency("static/loaded.svg")], {
+    resources: [resource("static/loaded.svg")],
+  });
+  const markup = renderEvidence(data, true);
   assert.doesNotMatch(markup, / hidden=/);
   assert.match(markup, /static\/loaded\.svg/);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 
-test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
-  const loaded = parseReviewResult(
-    review("other", [dependency("static/logo.svg")], {
-      resources: [resource("static/logo.svg")],
-    }),
-  );
-  assert.doesNotMatch(renderEvidence(workspace(), loaded), /static\/logo\.svg/);
-});
-
-test("a private source path never reaches Details as evidence", () => {
-  for (const path of ["entries/renderer.ts", "mockups/shared.css"])
-    assert.throws(
-      () =>
-        parseReviewResult(
-          review("home", [dependency(path)], { resources: [resource(path)] }),
-        ),
-      /review/,
-    );
+test("compared views add evidence only once the routed entry's comparison loads", () => {
+  const data = workspace();
+  data.compared = compared([dependency("static/logo.svg")], {
+    resources: [resource("static/logo.svg")],
+  });
+  assert.doesNotMatch(renderEvidence(data), /static\/logo\.svg/);
+  assert.match(renderEvidence(data, true), /static\/logo\.svg/);
+  delete data.compared;
+  assert.doesNotMatch(renderEvidence(data, true), /static\/logo\.svg/);
 });
 
 test("workspace evidence keeps excluded stylesheets separate", () => {
@@ -112,11 +98,9 @@ test("workspace evidence keeps excluded stylesheets separate", () => {
       resources: [],
     }),
   }));
-  const loaded = parseReviewResult(
-    review("home", [], { state: "unchanged" }, ["mobile", "desktop"]),
-  );
+  data.compared = compared([], { state: "unchanged" }, ["mobile", "desktop"]);
 
-  const markup = renderEvidence(data, loaded);
+  const markup = renderEvidence(data, true);
   assert.doesNotMatch(markup, /Changes to these files may affect this screen:/);
   assert.match(
     markup,
@@ -127,13 +111,13 @@ test("workspace evidence keeps excluded stylesheets separate", () => {
 
 test("loaded evidence lists a resource that several views keep once", () => {
   const beta = "static/beta.svg";
-  const loaded = parseReviewResult(
-    review("home", [dependency(beta)], { resources: [resource(beta)] }, [
-      "mobile",
-      "desktop",
-    ]),
+  const data = workspace();
+  data.compared = compared(
+    [dependency(beta)],
+    { resources: [resource(beta)] },
+    ["mobile", "desktop"],
   );
-  const markup = renderEvidence(workspace(), loaded);
+  const markup = renderEvidence(data, true);
 
   assert.match(
     markup,
@@ -142,52 +126,26 @@ test("loaded evidence lists a resource that several views keep once", () => {
   assert.equal(markup.split(`<li>${beta}</li>`).length - 1, 1);
 });
 
-function renderEvidence(
-  data: WorkspaceData,
-  loaded?: ReturnType<typeof parseReviewResult>,
-): string {
+function renderEvidence(data: WorkspaceData, loaded = false): string {
   return renderToStaticMarkup(
-    createElement(WorkspaceEvidence, {
-      data,
-      ...(loaded ? { loaded } : {}),
-    }),
+    createElement(WorkspaceEvidence, { compared: loaded, data }),
   );
 }
 
-/** A one-screen review v8 result whose light views share one record shape. */
-function review(
-  path: string,
-  reasons: EntryChangeReason[],
+/** The routed screen `home`'s comparison facts, whose light views share one record shape. */
+function compared(
+  reasons: readonly EntryChangeReason[],
   shape: Partial<ReviewView> = {},
   viewports: readonly ("mobile" | "desktop")[] = ["mobile"],
-): ReviewResult {
-  const side = { path, title: "Home", props: {} };
-  const state = shape.state ?? "changed";
+): ComparedEntry {
   const views = viewports.map((viewport): ReviewView => ({
     ignoredIds: [],
     ...structuredClone(shape),
     viewport,
     colorScheme: "light",
-    state,
+    state: shape.state ?? "changed",
   }));
-  const entry: ReviewEntry = {
-    kind: "screen",
-    path,
-    title: "Home",
-    before: side,
-    after: side,
-    state,
-    included: reasons.length > 0,
-    reasons,
-    views,
-  };
-  return {
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [entry],
-    affected: [],
-    diagnostics: [],
-  };
+  return { path: "home", basePath: "home", reasons, views };
 }
 
 function workspace(): WorkspaceData {

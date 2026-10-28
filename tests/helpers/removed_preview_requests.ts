@@ -1,14 +1,12 @@
 import { createHash } from "node:crypto";
 
-import type {
-  ReviewResult,
-  ReviewView,
-} from "../../packages/viewer/dist/review/types.js";
+import type { ReviewView } from "../../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 
 export const GENERATION = "b".repeat(64);
 
-export const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
+/** The comparison's generation root, which owns every historical document. */
+export const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/`;
 
 export const removedPage: RemovedPreviewData = {
   path: "removed-page",
@@ -24,34 +22,37 @@ export const removedScreen: RemovedPreviewData = {
 
 export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
+/** The removed detail address of screen `removed-screen` inside the generation. */
+export const screenPath = `mokly-viewer/diffs/generations/${GENERATION}/entries/removed-screen.json`;
+
 /**
- * A review v8 result whose screen `removed-screen` has these views: removed
- * when every view is removed, else changed with a current side.
+ * The entry detail v3 of a removed screen with these captured views, which
+ * names this snapshot id and, by default, the screen `removed-screen`.
  */
-export function review(
+export function removedDetail(
   views: ReviewView[],
-  baseCommit = "a".repeat(40),
-): ReviewResult {
-  const side = { path: "removed-screen", title: "Removed screen", props: {} };
-  const removed = views.every((view) => view.state === "removed");
+  snapshotId = "e".repeat(64),
+  path = "removed-screen",
+) {
   return {
-    schemaVersion: 8,
-    baseCommit,
-    entries: [
-      {
-        kind: "screen",
-        path: "removed-screen",
-        title: "Removed screen",
-        before: side,
-        ...(removed ? {} : { after: side }),
-        state: removed ? "removed" : "changed",
-        included: true,
-        reasons: [{ kind: removed ? "removed" : "material" }],
-        views,
-      },
-    ],
-    affected: [],
-    diagnostics: [],
+    schemaVersion: 3,
+    identity: { id: "c".repeat(64), title: "Mokly" },
+    generation: GENERATION,
+    entry: { kind: "screen", path, snapshotId },
+    reasons: [{ kind: "removed" }],
+    views: views.map((view) => ({
+      ...view,
+      usage: { status: "ready", instances: [], slots: [], ranges: [] },
+      resourceEvidence: { rules: [], resources: [] },
+    })),
+    controlOrder: [],
+    workspace: {
+      comparisonEligible: false,
+      usedBy: [],
+      affected: [],
+      relatedComponents: [],
+      inputChanges: [],
+    },
   };
 }
 

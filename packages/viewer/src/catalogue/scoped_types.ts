@@ -1,8 +1,8 @@
-/** The shell's working catalogue: the index v7 with usage from held details. */
+/** The shell's working catalogue: the index v8 with usage from held details. */
 
 import type {
   CatalogueComponent,
-  EntryDetailV2,
+  EntryDetailV3,
   CatalogueDocument,
   CataloguePage,
   CatalogueReadModel,
@@ -11,6 +11,7 @@ import type {
   CatalogueUseCase,
   CatalogueView,
   RemovedEntry,
+  ReviewState,
   ViewEvidence,
 } from "./types.js";
 
@@ -18,9 +19,11 @@ import type {
 export type ShellCatalogueUsage =
   CatalogueUsage | { readonly status: "omitted" };
 
-/** One index view with the usage and evidence its entry's detail carries. */
+/** One index view with the usage, review state, and evidence its entry's detail carries. */
 export interface ShellCatalogueView extends CatalogueView {
   usage: ShellCatalogueUsage;
+  state?: ReviewState;
+  ignoredIds?: readonly string[];
   resourceEvidence?: ViewEvidence;
 }
 
@@ -70,5 +73,5 @@ export interface ShellCatalogueReadModel extends Omit<
   components: readonly ShellCatalogueComponent[];
   removedEntries: readonly ShellRemovedEntry[];
   /** The accepted details by `detailKey`, each fenced against this index. */
-  details: ReadonlyMap<string, EntryDetailV2>;
+  details: ReadonlyMap<string, EntryDetailV3>;
 }

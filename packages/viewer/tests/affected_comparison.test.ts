@@ -13,7 +13,7 @@ import { test } from "node:test";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import type { Viewport } from "../src/data/axes.js";
 import type { UsageLink } from "../src/shell/workspace_data.js";
@@ -28,7 +28,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 /** A screen variant, a component, and its variant that Changes does not list. */
 const SCREEN = "product/browse/home/empty";
@@ -53,7 +53,7 @@ const CARD = {
 /** The routed entry's workspace and shown decision, after optional edits. */
 function shown(
   path: string,
-  edit?: (detail: EntryDetailV2) => void,
+  edit?: (detail: EntryDetailV3) => void,
   {
     index,
     viewport = "both",
@@ -90,7 +90,7 @@ function shown(
  * detail names Card, and the usage of the views in `viewports` holds it.
  */
 function affected(viewports: readonly Viewport[] = ["mobile", "desktop"]) {
-  return (detail: EntryDetailV2) => {
+  return (detail: EntryDetailV3) => {
     detail.workspace!.comparisonEligible = true;
     detail.workspace!.relatedComponents = [
       { path: "components/card", title: "Card" },

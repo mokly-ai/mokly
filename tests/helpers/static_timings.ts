@@ -12,6 +12,7 @@ interface Timing {
   elapsedMs: number;
   durationMs?: number;
   status?: string;
+  side?: "base" | "head";
   reason?: "recycle" | "replacement" | "retry" | "root-switch";
   tier?: number;
   views?: number;
@@ -22,6 +23,12 @@ interface Timing {
   changed?: number;
   ignoredOnly?: number;
   kind?: string;
+  phase?: string;
+  hits?: number;
+  misses?: number;
+  evictions?: number;
+  chargedBytes?: number;
+  entries?: number;
 }
 
 export function timings(stderr: string): Timing[] {

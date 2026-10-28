@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import path from "node:path";
 import test from "node:test";
 
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
-import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 
 import { upload } from "./helpers/receiver/upload.js";
 import { cleanupAll } from "./helpers/static_cleanup.js";
@@ -65,13 +63,10 @@ test(
       assert.notEqual(metadata.baseSha, tip);
       assert.notEqual(metadata.baseSha, head);
       assert.equal(metadata.configPath, config);
-      assert.equal(metadata.comparisonPath, index.comparisonUrl);
+      assert.equal(Object.hasOwn(metadata, "comparisonPath"), false);
       assert.ok(index.comparisonUrl);
-      const review = parseReviewResult(
-        JSON.parse(received.get(index.comparisonUrl)!.toString()),
-      );
-      assert.equal(review.baseCommit, base);
-      const generation = path.posix.dirname(index.comparisonUrl);
+      assert.equal(index.baseCommit, base);
+      const generation = index.comparisonUrl.slice(0, -1);
       assert.equal(received.has(`${generation}/snapshot.json`), false);
       assert.deepEqual(
         index.removedEntries.map(({ entry }) => entry.path),

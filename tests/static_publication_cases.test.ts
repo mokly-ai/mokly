@@ -58,8 +58,9 @@ test(
         assert.match(result.stdout, /Published Mokly catalogue/);
         if (change === "unrelated") {
           assert.deepEqual(server.attempts, previousBlobAttempts);
-          // The Plan archive still carries the new publication metadata.
-          assert.match(result.stdout, /1 file uploaded/);
+          // The Plan archive still carries the new publication metadata and
+          // the catalogue index.
+          assert.match(result.stdout, /2 files uploaded/);
         }
       }
       assert.equal(server.metadata[0]?.configPath, "tools/mokly.config.json");
@@ -186,6 +187,18 @@ test(
               record.parentId !== undefined,
           ),
         );
+        const write = records.find(
+          (record) =>
+            record.stage === "output.write" && record.event === "start",
+        );
+        const cache = records.filter(
+          (record) =>
+            record.stage === "render.cache" && record.phase === "output.write",
+        );
+        assert.equal(cache.length, 1);
+        assert.equal(cache[0]?.parentId, write?.id);
+        assert.ok((cache[0]?.misses ?? 0) > 0);
+        assert.ok((cache[0]?.chargedBytes ?? 0) > 0);
         assert.ok(!output.stdout.includes("✔"));
       }
       assert.ok(result.stderr.includes('"stage":"upload.plan"'));

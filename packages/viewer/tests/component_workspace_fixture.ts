@@ -1,7 +1,7 @@
 import { isManifestComponentVariant } from "../src/components/manifest_types.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
-import { shellModelFixture } from "./catalogue_v7_fixture.js";
+import { shellModelFixture } from "./catalogue_v8_fixture.js";
 
 export function componentWorkspaceFixture() {
   const model = shellModelFixture();

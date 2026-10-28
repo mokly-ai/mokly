@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use mokly_cli::redaction::Redactor;
+use mokly_graph::cache::{CacheStats, RenderCache};
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::workers::Clock;
 use serde_json::{Map, Value, json};
@@ -14,6 +15,7 @@ use tracing_subscriber::Layer;
 use tracing_subscriber::layer::{Context, SubscriberExt};
 use tracing_subscriber::registry::LookupSpan;
 
+use crate::serve_trace_cache;
 use crate::serve_trace_stages::stage;
 use crate::terminal::Terminal;
 
@@ -23,12 +25,15 @@ pub(super) struct Timings {
     clock: Arc<dyn Clock>,
     next: AtomicU64,
     redactor: Arc<Redactor>,
+    cache: Arc<dyn RenderCache>,
 }
 
+/// Install the timing layer over the command's one render cache.
 pub(super) fn install(
     terminal: Arc<dyn Terminal>,
     session: String,
     redactor: Arc<Redactor>,
+    cache: Arc<dyn RenderCache>,
 ) -> bool {
     let layer = Timings {
         terminal,
@@ -36,6 +41,7 @@ pub(super) fn install(
         clock: Arc::new(SystemClock::default()),
         next: AtomicU64::new(1),
         redactor,
+        cache,
     };
     tracing::subscriber::set_global_default(tracing_subscriber::registry().with(layer)).is_ok()
 }
@@ -49,6 +55,7 @@ struct SpanTiming {
     documents: u64,
     fragments: u64,
     cache_hits: u64,
+    cache: Option<CacheStats>,
 }
 
 #[derive(Default)]
@@ -62,7 +69,7 @@ struct Fields {
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
-            "viewport" | "scheme" | "action" | "operation" => {
+            "viewport" | "scheme" | "action" | "operation" | "side" => {
                 self.values.insert(field.name().into(), json!(value));
             }
             "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {
@@ -140,6 +147,16 @@ impl Timings {
         }
         self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
     }
+    fn emit_cache(&self, span: &SpanTiming, start: &CacheStats) {
+        let mut record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),
+            "role":"core","stage":"render.cache","event":"counts",
+            "id":self.next.fetch_add(1, Ordering::SeqCst),"parentId":span.id,
+            "elapsedMs":self.elapsed(),"phase":span.stage});
+        for (key, value) in serve_trace_cache::counts(start, &self.cache.stats()) {
+            record[key] = value;
+        }
+        self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
+    }
 }
 
 impl<S> Layer<S> for Timings
@@ -170,6 +187,7 @@ where
             documents: 0,
             fragments: 0,
             cache_hits: 0,
+            cache: serve_trace_cache::phase(name).then(|| self.cache.stats()),
         };
         self.emit(&timing, "start");
         span.extensions_mut().insert(timing);
@@ -229,13 +247,24 @@ where
         {
             self.emit(&timing, "counts");
         }
+        if let Some(start) = &timing.cache {
+            self.emit_cache(&timing, start);
+        }
         self.emit(&timing, "end");
     }
 }
 
 #[cfg(test)]
+#[path = "_tests_/cache_trace_tests.rs"]
+mod cache_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/capture_trace_tests.rs"]
 mod capture_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/extraction_trace_tests.rs"]
+mod extraction_trace_tests;
 
 #[cfg(test)]
 #[path = "_tests_/serve_trace_tests.rs"]

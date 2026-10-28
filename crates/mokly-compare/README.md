@@ -46,7 +46,9 @@ not fill the source-byte LRU.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
-needs files on disk. `DiskCache` keeps the source and dependency namespaces
+needs files on disk. Its `review.base-extraction` span times the source key,
+the cache lookup, and a build, and records `action`: `reuse` for a complete
+entry and `extract` for a build. `DiskCache` keeps the source and dependency namespaces
 under the directory that `SystemLocations` selects, with OS locks for
 namespace mutation and entry leases. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
@@ -87,15 +89,16 @@ paths.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 `Comparison::capture_base` validates and captures the base through one ordered
-collector. Each base view supplies its validated document and closure without
-a second render. `Comparison::compare_prepared` classifies that prepared base.
-An uncaptured fallback also uses that entry point, so a summary that exceeds
-the capture bound does not start another pass. The capture keeps exact
-document bytes, generated CSS, and trusted annotations in compressed form.
-Inputs that do not fit the capture budget read from the pinned source. Head
-reads use the bounded render cache and render again on the head root after
-eviction. Each result holds at most one base capture, writes no files, and
-retains no parsed page set. The
+collector. `Comparison::capture_head` uses the same collector for the build
+head. Each view supplies its validated document and closure without a second
+render. `Comparison::compare_prepared` classifies the prepared base and head.
+An uncaptured fallback uses the source generation, so a summary that exceeds
+the capture bound does not start another pass. The capture keeps exact document
+bytes, generated CSS, and trusted annotations in compressed form. Inputs that
+do not fit the capture budget read from their side's source. Serve head reads
+use the bounded render cache and render again on the head root only after
+cache eviction. Build head reads use the head capture. Each result holds at
+most one base capture, and a build result also holds one head capture. The
 [comparison serving contract](../../docs/protocol/mokly-comparison-serving.md)
 owns the capture budget and its overlap with the render cache. Capture checks
 cancellation before each view and each encoding. Its timing spans contain no
@@ -112,9 +115,11 @@ private capture codec and the head comparison retain these rule records.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.
-Removed previews read the same pinned base generation. The retained result
-holds the bounded base capture, the original cached head generation, view
-states, reasons, ownership records, and immutable historical metadata.
+Removed previews read the same pinned base generation. Serve retains the
+original cached head generation and one bounded base capture. Build retains the
+captured head and the bounded base capture. Both
+results keep view states, reasons, ownership records, and immutable historical
+metadata.
 
 `Lookup` indexes kind-aware, case-folded identities once per projection batch
 under the [branch-point lookup contract](../../docs/protocol/mokly-branch-point-lookup.md).
@@ -135,11 +140,15 @@ sidecar pool, and cancellation.
 The projection functions publish one retained result, and neither Serve nor
 `mokly-static` changes the render bytes. `projection_index::apply` projects the
 classification onto current or historical public records of the same retained
-catalogue state, with every published record classified.
-`projection_detail::apply_evidence` supplies included entry reasons and
-resource evidence for current and removed details. `projection_workspace::apply`
+catalogue state, with every published record classified, and names the base
+commit. `projection_detail::apply_evidence` supplies included entry reasons,
+each view's state, ignore ids, and resource evidence, and a current screen's or
+component's base side, for current and removed details. These records carry
+every public fact of the review result, which no file holds.
+`projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent until the caller proves usage.
+An absent workspace stays absent. An absent list stays absent until the caller
+proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file

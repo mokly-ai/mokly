@@ -11,7 +11,7 @@ import {
   detailFixture,
   indexFixture,
   shellModelFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
@@ -82,6 +82,7 @@ test("Changes that are not ready show no page status or comparison details", () 
   });
   for (const changesStatus of ["pending", "unavailable", "disabled"] as const) {
     const index = indexFixture((model) => {
+      delete model.baseCommit;
       Object.assign(model, {
         changesStatus,
         comparisonUrl: null,

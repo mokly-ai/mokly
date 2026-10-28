@@ -8,7 +8,7 @@ use bytes::Bytes;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::error::Error;
-use crate::http::{HttpMock, Request, Step, TransportError};
+use crate::http::{Encoding, HttpMock, Request, Step, TransportError};
 use crate::retry::{Requests, retry_after_seconds};
 use crate::runtime::{ClockMock, Timer};
 
@@ -19,6 +19,7 @@ fn request(step: Step) -> Request {
         step,
         url: settings(1).endpoint,
         body: Bytes::new(),
+        encoding: Encoding::Identity,
         timeout: Duration::from_secs(120),
     }
 }

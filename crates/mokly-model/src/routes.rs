@@ -94,11 +94,6 @@ pub fn comparison_generations() -> String {
     namespace::viewer("diffs/generations/")
 }
 
-/// Artifact-root-relative review document of a comparison generation.
-pub fn comparison_review(generation: &str) -> String {
-    format!("{}review.json", comparison_generation(generation))
-}
-
 #[cfg(test)]
 #[path = "_tests_/comparison_routes_tests.rs"]
 mod comparison_routes_tests;

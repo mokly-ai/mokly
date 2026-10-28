@@ -8,6 +8,7 @@ use crate::readers::{ReadError, index};
 fn fixture(component: bool, removed: bool) -> Value {
     let mut value = empty_index();
     value["changesStatus"] = json!("ready");
+    value["baseCommit"] = json!("b".repeat(40));
     let mut entry = screen("entry", None);
     entry["changes"] =
         json!({"status":"ready","kind":if removed {"removed"} else {"changed"},"included":true});

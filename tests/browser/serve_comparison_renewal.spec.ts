@@ -6,15 +6,11 @@ test("shared Serve comparison fixture renews selected generations after a watche
   request,
   changes,
 }) => {
-  const selected = `/mokly-viewer/diffs/review.json?path=${changes.paths.changed}`;
+  const selected = `/mokly-viewer/diffs/selection?path=${changes.paths.changed}`;
   const initial = await request.get(selected);
-  expect(initial.ok()).toBe(true);
-  const before = initial
-    .url()
-    .replace(
-      "review.json",
-      `snapshots/before/mokly-generated/${changes.paths.changed}/index.desktop.html`,
-    );
+  // The selection redirects to the root of its generation, which has no body.
+  expect(initial.status()).toBe(204);
+  const before = `${initial.url()}snapshots/before/mokly-generated/${changes.paths.changed}/index.desktop.html`;
   const after = before.replace("/snapshots/before/", "/snapshots/after/");
   const retained = await (await request.get(after)).body();
   expect(retained.toString()).toContain("After screen");
@@ -34,18 +30,13 @@ test("shared Serve comparison fixture renews selected generations after a watche
   expect(next.revision).toBeGreaterThan(index.revision);
   expect(next.live).not.toEqual(index.live);
   const renewed = await request.get(`${selected}&refresh=1`);
-  expect(renewed.ok()).toBe(true);
+  expect(renewed.status()).toBe(204);
   expect(renewed.url()).not.toBe(initial.url());
-  expect((await renewed.json()).baseCommit).toBe(changes.baseCommit);
+  expect(next.baseCommit).toBe(changes.baseCommit);
   expect(
     await (
       await request.get(
-        renewed
-          .url()
-          .replace(
-            "review.json",
-            `snapshots/after/mokly-generated/${changes.paths.changed}/index.desktop.html`,
-          ),
+        `${renewed.url()}snapshots/after/mokly-generated/${changes.paths.changed}/index.desktop.html`,
       )
     ).text(),
   ).toContain("Watched edit");
@@ -54,7 +45,6 @@ test("shared Serve comparison fixture renews selected generations after a watche
 });
 
 test("shared Serve comparison fixture can move and restore its independent base ref", async ({
-  request,
   changes,
 }) => {
   const initial = await changes.index();
@@ -69,19 +59,14 @@ test("shared Serve comparison fixture can move and restore its independent base 
       (entry) => entry.changes.status === "ready" && !entry.changes.included,
     ),
   ).toBe(true);
-  expect(
-    (
-      await (
-        await request.get(new URL(atHead.comparisonUrl!, changes.url).href)
-      ).json()
-    ).baseCommit,
-  ).toBe(changes.headCommit);
+  expect(atHead.baseCommit).toBe(changes.headCommit);
   expect(
     atHead.screens.find((entry) => entry.path === changes.paths.changed)!
       .views[0]!.documentKey,
   ).toBe(originalKey);
   expect(atHead.live).toEqual(initial.live);
   const restored = await changes.moveBase("base");
+  expect(restored.baseCommit).toBe(changes.baseCommit);
   expect(restored.removedEntries).toEqual(initial.removedEntries);
   expect(restored.screens.map((entry) => entry.changes)).toEqual(
     initial.screens.map((entry) => entry.changes),

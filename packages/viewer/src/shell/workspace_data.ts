@@ -1,9 +1,10 @@
 /** Serializable, source-derived state shared by every delivery's inspector. */
 
-import type { EntryDetailV2, InputChange } from "../catalogue/types.js";
+import type { EntryDetailV3, InputChange } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import type {
+  ComparedEntry,
   EntryChangeReason,
   ViewResourceEvidence,
 } from "../review/types.js";
@@ -21,8 +22,8 @@ export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
-  controlOrder?: EntryDetailV2["controlOrder"];
-  /** False when no detail carried the Usage lists of this entry. */
+  controlOrder?: EntryDetailV3["controlOrder"];
+  /** False when the detail that carries this entry's Usage lists is absent. */
   usageComplete?: boolean;
   /** Selected views are waiting for the routed entry's detail. */
   viewUsagePending?: boolean;
@@ -71,12 +72,15 @@ export interface WorkspaceData {
   removed: boolean;
   relatedComponents: readonly { path: string; title: string }[];
   inputChanges: readonly InputChange[];
+  /** The routed entry's comparison facts, while its detail carries ready views. */
+  compared?: ComparedEntry;
 }
 
 /**
  * The routed entry's workspace, projected from the published index and the
- * routed entry's detail. Entry state and actual saved views stay independent
- * of Changes membership. Every catalogue of a delivery carries its published
+ * route's held details. A current component variant uses its parent's detail
+ * for Usage lists. Entry state and actual saved views stay independent of
+ * Changes membership. Every catalogue of a delivery carries its published
  * records.
  */
 export function workspaceData(

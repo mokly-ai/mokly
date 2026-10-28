@@ -3,8 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
-import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
+import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
 
 import { build, fixture, json } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";
@@ -20,13 +19,9 @@ test(
     try {
       const ready = await build(root);
       assert.ok(ready.index.comparisonUrl);
-      const prefix = path.posix.dirname(ready.index.comparisonUrl);
+      const prefix = ready.index.comparisonUrl.slice(0, -1);
       const generation = path.posix.basename(prefix);
-      const review = await json<ReviewResultV8>(
-        ready.output,
-        ready.index.comparisonUrl,
-      );
-      assert.equal(review.schemaVersion, 8);
+      assert.equal(ready.index.schemaVersion, 8);
       assert.deepEqual(
         [
           ...ready.index.screens,
@@ -45,7 +40,7 @@ test(
         ["home", "old", "old-note", "retired"],
       );
       assert.equal(ready.index.base, "fixture-base");
-      assert.equal(review.baseCommit, base);
+      assert.equal(ready.index.baseCommit, base);
       const output = await files(ready.output);
       assert.equal(output.has(`${prefix}/snapshot.json`), false);
       await checkIdentity(
@@ -77,15 +72,15 @@ test(
         output.get(`${prefix}/snapshots/after/logo.svg`)!.toString(),
         /After asset/u,
       );
-      const detail = await json<EntryDetailV2>(
+      const detail = await json<EntryDetailV3>(
         ready.output,
         "mokly-viewer/entries/home.json",
       );
       assert.equal(detail.deploymentId, ready.index.deploymentId);
-      assert.deepEqual(
-        detail.reasons,
-        review.entries.find((entry) => entry.path === "home")!.reasons,
-      );
+      assert.deepEqual(detail.reasons, [
+        { kind: "dependency", path: "static/logo.svg" },
+        { kind: "material" },
+      ]);
       for (const view of detail.views)
         assert.ok(
           view.resourceEvidence!.resources.some(
@@ -98,7 +93,7 @@ test(
       );
       for (const removed of ready.index.removedEntries) {
         assert.ok(output.has(`view/${removed.entry.path}/index.html`));
-        const historical = await json<EntryDetailV2>(
+        const historical = await json<EntryDetailV3>(
           ready.output,
           `${prefix}/entries/${removed.entry.path}.json`,
         );

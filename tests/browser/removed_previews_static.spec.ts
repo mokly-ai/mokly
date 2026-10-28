@@ -122,10 +122,7 @@ for (const width of [390, 1280])
       baseURL,
     }) => {
       const index = await comparisonIndex(request, baseURL);
-      const generation = new URL(index.comparisonUrl, baseURL).pathname.replace(
-        /review\.json$/u,
-        "",
-      );
+      const generation = new URL(index.comparisonUrl, baseURL).pathname;
       const paths: string[] = [];
       page.on("request", (sent) => paths.push(new URL(sent.url()).pathname));
       await openRemoved(page, index, comparisonPaths.removedPage);
@@ -137,14 +134,15 @@ for (const width of [390, 1280])
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
-      // The page reads its preview file once and the screen the review once.
-      for (const file of [
-        `previews/${comparisonPaths.removedPage}/index.json`,
-        "review.json",
-      ])
-        expect(paths.filter((path) => path === `${generation}${file}`)).toEqual(
-          [`${generation}${file}`],
-        );
+      // The page's preview reads its preview file once. The screen's preview
+      // reads the removed detail that Details also reads.
+      for (const [file, reads] of [
+        [`previews/${comparisonPaths.removedPage}/index.json`, 1],
+        [`entries/${comparisonPaths.removedScreen}.json`, 2],
+      ] as const)
+        expect(
+          paths.filter((path) => path === `${generation}${file}`),
+        ).toHaveLength(reads);
       // Each previous document is read once, from the generation's Before side.
       const before = `${generation}snapshots/before/mokly-generated`;
       expect(paths.filter((path) => path.endsWith(".html")).sort()).toEqual([
@@ -156,8 +154,8 @@ for (const width of [390, 1280])
   });
 
 /** Only the fields that this case rewrites; the rest passes through. */
-interface CapturedReview {
-  entries: { kind: string; path: string; views: { viewport: string }[] }[];
+interface CapturedDetail {
+  views: { viewport: string }[];
 }
 
 test("a viewport with no captured previous view says so", async ({
@@ -166,15 +164,16 @@ test("a viewport with no captured previous view says so", async ({
   baseURL,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  // Deliver the review as if the removed screen had only desktop views.
-  await page.route(`**/${index.comparisonUrl}`, async (route) => {
-    const response = await route.fetch();
-    const review = (await response.json()) as CapturedReview;
-    for (const entry of review.entries)
-      if (entry.path === comparisonPaths.removedScreen)
-        entry.views = entry.views.filter((view) => view.viewport !== "mobile");
-    await route.fulfill({ response, json: review });
-  });
+  // Deliver the removed detail as if the screen had only desktop views.
+  await page.route(
+    `**/${index.comparisonUrl}entries/${comparisonPaths.removedScreen}.json`,
+    async (route) => {
+      const response = await route.fetch();
+      const detail = (await response.json()) as CapturedDetail;
+      detail.views = detail.views.filter((view) => view.viewport !== "mobile");
+      await route.fulfill({ response, json: detail });
+    },
+  );
   const note = `${STAGE} .mbk-preview-note`;
   const rest = `${note} .mbk-preview-switch`;
   await openRemoved(page, index, comparisonPaths.removedScreen);

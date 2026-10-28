@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
-use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
@@ -20,7 +20,7 @@ use crate::snapshot::Snapshot;
 
 pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     index.revision = 1;
@@ -37,8 +37,8 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         screen.visual.views.truncate(1);
         screen.visual.views[0].comparison = ComparisonSelection::Unavailable;
         let view = &screen.visual.views[0];
-        let detail = EntryDetailV2 {
-            schema_version: 2,
+        let detail = EntryDetailV3 {
+            schema_version: 3,
             control_order: Some(screen.visual.controls.keys().cloned().collect()),
             identity: index.identity.clone(),
             deployment_id: Some(index.deployment_id.clone()),
@@ -53,10 +53,13 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 viewport: view.viewport,
                 color_scheme: view.color_scheme,
                 usage: CatalogueUsage::Pending,
+                state: None,
+                ignored_ids: None,
                 resource_evidence: None,
             }],
             resource_evidence: None,
             reasons: None,
+            before: None,
             workspace: None,
         };
         routes.push(RenderRoute {

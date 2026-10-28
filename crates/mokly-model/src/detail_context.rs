@@ -3,9 +3,9 @@
 use std::collections::BTreeSet;
 
 use crate::axes::EntryKind;
-use crate::public_detail::EntryDetailV2;
+use crate::public_detail::EntryDetailV3;
 use crate::public_index::CatalogueReadModel;
-use crate::public_metadata::{CatalogueChanges, ComparisonSelection};
+use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
 use crate::readers::{self, ReadError};
 use crate::usage_context;
@@ -13,20 +13,20 @@ use crate::usage_schemas::UsageSchemas;
 
 /// Decode and validate a current entry detail against the installed index.
 /// Historical callers supply their base-side component schemas to `usage_context`.
-pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV2, ReadError> {
+pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV3, ReadError> {
     let detail = readers::detail(text)?;
     validate(&detail, index)?;
     Ok(detail)
 }
 
 /// Validate the current fence, kind, view order, evidence readiness, and usage.
-pub fn validate(detail: &EntryDetailV2, index: &CatalogueReadModel) -> Result<(), ReadError> {
+pub fn validate(detail: &EntryDetailV3, index: &CatalogueReadModel) -> Result<(), ReadError> {
     validate_with(detail, index, &mut UsageSchemas::new(&index.components))
 }
 
 /// Validate all usage against publication-local compiled schemas.
 pub fn validate_with(
-    detail: &EntryDetailV2,
+    detail: &EntryDetailV3,
     index: &CatalogueReadModel,
     schemas: &mut UsageSchemas<'_>,
 ) -> Result<(), ReadError> {
@@ -70,6 +70,21 @@ pub fn validate_with(
     let Some((entry, visual)) = entry else {
         return Err(invalid(ContractViolation::DetailKind));
     };
+    if let Some(workspace) = detail.workspace.as_ref() {
+        let current_variant = detail.entry.kind == EntryKind::Component
+            && index
+                .components
+                .iter()
+                .find(|component| component.entry.path == *path)
+                .is_some_and(|component| component.variant_of.is_some());
+        if current_variant {
+            if workspace.used_by.is_some() || workspace.affected.is_some() {
+                return Err(invalid(ContractViolation::Workspace));
+            }
+        } else if workspace.used_by.is_none() || workspace.affected.is_none() {
+            return Err(invalid(ContractViolation::Workspace));
+        }
+    }
     if detail.reasons.is_some()
         != matches!(
             entry.changes,
@@ -77,6 +92,12 @@ pub fn validate_with(
         )
     {
         return Err(invalid(ContractViolation::DetailReasonsPresence));
+    }
+    if detail.before.is_some()
+        != (visual.is_some()
+            && matches!(entry.changes, CatalogueChanges::Ready { kind, .. } if kind != ChangeKind::Added))
+    {
+        return Err(invalid(ContractViolation::DetailComparison));
     }
     if let Some(visual) = visual {
         let Some(order) = &detail.control_order else {

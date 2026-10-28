@@ -11,12 +11,11 @@ depends on it. It has no internal crate dependency and performs no file IO.
   [format inventory](../../docs/protocol/mokly-format-versions.md) lists them.
 - Own shared output shapes and one pure marker writer for build and publish.
 - Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
-  explicit empty values, omitted absent optionals, and a final LF. A compact
-  form without whitespace encodes a comparison's review result.
+  explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
-- Own the review result, change snapshot, and removed-preview shapes and their
-  strict readers.
+- Own the review result and change snapshot, the in-memory comparison
+  records, the removed-preview shape, and their strict readers.
 - Generate TypeScript declarations for the viewer.
 
 ## What This Crate Does
@@ -51,19 +50,21 @@ catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
 per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
 coordinates are one-based; a zero line or column means the coordinate is
 unavailable. JavaScript diagnostics can use the module and export instead. The public
-roots are `CatalogueReadModel`, `EntryDetailV2`, and `LiveDescriptorV3`.
+roots are `CatalogueReadModel`, `EntryDetailV3`, and `LiveDescriptorV3`.
 Their readers gate the version before decoding payload fields.
 Entry detail carries `controlOrder` for screens and components. It lists every
 editable key once, in declaration order, independently of canonical object keys.
 Detail validation checks that list against the index's controls.
 Index validation checks private fields, paths, variants, trees, schemas, tagged props, flow
-membership, removed metadata, snapshot identities, and generation URLs.
+membership, removed metadata, snapshot identities, the base commit of ready
+Changes, and generation roots.
 Ready component and view eligibility follows the same kind rules as the viewer,
 including removed component parents.
 Detail validation checks the current or historical fence, field placement
 by kind, and canonical tagged props in usage and input-change records.
 The optional detail-root `reasons` uses the review result's reason shape and
-order.
+order. A view's `state` and `ignoredIds` travel with its `resourceEvidence`,
+and `before` names the base side of a ready current screen or component.
 Ready included entries carry it even when their usage workspace is unavailable.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
 print the supplied integer or explain its absence.
@@ -89,9 +90,10 @@ TypeScript constants. `shell::html` supplies the same data-free shell stub to
 Serve and the static writer.
 
 `review` and `review_affected` define direct reasons, view states, and complete
-usage chains. `review_order` supplies canonical order for producers and readers.
-`readers::review` gates the review version before validating sides,
-membership, order, and evidence.
+usage chains. A comparison keeps the review result in memory and publishes its
+facts through the index and the entry details. `review_order` supplies
+canonical order for producers and readers. `readers::review` gates the review
+version before validating sides, membership, order, and evidence.
 The reader requires current variants before base-only variants, exact
 `previousPath` on moved pairs, and UTF-16 order for reason targets.
 The classifier also validates source coverage and actual ownership proof.
@@ -129,8 +131,6 @@ fn encode() -> Result<()> {
     let value = json!({"z": [], "a": {}});
     let bytes = canonical::to_string(&value)?;
     assert_eq!(bytes, "{\n  \"a\": {},\n  \"z\": []\n}\n");
-    let compact = canonical::to_compact_string(&value)?;
-    assert_eq!(compact, "{\"a\":{},\"z\":[]}\n");
     Ok(())
 }
 ```
@@ -146,8 +146,8 @@ cargo xtask generate-types
 
 - [`src/versions.rs`](./src/versions.rs) holds every independent format
   number, such as `CATALOGUE_INDEX` and `ENTRY_DETAIL`.
-- [`src/canonical.rs`](./src/canonical.rs) provides `to_string` and
-  `to_compact_string`, the canonical JSON encoders.
+- [`src/canonical.rs`](./src/canonical.rs) provides `to_string`, the
+  canonical JSON encoder.
 - [`src/validation.rs`](./src/validation.rs) defines `PropValidator`, the one
   validator for the `PropSchema` profile of
   [`src/prop_schema.rs`](./src/prop_schema.rs) and for complete props.
@@ -155,7 +155,7 @@ cargo xtask generate-types
   private in-memory catalogue that the projection reads.
 - [`src/public_index.rs`](./src/public_index.rs) and
   [`src/public_detail.rs`](./src/public_detail.rs) define the public roots
-  `CatalogueReadModel`, `EntryDetailV2`, and `LiveDescriptorV3`.
+  `CatalogueReadModel`, `EntryDetailV3`, and `LiveDescriptorV3`.
 - [`src/projection.rs`](./src/projection.rs) provides `index` and
   `pending_details`, which project a validated model into public records.
 - [`src/readers.rs`](./src/readers.rs) provides the strict readers `index`,

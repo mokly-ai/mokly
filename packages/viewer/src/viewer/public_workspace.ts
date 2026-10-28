@@ -1,6 +1,9 @@
 /** Workspace values derived only from the validated public catalogue. */
 
-import { detailKey } from "../catalogue/detail_fences.js";
+import {
+  detailKey,
+  workspaceDetailRequest,
+} from "../catalogue/detail_fences.js";
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueComponent,
@@ -20,6 +23,7 @@ import type {
 } from "../shell/workspace_data.js";
 
 import { displayEntry } from "./projection.js";
+import { publicComparedEntry } from "./public_compared.js";
 import { shownReasons } from "./public_reasons.js";
 import { publicParent, publicVariants } from "./public_variants.js";
 import {
@@ -62,7 +66,7 @@ function variantStatus(
 }
 
 /**
- * The routed entry's workspace from the index and the routed entry's detail.
+ * The routed entry's workspace from the index and the route's held details.
  * `base` is the index's branch name; it stays empty when the index names none.
  * The detail's direct reasons that fit the record reach Details before any
  * comparison loads.
@@ -91,6 +95,10 @@ export function publicWorkspace(
     }),
   );
   const detail = held?.workspace;
+  const workspaceDetail = model.details.get(
+    detailKey(workspaceDetailRequest(original, !removed, selected?.snapshotId)),
+  );
+  const workspace = workspaceDetail?.workspace;
   const publicComponent: ShellCatalogueComponent | undefined =
     original.kind === "component"
       ? original.variantOf !== undefined
@@ -138,6 +146,7 @@ export function publicWorkspace(
       : undefined;
   const workspaceStatus = selectedVariant?.status ?? entryStatus;
   const resourceEvidence = publishedResourceEvidence(original.views);
+  const compared = publicComparedEntry(original, held);
   const componentRecords = original.views.some(
     (view) =>
       view.resourceEvidence !== undefined &&
@@ -168,8 +177,8 @@ export function publicWorkspace(
     ),
     variants,
     ...(held?.controlOrder ? { controlOrder: held.controlOrder } : {}),
-    usedBy: (detail?.usedBy ?? []).map(shellUsageLink),
-    affected: (detail?.affected ?? []).map(shellUsageLink),
+    usedBy: (workspace?.usedBy ?? []).map(shellUsageLink),
+    affected: (workspace?.affected ?? []).map(shellUsageLink),
     base,
     comparisons,
     comparisonEligible:
@@ -187,7 +196,7 @@ export function publicWorkspace(
     removed,
     relatedComponents: detail?.relatedComponents ?? [],
     inputChanges: detail?.inputChanges ?? [],
-    ...(detail ? {} : { usageComplete: false }),
+    ...(workspace ? {} : { usageComplete: false }),
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
     ...(original.changes.status === "ready"
@@ -196,6 +205,7 @@ export function publicWorkspace(
     ...(reasons ? { reasons } : {}),
     ...(componentRecords ? { componentRecords } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
+    ...(compared ? { compared } : {}),
   };
 }
 

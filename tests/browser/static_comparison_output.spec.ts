@@ -10,6 +10,7 @@ import {
 } from "./comparison_test.js";
 
 test("the native comparison copy remains usable after its two-commit source repository is removed", async ({
+  page,
   request,
   baseURL,
 }) => {
@@ -20,13 +21,74 @@ test("the native comparison copy remains usable after its two-commit source repo
   ).json();
   expect(index.changesStatus).toBe("ready");
   expect(index.base).toBe("fixture-base");
-  expect(index.comparisonUrl).toMatch(
-    /\/generations\/[a-f0-9]{64}\/review\.json$/,
+  expect(index.comparisonUrl).toMatch(/\/generations\/[a-f0-9]{64}\/$/);
+  expect(index.baseCommit).toMatch(/^[a-f0-9]{40}$/);
+  const parentDetail = (await (
+    await request.get(
+      `${baseURL}/mokly-viewer/entries/${comparisonPaths.component}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  const variantDetail = (await (
+    await request.get(
+      `${baseURL}/mokly-viewer/entries/${comparisonPaths.changedVariant}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  expect(parentDetail.workspace?.usedBy).toBeDefined();
+  expect(variantDetail.workspace?.usedBy).toBeUndefined();
+  expect(variantDetail.workspace?.affected).toBeUndefined();
+  const removed = index.removedEntries.find(
+    (record: { entry: { path: string } }) =>
+      record.entry.path === comparisonPaths.removedVariant,
+  )! as { snapshotId: string };
+  const removedDetail = (await (
+    await request.get(
+      `${baseURL}/${index.comparisonUrl}entries/${comparisonPaths.removedVariant}.json`,
+    )
+  ).json()) as {
+    workspace?: { usedBy?: unknown[]; affected?: unknown[] };
+  };
+  expect(removed.snapshotId).toMatch(/^[a-f0-9]{64}$/u);
+  expect(removedDetail.workspace?.usedBy).toEqual([]);
+  expect(removedDetail.workspace?.affected).toEqual(
+    parentDetail.workspace?.affected,
   );
-  const review = await (
-    await request.get(new URL(index.comparisonUrl, baseURL).href)
-  ).json();
-  expect(review.baseCommit).toMatch(/^[a-f0-9]{40}$/);
+  await page.goto(`/view/${comparisonPaths.changedVariant}/`);
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  await expect(
+    usage.locator('[data-usage-section="used-by"]').getByRole("link"),
+  ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
+
+  const parentRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/entries/components/card.json"))
+      parentRequests.push(request.url());
+  });
+  await page.goto(
+    `/view/${comparisonPaths.removedVariant}/?snapshot=${removed.snapshotId}`,
+  );
+  await expect(
+    page.getByRole("tab", { name: "Usage", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const removedUsage = page.getByRole("tabpanel", {
+    name: "Usage",
+    exact: true,
+  });
+  await expect(
+    removedUsage.getByRole("heading", { name: "Used by" }),
+  ).toBeVisible();
+  await expect(removedUsage).toContainText("No recorded consumers.");
+  await expect(
+    removedUsage.getByRole("heading", {
+      name: "Affected screens and components",
+    }),
+  ).toBeVisible();
+  expect(parentRequests).toEqual([]);
   expect(
     index.screens.find(
       (entry: { path: string }) => entry.path === comparisonPaths.unchanged,

@@ -9,7 +9,7 @@ import {
 } from "@mokly/viewer";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -34,7 +34,7 @@ interface HostOptions {
 interface Host {
   root: Root;
   props: MoklyViewerProps;
-  details: Record<string, EntryDetailV2>;
+  details: Record<string, EntryDetailV3>;
   ref: { current: MoklyViewerHandle | null };
   events: { name: string; value: unknown }[];
   render(): void;
@@ -49,8 +49,8 @@ const data = (
     fixture: {
       index: CatalogueReadModel;
       details: {
-        current: Record<string, EntryDetailV2>;
-        removed: Record<string, EntryDetailV2>;
+        current: Record<string, EntryDetailV3>;
+        removed: Record<string, EntryDetailV3>;
       };
       baseUrl: string;
     };
@@ -89,7 +89,7 @@ const start = (id: string, options: HostOptions = {}) => {
       if (
         typeof host.props.index === "object" &&
         !(host.props.index instanceof URL) &&
-        host.props.index.schemaVersion === 7
+        host.props.index.schemaVersion === 8
       )
         host.details = browserDetails(host.props.index, host.details);
       const node = <MoklyViewer {...host.props} ref={ref} />;

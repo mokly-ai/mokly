@@ -1,4 +1,4 @@
-//! Catalogue index v7, its navigation tree, and historical records.
+//! Catalogue index v8, its navigation tree, and historical records.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -116,12 +116,12 @@ pub struct RemovedEntry {
     pub preview: Option<RemovedPreview>,
 }
 
-/// Complete public catalogue index v7.
+/// Complete public catalogue index v8.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogueReadModel {
-    /// Must equal 7; readers gate it before decoding.
-    #[ts(type = "7")]
+    /// Must equal 8; readers gate it before decoding.
+    #[ts(type = "8")]
     pub schema_version: u32,
     /// Origin-scoped catalogue identity.
     pub identity: CatalogueIdentity,
@@ -133,13 +133,17 @@ pub struct CatalogueReadModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub base: Option<String>,
+    /// Pinned merge base, present exactly while Changes is ready.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub base_commit: Option<String>,
     /// Present only in Serve.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub live: Option<LiveGeneration>,
     /// Comparison preparation state.
     pub changes_status: ChangesStatus,
-    /// Generation-pinned review URL, or null.
+    /// Root of the generation-pinned comparison, or null.
     pub comparison_url: Option<String>,
     /// One tree containing each current entry exactly once.
     pub tree: Vec<CatalogueNode>,

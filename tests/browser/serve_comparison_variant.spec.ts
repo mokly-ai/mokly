@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { parseReviewResult } from "../../packages/viewer/src/review/result_validation.js";
+import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 
 import { showMode } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
@@ -8,6 +8,7 @@ import { expectCardPane } from "./serve_comparison_ui.js";
 
 test("Serve opens Overlay for the Card variant with parent-owned stylesheet evidence", async ({
   page,
+  request,
   changes,
 }) => {
   await page.goto(`/view/${changes.paths.changedVariant}/?viewport=desktop`);
@@ -15,25 +16,27 @@ test("Serve opens Overlay for the Card variant with parent-owned stylesheet evid
     page.waitForResponse(
       (response) =>
         response.url().includes("/generations/selected-") &&
-        response.url().endsWith("/review.json") &&
+        response.url().endsWith("/") &&
         response.request().method() === "GET",
     ),
     showMode(page, "Overlay"),
   ]);
-  expect(selected.ok()).toBe(true);
-  const review = parseReviewResult(await selected.json());
-  expect(review.entries.map((entry) => entry.path)).toEqual([
-    changes.paths.component,
-  ]);
-  const variants = review.entries[0]!.variants!;
-  expect(variants.map((entry) => entry.path)).toEqual([
-    changes.paths.changedVariant,
-  ]);
-  expect(variants[0]!.reasons).toContainEqual({
+  expect(selected.status()).toBe(204);
+  // The variant's detail carries the comparison facts that the panes show.
+  const variant = readEntryDetail(
+    await (
+      await request.get(
+        `/mokly-viewer/entries/${changes.paths.changedVariant}.json`,
+      )
+    ).json(),
+  );
+  expect(variant.before?.path).toBe(changes.paths.changedVariant);
+  expect(variant.views[0]!.state).toBe("changed");
+  expect(variant.reasons).toContainEqual({
     kind: "dependency",
     path: "static/mokly-generated/styles/theme.css",
   });
-  expect(variants[0]!.views[0]!.rules).toContainEqual({
+  expect(variant.views[0]!.resourceEvidence!.rules).toContainEqual({
     stylesheet: "static/mokly-generated/styles/theme.css",
     selector: ".accent",
     status: "matched",

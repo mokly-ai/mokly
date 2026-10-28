@@ -3,8 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
-import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
+import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
 
 import {
   build,
@@ -35,7 +34,7 @@ test(
       ];
       const removed = ready.index.removedEntries.map((record) => record.entry);
       for (const entry of current) {
-        const detail = await json<EntryDetailV2>(
+        const detail = await json<EntryDetailV3>(
           ready.output,
           `mokly-viewer/entries/${entry.path}.json`,
         );
@@ -57,11 +56,7 @@ test(
         1,
       );
       assert.ok(ready.index.comparisonUrl);
-      const review = await json<ReviewResultV8>(
-        ready.output,
-        ready.index.comparisonUrl,
-      );
-      assert.equal(review.baseCommit, base);
+      assert.equal(ready.index.baseCommit, base);
       const first = await files(ready.output);
       await build(root);
       assert.deepEqual(await files(ready.output), first);
@@ -83,7 +78,7 @@ test(
       for (const entry of current)
         assert.equal(
           Object.hasOwn(
-            await json<EntryDetailV2>(
+            await json<EntryDetailV3>(
               unavailable.output,
               `mokly-viewer/entries/${entry.path}.json`,
             ),
@@ -104,7 +99,7 @@ test(
       for (const entry of current)
         assert.equal(
           Object.hasOwn(
-            await json<EntryDetailV2>(
+            await json<EntryDetailV3>(
               disabled.output,
               `mokly-viewer/entries/${entry.path}.json`,
             ),
@@ -143,16 +138,13 @@ test(
       const output = path.join(root, ".context/nested");
       const index = await json<{
         base: string;
+        baseCommit: string;
         changesStatus: string;
-        comparisonUrl: string;
       }>(output, "mokly-viewer/index.json");
       assert.equal(index.base, "override-base");
       assert.equal(index.changesStatus, "ready");
       assert.match(result.stdout, /Comparing with override-base/u);
-      assert.equal(
-        (await json<ReviewResultV8>(output, index.comparisonUrl)).baseCommit,
-        base,
-      );
+      assert.equal(index.baseCommit, base);
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
@@ -182,7 +174,7 @@ test(
         );
       const ready = await build(root);
       const output = await files(ready.output);
-      const generation = path.posix.dirname(ready.index.comparisonUrl!);
+      const generation = ready.index.comparisonUrl!.slice(0, -1);
       for (const name of names) {
         for (const file of [
           `view/${name}/index.html`,

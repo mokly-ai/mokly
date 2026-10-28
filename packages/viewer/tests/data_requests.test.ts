@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
@@ -20,7 +20,7 @@ import {
   catalogueFixture,
   detailFixture,
   indexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const OTHER = "e".repeat(64);
 const RETIRED =
@@ -36,7 +36,7 @@ function route(path: string): ShellRoute {
 /** A source that answers from scripts and records every request. */
 function scripted(
   indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV2 | Error,
+  detail: (request: DetailRequest) => EntryDetailV3 | Error,
 ) {
   const calls = { indexes: 0, details: [] as DetailRequest[] };
   const source: ShellDataSource = {
@@ -57,7 +57,7 @@ function scripted(
   return { source, calls };
 }
 
-function revised(path: string, revision: number): EntryDetailV2 {
+function revised(path: string, revision: number): EntryDetailV3 {
   return { ...detailFixture({ path }), revision };
 }
 
@@ -72,11 +72,17 @@ test("each route requests the details its frames and lists read", () => {
     "product/browse/home",
     "product/browse/home/empty",
     "components/action",
-    "components/action/default",
     "guide",
     "product",
   ])
     assert.deepEqual(requests(`/view/${path}/`), [{ path }]);
+  assert.deepEqual(requests("/view/components/action/default/"), [
+    { path: "components/action/default" },
+    { path: "components/action" },
+  ]);
+  assert.deepEqual(requests("/view/product/browse/home/empty/"), [
+    { path: "product/browse/home/empty" },
+  ]);
   const tour = index.useCases.find((entry) => entry.path === "tour")!;
   assert.deepEqual(requests("/view/tour/"), [
     { path: "tour" },
@@ -272,7 +278,7 @@ test("a refresh from another deployment or format does not install", async () =>
     { kind: "deployment" },
   );
   assert.equal(moved.calls.details.length, 0);
-  const version = new MoklyVersionError("catalogue", 8, 7);
+  const version = new MoklyVersionError("catalogue", 9, 8);
   const newer = scripted([version], () => new Error("unused"));
   assert.deepEqual(
     await loadRefresh(

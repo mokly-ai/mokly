@@ -43,3 +43,16 @@ export function unavailableResourceNotice(url: string): ErrorAllowance {
       /^Failed to load resource: the server responded with a status of 503 \(Service Unavailable\)$/u,
   };
 }
+
+/** Deliberately failing pane documents beneath one comparison generation. */
+export function generationDocumentsNotice(
+  generation: string,
+  status: 404 | 503,
+): ErrorAllowance {
+  const escaped = generation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rule =
+    status === 404
+      ? missingResourceNotice(generation)
+      : unavailableResourceNotice(generation);
+  return { ...rule, url: new RegExp(`^${escaped}snapshots/`, "u") };
+}

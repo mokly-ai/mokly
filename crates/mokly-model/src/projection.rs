@@ -11,7 +11,7 @@ use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::error::{InternalError, Result};
 use crate::material::digest;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::*;
@@ -68,6 +68,7 @@ pub fn index(
         deployment_id: state.deployment_id.clone(),
         revision: state.revision,
         base: state.base.clone(),
+        base_commit: None,
         live: state
             .live_generation
             .as_ref()
@@ -160,7 +161,7 @@ pub fn pending_details(
     model: &CatalogueModel,
     index: &CatalogueReadModel,
     keys: &[ViewKey],
-) -> BTreeMap<String, EntryDetailV2> {
+) -> BTreeMap<String, EntryDetailV3> {
     let by_path = key_index(keys);
     model
         .entries
@@ -175,6 +176,8 @@ pub fn pending_details(
                         viewport,
                         color_scheme: key.color_scheme,
                         usage: CatalogueUsage::Pending,
+                        state: None,
+                        ignored_ids: None,
                         resource_evidence: None,
                     })
                 })
@@ -182,7 +185,7 @@ pub fn pending_details(
             views.sort_by_key(|view| (view.viewport, view.color_scheme));
             (
                 entry.metadata.path.clone(),
-                EntryDetailV2 {
+                EntryDetailV3 {
                     schema_version: versions::ENTRY_DETAIL,
                     identity: index.identity.clone(),
                     deployment_id: Some(index.deployment_id.clone()),
@@ -195,6 +198,7 @@ pub fn pending_details(
                     },
                     views,
                     reasons: None,
+                    before: None,
                     resource_evidence: None,
                     workspace: None,
                     control_order: match &entry.content {

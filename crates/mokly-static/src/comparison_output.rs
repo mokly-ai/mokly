@@ -7,7 +7,7 @@ use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::output::artifact::File;
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{readers, routes};
@@ -36,10 +36,6 @@ pub(crate) fn append(
     ))?;
     projection_removed::workspaces(&mut details);
     let mut inventory = Inventory::default();
-    inventory.insert(
-        "review.json".into(),
-        identity::review(&result.review)?.into(),
-    )?;
     side(
         result.before.as_ref(),
         ReviewSide::Before,
@@ -67,7 +63,7 @@ pub(crate) fn append(
     }
     compare(projection_workspace::apply(&mut details, result))?;
     let (generation, files) = finalize(inventory, &mut details)?;
-    index.comparison_url = Some(routes::comparison_review(&generation));
+    index.comparison_url = Some(routes::comparison_generation(&generation));
     let prefix = routes::comparison_generation(&generation);
     for file in files {
         output.insert(format!("{prefix}{}", file.path), file.bytes)?;
@@ -77,7 +73,7 @@ pub(crate) fn append(
 
 fn finalize(
     inventory: Inventory,
-    details: &mut BTreeMap<String, EntryDetailV2>,
+    details: &mut BTreeMap<String, EntryDetailV3>,
 ) -> Result<(String, Vec<File>)> {
     let mut files = inventory.into_files();
     let mut hashes: Vec<_> = files

@@ -130,8 +130,8 @@ the working tree, which `publish` requires to be a clean checkout of
 `headSha`, and the base side from the base commit under
 [Sides](./mokly-comparison.md#sides); base dependencies follow the three
 tiers. One generation renders every view of both sides and compares them
-under the [Output Transaction](./mokly-export.md#output-transaction). The index records the base ref in `base` and the review result
-its `baseCommit`. `publish` requires the clean checkout of the
+under the [Output Transaction](./mokly-export.md#output-transaction). The index records the base ref in `base` and the pinned merge base in
+`baseCommit`. `publish` requires the clean checkout of the
 [upload contract](./mokly-upload.md).
 
 Missing history, including a shallow clone without the merge base, fails the

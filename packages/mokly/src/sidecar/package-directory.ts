@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
+import { packageName } from "./specifier.js";
 
 const caches = new WeakMap<ModulePaths, Map<string, Promise<string>>>();
 
@@ -12,10 +13,7 @@ export function packageDirectory(
   directory: string,
   specifier: string,
 ): Promise<string> {
-  const name = specifier
-    .split("/")
-    .slice(0, specifier.startsWith("@") ? 2 : 1)
-    .join("/");
+  const name = packageName(specifier);
   let cache = caches.get(paths);
   if (!cache) caches.set(paths, (cache = new Map()));
   const key = JSON.stringify([directory, name]);

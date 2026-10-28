@@ -12,8 +12,11 @@ use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 
 use crate::capture_usage;
 
-/// Same default capacity as the shared render cache, independent of catalogue size.
+/// Base capture capacity, independent of catalogue size.
 pub(crate) const DEFAULT_BASE_CAPTURE_BYTES: usize = 256 * 1024 * 1024;
+
+/// Head capture capacity, independent of catalogue size.
+pub(crate) const DEFAULT_HEAD_CAPTURE_BYTES: usize = 256 * 1024 * 1024;
 
 /// Monotonic reservations shared by every retained capture allocation.
 pub(crate) struct Budget {

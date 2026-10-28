@@ -117,15 +117,17 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
-index, and fetches the routed entry's detail under the
-[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The detail carries
-the workspace lists, so no route reads another page. Static mode with a
+index, and fetches the route's details under the
+[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). A current component
+variant reads its Used by and Affected lists from its parent's detail. The
+shell fetches no other shell page for evidence. Static mode with a
 missing, malformed, or other-version index or detail fails closed instead of
 requesting a development endpoint. A static build never falls back to a live
 endpoint for any request.
 
 In-shell navigation commits the destination from the index at once and fetches
-its detail. A detail with another `deploymentId` means another deployment
+its details, including the parent's detail for a current component variant.
+A detail with another `deploymentId` means another deployment
 replaced the files, so the shell performs a full page load of the requested
 URL rather than mixing deployments. An open tab keeps its loaded deployment
 for the page's lifetime; reload the page to adopt a newer one. In-shell
@@ -156,26 +158,28 @@ fallback.
 ## Static Comparisons
 
 Each build with Changes packages one complete comparison, with every
-referenced before and after document, the removed entries' details, the
-removed previews, and the transitive resources under one generation root:
+before and after document, the removed entries' details, the removed
+previews, and the transitive resources under one generation root:
 
 ```text
-mokly-viewer/diffs/generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/
 ```
 
-The generation keeps the review JSON, the snapshot document bytes, and the
-relative snapshot paths of the comparison unchanged.
+The generation keeps the snapshot document bytes and the relative snapshot
+paths of the comparison unchanged. It holds no review file.
 
-The index's `comparisonUrl` names this immutable JSON file directly. The shell
-requests it only for a selected diff or an opened removed entry and resolves
-snapshots from the actual response URL. A static build needs no redirect from
-`/mokly-viewer/diffs/review.json`; Serve keeps its stable endpoint.
+The index's `comparisonUrl` names this immutable root directly. A selected
+diff loads only the snapshot documents that it shows, resolved against that
+root; the comparison's view states and evidence come from the selected
+entry's detail. An opened removed entry loads its detail and its historical
+documents from the same root. A static build needs no selection endpoint and
+requests no generation root; Serve keeps its selection endpoint.
 
 Current is the default after navigation and reload. Browsing, Changes
-filtering, and scheme or viewport switches request no comparison JSON and no
-snapshot file. A build with Changes carries the same per-view states as Serve,
-so its shell marks hidden changed views and lists them in Details without
-fetching that JSON. Added entries keep their current preview without
+filtering, and scheme or viewport switches request no snapshot file. A build
+with Changes carries the same per-view states as Serve, so its shell marks
+hidden changed views and lists them in Details from the index and the
+details. Added entries keep their current preview without
 comparison modes. Removed screens and pages have no comparison modes;
 selecting one requests the packaged historical version under removed previews.
 Side by side, Overlay, and Difference keep the UI and the

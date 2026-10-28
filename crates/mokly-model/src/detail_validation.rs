@@ -5,15 +5,16 @@ use std::collections::BTreeSet;
 use crate::axes::EntryKind;
 use crate::canonical::compare_utf16;
 use crate::paths::is_entry_path;
-use crate::public_detail::EntryDetailV2;
+use crate::public_detail::EntryDetailV3;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 use crate::review_order::reason_key;
+use crate::review_validation::ignore_id;
 use crate::usage::CatalogueUsage;
 use crate::wire_decode;
 
-pub(crate) fn validate(detail: &EntryDetailV2) -> Result<(), ReadError> {
+pub(crate) fn validate(detail: &EntryDetailV3) -> Result<(), ReadError> {
     let current = detail.deployment_id.is_some()
         && detail.revision.is_some()
         && detail.generation.is_none()
@@ -59,6 +60,13 @@ pub(crate) fn validate(detail: &EntryDetailV2) -> Result<(), ReadError> {
     if !visual && (!detail.views.is_empty() || detail.workspace.is_some()) {
         return Err(invalid(ContractViolation::DetailKind));
     }
+    if removed
+        && visual
+        && let Some(workspace) = detail.workspace.as_ref()
+        && (workspace.used_by.is_none() || workspace.affected.is_none())
+    {
+        return Err(invalid(ContractViolation::Workspace));
+    }
     if visual != detail.control_order.is_some()
         || detail
             .control_order
@@ -70,6 +78,7 @@ pub(crate) fn validate(detail: &EntryDetailV2) -> Result<(), ReadError> {
     if detail.entry.kind != EntryKind::Page && detail.resource_evidence.is_some() {
         return Err(invalid(ContractViolation::DetailEvidence));
     }
+    comparison(detail, current && visual)?;
     for view in &detail.views {
         if let CatalogueUsage::Ready { instances, .. } = &view.usage {
             for instance in instances {
@@ -91,6 +100,35 @@ pub(crate) fn validate(detail: &EntryDetailV2) -> Result<(), ReadError> {
         }
     }
     Ok(())
+}
+
+/// View states and ignore ids travel with view evidence; `before` names a current visual entry's base side.
+fn comparison(detail: &EntryDetailV3, current_visual: bool) -> Result<(), ReadError> {
+    let views = detail.views.iter().all(|view| {
+        let ready = view.resource_evidence.is_some();
+        view.state.is_some() == ready
+            && view.ignored_ids.as_ref().is_none_or(|ids| {
+                ids.iter().all(|id| ignore_id(id))
+                    && ids
+                        .windows(2)
+                        .all(|pair| compare_utf16(&pair[0], &pair[1]).is_lt())
+            })
+            && view.ignored_ids.is_some() == ready
+    });
+    let before = detail.before.as_ref().is_none_or(|before| {
+        current_visual
+            && is_entry_path(&before.path)
+            && before
+                .props
+                .as_ref()
+                .is_none_or(|props| wire_decode::decode(props).is_ok())
+            && (detail.entry.kind == EntryKind::Component || before.supplied_slots.is_none())
+    });
+    if views && before {
+        Ok(())
+    } else {
+        Err(invalid(ContractViolation::DetailComparison))
+    }
 }
 
 fn invalid(message: ContractViolation) -> ReadError {

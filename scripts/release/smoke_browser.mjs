@@ -10,13 +10,13 @@ import { build } from "esbuild";
 export async function smokeBrowser(root, repositoryRoot) {
   const index = JSON.parse(
     await fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/fixtures/catalogue-v7.json"),
+      path.join(repositoryRoot, "docs/protocol/fixtures/catalogue-v8.json"),
       "utf8",
     ),
   );
   const details = JSON.parse(
     await fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/fixtures/entry-details-v2.json"),
+      path.join(repositoryRoot, "docs/protocol/fixtures/entry-details-v3.json"),
       "utf8",
     ),
   );

@@ -1,18 +1,19 @@
 //! Current details follow their own index record's ready and included membership.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
 use crate::readers::{self, ReadError};
+use crate::review::ReviewEntryAddress;
 use crate::usage::CatalogueUsage;
 
 use super::validate;
 
-fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV2) {
+fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV3) {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     let identity = index.identity.clone();
@@ -31,8 +32,16 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
         EntryKind::Document => (&mut index.documents[0].entry, None),
         EntryKind::UseCase => (&mut index.use_cases[0].entry, None),
     };
+    let based = visual.is_some()
+        && matches!(changes, CatalogueChanges::Ready { kind, .. } if kind != ChangeKind::Added);
     entry.changes = changes;
     let path = entry.path.clone();
+    let before = based.then(|| ReviewEntryAddress {
+        path: path.clone(),
+        title: entry.title.clone(),
+        props: None,
+        supplied_slots: None,
+    });
     let control_order = visual
         .as_ref()
         .map(|visual| visual.controls.keys().cloned().collect());
@@ -46,13 +55,15 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
                     viewport: view.viewport,
                     color_scheme: view.color_scheme,
                     usage: CatalogueUsage::Pending,
+                    state: None,
+                    ignored_ids: None,
                     resource_evidence: None,
                 }
             })
             .collect()
     });
-    let detail = EntryDetailV2 {
-        schema_version: 2,
+    let detail = EntryDetailV3 {
+        schema_version: 3,
         control_order,
         identity,
         deployment_id: Some(deployment_id),
@@ -65,6 +76,7 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
         },
         reasons: None,
         views,
+        before,
         resource_evidence: None,
         workspace: None,
     };

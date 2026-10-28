@@ -11,8 +11,8 @@ Authored sources define the catalogue: HTML screens, components, and pages,
 use case files, Markdown documents, folder records, entry modules, and
 stories files under the configured roots, plus the configuration file, the
 renderer module, and the configured stylesheets. The catalogue model is built
-from them in memory on every start and after every watched change. The [catalogue index v7](./mokly-shell-delivery.md#catalogue-index)
-and the [entry detail v2](./mokly-shell-delivery.md#entry-detail) are the
+from them in memory on every start and after every watched change. The [catalogue index v8](./mokly-shell-delivery.md#catalogue-index)
+and the [entry detail v3](./mokly-shell-delivery.md#entry-detail) are the
 public form of the model.
 
 ## Discovery And Validation
@@ -45,10 +45,19 @@ once per enabled colour scheme. A watched change renders again only the
 outputs whose inputs changed, and a component rendered with the same props on
 many screens renders once.
 
-The render cache is bounded at 256 MiB. Serve and `build` read it. Changes
-captures the base within 256 MiB and reads the head from the render cache.
-Base capture misses use the pinned source; evicted head documents render
-again on the head root. The base-side extraction cache and the dependency install cache live in the
+The render cache is bounded at 256 MiB. Serve reads the head from it. Changes
+captures the base within 256 MiB. Base capture misses use the pinned source.
+`build` and `publish` capture the head once during the build check, within their
+own 256 MiB bound. Changes, the output, and the comparison output read that
+capture. An evicted head document renders again on the head root.
+Decision: the head reuses the base capture, so a build renders each head
+document once. A larger render cache, bounded render batches, and a reordered
+build were rejected. No fixed cache bound fits every catalogue, batches still
+render each document several times, and a reorder changes the build's stage
+order.
+Decision: each side has its own bound. A shared bound was rejected, because the
+head is captured first and could leave no room for the base.
+The base-side extraction cache and the dependency install cache live in the
 operating system's cache directory under a key derived from the repository
 path, each with its own byte bound; the terminal names that directory, and
 deleting it is safe. No cache is in the repository.
@@ -78,11 +87,12 @@ process.
 ## Build
 
 `mokly build` runs discovery and validation, renders every view of every
-entry, reports warnings, and writes the static site into the directory `--out`
-names, `mokly-static/` at the repository root by default, which Git must
-ignore. It writes the shell stub per route, the index, one detail per entry,
-every document, the comparison generation, the viewer bundle, styles, and
-fonts under the [static build contract](./mokly-export.md) and the
+entry, captures the head during the build check for Changes and output, reports
+warnings, and writes the static site into the directory `--out` names,
+`mokly-static/` at the repository root by default, which Git must ignore. It
+writes the shell stub per route, the index, one detail per entry, every
+document, the comparison generation, the viewer bundle, styles, and fonts
+under the [static build contract](./mokly-export.md) and the
 [static delivery contract](./mokly-export-delivery.md). An error fails the
 command before any file is written. With `--strict`, a warning fails it too.
 The output transaction stages the whole site, replaces the output directory
@@ -120,7 +130,7 @@ writes the same relative paths as files. In addition:
 | ----------------------------------------------- | ----- | ------- | --------------------------------------------------------------------------------------------------------- |
 | `/static/mokly-generated/<route>`               | live  | files   | rendered views, pages, and documents, named under the [artifact path contract](./mokly-artifact-paths.md) |
 | `/static/<closure path>`                        | live  | files   | authored assets in the [public closure](./mokly-public-closure.md), read from the roots                   |
-| `/mokly-viewer/diffs/review.json?path=<path>`   | live  | absent  | an on-demand comparison, redirected to its immutable generation                                           |
+| `/mokly-viewer/diffs/selection?path=<path>`     | live  | absent  | an on-demand comparison, redirected to its immutable generation's root                                    |
 | `/mokly-viewer/components/render`               | live  | absent  | the live prop render of the [controls contract](./mokly-component-controls.md)                            |
 | `/mokly-viewer/components/renders/<render-id>/` | live  | absent  | a temporary preview document and its resources                                                            |
 

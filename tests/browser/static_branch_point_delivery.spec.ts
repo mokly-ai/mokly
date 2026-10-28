@@ -4,7 +4,6 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
-import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { expectBadgeAffected } from "./branch_point_affected.js";
 import { branchPointDeliveryCases } from "./branch_point_delivery_cases.js";
@@ -25,17 +24,19 @@ for (const width of [390, 1280]) {
       allowBrowserError,
     }) => {
       allowBrowserError(missingResourceNotice(`${branchCopy.url}/favicon.ico`));
-      const { index, reviewUrl, generation } = await deliveryIndex(
+      const { index, generation } = await deliveryIndex(
         request,
         branchCopy.url,
       );
-      const review = (await (
-        await request.get(reviewUrl)
-      ).json()) as ReviewResultV8;
-      const entries = review.entries.flatMap((entry) => [
-        entry,
-        ...(entry.variants ?? []),
-      ]);
+      /** One copied detail, current or removed, read through the exact-file host. */
+      const copiedDetail = async (address: string) =>
+        readEntryDetail(
+          JSON.parse(
+            (
+              await copiedBytes(request, branchCopy.directory, address)
+            ).toString(),
+          ),
+        );
       const traffic = deliveryRequests(page);
       const viewport = width === 390 ? "mobile" : "desktop";
       const file = `index.${viewport}.html`;
@@ -44,25 +45,22 @@ for (const width of [390, 1280]) {
         "isolated",
       ]);
       if (scenario.affectedComponent) {
-        const address = `${branchCopy.url}/mokly-viewer/entries/${scenario.affectedComponent}.json`;
-        const detail = readEntryDetail(
-          JSON.parse(
-            (
-              await copiedBytes(request, branchCopy.directory, address)
-            ).toString(),
-          ),
+        const detail = await copiedDetail(
+          `${branchCopy.url}/mokly-viewer/entries/${scenario.affectedComponent}.json`,
         );
-        expectBadgeAffected(detail.workspace!.affected);
+        expectBadgeAffected(detail.workspace!.affected!);
       }
       for (const pair of scenario.pairs) {
-        const record = entries.find((entry) => entry.path === pair.after)!;
+        // The current entry's detail names the base side it compares with.
+        const record = await copiedDetail(
+          `${branchCopy.url}/mokly-viewer/entries/${pair.after}.json`,
+        );
+        expect(record.entry.path).toBe(pair.after);
         expect(record.before?.path).toBe(pair.before);
-        expect(record.after?.path).toBe(pair.after);
-        expect(record.previousPath).toBe(pair.moved ? pair.before : undefined);
         const current = [...index.screens, ...index.components].find(
           (entry) => entry.path === pair.after,
         )!;
-        expect(current.previousPath).toBe(record.previousPath);
+        expect(current.previousPath).toBe(pair.moved ? pair.before : undefined);
         if (pair.moved) {
           const missing = `${generation}snapshots/before/mokly-generated/${pair.after}/${file}`;
           expect((await request.get(missing)).status()).toBe(404);
@@ -102,25 +100,21 @@ for (const width of [390, 1280]) {
           (entry) => entry.entry.path === scenario.removed!.path,
         )!;
         expect(removed.parentTitle).toBe(scenario.removed.parentTitle);
-        const address = `${generation}entries/${removed.entry.path}.json`;
-        const detail = readEntryDetail(
-          await (await request.get(address)).json(),
+        const detail = await copiedDetail(
+          `${generation}entries/${removed.entry.path}.json`,
         );
         expect(detail.entry.path).toBe(removed.entry.path);
         expect(detail.entry.snapshotId).toBe(removed.snapshotId);
-        await copiedBytes(request, branchCopy.directory, address);
         const document = `${generation}snapshots/before/mokly-generated/${removed.entry.path}/${file}`;
         const response = await page.goto(document);
         await expect(page.locator("button")).toHaveText(scenario.removed.text);
         expect(await response!.body()).toEqual(
           await copiedBytes(request, branchCopy.directory, document),
         );
-        const historical = entries.find(
-          (entry) => entry.path === removed.entry.path,
-        )!;
-        expect(historical.state).toBe("removed");
-        expect(historical.before?.path).toBe(removed.entry.path);
-        expect(historical.after).toBeUndefined();
+        // A removed entry has only its base side, so every view is removed.
+        expect(detail.views.length).toBeGreaterThan(0);
+        for (const view of detail.views) expect(view.state).toBe("removed");
+        expect(detail.before).toBeUndefined();
       }
       if (scenario.document) {
         expect(index.documents.map((entry) => entry.path)).toContain(

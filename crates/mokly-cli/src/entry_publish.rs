@@ -35,7 +35,7 @@ use crate::interrupts::Interrupts;
 use crate::one_shot::Lines;
 use crate::publication_runtime;
 use crate::terminal::Terminal;
-use crate::{command_diagnostics, serve_trace};
+use crate::{command_diagnostics, render_runtime, serve_trace};
 
 pub(super) fn run(
     publish: &grammar::Publish,
@@ -43,11 +43,13 @@ pub(super) fn run(
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
+    let cache = render_runtime::cache();
     if publish.common.debug_timings {
         serve_trace::install(
             terminal.clone(),
             format!("publish-{}", std::process::id()),
             redactor.clone(),
+            cache.clone(),
         );
     }
     let timing = tracing::info_span!("publish", status = "error").entered();
@@ -132,6 +134,7 @@ pub(super) fn run(
             cancellation: interrupts.cancellation.clone(),
             pool: interrupts.pool.clone(),
             phases: lines.clone(),
+            cache,
         }),
         reporter: lines.clone(),
         exchange: Arc::new(Uploading {

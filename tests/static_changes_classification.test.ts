@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
+import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";
@@ -106,9 +106,9 @@ test(
           fs.stat(path.join(moved.output, `view/${name}/index.html`)),
           { code: "ENOENT" },
         );
-      const historical = await json<EntryDetailV2>(
+      const historical = await json<EntryDetailV3>(
         moved.output,
-        `${path.posix.dirname(moved.index.comparisonUrl!)}/entries/card/compact.json`,
+        `${moved.index.comparisonUrl!}entries/card/compact.json`,
       );
       assert.equal(historical.entry.snapshotId, removed.snapshotId);
       assert.ok(
@@ -134,7 +134,7 @@ test(
         '{"review":{"base":"fixture-base"}}',
       );
       const component = (body: string) =>
-        `---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<button>${body} {{label}}</button>`;
+        `---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: disabled, title: Disabled, props: {label: Disabled}}]\n---\n<button>${body} {{label}}</button>`;
       await write(root, "specs/button.component.html", component("Before"));
       await write(
         root,
@@ -156,17 +156,23 @@ test(
         screen('<ui-button mokly-instance="button" label="New" />'),
       );
       const built = await build(root);
-      const button = await json<EntryDetailV2>(
+      const button = await json<EntryDetailV3>(
         built.output,
         "mokly-viewer/entries/button.json",
       );
       assert.ok(
-        button.workspace!.usedBy.some((use) => use.entryPath === "home"),
+        button.workspace!.usedBy!.some((use) => use.entryPath === "home"),
       );
       assert.ok(
-        button.workspace!.affected.some((use) => use.entryPath === "affected"),
+        button.workspace!.affected!.some((use) => use.entryPath === "affected"),
       );
-      const affected = await json<EntryDetailV2>(
+      const variant = await json<EntryDetailV3>(
+        built.output,
+        "mokly-viewer/entries/button/disabled.json",
+      );
+      assert.equal(variant.workspace!.usedBy, undefined);
+      assert.equal(variant.workspace!.affected, undefined);
+      const affected = await json<EntryDetailV3>(
         built.output,
         "mokly-viewer/entries/affected.json",
       );
@@ -176,7 +182,7 @@ test(
         ),
       );
       assert.equal(affected.workspace!.comparisonEligible, true);
-      const home = await json<EntryDetailV2>(
+      const home = await json<EntryDetailV3>(
         built.output,
         "mokly-viewer/entries/home.json",
       );

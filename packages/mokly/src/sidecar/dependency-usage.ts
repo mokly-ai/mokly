@@ -4,6 +4,7 @@ import path from "node:path";
 import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
 
 import { inside, logical } from "./path-scope.js";
+import { bareSpecifier, packageName } from "./specifier.js";
 
 type Candidate = { directory: string; package: string };
 
@@ -49,9 +50,8 @@ export class DependencyUsage {
       specifier = this.settings.aliases[alias]! + specifier.slice(alias.length);
       directory = this.configuration;
     }
-    if (/^(\.|\/|#|[a-z]+:)/i.test(specifier)) return;
-    const parts = specifier.split("/");
-    const name = parts.slice(0, specifier.startsWith("@") ? 2 : 1).join("/");
+    if (!bareSpecifier(specifier)) return;
+    const name = packageName(specifier);
     const key = JSON.stringify([directory, name]);
     let candidates = this.candidates.get(key);
     if (!candidates) {
@@ -90,11 +90,8 @@ export class DependencyUsage {
       specifier = this.settings.aliases[alias]! + specifier.slice(alias.length);
       directory = this.configuration;
     }
-    if (/^(\.|\/|#|[a-z]+:)/i.test(specifier)) return;
-    const name = specifier
-      .split("/")
-      .slice(0, specifier.startsWith("@") ? 2 : 1)
-      .join("/");
+    if (!bareSpecifier(specifier)) return;
+    const name = packageName(specifier);
     while (inside(this.sourceRoot, directory)) {
       const root = path.join(directory, "node_modules");
       const candidate =

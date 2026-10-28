@@ -139,3 +139,29 @@ that the release removes.
 Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
+
+## Upgrade to comparisons without `review.json`
+
+A comparison generation no longer contains `review.json`. The catalogue index
+and the entry details carry every public comparison fact.
+
+- Read the catalogue index version 8. It adds `baseCommit`, the merge base
+  that Changes pinned, while Changes is ready. Its `comparisonUrl` names the
+  root of the comparison generation, which ends with `/`, instead of a file.
+- Read each view's comparison `state` and `ignoredIds` from the entry detail,
+  beside its `resourceEvidence`. A ready current screen or component also
+  carries `before`, the address of its base side.
+- In Serve, request `/mokly-viewer/diffs/selection?path={path}` instead of
+  `/mokly-viewer/diffs/review.json?path={path}`. It redirects to the root of
+  the selected generation.
+- A receiver of `mokly publish` reads upload envelope version 3, which has no
+  `comparisonPath`, and reads Changes from the `mokly-viewer/index.json` that
+  the Plan request carries. Mokly Cloud must accept upload version 3 and index
+  version 8 before it stores a publication of this release.
+- `MoklyVersionError` no longer reports a `review` boundary.
+
+## Upgrade entry detail version 3
+
+Entry detail version 3 omits `usedBy` and `affected` from current component
+variants. Their pages request the parent detail and read both lists there.
+Rename `EntryDetailV2` to `EntryDetailV3` in viewer integrations.

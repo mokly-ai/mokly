@@ -18,13 +18,15 @@ export async function deliveryIndex(
   expect(response.ok()).toBe(true);
   const index: CatalogueReadModel = readCatalogueIndex(await response.json());
   expect(index.comparisonUrl).not.toBeNull();
-  const reviewUrl = new URL(index.comparisonUrl!, origin).href;
-  return { index, reviewUrl, generation: new URL(".", reviewUrl).href };
+  return { index, generation: new URL(index.comparisonUrl!, origin).href };
 }
 
-/** Observe real requests, including renewals, without replacing any response. */
-export function deliveryRequests(page: Page) {
-  const traffic = staticRequests(page);
+/**
+ * Observe real requests, including renewals, without replacing any response.
+ * `missing` lists the URLs that a spec removed from the copy on purpose.
+ */
+export function deliveryRequests(page: Page, missing: readonly string[] = []) {
+  const traffic = staticRequests(page, missing);
   const heads: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "HEAD") heads.push(request.url());
