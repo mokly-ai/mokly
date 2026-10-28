@@ -38,6 +38,7 @@ fn relative_node_probe() {
     let result = spawner.spawn(&Command {
         program: "node".into(),
         args: vec!["--version".into()],
+        scripts: false,
         directory: base.path().into(),
         timeout: Duration::from_secs(120),
         byte_limit: None,
@@ -97,6 +98,7 @@ fn selected_node_probe() {
             .spawn(&Command {
                 program: program.into(),
                 args: vec!["--version".into()],
+                scripts: false,
                 directory: root.clone(),
                 timeout: Duration::from_secs(120),
                 byte_limit: None,
