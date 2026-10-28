@@ -1,7 +1,11 @@
 # Per-Entry Render Keys
 
-Status: Active. [PR #227](https://github.com/mokly-ai/mokly/pull/227) is open.
-The plan closes when its PR merges.
+Status: Completed. [PR #227](https://github.com/mokly-ai/mokly/pull/227)
+merged on 2026-10-28.
+[PR #235](https://github.com/mokly-ai/mokly/pull/235) applies the answers
+to review 2. The follow-up for config-relative paths stays open under user
+item 167 in the Rust rebuild plan, and two problems outside the scope wait
+for a separate branch, as the review TODO lists.
 
 One JavaScript edit re-renders every JavaScript document, and an unchanged
 base renders every base document through the sidecars again. Both come from
@@ -102,6 +106,27 @@ it with its reason.
    because a naming gap would then under-invalidate. Reason: decision 2 A
    already identifies those packages by their resolved paths, and both sides
    record the React manifest.
+
+The orchestrator answered the review 2 findings on 2026-10-28.
+
+8. Decision 8 (2026-10-28, review 2 finding R2-1): A, the binding of a
+   definition that the unattributed API made enters every key of its side.
+   Rejected: B, file it under each installed-package module in the closure
+   of the re-exporting entry module, because a widely imported package
+   would carry it into many keys. Also rejected: C, a sidecar field for the
+   declaring module, and D, the binding handles that each render reads,
+   checked on each cache hit, because both are large. Reason: it is the
+   smallest fix that cannot leave a stale render. A story parent has no
+   sidecar source path either, but its stories file declares it, so it
+   keeps its per-module filing.
+9. Decision 9 (2026-10-28, review 2 finding R2-2): A, the shared part of
+   the keys leaves the preview digests out. Rejected: B, a generation field
+   that marks an unnamed preview, because it is large. Reason: one filter
+   restores the rule that only the stories use the whole-bundle key.
+10. Decision 10 (2026-10-28, review 2 finding R2-4): B, a real-sidecar test
+    that links `.storybook`. Rejected: A, a unit test of the environment
+    derivation only, because it does not check the symbolic-link case
+    through the real sidecar. Reason: it covers that case end to end.
 
 ## Corrections And Planning Findings
 
@@ -496,7 +521,7 @@ Let equal head and base inputs share render cache entries under decision 1.
   - The second complete gate passed all seven suites on `9a07db7c`.
 - [x] Commit with Conventional Commits and push the branch after each
       milestone.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -517,16 +542,17 @@ Let equal head and base inputs share render cache entries under decision 1.
   - Review 2 at `f0839dfb` checked the fix commits and found four new
     findings, which the validity check confirmed. Finding 3 of review 2,
     the sidecar contract sentence about generation ids, is fixed in the
-    commit after merge `eb9fb017`. Open, by severity:
-  - R2-1. Installed-package definitions miss their binding input.
-    Severity Medium, effort Small. Recommended: A, put the binding of a
-    definition without a sidecar source path into every key of its side.
-  - R2-2. An unnamed preview moves every key. Severity Low, category
-    performance, effort Small. Recommended: A, keep the preview names out of
-    the shared part of the keys.
-  - R2-4. No test drives the unnamed-preview path. Severity Low, effort
-    Small. Recommended: B, an integration test with a linked `.storybook`
-    folder.
+    commit after merge `eb9fb017`.
+  - The orchestrator answered the other three review 2 findings on
+    2026-10-28, as decisions 8 to 10 record.
+    [PR #235](https://github.com/mokly-ai/mokly/pull/235) applies them
+    after the merge of PR #227:
+    - R2-1, Medium: A. The binding of an installed-package definition
+      enters every key of its side.
+    - R2-2, Low: A. An edit to an unnamed preview moves only the story
+      keys.
+    - R2-4, Low: B. A real-sidecar test links `.storybook` and edits the
+      preview.
   - Outside the scope: `crates/mokly-render/src/graph.rs`. `entry_modules`
     splits a handle at its first `#`, so a module path with `#` gets the
     wrong stylesheet module. Separate branch.
