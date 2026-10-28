@@ -131,6 +131,9 @@ mod ignore_composition_tests;
 mod ignore_parsing_tests;
 
 #[cfg(test)]
+#[path = "_tests_/html5lib_corpus_tests.rs"]
+mod html5lib_corpus_tests;
+#[cfg(test)]
 #[path = "_tests_/pipeline_differential_tests.rs"]
 mod pipeline_differential_tests;
 #[cfg(test)]

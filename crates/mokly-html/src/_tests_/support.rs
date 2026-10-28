@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeBuilderOpts;
-use html5ever::{ParseOpts, parse_document};
+use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::definition_provider::{
     DefinitionProvider, DefinitionProviderMock, Definitions, ProvidedDefinition,
@@ -59,6 +59,42 @@ pub(crate) fn saved_slot(body: &str) -> SavedSlot {
 
 pub(crate) fn legacy_authored_document(source: &str) -> Vec<HtmlNode> {
     legacy_document_with_mode(source, true)
+}
+
+/// html5ever's own tokenizer and tree builder, as the reference for a delivered document.
+pub(crate) fn legacy_delivered_document(source: &str) -> Vec<HtmlNode> {
+    legacy_document_with_mode(source, false)
+}
+
+/// html5ever's own tokenizer and tree builder, as the reference for a fragment in `body`.
+pub(crate) fn legacy_delivered_fragment(source: &str) -> Vec<HtmlNode> {
+    let nodes = legacy_fragment_once(source);
+    if terminal_text(&nodes) {
+        legacy_fragment_once(&serialize::html(&nodes))
+    } else {
+        nodes
+    }
+}
+
+fn legacy_fragment_once(source: &str) -> Vec<HtmlNode> {
+    let options = ParseOpts {
+        tree_builder: TreeBuilderOpts {
+            scripting_enabled: false,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let body = QualName::new(None, ns!(html), local_name!("body"));
+    parse_fragment(Arena::new(false), options, body, Vec::new(), false)
+        .one(source)
+        .into_iter()
+        .flat_map(|mut node| match &mut node {
+            HtmlNode::Element(element) if element.name == "html" => {
+                std::mem::take(&mut element.children)
+            }
+            _ => vec![node],
+        })
+        .collect()
 }
 
 fn legacy_document_with_mode(source: &str, authored: bool) -> Vec<HtmlNode> {

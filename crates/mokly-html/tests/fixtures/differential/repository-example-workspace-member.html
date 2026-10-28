@@ -1,0 +1,44 @@
+---
+element: workspace-member
+title: Workspace member
+description: One person in a workspace, with their role and invitation state.
+tags: [team]
+relatedDocs: [examples/basic/specs/example/team/member-roles.md]
+propSchema:
+  type: object
+  additionalProperties: false
+  required: [name, email, initials, role]
+  properties:
+    name: { type: string, minLength: 1 }
+    email: { type: string, minLength: 1 }
+    initials: { type: string, minLength: 1, maxLength: 2 }
+    role: { enum: [Owner, Admin, Member] }
+    pending: { type: boolean }
+props:
+  name: Maya Chen
+  email: maya@fernhill.example
+  initials: MC
+  role: Owner
+variants:
+  - slug: pending
+    title: Workspace member, invitation sent
+    description: A person who has an invitation and has not joined yet.
+    props:
+      name: Sam Okafor
+      email: sam@fernhill.example
+      initials: SO
+      role: Member
+      pending: true
+---
+
+<div class="member" lang="en">
+  <span class="member-avatar" aria-hidden="true">{{initials}}</span>
+  <span class="member-text">
+    <span class="member-name">{{name}}</span>
+    <span class="member-email">{{email}}</span>
+  </span>
+  <span class="member-meta">
+    <span class="member-role">{{role}}</span>
+    <span class="member-status" mokly-if="$pending">Invited</span>
+  </span>
+</div>

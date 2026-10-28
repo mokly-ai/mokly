@@ -143,6 +143,20 @@ The native HTML sweep fixture covers front matter, template spacing, variants,
 named and repeated slots, ignore scopes, link controls, and resource closure.
 The link-control tests cover the ancestor and descendant placement matrix.
 
+The parser differential test reads the tracked inputs in
+`tests/fixtures/differential`. It requires each tree to equal html5ever's own
+parse without positions, and it keeps each position table as an `insta`
+snapshot. When a parser change moves a position on purpose, rerun the test
+with `INSTA_UPDATE=always` and review each changed `.snap` file.
+
+The html5lib tree-construction corpus in `tests/fixtures/html5lib` is test
+data from html5lib-tests commit `9329e64`, the last commit before that corpus
+moved to web-platform-tests, under its MIT license. Each corpus input must
+parse as a document and as a `body` fragment to html5ever's own tree, and each
+recorded position must name its own start tag. The corpus has no duplicate
+attributes and no text that a CDATA section reorders, so the tracked fixtures
+cover those steps. Neither directory is part of the crate build.
+
 ### Key Code
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
