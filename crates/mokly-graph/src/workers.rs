@@ -1,10 +1,11 @@
-//! Parallel document validation with deterministic result order.
+//! Parallel document validation and stylesheet bundling with deterministic result order.
 
 use std::collections::BTreeSet;
 use std::fmt;
 use std::sync::Arc;
 
 use mokly_catalogue::diagnostic::Warning;
+use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_html::links::Reference;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use rayon::prelude::*;
@@ -68,6 +69,18 @@ impl fmt::Debug for dyn DocumentWorker + '_ {
     }
 }
 
+/// One stylesheet root bundled on a render worker.
+pub trait StylesheetWorker: Send + Sync {
+    /// Bundle one root without scheduling another worker.
+    fn stylesheet(&self, root: &StylesheetRoot) -> Result<Bundle>;
+}
+
+impl fmt::Debug for dyn StylesheetWorker + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("StylesheetWorker")
+    }
+}
+
 /// Worker scheduling is an injectable runtime boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
@@ -94,6 +107,14 @@ pub trait RenderWorkers: Send + Sync {
     /// Render an on-demand document on the same stack as complete builds.
     fn document(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Arc<Artifact>> {
         worker.artifact(route)
+    }
+    /// Bundle every root, retaining root order and every failure.
+    fn stylesheets(
+        &self,
+        roots: &[StylesheetRoot],
+        worker: &dyn StylesheetWorker,
+    ) -> Vec<Result<Bundle>> {
+        roots.iter().map(|root| worker.stylesheet(root)).collect()
     }
     /// Run all jobs, retaining authored route order and every failure.
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>>;
@@ -145,6 +166,19 @@ impl RenderWorkers for ThreadWorkers {
         self.pool
             .install(|| parent.in_scope(|| worker.artifact(route)))
     }
+    fn stylesheets(
+        &self,
+        roots: &[StylesheetRoot],
+        worker: &dyn StylesheetWorker,
+    ) -> Vec<Result<Bundle>> {
+        let parent = tracing::Span::current();
+        self.pool.install(|| {
+            roots
+                .par_iter()
+                .map(|root| parent.in_scope(|| worker.stylesheet(root)))
+                .collect()
+        })
+    }
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>> {
         let parent = tracing::Span::current();
         self.pool.install(|| {
@@ -173,3 +207,7 @@ pub(crate) fn check_cancelled(workers: &dyn RenderWorkers) -> Result<()> {
 #[cfg(test)]
 #[path = "_tests_/comparison_workers_tests.rs"]
 mod comparison_workers_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_workers_tests.rs"]
+mod stylesheet_workers_tests;

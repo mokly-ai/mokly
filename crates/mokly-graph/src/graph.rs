@@ -119,12 +119,10 @@ impl Graph {
             .filter(|root| root.local_css)
             .map(|root| root.path.clone())
             .collect();
-        for root in roots.into_values() {
-            check_cancelled(self.workers.as_ref())?;
-            let bundle = match self.stylesheets.bundle(&root) {
-                Ok(bundle) => bundle,
-                Err(source) => return Err(GraphError::Css { source }),
-            };
+        let roots: Vec<_> = roots.into_values().collect();
+        let bundles = self.workers.stylesheets(&roots, self);
+        for (root, bundle) in roots.into_iter().zip(bundles) {
+            let bundle = bundle?;
             if let Err(source) = module_names.register(&bundle.css_modules) {
                 return Err(GraphError::Css { source });
             }

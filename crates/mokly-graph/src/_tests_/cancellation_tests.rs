@@ -148,12 +148,12 @@ fn preparation_stops_before_the_next_stylesheet_root() {
                 plugin_inputs: Default::default(),
                 directories: Vec::new(),
             })),
-        RenderCacheMock::insert
-            .next_call(matching!(_, _))
-            .returns(()),
         RenderWorkersMock::cancelled
             .next_call(matching!())
             .returns(true),
+        RenderCacheMock::insert
+            .next_call(matching!(_, _))
+            .returns(()),
     )));
     let mut config = config();
     config.input = serde_json::from_value(

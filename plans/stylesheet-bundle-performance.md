@@ -196,13 +196,13 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
 Step A keeps the behaviour at every boundary, so no protocol page changes.
 The timings contract already says that parallel graph work overlaps.
 
-- [ ] Confirm that `docs/protocol/mokly-runtime.md`,
+- [x] Confirm that `docs/protocol/mokly-runtime.md`,
       `docs/protocol/mokly-timings.md`, and `docs/architecture/rust-core.md`
       stay true. Change nothing that stays true.
-- [ ] Update `crates/mokly-graph/README.md`: preparation bundles the roots on
+- [x] Update `crates/mokly-graph/README.md`: preparation bundles the roots on
       the render workers and registers them in root order, and each root job
       checks cancellation. Name `stylesheets` under `### Key Code`.
-- [ ] Update `crates/mokly-render/README.md`: one context's PostCSS requests
+- [x] Update `crates/mokly-render/README.md`: one context's PostCSS requests
       reach the sidecar one at a time, and the read inventory runs outside the
       PostCSS cache lock.
 
@@ -210,34 +210,41 @@ The timings contract already says that parallel graph work overlaps.
 
 Write each failing test first.
 
-- [ ] Add `StylesheetWorker` and `RenderWorkers::stylesheets` to
+- [x] Add `StylesheetWorker` and `RenderWorkers::stylesheets` to
       `crates/mokly-graph/src/workers.rs`, and implement it on
       `ThreadWorkers`.
-- [ ] Forward `stylesheets` in `crates/mokly-cli/src/cancelled_work.rs` with
+- [x] Forward `stylesheets` in `crates/mokly-cli/src/cancelled_work.rs` with
       a cancellation check before each job. Without it, production keeps the
       serial trait default.
-- [ ] Run the root jobs in `crates/mokly-graph/src/graph.rs` and register
+- [x] Run the root jobs in `crates/mokly-graph/src/graph.rs` and register
       the results in root order. Keep the file under 300 lines. Move the
       registration into its own module when the file needs the room.
-- [ ] Apply decision 2 in `crates/mokly-render/src/postcss.rs`.
-- [ ] Tests:
-  - [ ] `crates/mokly-graph/tests`: a fixture with at least six roots gives
+- [x] Apply decision 2 in `crates/mokly-render/src/postcss.rs`.
+- [x] Tests:
+  - [x] `crates/mokly-graph/tests`: a fixture with at least six roots gives
         the same routes, CSS bytes, keys, sources, and warnings with one
         worker and with eight workers.
-  - [ ] `crates/mokly-graph`: with two failed roots, preparation returns the
+  - [x] `crates/mokly-graph`: with two failed roots, preparation returns the
         error of the first root in root order, also when the later root fails
         first. The test controls the order with signals, not with time.
-  - [ ] `crates/mokly-graph`: `ThreadWorkers::stylesheets` keeps the input
+  - [x] `crates/mokly-graph`: `ThreadWorkers::stylesheets` keeps the input
         order and runs two jobs at the same time. A job waits for a signal
         from the other job, with a polling deadline of at least 10 s.
-  - [ ] `crates/mokly-graph`: `css.bundle` spans on worker threads keep the
-        `graph.prepare` span as their parent.
-  - [ ] `crates/mokly-cli`: `CancellableWorkers::stylesheets` forwards to its
+  - [x] `crates/mokly-cli/tests/serve_process_tests.rs`: through the real
+        timing layer, every `css.bundle` span of two roots keeps the
+        `graph.prepare` span as its parent.
+  - [x] `crates/mokly-cli`: `CancellableWorkers::stylesheets` forwards to its
         inner workers, and a cancelled job returns the cancelled diagnostic.
-  - [ ] `crates/mokly-render`: while one request runs its read inventory, a
+  - [x] `crates/mokly-render`: while one request runs its read inventory, a
         request for another input of the same context completes its sidecar
         call. Two requests for one input make one sidecar call.
-- [ ] Run `cargo xtask check --suite repository`.
+- [x] Run `cargo xtask check --suite repository`.
+- [x] Update the mock order of
+      `cancellation_tests::preparation_stops_before_the_next_stylesheet_root`
+      in `crates/mokly-graph`: the second root still never bundles, and the
+      render-cache insert of the first root now follows the root jobs.
+
+Evidence: `.context/perf5-parallel-stylesheets/repository-suite-a2.log`.
 
 ## Milestone 3: Output check and measurement, step A
 
