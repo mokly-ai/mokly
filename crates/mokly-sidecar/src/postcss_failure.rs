@@ -12,7 +12,7 @@ use ts_rs::TS;
 pub enum PostcssFailure {
     /// Module evaluation or default export failed.
     Load {
-        /// Configuration-relative module path.
+        /// Repository-relative module path without `.` or `..` segments.
         module: String,
         /// Tool detail.
         detail: String,
@@ -40,7 +40,7 @@ pub enum PostcssFailure {
     Factory {
         /// Authored plugin name.
         plugin: String,
-        /// Configuration module.
+        /// Repository-relative module path without `.` or `..` segments.
         module: String,
         /// Tool detail.
         detail: String,
