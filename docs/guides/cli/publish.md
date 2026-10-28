@@ -57,8 +57,9 @@ before the command runs. Publish never fetches it.
 
 Publish prints `Mokly publish build: {directory}` before it builds.
 It sends the upload metadata and ownership inventory first. The receiver
-returns the content digests it needs. Publish sends those exact immutable
-bytes and then asks the receiver to complete the publication.
+returns the content digests it needs. Publish sends the bytes of those files
+and then asks the receiver to complete the publication. When the receiver
+lists gzip, a Blob body is gzip if that is smaller than the file.
 
 Requests have at most five attempts for temporary failures. One expired or
 incomplete upload can start a new Plan. Rerunning the command reuses content
