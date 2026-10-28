@@ -27,6 +27,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
   };
   const model: CatalogueReadModel = {
     documents: [],
+    baseCommit: "a".repeat(40),
     changesStatus: "ready",
     comparisonUrl: null,
     components: [],
@@ -35,7 +36,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     pages: [],
     removedEntries: [{ folderTitles: [], entry }],
     revision: 1,
-    schemaVersion: 7,
+    schemaVersion: 8,
     screens: [],
     tree: [],
     useCases: [],

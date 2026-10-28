@@ -20,7 +20,7 @@ use unimock::{Clause, MockFn, Unimock, matching};
 
 use crate::capture_producer;
 
-use super::{capture, capture_with_bound};
+use super::{CaptureSide, capture, capture_with_bound};
 
 fn source(
     side: &'static str,
@@ -116,7 +116,7 @@ fn captured_assets_forward_streams_and_membership_without_reading_payloads() {
             .each_call(matching!("assets/image.png"))
             .answers(&|_, _| Ok(true)),
     )));
-    let captured = capture_with_bound(source, usize::MAX).unwrap();
+    let captured = capture_with_bound(source, usize::MAX, CaptureSide::Base).unwrap();
     assert!(captured.comparison_capture().is_some());
     assert!(captured.contains_resource("assets/image.png").unwrap());
     assert_eq!(
@@ -133,8 +133,8 @@ fn captured_assets_forward_streams_and_membership_without_reading_payloads() {
 fn side_switch_count_is_constant_and_replays_do_not_render() {
     let run = |count| {
         let events = Arc::new(Mutex::new(vec![]));
-        let before = capture(source("before", count, events.clone())).unwrap();
-        let after = capture(source("after", count, events.clone())).unwrap();
+        let before = capture(source("before", count, events.clone()), CaptureSide::Base).unwrap();
+        let after = capture(source("after", count, events.clone()), CaptureSide::Head).unwrap();
         for _ in 0..3 {
             for index in 0..count {
                 let route = format!("{index}/index.html");
@@ -156,6 +156,7 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
             }
         }
         assert_eq!(before.render_all().unwrap().documents, count);
+        assert_eq!(after.render_all().unwrap().documents, count);
         for side in [&before, &after] {
             assert_eq!(
                 side.resource_digest("static/mokly-generated/assets/image.png")
@@ -196,11 +197,11 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
 fn smaller_bound_rebuilds_from_original_source_without_stacking_captures() {
     let events = Arc::new(Mutex::new(vec![]));
     let original = source("base", 4, events.clone());
-    let full = capture(original.clone()).unwrap();
+    let full = capture(original.clone(), CaptureSide::Base).unwrap();
     let full_info = full.comparison_capture().unwrap();
     assert_eq!(full_info.views, 4);
     let bound = full_info.retained_bytes / 2;
-    let smaller = capture_with_bound(full.clone(), bound).unwrap();
+    let smaller = capture_with_bound(full.clone(), bound, CaptureSide::Base).unwrap();
     let smaller_info = smaller.comparison_capture().unwrap();
     assert!(!Arc::ptr_eq(&full, &smaller));
     assert!(Arc::ptr_eq(&smaller_info.source, &original));
@@ -232,22 +233,27 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
             })),
     )));
     assert!(
-        matches!(capture(source), Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled)
+        matches!(capture(source, CaptureSide::Base), Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled)
     );
 }
 
 #[test]
 fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_source() {
     let reads = Arc::new(Mutex::new(Vec::new()));
-    let captured = capture(source("base", 4, reads.clone())).unwrap();
+    let captured = capture(source("base", 4, reads.clone()), CaptureSide::Base).unwrap();
+    let received = Arc::new(Mutex::new(Vec::new()));
+    let received_for_mock = received.clone();
     let mut collector = Unimock::new(
         ComparisonCollectorMock::collect
             .each_call(matching!(_, _))
-            .answers(&|_, route, input| {
-                assert_eq!(input.artifact.bytes, format!("base:{route}").as_bytes());
-                assert!(input.closure.files.contains(route));
+            .answers_arc(Arc::new(move |_, route, input| {
+                received_for_mock.lock().unwrap().push((
+                    route.to_owned(),
+                    input.artifact.bytes.clone(),
+                    input.closure.files.clone(),
+                ));
                 Ok(())
-            })
+            }))
             .n_times(4),
     );
     assert_eq!(
@@ -258,4 +264,10 @@ fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_sou
         4
     );
     assert_eq!(reads.lock().unwrap().len(), 4);
+    let received = received.lock().unwrap();
+    assert_eq!(received.len(), 4);
+    for (route, bytes, files) in received.iter() {
+        assert_eq!(bytes, format!("base:{route}").as_bytes());
+        assert!(files.contains(route));
+    }
 }

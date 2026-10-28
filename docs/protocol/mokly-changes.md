@@ -1,13 +1,9 @@
 # Changes and screen comparisons
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
-A base commit without the selected configuration file has an empty catalogue.
-Every current entry is added. A malformed configuration or a failed Git read
-keeps its validation or Git failure. A comparison size or command budget
-makes Changes unavailable with a diagnostic naming the path and limit. The
-current build remains usable. Runtime failure outcomes follow
-[base preparation](./mokly-base-preparation.md#shared-render-runtime).
+The [catalogue change metadata contract](./mokly-catalogue-changes.md) states
+what Changes shows when the base commit has no configuration file, when a base
+read fails, and when a comparison budget is exceeded. Runtime failure outcomes
+follow [base preparation](./mokly-base-preparation.md#shared-render-runtime).
 
 ## Changes membership
 

@@ -18,7 +18,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const ORIGIN = "https://catalogue.test";
 
@@ -115,7 +115,7 @@ test("an object index needs its base address and a URL index refuses one", async
     signal,
   );
   assert.equal(loaded.root.href, `${ORIGIN}/`);
-  assert.equal(loaded.index.schemaVersion, 7);
+  assert.equal(loaded.index.schemaVersion, 8);
   await assert.rejects(
     loadIndexSource(rawIndexFixture(), undefined, signal),
     DeliveryFetchError,

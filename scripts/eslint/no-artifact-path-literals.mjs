@@ -1,6 +1,10 @@
 /** Require the shared builders for comparison artifact paths in production code. */
 
-/** A snapshot path, or `pages/` followed later by `.json`. */
+/**
+ * A snapshot path, or `pages/` followed later by `.json`. A template literal
+ * is tested as one string with each substitution read as `${}`. `previews/`
+ * paths are not checked.
+ */
 const artifactPath = /snapshots\/|pages\/[\s\S]*\.json/u;
 
 export default {

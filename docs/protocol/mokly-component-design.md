@@ -1,17 +1,16 @@
 # Component Explorer Design
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all fifty-three component design entries (fifty-one screens and two variants), their
-owning folders, and stylesheet scopes.
+all fifty-three component design entries (fifty-one screens and two variants)
+and their owning folders.
 
 ## Component Pages
 
-Reuse the existing top bar, split navigation tree, screen heading, comparison band,
-stage, and comparison controls, adding the shared icon inspector and compact view toolbar. Components use a small cube
+Component pages use the top bar, split navigation tree, screen heading,
+comparison band, stage, and comparison controls of the shell designs, plus the
+shared icon inspector and compact view toolbar. Components use a small cube
 icon in the Components section. Both sections are views of one tree, so the
 `Example` folder appears above `Screens` in Specs and above its `Components`
 library in Components, and component crumbs read `Example › Components`. A
@@ -39,7 +38,8 @@ shown entry is a depiction, and no option on another page links into them.
 Navigation variant rows follow the same rule.
 The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context keeps the shell's fixed 1024px layout width in every window, so a component's desktop view has one layout width, and a narrower preview pane scrolls. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
-The same `ActionExample` and `ToolbarExample` are reused in consuming screens.
+Consuming screens depict the same Action and Toolbar examples as the component
+pages.
 
 Side by side draws one canvas per version under Before and Current labels.
 Overlay and Difference draw one bordered frame at the same canvas height, its
@@ -92,8 +92,8 @@ artboards render with these counts.
 Every known shown view carries an Added, Changed, Removed, or Unmodified badge
 beside its title. In the removed scenario Compact is its own Removed entry
 beneath Action and reads Removed when selected; Farewell is Removed.
-States links an Additions child gallery with one new Badge example and one Changes
-entry, preserving the five-screen limit in its parent and the existing unused state.
+States links an Additions child gallery with one added Badge example and one
+Changes entry, so States keeps its five-screen limit and its unused state.
 It also links the Loading and recovery child gallery. That gallery shows
 `Loading usage…` without counts or lists, screen inspection with
 `Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
@@ -142,8 +142,8 @@ components. Sage outlines and named labels expose the selected regions; a
 nested selection cuts out only the Toolbar action and dims the parent again.
 The same consumer DOM is used with highlighting off and on. Welcome uses an SVG overlay; Details uses a clipped scrim around its single Action. Neither sets ancestor opacity. Each viewport uses its own overlay, with unique SVG mask ids when Both is selected.
 
-Mask geometry is fixed to the synthetic artboard's layout and tested against
-its actual DOM bounds. The runtime owns geometry collection, selection, Escape
+Mask geometry is fixed to the synthetic artboard's layout and matches its
+actual DOM bounds. The runtime owns geometry collection, selection, Escape
 handling, and cleanup. Comparison artboards disable highlighting, as does
 a Removed screen because it has no current preview to inspect.
 An empty usage list says no registered components are used in this view;
@@ -153,43 +153,3 @@ example and an explicit empty Used by list.
 Disabled highlight controls explain whether there are no registered components,
 inspection is unavailable, a comparison is selected, or the screen was removed. Highlight chips have a
 small gap above an intact rounded outline, shared by all three region layouts.
-
-## Verification And Maintenance
-
-Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
-shared component stylesheets are hand-authored public inputs, scoped to the
-`design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the fifty-three
-component design routes. Registered components declare exclusive CSS through
-`stylesheets`; the `$componentStylesheets` marker keeps those links between base
-and layout sheets. Shared metadata supplies related docs, while folder records
-supply navigation. Source paths supply no comparison evidence. The controls
-stylesheet stays scoped to its twenty owning entries. Watched Serve reloads
-configured and declared CSS. Shared fixtures and screen parts live beside their
-owning screen modules.
-
-The on-demand Rust attribution matrix over the design catalogue classifies all nine shared
-sheets once per scenario. Rendered stylesheet links pin 51, 20, 0, or all
-`design/` screens and 69 component saved-variant entries. A parent component
-renders its own views from its own props. The tests keep exact per-entry
-rendered-resource records and rule records, the exact changed-entry union, and
-no affected consumers for unresolved shared rules. They exclude unrelated
-design screens, product screens and their use case.
-`design.css` is rendered-resource evidence; it supplies no shared impact.
-
-Run the component specs of the browser suite against `mokly serve` with
-`npm run test:browser -- tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
-The browser suite opens every artboard in the served Browse frames, checks
-links, selection semantics, counts, missing states, responsive overflow, mask
-geometry, and the stacked frames' layers, blending, single scroller and drawn
-offset; the Rust behaviour tests pin parents' own-props views, the stacked
-frames' structure, every comparison caption tied to its recorded change, and
-the Checklist's Changes.
-These four focused checks run in the default Rust workspace suite. The
-[CLI development guide](../../crates/mokly-cli/README.md#development) gives the
-focused command and the optional full attribution matrix.
-Visually inspect all rendered mobile and desktop pages in the served frames and
-in the `mokly build` output, including both selected-instance states.
-Run `cargo xtask check` before committing and pushing. After the push, use the
-`implementation-review` skill against `origin/main` and report findings
-without changing the implementation.

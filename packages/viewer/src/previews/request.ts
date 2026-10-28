@@ -1,5 +1,6 @@
 /** Resolve and fetch one removed entry's previous version. */
 
+import { removedEntryDetailPath } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
@@ -7,9 +8,7 @@ import { encodeUrlPath } from "../data/paths.js";
 import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
-import { pageContent, screenContent } from "./content.js";
-
-const REVIEW_FILE = "review.json";
+import { pageContent, screenContent, type ParsedPreview } from "./content.js";
 
 /** One historical screen view rendered in its own device frame. */
 export interface PreviewScreenView {
@@ -41,11 +40,12 @@ export interface LoadedPreview {
 export interface PreviewRequest {
   endpoint: URL;
   /**
-   * Generation root the historical documents resolve against. A packaged page
-   * descriptor sits under `previews/<path>/`, so its documents resolve against the
-   * comparison's generation rather than the descriptor's own directory.
+   * Generation root the historical documents resolve against. A removed
+   * screen's detail sits under `entries/` and a page descriptor under
+   * `previews/<path>/`, so documents resolve against the comparison's
+   * generation rather than the metadata's own directory.
    */
-  generation?: URL;
+  generation: URL;
 }
 
 /** Static metadata needed to resolve an advertised previous version. */
@@ -83,13 +83,11 @@ export function previewEndpoint(
   if (advertised.kind !== data.kind) return undefined;
   const comparisonPath = comparisonUrl.replace(/^\/+/, "");
   const generation = new URL(`/${comparisonPath}`, base);
-  if (advertised.kind === "screen") return { endpoint: generation };
-  const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
-  const path = `${prefix}${previewMetadataPath(data.path)}`;
-  return {
-    endpoint: new URL(`/${encodeUrlPath(path)}`, base),
-    generation,
-  };
+  const path =
+    advertised.kind === "screen"
+      ? removedEntryDetailPath(comparisonPath, data.path)
+      : `${comparisonPath}${encodeUrlPath(previewMetadataPath(data.path))}`;
+  return { endpoint: new URL(`/${path}`, base), generation };
 }
 
 /**
@@ -101,26 +99,19 @@ export function advertisedPreviewPaths(
   model: CatalogueReadModel,
 ): AdvertisedPreviewPaths {
   const comparison = model.comparisonUrl;
+  if (comparison === null) return { files: [], prefixes: [] };
   return {
-    files: [
-      ...(comparison === null ? [] : [comparison]),
-      ...model.removedEntries.flatMap((removed) =>
-        (removed.preview?.kind === "page" ||
-          removed.preview?.kind === "document") &&
-        comparison !== null
-          ? [
-              `${comparison.slice(0, -REVIEW_FILE.length)}${previewMetadataPath(removed.entry.path)}`,
-            ]
+    files: model.removedEntries.flatMap((removed) =>
+      removed.preview?.kind === "screen"
+        ? [removedEntryDetailPath(comparison, removed.entry.path)]
+        : removed.preview?.kind === "page" ||
+            removed.preview?.kind === "document"
+          ? [`${comparison}${previewMetadataPath(removed.entry.path)}`]
           : [],
-      ),
-    ],
-    prefixes:
-      comparison === null
-        ? []
-        : (["before", "after"] as const).map(
-            (side) =>
-              `${comparison.slice(0, -REVIEW_FILE.length)}${snapshotSidePath(side)}`,
-          ),
+    ),
+    prefixes: (["before", "after"] as const).map(
+      (side) => `${comparison}${snapshotSidePath(side)}`,
+    ),
   };
 }
 
@@ -128,17 +119,25 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
+/**
+ * Whether the loaded metadata names the requested removed record: a removed
+ * screen's detail repeats its snapshot id, and a page descriptor's base commit
+ * derives it.
+ */
 function snapshotMatches(
   data: RemovedPreviewData,
-  baseCommit: string,
+  parsed: ParsedPreview,
 ): boolean {
   if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
     return true;
   if (!data.snapshotId || !data.catalogueIdentity) return false;
-  return (
-    historicalSnapshotId(data.catalogueIdentity, baseCommit, data) ===
-    data.snapshotId
-  );
+  return parsed.identity.kind === "snapshot"
+    ? parsed.identity.snapshotId === data.snapshotId
+    : historicalSnapshotId(
+        data.catalogueIdentity,
+        parsed.identity.baseCommit,
+        data,
+      ) === data.snapshotId;
 }
 
 /** Request one preview and validate it against the entry that asked for it. */
@@ -154,12 +153,12 @@ export async function requestPreview(
   });
   if (!response.ok) unavailable();
   const payload: unknown = await response.json();
-  const base = request.generation?.href ?? response.url;
+  const base = request.generation.href;
   const parsed =
     data.kind === "screen"
       ? screenContent(data, payload, base)
       : pageContent(data, payload, base);
-  if (!snapshotMatches(data, parsed.baseCommit)) unavailable();
+  if (!snapshotMatches(data, parsed)) unavailable();
   return {
     content: parsed.content,
     generation: new URL(".", base).href,

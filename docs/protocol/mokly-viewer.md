@@ -1,14 +1,13 @@
 # Embeddable Mokly Viewer
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
 `>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
-renders only in the browser. Its shared shapes are the generated types of the
-Rust model crate. The package has four entry points:
+renders only in the browser. Its shared shapes are the
+[generated types](../../packages/viewer/src/generated/catalogue/) of the model.
+The package has four entry points:
 
 - The root React entry exports `MoklyViewer`, its types, the frame adapters,
   `resolveInstance`, and the readers of the catalogue index and the entry
@@ -38,7 +37,7 @@ interface ViewerSelection {
   search: string;
   tags: readonly string[];
 }
-/** The catalogue index v7 as an object, or its absolute HTTP(S) URL. */
+/** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 type IndexSource = CatalogueReadModel | string | URL;
 type DetailResult = EntryDetailV2 | string | URL;
 /** One entry detail v2, or its URL; a removed entry names its snapshot. */
@@ -118,12 +117,12 @@ the index publishes, and absent otherwise. The event has no `route`,
 `viewHref(path)` of the [artifact path contract](./mokly-artifact-paths.md)
 for its shell URL.
 
-`index` is the catalogue index v7. For an object source, `baseUrl` is
+`index` is the catalogue index v8. For an object source, `baseUrl` is
 required and supplies the HTTP(S) artifact origin root. A URL or string source
 must be an absolute HTTP(S) URL; its validated final response URL establishes
 that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
-[read model v7](./mokly-catalogue.md) before it renders.
+[read model v8](./mokly-catalogue.md) before it renders.
 
 `detail` supplies the entry detail v2 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a
@@ -151,123 +150,8 @@ independent frames; it owns no global document state.
 
 ## Selection, Events And Imperative Use
 
-`screenPath` names one catalogue entry path: a screen, page, document, use
-case, component, or a screen or component [variant](./mokly-variants.md); null
-selects home. A path with no current or removed entry shows the not-found view
-with usable navigation. A variant of either kind is selected by its own path;
-selecting a component parent shows the parent's own view, rendered from its
-own props, and there is no separate variant selection field. `view` selects
-the All/Changes **catalogue filter**, not a comparison mode. Logical fragments
-and comparison mode keep their route and runtime state.
-
-`snapshotId` is the optional opaque identity published beside a removed entry
-of any kind. With it, the pair must resolve exactly one removed record; an
-unknown, stale, or cross-catalogue identity is unavailable. A path-only
-selection of a removed record normalizes to its published identity when
-present. Readers reject an index where a current and a removed record share a
-path. When a newer index arrives, the selected removed record is matched by
-its identity; a replaced or missing record becomes unavailable without
-retargeting. The `snapshot` query of the removed entry's `/view/<path>/` URL,
-its survival across axis and filter changes, and its removal by navigation to
-current content follow the
-[shell destination contract](./mokly-shell-destinations.md). Direct URLs and
-Back/Forward restore the exact record, and titles, breadcrumbs, Details,
-status, active rows, preview lookup, and navigation events always use it.
-Removed screens expose only their read-only previous version, with no
-component picking, inspection, or comparison action.
-
-Defaults are home, All, Both, Light, empty search and no tags, overridden once
-by `defaultSelection`. `selection` supplies the complete controlled state;
-when present, require `onSelectionChange` and do not also accept
-`defaultSelection`. A user action or imperative `select` merges a partial
-update into current state, validates it and emits a complete next state only
-if changed. Controlled changes stay proposals until the host supplies them
-back; incoming props do not echo an event. Uncontrolled mode commits the next
-state itself. Invalid selection props, including invalid snapshots, render an
-unavailable state and emit one selection error; invalid imperative selections
-reject without committing. A partial selection that explicitly supplies
-`screenPath` without `snapshotId` returns to current content and clears a
-historical selection; viewport, scheme, filter, search and tag changes keep
-it. Shell links and pending route intents propose `{ screenPath, snapshotId }`
-atomically. The component page's variant bar links to the parent's own entry
-and its variant entries, proposing `select({ screenPath })` for the chosen
-entry; comparison mode across siblings follows
-[variant navigation](./mokly-variant-navigation.md). A committed selection
-replaces frames and announces `onScreenNavigate` once. Switching control mode
-requires remounting. Never mutate supplied objects or arrays.
-
-The viewer rebuilds `variantOf` for current and removed entries of both kinds
-from the index, so its hierarchy, breadcrumbs, details rows, aggregate mark,
-and removed-variant adoption match Serve; removed variants attach only to a
-current non-variant parent, otherwise each stays one flat fallback row, and
-every removed entry appears exactly once. A shell-link activation while `view`
-is `changes` proposes one atomic selection: an aggregate-only parent proposes
-its first visible changed variant, and a changed destination opened from an
-entry that is not itself changed also proposes its first changed view's axes
-under the [Changes screen controls](./mokly-changes-controls.md#screen-controls),
-unless the link carries a valid explicit axis under the shell destination
-contract. Sticky axes otherwise survive shell links, imperative `select`
-calls and supplied selection props.
-
-Free text and tags follow the single [search rule](./mokly-folders.md#titles).
-Public selection carries the normalized phrase as `search` and the deduplicated
-list as `tags`; the visible input displays those tags as `tag:` terms.
-Navigation proposes any filter clearing needed to reveal its destination as one
-atomic selection update. Light-only views keep the fallback labels when Dark is
-selected; no fake dark view is made. The shown status, the hidden-change marks
-and the comparison eligibility of the effective views follow the Changes
-screen controls in every delivery, with ready evidence applied only when its
-entry path matches the selected preview. Controlled selection, comparison deep
-links, and detail updates use that one decision; a deep link is honoured only
-after it confirms eligibility, and every matching update recomputes it in
-place.
-
-`onSelectionChange` reports requested state changes. `onScreenNavigate` fires
-once after a committed entry, snapshot or fragment transition, including
-accepted frame links and Back/Forward; it is observational, not a second
-router. Unknown frame-link behaviour for standalone, uncontrolled, and
-controlled hosts is owned by the
-[navigation contract](./mokly-navigation.md#enhanced-navigation-and-safe-degradation).
-Instance hover and click report scoped keys and current frame-relative boxes;
-hover exit uses null and empty boxes, clicks always have an instance. Flow
-events identify the owning use case and step without changing the screen's
-key. Titles and props come from the index and the detail, never from
-cross-origin DOM messages. Automatic inspection requires a frame's own ready,
-bounded usage from the detail; unavailable siblings stay navigable but emit no
-pointer inspection events. Every current, visible frame with ready usage can
-emit authenticated hover and click events, independent of an explicit
-highlight's mask and label scope; such a click leaves an idle highlight intact
-and ends inspection only while a pick is active. A detail update refreshes the
-usage of mounted frames without reloading a frame whose `documentKey` is
-unchanged. Inspection ownership, evidence invalidation, multi-frame
-highlighting, marker positioning and the shared geometry scheduler are the
-marker contract.
-
-`highlightInstance`, `highlightInstances` and `scrollToInstance` operate on
-exact current views and reject missing or unavailable instances without
-navigation or replacement guessing; null and empty arguments clear.
-`startPick` starts only on an inspectable Current view, emits `onPickStart`
-after activation, and reuses the inspection visuals. The first accepted
-instance click emits `onInstanceClick`, ends pick, then emits
-`onPickEnd({ reason: "selected", instance })`. Cancel, Escape, navigation,
-source replacement, evidence invalidation and errors end an active pick
-exactly once with their reason; `cancelPick` is idempotent, and pick emits no
-selection callback unless selection actually changes. No pick button exists
-in the standalone shell. Concurrent `startPick` calls share one activation
-and one start event; cancelling a pending activation rejects its promise, and
-only an activated pick emits an end event. Starting pick focuses the viewer so
-keyboard cancellation stays scoped. Any actual frame replacement, including
-viewport, effective scheme, entry or fragment changes, ends active picking
-exactly once with `navigation`, cancels pending activation and clears
-inspection masks, labels and selection; changes that preserve the mounted
-views do not end picking. Public operations keep the complete `InstanceRef`
-scope. Late asynchronous work is fenced by request and frame generation;
-obsolete promises reject with `disposed` and cannot affect replacement
-presentation or events. Async failures reject the handle promise and emit one
-product-safe `onError` without private paths. Unmount cancels without later
-callbacks, user callback exceptions are not reclassified as viewer errors, and
-during teardown every frame and runtime cleanup runs even when a host callback
-throws, after which the original exception is rethrown unchanged.
+The [viewer selection contract](./mokly-viewer-selection.md) defines
+selection, events, and the imperative handle.
 
 ## Rendered Features And Slots
 
@@ -326,59 +210,8 @@ shell regions; the embedding document must not be the stage scroll container.
 
 ## Shell Tree And State
 
-The shell is one React component tree that renders only in the browser:
-`MoklyViewer` in React hosts, and the `./browser` entry in the stub that Serve
-and `build` deliver. There are no runtime-owned islands, no string-rendered
-markup injected into the tree, and no second implementation of any shell
-interaction. Route content renders from the validated index and the current
-entry's detail; navigation never fetches shell HTML. Controlled props and
-handle methods update shell state. The bundle reads the stored appearance,
-disclosure and navigation-width preferences before its first render, so no
-pre-render script and no ownership handoff exists. Frames are static
-documents in sandboxed iframes; the shell reaches inside only viewer-owned
-removed-preview and [comparison-pane](./mokly-comparison-panes.md) `srcdoc`
-documents, to install their guard and scrolling controller.
-
-Shell state is one store scoped to a mounted viewer:
-
-- **Route** is derived from the URL and is the only source of route truth:
-  the entry, comparison selection and the validated `fragment` query. The
-  shared parser turns `/view/<path>/`, `/view/<path>`, or
-  `/view/<path>/index.html` into a path; the entry and its kind resolve
-  through the index. The standalone shell owns the document URL and history
-  and normalises it to the canonical form; React hosts receive route changes
-  through `onScreenNavigate` and own their own URL.
-- **Selection** is the public `ViewerSelection`. The standalone shell keeps
-  viewport, scheme and filters in memory across in-shell navigation.
-- **Disclosure** covers navigation groups, the details inspector, navigation
-  split width and responsive drawer. Group storage and reconciliation follow
-  the [disclosure persistence contract](./mokly-disclosure-persistence.md).
-  Details and split-width choices persist per origin; the drawer and tag
-  picker panel reset on a full page load.
-- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
-  comparison-document regions and the Scroll together choice follow their
-  [scrolling contracts](./mokly-comparison-scrolling.md).
-- **Workspace** state (props under edit, inspector tab and pane size, active
-  pick, highlight scope) lives with the mounted view and is discarded on
-  route change or source replacement.
-- **Data** is the installed index and the details the shell holds for the
-  page's lifetime. In Serve the standalone shell follows the event stream of
-  the shell delivery contract: a publication raises `revision`, the shell
-  fetches the index and the current route's details, adopts them in one store
-  commit, updates the navigation, Changes marks, Usage and Details in place,
-  and reloads only the mounted frames whose `documentKey` changed; only a
-  message from another server process reloads the page. A React host supplies newer data by replacing `index`.
-
-A source change (index object identity, URL value, object base origin, or
-`detail` function identity) or an adapter change remounts the shell tree,
-cancelling stale loads, pick and frame sessions. Selection changes do not
-remount it. Cleanup tolerates React effect setup and cleanup replay with no
-duplicate listeners or requests. The standalone shell in Serve reads the
-temporary-render capability from the live descriptor under the
-[component controls contract](./mokly-component-controls.md#rendering-boundary); a static build has
-no descriptor, and a React host has no live capability, so its controls are
-read-only under the [controls contract](./mokly-component-controls.md).
-Private tokens never enter the index or a detail.
+The [viewer selection contract](./mokly-viewer-selection.md#shell-tree-and-state)
+defines the shell tree and its state.
 
 ## Host Independence
 
@@ -389,8 +222,4 @@ contracts. It sends no telemetry and reads no cookies. Consumer code never
 enters the browser through the viewer. The in-frame inspector script of the
 frame adapter contract is the one React-free part of the package. Several
 viewers can mount in one document with independent state, and each cleans up
-on unmount. Acceptance covers all props, slots, events, handle methods,
-controlled-state round trips, multiple independent mounts, source replacement,
-same-origin and cross-origin frames, a Serve publication that reloads only
-changed frames, and the browser suite against the standalone and embedded
-shells.
+on unmount.

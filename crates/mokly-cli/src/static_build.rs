@@ -51,6 +51,8 @@ pub trait Phases: Send + Sync {
 }
 
 /// Render lifecycle drained before installation, even on failure.
+/// Stopping first means no sidecar runs during installation, and a stop failure fails
+/// the build while the earlier output is still in place.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DrainMock))]
 pub trait Drain: Send + Sync {
     /// Stop render work and sidecars before the transaction's commit point.

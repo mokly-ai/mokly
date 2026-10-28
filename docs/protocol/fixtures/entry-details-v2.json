@@ -1,6 +1,14 @@
 {
   "current": {
     "components/action": {
+      "before": {
+        "path": "components/action",
+        "props": {
+          "label": ["string", "Go"]
+        },
+        "suppliedSlots": [],
+        "title": "Action"
+      },
       "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
       "entry": {
         "kind": "component",
@@ -15,10 +23,12 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [
@@ -36,10 +46,12 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [
@@ -66,6 +78,14 @@
       "controlOrder": ["label"]
     },
     "components/action/default": {
+      "before": {
+        "path": "components/action/default",
+        "props": {
+          "label": ["string", "Continue"]
+        },
+        "suppliedSlots": [],
+        "title": "Default"
+      },
       "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
       "entry": {
         "kind": "component",
@@ -80,6 +100,7 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": [
@@ -93,6 +114,7 @@
               }
             ]
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [
@@ -110,6 +132,7 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": [
@@ -123,6 +146,7 @@
               }
             ]
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [
@@ -195,6 +219,11 @@
       "views": []
     },
     "product/browse/details": {
+      "before": {
+        "path": "product/browse/details",
+        "props": {},
+        "title": "Details"
+      },
       "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
       "entry": {
         "kind": "screen",
@@ -210,6 +239,7 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": [
@@ -223,6 +253,7 @@
               }
             ]
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -233,10 +264,12 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -256,6 +289,11 @@
       "controlOrder": []
     },
     "product/browse/home": {
+      "before": {
+        "path": "product/browse/home",
+        "props": {},
+        "title": "Home"
+      },
       "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
       "entry": {
         "kind": "screen",
@@ -275,10 +313,12 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "changed",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -289,10 +329,12 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "changed",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -312,6 +354,11 @@
       "controlOrder": []
     },
     "product/browse/home/empty": {
+      "before": {
+        "path": "product/browse/home/empty",
+        "props": {},
+        "title": "Empty"
+      },
       "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
       "entry": {
         "kind": "screen",
@@ -326,10 +373,12 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -340,10 +389,12 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "unchanged",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -398,10 +449,12 @@
       "views": [
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "removed",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -412,10 +465,12 @@
         },
         {
           "colorScheme": "light",
+          "ignoredIds": [],
           "resourceEvidence": {
             "resources": [],
             "rules": []
           },
+          "state": "removed",
           "usage": {
             "instances": [],
             "ranges": [],

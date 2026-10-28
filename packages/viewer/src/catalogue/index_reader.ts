@@ -1,4 +1,4 @@
-/** The catalogue index v7 reader: the version gate first, then every field. */
+/** The catalogue index v8 reader: the version gate first, then every field. */
 
 import { invalidData, record } from "../components/data.js";
 
@@ -15,6 +15,7 @@ import type {
 import {
   array,
   choice,
+  commitId,
   comparisonPath,
   counter,
   entryPath,
@@ -26,9 +27,9 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only catalogue index number this viewer reads. */
-const CATALOGUE_INDEX_VERSION = 7;
+const CATALOGUE_INDEX_VERSION = 8;
 
-/** Gate the version, read every v7 field, and validate the relationships. */
+/** Gate the version, read every v8 field, and validate the relationships. */
 export function readCatalogueIndex(value: unknown): CatalogueReadModel {
   const version = record(value) ? value.schemaVersion : undefined;
   if (version !== CATALOGUE_INDEX_VERSION)
@@ -37,6 +38,9 @@ export function readCatalogueIndex(value: unknown): CatalogueReadModel {
   assertPublicIndex(input);
   const identity = object(input.identity);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
+  const changesStatus = choice(input.changesStatus, CHANGE_STATUSES);
+  if ((input.baseCommit !== undefined) !== (changesStatus === "ready"))
+    invalidData("$catalogue", "baseCommit belongs exactly to ready Changes");
   const treeOrder = readOrder(input.treeOrder);
   const entries = <Kind extends CatalogueRecord["kind"]>(
     field: string,
@@ -54,8 +58,11 @@ export function readCatalogueIndex(value: unknown): CatalogueReadModel {
     deploymentId: hash(input.deploymentId),
     revision: counter(input.revision),
     ...(input.base === undefined ? {} : { base: string(input.base) }),
+    ...(input.baseCommit === undefined
+      ? {}
+      : { baseCommit: commitId(input.baseCommit) }),
     ...(input.live === undefined ? {} : { live: readLive(input.live) }),
-    changesStatus: choice(input.changesStatus, CHANGE_STATUSES),
+    changesStatus,
     comparisonUrl,
     tree: array(input.tree).map(readNode),
     ...(treeOrder ? { treeOrder } : {}),

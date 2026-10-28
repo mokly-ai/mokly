@@ -111,23 +111,19 @@ fn adding_the_dark_scheme_lists_new_views_without_affected_consumers() {
         String::from_utf8_lossy(&output.stderr)
     );
     let site = directory.path().join("mokly-static");
-    let index: serde_json::Value =
-        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
-    let review: serde_json::Value = serde_json::from_slice(
-        &fs::read(site.join(index["comparisonUrl"].as_str().unwrap())).unwrap(),
-    )
-    .unwrap();
-    // A gained view has no base counterpart, so it proves no render impact.
-    assert_eq!(review["affected"], serde_json::json!([]));
     for path in ["badge", "home"] {
-        let entry = review["entries"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|entry| entry["path"] == path)
-            .unwrap();
-        assert_eq!(entry["reasons"], serde_json::json!([{"kind": "metadata"}]));
-        let states: Vec<_> = entry["views"]
+        let detail: serde_json::Value = serde_json::from_slice(
+            &fs::read(site.join(format!("mokly-viewer/entries/{path}.json"))).unwrap(),
+        )
+        .unwrap();
+        // A gained view has no base counterpart, so it proves no render impact.
+        assert_eq!(
+            detail["workspace"]["relatedComponents"],
+            serde_json::json!([]),
+            "{path}"
+        );
+        assert_eq!(detail["reasons"], serde_json::json!([{"kind": "metadata"}]));
+        let states: Vec<_> = detail["views"]
             .as_array()
             .unwrap()
             .iter()

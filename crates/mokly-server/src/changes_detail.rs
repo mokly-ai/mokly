@@ -17,10 +17,13 @@ pub(crate) fn apply(next: &mut Snapshot) -> Result<()> {
         .map(|(path, detail)| {
             let mut detail = (**detail).clone();
             for view in &mut detail.views {
+                view.state = None;
+                view.ignored_ids = None;
                 view.resource_evidence = None;
             }
             detail.resource_evidence = None;
             detail.reasons = None;
+            detail.before = None;
             detail.workspace = None;
             (path.clone(), detail)
         })

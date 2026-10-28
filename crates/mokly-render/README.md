@@ -28,7 +28,7 @@ Catalogue preparation resolves paths, variants, controls, schemas, props,
 slots, and component elements in Rust. The adapter retains handles separately
 from defining-module attribution. A stories file supplies one component with
 an inferred schema and story variants. Its `argTypes` supply control hints.
-The adapter preserves control and prop declaration order for entry detail v2.
+The adapter preserves control and prop declaration order for the entry detail.
 Non-data inference warnings use the final entry path. Props diagnostics carry
 their detail separately from the module-and-export location, so Rust prints
 one location before the diagnostic code. PostCSS requests carry logical
@@ -120,24 +120,57 @@ and comparison.
 Both sides use the current package version and
 the same document composition code.
 
+The fragment adapter transfers typed registry rule ownership to HTML assembly
+without splitting the delivered CSS text or changing its style-block grouping.
+
 ## Quick Start
 
-Build the packages before real-process tests:
+The composition root builds one `Runtime` and consumes it through both
+factory traits:
+
+```rust
+use std::sync::Arc;
+
+use mokly_catalogue::definition_provider::DefinitionProvider;
+use mokly_graph::cache::MemoryCache;
+use mokly_graph::types::GraphFactory;
+use mokly_graph::workers::RenderWorkers;
+use mokly_render::runtime::Runtime;
+use mokly_sidecar::pool::SidecarPool;
+use mokly_source_interface::tree::SourceTree;
+
+fn services(
+    tree: Arc<dyn SourceTree>,
+    pool: Arc<dyn SidecarPool>,
+    workers: Arc<dyn RenderWorkers>,
+    version: String,
+) -> (Arc<dyn DefinitionProvider>, Arc<dyn GraphFactory>) {
+    let runtime = Arc::new(Runtime::new(
+        tree.clone(),
+        tree,
+        pool,
+        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        workers,
+        version,
+        None,
+    ));
+    (runtime.clone(), runtime)
+}
+```
+
+Inject the runtime as both `Builder.definitions` and the CLI's
+`CatalogueBuild.graphs`. The binary owns pool shutdown. Serve uses the same
+factories for initial preparation, manual rebuilds, and authenticated
+temporary prop renders. Build the packages before the real-process tests:
 
 ```bash
 npm run build
 cargo test -p mokly-render
 ```
 
-Inject one `Arc<Runtime>` as both `Builder.definitions` and
-`CatalogueBuild.graphs`. Consume each factory through its trait. The binary
-owns pool shutdown. Serve uses the same factories for initial preparation,
-manual rebuilds, and authenticated temporary prop renders.
-
 ## Development
 
 ```bash
-cargo test -p mokly-render
 cargo clippy -p mokly-render --all-targets -- -D warnings
 ```
 
@@ -147,19 +180,30 @@ check call order and outputs without elapsed-time assertions. The JavaScript
 rebuild test retains both generations on one pool. It renders an uncached old
 view after the edit and counts real process starts and hello calls.
 
-The fragment adapter transfers typed registry rule ownership to HTML assembly
-without splitting the delivered CSS text or changing its style-block grouping.
-
 ### Key Code
 
-- [Runtime factories](./src/runtime.rs) and [base inputs](./src/side.rs).
-- [Bundle order](./src/bundle.rs) and [definition conversion](./src/definition_input.rs).
-- [Graph composition](./src/graph.rs) and [fragment records](./src/fragments.rs).
-- [PostCSS](./src/postcss.rs) and [dependency inventory](./src/postcss_inventory.rs).
+- [`src/runtime.rs`](./src/runtime.rs) defines `Runtime`, which implements
+  `DefinitionProvider` and `GraphFactory` over the injected source readers,
+  sidecar pool, workers, and render cache.
+- [`src/side.rs`](./src/side.rs) defines `BaseSide`, the leased base
+  extraction and dependency selection of a historical render.
+- [`src/dependency_usage.rs`](./src/dependency_usage.rs) defines
+  `DependencyUsage`, which records the dependency directories that renders
+  read.
+- [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
+  source of each subsystem failure.
+- [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
+  same composition path.
+- [`src/bundle.rs`](./src/bundle.rs) bundles only changed JavaScript and
+  isolates class maps across retained graphs.
+- [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
+  side-specific context before scoping.
 
 ### Related Docs
 
 - [Sidecar protocol](../../docs/protocol/mokly-sidecar.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md).
 - [Rendering](../../docs/protocol/mokly-rendering.md).
+- [PostCSS contexts and evidence](../../docs/protocol/mokly-sidecar-postcss.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Rust core architecture](../../docs/architecture/rust-core.md).

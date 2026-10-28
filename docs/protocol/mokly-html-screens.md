@@ -1,7 +1,5 @@
 # HTML Screens, Pages, And Use Cases
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## File Kinds Without JavaScript
 
 | Kind      | File suffix       | Body                                              |
@@ -12,8 +10,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 | use case  | `.use-case.yaml`  | ordered steps that reference existing screens     |
 | document  | `.md`             | see [Markdown documents](./mokly-documents.md)    |
 
-Default root globs include these suffixes, `**/*.mockup.{ts,tsx}`,
-`**/*.stories.{ts,tsx,js,jsx}`, and `**/*.md`. The [path contract](./mokly-paths.md)
+The [default root globs](./mokly-root-discovery.md#root-fields) include these
+suffixes. The [path contract](./mokly-paths.md)
 derives paths from each file's root and removes the suffix before deriving its
 slug. HTML and YAML sources are protected from public delivery, watched, and never bundled.
 
@@ -167,21 +165,13 @@ including a variant.
 
 ## Rendering
 
-1. Parse the front matter and the body, resolve the props of the entry or
-   the variant, substitute them, and resolve every component element.
-2. Render HTML components in Rust by substitution and slot filling, recursively.
-   Render JavaScript components through the [sidecar](./mokly-sidecar.md),
-   memoized by props, viewport, colour scheme, and the enclosing ignore
-   scope, with slot placeholders that report their scope state.
-3. Compose each viewport and colour-scheme view. Attach ownership and ignore
-   regions to the tree. Collect sidecar styles and assemble the document with
-   the configured stylesheets.
-4. Rewrite and validate links. Serve, Changes, and `build` share the
-   in-memory view cache, keyed by inputs. Derive the entry's catalogue usage
-   from the tree's ownership regions.
-
-Rendering writes nothing to the repository. Serve, `build`, Changes, and publish
-use this pipeline. An HTML-only catalogue never starts a sidecar.
+HTML components render by substitution and slot filling, recursively.
+JavaScript components render through the [sidecar](./mokly-sidecar.md), with
+slot placeholders that report their scope state. The
+[rendering contract](./mokly-rendering.md) owns document composition and
+assembly. Rendering writes nothing to the repository. Serve, `build`,
+Changes, and publish use the same rendering. An HTML-only catalogue never
+starts a sidecar.
 
 ## Diagnostics
 

@@ -1,4 +1,4 @@
-//! Catalogue index v7 entry records, without usage or resource evidence.
+//! Catalogue index entry records, without usage or resource evidence.
 
 use std::collections::BTreeMap;
 

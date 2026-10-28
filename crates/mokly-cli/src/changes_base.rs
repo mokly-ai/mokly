@@ -24,6 +24,9 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::BaseDependencies;
 
+/// Prepare the base generation through a second `Runtime` over the base tree. It reuses
+/// the head runtime's pool, render cache, and workers. A base that needs a sidecar gets a
+/// `BaseSide`, which keeps its source and dependency leases while the base graph lives.
 pub(super) struct NativeBase {
     pub(super) runtime: Arc<Runtime>,
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -156,6 +159,9 @@ impl BaseProvider for NativeBase {
     }
 }
 
+/// Compare the governing manifests and lockfiles of the used dependency directories on
+/// both sides. It reads only those exact paths, with no tree listing, so an HTML-only
+/// base needs no extraction. A difference gives one `base-dependencies` warning.
 fn html_dependencies(
     request: &BaseRequest<'_>,
     config: &ResolvedConfig,

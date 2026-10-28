@@ -9,7 +9,7 @@ const rule = "import/no-duplicates";
 const probes = [
   "packages/viewer/src/client/lint-coverage-probe.ts",
   "packages/viewer/src/lint-coverage-probe.tsx",
-  "scripts/rebuild/lint-coverage/nested/probe.mjs",
+  "scripts/verification/lint-coverage/nested/probe.mjs",
   "tests/lint-coverage-probe.ts",
 ];
 

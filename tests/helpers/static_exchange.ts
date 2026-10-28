@@ -6,6 +6,9 @@ import zlib from "node:zlib";
 import { verifyInventory } from "./receiver/ownership.js";
 import { cleanupAll } from "./static_cleanup.js";
 
+/** The catalogue index that every Plan archive carries after the envelope and marker. */
+const INDEX = "mokly-viewer/index.json";
+
 interface MarkerEntry {
   path: string;
   sha256: string;
@@ -34,6 +37,7 @@ function archive(bytes: Buffer): Map<string, Buffer> {
 
 export async function exchange(
   options: {
+    gzip?: boolean;
     retry?: boolean;
     retryStatus?: number;
     token?: string;
@@ -46,6 +50,8 @@ export async function exchange(
   const bodies: Buffer[] = [];
   const blobs = new Map<string, Buffer>();
   const attempts = new Map<string, number>();
+  const blobEncodings = new Map<string, "gzip" | "identity">();
+  const blobBodyLengths = new Map<string, number>();
   let entries: MarkerEntry[] = [];
   let complete = 0;
   let completionAttempts = 0;
@@ -58,7 +64,6 @@ export async function exchange(
     headSha: string;
     baseRef: string | null;
     baseSha: string | null;
-    comparisonPath: string | null;
   }> = [];
   const missingCounts: number[] = [];
   const missingSets: string[][] = [];
@@ -91,19 +96,16 @@ export async function exchange(
         ) as (typeof metadata)[number];
         assert.deepEqual(
           [...files.keys()],
-          [
-            "mokly-upload.json",
-            ".mokly-export-artifact",
-            ...(envelope.comparisonPath ? [envelope.comparisonPath] : []),
-          ],
+          ["mokly-upload.json", ".mokly-export-artifact", INDEX],
         );
-        if (envelope.comparisonPath) {
-          const review = JSON.parse(
-            files.get(envelope.comparisonPath)!.toString(),
-          ) as { schemaVersion: number; baseCommit: string };
-          assert.equal(review.schemaVersion, 8);
-          assert.equal(review.baseCommit, envelope.baseSha);
-        }
+        const index = JSON.parse(files.get(INDEX)!.toString()) as {
+          schemaVersion: number;
+          base?: string;
+          baseCommit?: string;
+        };
+        assert.equal(index.schemaVersion, 8);
+        assert.equal(index.baseCommit ?? null, envelope.baseSha);
+        if (envelope.baseSha) assert.equal(index.base, envelope.baseRef);
         metadata.push(envelope);
         identity = `${envelope.headSha}:${envelope.configPath}`;
         markerBytes = files.get(".mokly-export-artifact")!;
@@ -141,16 +143,35 @@ export async function exchange(
             schemaVersion: 1,
             upload: { id: "local", expiresAt: "2099-01-01T00:00:00.000Z" },
             missing,
+            ...(options.gzip ? { blobEncodings: ["gzip"] } : {}),
             blobUrl: `${base}/blobs/{sha256}`,
             completeUrl: `${base}/complete`,
           }),
         );
       } else if (request.url?.startsWith("/blobs/")) {
         const hash = request.url.slice("/blobs/".length);
+        const entry = entries.find((candidate) => candidate.sha256 === hash);
+        assert.ok(entry);
+        const contentEncoding = request.headers["content-encoding"];
+        let decoded = bytes;
+        if (contentEncoding !== undefined) {
+          assert.equal(options.gzip, true);
+          assert.equal(contentEncoding, "gzip");
+          const contentLength = Number(request.headers["content-length"]);
+          assert.ok(contentLength <= entry.size);
+          decoded = zlib.gunzipSync(bytes, {
+            maxOutputLength: entry.size + 1,
+          });
+          blobEncodings.set(hash, "gzip");
+        } else {
+          blobEncodings.set(hash, "identity");
+        }
         assert.equal(
-          crypto.createHash("sha256").update(bytes).digest("hex"),
+          crypto.createHash("sha256").update(decoded).digest("hex"),
           hash,
         );
+        assert.equal(decoded.length, entry.size);
+        blobBodyLengths.set(hash, bytes.length);
         if (options.holdBlob) {
           options.holdBlob();
           return;
@@ -160,7 +181,7 @@ export async function exchange(
           response.writeHead(retryStatus, { "Retry-After": "0" }).end();
           return;
         }
-        blobs.set(hash, bytes);
+        blobs.set(hash, decoded);
         response.writeHead(204).end();
       } else {
         assert.equal(request.url, "/complete");
@@ -215,6 +236,8 @@ export async function exchange(
   return {
     endpoint: `${base}/plan?key=1=2`,
     bodies,
+    blobEncodings,
+    blobBodyLengths,
     attempts,
     metadata,
     missingCounts,

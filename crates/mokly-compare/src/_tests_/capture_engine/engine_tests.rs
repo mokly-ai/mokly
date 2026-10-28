@@ -5,7 +5,7 @@ use std::sync::Arc;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_model::{material, namespace};
 
-use crate::comparison_capture;
+use crate::comparison_capture::{self, CaptureSide};
 use crate::comparison_types::Comparison;
 
 use super::support::{self, Probe, STYLES};
@@ -29,7 +29,7 @@ fn engine_batches_base_reads_at_one_to_four_sizes_and_keeps_the_head_source() {
             Arc::ptr_eq(&result.after, &after),
             "head must keep its original bounded cache"
         );
-        let reused = comparison_capture::capture(result.before.clone()).unwrap();
+        let reused = comparison_capture::capture(result.before.clone(), CaptureSide::Base).unwrap();
         assert!(Arc::ptr_eq(&reused, &result.before));
         let retained = reused.comparison_capture().unwrap();
         assert_eq!(retained.views, count);

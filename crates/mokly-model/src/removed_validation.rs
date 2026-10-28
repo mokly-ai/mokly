@@ -1,10 +1,11 @@
-//! Historical metadata, snapshot identities, and generation URL structure.
+//! Historical metadata, snapshot identities, the base commit, and generation URL structure.
 
 use std::collections::BTreeSet;
 
 use crate::namespace;
+use crate::output::validation::hexadecimal;
 use crate::public_index::CatalogueReadModel;
-use crate::public_metadata::{CatalogueChanges, ChangeKind};
+use crate::public_metadata::{CatalogueChanges, ChangeKind, ChangesStatus};
 use crate::public_records::CatalogueRecord;
 use crate::public_validation::{hash, invalid, metadata, visual};
 use crate::read_contract::ContractViolation;
@@ -13,10 +14,18 @@ use crate::readers::ReadError;
 pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
     if index.comparison_url.as_deref().is_some_and(|url| {
         !url.strip_prefix(&namespace::viewer("diffs/generations/"))
-            .and_then(|tail| tail.strip_suffix("/review.json"))
+            .and_then(|tail| tail.strip_suffix('/'))
             .is_some_and(hash)
     }) {
         return Err(invalid(ContractViolation::ComparisonUrl));
+    }
+    if index.base_commit.is_some() != (index.changes_status == ChangesStatus::Ready)
+        || index
+            .base_commit
+            .as_deref()
+            .is_some_and(|commit| !hexadecimal(commit, &[40, 64]))
+    {
+        return Err(invalid(ContractViolation::BaseCommit));
     }
     let mut paths = BTreeSet::new();
     let mut snapshots = BTreeSet::new();

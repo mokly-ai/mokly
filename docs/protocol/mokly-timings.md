@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -19,7 +17,7 @@ Each record has `schemaVersion: 1`, a process-local `session`, `pid`, `role`,
 `stage`, numeric `id`, optional `parentId`, and monotonic `elapsedMs` since
 the session began. `event` is `start`, `end`, or `counts`. Span ends add
 `durationMs` and `status` (`ok` or `error`). Counts carry named numeric
-totals. `role` is `core` for the Rust binary and `sidecar` for a sidecar
+totals. `role` is `core` for the Mokly binary and `sidecar` for a sidecar
 process; the core forwards sidecar records on the same stderr stream
 unchanged. The stage names and available counts are diagnostic details, not a
 stable public API. No documents, props, file contents, environment values, or
@@ -45,7 +43,7 @@ its files are installed. Its Serve duration includes queue time.
 | `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                                      |
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
-| `render.fragment`                                | the wait for one sidecar render, or an HTML component render in Rust                                                                 |
+| `render.fragment`                                | the wait for one sidecar render, or an HTML component render in the core                                                             |
 | `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module                                       |
 | `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                             |
 | `serve.ready`                                    | command start to the listening URL                                                                                                   |
@@ -67,9 +65,12 @@ its files are installed. Its Serve duration includes queue time.
 | `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                                     |
 
 Review spans use the same session, role, and parent context as their caller:
-under `changes.classify` in Serve and under `output.write` in `build`. A
-repeated discovery for the same side, route, content digest, and exclusion
-identity is a defect. A contained parse or selector failure in
+under `changes.classify` in Serve and under `output.write` in `build`. The
+`review.capture-side` span carries `side`, with `base` for the base generation
+and `head` for the head generation. Build and publish emit the head capture
+under `output.write` before `changes.classify`. The base capture appears under
+`review.base-tree`. A repeated discovery for the same side, route, content
+digest, and exclusion identity is a defect. A contained parse or selector failure in
 `review.css-analysis` returns unresolved evidence with status `ok`; an
 escaping error ends the span with `error`. The spans log no paths,
 selectors, CSS, or document text.
@@ -86,9 +87,7 @@ Static input counters on `output.*` stages are observations. Their
 `retainedBytes` counts private source payload once per captured path.
 It excludes map metadata and other byte owners.
 Reads below a `css.bundle` span describe calls that reach the captured tree;
-inner cache hits and bundle copies do not appear as captured reads. The harness
-matches these spans to the RSS samples before and after their received interval.
-These samples can include adjacent work and can count shared pages more than once.
+inner cache hits and bundle copies do not appear as captured reads.
 
 `sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
 `worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
@@ -98,15 +97,14 @@ including failed compilations. Replay and evaluation-only reuse add no
 
 `review.capture-side` starts with status `error` and records `ok` only after
 successful work. Completed captures emit counts, including a zero-view capture
-when no input fits. `views` counts retained base documents. `uncapturedViews`
-counts base documents that use pinned-source fallback. These counts sum to the
-number of base documents, including on reuse. `encodedBytes`
-counts compressed document and CSS payloads. `retainedBytes` adds Rust metadata,
-closures, generated digests, route keys, and conservative container charges.
-The separate 256 MiB capture bound applies to that total, beside the render
-cache. These charges are not measured RSS. The API supports capture reuse and
-reports the same counts without duplicating storage. Production callers supply
-fresh bases; Serve can hold an accepted capture while building its replacement.
+when no input fits. `views` counts retained documents on `side`.
+`uncapturedViews` counts documents that use that side's source fallback. These
+counts sum to the number of documents on that side, including on reuse.
+`encodedBytes` counts compressed document and CSS payloads. `retainedBytes` adds
+the capture's metadata, closures, generated digests, route keys, and
+conservative container charges. Each side has a separate 256 MiB capture bound
+beside the render cache. These charges are not measured RSS. Serve can hold an
+accepted capture while building its replacement.
 
 ## Sidecar Spans
 
@@ -126,26 +124,13 @@ The repository's large consumer is synthetic and opt-in. Its generator
 produces an HTML variant and a React variant of the same catalogue: nested
 folders, component entries with variants, repeated and nested component usage,
 slots, both viewports and colour schemes, catalogue links, pages, use cases,
-Markdown documents, imported CSS, and images, with configurable sizes. A small
-instance of the generator runs in automated tests; a full-sized instance is
-smoke-tested with the opt-in benchmark. It is a repeatable workload for
-locating scaling costs, not a claim of identical production data or timings.
-Shared stylesheets have a configurable count and per-area screen share. The
-defaults are four sheets and a share of 0.5, rounded up to whole screens.
+Markdown documents, imported CSS, and images, with configurable sizes. It is a
+repeatable workload for locating scaling costs, not a claim of identical
+production data or timings. The fixture provides a base commit so Changes
+performs a real comparison, and the benchmark expects zero Changes.
 
-The fixture provides a base commit so Changes performs a real comparison:
-after the base commit, setup adds an unrelated rule to the first shared
-stylesheet, so classification exercises real rule evidence and attribution
-excludes the unrelated rule from every linked screen. With `--stylesheets 0` the
-fixture has no shared stylesheet, so setup adds no rule. The benchmark expects
-zero Changes, including use cases. `--toolchain install` archives the CLI,
-viewer, native package, and consumer lockfile, then installs head dependencies.
-`--toolchain workspace` reuses the workspace dependencies and saves their
-lockfile for evidence. Every result names the mode. Setup time is separate;
-workspace reuse has no install-time measurement.
-
-The benchmark harness runs four scenarios on each variant, with the sidecar
-count held constant and other heavy work idle:
+The benchmark runs four scenarios on each variant, with the sidecar count held
+constant and other heavy work idle:
 
 1. `build`: command start to exit, and the peak resident size of the core
    and the sidecars.
@@ -158,44 +143,12 @@ count held constant and other heavy work idle:
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.
 
-A focused `startup` selection measures the same cold/warm usable startup and
-checks previews, axes, live props, cached bytes, and pages with the real base.
-It finishes without waiting for Changes or review availability and reports
-neither value. `all` retains the four complete scenarios above.
 A scenario that waits for Changes fails when Changes is unavailable.
-Unavailable Changes never counts as zero Changes.
-
-The benchmark launches the browser before timing a fresh Serve process,
-verifies viewport and scheme changes, a live prop edit, pages, and eventual
-Changes, and reports each measurement as JSON on stdout. It writes one progress
-line to stderr when each scenario starts. A fresh Serve process and browser
-context define each restart. The browser process starts before measurement.
-
-The harness samples process RSS every 50 ms. It reports the maximum sum for
-the CLI shim, core, and sidecar descendants across process groups, plus the maximum for the whole harness tree,
-including the browser. Chrome uses at most two renderer processes and disables
-GPU acceleration. These are sampled observations, not exact operating system
-high-water marks. `--memory-stop-kib` defaults to 1,750,000 KiB of whole-tree
-RSS. Set a larger limit on a suitable machine, or use 0 to disable the stop.
-The report records the limit. This safety stop is not an acceptance budget.
-
-Sidecar deadlines follow the sidecar contract. `--sidecar-timeout-ms` explicitly
-sets `MOKLY_SIDECAR_TIMEOUT_MS` for the child. Each report records this option,
-the inherited timeout variable, exact `NODE_OPTIONS`, Node heap limit,
-`GOMAXPROCS`, and `GOMEMLIMIT`. Overrides affect measurements and must accompany
-any comparison. Build and listening waits have 300-second liveness deadlines.
-Browser operations allow 60 seconds. The full-size watch scenario uses a
-30-minute browser liveness allowance for initial rendering, delivered Changes,
-review fetches, and source restoration. This allowance is a harness liveness
-guard, not an edit-to-reload budget or a product timeout. A deadline fails the
-run and preserves its diagnostic. Shutdown sends SIGTERM, then SIGKILL after
-10 seconds if needed.
-
-Fixtures and logs belong in ignored directories. The CLI checks `git check-ignore`
-and warns when the chosen root is not confirmed ignored. It rejects options
-that do not apply to the selected command. Use the
-[large fixture commands](../../tests/fixtures/large/README.md) to select dimensions,
-a variant, a memory stop, and one of the four scenarios.
+Unavailable Changes never counts as zero Changes. Resident sizes are sampled
+observations, not exact operating system high-water marks. The
+[large fixture README](../../tests/fixtures/large/README.md) describes the
+generator, its options, the toolchain modes, the harness limits, and the
+commands.
 
 CI's small correctness fixtures have
 [no machine-specific wall-clock assertion](./ci-test-timing.md).
@@ -228,9 +181,8 @@ installation, and Git setup. The product build is a prerequisite outside this
 measurement. Setup records keep elapsed time, sampled peak RSS, and failures.
 An observation at or above either setup budget fails isolated setup.
 
-This table holds the budgets with the values the user approved. A row whose
-value is a recording rule rather than a number is measured and reported, not
-enforced; a number enters the row when the user approves it. The runtime enforces cache and dependency-preparation limits. The benchmark
+A row whose value is a recording rule rather than a number is measured and
+reported, not enforced. The runtime enforces cache and dependency-preparation limits. The benchmark
 enforces numeric acceptance thresholds and fails when one is exceeded. A startup observation
 at or above its variant's budget produces a failed result with its measured
 values and reason.

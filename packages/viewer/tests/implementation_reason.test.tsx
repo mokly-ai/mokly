@@ -4,13 +4,11 @@
  */
 
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { parseReviewResult } from "../src/review/result_validation.js";
-import type { ReviewResult } from "../src/review/types.js";
+import type { ComparedEntry } from "../src/review/types.js";
 import {
   selectedComparisonDocuments,
   selectedComparisonViews,
@@ -21,7 +19,7 @@ import type { WorkspaceData } from "../src/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 
 const SENTENCE = "Rendered content changed where this component is used.";
-const URL_ = `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`;
+const URL_ = `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`;
 const MOBILE: ComparisonPresentation = {
   colorScheme: "light",
   mode: "side",
@@ -30,32 +28,22 @@ const MOBILE: ComparisonPresentation = {
 };
 
 /**
- * The model crate's fixture where only actual-instance proof changes `card`:
- * its own mobile view is unchanged, and the screen `home` uses it.
+ * The detail of `card`, where only actual-instance proof changes it: its own
+ * mobile view is unchanged.
  */
-function implementationOnly(): ReviewResult {
-  const result = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../crates/mokly-model/src/_tests_/fixtures/review-v8.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ) as ReviewResult;
-  const card = result.entries[0]!;
-  card.reasons = [{ kind: "implementation" }];
-  card.state = "unchanged";
-  card.views = [
+const implementationOnly: ComparedEntry = {
+  path: "card",
+  basePath: "card",
+  reasons: [{ kind: "implementation" }],
+  views: [
     {
       viewport: "mobile",
       colorScheme: "light",
       state: "unchanged",
       ignoredIds: [],
     },
-  ];
-  return parseReviewResult(result);
-}
+  ],
+};
 
 /** The live workspace of the component `card`, before any comparison loads. */
 function cardWorkspace(): WorkspaceData {
@@ -75,24 +63,22 @@ function cardWorkspace(): WorkspaceData {
     removed: false,
     variants: [],
     views: [],
+    reasons: implementationOnly.reasons,
+    compared: implementationOnly,
   } as unknown as WorkspaceData;
 }
 
 test("Details explain a component's impact where it is used", () => {
   const markup = renderToStaticMarkup(
-    <WorkspaceEvidence
-      data={cardWorkspace()}
-      loaded={implementationOnly()}
-      variantPath="card"
-    />,
+    <WorkspaceEvidence compared data={cardWorkspace()} variantPath="card" />,
   );
   assert.ok(markup.includes(`<p>${SENTENCE}</p>`), markup);
   assert.doesNotMatch(markup, /<p>Rendered content changed\.<\/p>/);
 });
 
 test("the reason leaves the component's own views unchanged", () => {
-  const loaded = { result: implementationOnly(), url: URL_ };
-  const views = selectedComparisonViews(loaded, MOBILE, "component", "card");
+  const loaded = { url: URL_ };
+  const views = selectedComparisonViews(loaded, MOBILE, implementationOnly);
   assert.equal(views?.length, 1);
   assert.equal(views[0]!.view.state, "unchanged");
   assert.equal(views[0]!.styleOnly, false);

@@ -9,22 +9,19 @@ viewport is the only page-level scroll container for its panes; inner regions
 defined below remain scrollable in their own right. Frames carry
 `scrolling="no"` and are scrolled only by the viewer.
 
-A sticky box at the viewport's top-left, exactly its width and height, holds
-the device-sized frames. A spacer after that box extends each viewport to the
-section's largest document range. Its height is the largest
-`scrollHeight - clientHeight`; its width is the viewport width plus the largest
-`scrollWidth - clientWidth`. Side by side gives both spacers this pair maximum,
-so their ranges match. The viewport sets `overflow-anchor: none`.
+The device-sized frames stay in place while their viewport scrolls. Each
+viewport's scroll range is the section's largest document range: vertically
+the largest `scrollHeight - clientHeight`, and horizontally the largest
+`scrollWidth - clientWidth`. Side by side gives both viewports this pair
+maximum, so their ranges match.
 
-The viewer measures a document when it commits, one animation frame after its
-predecessor's window hides and before slow resources finish, and again on its
-`load`. After parsing, a parent-realm `ResizeObserver` watches the root and body;
-captured resource loads, font completion, and `<details>` toggles also schedule
-measurement on the next animation frame. Measurement updates every spacer and
-reapplies the current page offsets. No frame dimension depends on the result, so
-measurement cannot feed back into the document. Every measurement also
-discards all positive and negative inner-region matches for that section and
-every collected region list.
+The viewer measures a document as soon as it commits, before slow resources
+finish, and again on its `load`. It measures again when the document's root
+or body changes size, a resource loads, fonts finish loading, or a `<details>`
+element toggles. Measurement updates every viewport's range and reapplies the
+current page offsets. No frame dimension depends on the result, so measurement
+cannot feed back into the document. Every measurement discards the section's
+region pairing results, including the no-match results.
 
 ## Page Writes And Echoes
 
@@ -33,8 +30,7 @@ holds in the same handler that observed it. With Scroll together on, Side by
 side first mirrors its two chrome viewports in both directions; a stack always
 has one viewport, so its layers always share one offset. The off behavior is
 defined by the [Scroll together contract](./mokly-comparison-scroll-together.md).
-Every page write uses `scrollTo({ behavior: "instant", left, top })`, regardless
-of CSS `scroll-behavior`.
+Every page write is instant, regardless of CSS `scroll-behavior`.
 
 A shorter or narrower document clamps at its own range. Its frame is translated
 back by the unmet x and y remainder, without changing the snapshot document, so
@@ -44,11 +40,11 @@ root is transparent, over the selected scheme's opaque screen background.
 
 A document scroll the viewer did not make, including find in page, focus,
 selection autoscroll, or fragment behavior, is written back to its chrome
-viewport first and then applied under the current Scroll together mode. Loops
-are value-based, never timer-based: after a write, the controller records the
-offset at which each scroller actually settled; an event reporting exactly
-that x/y pair is the write's echo and is ignored. A different value is a new
-source scroll, and the controller records it as that scroller's offset.
+viewport first and then applied under the current Scroll together mode.
+Echoes are recognized by value, never by a timer. A scroller's last recorded
+value is the x/y offset at which the last viewer write settled, or the offset
+of its last source scroll. An event that reports exactly that value is ignored.
+An event with a different value is a new source scroll.
 
 ## Inner Scroll Regions
 
@@ -67,20 +63,13 @@ with a candidate that also scrolls on x, and a source whose `overflow-x` is
 `hidden` is y-only even when its content is wider. Both offsets are still
 written together.
 
-A section collects each document's regions at most once per measurement, on
-the first region scroll, anchor, or realignment that needs them, and a region
-is matched only on its first scroll after a measurement; later scroll events
-reuse both. Key routing reads only the pressed element and its ancestors.
-
 ## Region Writes And Echoes
 
-One capturing `scroll` listener per pane document observes the page and every
-nested region. With Scroll together on, the source event handler writes both
-source offsets to every accepted counterpart with
-`scrollTo({ behavior: "instant", left, top })`. Read back and record each
-settled pair; the browser clamps a shorter region to its own x/y range. Never
-resize, translate, restyle, or move snapshot elements to compensate, so
-versions may differ visibly past a shorter region's end.
+With Scroll together on, the handler of a region's scroll event writes both
+source offsets to every accepted counterpart instantly. The browser clamps a
+shorter region to its own x/y range. Never resize, translate, restyle, or move
+snapshot elements to compensate, so versions may differ visibly past a shorter
+region's end.
 
 The browser may animate a source scroll over several frames, for example the
 scroll that a scroll key starts. Each frame's scroll event reports a new
@@ -162,12 +151,3 @@ current document position and apply that page offset under the current mode.
 Horizontal page movement uses the same nearest-edge rule; vertical movement
 aligns the target's top. With Scroll together on, every enclosing counterpart
 follows before the page viewport moves.
-
-## Acceptance
-
-Browser regressions, listed in the
-[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
-the page and region cases in every comparison mode, the key cases in Overlay,
-the anchor cases in Overlay and Side by side, and the scrolling of a previous
-version, and controller unit tests prove measurement, key routing including
-right-to-left regions, anchors, echoes, and the page mirror.

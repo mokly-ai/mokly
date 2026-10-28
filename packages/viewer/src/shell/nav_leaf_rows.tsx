@@ -128,7 +128,9 @@ function NavRowLink(props: {
  * component with other members, pairs its link with a chevron button and is
  * followed by the list that button discloses: the variants, then the members
  * rendered by `children`. The list is open on the server only while it holds
- * the active route or the active route is the parent itself.
+ * the active route or the active route is the parent itself. It is a `div`
+ * closed by `hidden`, not a `<details>`: the button and each route reveal open
+ * it through its disclosure key, and the button's `aria-expanded` follows.
  */
 export function LeafRow(props: {
   children?: ReactNode;

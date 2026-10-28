@@ -5,7 +5,7 @@ import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import type { EntryDetailV2 } from "../src/catalogue/types.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v7_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
 
 const OTHER = "d".repeat(64);
 const RETIRED =
@@ -192,7 +192,7 @@ test("a removed detail needs the index identity, generation and snapshot", () =>
 
 test("a removed detail is not accepted once its comparison is replaced", () => {
   const replaced = indexFixture((raw) => {
-    raw.comparisonUrl = `mokly-viewer/diffs/generations/${OTHER}/review.json`;
+    raw.comparisonUrl = `mokly-viewer/diffs/generations/${OTHER}/`;
   });
   assert.equal(
     fenceDetail(

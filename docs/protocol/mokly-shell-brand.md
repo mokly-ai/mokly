@@ -42,13 +42,6 @@ The narrow top bar hides the wordmark so search retains space, while the mark
 and accessible link name remain. The mark keeps the same size and colors in
 standalone and embedded shells at every width.
 
-## Verification
-
-Unit tests pin the SVG bytes, Light and Dark roles, wordmark typography, and
-shared runtime/mockup styles. Browser coverage verifies the mark in the
-responsive shell and design catalogue. Palette tests keep the brand/surface
-contrast pair recorded in both appearances.
-
 ## Related Docs
 
 - [Shell design](./mokly-shell-design.md)

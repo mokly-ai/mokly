@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import path from "node:path";
 import test from "node:test";
 
 import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
-import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";
@@ -32,7 +30,7 @@ test(
         kind: "changed",
         included: true,
       });
-      const prefix = path.posix.dirname(built.index.comparisonUrl!);
+      const prefix = built.index.comparisonUrl!.slice(0, -1);
       assert.deepEqual(
         [
           ...built.index.screens,
@@ -48,11 +46,13 @@ test(
           .map((entry) => entry.path),
         ["note"],
       );
-      const review = await json<ReviewResultV8>(
+      const note = await json<EntryDetailV2>(
         built.output,
-        built.index.comparisonUrl!,
+        "mokly-viewer/entries/note.json",
       );
-      assert.ok(!review.entries.some((entry) => entry.path === "note"));
+      assert.equal(note.entry.kind, "document");
+      assert.deepEqual(note.views, []);
+      assert.equal(note.before, undefined);
       const output = await files(built.output);
       assert.match(
         output
@@ -106,7 +106,7 @@ test(
             (rule) => rule.status === "matched" && rule.owner.kind === "entry",
           ),
         );
-      const prefix = path.posix.dirname(built.index.comparisonUrl!);
+      const prefix = built.index.comparisonUrl!.slice(0, -1);
       const output = await files(built.output);
       const before = output.get(
         `${prefix}/snapshots/before/mokly-generated/home/index.desktop.html`,

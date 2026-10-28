@@ -14,8 +14,8 @@ the exact directory spelling, and differently cased directories reach the
 shared `case-collision` rule instead. A file name outside
 the [segment grammar](./mokly-paths.md#segment-grammar) fails the build; Mokly
 does not rename it. Documents have no variants and no `defineX` helper; the
-file is the definition. The core parses and composes a document in Rust; no
-sidecar starts for it.
+file is the definition. The core parses and composes a document. Rendering a
+document starts no sidecar.
 
 ## Front Matter
 
@@ -78,8 +78,8 @@ inline code, and full-width tables; below 600px the body is 14px and the
 title 22px. Elements that the design does not show follow the same scale.
 The light document's route is `static/mokly-generated/<path>/index.html`; when
 the catalogue enables dark, `static/mokly-generated/<path>/index.dark.html`
-applies the dark palette. Serve answers both routes from the render cache, and
-`build` writes them under `--out`; nothing is written into the repository. A
+applies the dark palette. Serve answers both routes, and `build` writes them
+under `--out`. Nothing is written into the repository. A
 document without a dark document keeps its light one under Dark. When the
 catalogue has a dark axis, the shell names that fallback with the
 `Light only` note: in a quiet band above a current document's pane, as the
@@ -91,9 +91,9 @@ screen's scheme, and documents have no viewport axis. Documents pass the same
 link rewriting and final validation as pages, then the independent element,
 attribute and URL allowlist of
 [Document Rendering Safety](./mokly-document-safety.md), which rejects active
-markup, event and style attributes and unsupported URL schemes. The template
-is script-free; a blanket script-blocking CSP meta is omitted because it also
-blocks Mokly's frame instrumentation.
+markup, event and style attributes and unsupported URL schemes. The
+[script policy](./mokly-document-safety.md#script-policy) gives the reason
+that the script-free template carries no CSP meta.
 
 ## Links And Resources
 
@@ -127,10 +127,10 @@ links keep repository spelling when catalogue placement differs:
   `dist`, `coverage`, `test-results`, `playwright-report` segment. Failure is
   `<location>: resource <destination> contains a hidden path segment` or
   `<location>: resource <destination> is inside a private build or dependency directory (<name>)`.
-  The resource is a watched input for source protection, freshness and watch,
-  and it enters the closure before imported CSS validation, so a nested source
-  root can share an explicitly referenced asset with CSS. Unrelated public
-  files keep the CSS pass's protection.
+  The resource is a watched input for source protection, freshness and watch.
+  It stays public when imported CSS also uses it, so a nested source root can
+  share an explicitly referenced asset with CSS. The other inputs of imported
+  CSS stay protected.
 - A relative destination that names any other existing repository file, such
   as a source file or an authored HTML file, renders as plain text showing the
   link text; Mokly never serves sources through a document link. These

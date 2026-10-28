@@ -7,23 +7,19 @@ standalone browser inventory and the deployment identity algorithm that the
 ## Browser Modules
 
 The standalone inventory under `mokly-viewer/client/` is the client-rendered
-shell: `shell.js`, the `@mokly/viewer/browser` entry bundled with React and
-React DOM, the shell tree, the readers of the catalogue index and the entry
-detail, the frame adapters, the message transport, geometry, the comparison
-and removed-preview controllers, and the typed review and removed-preview
-validators. `mokly-viewer/shell.css` and `mokly-viewer/fonts/**` complete the
+shell: `shell.js` is the `@mokly/viewer/browser` entry bundled with React and
+React DOM. `mokly-viewer/shell.css` and `mokly-viewer/fonts/**` complete the
 shell's assets. The viewer package build records every browser output in the
 browser module inventory v1. `build` copies exactly the files that inventory
 lists, and Serve serves exactly those files; a package directory that differs
 from its inventory fails the command.
 
-`build` lexes every package-owned `.js` file under `mokly-viewer/` as a
-module and checks every decoded static import, re-export, and literal dynamic
-import against the inventory and the URL rules, including relative specifiers
-that contain `+` or `:`. Quoted prose, comments, regular expressions, and
-`import.meta` are not module requests. A computed dynamic expression is not
-evaluated and not treated as a path. A lexer failure fails the build and names
-the script.
+`build` checks every decoded static import, re-export, and literal dynamic
+import of each package-owned `.js` file under `mokly-viewer/` against the
+inventory and the URL rules. A request that names no file of the inventory
+fails the build. A computed dynamic expression is not evaluated and not
+treated as a path. A script that does not parse as a module fails the build
+and names the script.
 
 The bundle detects a static build from the index, which has no `live` field.
 In a static build the shell never requests the live descriptor, the event
@@ -32,10 +28,9 @@ details under the [fetch rules](./mokly-shell-delivery.md#fetch-and-fences)
 of the shell delivery contract and applies the stored or system appearance
 before its first render, so no pre-paint script exists.
 Removed-content requests are limited to the generation that the index's
-`comparisonUrl` names: the removed entry's detail, the generation's
-`review.json` for a removed screen's views, the preview metadata of a removed
-page or document, and the snapshot documents beneath that generation's
-permitted sides. There is no parallel vanilla Browse or preview runtime.
+`comparisonUrl` names: the removed entry's detail, the preview metadata of a
+removed page or document, and the snapshot documents beneath that
+generation's permitted sides. There is no parallel vanilla Browse or preview runtime.
 
 The inspector is `client/inspector.js`: React-free, at the 9,216-byte cap of
 the [published inspector contract](./mokly-published-inspector.md). It runs
@@ -46,11 +41,10 @@ identity as required below.
 
 ## Deployment Identity
 
-A comparison generation identifies only its own files: `review.json`, the
-removed entries' details, the snapshots, their resources, and the previews.
-Its directory name is a 64-hex SHA-256 of its inventory. Use generation-relative
-file paths and canonical JSON for metadata, with `review.json` in its compact
-form. Set only each removed detail's top-level
+A comparison generation identifies only its own files: the removed entries'
+details, the snapshots, their resources, and the previews. Its directory name
+is a 64-hex SHA-256 of its inventory. Use generation-relative file paths and
+canonical JSON for metadata. Set only each removed detail's top-level
 `generation` to 64 zeros for hashing. Hash each file, sort the `[path, sha256]`
 pairs in UTF-16 order, then hash the canonical JSON array. Stamp that result
 into the removed details. This removes the identity's self-reference; one

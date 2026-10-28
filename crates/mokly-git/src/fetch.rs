@@ -18,6 +18,10 @@ impl Cancellation for Active {
 }
 
 impl GitRepository {
+    /// Fetches every missing blob of `entries` from a promisor remote in one
+    /// `fetch --stdin` request; checkout reads pass their attribute files too.
+    /// The fetch lock serializes this step, so parallel conversion reads never
+    /// start competing fetches. Returns whether a fetch ran.
     pub(crate) fn ensure_objects(&self, entries: &[Entry]) -> Result<bool> {
         let ids: BTreeSet<_> = entries
             .iter()

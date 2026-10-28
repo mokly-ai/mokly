@@ -1,4 +1,6 @@
 //! Changes begins after current usage and restarts only for new heads or Git refs.
+//! There is no separate classification cache: a restart reuses unchanged documents
+//! through the content-addressed render cache.
 
 use std::sync::Arc;
 use std::time::Duration;

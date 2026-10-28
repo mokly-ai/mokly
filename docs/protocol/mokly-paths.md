@@ -24,12 +24,12 @@ inheritance and validation.
 `roots` in the [configuration](./mokly-configuration.md#roots) lists the
 directories Mokly scans. Each root has:
 
-| Field         | Meaning                                                     | Default                                                                                                                                                          |
-| ------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dir`         | Config-relative directory inside `repoRoot`                 | required                                                                                                                                                         |
-| `files`       | Globs relative to `dir` selecting the files to read         | `**/*.mockup.{ts,tsx}`, `**/*.md`, and the HTML, YAML and stories suffixes of the [HTML screens contract](./mokly-html-screens.md#file-kinds-without-javascript) |
-| `path`        | Path prefix placed before every derived path from this root | none                                                                                                                                                             |
-| `transparent` | Directory names removed from derived paths                  | `[]`                                                                                                                                                             |
+| Field         | Meaning                                                     | Default                                                    |
+| ------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| `dir`         | Config-relative directory inside `repoRoot`                 | required                                                   |
+| `files`       | Globs relative to `dir` selecting the files to read         | the [default globs](./mokly-root-discovery.md#root-fields) |
+| `path`        | Path prefix placed before every derived path from this root | none                                                       |
+| `transparent` | Directory names removed from derived paths                  | `[]`                                                       |
 
 A matched `.md` file is a document; a matched `.screen.html`,
 `.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
@@ -169,14 +169,6 @@ and column. The CLI inserts the source code after that location under the
 Folder record diagnostics live in the
 [folder contract](./mokly-folders.md#diagnostics); export collection
 diagnostics live in the [entry module contract](./mokly-entry-modules.md).
-
-## Verification
-
-Coverage must prove derivation from each root field, transparent removal,
-`index` collapse for documents and entries, declared-path replacement, every
-grammar rejection including device names and case-only collisions, the
-leaf-versus-folder rule with variants and index pages, URL normalisation of
-the three accepted forms, and the exact text of every diagnostic.
 
 ## Related Docs
 

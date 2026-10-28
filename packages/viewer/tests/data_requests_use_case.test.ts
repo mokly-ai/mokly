@@ -5,7 +5,7 @@ import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 
-import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import { catalogueFixture, indexFixture } from "./catalogue_v8_fixture.js";
 
 const HOME = "product/browse/home";
 const DETAILS = "product/browse/details";

@@ -42,6 +42,9 @@ export const SHELL_PREVIEW_SCHEME_CSS = `
   background: var(--mbk-dark-screen-bg);
 }
 
+/* A dark screen would lose its edge in the near-black phone body. Its 1px
+   inset hairline is an overlay above the fragment, so the document cannot
+   cover it. */
 [data-preview-color-scheme="dark"] .phone-screen::after {
   content: "";
   position: absolute;

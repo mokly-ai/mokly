@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components
@@ -160,24 +158,21 @@ not make every nested control indistinguishable. At a nested depth, nonselected
 content is dimmed again. Sibling or repeated instances stay independently
 selectable through outlines and the accessible Components list.
 
-Implement highlighting as shell-owned presentation over validated live DOM
-ranges, with dimming-mask cutouts for the selected regions. Do not set opacity
-on a consumer ancestor and try to restore opacity on its descendants. Do not
-clone component DOM, change its position, insert layout wrappers, or alter its
-computed styles. Component pixels, layout, and original opacity stay intact.
-Cross-origin overlays reset the package host's presentation with important
-styles and isolate and reset their SVG in a shadow root, so consumer CSS
-cannot paint over selected regions. Both measurers share
-containing-block-aware clipping for fixed elements, transformed ancestors and
-inner scrollers.
+Highlighting is shell-owned presentation over validated live DOM ranges: a
+dimming mask with cutouts for the selected regions. It never sets opacity on a
+consumer ancestor. It never clones component DOM, changes its position,
+inserts layout wrappers, or alters its computed styles. Component pixels,
+layout, and original opacity stay intact. Consumer CSS cannot paint over the
+selected regions, also in a cross-origin overlay.
 
 Bounds come from the active composed document, support multi-root and text
 ranges, and follow scroll, nested scroll containers, frame resize and
 expansion, fonts and images loading, and viewport and theme swaps. Clip to the
 visible frame and its clipping ancestors; do not highlight unrelated content
-covered by occluding elements. Zero-area and hidden instances stay inspectable
-in the inspector without an invented rectangle. Unsupported boundaries report
-unavailable inspection explicitly.
+covered by occluding elements. Clipping follows the containing block of fixed
+elements, transformed ancestors, and inner scrollers. Zero-area and hidden
+instances stay inspectable in the inspector without an invented rectangle.
+Unsupported boundaries report unavailable inspection explicitly.
 
 While the toggle is on, selecting outlined regions inspects them rather than
 following their product links. Normal frame navigation is restored when it is
@@ -191,8 +186,7 @@ stale instance selection. A viewport or theme change rebinds usage to the new
 document; preserve a selection only if its identity still exists. Entering a
 comparison turns highlighting off; its toggle is unavailable in comparison
 modes, whose snapshots stay unmodified. Removed screens also disable it because
-there is no current preview to inspect. Component-page nested inspection can
-reuse this same mechanism.
+there is no current preview to inspect.
 
 ## Frame And Delivery Boundary
 
@@ -225,25 +219,12 @@ emitted events. This differs from the workspace's intentional multi-view
 highlighting of one selected key. Frame replacement ends host picking and
 clears stale inspection under the viewer lifecycle contract.
 
-## Mockups And Verification
+## Mockups
 
-The owning design catalogue lives under `examples/basic/specs/design`; UI
-changes update it first and check it through Serve. Do not introduce an
-unrelated Expo app or a second mockup generator. It provides mobile and
-desktop screen components for the component page and variants, changed
-component and Affected screens, screen inspector usage, highlight selection,
-loading Usage, and empty and unavailable states. The
+The [component design](./mokly-component-design.md) depicts these pages in
+mobile and desktop artboards under `examples/basic/specs/design`: the
+component page and variants, a changed component and its Affected screens,
+screen inspector usage, highlight selection, loading Usage, and the empty and
+unavailable states. The
 [controls designs](./mokly-component-controls-design.md) belong to the
-inspector; local Serve implements those controls.
-
-Each owning screen-spec page has at most five screens. Split additional states
-into linked child pages, with a canonical screen on nonterminal pages. Reuse
-existing shell and frame components and the shared inspector, and link new
-screens from the catalogue and related screen and component pages. Flows only
-compose those existing screens and link back to their owners. Keep annotations
-outside rendered screen areas.
-
-Browser tests exercise the served and the built shell with actual usage
-records, both viewport and theme modes, nested, repeated and multi-root
-content, scrolling, resizing, missing metadata, selection and navigation,
-keyboard access, and cleanup.
+inspector. Local Serve implements those controls.

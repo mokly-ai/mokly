@@ -47,7 +47,8 @@ export function useNavigationScroll(
 /**
  * The summary of a revealed folder once its row shows. An application-owned
  * host can commit the reveal's cleared filters after the request, so the row
- * may still be hidden when the reveal starts.
+ * may still be hidden when the reveal starts. Only sections and folders are
+ * `<details>`; a variant list shares `data-nav-disclosure` but is a `div`.
  */
 function shownFolderSummary(
   pane: HTMLElement,

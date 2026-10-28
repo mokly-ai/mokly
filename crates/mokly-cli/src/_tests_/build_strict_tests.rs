@@ -18,7 +18,7 @@ use crate::cancellation::BuildCancellation;
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 
-use super::build_tests::{config, graphs, options, prepared};
+use super::build_tests::{capture_head, config, graphs, options, prepared};
 
 fn configuration_warning(code: &'static str, message: &str) -> Warning {
     Warning {
@@ -75,11 +75,12 @@ fn strict_build(head: Vec<Warning>, base: Vec<Warning>) -> Result<BuildSummary, 
                 .returns(Ok(prepared(head))),
         )),
         graphs,
-        changes: Arc::new(Unimock::new(
+        changes: Arc::new(Unimock::new((
+            capture_head(),
             ChangesServiceMock::classify
                 .next_call(matching!(_, _, _, _))
                 .answers_arc(Arc::new(move |_, _, _, _, _| Ok(ready(base.clone())))),
-        )),
+        ))),
     };
     let mut options = options();
     options.no_changes = false;

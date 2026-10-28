@@ -1,14 +1,12 @@
 # API reference
 
-Status: In progress under the [Rust rebuild plan](../../../../plans/rust-rebuild.md).
-
 This page belongs to the [`@mokly/viewer` README](../../README.md). It lists the props, the handle methods, and the package entry points.
 
 ## `<MoklyViewer>`
 
 | Prop                                 | Purpose                                                                                                            |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `index`                              | The catalogue index v7 as an object, or its absolute HTTP(S) URL                                                   |
+| `index`                              | The catalogue index v8 as an object, or its absolute HTTP(S) URL                                                   |
 | `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v2, its URL, or a promise of either    |
 | `baseUrl`                            | Required origin root for an object `index`; invalid for a URL `index`                                              |
 | `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                               |
@@ -65,8 +63,8 @@ accepts exactly one format number and rejects every other with a typed
 `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
 The embedded viewer reports the same failure through `onError` with code
 `version`. The
-[version gates](../../../../docs/protocol/mokly-viewer-namespace.md#version-matrix)
-list every boundary.
+[format version inventory](../../../../docs/protocol/mokly-format-versions.md#version-inventory)
+lists every boundary.
 
 `@mokly/viewer/data` exports the path functions and the directory names
 `GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` of the
@@ -77,5 +75,4 @@ functions `isLinkPath` and `isLogicalFragment` of the
 [authoring links](../../../../docs/protocol/mokly-authoring.md#links), and the
 profile validators `validatePropSchema` and `validateProps` of the
 [entry props contract](../../../../docs/protocol/mokly-entry-props.md#prop-schema-profile),
-which generate no code; it has no React dependency. The review result types
-and reader are internal to the viewer.
+which generate no code; it has no React dependency.

@@ -1,7 +1,5 @@
 # CSS Rule Membership And Identity
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 
 ## Matched Elements
@@ -18,6 +16,8 @@ document. Match in the document where the stylesheet applies; a stylesheet
 inside an embedded document does not style its host document. Resource
 confinement and changed-byte eligibility stay in force. Configuration,
 declarations, JavaScript imports, and owner records cannot widen this scope.
+The decision is the same however the stylesheet reaches the page: through
+configuration, a component declaration, an `@import`, or a JavaScript import.
 
 Match against both sides' composed trees of the
 [tree model](./mokly-comparison.md#tree-model), with their ownership regions
@@ -35,10 +35,8 @@ For each resolved changed rule, find every element that any of its selectors
 can match in either document, not just the first match. Reachability on
 either side admits the page; both available documents then participate, even
 when one side has no link. Apply the nesting, pseudo-class, pseudo-element,
-and unevaluated-condition rules of the attribution contract. Keep the side,
-the document, the selector, and the containing regions of each match until
-classification finishes. These element references are internal evidence,
-never serialized nodes or new reasons.
+and unevaluated-condition rules of the attribution contract. Matched elements
+are internal evidence, never serialized nodes or new reasons.
 
 An unresolved outcome supplies no proven element set. Never guess component
 matches from a selector string or an owner list. The closed keep list of the
@@ -146,8 +144,9 @@ make copies equal. Duplicate declarations, token separation, strings, and
 an empty declaration block. Two rules are one identity exactly when their
 before sides are equal and their after sides are equal.
 
-The identity excludes the stylesheet path, the bundle root, the ordinal, the
-owners, the enclosing conditions, and the at-rule name and prelude.
+The identity excludes the stylesheet path, the bundle root, the source
+position, the owners, the enclosing conditions, and the at-rule name and
+prelude.
 Conditions still participate in the stylesheet diff, and nesting still
 participates in matching. A selector-less or otherwise unresolved rule cannot
 establish a component match, even when its identity coincides with another
@@ -178,54 +177,6 @@ it invents no changed rule. A missing stylesheet counterpart is empty only
 when that side does not reference the file and its absence is proved by the
 confined source reader. A missing referenced target fails validation; an
 invalid read never becomes an empty stylesheet.
-
-## Attribution Examples
-
-The decision is the same however the stylesheet reaches the page. In these
-examples, `Action` renders `.action` on its own pages and on `Checkout`. The
-edit changes a plain `color` declaration, so it is resolvable.
-
-| How CSS reaches the page            | Example                                                                                                                                    | Changes and evidence                                                                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Configured stylesheet               | `shared.css` is linked on Action's own pages and on Checkout; its changed `.action` rule matches only Action regions.                      | Action and the variants with kept matches have rows. Checkout is under Action's Affected screens; its record is owned by Action.                                                 |
-| Component `stylesheets` declaration | Action declares `action.css`; its changed `.checkout-heading` rule matches Checkout's heading outside Action and matches no Action region. | Checkout has a row with an entry-owned record. Action is unchanged. Details name `action.css` and `.checkout-heading`.                                                           |
-| Import from a stylesheet            | Declared `action.css` imports `parts.css`; the changed `.action` rule in `parts.css` matches Action on its own pages and on Checkout.      | The same Action rows and affected Checkout result as configured CSS. Evidence names `parts.css`, not its importing file. A heading rule in that file would instead add Checkout. |
-| JavaScript import                   | An imported CSS rule is bundled into separate stylesheets for Action and Checkout, with equal before and after tuples.                     | The same Action rows and affected Checkout result. Evidence names each view's delivered stylesheet; private source paths add nothing.                                            |
-
-If a stylesheet linked only on Checkout changes `.checkout .action`, the match
-lies inside an Action instance, but no Action own page has the same changed
-rule and match. Checkout gets the row; Action stays unchanged. The page's
-details list that selector. Other Action consumers are not added by this rule.
-This holds too when the screen-only rule comes from a JavaScript import.
-
-### Nested Components
-
-Assume each named rule has the same changed identity on the relevant pages,
-and there are no independent changes:
-
-- `.action` matches Action's root region on its own pages. On Toolbar's own
-  page it matches only inside Action. Action keeps its own-page matches;
-  Toolbar loses those nested matches. Only Action and the variants with kept
-  matches get component rows. Toolbar is under Action's Affected screens.
-- `.toolbar .action` matches on Toolbar's own pages but not on Action's own
-  pages. Action cannot take these matches from Toolbar. Toolbar keeps them and
-  changes; its consumers are affected. Action stays unchanged.
-- With Icon inside Action inside Toolbar, `.icon` matches Icon's root region
-  on its own pages. Action's and Toolbar's own-page matches all lie inside
-  Icon. Only Icon keeps matches and changes. Action and Toolbar are under its
-  Affected screens.
-- Y's own-page matches all sit inside a nested Z that keeps its own-page
-  matches. Y loses them and is not changed. On X's own page, the same rule
-  matches inside Y but outside Z, with no other match that X can keep. Y still
-  takes that match from X because Y's unfiltered own-page set is nonempty. X
-  is not changed as a component. The match lies outside every changed
-  component on this page, so X's view gets an entry-owned record and a row,
-  with no Affected screens from that reason. This conservative fallback keeps
-  the change visible.
-
-If a rule instead matches `.renderer-frame` outside Toolbar's root region,
-only that page gets an entry-owned record, with no affected consumers for that
-rule.
 
 Evidence fields and validation are defined in
 [CSS Attribution Membership](./mokly-css-attribution-membership.md).

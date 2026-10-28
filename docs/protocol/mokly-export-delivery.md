@@ -1,16 +1,16 @@
 # Static Delivery
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Hosting Contract
 
 Deploy the output directory's contents as the HTTP(S) origin's document root.
 The host must serve ordinary files with their correct MIME types, `index.html`
 directory indexes, query-insensitive file lookup, and normal missing-file
 responses. Serve `mokly-viewer/` and `static/` under the
-[portable-name rules](./mokly-viewer-namespace.md#names-and-acceptance). No
+[portable-name rules](./mokly-viewer-namespace.md#deployed-names). No
 SPA fallback, URL rewriting, or server-side rendering is required;
-no process renders shell HTML, so the host runs nothing.
+no process renders shell HTML, so the host runs nothing. Every local request
+of the output resolves inside the output. No request reaches the consumer
+project, `.git`, `node_modules`, or a Mokly process.
 
 The output includes a `404.html` stub. Hosts may configure it as their error
 document; producing the HTTP 404 status for arbitrary unknown URLs is host
@@ -23,7 +23,7 @@ on a generic static server interpreting it. Generic deployments document the
 header requirements below.
 
 The default iframe sandbox stays `allow-same-origin`. Cross-origin hosts must
-explicitly use the [postMessage adapter](./mokly-frame-adapter.md), a distinct
+explicitly use the [postMessage adapter](./mokly-inspector-wire.md#cross-origin-mount-and-handshake), a distinct
 real `frameOrigin`, and `sandbox="allow-same-origin allow-scripts"`. Opaque
 `null` origins are rejected. Query-insensitive hosting preserves the adapter's
 `mokly-host` parameter. This exception enables document scripts on the isolated
@@ -40,18 +40,21 @@ needs no rewrite rules. Every rendered file name derives from its entry's path
 under the [artifact path contract](./mokly-artifact-paths.md) and keeps the
 authored case of each segment when written into URLs.
 
-| Path                                                                        | Content                                                |
-| --------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `index.html`                                                                | the shell stub                                         |
-| `view/<path>/index.html`                                                    | the same stub, one per current and removed entry       |
-| `404.html`                                                                  | the same stub                                          |
-| `mokly-viewer/index.json`                                                   | the catalogue index v7                                 |
-| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail v2 per current entry                  |
-| `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                              |
-| `static/mokly-generated/<route>`                                            | rendered views and documents                           |
-| `static/<closure path>`                                                     | referenced authored resources                          |
-| `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**` | the shell bundle, the inspector, styles, and fonts     |
-| `.mokly-export-artifact`                                                    | the [ownership marker v3](./mokly-export-ownership.md) |
+| Path                                                                        | Content                                             |
+| --------------------------------------------------------------------------- | --------------------------------------------------- |
+| `index.html`                                                                | the shell stub                                      |
+| `view/<path>/index.html`                                                    | the same stub, one per current and removed entry    |
+| `404.html`                                                                  | the same stub                                       |
+| `mokly-viewer/index.json`                                                   | the catalogue index                                 |
+| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail per current entry                  |
+| `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                           |
+| `static/mokly-generated/<route>`                                            | rendered views and documents                        |
+| `static/<closure path>`                                                     | referenced authored resources                       |
+| `mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**` | the shell bundle, the inspector, styles, and fonts  |
+| `.mokly-export-artifact`                                                    | the [ownership marker](./mokly-export-ownership.md) |
+
+The [format inventory](./mokly-format-versions.md) gives the version of each
+JSON file.
 
 Shell documents are `index.html` files, so `/view/<path>/` needs no rewrite.
 A host serving `view/<path>/index.html` for `/view/<path>`, `/view/<path>/`,
@@ -127,9 +130,9 @@ replaced the files, so the shell performs a full page load of the requested
 URL rather than mixing deployments. An open tab keeps its loaded deployment
 for the page's lifetime; reload the page to adopt a newer one. In-shell
 navigation, reload, Back/Forward, new tabs, and browser-normalized response
-URLs keep the same entry identity and the existing scroll and disclosure
-behaviour. Unknown paths are unavailable: the shell renders only entries
-present in its index and never invents a catch-all route.
+URLs keep the same entry identity, scroll, and disclosure behaviour. Unknown
+paths are unavailable: the shell renders only entries present in its index
+and never invents a catch-all route.
 
 A removed entry resolves from the index's `removedEntries`; it needs no query
 when its path is unique, and a present `snapshot` must match the published
@@ -153,33 +156,35 @@ fallback.
 ## Static Comparisons
 
 Each build with Changes packages one complete comparison, with every
-referenced before and after document, the removed entries' details, the
-removed previews, and the transitive resources under one generation root:
+before and after document, the removed entries' details, the removed
+previews, and the transitive resources under one generation root:
 
 ```text
-mokly-viewer/diffs/generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/
 ```
 
-Keep the engine's JSON and document bytes and its relative snapshot paths. Do
-not change the review schema or rebase only some of its resource references.
+The generation keeps the snapshot document bytes and the relative snapshot
+paths of the comparison unchanged. It holds no review file.
 
-The index's `comparisonUrl` names this immutable JSON file directly. The shell
-requests it only for a selected diff or an opened removed entry and resolves
-snapshots from the actual response URL. A static build needs no redirect from
-`/mokly-viewer/diffs/review.json`; Serve keeps its stable endpoint.
+The index's `comparisonUrl` names this immutable root directly. A selected
+diff loads only the snapshot documents that it shows, resolved against that
+root; the comparison's view states and evidence come from the selected
+entry's detail. An opened removed entry loads its detail and its historical
+documents from the same root. A static build needs no selection endpoint and
+requests no generation root; Serve keeps its selection endpoint.
 
 Current is the default after navigation and reload. Browsing, Changes
-filtering, and scheme or viewport switches request no comparison JSON and no
-snapshot file. A build with Changes carries the same per-view states as Serve,
-so its shell marks hidden changed views and lists them in Details without
-fetching that JSON. Added entries keep their current preview without
+filtering, and scheme or viewport switches request no snapshot file. A build
+with Changes carries the same per-view states as Serve, so its shell marks
+hidden changed views and lists them in Details from the index and the
+details. Added entries keep their current preview without
 comparison modes. Removed screens and pages have no comparison modes;
 selecting one requests the packaged historical version under removed previews.
 Side by side, Overlay, and Difference keep the UI and the
 missing-current state for removed component variants. Refresh and retry reload
 the same generation; only another build and deployment produce new comparison
 content. Hosts may keep prior generations for old tabs; if they remove them,
-the existing comparison failure state applies until the page reloads.
+the comparison failure state applies until the page reloads.
 Cancellation and failure keep the catalogue usable and cannot replace a
 different screen.
 
@@ -200,27 +205,3 @@ sources fail the current validation leaves `comparisonUrl: null` and
 
 The browser module inventory and the deployment identity algorithm follow the
 separate [static build browser contract](./mokly-export-browser.md).
-
-## Browser Acceptance
-
-Use a basic HTTP fixture that serves exact files and directory indexes,
-handles GET and HEAD with proper MIME types, and supplies no Mokly or provider
-rewrites. Copy only the output to a separate directory before serving; its
-requests must not reach the consumer project, `.git`, Node modules, or a Mokly
-process.
-
-Verify direct and reloaded nested pages, host-normalized URLs, folder
-navigation, search, tags, and Changes, details, both viewports and schemes,
-use cases, component variants, ordinary fallback links, every logical-link
-activation mode, fragments, Back/Forward, and removed screens. Assert that
-every local request resolves and that Current makes no comparison, live
-descriptor, or event-stream request; prove that a static page and an embedded
-viewer make no live request, that a Serve page with the event stream denied
-still browses, and that a stale render response never replaces a preview.
-
-Exercise all three diff modes, missing sides, ignored regions, rule and
-resource evidence, refresh, errors, interrupted navigation, and resource
-isolation after the source tree changes or disappears. Keep browser coverage
-under the Cloudflare Pages local runtime for the repository preview's
-normalized URLs, headers, and public URLs. Delivery adds no screen; visual
-smoke tests reuse the owning mobile and desktop mockups.

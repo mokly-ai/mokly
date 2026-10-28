@@ -9,9 +9,10 @@ selector for interface and preview scheme. Embedded hosts keep their separate
 preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
 names, hover tooltips, selected states, and visible keyboard focus.
 
-Use centered SVGs for the menu and dropdown chevron, avoiding text baselines.
-Usage uses a connected-node icon with clear, separated strokes. Icon boxes do
-not shrink; all glyphs are centered within their pointer targets.
+The menu icon and the dropdown chevron sit centered in their boxes, independent
+of text baselines. Usage uses a connected-node icon with clear, separated
+strokes. Icon boxes do not shrink; all glyphs are centered within their
+pointer targets.
 
 The viewport dropdown switches the actual displayed preview contexts. Both shows
 both mobile and desktop, with labels identifying each. Desktop content keeps
@@ -20,10 +21,9 @@ preview pane instead of scaling the document or widening the outer page.
 Theme changes affect the preview and its context labels, leaving the application
 chrome legible. View changes preserve the selected variant and edited fields.
 
-Native form state and scoped CSS make these mockup controls work without scripts,
-including inside Browse's sandboxed frames. Preview fragments are authored from
-the same fixture values for both contexts. They do not render newly entered
-prop values. Highlighting uses the fixture's existing overlay
+These mockup controls work without scripts, including inside Browse's
+sandboxed frames. Both preview contexts show the same fixture values. They do
+not render newly entered prop values. Highlighting uses the fixture's overlay
 geometry and never dims an ancestor of a highlighted component.
 
 Disable highlighting when no registered components exist, inspection is
@@ -51,11 +51,11 @@ between those states. Keyboard focus also draws an accent bar along the divider'
 outer edge instead of a ring around the hit area. While a drag is in progress the
 pointer keeps the resize cursor everywhere and preview frames ignore pointer input,
 so the gesture cannot be interrupted by the content underneath.
-The native sizing element sits behind the preview with its hit area centered
-on the divider; it changes layout height without consumer scripts. Both panes
-have minimum heights. Closing restores the preview's space; reopening keeps
-the resized split, clamped to the available workspace. Runtime resizing supports
-the whole divider and keyboard input; native mockup dragging uses its center grip.
+The mockup's resize hit area is centered on the divider, and resizing changes
+the layout height without consumer scripts. Both panes have minimum heights.
+Closing restores the preview's space; reopening keeps the resized split,
+clamped to the available workspace. Runtime resizing supports the whole
+divider and keyboard input; native mockup dragging uses its center grip.
 
 On mobile, keep the preview at full size and open the inspector above it as a
 non-modal, full-workspace-width bottom sheet with safe-area spacing and a
@@ -77,7 +77,7 @@ A component can render other registered components. On its page, the inspector
 tab is named Nested components and lists those children, excluding the component
 whose page is open. Toolbar demonstrates its nested Action instance. Leaf
 components, including Action, omit this tab. Screen pages keep their Components
-tab, including the existing explicit empty and unavailable states.
+tab, including the explicit empty and unavailable states.
 
 ## Comparison Availability
 
@@ -128,7 +128,7 @@ The `design/components/pages/variants` mockup depicts the inverse boundary: the
 selected Disabled variant entry is Unmodified and ineligible, so no comparison
 band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
-preview without comparison controls, plus one Changes entry. The existing unused Badge
+preview without comparison controls, plus one Changes entry. The unused Badge
 example stays Unmodified. Status must never be inferred from usage counts.
 
 ## Comparison Details
@@ -198,22 +198,3 @@ component's own view states and comparison captions stay unchanged. The
 `design/components/states/shared-impact/style-changed` artboard depicts it: a
 markup change shows only where screens use Action, so Details read the
 sentence while the Default caption still names only the changed styles.
-
-## Verification
-
-Capture regressions before making the changes. Exercise native viewport,
-theme, and highlight controls inside served frames and in the `mokly build`
-output. Verify both
-rendered contexts, independent mask ids, correct labels, retained control values,
-leaf/composite tab membership, and explicit comparison eligibility.
-
-Use pointer dragging on the centered desktop grip, and touch/Space on the mobile
-grabber. Check bounds, closing/reopening, retained edits and preview dimensions,
-and document/main/inspector scrolling separately at mobile and desktop sizes.
-Verify centered menu/caret SVGs and clear Usage geometry at both sizes.
-Keep existing link, prop, usage, highlight-geometry, and Changes-count assertions.
-Open and visually inspect every changed artboard in the served Browse frames
-and the interactive Both/Dark states. Run the component specs of the browser
-suite against `mokly serve` with
-`npm run test:browser -- tests/browser/component*.spec.ts`.
-Finish with `cargo xtask check`, commit/push, and the post-push review.

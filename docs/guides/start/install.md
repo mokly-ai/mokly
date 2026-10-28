@@ -7,11 +7,18 @@ order: 1
 
 ## Install the package
 
-Mokly runs from your own repository as a development dependency. React and
-React DOM render your screens, so install them beside it.
+Mokly runs from your own repository as a development dependency.
 
 ```shell
-npm install --save-dev @mokly/mokly react react-dom
+npm install --save-dev @mokly/mokly
+```
+
+An HTML-only catalogue needs neither React nor React DOM. Screens and
+components written in React need React and React DOM 19 or newer in your
+repository. Install them when your repository does not have them yet:
+
+```shell
+npm install --save-dev react react-dom
 ```
 
 <!-- x-release-please-start-version -->
@@ -53,10 +60,10 @@ npm install --save-dev @mokly/mokly@0.16.1
 
 - Node.js 22.15 or newer, excluding Node 23 and Node 24.14 through 24.18. If you use Node 24,
   select 24.19 or later to avoid the affected runtime releases.
-- A repository with React components, or somewhere to write new ones.
+- A repository that holds your screens and components, or somewhere to write
+  new ones.
 - Git, once you want to compare a branch with its base.
 
 ## Next
 
-Create the configuration that tells Mokly where your screens live and where
-the catalogue is written.
+[Configure](/docs/start/configure/) where Mokly finds your screens.

@@ -1,15 +1,12 @@
 # Tree Comparison And Changes
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head
 differ in a way a reviewer should see, and who owns each difference. Its
 inputs are the head side rendered from the working tree, the base side
 rendered from the base commit under [Sides](#sides), and the configured review
-settings. It works on parsed trees. It never reads recorded text offsets, and
-it never splices document text.
+settings. It works on parsed trees.
 
 ## Markers
 
@@ -123,7 +120,8 @@ A base resource that cannot complete checkout conversion is unavailable with
 one `base-conversion` warning. Failed filters, timeouts, and converted-byte
 limits have this outcome. Its unknown bytes prove neither equality nor a
 change. Other resource and document comparisons continue. Working-side
-resource validation keeps its existing failure behavior.
+resources keep the validation failures of the
+[Changes resource rules](./mokly-changes.md#resources).
 
 ## Changes Membership
 
@@ -140,23 +138,24 @@ owns the removed-entry presentation.
 
 Base conversion applies the base commit's attributes and the user's Git
 configuration. It includes line endings, custom filters, and Git LFS downloads.
-Network access is allowed within the existing preparation bounds. Missing
-promisor blobs are fetched in one batch before parallel reads. A failed fetch
-names a recovery command. The [base preparation contract](./mokly-base-preparation.md)
-also defines the matching Git clean rule for dependency identities.
+Network access is allowed within the preparation bounds. Base reads fetch the
+missing objects of a partial clone from its promisor remote. A failed fetch
+names a recovery command. The
+[base preparation contract](./mokly-base-preparation.md) defines those bounds.
+The [dependency contract](./mokly-base-dependencies.md#dependency-identity)
+defines the matching Git clean rule for dependency identities.
 
 The base is the merge base of the configured `review.base` and `HEAD`. The
 head side renders from the working tree. The base side renders from the base
 commit's Git tree through the same render graph, with checkout-converted sources;
 HTML screens, components, and documents need no checkout. Both sides render
-with the current Mokly version, so a Mokly upgrade alone lists no change, and
-the render cache keeps a side's views until their inputs change.
+with the current Mokly version, so a Mokly upgrade alone lists no change.
 
 React and Storybook components, React screens, the consumer renderer module,
 and consumer PostCSS at the base need the base's JavaScript on disk. The base
-commit's sources are extracted on demand into the bounded cache outside the
-repository that the [architecture page](../architecture/rust-core.md#render-graph)
-names, keyed by the commit, and the sidecar bundles from that directory.
+commit's sources are extracted on demand into the
+[base preparation cache](./mokly-base-cache.md), outside the repository. The
+sidecar bundles the base side from those extracted sources.
 
 ### HTML Package Styles
 
@@ -164,7 +163,7 @@ An HTML-only catalogue without a renderer or PostCSS uses working-tree
 dependencies for package stylesheets on both sides. It needs no extraction,
 Node process, or package installation. Compare Git clean identities only for
 manifests and lockfiles beside each `node_modules` directory used by the head,
-and its repository ancestors. Read exact paths on both sides without tree listing.
+and its repository ancestors.
 Without a used dependency directory, read no dependency inputs and emit no warning.
 When these identities differ, emit a configuration-subject `base-dependencies`
 warning, including when both sides render the same installed CSS. Equal
@@ -184,46 +183,31 @@ dependencies in three tiers, including the supported base installs.
 
 A base whose sources fail the current validation makes Changes unavailable
 with those diagnostics.
-The [base preparation contract](./mokly-base-preparation.md) defines input
-identity, dependency installation, cache leases and bundle settings.
+The [dependency contract](./mokly-base-dependencies.md) defines input
+identity, dependency installation, and bundle settings. The
+[base cache contract](./mokly-base-cache.md) defines cache leases.
 
 ## Review Result v8 And Snapshot v4
 
-```ts
-interface ReviewResultV8 {
-  schemaVersion: 8;
-  baseCommit: string;
-  entries: readonly ReviewEntry[];
-  affected: readonly AffectedConsumer[];
-  diagnostics: readonly ReviewDiagnostic[];
-}
-interface ReviewView {
-  viewport: "mobile" | "desktop";
-  colorScheme: "light" | "dark";
-  state: "unchanged" | "changed" | "added" | "removed" | "ignored-only";
-  ignoredIds: readonly string[];
-  rules?: readonly RuleEvidence[];
-  resources?: readonly ResourceEvidence[];
-}
-interface RuleEvidence {
-  stylesheet: string;
-  selector: string;
-  status: "matched" | "excluded" | "unresolved";
-  owner: { kind: "entry" } | { kind: "component"; path: string };
-}
-interface ResourceEvidence {
-  path: string; // the rendered resource route the view reaches
-  owner: { kind: "entry" } | { kind: "component"; path: string };
-}
-```
+The comparison classifies every entry and view into one review result v8 and
+pairs it with the base commit in the catalogue change snapshot v4. Both stay
+in memory: no host writes, serves, or uploads them. The
+[catalogue index](./mokly-catalogue.md) and the
+[entry details](./mokly-shell-delivery.md#entry-detail) are the only public
+comparison records. A catalogue-wide comparison file is rejected: it would
+repeat the details' evidence and outgrow the per-file limits of static hosts.
 
-The [component comparison records](./mokly-component-comparison-records.md)
-page defines `ReviewEntry`, `AffectedConsumer`, and `ReviewDiagnostic`.
+The model crate's `ReviewResultV8` type and the types that it uses define the
+shape of the review result. The
+[component comparison records](./mokly-component-comparison-records.md) page
+states the rules of `ReviewEntry`, `AffectedConsumer`, and `ReviewDiagnostic`.
 Entries are path-keyed: kind, path, `previousPath` on moved pairs, metadata
 reasons, views, and component variants grouped under their parent. Every
-evidence record names its owner. The catalogue change snapshot v4 pairs
-review v8 with the base commit for Serve, the static build, and publication. The generated
-TypeScript types are the normative shapes.
+evidence record names its owner. Serve, the static build, and publication
+project the same snapshot. The generated
+[`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
+and [`EntryDetailV2`](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+types define the index and the detail.
 
 `ignoredIds` lists the sorted unique ids of paired ignore regions removed for
 canonical equality, including equal regions in an `unchanged` view. Git

@@ -10,20 +10,20 @@ permissions:
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
 jobs:
-  repository:
-    name: Repository
+  profile:
+    name: Runtime profile
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 75
+    timeout-minutes: 30
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
     steps:
-      - name: Check out repository
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 0
       - name: Select Node verification profile
         id: profile
         env:
@@ -50,15 +50,42 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
+      # Read the exact version that floating Node 24 resolved to; the repository
+      # job and every Node 24 job request it. The `node-version` output of
+      # actions/setup-node holds the same version with a leading `v`; this step
+      # omits the `v`.
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
+  repository:
+    name: Repository
+    needs:
+      - profile
+    runs-on: blacksmith-8vcpu-ubuntu-2404
+    timeout-minutes: 75
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ needs.profile.outputs.node-24-version }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
+          cache-directories: .context/rust-audit-tool
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Build native artifacts
@@ -80,13 +107,13 @@ jobs:
   viewer:
     name: Viewer (Node ${{ matrix.node }})
     needs:
-      - repository
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+      - profile
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
+        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
       MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-full.json
@@ -98,7 +125,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
@@ -106,6 +133,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Run viewer verification
@@ -122,13 +155,13 @@ jobs:
           retention-days: 14
   browser:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
-    needs: [repository]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    needs: [profile]
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
+        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
         shard: [1, 2, 3, 4]
     env:
       PLAYWRIGHT_CHANNEL: chromium
@@ -142,7 +175,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
@@ -150,6 +183,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -177,7 +216,7 @@ jobs:
   native:
     name: Native (${{ matrix.runner }})
     needs:
-      - repository
+      - profile
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
@@ -185,7 +224,7 @@ jobs:
       matrix:
         runner:
           - blacksmith-6vcpu-macos-26
-          - blacksmith-2vcpu-windows-2025
+          - blacksmith-8vcpu-windows-2025
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -204,6 +243,11 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Build viewer package
@@ -214,13 +258,13 @@ jobs:
         run: cargo xtask check --suite native
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }})
-    needs: [repository]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    needs: [profile]
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
+        node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -232,7 +276,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.profile.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
@@ -240,6 +284,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -270,6 +320,7 @@ jobs:
     name: Required CI
     if: always()
     needs:
+      - profile
       - repository
       - viewer
       - browser
@@ -285,7 +336,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ needs.repository.outputs.node-24-version }}
+          node-version: ${{ needs.profile.outputs.node-24-version }}
           package-manager-cache: false
       - name: Download suite evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -294,12 +345,14 @@ jobs:
           path: .context/downloaded-verification
       - name: Require every verification job
         env:
+          PROFILE_RESULT: ${{ needs.profile.result }}
           REPOSITORY_RESULT: ${{ needs.repository.result }}
           VIEWER_RESULT: ${{ needs.viewer.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
           STATIC_DELIVERY_RESULT: ${{ needs.static-delivery.result }}
         run: |
+          test "$PROFILE_RESULT" = success
           test "$REPOSITORY_RESULT" = success
           test "$VIEWER_RESULT" = success
           test "$BROWSER_RESULT" = success
@@ -307,5 +360,5 @@ jobs:
           test "$STATIC_DELIVERY_RESULT" = success
       - name: Require complete suite evidence
         env:
-          EXPECTED_RUNTIMES: ${{ needs.repository.outputs.verification-runtimes }}
+          EXPECTED_RUNTIMES: ${{ needs.profile.outputs.verification-runtimes }}
         run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"

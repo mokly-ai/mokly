@@ -84,6 +84,10 @@ pub struct TimedCommands {
 }
 
 impl Commands for TimedCommands {
+    /// Supervises the child until it settles, the deadline passes, or the tree
+    /// passes the byte limit. The size check recounts the whole private root at
+    /// most once per second, because each count walks the complete tree, and it
+    /// ignores files that vanish while the manager runs.
     fn run(&self, command: &Command) -> Result<Vec<u8>> {
         if self.cancellation.cancelled() {
             return Err(Error::Cancelled);

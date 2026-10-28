@@ -1,13 +1,8 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
-import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
-import { reviewEntry } from "../review/entries.js";
-import {
-  affectedEntry,
-  keepsComponentRecord,
-  viewAxesKey,
-} from "../review/shared_impact.js";
-import type { ReviewView } from "../review/types.js";
+import { snapshotViewPath } from "../navigation/routes.js";
+import { keepsComponentRecord, viewAxesKey } from "../review/shared_impact.js";
+import type { ComparedEntry, ReviewView } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
 import type { ComparisonPresentation } from "./use_comparison.js";
@@ -19,8 +14,8 @@ export interface SelectedComparisonView {
   documents: { after?: string; before?: string };
   /**
    * The view is unchanged, yet changed components affect it: it keeps a
-   * component-owned record, the review's affected records name it, or its
-   * usage holds a changed component that the entry detail names.
+   * component-owned record, or its usage holds a changed component that the
+   * entry detail names.
    */
   componentsOnly: boolean;
   /** The mode this view shows; one-sided views fall back to Side by side. */
@@ -49,18 +44,16 @@ function snapshotUrl(
 
 /**
  * The views a presentation shows, mobile first, each in the selected scheme
- * or its Light fallback. `undefined` means the identity has no result record.
- * `usingChanged` holds the axes keys of the routed views whose usage holds a
- * changed component.
+ * or its Light fallback. `undefined` means the routed entry's detail has no
+ * ready comparison. `usingChanged` holds the axes keys of the routed views
+ * whose usage holds a changed component.
  */
 export function selectedComparisonViews(
   loaded: LoadedComparison,
   presentation: ComparisonPresentation,
-  kind: ViewRouteKind,
-  id: string,
+  entry: ComparedEntry | undefined,
   usingChanged: ReadonlySet<string> = new Set(),
 ): readonly SelectedComparisonView[] | undefined {
-  const entry = reviewEntry(loaded.result, kind, id);
   if (!entry) return;
   return (["mobile", "desktop"] as const).flatMap((viewport) => {
     if (presentation.viewport !== "both" && presentation.viewport !== viewport)
@@ -83,30 +76,18 @@ export function selectedComparisonViews(
         documents: {
           ...(before
             ? {
-                before: snapshotUrl(
-                  loaded.url,
-                  "before",
-                  entry.before?.path ?? id,
-                  view,
-                ),
+                before: snapshotUrl(loaded.url, "before", entry.basePath, view),
               }
             : {}),
           ...(after
             ? {
-                after: snapshotUrl(
-                  loaded.url,
-                  "after",
-                  entry.after?.path ?? id,
-                  view,
-                ),
+                after: snapshotUrl(loaded.url, "after", entry.path, view),
               }
             : {}),
         },
         componentsOnly:
           view.state === "unchanged" &&
-          (keepsComponentRecord(view) ||
-            affectedEntry(loaded.result, entry, view) ||
-            usingChanged.has(viewAxesKey(view))),
+          (keepsComponentRecord(view) || usingChanged.has(viewAxesKey(view))),
         mode: before && after ? presentation.mode : "side",
         styleOnly: isStyleOnlyView(view, entry.reasons),
         view,

@@ -76,7 +76,7 @@ for (const width of [1280, 390])
       }
     });
 
-test("Refresh comparison reads the pinned review again and presents the same versions", async ({
+test("Refresh comparison reads the pinned generation again and presents the same versions", async ({
   page,
   request,
   baseURL,
@@ -92,14 +92,15 @@ test("Refresh comparison reads the pinned review again and presents the same ver
   const stage = page.locator("[data-diff-stage]");
   await markPaneDocuments(stage);
 
+  // Hold every pane document that the refresh reads again.
   const held: Route[] = [];
-  await page.route(`**/${index.comparisonUrl}`, (route) => {
+  await page.route(`**/${index.comparisonUrl}snapshots/**/*.html`, (route) => {
     held.push(route);
   });
   await page.getByRole("button", { name: "Refresh comparison" }).click();
-  await expect.poll(() => held.length).toBe(1);
+  await expect.poll(() => held.length).toBe(4);
   await expect(stage).toHaveAttribute("aria-busy", "true");
-  await held[0]!.continue();
+  for (const route of held) await route.continue();
   await expect(stage).not.toHaveAttribute("aria-busy", "true");
   await expect(frames).toHaveCount(4);
   await expect.poll(() => sources(page)).toEqual(loaded);

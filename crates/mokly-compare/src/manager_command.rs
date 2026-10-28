@@ -100,6 +100,8 @@ pub(crate) fn arguments(root: &Root, destination: &Path, scripts: bool) -> Vec<O
     args
 }
 
+/// Download caches and stores that a manager writes inside the private entry.
+/// The install removes them after the manager finishes.
 pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {
     match manager {
         Manager::Npm => &[".npm-cache"],

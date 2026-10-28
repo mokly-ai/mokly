@@ -11,6 +11,7 @@ use mokly_model::review::{EntryChangeReason, ReviewResultV8, ReviewState};
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 
 use crate::comparison_capture;
+use crate::comparison_capture::CaptureSide;
 use crate::comparison_error::CompareResult;
 use crate::error::Result;
 use crate::move_types::Pairing;
@@ -94,7 +95,7 @@ pub struct ComparisonResult {
     pub counts: ComparisonCounts,
     /// Bounded captured base over the pinned source; misses read that same source.
     pub before: Arc<dyn RenderGeneration>,
-    /// Original working generation; head reads use its bounded render cache.
+    /// Working generation; uncaptured head reads use its bounded render cache.
     pub after: Arc<dyn RenderGeneration>,
 }
 
@@ -113,7 +114,12 @@ impl fmt::Debug for ComparisonResult {
 pub trait Comparison: Send + Sync {
     /// Validate and retain bounded base inputs before comparison begins.
     fn capture_base(&self, before: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
-        comparison_capture::capture(before).compare()
+        comparison_capture::capture(before, CaptureSide::Base).compare()
+    }
+
+    /// Validate and retain bounded head inputs before build output starts.
+    fn capture_head(&self, after: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
+        comparison_capture::capture(after, CaptureSide::Head).compare()
     }
 
     /// Classify a base whose complete validation and bounded capture already finished.

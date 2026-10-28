@@ -64,7 +64,7 @@ async fn a_lost_put_response_still_counts_after_an_expired_plan() {
         )
         .await
         .unwrap();
-    assert_eq!(result.uploaded, 3);
+    assert_eq!(result.uploaded, 4);
     assert_eq!(result.unchanged, 3);
 }
 
@@ -123,12 +123,13 @@ async fn completed_blob_progress_precedes_a_later_replan() {
     let prepared = Prepared::new(&artifact(false)).unwrap();
     let missing = super::support::missing();
     let first = missing.iter().next().unwrap();
-    let completed = 1 + prepared
-        .ownership
-        .files
-        .iter()
-        .filter(|entry| &entry.sha256 == first)
-        .count();
+    let completed = prepared.plan_files.len() - 1
+        + prepared
+            .ownership
+            .files
+            .iter()
+            .filter(|entry| &entry.sha256 == first)
+            .count();
     let initial = plan(missing);
     let replanned = plan(BTreeSet::new());
     let events = Arc::new(std::sync::Mutex::new(Vec::new()));

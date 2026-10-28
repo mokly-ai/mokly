@@ -168,12 +168,17 @@ export async function bundle(
       "sidecar.bundle.graph",
       () => moduleGraph(compiled.metafile!, paths),
     );
+    // The compilation identity: module paths, imports and non-CSS source and
+    // loader bytes, then the metadata inputs and the settings hashed below.
     const hash = createHash("sha256");
     const physicalInputs: Record<string, string | null> = {};
     const metadataInputs: Record<string, string | null> = {};
     measurements.runSync("sidecar.bundle.inputs", () => {
       for (const module of graph) {
         const absolute = physical.get(module.path)!;
+        // Digest the bytes the compiler consumed, as the plugins recorded
+        // them; a later read could see a newer file, so an unrecorded input
+        // fails the bundle.
         const text = inputs.files.get(absolute);
         if (text === undefined)
           throw new Error(

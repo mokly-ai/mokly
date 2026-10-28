@@ -25,7 +25,7 @@ test("the owning catalogue stays usable when HEAD is the unchanged baseline", as
 }, info) => {
   const index = await comparisonIndex(request, baseURL);
   expect(index.changesStatus).toBe("ready");
-  expect(index.comparisonUrl).toMatch(/\/review\.json$/u);
+  expect(index.comparisonUrl).toMatch(/\/generations\/[a-f0-9]{64}\/$/u);
   expect(changesPaths(index)).toEqual([]);
   const failures: string[] = [];
   const requests: string[] = [];

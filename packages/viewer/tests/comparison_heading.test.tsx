@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { ComparisonHeading } from "../src/shell/evidence_details.js";
 
-import { indexFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { indexFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
 import {
   CHANGED,
   CHANGED_REASONS,

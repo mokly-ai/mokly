@@ -1,19 +1,17 @@
 # Component Comparison Schema
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Normative Result
 
-Every catalogue emits the review result v8 of the
+Every comparison classifies into the in-memory review result v8 of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
 whose envelope, view record, and rule evidence that page owns. The
 [component comparison records](./mokly-component-comparison-records.md) page
 owns the entry record, the affected-consumer record, and the diagnostic
 record inside that envelope, with the sides, the pairing, the view union, and
-the `included` membership field. The generated TypeScript types of the model
-crate are the normative shapes. One shape serves every catalogue: a catalogue
-without registered components emits no component entries and an empty
-`affected` list, and there is no second screen-only shape. This page defines
+the `included` membership field. The model crate's types are the normative
+shapes. One shape serves every catalogue: a catalogue without registered
+components classifies no component entries and has an empty `affected` list,
+and there is no second screen-only shape. This page defines
 the semantics of the reasons and the proof behind each affected-consumer
 record.
 
@@ -105,7 +103,7 @@ variant views keep their own ids. Component suppression is described through
 ## Validation And Publication
 
 The [validation contract](./mokly-component-review-validation.md) owns source
-coverage, affected-consumer proof, canonical ordering, snapshot confinement,
-and strict reader admission. Its rules apply to Serve's background
-classification, the selected comparison, `build`, and `publish`. Every
-producer writes version 8, and every reader accepts only version 8.
+coverage, affected-consumer proof, canonical ordering, and snapshot
+confinement. Its rules apply to Serve's background classification, the
+selected comparison, `build`, and `publish`, which project the validated
+result into the index and the entry details.

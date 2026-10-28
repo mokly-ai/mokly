@@ -40,7 +40,7 @@ export function upload(bytes: Uint8Array): Record<string, unknown> {
   if (bytes.length > 16_384) throw new Error("too-large");
   const value = object(decode(bytes));
   if (!("schemaVersion" in value)) throw new Error("invalid");
-  if (value.schemaVersion !== 2) throw new Error("unsupported-version");
+  if (value.schemaVersion !== 3) throw new Error("unsupported-version");
   const keys = [
     "schemaVersion",
     "moklyVersion",
@@ -52,7 +52,6 @@ export function upload(bytes: Uint8Array): Record<string, unknown> {
     "pullRequest",
     "configPath",
     "exportedAt",
-    "comparisonPath",
   ].sort();
   if (Object.keys(value).sort().join() !== keys.join())
     throw new Error("invalid");
@@ -99,17 +98,9 @@ export function upload(bytes: Uint8Array): Record<string, unknown> {
     (!Number.isSafeInteger(value.pullRequest) || Number(value.pullRequest) <= 0)
   )
     throw new Error("invalid");
-  if (value.comparisonPath === null) {
-    if (value.baseRef !== null || value.baseSha !== null)
-      throw new Error("invalid");
-  } else if (
-    !text(value.baseRef, 255) ||
-    !hex(value.baseSha) ||
-    typeof value.comparisonPath !== "string" ||
-    !/^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/u.test(
-      value.comparisonPath,
-    )
-  )
+  if (value.baseSha === null) {
+    if (value.baseRef !== null) throw new Error("invalid");
+  } else if (!text(value.baseRef, 255) || !hex(value.baseSha))
     throw new Error("invalid");
   return value;
 }
@@ -130,7 +121,7 @@ export function plan(
   marker: string[],
   status = 200,
   contentType: string | null = "application/json",
-) {
+): "gzip" | "identity" {
   if (
     status !== 200 ||
     bytes.length > 16_777_216 ||
@@ -175,6 +166,10 @@ export function plan(
   )
     throw new Error("invalid");
   requestUrl(root.completeUrl, endpoint);
+  return Array.isArray(root.blobEncodings) &&
+    root.blobEncodings.some((item: unknown) => item === "gzip")
+    ? "gzip"
+    : "identity";
 }
 export function complete(
   bytes: Uint8Array,

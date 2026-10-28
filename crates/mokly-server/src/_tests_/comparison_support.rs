@@ -3,14 +3,17 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_compare::comparison_types::{
     ComparisonResult, DocumentComparison, EntryClassification, ViewKey,
 };
+use mokly_graph::cache::Artifact;
 use mokly_graph::key::NodeKey;
 use mokly_graph::types::{DocumentPlan, RenderGeneration};
+use mokly_html::composition::Composed;
+use mokly_html::parse;
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
-use mokly_model::canonical;
 use mokly_model::catalogue::{
     CatalogueModel, EntryContent, EntryMetadata, ModelEntry, SourceLocation,
 };
@@ -21,8 +24,8 @@ use mokly_model::review::{
 };
 use mokly_model::snapshot::{CatalogueChangeSnapshotV4, RemovedEntrySnapshot};
 use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
+use mokly_model::usage::CatalogueUsage;
 use mokly_model::wire_props;
-use serde::Serialize;
 use unimock::Unimock;
 
 use crate::assets::File;
@@ -119,12 +122,6 @@ pub(crate) fn accepted(
     })
 }
 
-/// The compact canonical bytes of a value: sorted keys, no whitespace, one final LF.
-pub(crate) fn compact(value: &impl Serialize) -> String {
-    let value = canonical::sorted(serde_json::to_value(value).unwrap());
-    format!("{}\n", serde_json::to_string(&value).unwrap())
-}
-
 pub(crate) fn snapshot(accepted: Option<Arc<Accepted>>) -> Arc<Snapshot> {
     let mut snapshot = (*publication_support::snapshot(0, Arc::new(Unimock::new(())))).clone();
     snapshot.changes = accepted;
@@ -139,7 +136,7 @@ pub(crate) fn snapshot(accepted: Option<Arc<Accepted>>) -> Arc<Snapshot> {
 
 pub(crate) fn files() -> BTreeMap<String, File> {
     BTreeMap::from([(
-        "review.json".into(),
+        "entries/sample.json".into(),
         File {
             bytes: "{}".into(),
             content_type: "application/json; charset=utf-8".into(),
@@ -226,4 +223,25 @@ pub(crate) fn historical() -> Arc<Accepted> {
     });
     result.entries[0].documents[0].before_route = Some("sample/index.html".into());
     value
+}
+
+/// The removed page's base document, parsed so its preview can be projected.
+pub(crate) fn history() -> Arc<Artifact> {
+    Arc::new(Artifact {
+        bytes: b"<p>History</p>".to_vec(),
+        content_type: "text/html".into(),
+        fragment: None,
+        document: Some(Composed {
+            tree: parse::html(DeliveredHtml::document("<p>History</p>")),
+            usage: CatalogueUsage::Ready {
+                instances: vec![],
+                slots: vec![],
+                ranges: vec![],
+            },
+            warnings: vec![],
+            resources: vec![],
+            components: vec![],
+            links: vec![],
+        }),
+    })
 }

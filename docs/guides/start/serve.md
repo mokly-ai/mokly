@@ -43,10 +43,8 @@ npx mokly serve --no-watch
 That serves one deterministic snapshot: the same fast start, without picking
 up later edits.
 
-Serve normally writes nothing to `mokly-generated/`. For an output tree that
-updates after each successful complete compilation, use `npx mokly serve --build`.
-Add `--no-watch` to write just once after the initial compilation. The parent
-process handles the write; failed compiles leave the last-good tree intact.
+Serve keeps the rendered catalogue in memory and writes nothing into your
+repository. [Build](/docs/start/build/) the catalogue when you need it as files.
 
 ## What you can do there
 

@@ -89,7 +89,7 @@ const start = (id: string, options: HostOptions = {}) => {
       if (
         typeof host.props.index === "object" &&
         !(host.props.index instanceof URL) &&
-        host.props.index.schemaVersion === 7
+        host.props.index.schemaVersion === 8
       )
         host.details = browserDetails(host.props.index, host.details);
       const node = <MoklyViewer {...host.props} ref={ref} />;

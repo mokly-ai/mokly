@@ -11,8 +11,12 @@ use crate::key::{NodeKind, key};
 use crate::requests::{MemoryRequests, Requests};
 
 /// Adapter around one sidecar bundle generation; consume through `dyn FragmentRenderer`.
+/// A component fragment key covers the generation, handle, effective entry and saved
+/// slots, props, render kind, viewport, scheme, ignore scope, and supplied slots, so
+/// equal requests share one cached render. A page key covers the generation and handle.
 pub struct MemoFragments {
-    /// Content-addressed sidecar bundle generation, including its module graph.
+    /// Fingerprint of the content-addressed sidecar bundle generation, including its
+    /// module graph, its class-map table digest, and its binding table.
     pub generation: String,
     /// The actual sidecar rendering boundary.
     pub renderer: Arc<dyn FragmentRenderer>,

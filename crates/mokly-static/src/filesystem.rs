@@ -53,7 +53,8 @@ pub trait Files: Send + Sync {
     fn unlink(&self, path: &Path) -> Result<()>;
     /// Remove an empty directory only.
     fn rmdir(&self, path: &Path) -> Result<()>;
-    /// Remove only a private operation-owned stage.
+    /// Remove only a private operation-owned stage, the one recursive removal.
+    /// A non-following stat makes a link or a file at that path fail.
     fn remove_stage(&self, path: &Path) -> Result<()>;
 }
 

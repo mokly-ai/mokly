@@ -1,18 +1,12 @@
 # Live catalogue evidence updates
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Revisions and publication
 
-Serve has one update model: one integer `revision` in the catalogue index,
-raised by one per publication, under the
-[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve). A
-publication is one completed action: a rebuild after a source change, a
-Changes completion or status move, a bundle change, or a completed on-demand
-render; the server may combine several completions into one publication.
-There is no separate content or evidence version: a source edit and a usage
-completion publish the same way, and the shell decides per frame through each
-view's `documentKey` in the index.
+Serve has one update model: the publications and the event stream of the
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). There is no
+separate content or evidence version: a source edit and a usage completion
+publish the same way, and the shell decides per frame through each view's
+`documentKey` in the index.
 
 Evidence travels only in the index and in the entry details. The index
 carries `changesStatus`, each entry's `changes`, each view's `comparison`,
@@ -25,30 +19,24 @@ temporary prop preview of the component controls contract uses the usage
 records of its own render response and never enters a detail.
 An included entry's detail carries direct `reasons` in the review v8 shape while Changes is ready, independently of workspace readiness.
 
-Document responses do not wait for evidence publication. One application-owned
-publisher coalesces completed routes, skips recorded routes and routes with no
-detail views, and publishes ready or unavailable usage. Closing Serve fences
-new publications and drains that task. A page or Markdown render does not
-raise the revision only because its document completed.
+Document responses do not wait for evidence publication. Completed routes
+coalesce into publications of ready or unavailable usage, and a route with no
+detail views publishes nothing. Closing Serve stops new publications. A page
+or Markdown render does not raise the revision only because its document
+completed.
 A completion that changes no detail publishes nothing, but its route still
 counts as completed. Its current revision and live render validity stay intact.
 After a rebuild, ready usage reused for an equal `documentKey` is already
 recorded as complete. Its later completion publishes no revision.
 
-The event stream at `/mokly-viewer/events` writes one message per
-publication whose `id` is the new revision and whose `data` is the server's
-`deploymentId`, and one message with the current values on every new
-connection, so a reconnecting shell catches up at once and a shell that
-reconnects to another server process performs a full page load. The stream
-exists only in Serve.
+A reconnecting shell catches up at once through the message that the event
+stream writes on every new connection. The stream exists only in Serve.
 
 ## Browser adoption
 
-On a message whose `data` differs from the installed `deploymentId` the
-standalone shell performs a full page load. On a message above the installed
-revision the shell cancels a refresh still in flight, fetches the index and the current route's details, and adopts them
-in one store commit under the shell delivery fences; the page never reloads.
-During and after adoption the shell keeps the navigation tree, the
+The shell adopts a publication under the
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve); the page
+never reloads for it. During and after adoption the shell keeps the navigation tree, the
 All/Changes buttons, the mounted preview frames, the filter, search text,
 section and folder disclosure, focus, the drawer, and scroll positions. It
 updates the Changes count and status, the changed-entry marks, and the
@@ -57,14 +45,10 @@ and additions and removals follow the canonical server order after the
 current tree. Removed screens and components stay in All, and removed pages
 and documents appear only in Changes.
 
-The shell reloads only the mounted frames whose `documentKey` in the
-refreshed index changed, whether the frame shows a screen or component view,
-a page, a document, or a use-case step; a frame whose key is unchanged keeps
-its document, scroll, and selection. When the refreshed index does not list the current entry, the route shows the
-missing state and keeps the URL until an index lists the entry again. A removed entry's detail is fetched from the
-generation the refreshed index names; a record absent from the refreshed index shows the missing state. When a fetch fails or the pair disagrees after
-one more index fetch, the shell keeps its installed state and shows the entry
-as unavailable with retry, and the next message starts a fresh refresh.
+A frame whose `documentKey` is unchanged keeps its document, scroll, and
+selection. A removed entry's detail is fetched from the generation the
+refreshed index names; a record absent from the refreshed index shows the
+missing state.
 
 Changes `preparing`, loading, and empty or unavailable states use the sidebar
 design of the [on-demand contract](./mokly-on-demand.md); `preparing`
@@ -77,9 +61,8 @@ folder may be collapsed on purpose, and an update cannot clear that search,
 open the disclosure, or scroll the route into view. Explicit navigation still
 reveals its destination under the normal rules.
 
-One effect-scoped subscription owns one `EventSource` on
-`/mokly-viewer/events`, opened when the index carries `live`; abort, page
-exit, or effect replay closes it and any refresh in flight. `EventSource` is
+The shell opens one `EventSource` on `/mokly-viewer/events` when the index
+carries `live`. Abort and page exit close it and any refresh in flight. `EventSource` is
 an optional browser facility: when it is missing, denied, or throws, the shell
 still renders the catalogue, reports the transport failure as a browser
 warning, and leaves only live updates unavailable; a page load fetches the
@@ -131,22 +114,5 @@ later. A component variant uses its own `entryPath`; no route or
 saved-variant field exists. Keep the first occurrence in evidence order:
 affected-consumer record order, then each record's evidence order. Do not
 sort the result or merge distinct entry, view, instance, ownership, removal,
-or eligibility contexts. Deduplication serializes each link once and tracks
-seen keys in one pass. It changes neither Changes membership nor comparison
+or eligibility contexts. Deduplication changes neither Changes membership nor comparison
 eligibility and rewrites no upstream evidence.
-
-## Acceptance
-
-Desktop and mobile browser coverage asserts retained document, navigation
-row, and frame identity, row positions, scroll, the focused search or control
-field, and folder choices across `preparing`, `pending`, ready with zero,
-ready with changes, and `unavailable` states. Cover a Changed selection while
-its preview is unchanged, a usage completion during a temporary prop edit,
-later variant and scheme switches, removed row membership and order,
-superseded responses, navigation races, reconnect catch-up, and two
-publications in quick succession. Cover the loading, failed, and retry
-presentation without a partial or zero list, and a refresh that reloads only
-the frames whose key changed. A source or resource edit must still refresh
-the rendered content. Test affected-link duplicates across evidence records,
-first-occurrence order, and distinct contexts, with one serialization per
-link and the same projection in Serve and the static output.

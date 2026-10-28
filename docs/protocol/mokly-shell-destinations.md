@@ -9,8 +9,9 @@ the same atomic route or controlled-selection update while an omitted, invalid,
 or repeated axis retains its sticky selection. This also applies when only an
 axis changes on the current destination. In Changes, at least one valid
 explicit axis suppresses first-changed-view landing; invalid or repeated values
-do not. Embedded and standalone shells use this one parser, so controlled hosts
-receive the complete proposal and commit nothing until they supply it back.
+do not. Embedded and standalone shells apply the same axis rules. Controlled
+hosts receive the complete proposal and commit nothing until they supply it
+back.
 
 ## Removed-Entry Snapshots
 

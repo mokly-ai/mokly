@@ -18,7 +18,7 @@ use crate::cancellation::BuildCancellation;
 use crate::changes_diagnostics;
 use crate::codes::Code;
 
-use super::build_tests::{config, graphs, options, prepared};
+use super::build_tests::{capture_head, config, graphs, options, prepared};
 
 #[test]
 fn strict_reports_head_and_base_preparation_warnings_after_classification() {
@@ -47,7 +47,8 @@ fn strict_reports_head_and_base_preparation_warnings_after_classification() {
                 .returns(Ok(prepared(vec![head.clone()]))),
         )),
         graphs,
-        changes: Arc::new(Unimock::new(
+        changes: Arc::new(Unimock::new((
+            capture_head(),
             ChangesServiceMock::classify
                 .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Base {
@@ -59,7 +60,7 @@ fn strict_reports_head_and_base_preparation_warnings_after_classification() {
                         },
                     }),
                 })),
-        )),
+        ))),
     };
     let mut options = options();
     options.no_changes = false;
@@ -149,7 +150,8 @@ fn an_invalid_internal_review_is_a_fatal_build_error() {
                 .returns(Ok(prepared(Vec::new()))),
         )),
         graphs,
-        changes: Arc::new(Unimock::new(
+        changes: Arc::new(Unimock::new((
+            capture_head(),
             ChangesServiceMock::classify
                 .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Review {
@@ -158,7 +160,7 @@ fn an_invalid_internal_review_is_a_fatal_build_error() {
                         message: ContractViolation::Review,
                     },
                 })),
-        )),
+        ))),
     };
     let mut options = options();
     options.no_changes = false;

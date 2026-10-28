@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 import type { BrowserContext, Page } from "@playwright/test";
 
-import { availableReview, firstScreen } from "./changes.js";
+import { changesSummary, firstScreen } from "./changes.js";
 import { changesVisible, delivered, observeDelivery } from "./delivery.js";
 import { previewBytes } from "./http.js";
 import type { PreparedFixture } from "./setup.js";
@@ -39,7 +39,7 @@ export async function browse(
   const usableMs = performance.now() - beginning;
   await page.getByRole("searchbox").fill("");
   const comparison =
-    scope === "serve" ? await reviewReadiness(page, fixture, beginning) : {};
+    scope === "serve" ? await changesReadiness(page, fixture, beginning) : {};
   for (const viewport of ["desktop", "mobile"]) {
     await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
     for (const scheme of ["dark", "light"]) {
@@ -91,7 +91,7 @@ export async function browse(
   };
 }
 
-async function reviewReadiness(
+async function changesReadiness(
   page: Page,
   fixture: PreparedFixture,
   beginning: number,
@@ -99,7 +99,5 @@ async function reviewReadiness(
   const current = await delivered(page);
   await changesVisible(page, current.index);
   const changesReadyMs = performance.now() - beginning;
-  const review = await availableReview(page, fixture, current);
-  const reviewAvailableMs = performance.now() - beginning;
-  return { changesReadyMs, reviewAvailableMs, review };
+  return { changesReadyMs, summary: changesSummary(fixture, current) };
 }

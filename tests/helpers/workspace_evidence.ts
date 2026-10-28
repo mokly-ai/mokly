@@ -1,13 +1,12 @@
-/** Review records and rendering shared by the workspace evidence tests. */
+/** Compared-entry records and rendering shared by the workspace evidence tests. */
 
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { RuleEvidence } from "../../packages/viewer/dist/catalogue/types.js";
-import { parseReviewResult } from "../../packages/viewer/dist/review/result_validation.js";
 import type {
-  ReviewEntry,
-  ReviewResult,
+  ComparedEntry,
+  EntryChangeReason,
   ReviewView,
 } from "../../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../../packages/viewer/dist/shell/workspace_data.js";
@@ -31,55 +30,33 @@ export function view(
   return { viewport, colorScheme: "light", state, ignoredIds: [], rules };
 }
 
-/** One changed entry record: a screen, or a component with these props. */
+/** One changed entry's comparison facts: a screen, or a component with saved props. */
 export function entry(
   kind: "screen" | "component",
   path: string,
-  title: string,
-  reasons: ReviewEntry["reasons"],
+  reasons: readonly EntryChangeReason[],
   views: ReviewView[],
-): ReviewEntry {
-  const side = {
-    path,
-    title,
-    props: {},
-    ...(kind === "component" ? { suppliedSlots: [] } : {}),
-  };
-  const state = "changed";
+): ComparedEntry {
   return {
-    kind,
     path,
-    title,
-    before: side,
-    after: side,
-    state,
-    included: true,
+    basePath: path,
     reasons,
     views,
+    ...(kind === "component" ? { savedProps: { before: {}, after: {} } } : {}),
   };
 }
 
-/** A loaded comparison that holds one entry record. */
-export function loaded(entry: ReviewEntry): ReviewResult {
-  return parseReviewResult({
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [entry],
-    affected: [],
-    diagnostics: [],
-  });
-}
-
+/** The evidence markup, with the routed entry's comparison loaded when given. */
 export function renderEvidence(
   data: WorkspaceData,
   variantPath?: string,
-  comparison?: ReviewResult,
+  comparison?: ComparedEntry,
 ): string {
   return renderToStaticMarkup(
     createElement(WorkspaceEvidence, {
-      data,
+      compared: comparison !== undefined,
+      data: comparison ? { ...data, compared: comparison } : data,
       ...(variantPath ? { variantPath } : {}),
-      ...(comparison ? { loaded: comparison } : {}),
     }),
   );
 }

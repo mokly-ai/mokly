@@ -1,4 +1,9 @@
 //! Nonblocking eviction and cleanup of unlocked staging entries only.
+//!
+//! Eviction and stage cleanup run under the short namespace lock, so they only
+//! rename each victim into `trash/`. The recursive delete of the trash runs
+//! later outside that lock, with cancellation checks, and the next cache open
+//! sweeps any trash that an interrupted process left.
 
 use std::path::Path;
 
