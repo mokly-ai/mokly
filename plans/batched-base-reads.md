@@ -1,8 +1,9 @@
 # Batched Base Reads
 
-Status: Active. On branch
-`conductor/perf-2-batched-git-reads-and-base-reads-from-the-extraction`, no
-pull request yet. The plan closes when its pull requests merge.
+Status: Active. [PR #229](https://github.com/mokly-ai/mokly/pull/229) is open
+for design A. Design B continues on the stacked branch
+`conductor/perf-2b-base-reads-from-the-extraction`, with no pull request yet.
+The plan closes when its pull requests merge.
 
 Changes renders the base commit a second time and compares it with the
 working tree. Mokly never checks out the base. It reads each base file through
@@ -369,7 +370,7 @@ failing test first.
   - Outside the scope: `crates/mokly-git/src/checkout.rs`, a failed batch
     still names the first file of the call in its `Conversion` error.
     Separate branch.
-- [ ] Open the first pull request, for design A, with the before and after
+- [x] Open the first pull request, for design A, with the before and after
       table in its body. Put its link in the status paragraph.
 
 ## Milestone 5: Documentation and protocol for extraction reads
