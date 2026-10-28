@@ -508,6 +508,19 @@ Let equal head and base inputs share render cache entries under decision 1.
     the renderer and the preview get their own render input keys under
     every spelling. Effort Large. Covers findings 2 and 5. Previous
     examples: user item 167 in the Rust rebuild plan.
+  - Review 2 at `f0839dfb` checked the fix commits and found four new
+    findings, which the validity check confirmed. Finding 3 of review 2,
+    the sidecar contract sentence about generation ids, is fixed in the
+    commit after merge `eb9fb017`. Open, by severity:
+  - R2-1. Installed-package definitions miss their binding input.
+    Severity Medium, effort Small. Recommended: A, put the binding of a
+    definition without a sidecar source path into every key of its side.
+  - R2-2. An unnamed preview moves every key. Severity Low, category
+    performance, effort Small. Recommended: A, keep the preview names out of
+    the shared part of the keys.
+  - R2-4. No test drives the unnamed-preview path. Severity Low, effort
+    Small. Recommended: B, an integration test with a linked `.storybook`
+    folder.
   - Outside the scope: `crates/mokly-render/src/graph.rs`. `entry_modules`
     splits a handle at its first `#`, so a module path with `#` gets the
     wrong stylesheet module. Separate branch.
