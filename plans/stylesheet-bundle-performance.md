@@ -1,9 +1,9 @@
 # Stylesheet Bundle Performance
 
-Status: Active. On branch
-`conductor/perf-5-parallel-css-bundling-and-the-cross-attempt-stylesheet-cache`,
-no pull request yet. The work has two pull requests: step A, then step B.
-The plan closes when the step B pull request merges.
+Status: Active. The step A pull request,
+[PR #228](https://github.com/mokly-ai/mokly/pull/228), is open. Step B follows
+on the same branch after step A merges. The plan closes when the step B pull
+request merges.
 
 Graph preparation bundles the stylesheet roots on one thread, one root after
 another. On `examples/basic`, one preparation bundles 35 roots in 1.3 to
@@ -388,7 +388,7 @@ Evidence: `.context/perf5-parallel-stylesheets/review-a1.md`,
 `.context/perf5-parallel-stylesheets/validity-a1.md`, and
 `.context/perf5-parallel-stylesheets/review-a2.md`.
 
-- [ ] Open the step A pull request with the before and after table. Put its
+- [x] Open the step A pull request with the before and after table. Put its
       link in the status paragraph.
 
 ## Milestone 6: Documentation and protocol, step B
