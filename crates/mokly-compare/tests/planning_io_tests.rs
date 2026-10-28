@@ -122,8 +122,8 @@ fn fixture(size: usize) -> Fixture {
             .collect::<Vec<_>>(),
     );
     // Git for Windows sets `core.autocrlf=true` for the whole system, which
-    // makes every base read a converted read. Pin identity conversion in the
-    // repository, so these counts measure the batched path on every host.
+    // converts line endings on checkout. Pin identity conversion in the
+    // repository, so the base bytes equal the committed bytes on every host.
     let status = Command::new("git")
         .args(["config", "core.autocrlf", "false"])
         .current_dir(fixture.directory.path())

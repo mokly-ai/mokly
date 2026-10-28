@@ -95,7 +95,7 @@ export function PropSlots({ slots }: { slots: readonly string[] | undefined }) {
 
 /**
  * The Props tab: a selected instance's props; else the shown entry's own
- * fields or saved props, once the routed entry's detail arrives; else why the
+ * fields or saved props, once the route's details arrive; else why the
  * tab has none to show.
  */
 export function WorkspacePropsTab({
@@ -108,7 +108,7 @@ export function WorkspacePropsTab({
 }: {
   controls: ReactNode;
   data: WorkspaceData;
-  /** The routed entry's detail, which alone carries the fields' order. */
+  /** The route's details. The routed entry's own detail carries the fields' order. */
   delivery: DetailDelivery;
   instance: ComponentInstanceRecord | undefined;
   target: ControlTarget | undefined;
@@ -132,7 +132,7 @@ export function WorkspacePropsTab({
 }
 
 /**
- * Props while the routed entry's detail loads, or after its load failed. A
+ * Props while the route's details load, or after one load fails. A
  * replaced catalogue brings new details, so the fields keep waiting for them.
  */
 function PropsDelivery({

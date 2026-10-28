@@ -8,7 +8,7 @@ import { comparisonGeneration } from "./snapshot_identity.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "./types.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
@@ -17,10 +17,31 @@ export interface DetailRequest {
   snapshotId?: string;
 }
 
+/**
+ * The detail that carries a selected entry's workspace lists.
+ * The caller marks current records. Current component variants use their
+ * parent's detail. Historical entries keep their own detail, with or without
+ * a snapshot identity.
+ */
+export function workspaceDetailRequest(
+  entry: Pick<CatalogueRecord, "kind" | "path"> & { variantOf?: string },
+  current: boolean,
+  snapshotId?: string,
+): DetailRequest {
+  const path =
+    current && entry.kind === "component" && entry.variantOf !== undefined
+      ? entry.variantOf
+      : entry.path;
+  return {
+    path,
+    ...(snapshotId === undefined ? {} : { snapshotId }),
+  };
+}
+
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
-  | { kind: "accepted"; detail: EntryDetailV2 }
-  | { kind: "revision"; detail: EntryDetailV2 }
+  | { kind: "accepted"; detail: EntryDetailV3 }
+  | { kind: "revision"; detail: EntryDetailV3 }
   | { kind: "deployment" }
   | { kind: "rejected" };
 
@@ -42,7 +63,7 @@ export function detailKey(request: DetailRequest): string {
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
-  detail: EntryDetailV2,
+  detail: EntryDetailV3,
 ): DetailFence {
   if (request.snapshotId === undefined) {
     if (detail.deploymentId === undefined) return { kind: "rejected" };
@@ -91,11 +112,23 @@ export function currentEntry(
 function matches(
   index: CatalogueReadModel,
   entry: CatalogueRecord,
-  detail: EntryDetailV2,
+  detail: EntryDetailV3,
   historical: boolean,
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)
     return false;
+  if (entry.kind === "screen" || entry.kind === "component") {
+    const workspace = detail.workspace;
+    const ownsWorkspace =
+      workspaceDetailRequest(entry, !historical).path === entry.path;
+    if (
+      workspace &&
+      ownsWorkspace &&
+      (workspace.usedBy === undefined || workspace.affected === undefined)
+    ) {
+      return false;
+    }
+  }
   if (entry.kind !== "screen" && entry.kind !== "component")
     return detail.views.length === 0;
   if (

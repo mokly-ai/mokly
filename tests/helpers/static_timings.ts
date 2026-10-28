@@ -23,6 +23,12 @@ interface Timing {
   changed?: number;
   ignoredOnly?: number;
   kind?: string;
+  phase?: string;
+  hits?: number;
+  misses?: number;
+  evictions?: number;
+  chargedBytes?: number;
+  entries?: number;
 }
 
 export function timings(stderr: string): Timing[] {

@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::EntryKind;
 use mokly_model::projection;
-use mokly_model::public_detail::{EntryDetailV2, Workspace};
+use mokly_model::public_detail::{EntryDetailV3, Workspace};
 use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
 use mokly_model::snapshot::RemovedPagePreview;
 use mokly_model::versions;
@@ -54,7 +54,7 @@ pub fn details(
     result: &ComparisonResult,
     historical: &CatalogueReadModel,
     generation: &str,
-) -> Result<BTreeMap<String, EntryDetailV2>> {
+) -> Result<BTreeMap<String, EntryDetailV3>> {
     let mut details = projection::pending_details(
         &result.before.catalogue().model,
         historical,
@@ -130,13 +130,13 @@ pub fn previews(result: &ComparisonResult) -> Vec<RemovedPagePreview> {
 
 /// Initialize comparison workspaces after historical usage has been proved.
 /// Removed screens and component parents and variants share this policy in every host.
-pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV2>) {
+pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV3>) {
     for detail in details.values_mut() {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
             detail.workspace = Some(Workspace {
                 comparison_eligible: false,
-                used_by: Vec::new(),
-                affected: Vec::new(),
+                used_by: Some(Vec::new()),
+                affected: Some(Vec::new()),
                 related_components: Vec::new(),
                 input_changes: Vec::new(),
             });

@@ -30,7 +30,7 @@ use crate::serve_timing::ServeTiming;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use crate::serve_watch::{WatchInputs, WatchedInputs};
 use crate::terminal::Terminal;
-use crate::{serve_controls, serve_preparation, serve_shutdown, serve_signals, serve_trace};
+use crate::{render_runtime, serve_controls, serve_preparation, serve_shutdown, serve_signals};
 
 pub(super) fn run(
     common: &Common,
@@ -40,17 +40,18 @@ pub(super) fn run(
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
     let entropy: Arc<dyn Entropy> = Arc::new(RandomEntropy);
-    if common.debug_timings
-        && !serve_trace::install(terminal.clone(), entropy.secret(), redactor.clone())
-    {
-        terminal.stderr(&style.error(
-            Code::ServerFailed,
-            "Timing diagnostics could not start.",
-            &redactor,
-        ));
+    let cache = render_runtime::cache();
+    let started = ServeTiming::start(
+        common,
+        style,
+        &redactor,
+        &terminal,
+        entropy.as_ref(),
+        cache.clone(),
+    );
+    let Some(mut timing) = started else {
         return ExitCode::FAILURE;
-    }
-    let mut timing = ServeTiming::new();
+    };
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(error) => {
@@ -84,7 +85,8 @@ pub(super) fn run(
         style: style.clone(),
         redactor: redactor.clone(),
     });
-    let services = match ServeServices::new(&cwd, common, diagnostics, cancellation.clone()) {
+    let services = match ServeServices::new(&cwd, common, diagnostics, cancellation.clone(), cache)
+    {
         Ok(services) => services,
         Err(error) => {
             reporter.preparation_failed(attempt.as_ref(), &error);

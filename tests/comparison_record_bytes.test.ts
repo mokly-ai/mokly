@@ -11,13 +11,13 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import type { CatalogueReadModel } from "../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
-import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
+import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
 
 import { completed, serve } from "./helpers/mokly_serve.js";
 import { build, fixture } from "./helpers/static_changes.js";
 
 /** The comparison facts of one current detail, without its deployment fences. */
-function facts(detail: EntryDetailV2) {
+function facts(detail: EntryDetailV3) {
   return {
     before: detail.before,
     reasons: detail.reasons,
@@ -40,7 +40,7 @@ async function served(context: TestContext, root: string) {
       url,
       context.signal,
       "home",
-    )) as { index: CatalogueReadModel; detail: EntryDetailV2 };
+    )) as { index: CatalogueReadModel; detail: EntryDetailV3 };
     assert.equal(index.changesStatus, "ready");
     const removed: Record<string, string> = {};
     for (const { entry } of index.removedEntries) {
@@ -74,7 +74,7 @@ test(
           path.join(built.output, "mokly-viewer/entries/home.json"),
           "utf8",
         ),
-      ) as EntryDetailV2;
+      ) as EntryDetailV3;
       assert.equal(home.before?.path, "home");
       assert.ok(home.views.every((view) => view.state === "changed"));
       assert.ok(

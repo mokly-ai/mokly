@@ -2,10 +2,21 @@
 
 use mokly_css::error::CssError;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
+use mokly_sidecar::error::Error;
 
 use crate::error::RenderError;
 
 impl RenderError {
+    /// A request that timed out or whose sidecar exited on both attempts.
+    pub(crate) fn lost_child(&self) -> bool {
+        matches!(
+            self,
+            Self::Sidecar {
+                source: Error::RequestTimeout { .. } | Error::RequestCrashed { .. },
+            }
+        )
+    }
+
     pub(crate) fn diagnostic(&self) -> Option<RuntimeDiagnostic> {
         let message = match self {
             Self::Sidecar { source } => return source.diagnostic(),

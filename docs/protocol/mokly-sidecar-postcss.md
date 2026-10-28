@@ -19,6 +19,16 @@ Child startup errors, exit, IPC disconnection, and failed request writes settle
 affected requests without waiting for the request deadline. Errors raised before
 request attachment remain failures of that request. A failed child cannot accept
 later work; a later request starts a new child for the context.
+The core sends one request of a context at a time. An effective input whose
+request failed fails again with the same diagnostic for the rest of its
+context, without another request. When a request times out or its child exits
+on both attempts, every request of that context that already waits for its
+turn fails with the same diagnostic. A request that arrives later starts a new
+child. Decision: a failure stays with its input and reaches the waiting
+requests, so a hung plugin delays a failed preparation by one deadline pair.
+Failing every later request of the context after a timeout was rejected,
+because one transient fault would then fail every new stylesheet of a live
+generation until the next rebuild.
 When a PostCSS request reaches its deadline, the timeout diagnostic includes
 deterministic timings for child spawn, configuration load, plugin construction,
 and the latest stylesheet run. Each phase reports its elapsed milliseconds or

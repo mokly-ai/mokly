@@ -12,7 +12,7 @@ use crate::projection_workspace;
 
 use super::support::{classified, details, entry, result, with_lookup};
 
-fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
+pub(super) fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
     AffectedConsumer {
         changed_component_id: "button".into(),
         consumer: AffectedConsumerAddress {
@@ -79,6 +79,8 @@ fn removed_components_can_compare_but_removed_screens_cannot() {
             .as_mut()
             .unwrap()
             .used_by
+            .as_mut()
+            .unwrap()
             .push(UsageLink {
                 entry_path: path.into(),
                 entry_kind: if kind == EntryKind::Screen {
@@ -104,10 +106,23 @@ fn removed_components_can_compare_but_removed_screens_cannot() {
             eligible
         );
         assert_eq!(
-            historical["button"].workspace.as_ref().unwrap().affected[0].comparison_eligible,
+            historical["button"]
+                .workspace
+                .as_ref()
+                .unwrap()
+                .affected
+                .as_ref()
+                .unwrap()[0]
+                .comparison_eligible,
             eligible
         );
-        let usage = &historical["button"].workspace.as_ref().unwrap().used_by[0];
+        let usage = &historical["button"]
+            .workspace
+            .as_ref()
+            .unwrap()
+            .used_by
+            .as_ref()
+            .unwrap()[0];
         assert_eq!(usage.comparison_eligible, eligible);
         assert_eq!(usage.title, "Historical consumer");
     }
@@ -154,10 +169,26 @@ fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_orde
         1
     );
     assert_eq!(
-        current["button"].workspace.as_ref().unwrap().affected.len(),
+        current["button"]
+            .workspace
+            .as_ref()
+            .unwrap()
+            .affected
+            .as_ref()
+            .unwrap()
+            .len(),
         1
     );
-    assert!(!current["button"].workspace.as_ref().unwrap().affected[0].removed);
+    assert!(
+        !current["button"]
+            .workspace
+            .as_ref()
+            .unwrap()
+            .affected
+            .as_ref()
+            .unwrap()[0]
+            .removed
+    );
     current
         .get_mut("home")
         .unwrap()
@@ -176,7 +207,14 @@ fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_orde
         });
     projection_workspace::apply(&mut current, &result).unwrap();
     assert_eq!(
-        current["button"].workspace.as_ref().unwrap().affected.len(),
+        current["button"]
+            .workspace
+            .as_ref()
+            .unwrap()
+            .affected
+            .as_ref()
+            .unwrap()
+            .len(),
         1
     );
     assert_eq!(
@@ -215,4 +253,29 @@ fn comparison_evidence_does_not_invent_a_workspace_before_usage_is_ready() {
     current.get_mut("button").unwrap().workspace = None;
     projection_workspace::apply(&mut current, &result).unwrap();
     assert!(current["button"].workspace.is_none());
+}
+
+#[test]
+fn a_current_variant_keeps_no_workspace_lists() {
+    let parent = entry("button", EntryKind::Component, None);
+    let variant = entry("button/default", EntryKind::Component, Some("button"));
+    let result = result(
+        vec![parent.clone(), variant.clone()],
+        vec![parent, variant],
+        vec![
+            classified("button", EntryKind::Component, ReviewState::Unchanged),
+            classified(
+                "button/default",
+                EntryKind::Component,
+                ReviewState::Unchanged,
+            ),
+        ],
+    );
+    let mut result = result;
+    with_lookup(&mut result);
+    let mut current = details(&result.after.catalogue().model);
+    projection_workspace::apply(&mut current, &result).unwrap();
+    let workspace = current["button/default"].workspace.as_ref().unwrap();
+    assert!(workspace.used_by.is_none());
+    assert!(workspace.affected.is_none());
 }
