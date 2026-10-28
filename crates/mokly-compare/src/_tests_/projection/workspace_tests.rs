@@ -256,7 +256,7 @@ fn comparison_evidence_does_not_invent_a_workspace_before_usage_is_ready() {
 }
 
 #[test]
-fn a_current_variant_keeps_usage_but_drops_affected_lists() {
+fn a_current_variant_keeps_no_workspace_lists() {
     let parent = entry("button", EntryKind::Component, None);
     let variant = entry("button/default", EntryKind::Component, Some("button"));
     let result = result(
@@ -276,6 +276,6 @@ fn a_current_variant_keeps_usage_but_drops_affected_lists() {
     let mut current = details(&result.after.catalogue().model);
     projection_workspace::apply(&mut current, &result).unwrap();
     let workspace = current["button/default"].workspace.as_ref().unwrap();
-    assert!(workspace.used_by.is_some());
+    assert!(workspace.used_by.is_none());
     assert!(workspace.affected.is_none());
 }

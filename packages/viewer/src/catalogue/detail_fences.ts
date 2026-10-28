@@ -119,21 +119,14 @@ function matches(
     return false;
   if (entry.kind === "screen" || entry.kind === "component") {
     const workspace = detail.workspace;
-    if (historical) {
-      if (
-        workspace &&
-        (workspace.usedBy === undefined || workspace.affected === undefined)
-      )
-        return false;
-    } else if (workspace) {
-      const currentVariant =
-        entry.kind === "component" && entry.variantOf !== undefined;
-      if (
-        !currentVariant &&
-        (workspace.usedBy === undefined || workspace.affected === undefined)
-      ) {
-        return false;
-      }
+    const ownsWorkspace =
+      workspaceDetailRequest(entry, !historical).path === entry.path;
+    if (
+      workspace &&
+      ownsWorkspace &&
+      (workspace.usedBy === undefined || workspace.affected === undefined)
+    ) {
+      return false;
     }
   }
   if (entry.kind !== "screen" && entry.kind !== "component")

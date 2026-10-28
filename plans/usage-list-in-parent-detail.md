@@ -115,8 +115,8 @@ The user answered these on 2026-10-27.
   empty list for each screen, and no list for a variant. It stops cloning the
   parent's list into each variant.
 - `projection_workspace::apply` updates the eligibility of the rows that
-  exist. It sets `affected` only on details that are not current variants. A
-  removed detail is the one with `generation`.
+  exist. It fills only lists that the incoming workspace already has. An
+  absent list stays absent.
 - `projection_removed::workspaces` keeps empty lists on every removed screen
   and component.
 - The core keeps the version 2 requirement where the lists stay.

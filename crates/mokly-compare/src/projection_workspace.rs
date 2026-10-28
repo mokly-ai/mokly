@@ -13,7 +13,8 @@ use crate::{projection_affected, projection_inputs};
 /// Join current usage with retained comparison evidence without changing document bytes.
 /// The caller supplies settled view usage and current Used by lists.
 /// This updates comparison-owned fields and retains those Used by rows.
-/// An absent workspace stays absent until the caller proves its usage inputs.
+/// An absent workspace stays absent. An absent list stays absent until the
+/// caller proves its usage inputs.
 /// Metadata, counterparts, removals, and consumer links are indexed once for the batch.
 pub fn apply(
     details: &mut BTreeMap<String, EntryDetailV3>,
@@ -50,14 +51,9 @@ pub fn apply(
             .and_then(|metadata| metadata.variant_of.as_deref())
             .unwrap_or(path);
         workspace.related_components = affected.related.get(path).cloned().unwrap_or_default();
-        let current_variant = detail.entry.kind == EntryKind::Component
-            && detail.generation.is_none()
-            && context
-                .metadata
-                .get(path.as_str())
-                .is_some_and(|metadata| metadata.variant_of.is_some());
-        workspace.affected =
-            (!current_variant).then(|| affected.links.get(parent).cloned().unwrap_or_default());
+        if workspace.affected.is_some() {
+            workspace.affected = Some(affected.links.get(parent).cloned().unwrap_or_default());
+        }
         workspace.input_changes.clear();
         projection_inputs::append(
             path,

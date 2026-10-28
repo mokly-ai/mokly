@@ -9,7 +9,6 @@ use mokly_compare::lookup::{Destination, Lookup, Parent};
 use mokly_compare::{projection_index, projection_workspace};
 use mokly_model::axes::{EntryKind, Viewport};
 use mokly_model::projection;
-use mokly_model::public_detail::Workspace;
 use mokly_model::review::ReviewState;
 use mokly_model::review_affected::ReviewSide;
 use serde::Deserialize;
@@ -232,15 +231,13 @@ fn affected_destinations(result: &ComparisonResult) {
     let state = projection_index::publication("mokly.config.json".into(), "fixture-base");
     let index = projection::index(model, &[], &state).unwrap();
     let mut details = projection::pending_details(model, &index, &[]);
-    for detail in details.values_mut() {
-        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
-            detail.workspace = Some(Workspace {
-                comparison_eligible: false,
-                used_by: Some(vec![]),
-                affected: Some(vec![]),
-                related_components: vec![],
-                input_changes: vec![],
-            });
+    let workspace_details: BTreeMap<_, _> = details
+        .iter()
+        .map(|(path, detail)| (path.clone(), detail))
+        .collect();
+    for (path, workspace) in mokly_model::projection_usage::workspaces(&workspace_details, &index) {
+        if let Some(detail) = details.get_mut(&path) {
+            detail.workspace = Some(workspace);
         }
     }
     projection_workspace::apply(&mut details, result).unwrap();

@@ -172,6 +172,14 @@ test("workspace lists stay on current parents and variant lists are ignored", ()
     fenceDetail(index, { path: "components/action/default" }, variant).kind,
     "accepted",
   );
+  const screenVariant = current("product/browse/home/empty", (detail) => {
+    delete (detail.workspace as unknown as Record<string, unknown>).usedBy;
+  });
+  assert.equal(
+    fenceDetail(index, { path: "product/browse/home/empty" }, screenVariant)
+      .kind,
+    "rejected",
+  );
 });
 
 test("removed details may omit their workspace, but partial lists are rejected", () => {

@@ -4,7 +4,7 @@ use mokly_model::axes::EntryKind;
 use mokly_model::review::ReviewState;
 use mokly_model::review_affected::ConsumerKind;
 
-use crate::projection_workspace;
+use crate::{projection_removed, projection_workspace};
 
 use super::support::{classified, details, entry, result, with_lookup};
 use super::workspace_tests::effect;
@@ -48,6 +48,7 @@ fn a_removed_component_variant_keeps_its_parent_affected_list() {
         .push(effect("button/default", ConsumerKind::Component));
     with_lookup(&mut result);
     let mut details = details(&result.before.catalogue().model);
+    projection_removed::workspaces(&mut details);
     details.get_mut("button/default").unwrap().generation = Some("f".repeat(64));
     projection_workspace::apply(&mut details, &result).unwrap();
     let parent_affected = details["button"]

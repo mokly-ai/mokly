@@ -1,11 +1,11 @@
 //! A reused donor path cannot erase its variants' retained Before usage.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_workspace};
 use mokly_model::projection;
-use mokly_model::public_detail::{UsageLink, Workspace};
+use mokly_model::public_detail::UsageLink;
 use mokly_model::review_affected::{ConsumerKind, ReviewSide};
 
 #[expect(
@@ -87,13 +87,15 @@ fn usage_links(result: &ComparisonResult) -> Vec<UsageLink> {
     let state = projection_index::publication("mokly.config.json".into(), "fixture-base");
     let index = projection::index(model, &[], &state).unwrap();
     let mut details = projection::pending_details(model, &index, &[]);
-    details.get_mut("badge").unwrap().workspace = Some(Workspace {
-        comparison_eligible: false,
-        used_by: Some(vec![]),
-        affected: Some(vec![]),
-        related_components: vec![],
-        input_changes: vec![],
-    });
+    let workspace_details: BTreeMap<_, _> = details
+        .iter()
+        .map(|(path, detail)| (path.clone(), detail))
+        .collect();
+    for (path, workspace) in mokly_model::projection_usage::workspaces(&workspace_details, &index) {
+        if let Some(detail) = details.get_mut(&path) {
+            detail.workspace = Some(workspace);
+        }
+    }
     projection_workspace::apply(&mut details, result).unwrap();
     details
         .remove("badge")
