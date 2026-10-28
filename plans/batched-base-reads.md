@@ -283,18 +283,33 @@ failing test first.
 
 ## Milestone 4: Verification and measurement of batch conversion
 
-- [ ] Run `cargo test -p mokly-git`, `cargo test -p mokly-compare`,
+- [x] Run `cargo test -p mokly-git`, `cargo test -p mokly-compare`,
       `cargo test -p mokly-cli`, `cargo xtask check --suite repository`,
       `npm run format:check`, and `tests/markdown_links.test.ts`.
-- [ ] Measure with the shared method on the release build: cold and warm
+- [x] Measure with the shared method on the release build: cold and warm
       `examples/basic`, the edit run, and both small fixtures. Acceptance: the
       `review.base-extraction` span of a cold run is under 5 s. Save the
       records under `.context/perf/` and the summary under
       `.context/batched-base-reads/`.
-- [ ] Build `examples/basic` with `--strict --base fc8535b0` with the
+- [x] Build `examples/basic` with `--strict --base fc8535b0` with the
       baseline binary and with the new binary. Compare the two output
       directories byte for byte. Record the result.
-- [ ] Merge `origin/main` with the `git-merge` skill. Commit and push.
+- Results, medians against the baseline medians:
+  - Cold `examples/basic`: `review.base-extraction` 0.8 s versus an untimed
+    gap of 74.6 s. `changes.classify` 46.0 s versus 129.6 s.
+  - Warm `examples/basic`: `changes.classify` 46.3 s versus 51.4 s. The four
+    base spans together 13.2 s versus 16.1 s.
+  - Edit run: second `changes.classify` 62.7 s versus 68.6 s. Edit to the
+    end of the second classification 84.3 s versus 93.5 s.
+  - Small React fixture: `changes.classify` 10.0 s cold and 9.5 s warm
+    versus 11.4 s and 11.2 s. Small HTML fixture with `* text=auto`: 0.9 s
+    versus 1.2 s.
+  - The build with base `fc8535b0` wrote identical output, 2,382 files, in
+    47 s versus 98 s.
+- Evidence: `.context/batched-base-reads/after-a.md` and
+  `.context/batched-base-reads/m4-repository-check.log`.
+- [x] Merge `origin/main` with the `git-merge` skill. Commit and push.
+      Merge `d385bb75` took #221 with no conflict and an empty remerge diff.
 - [ ] Review the complete diff against `origin/main` with the
       `implementation-review` skill. Apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
