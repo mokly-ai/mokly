@@ -14,9 +14,11 @@ use mokly_watch::plan::Plan;
 
 use crate::serve_watch::watch_result;
 
-/// A write during a preparation can carry an earlier time on file systems with coarse
-/// timestamps, so a change this close before the start still counts.
-const MARGIN: Duration = Duration::from_secs(2);
+/// The kernel stamps writes from a coarse clock, so a change this close before the start
+/// still counts.
+const MARGIN: Duration = Duration::from_millis(100);
+/// File systems that keep whole seconds round a write down by up to this much.
+const WHOLE_SECOND_MARGIN: Duration = Duration::from_secs(2);
 
 /// Native observers, the wall clock, and file modification times behind one boundary.
 #[cfg_attr(test, unimock::unimock(api = ObserversMock))]
@@ -64,16 +66,13 @@ pub(super) fn changed(
     started: SystemTime,
     files: &dyn Observers,
 ) -> Vec<mokly_watch::error::Result<Event>> {
-    let earliest = started
-        .checked_sub(MARGIN)
-        .unwrap_or(SystemTime::UNIX_EPOCH);
     let now = files.now();
     paths
         .iter()
         .filter(|path| {
             files
                 .modified(path)
-                .is_some_and(|time| earliest <= time && time <= now)
+                .is_some_and(|time| earliest(started, time) <= time && time <= now)
         })
         .map(|path| {
             Ok(Event {
@@ -82,4 +81,16 @@ pub(super) fn changed(
             })
         })
         .collect()
+}
+
+/// The earliest time of a change during a preparation that began at `started`. A time
+/// with no sub-second part may come from a file system that keeps whole seconds.
+fn earliest(started: SystemTime, time: SystemTime) -> SystemTime {
+    let whole = time
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .is_ok_and(|elapsed| elapsed.subsec_nanos() == 0);
+    let margin = if whole { WHOLE_SECOND_MARGIN } else { MARGIN };
+    started
+        .checked_sub(margin)
+        .unwrap_or(SystemTime::UNIX_EPOCH)
 }

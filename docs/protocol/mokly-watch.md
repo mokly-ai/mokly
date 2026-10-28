@@ -133,14 +133,19 @@ unobserved directory during the preparation would stay unseen.
 An exact input file outside the roots can lie in a directory that the active
 watcher did not observe when the preparation began. After the candidate's
 watcher attaches, Serve treats each such regular file as changed when its
-modification time falls between two seconds before the preparation began and
-the moment of the check. Serve rebuilds for that change after it adopts the
-candidate, at startup and on every rebuild. When Serve prepares again, the
-check follows the second preparation.
+modification time falls between the start of the preparation and the moment
+of the check. The window opens 100 milliseconds before the start, because
+writes carry times from a coarse clock, or two seconds before the start for
+a time with no sub-second part, because some file systems keep whole
+seconds. Serve rebuilds for that change after it adopts the candidate, at
+startup and on every rebuild. When Serve prepares again, the check follows
+the second preparation.
 Decision: modification times decide for exact files. Requiring their
 directories in the coverage rule was rejected, because every catalogue then
 prepares twice again. Comparing content digests was rejected, because the
-core and the sidecar read the files and no one record holds every digest.
+core and the sidecar read the files and no one record holds every digest. A
+two-second window for every file was rejected, because files written just
+before startup, such as a generated catalogue, would rebuild it once more.
 
 Initial startup selects its port under the
 [package contract](./mokly-package.md#cli). Exhausting the range or another

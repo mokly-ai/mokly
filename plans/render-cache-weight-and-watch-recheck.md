@@ -95,6 +95,14 @@ Decisions D1 to D4 were asked on 2026-10-27. The user answered on
   any entry, so a tool that writes into it during each preparation would
   start rebuilds without end. Rejected: every target that is not a root,
   as the option text said.
+- D9 (2026-10-28, agent, under the user's rule): the D6 window opens 100 ms
+  before the preparation start, and two seconds before it only for a file
+  time with no sub-second part. Reason: CI showed that a two-second window
+  for every file replays fixture sources written just before startup. The
+  extra rebuild at readiness made the React large watch browser test fail.
+  The 100 ms cover the coarse kernel clock that stamps writes, and whole
+  seconds mark the file systems that round times down. Rejected: no margin,
+  which misses edits on such file systems.
 - D4, the recheck: B, the coverage rule. It supersedes decision 2. Rejected:
   A, decision 2 as written, because discovery reports no roots, C, a narrow
   stylesheet recheck, because it changes the code of perf 5, and D, no
@@ -449,6 +457,31 @@ Apply the orchestrator's answers D6 and D7 to review findings 1 and 3.
       `tests/static_publication_cases.test.ts`. A timing layer with a
       separate cache fails both checks.
 - [x] Run the checks, commit, and push. Update the pull request.
+
+## Milestone 8: CI fixes
+
+Fix the two CI failures of the review answers. The Repository failure is a
+new RustSec advisory for `pulldown-cmark` on every pull request, which the
+orchestrator fixes in PR #230.
+
+- [x] Native Windows: `cache_trace_tests` gave the timing layer the original
+      unimock cache mock. The tracing dispatcher released the layer on
+      another thread, so unimock panicked, and the poisoned tracing callsite
+      lock failed 23 other tests. The tests now keep the original mock and
+      give the layer a clone, as the clock mocks already do. Every assertion
+      stays. The failure reproduced only on the Windows runner.
+- [x] Browser shard 1: `large_watch.spec.ts` "large watch delivers browser
+      evidence for react" failed with two 404 responses for
+      `/static/assets/mark.svg`. Locally it failed the same way, passed with
+      the replay disabled, and logged four replayed fixture sources at
+      startup. D9 fixes it: the spec passed three times, also with both
+      variants. Evidence:
+      `.context/render-cache-weight-and-watch-recheck/large-watch-*.log`.
+- [ ] Merge `origin/main` when the orchestrator reports that PR #230 merged.
+  - Outside the scope: `crates/mokly-server`, a page that requests an
+    authored asset while a new generation publishes can get a 404 until a
+    render of the new generation reaches the asset, as the extra rebuild
+    showed for `mark.svg`. Separate branch.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -72,10 +72,14 @@ fn changed() -> Event {
 
 #[test]
 fn files_changed_from_the_margin_before_the_start_until_now_replay_once() {
+    // Whole-second times count from two seconds before the start, finer times from 100 ms.
+    let before = |millis| at(100) - Duration::from_millis(millis);
     for (time, replays) in [
         (Some(at(105)), true),
         (Some(at(99)), true),
         (Some(at(97)), false),
+        (Some(before(50)), true),
+        (Some(before(500)), false),
         (Some(at(111)), false),
         (None, false),
     ] {
