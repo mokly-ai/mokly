@@ -230,29 +230,33 @@ options. The doc changes for items 1 and 128 move to Milestone 4, because
 they wait for Cal. Where an answer chose between options, the
 page states the decision in force with the rejected alternative and the
 reason, in one or two sentences. Each changed page gets the line
-`Status: In progress under the [Diagnostics And HTML Messages](../../plans/diagnostics-and-html-messages.md) plan.`
+`Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).`
 below its title until its behaviour is implemented.
 
-- [ ] `docs/protocol/mokly-html-screens.md`:
-  - [ ] Add `html-ignore-attribute` to the Diagnostics table, and define its
+- [x] `docs/protocol/mokly-html-screens.md`:
+  - [x] Add `html-ignore-attribute` to the Diagnostics table, and define its
         message (item 87).
-  - [ ] Unknown attributes on ignore wrappers in a page callback document
+  - [x] Unknown attributes on ignore wrappers in a page callback document
         warn once per page and attribute (item 138 C).
-  - [ ] A `{{...}}` failure names the line and column of its own `{{`,
+  - [x] A `{{...}}` failure names the line and column of its own `{{`,
         also after character references, in attribute values, and with CRLF
         or CR line ends. A `{{` that a character reference produces names
         the start of that reference (offset maps, finding 3 A).
-  - [ ] Delete "One parser and one renderer serve both." (finding 4 A).
-- [ ] `docs/protocol/mokly-link-validation.md`: state the rule in force that
+  - [x] Delete "One parser and one renderer serve both." (finding 4 A).
+- [x] `docs/protocol/mokly-link-validation.md`: state the rule in force that
       callback output fails on every duplicate attribute (finding 2 A).
-- [ ] `docs/protocol/mokly-entry-props.md`: define the saved-prop and the
+- [x] `docs/protocol/mokly-entry-props.md`: define the saved-prop and the
       invocation messages (item 87 B).
-- [ ] `docs/protocol/mokly-component-controls.md`: define the
+- [x] `docs/protocol/mokly-component-controls.md`: define the
       `props-control-bounds` message (item 87 B).
-- [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
+- [x] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
       row names authored bodies and page callback documents (item 138 C).
-- [ ] Keep each page under 250 lines. Run `npm run format:check` and
+- [x] Keep each page under 250 lines. Run `npm run format:check` and
       `node --import tsx --test tests/markdown_links.test.ts`.
+- Done in `dabf30d2`. The docs delegate's design calls and probes:
+  `.context/diagnostics-and-html-messages/m1-probes/` and its reply in
+  session `7712180f`. The HTML screens page has 249 lines, so Milestone 4
+  splits it before it adds text.
 
 ## Milestone 2: Warning text
 
@@ -313,8 +317,6 @@ they arrive. If an answer differs, rewrite the TODOs first.
 - [ ] `docs/protocol/mokly-html-components.md`: saved slot fragments use the
       body checks, including forbidden and unknown elements and reserved
       names. Each failure names the slot field (item 128 A, finding 1 C).
-- [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
-      row also names saved slots.
 - [ ] Tests that fail on `main`:
   - [ ] Catalogue tests: a saved slot with `script`, `html`, `head`,
         `body`, `base`, `mokly-foo`, or an unknown hyphenated element fails
@@ -376,6 +378,8 @@ The README parts for items 1 and 128 move to Milestone 4.
       formatter and the JSON quoting helper under Key Code.
 - [ ] `crates/mokly-html/README.md`: page callback warnings, invocation
       warnings, and duplicate attribute text.
+- [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
+      row also names saved variant slots, which warn today.
 - [ ] Delete the comment without a pattern from `.prettierignore` (finding 5
       A).
 - [ ] Remove the status line from each protocol page whose behaviour is now
