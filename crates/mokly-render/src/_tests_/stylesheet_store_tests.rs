@@ -149,6 +149,20 @@ fn finding_6_a_key_capacity_counts_toward_the_store_bound() {
 }
 
 #[test]
+fn finding_2_a_long_miss_key_charges_its_digest_and_keeps_full_lookup() {
+    let first = record("a.css", MODULE, None);
+    let key = "a".repeat(4096);
+    let digest = mokly_model::material::digest(key.as_bytes());
+    let reason = size_of::<(String, Miss)>() + digest.capacity();
+    let mut store = StylesheetCache::new(first.bytes + reason);
+
+    store.insert(key.clone(), first);
+
+    assert_eq!(store.miss(&key), Miss::Evicted);
+    assert_eq!(store.retained(), reason);
+}
+
+#[test]
 fn a_rejected_key_misses_with_inconsistent_evidence_until_a_record_replaces_it() {
     let mut store = StylesheetCache::default();
     store.insert("a".into(), record("a.css", MODULE, None));
@@ -188,7 +202,7 @@ fn a_record_that_fits_only_without_its_held_context_entry_stays_out() {
     let mut larger = bundle("b.css", MODULE);
     larger.css.push_str(&"b{color:blue}".repeat(8));
     let second = stored(larger, Some(&shared));
-    let reason = size_of::<(String, Miss)>() + 1;
+    let reason = size_of::<(String, Miss)>() + mokly_model::material::digest(b"b").capacity();
     let limit = key_bytes("a") + first.bytes + shared.bytes + reason;
     assert!(second.bytes < limit);
     assert!(key_bytes("b") + second.bytes + shared.bytes > limit);

@@ -4,6 +4,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_model::material::digest;
+
 use crate::stylesheet_record::{ContextEvidence, Record};
 
 /// Why the cache could not serve a stylesheet: the `cache` field of its `css.bundle` span.
@@ -78,20 +80,25 @@ impl StylesheetCache {
 
     /// The reason that a lookup of `key` without a record reports.
     pub(crate) fn miss(&self, key: &str) -> Miss {
-        self.misses.get(key).copied().unwrap_or(Miss::NoRecord)
+        self.misses
+            .get(&digest(key.as_bytes()))
+            .copied()
+            .unwrap_or(Miss::NoRecord)
     }
 
     /// Remember that the record of `key` stayed in its attempt.
     pub(crate) fn reject(&mut self, key: String) {
         self.records.remove(&key);
         self.prune();
-        self.misses.insert(key, Miss::InconsistentEvidence);
+        self.misses
+            .insert(digest(key.as_bytes()), Miss::InconsistentEvidence);
         self.trim_misses();
     }
 
     pub(crate) fn insert(&mut self, key: String, record: Arc<Record>) {
         self.records.remove(&key);
-        self.misses.remove(&key);
+        let miss_key = digest(key.as_bytes());
+        self.misses.remove(&miss_key);
         self.prune();
         let alone = Self::charge(Charge::Record {
             key: &key,
@@ -101,7 +108,7 @@ impl StylesheetCache {
             .as_ref()
             .map_or(0, |context| Self::charge(Charge::Context(context)));
         if alone > self.limit {
-            self.misses.insert(key, Miss::Evicted);
+            self.misses.insert(miss_key, Miss::Evicted);
         } else {
             if self.retained() + self.record_charge(&key, &record) > self.limit {
                 self.evict();
@@ -143,8 +150,11 @@ impl StylesheetCache {
     fn evict(&mut self) {
         let removed = std::mem::take(&mut self.records);
         self.contexts.clear();
-        self.misses
-            .extend(removed.into_keys().map(|key| (key, Miss::Evicted)));
+        self.misses.extend(
+            removed
+                .into_keys()
+                .map(|key| (digest(key.as_bytes()), Miss::Evicted)),
+        );
     }
 
     /// Drop the context entries that no record uses.
