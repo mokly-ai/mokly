@@ -1,5 +1,6 @@
 //! URL schemes occur before the first path, query, or fragment delimiter.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_model::catalogue::SourceLocation;
 
 use crate::{parse, url_safety};
@@ -14,7 +15,9 @@ fn colons_outside_a_valid_scheme_are_allowed_in_href_and_src() {
         "https://example.com:8443/a?time=10:30#x:y",
     ] {
         for attribute in ["href", "src"] {
-            let nodes = parse::fragment(&format!("<a {attribute}=\"{url}\">Go</a>"));
+            let nodes = parse::html(DeliveredHtml::fragment(&format!(
+                "<a {attribute}=\"{url}\">Go</a>"
+            )));
             url_safety::validate(&nodes, &location()).unwrap();
         }
     }
@@ -30,7 +33,9 @@ fn disallowed_schemes_and_protocol_relative_urls_still_fail() {
         "custom+app.2:go",
     ] {
         for attribute in ["href", "src"] {
-            let nodes = parse::fragment(&format!("<a {attribute}=\"{url}\">Go</a>"));
+            let nodes = parse::html(DeliveredHtml::fragment(&format!(
+                "<a {attribute}=\"{url}\">Go</a>"
+            )));
             assert!(
                 url_safety::validate(&nodes, &location()).is_err(),
                 "{attribute}={url}"

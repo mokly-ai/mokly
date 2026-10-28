@@ -54,6 +54,53 @@ fn unknown_ignore_attributes_warn_once_and_strict_preserves_output() {
 }
 
 #[test]
+fn saved_slot_ignore_attributes_are_not_evaluated() {
+    let stderr = build_saved_slot("extra='{{missing}}'", true);
+    assert!(stderr.contains("unknown attribute extra on <mokly-ignore> is ignored"));
+}
+
+#[test]
+fn saved_slot_reserved_wrapper_attributes_stay_visible_to_composition() {
+    for name in ["data-mokly-link", "data-mokly-link-control-future"] {
+        let warning = format!("reserved navigation metadata {name} on <mokly-ignore> is rejected");
+        let stderr = build_saved_slot(&format!("{name}='literal'"), true);
+        assert!(stderr.contains(&warning), "{stderr}");
+        let stderr = build_saved_slot(&format!("{name}='{{{{missing}}}}'"), false);
+        assert!(stderr.contains(&warning), "{stderr}");
+        assert!(
+            stderr.contains("[mokly/html-props] undeclared prop reference missing"),
+            "{stderr}"
+        );
+    }
+}
+
+fn build_saved_slot(attribute: &str, success: bool) -> String {
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join("specs")).unwrap();
+    fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+    fs::write(
+        root.path().join("specs/panel.component.html"),
+        format!(
+            "---\ntitle: Panel\nelement: ui-panel\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\nslots: [children]\nvariants:\n  - slug: saved\n    title: Saved\n    props: {{}}\n    slots:\n      children: \"<mokly-ignore id='saved' {attribute}><b>Saved</b></mokly-ignore>\"\n---\n<slot></slot>"
+        ),
+    )
+    .unwrap();
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "---\ntitle: Home\n---\n<ui-panel></ui-panel>",
+    )
+    .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
+        .args(["build", "--no-changes", "--out", "site"])
+        .current_dir(root.path())
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(output.status.success(), success, "{attribute}: {stderr}");
+    stderr
+}
+
+#[test]
 fn unknown_ignore_href_does_not_validate_a_logical_link() {
     check_ignored_attribute("href='mock:missing'", "href");
 }

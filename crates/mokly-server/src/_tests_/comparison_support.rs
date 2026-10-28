@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_compare::comparison_types::{
     ComparisonResult, DocumentComparison, EntryClassification, ViewKey,
@@ -231,7 +232,7 @@ pub(crate) fn history() -> Arc<Artifact> {
         content_type: "text/html".into(),
         fragment: None,
         document: Some(Composed {
-            tree: parse::document("<p>History</p>"),
+            tree: parse::html(DeliveredHtml::document("<p>History</p>")),
             usage: CatalogueUsage::Ready {
                 instances: vec![],
                 slots: vec![],

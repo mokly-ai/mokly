@@ -1,0 +1,84 @@
+---
+title: HTML sweep
+description: no
+tags: [html, sweep]
+address: /account
+rationale: A native rendering fixture.
+useCasePaths: [tour]
+propSchema:
+  type: object
+  additionalProperties: false
+  properties:
+    label: { type: string }
+    visible: { type: boolean }
+    disabled: { type: boolean }
+    absent: { type: string }
+    meta:
+      type: object
+      additionalProperties: false
+      properties: { tag: { type: string }, note: { type: string } }
+    resource: { type: string }
+props:
+  label: '<Ada & "Co">'
+  visible: true
+  disabled: false
+  meta: { tag: paid, note: parent-only }
+  resource: ../../media/icon.svg
+variants:
+  - slug: off
+    title: Quiet
+    props:
+      label: Variant
+      visible: false
+      disabled: true
+      meta: { tag: other }
+      resource: ../../../media/icon.svg
+---
+
+<main id="home">
+  <h1>{{ label }}</h1>
+  <p title="prefix {{ label }} suffix">{{ meta.tag }} {{ meta.note }}</p>
+  <p id="dollar" title="$literal">$$literal</p>
+  <p id="open">{{ never-closes</p>
+  <input disabled="{{ disabled }}" title="{{ absent }}" />
+  <p mokly-if="$visible">Visible content</p>
+  <p mokly-viewport="mobile">Mobile only</p>
+  <p mokly-viewport="desktop">Desktop only</p>
+  <mokly-ignore-scope enabled="false">
+    <ui-panel
+      label="Receiver"
+      amount="2.5"
+      count="3"
+      active=""
+      meta="$meta"
+      optional="$absent"
+      mokly-instance="panel"
+    >
+      <div slot="heading">
+        <strong>Supplier {{ label }}</strong
+        ><ui-leaf label="$$cash" mokly-instance="cash"></ui-leaf>
+      </div>
+      <mokly-ignore id="slot-clock"><time>Supplied clock</time></mokly-ignore>
+      <a href="mock:target#summary">Supplied link</a>
+    </ui-panel>
+    <mokly-ignore id="suppressed"><span>Material text</span></mokly-ignore>
+    <mokly-ignore-scope enabled="true"
+      ><mokly-ignore id="active" material-key="version-one"
+        ><time>Today</time></mokly-ignore
+      ></mokly-ignore-scope
+    >
+  </mokly-ignore-scope>
+  <ui-multi label="$label" mokly-instance="multi"></ui-multi>
+  <ui-empty mokly-instance="empty"></ui-empty>
+  <ui-leaf
+    label="Navigate"
+    to="target"
+    fragment="summary"
+    mokly-instance="link"
+  ></ui-leaf>
+  <a href="mock:target#summary" data-nav-href="mock:target#summary">Target</a>
+  <a href="mock:tour">Journey</a>
+  <img src="{{ resource }}" alt="Public asset" />
+  <!-- ordinary comment -->
+  <!-- mokly-forged: removed -->
+</main>

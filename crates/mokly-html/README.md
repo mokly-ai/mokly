@@ -28,9 +28,13 @@ Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
 
-The parser uses a package-owned arena and disables scripting. Composition
-re-parses its output with the same HTML5 algorithm. Usage and comparison use
-that browser tree. Split instance, slot, and ignore regions lose their regions.
+`parse::html` reads HTML through the catalogue's shared HTML driver with
+scripting disabled, the same driver that the catalogue checks use. The input type chooses the parse. Catalogue templates and saved slots
+give `AuthoredHtml`, and all other HTML is `DeliveredHtml`. Authored parses
+remove unknown ignore-wrapper attributes, and a located template also gets
+source locations. Delivered parses keep every authored attribute. Composition
+re-parses its output as delivered HTML. Usage and comparison use that
+browser tree. Split instance, slot, and ignore regions lose their regions.
 A re-owned instance with a colliding identity also loses its region. The
 `html-foster-parented` warning names the component element and parent; shared
 body warnings use the parent entry once across its variants.
@@ -79,14 +83,18 @@ Authored attributes cannot create these trusted records. The public annotation
 types have no serde decoding implementation; private comparison codecs own
 their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
-The HTML5 tree sink removes ordinary unknown ignore-wrapper attributes when
-it creates elements. Composition and slot routing never see those attributes.
-Wrapper source locations survive attribute filtering, HTML table repair, and
-plaintext reparsing. Diagnostic identities do not expose discarded values.
+The authored HTML sink removes ordinary unknown ignore-wrapper attributes when
+it creates elements. The delivered sink keeps those attributes until
+composition filters them, with the same rule, directly after it parses callback
+HTML and before any other step reads them. Callback documents
+use the delivered parser, but the browser does not receive the wrapper nodes.
+The shared driver gives authored elements their source locations before HTML
+table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
-and attribute. Their values are not evaluated. Strict builds fail on these
-warnings. Reserved navigation metadata and duplicate-navigation failures
-retain their existing checks.
+and attribute. Unknown attribute values are not evaluated. Strict builds fail
+on these warnings. Reserved navigation names are not unknown attributes:
+composition keeps them, as the authored parse does, and reserved navigation
+metadata and duplicate-navigation failures retain their existing checks.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
@@ -102,10 +110,22 @@ by the graph. The crate performs no direct filesystem access or writes.
 ## Quick Start
 
 ```rust
+use mokly_catalogue::html_input::DeliveredHtml;
+use mokly_catalogue::template_types::Template;
 use mokly_html::{parse, serialize};
 
-let tree = parse::fragment("<main><p>Hello &amp; welcome</p></main>");
+let tree = parse::html(DeliveredHtml::fragment("<main><p>Hello &amp; welcome</p></main>"));
 assert_eq!(serialize::html(&tree), "<main><p>Hello &amp; welcome</p></main>");
+
+let template = Template {
+    source_path: "specs/home.screen.html".into(),
+    source: "<main>Hello</main>".into(),
+    body: "<main>Hello</main>".into(),
+    body_offset: 0,
+    page: false,
+};
+let authored = parse::html(template.located_html());
+assert_eq!(serialize::html(&authored), "<main>Hello</main>");
 ```
 
 ## Development
@@ -123,6 +143,20 @@ The native HTML sweep fixture covers front matter, template spacing, variants,
 named and repeated slots, ignore scopes, link controls, and resource closure.
 The link-control tests cover the ancestor and descendant placement matrix.
 
+The parser differential test reads the tracked inputs in
+`tests/fixtures/differential`. It requires each tree to equal html5ever's own
+parse without positions, and it keeps each position table as an `insta`
+snapshot. When a parser change moves a position on purpose, rerun the test
+with `INSTA_UPDATE=always` and review each changed `.snap` file.
+
+The html5lib tree-construction corpus in `tests/fixtures/html5lib` is test
+data from html5lib-tests commit `9329e64`, the last commit before that corpus
+moved to web-platform-tests, under its MIT license. Each corpus input must
+parse as a document and as a `body` fragment to html5ever's own tree, and each
+recorded position must name its own start tag. The corpus has no duplicate
+attributes and no text that a CDATA section reorders, so the tracked fixtures
+cover those steps. Neither directory is part of the crate build.
+
 ### Key Code
 
 - [`src/composition.rs`](./src/composition.rs) defines `Composer` and
@@ -133,8 +167,13 @@ The link-control tests cover the ancestor and descendant placement matrix.
   records.
 - [`src/tree.rs`](./src/tree.rs) defines `Node`, `Element`, and `Region`, the
   owned HTML5 tree with explicit composition regions.
-- [`src/parse.rs`](./src/parse.rs) provides `document` and `fragment`, which
-  parse HTML5 with scripting disabled.
+- [`src/parse.rs`](./src/parse.rs) provides `html`, which parses authored or
+  delivered HTML through the catalogue's shared driver with scripting disabled.
+  The input type chooses the parse.
+- [`src/pipeline/runner.rs`](./src/pipeline/runner.rs) runs that driver with
+  the tree arena and applies the plaintext repair.
+- [`src/html_sink.rs`](./src/html_sink.rs) implements the html5ever
+  `TreeSink` and the `DriverSink` hooks for the tree arena.
 - [`src/serialize.rs`](./src/serialize.rs) provides `html`, which writes
   deterministic document bytes with the inspector markers.
 - [`src/props.rs`](./src/props.rs) provides `coerce`, `substitute`, and

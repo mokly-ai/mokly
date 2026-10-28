@@ -11,7 +11,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::expansion::{After, Expansion};
 use crate::tree::{Element, Node};
-use crate::{conditions, relative_links, serialize};
+use crate::{conditions, ignore_checks, relative_links, serialize};
 
 impl Engine<'_> {
     pub(crate) fn element(
@@ -23,6 +23,7 @@ impl Engine<'_> {
             Viewport::Mobile => "mobile",
             Viewport::Desktop => "desktop",
         };
+        ignore_checks::filter_attributes(&mut element);
         if !conditions::visible(&mut element, &context, viewport)? {
             return Ok(Expansion::ready(Vec::new(), context));
         }

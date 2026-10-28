@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use mokly_catalogue::html_input::AuthoredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::{parse, tree};
 
@@ -52,7 +53,7 @@ pub(crate) fn resolve(
                 let children = catalogue
                     .templates
                     .get(&path)
-                    .map(|template| direct(&template.body, catalogue))
+                    .map(|template| direct(template.html(), catalogue))
                     .unwrap_or_default();
                 let next: Vec<_> = children
                     .iter()
@@ -95,8 +96,8 @@ pub(crate) fn resolve(
         .ok_or_else(|| invalid(path, "component source key is missing"))
 }
 
-pub(crate) fn direct(body: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
-    let nodes = parse::fragment(body);
+pub(crate) fn direct(html: AuthoredHtml<'_>, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
+    let nodes = parse::html(html);
     tree::walk(&nodes)
         .filter_map(|node| match node {
             tree::Node::Element(element) => catalogue

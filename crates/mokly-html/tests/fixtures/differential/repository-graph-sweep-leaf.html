@@ -1,0 +1,12 @@
+---
+title: Leaf
+element: ui-leaf
+propSchema:
+  type: object
+  additionalProperties: false
+  required: [label]
+  properties: { label: { type: string } }
+props: { label: Saved leaf }
+---
+
+<button type="button">{{ label }}</button>

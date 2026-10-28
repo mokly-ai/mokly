@@ -67,22 +67,18 @@ empty string in text and removes such an attribute; `{{…}}` naming an
 undeclared prop, an array, or an object without a path fails with
 `html-props`; `{{` that does not close is ordinary text. Every other
 attribute is ordinary HTML and is never interpreted. A component body uses
-this same template language with the component's own props and adds slot
-placeholders under the [HTML components contract](./mokly-html-components.md#body);
-one parser and one renderer serve both.
+this template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
+One parser and one renderer serve both. Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
 
-Substitutions accept ASCII whitespace around the prop path: `{{ name }}`
-equals `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
+Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
+`{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
-A hyphenated element name resolves against the component registry: the
-`element` of an [HTML component](./mokly-html-components.md) or of a
-JavaScript component registered with `element`, which the sidecar's `describe`
-call reports. A hyphenated name that matches
-no component fails with `html-element`, because rendering it as a plain element
-would silently lose the component. Every element name with the `mokly-`
-prefix is reserved for Mokly: `mokly-ignore` and `mokly-ignore-scope` are
-defined below, `mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md),
-and any other `mokly-` name fails with `html-element`.
+A hyphenated name resolves against the component registry. Its name comes from
+the `element` of an HTML component or JavaScript component; the sidecar
+`describe` call reports JavaScript names. An unknown hyphenated name fails with
+`html-element` because plain rendering would lose the component. Every `mokly-`
+name is reserved: `mokly-ignore` and `mokly-ignore-scope` are defined below,
+`mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md), and any other `mokly-` name fails with `html-element`.
 
 ## Component Elements
 
@@ -139,9 +135,10 @@ and protocol-relative `//` URLs.
 Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
-warn once per shared body and attribute. Their values are not evaluated.
-Strict builds fail. HTML5 parses remove unknown attributes from these wrappers
-in HTML, `srcdoc`, and `definePage`; closure and Changes omit them.
+warn once per shared body and attribute. Their values are not evaluated and do not enter document keys.
+Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected.
+In referenced authored HTML files and `srcdoc` values, elements named `mokly-ignore` or `mokly-ignore-scope` keep every attribute for resource and style checks.
+The [public closure](./mokly-public-closure.md) and Changes never see unknown attributes on wrappers in authored bodies or in sidecar output.
 
 ## Variants
 

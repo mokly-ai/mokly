@@ -80,6 +80,16 @@ baseline, which detects only edits after capture. One JavaScript read does not
 prove that an opaque reader used the same bytes. No file, plugin, or context
 becomes complete because a witness exists.
 
+File modules supplied by consumer module hooks retain their resolved paths,
+including when a hook supplies a module without delegating. Their bytes remain
+opaque without raw provenance. Modules that Node loads in its asynchronous
+loader thread, such as the modules that define asynchronous hooks, have no
+module path. They have no late baseline unless another input report names
+their paths. Decision: Mokly observes module paths only on the main thread. A
+loader-thread observer was rejected, because main-thread observation already
+reports every module that PostCSS code loads, and a loader-thread observer adds
+work to each module resolution.
+
 Decision: Mokly keeps native plugins compatible. It records a read witness
 only for the reads that it observes, and it reports its coverage as
 `incomplete`. Enforced immutable inputs were rejected because they need a
