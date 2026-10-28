@@ -17,7 +17,7 @@ impl Renamer<'_> {
     pub(crate) fn rules(&mut self, tokens: &Tokens<'_>) -> Result<()> {
         let mut pending = vec![Frame {
             range: tokens.root(),
-            grammar: Grammar::Rules,
+            grammar: Grammar::Stylesheet,
             body: Body::default(),
         }];
         while let Some(frame) = pending.last_mut() {

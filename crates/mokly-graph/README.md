@@ -20,8 +20,10 @@ writes no files.
 `Graph` implements `dyn RenderGraph`. `DeliveryInputs` supplies module CSS
 roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet inputs
-and computes document plans. Completed JavaScript, stylesheet, PostCSS, and
-asset inputs populate the prepared catalogue's dependency-directory set.
+and computes document plans. Configured and declared stylesheet roots and
+links name local stylesheets by `ResolvedConfig::repository_path`. Completed
+JavaScript, stylesheet, PostCSS, and asset inputs populate the prepared
+catalogue's dependency-directory set.
 Cached bundles supply the same set. Old cache-validation reads and filename
 suffixes cannot add or hide dependency usage. Preparation bundles the
 stylesheet roots on the render workers, then registers the bundles in root
@@ -116,7 +118,6 @@ Production callers supply fresh base generations.
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
-The physical directory that a `..` spelling reaches also stays private.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
 platform. The working-tree adapter implements `mokly_source_interface::tree::SourceTree`. Historical rendering

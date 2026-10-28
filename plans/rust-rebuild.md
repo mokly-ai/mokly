@@ -5402,10 +5402,17 @@ check passes on this commit.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Resolve user item 111 with option C: take each statement's start and
+- [x] Resolve user item 111 with option C: take each statement's start and
       kind from cssparser's parsers so the CSS Modules scanners align with
       `lightningcss`. Keep the iterative, heap-only depth guarantee and add
       differential coverage for repository stylesheets and a generated corpus.
+  - User decision 111 (2026-10-21): C, ported in `f4558272`. The section
+    reader takes each statement's start and kind from cssparser's rule
+    parsers, so the stylesheet skips `<!--` and `-->` before a statement
+    for all three scanners. Differential tests compare the old and the new
+    reader on the 51 repository stylesheets and five generated ones, and
+    check 40 HTML comment prefix cases exactly. Evidence:
+    `.context/port-111c/`.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution
@@ -6230,7 +6237,7 @@ does not ask the user before the merge.
       in product code with a Clippy `disallowed-methods` rule (a new lint,
       which needs the user's approval). Recommended: B.
 
-- [ ] Resolve user item 167 (W8 finding 1): a nested configuration with
+- [x] Resolve user item 167 (W8 finding 1): a nested configuration with
       `"renderer": "../renderer.tsx"` gets no renderer stylesheet, because
       `crates/mokly-render/src/bundle_inputs.rs:26` and
       `crates/mokly-render/src/graph.rs:159` use the raw spelling while
@@ -6241,8 +6248,11 @@ does not ask the user before the merge.
       normalized form of a config-relative path, and use it for the
       renderer, the PostCSS module, and the configured stylesheets in the
       render crate, Large, which also fixes 169 and 170. Recommended: B.
+  - User decision 167 (2026-10-28): B. One public resolver for every
+    config-relative path, read by every consumer. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 168 (W8 finding 2): the manifest rule
+- [x] Resolve user item 168 (W8 finding 2): the manifest rule
       (`crates/mokly-catalogue/src/config_paths.rs:210`, `has_manifest`) now
       accepts two rare roots that the base rejected: a link before `..`
       where only the normalized root holds `package.json`, and a file before
@@ -6255,21 +6265,31 @@ does not ask the user before the merge.
       differs from its normalized root, a new rejection, see 171; D, resolve
       each root once into one record that the manifest rule, the file
       policy, and the output boundary read, Large. Recommended: A.
+  - User decision 168 (2026-10-28): E, close it with 171 B. Under one
+    lexical rule both roots are valid, and the output boundary no longer
+    projects `file.txt/../ui/package.json`. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
+- [x] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
       `sub/../first.css` fails a component build with "listed authoring
       input" (`crates/mokly-render/src/declarations.rs:35`). Severity Low,
       effort Large for B. Options: A, normalize the configured list there,
       Small; B, the method of 167 B, Large. Recommended: B.
+  - User decision 169 (2026-10-28): B. The declared-stylesheet check reads
+    the resolver. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 170 (W8 finding 4): PostCSS load errors show
+- [x] Resolve user item 170 (W8 finding 4): PostCSS load errors show
       `tools/../postcss.mjs` instead of `postcss.mjs`
       (`crates/mokly-render/src/stylesheets.rs:63`, `postcss.rs:131`).
       Severity Low, UX wording, effort Large for B. Options: A, normalize
       before the sidecar call, Small; B, the method of 167 B, Large.
       Recommended: B.
+  - User decision 170 (2026-10-28): B. Every `processCss` request names the
+    normalized module path. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 171 (W8 decision 5): in a spelling such as
+- [x] Resolve user item 171 (W8 decision 5): in a spelling such as
       `link/../ui`, where `link` is a symbolic link, one package root has two
       meanings: the normalized root and the physical target. `80a8a195`
       keeps the base behaviour through
@@ -6280,13 +6300,21 @@ does not ask the user before the merge.
       fails with the existing "must contain package.json" message, which
       also closes 168; C, reject such a spelling with a new message.
       Recommended: B.
+  - User decision 171 (2026-10-28): B. The user approved the removal of the
+    aliases. A package root names only its normalized root, under the path
+    rule of the configuration contract. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 172 (W8 decision 6): a Rust test that compares
+- [x] Resolve user item 172 (W8 decision 6): a Rust test that compares
       joined paths as `/` strings fails only on Windows. Severity Low,
       effort Small. Options: A, keep the convention of comparing `Path`
       values, which the hosted Windows job enforces, Small; B, a shared test
       helper that compares path lists by components, in a new shared test
       crate, Large. Recommended: A.
+  - User decision 172 (2026-10-28): A. Keep the convention of comparing
+    `Path` values. The tests of the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md)
+    follow it. It needs no code change.
 
 - [ ] Resolve user item 173 (W8 decision 7):
       `crates/mokly-compare/tests/large_sources_tests.rs:17` runs `git`
@@ -6371,7 +6399,7 @@ does not ask the user before the merge.
       `Debug` for `Publish`; B, one secret type with a redacting `Debug` for
       every token field. Recommended: B.
 
-- [ ] Resolve user item 182 (delta review 7, older than the delta):
+- [x] Resolve user item 182 (delta review 7, older than the delta):
       `crates/mokly-render/src/side.rs:62` keeps duplicate package roots, but
       `crates/mokly-compare/src/dependencies.rs:191` removes them on the base
       side. With `packageRoots: [".", "packages/ui"]` in a root
@@ -6380,6 +6408,13 @@ does not ask the user before the merge.
       not recorded. Options (estimate): A, remove duplicates on the head side
       too; B, make `ResolvedConfig::package_roots()` return the list without
       duplicates for both sides. Recommended: B.
+  - User decision 182 (2026-10-28): C, one function builds the ancestor and
+    package-root list for both sides. Fixed by
+    [PR #227](https://github.com/mokly-ai/mokly/pull/227) in `ad86ebb7`:
+    `ancestor_roots::package_roots`, which `side::inputs` and
+    `dependencies::package_roots` call. The
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md)
+    ticks the item, because #227 does not name it.
 
 - [x] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
       protocol pages, still start with
@@ -6591,6 +6626,91 @@ does not ask the user before the merge.
       mutex. A test that fails while it holds the lock poisons the mutex, and
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
+
+- [x] Decide the open findings of the post-push review of
+      `rebuild/port-111c`, the port of user decision 111 C (report:
+      `.context/port-111c/review/review-1-full.md`). Finding 1 (Low, product
+      bug: the probe read no qualified rules in rule lists and keyframes
+      blocks) is fixed with option B in the same commit as this record.
+  - Finding 2: rule-list statements still end at semicolons. Severity Low,
+    effort Small. Recommended: A, narrow the protocol and README parity
+    sentences to say that a `;` also ends a rule-list statement for the
+    scoper, and add a follow-up for that boundary.
+  - Finding 3: HTML comment tests cover only the first statement. Severity
+    Low, effort Small. Recommended: B, add later-statement cases and check
+    an exact expected walk after each HTML comment prefix.
+  - Finding 4: the prefix rule record can replace the result. Severity Low,
+    effort Small. Recommended: B, document the `a{}` prefix and discard a
+    record that starts inside it.
+  - User decisions (2026-10-26): finding 2 A, finding 3 B, and finding 4 B,
+    done in the same commit as this record. The protocol page and the crate
+    README name the `;` boundary, and the follow-up below keeps it. The
+    regression test covers a later statement, and the differential test
+    checks each HTML comment prefix exactly. The probe ignores a record of
+    its `a{}` prefix.
+
+- [ ] Follow-up (Low, from finding 2 of the `rebuild/port-111c` review): in a
+      rule list, the CSS Modules section reader ends a statement at `;`, but
+      cssparser ends a style rule or a keyframe only at its `{}` block. The
+      protocol page records the boundary. Aligning it, option B of the
+      finding, changes diagnostics and touches user item 113.
+
+- [x] Decide finding 1 of the review of the decisions above on
+      `rebuild/port-111c` (report: `.context/port-111c/review/review-3.md`).
+      Finding 2 (Low: a probe test name contradicted its third case) is
+      fixed with option B in `920754fd`. Its re-review
+      (`.context/port-111c/review/review-4.md`) found the old test name
+      still wrong, fixed with option A in `c662bdb1`.
+  - Finding 1: the parity sentence misses two other differences, a
+    declarations-block statement that ends at its first `{}` block and an
+    `@-moz-document` block outside a style rule. Severity Low, effort
+    Small. Recommended: B, replace the count of exceptions with one rule:
+    the scoper reads each statement that the bundler keeps with the same
+    start and kind.
+  - User decision (2026-10-26): B, done in the same commit as this record.
+    The protocol page and the crate README state the one rule, give the
+    `;` boundary as an example, and keep its reason.
+  - Correction: only the protocol page gives the reason for the `;`
+    boundary. The crate README gives the boundary as an example only.
+- Outside the `rebuild/port-111c` review scope:
+  `crates/mokly-css/src/token_grammar.rs:68`: the scanners read an
+  `@-moz-document` block outside a style rule as a style block, but
+  lightningcss parses it as an `@media` block. Separate branch.
+
+- [x] Decide finding 1 of the review of `3066e47a` on `rebuild/port-111c`
+      (report: `.context/port-111c/review/review-5.md`). Finding 2 (Low: the
+      plan record said that the README keeps the `;` reason) is fixed with
+      option A in the same commit as this record.
+  - Finding 1: the parity rule is false for descriptor blocks. The scoper
+    ends a non-custom `@font-face` or `@property` statement at its first
+    `{}` block, as postcss does, but the bundler keeps the text up to `;`.
+    Severity Low, effort Small. Recommended: A, name the descriptor case in
+    both docs.
+  - User decision (2026-10-28): A, without option D, done in the commit
+    that adds this line. The protocol page names the descriptor-block case
+    beside the rule, with its reason. The crate README, which names the
+    `@font-face` boundary, points its parity sentence at it. The same commit
+    removes the Status line of `docs/protocol/mokly-imported-styles-modules.md`,
+    which user decision 185 kept for item 111 only.
+- Outside the `rebuild/port-111c` review scope:
+  `crates/mokly-css/src/token_sections.rs:59`: the `Statement` doc says that
+  a statement reads as lightningcss reads the block that holds it, but the
+  section reader reads an `@font-face` descriptor with a `{}` block as a
+  rule. Separate branch.
+
+- [ ] Decide finding 1 of the final review of `rebuild/port-111c` at
+      `b152d0dc` (report: `.context/port-111c/review/review-7.md`). The
+      validity check confirmed it. The options check added options E to G
+      and changed the recommendation from A to C.
+  - Finding 1: the differential fixture list misses two repository
+    stylesheets that #227 added, and a moved or deleted listed file breaks
+    the `mokly-css` test build. Severity Low, effort Medium. Recommended: C,
+    read the tracked stylesheets at test time in an integration test behind
+    a test-support feature.
+  - Open problem found by the options check:
+    `crates/mokly-css/src/_tests_/token_differential_tests.rs:200`: the
+    assertion that the sources are not empty cannot fail, because the five
+    generated stylesheets are always present.
 
 - [ ] Follow-up (Low, cost, not a user item): move the Linux CI jobs that
       compile Rust back to 2 vCPUs. On 2026-10-26 the user raised them from

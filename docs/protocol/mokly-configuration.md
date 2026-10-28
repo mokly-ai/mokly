@@ -62,6 +62,17 @@ The rules below define how Mokly resolves and applies the fields.
 
 Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`, module
 resolution package roots, and local stylesheet paths) are config-relative.
+Each one names the path that it reaches from the configuration file's
+directory after `.` segments, `..` segments, and empty segments are removed,
+in the working tree and in the base tree of a comparison. A symbolic link
+before a `..` segment does not change that path: `link/../ui` names `ui`.
+Spellings with the same path behave the same in every command. A
+configuration validation message repeats the authored value, and any other
+message names the path without `.` or `..` segments. Mokly removes `..` from
+the spelling and never follows a link first. Following the link was
+rejected, because one field must have one meaning in the core, in the
+sidecar, and on both sides of a comparison.
+
 `roots[].files` globs are relative to their root; `watch.rules[].paths` are
 repository-relative POSIX globs; a stylesheet `match` matches catalogue
 entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
@@ -170,9 +181,7 @@ the loader boundary; public files use the
 `moduleResolution` has no defaults beyond esbuild's platform behaviour in the
 [sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
-supplement consumer lookup. A package root names the directory that its path
-reaches after `.` and `..` segments are removed, in the working tree and in
-the base tree of a comparison. Alias keys and targets accept bare package
+supplement consumer lookup. Alias keys and targets accept bare package
 specifiers only. JavaScript and CSS apply one longest-key alias substitution.
 Alias targets resolve from the
 configuration directory through Node's ancestor lookup, then the configured

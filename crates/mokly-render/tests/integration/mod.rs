@@ -5,6 +5,7 @@ mod ancestor_tests;
 mod base_styles_tests;
 mod base_tests;
 mod cache_tests;
+mod config_path_tests;
 mod containment_tests;
 mod declaration_alias_tests;
 mod declaration_tests;
