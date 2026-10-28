@@ -470,9 +470,15 @@ Let equal head and base inputs share render cache entries under decision 1.
       a visible edit to the shared module moved 13, and the page showed the
       edit. Screenshots: `.context/perf/smoke/before.png` and `after.png`.
 - [x] Add the after numbers to the measurements.
-- [ ] Once perf 0's render cache counts are on `origin/main`, record the
+- [x] Once perf 0's render cache counts are on `origin/main`, record the
       charged bytes of the render cache after the base render on
       `examples/basic`, for the orchestrator's follow-up on base entries.
+  - Result at merge `a6ec49bb` with the 256 MiB render cache: after the
+    base render, the cache holds 1,217 entries and charges 164,521,304
+    bytes (156.9 MiB). It evicts nothing. The base adds 39 entries and
+    119,443 bytes, which are its stylesheet bundles. The base capture and
+    the comparison read 2,780 entries and miss none. Evidence:
+    `.context/per-entry-render-keys/charged-bytes.txt`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -532,5 +538,9 @@ Let equal head and base inputs share render cache entries under decision 1.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Measure again after perf 0 merges. A lighter render cache weight keeps
+- [x] Measure again after perf 0 merges. A lighter render cache weight keeps
       more head entries, which raises the cross-side hit rate.
+  - Result: one run at merge `a6ec49bb` on `examples/basic`. The base
+    capture makes 0 renders in 0.6 s, and the comparison makes 0 renders in
+    3.0 s. The whole run makes 549 `sidecar.render` calls. Evidence:
+    `.context/per-entry-render-keys/charged-bytes.txt`.
