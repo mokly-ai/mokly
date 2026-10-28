@@ -103,3 +103,38 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         assert!(validate(&candidate, &index).is_err(), "mutation {mutation}");
     }
 }
+
+#[test]
+fn workspace_lists_stay_on_parents_and_are_rejected_on_variants() {
+    let index = readers::index(include_str!(
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+    ))
+    .unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../docs/protocol/fixtures/entry-details-v3.json"
+    ))
+    .unwrap();
+    let mut parent =
+        readers::detail(&fixtures["current"]["components/action"].to_string()).unwrap();
+    parent.workspace.as_mut().unwrap().used_by = None;
+    assert!(matches!(
+        validate(&parent, &index),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
+
+    let mut variant =
+        readers::detail(&fixtures["current"]["components/action/default"].to_string()).unwrap();
+    let workspace = variant.workspace.as_mut().unwrap();
+    workspace.used_by = Some(Vec::new());
+    workspace.affected = Some(Vec::new());
+    assert!(matches!(
+        validate(&variant, &index),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
+}

@@ -14,6 +14,7 @@ use mokly_cli::serve::PreparedServe;
 use mokly_cli::{build_output, serve_errors, serve_output};
 use mokly_compare::base_render::selected_base;
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::extraction_snapshots::Snapshots;
 use mokly_graph::types::RenderGeneration;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{
@@ -44,6 +45,7 @@ pub(super) struct ServeChanges {
     pub(super) progress: Arc<dyn Progress>,
     pub(super) refreshes: Arc<dyn GitRefresh>,
     pub(super) cache_announced: Arc<AtomicBool>,
+    pub(super) extraction_snapshots: Arc<dyn Snapshots>,
     pub(super) warnings: Arc<dyn WarningScopes>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) git: Arc<dyn GitWork>,

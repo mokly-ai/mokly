@@ -120,21 +120,22 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
-index, and fetches the routed entry's detail under the
-[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The first load does
-not request the deployment file. During in-shell navigation, each detail
-request also requests `mokly-viewer/deployment.json`; the shell requests it
-before it opens a comparison or a removed entry. The detail carries the
-workspace lists, so no route reads another page. Static mode with a missing,
-malformed, or other-version index or detail fails closed instead of requesting
-a development endpoint. A static build never falls back to a live endpoint
-for any request.
+index, and fetches the route's details under the
+[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). A current component
+variant reads its Used by and Affected lists from its parent's detail. The
+shell fetches no other shell page for evidence. The first load does not request
+the deployment file. During in-shell navigation, each detail request also
+requests `mokly-viewer/deployment.json`, and the shell requests it before it
+opens a comparison or removed entry. Static mode with a missing, malformed, or
+other-version index or detail fails closed instead of requesting a development
+endpoint. A static build never falls back to a live endpoint for any request.
 
 In-shell navigation commits the destination from the index at once and fetches
-its detail and the deployment file. A deployment file with another
-`deploymentId`, or a detail whose `detailId` differs from the index record,
-means another deployment replaced the files, so the shell performs a full page
-load of the requested URL rather than mixing deployments. An open tab keeps its loaded deployment
+its details, including the parent's detail for a current component variant. A
+deployment file with another `deploymentId`, or a detail whose `detailId`
+differs from the index record, means another deployment replaced the files, so
+the shell performs a full page load of the requested URL rather than mixing
+deployments. An open tab keeps its loaded deployment
 for the page's lifetime; reload the page to adopt a newer one. In-shell
 navigation, reload, Back/Forward, new tabs, and browser-normalized response
 URLs keep the same entry identity, scroll, and disclosure behaviour. Unknown

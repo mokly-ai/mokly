@@ -49,9 +49,15 @@ to typed consumers.
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md): current
 usage first, then Changes classification against one pinned merge base. They
 yield to foreground requests, publish changed evidence in one revision, and
-cannot publish into a replacement. Ready state installs the generation root,
-the base commit, Changes membership, moved paths, removed records, and per-view
-states, ignore ids, and evidence in one revision. Included details carry
+cannot publish into a replacement. `UsagePass` keeps a sliding window of at
+most `batch` renders. It starts them in catalogue order and reports each
+view's warnings and failure once, in catalogue order, after every earlier
+render ends. The
+composition root sizes the window. `Workers` admits queued background renders
+one at a time, in request order, whenever no foreground request is active.
+Ready state installs the generation root, the base commit, Changes
+membership, moved paths, removed records, and per-view states, ignore ids, and
+evidence in one revision. Included details carry
 classification reasons and their base side even without a workspace.
 Workspace lists stay absent until all
 consumer usage is proven. One unavailable view keeps every Used by list absent
@@ -99,9 +105,12 @@ asset loader serves the matching packaged icon for both Serve and static
 output.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
-Serve attempt. Saved, background, and temporary renders deliver private
-composition warnings before returning their result, including retained
-warnings on failure. The CLI owns sorting, deduplication, and attempt fences.
+Serve attempt. Saved and temporary renders deliver private composition
+warnings before returning their result, including retained warnings on
+failure. A background render returns its warnings instead, and a failure keeps
+them: `UsagePass` reports them through `Documents::report`, in catalogue
+order, directly before a failure's diagnostic. The CLI owns sorting,
+deduplication, and attempt fences.
 HTTP bodies and public models contain no warning records.
 
 Authored GET responses stream from the confined handle without a file-size
@@ -168,6 +177,9 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+- [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
+  usage pass's bounded batch, which keeps catalogue order for starts, warnings,
+  and failure reports.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
 - [`src/render_request.rs`](./src/render_request.rs) and

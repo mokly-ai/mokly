@@ -71,6 +71,21 @@ pub fn validate_with(
     if detail.detail_id != entry.detail_id {
         return Err(invalid(ContractViolation::DetailFence));
     }
+    if let Some(workspace) = detail.workspace.as_ref() {
+        let current_variant = detail.entry.kind == EntryKind::Component
+            && index
+                .components
+                .iter()
+                .find(|component| component.entry.path == *path)
+                .is_some_and(|component| component.variant_of.is_some());
+        if current_variant {
+            if workspace.used_by.is_some() || workspace.affected.is_some() {
+                return Err(invalid(ContractViolation::Workspace));
+            }
+        } else if workspace.used_by.is_none() || workspace.affected.is_none() {
+            return Err(invalid(ContractViolation::Workspace));
+        }
+    }
     if detail.reasons.is_some()
         != matches!(
             entry.changes,

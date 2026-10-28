@@ -111,6 +111,14 @@ export function readEntryDetail(value: unknown): EntryDetailV3 {
     invalidData("$detail", "only screens and components have a workspace");
   if (kind !== "page" && detail.resourceEvidence)
     invalidData("$detail", "only a page carries entry resource evidence");
+  if (
+    removed &&
+    visual &&
+    detail.workspace &&
+    (detail.workspace.usedBy === undefined ||
+      detail.workspace.affected === undefined)
+  )
+    invalidData("$detail", "removed visual details require workspace lists");
   if (detail.before && !(current && visual))
     invalidData("$detail", "only a current screen or component has a base");
   return detail;
@@ -194,8 +202,12 @@ function readWorkspace(value: unknown): Workspace {
   const input = object(value);
   return {
     comparisonEligible: boolean(input.comparisonEligible),
-    usedBy: array(input.usedBy).map(readUsageLink),
-    affected: array(input.affected).map(readUsageLink),
+    ...(input.usedBy === undefined
+      ? {}
+      : { usedBy: array(input.usedBy).map(readUsageLink) }),
+    ...(input.affected === undefined
+      ? {}
+      : { affected: array(input.affected).map(readUsageLink) }),
     relatedComponents: array(input.relatedComponents).map((raw) => {
       const related = object(raw);
       return { path: entryPath(related.path), title: text(related.title) };

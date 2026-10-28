@@ -3,7 +3,8 @@
 use serde_json::{Value, json};
 
 use crate::canonical;
-use crate::readers::{detail, index};
+use crate::read_contract::ContractViolation;
+use crate::readers::{ReadError, detail, index};
 
 pub(super) fn empty_index() -> Value {
     json!({"schemaVersion":8,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
@@ -85,14 +86,48 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
 
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let mut value = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
-    assert!(detail(&value.to_string()).is_ok());
-    value["generation"] = json!("c".repeat(64));
-    assert!(detail(&value.to_string()).is_err());
-    value.as_object_mut().unwrap().remove("generation");
-    value.as_object_mut().unwrap().remove("revision");
-    value["entry"]["snapshotId"] = json!("d".repeat(64));
-    assert!(detail(&value.to_string()).is_ok());
-    value["usage"] = json!({"status":"ready"});
-    assert!(detail(&value.to_string()).is_err());
+    let current = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    assert!(detail(&current.to_string()).is_ok());
+    let mut current_with_generation = current.clone();
+    current_with_generation["generation"] = json!("c".repeat(64));
+    assert!(detail(&current_with_generation.to_string()).is_err());
+
+    let mut valid_removed = current;
+    valid_removed.as_object_mut().unwrap().remove("revision");
+    valid_removed["entry"]["snapshotId"] = json!("d".repeat(64));
+    valid_removed["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
+    assert!(detail(&valid_removed.to_string()).is_ok());
+
+    let mut missing_used_by = valid_removed.clone();
+    missing_used_by["workspace"]
+        .as_object_mut()
+        .unwrap()
+        .remove("usedBy");
+    assert!(matches!(
+        detail(&missing_used_by.to_string()),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
+
+    let mut missing_affected = valid_removed.clone();
+    missing_affected["workspace"]
+        .as_object_mut()
+        .unwrap()
+        .remove("affected");
+    assert!(matches!(
+        detail(&missing_affected.to_string()),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
+
+    let mut private_usage = valid_removed;
+    private_usage["usage"] = json!({"status":"ready"});
+    assert!(matches!(
+        detail(&private_usage.to_string()),
+        Err(ReadError::Invalid { .. })
+    ));
 }

@@ -177,3 +177,9 @@ and the entry details carry every public comparison fact.
   the Plan request carries. Mokly Cloud must accept upload version 3 and index
   version 8 before it stores a publication of this release.
 - `MoklyVersionError` no longer reports a `review` boundary.
+
+## Upgrade entry detail version 3
+
+Entry detail version 3 omits `usedBy` and `affected` from current component
+variants. Their pages request the parent detail and read both lists there.
+Rename `EntryDetailV2` to `EntryDetailV3` in viewer integrations.

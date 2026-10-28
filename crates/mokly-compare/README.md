@@ -36,7 +36,13 @@ cached metadata and bounded path queries. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
-package manager. Conversion failures become `SourceError::Unavailable` and
+package manager. `Sources::attach` gives `GitSources` a leased extraction of
+the same commit: it lists the whole tree once, and later reads and digests use
+the extracted files, with Git for each file that the extraction lacks or that
+changed since its first fingerprint in the process. `GitSources::sharing` and
+`GitSourceFactory` share one `dyn Snapshots`, `ProcessSnapshots` in the CLI,
+which keeps the first fingerprints of each extraction for the process.
+Conversion failures become `SourceError::Unavailable` and
 `base-conversion` warnings. The resource memo keeps unavailable bytes distinct
 from missing paths. The
 [base preparation contract](../../docs/protocol/mokly-base-preparation.md)
@@ -46,7 +52,11 @@ not fill the source-byte LRU.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
-needs files on disk. `DiskCache` keeps the source and dependency namespaces
+needs files on disk. Its `review.base-extraction` span times the source key,
+the cache lookup, and a build, and records `action`: `reuse` for a complete
+entry and `extract` for a build. `Extraction::existing` and `Cache::lease`
+lease a complete entry without a build, so base preparation can read an
+earlier extraction before it knows whether the base needs one. `DiskCache` keeps the source and dependency namespaces
 under the directory that `SystemLocations` selects, with OS locks for
 namespace mutation and entry leases. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
@@ -145,7 +155,8 @@ component's base side, for current and removed details. These records carry
 every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent until the caller proves usage.
+An absent workspace stays absent. An absent list stays absent until the caller
+proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file

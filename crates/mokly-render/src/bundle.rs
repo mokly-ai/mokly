@@ -1,6 +1,6 @@
 //! Bundle only changed JavaScript and isolate class maps across retained graphs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
@@ -17,9 +17,10 @@ use mokly_sidecar::wire::MethodResult;
 use crate::error::{InternalError, RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::{BundleLease, PreparedLease};
+use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
-use crate::{bundle_attempt, bundle_inputs};
+use crate::{bundle_attempt, bundle_inputs, render_environment};
 use crate::{sources, stylesheets};
 
 pub(crate) struct BundleState {
@@ -30,6 +31,7 @@ pub(crate) struct BundleState {
     pub(crate) definitions: Definitions,
     pub(crate) modules: BTreeMap<String, Vec<String>>,
     pub(crate) module_digests: BTreeMap<String, Option<String>>,
+    pub(crate) render: RenderEnvironment,
     pub(crate) stamp: InputStamp,
 }
 
@@ -90,6 +92,7 @@ pub(crate) fn describe(
         record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
+    let render = render_environment::derive(&params, &result, &maps)?;
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules
@@ -105,6 +108,7 @@ pub(crate) fn describe(
             definitions: existing.definitions.clone(),
             modules,
             module_digests,
+            render,
             stamp,
         });
         bundle_attempt::remember(runtime, &existing);
@@ -137,6 +141,7 @@ pub(crate) fn describe(
         definitions,
         modules,
         module_digests,
+        render,
         stamp,
     });
     bundle_attempt::remember(runtime, &state);
@@ -164,6 +169,11 @@ fn finish(
             css_context: lease.side.context.clone(),
             modules: bundle.modules.clone(),
             module_digests: bundle.module_digests.clone(),
+            environment: bundle.render.environment.clone(),
+            resolution_digests: bundle.render.resolution_digests.clone(),
+            class_map_digests: bundle.render.class_map_digests.clone(),
+            runtime_packages: bundle.render.runtime_packages.clone(),
+            unattributed: BTreeSet::new(),
             resolution_files: bundle
                 .stamp
                 .files
@@ -196,8 +206,6 @@ fn finish(
         bundle.definitions.clone(),
     ))
 }
-
-type ClassMaps = BTreeMap<String, BTreeMap<String, String>>;
 
 fn maps_digest(maps: &ClassMaps) -> Result<String> {
     match serde_json::to_vec(maps) {

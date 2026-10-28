@@ -134,7 +134,7 @@ test(
         '{"review":{"base":"fixture-base"}}',
       );
       const component = (body: string) =>
-        `---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<button>${body} {{label}}</button>`;
+        `---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: disabled, title: Disabled, props: {label: Disabled}}]\n---\n<button>${body} {{label}}</button>`;
       await write(root, "specs/button.component.html", component("Before"));
       await write(
         root,
@@ -161,11 +161,17 @@ test(
         "mokly-viewer/entries/button.json",
       );
       assert.ok(
-        button.workspace!.usedBy.some((use) => use.entryPath === "home"),
+        button.workspace!.usedBy!.some((use) => use.entryPath === "home"),
       );
       assert.ok(
-        button.workspace!.affected.some((use) => use.entryPath === "affected"),
+        button.workspace!.affected!.some((use) => use.entryPath === "affected"),
       );
+      const variant = await json<EntryDetailV3>(
+        built.output,
+        "mokly-viewer/entries/button/disabled.json",
+      );
+      assert.equal(variant.workspace!.usedBy, undefined);
+      assert.equal(variant.workspace!.affected, undefined);
       const affected = await json<EntryDetailV3>(
         built.output,
         "mokly-viewer/entries/affected.json",

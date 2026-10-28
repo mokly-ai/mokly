@@ -4,7 +4,7 @@
 
 The browser renders Browse from a stub, an index, and entry details. The index
 holds navigation and metadata. Details hold usage, comparison evidence and
-workspaces. Serve and `build` deliver them. Navigation fetches the next detail.
+workspaces. Serve and `build` deliver them. Navigation fetches the route's details.
 No process renders shell HTML.
 
 ## Routes
@@ -122,6 +122,17 @@ Serve a view's usage is `pending` until its first render completes and the
 next publication replaces the detail; `build` renders every view before it
 writes, so a built detail carries no `pending` view.
 
+The workspace of a current component variant omits `usedBy` and `affected`.
+Its page reads both lists from its component parent's detail. Screens,
+component parents, and removed entries keep both lists in their own workspaces.
+Keeping copies on current variants was rejected because it repeats most of the
+usage data. Moving `affected` in a later format change was rejected because
+the same parent request carries both lists. The core rejects either list on a
+current component variant under the
+[misplaced-field rule](./mokly-catalogue-serialization.md#versions).
+Checking this placement only in tests was rejected because a writer bug must
+fail before a build or publication exposes it.
+
 A screen or component detail omits `workspace` until every input of its lists
 is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
@@ -141,50 +152,9 @@ retries on the next publication message. Static builds have no descriptor.
 
 ## Fetch And Fences
 
-At start the shell fetches the index, then the detail of the routed entry and,
-for a use case, the detail of each step screen whose views its frames show. It
-renders the navigation when the index arrives and the frames when those
-details arrive. It does not request the deployment file on the first load. On
-navigation inside the shell it commits the route from the index at once and
-fetches the destination's details. A static catalogue requests
-`mokly-viewer/deployment.json` with each detail request from that in-shell
-navigation, and before it opens a comparison or a removed entry. An embedded
-viewer makes this request when it fetched the index from a URL. An object index
-does not request the file. The standalone shell keeps the check for static
-catalogues. Each check uses the catalogue origin root. An unreadable or missing
-deployment file changes nothing.
-
-The separate deployment file checks old static tabs, so unchanged details keep
-their bytes across deployments. The rejected record-and-detail id misses
-viewer-only deployments and removed comparisons.
-
-Current detail fences check `revision`, then `detailId`, then identity and
-content. Revision comes first because newer Serve details have new ids. A revision mismatch
-refetches the index once. If the revision still disagrees, the entry
-shows its unavailable state with retry. If the revision matches but the
-`detailId` differs, the detail has replaced status in a static build and in
-Serve. The standalone shell performs a full page load, and an embedded host
-receives one `onError` and keeps its state. From then on the shell loads no
-index or detail, closes the event stream, and reports no later failure. An
-identity or content mismatch leaves the entry unavailable with retry. A use
-case shows that state only after
-each of its details has arrived, failed, or been replaced; until then its
-stage keeps loading, and an embedded host still receives the `onError` of each
-failure at once. A route that still waits
-for a detail has the replaced delivery status: in both hosts its stage keeps
-the loading state, never the unavailable state, until the new data arrives
-with the full page load or the `index` that the host supplies. A route whose
-details all arrived keeps them. A removed detail is accepted only when
-`identity` equals the index, its path selects the index's removed record, and
-`snapshotId` and `detailId` equal that record. Held details stay installed when
-a new index lists the same `detailId`; a current detail also keeps its
-`revision`.
-
-Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
-URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
-and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
-Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
-The shell keeps the index and the details for the page's lifetime.
+The [shell fetch and fence rules](./mokly-shell-fences.md) give how the shell
+fetches the index, the details, and the deployment file, when it accepts a
+detail, and how it answers each failed or mismatched response.
 
 ## Updates In Serve
 
@@ -205,7 +175,8 @@ On a message whose `data` differs from the installed `deploymentId`, another
 server process answers, and the standalone shell performs a full page load of
 the current URL. On a message whose id is above the installed revision, the
 shell cancels a refresh still in flight, fetches the index and the current
-route's details, requires one `revision` on all of them at or above the message id,
+route's details, including a current component variant's parent detail,
+requires one `revision` on all of them at or above the message id,
 and adopts them in one store commit: the navigation, the Changes marks,
 Usage, and the details panel update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
@@ -213,10 +184,11 @@ shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and
 replaces the render capability; a current entry the index no longer lists
 shows the missing state under the kept URL until an index lists it again; no
-other update reloads the page. When a fetch fails or the pair disagrees after
+other update reloads the page. When a fetch fails or the details disagree after
 one more index fetch, the shell keeps its state, shows the entry as
-unavailable with retry, and waits for the next message; a use case shows that
-state only after each of its details has arrived, failed, or been replaced.
+unavailable with retry, and waits for the next message. That state waits until
+each route detail, including a current component variant's parent detail, has
+arrived, failed, or been replaced.
 
 ## Identity
 
@@ -236,15 +208,3 @@ A new id means another build or process.
 entry path and optional snapshot id to an object, URL, or promise of either. Hosts use their own
 React. `@mokly/viewer/browser` mounts the standalone shell in the stub's mount element.
 The [embeddable viewer contract](./mokly-viewer.md) owns the props.
-
-## Fail-Closed Rules
-
-| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
-| an index or an event message with another `deploymentId`, or a current detail whose `detailId` differs from the index record at the same revision                                                                                                                       | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
-| a static deployment file with another `deploymentId`                                                                                                                                                                                                                    | a full page load in the standalone shell; one `onError` in an embedded host                                             |
-| a missing or unreadable static deployment file                                                                                                                                                                                                                          | no change                                                                                                               |
-| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                      | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
-| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, snapshot id, or `detailId` differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry; for a use case, once each of its details arrived, failed, or was replaced     |

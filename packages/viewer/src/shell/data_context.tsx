@@ -103,7 +103,7 @@ export function useLiveEditingStart(): LiveEditingStart | undefined {
   return useContext(ShellDataContext).editingStart;
 }
 
-/** The delivery of the routed entry's detail; absent on home and missing routes. */
+/** The delivery of the route's details; absent on home and missing routes. */
 export function useRouteDelivery(): DetailDelivery | undefined {
   return useContext(ShellDataContext).routeDelivery;
 }

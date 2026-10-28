@@ -1,6 +1,7 @@
 /** Diagnostic phases expose categories only, without authored paths or values. */
 export type BundlePhase =
   | "sidecar.bundle.compile"
+  | "sidecar.bundle.classify"
   | "sidecar.bundle.graph"
   | "sidecar.bundle.inputs"
   | "sidecar.bundle.resolution";

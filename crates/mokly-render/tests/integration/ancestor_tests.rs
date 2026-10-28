@@ -133,10 +133,10 @@ fn base_alias_and_bare_imports_use_the_base_ancestor_copy_for_javascript_and_css
         head.runtime.workers.clone(),
         head.runtime.version.clone(),
         Some(Arc::new(BaseSide {
-            sources: Lease {
+            sources: Arc::new(Lease {
                 directory: base.root().into(),
                 guard: Box::new(Unimock::new(())),
-            },
+            }),
             dependencies: Resolved {
                 tier: Tier::Installed,
                 node_modules: installed.root().join("node_modules"),

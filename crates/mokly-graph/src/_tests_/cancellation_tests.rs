@@ -14,7 +14,6 @@ use mokly_source_interface::tree::SourceTreeMock;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::cache::RenderCacheMock;
 use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::key::NodeKey;
@@ -148,9 +147,6 @@ fn preparation_stops_before_the_next_stylesheet_root() {
                 plugin_inputs: Default::default(),
                 directories: Vec::new(),
             })),
-        RenderCacheMock::insert
-            .next_call(matching!(_, _))
-            .returns(()),
         RenderWorkersMock::cancelled
             .next_call(matching!())
             .returns(true),

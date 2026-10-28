@@ -4,6 +4,7 @@ import {
   currentEntry,
   detailKey,
   fenceDetail,
+  workspaceDetailRequest,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
 import type {
@@ -28,11 +29,11 @@ export type DetailDelivery =
   | { status: "replaced" };
 
 /**
- * The details a route renders from: the routed entry's own, and for a use
- * case the detail of each step screen, whose views its frames inspect. Only
- * an entry or a removed record that the given index lists has a detail, so a
- * publication that drops or renames the routed entry requests none and
- * installs; the route then shows the missing state.
+ * The details a route renders from: the routed entry's own, a current
+ * component variant's parent, and each use-case step screen. Only an entry or
+ * a removed record that the given index lists has a detail, so a publication
+ * that drops or renames the routed entry requests none and installs; the route
+ * then shows the missing state.
  */
 export function routeDetailRequests(
   index: CatalogueReadModel,
@@ -54,6 +55,8 @@ export function routeDetailRequests(
   const entry = currentEntry(index, routed.path);
   if (entry?.kind !== routed.kind) return [];
   const requests: DetailRequest[] = [{ path: entry.path }];
+  const workspace = workspaceDetailRequest(entry, true);
+  if (workspace.path !== entry.path) requests.push(workspace);
   if (entry.kind === "use-case")
     for (const step of entry.steps)
       if (

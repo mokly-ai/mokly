@@ -113,6 +113,7 @@ What the shell reads: the catalogue index and entry detail, their routes, identi
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
 - [Public Catalogue Read Model](./mokly-catalogue.md)
 - [Shell Delivery And Read Model Routes](./mokly-shell-delivery.md)
+- [Shell Fetch And Fences](./mokly-shell-fences.md)
 - [Variant Navigation And Changes](./mokly-variant-navigation.md)
 
 ## Serve, Watch, And The CLI

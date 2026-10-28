@@ -12,6 +12,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
 use mokly_compare::base_render::{BaseProvider, BaseRequest};
+use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_paths;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
@@ -42,6 +43,7 @@ impl BaseProvider for NativeBase {
             inner: request.sources.tree.clone(),
             cancellation: self.cancellation.clone(),
         });
+        let early = self.early_sources(request)?;
         let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
         let file = request.working_config.file.to_string_lossy();
         let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
@@ -73,10 +75,14 @@ impl BaseProvider for NativeBase {
                 &config,
                 &self.runtime.dependency_usage.directories(),
                 &self.runtime.dependency_usage.unmapped_directories(),
+                early,
             )?)
         } else {
             None
         };
+        if let Some(base) = &base {
+            request.sources.sources.attach(base.sources.clone())?;
+        }
         let scripts_hint = base.as_ref().is_some_and(|base| {
             base.dependencies.tier == Tier::Installed && !request.install_scripts
         });
@@ -155,6 +161,37 @@ impl BaseProvider for NativeBase {
                     error
                 })
             }
+        }
+    }
+}
+
+impl NativeBase {
+    /// Before the base configuration loads, leases an existing complete extraction
+    /// and attaches it to the base sources, when the working configuration names a
+    /// renderer or PostCSS. This optional step never builds an extraction, and a
+    /// failure other than cancellation leaves the base reads on Git.
+    fn early_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
+        let input = &request.working_config.input;
+        if input.renderer.is_none() && input.postcss.is_none() {
+            return Ok(None);
+        }
+        let attached = self
+            .dependencies
+            .existing_sources(request)
+            .and_then(|lease| match lease {
+                Some(lease) => {
+                    request.sources.sources.attach(lease.clone())?;
+                    Ok(Some(lease))
+                }
+                None => Ok(None),
+            });
+        match attached {
+            Err(Error::Cancelled) => Err(Error::Cancelled),
+            Err(error) => {
+                tracing::debug!(%error, "base reads stay on Git before the dependency step");
+                Ok(None)
+            }
+            result => result,
         }
     }
 }

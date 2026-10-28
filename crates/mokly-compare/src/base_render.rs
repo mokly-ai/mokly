@@ -16,6 +16,7 @@ use crate::base_selection::{BaseLookup, PinnedBase};
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
+use crate::extraction_snapshots::Snapshots;
 use crate::git_tree::GitTree;
 use crate::source_failures::SourceFailures;
 use crate::sources::{GitSources, Sources};
@@ -48,6 +49,8 @@ pub struct GitSourceFactory {
     pub limits: Limits,
     /// Maximum retained source-blob batch bytes.
     pub batch_bytes: usize,
+    /// Extraction fingerprints shared by the base readers of the process.
+    pub snapshots: Arc<dyn Snapshots>,
 }
 
 impl BaseSourceFactory for GitSourceFactory {
@@ -57,7 +60,12 @@ impl BaseSourceFactory for GitSourceFactory {
         commit: ObjectId,
         root: &Path,
     ) -> Result<HistoricalSources> {
-        let sources: Arc<dyn Sources> = Arc::new(GitSources::new(repository, commit, self.limits));
+        let sources: Arc<dyn Sources> = Arc::new(GitSources::sharing(
+            repository,
+            commit,
+            self.limits,
+            self.snapshots.clone(),
+        ));
         let tree = Arc::new(GitTree::new(root.into(), sources.clone(), self.batch_bytes));
         Ok(HistoricalSources {
             sources,

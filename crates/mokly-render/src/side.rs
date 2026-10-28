@@ -17,10 +17,11 @@ use crate::source_paths;
 
 /// A base extraction and its selected dependency tier stay leased together.
 /// The base runtime and the source trees of its graphs hold this value, so both
-/// leases last while the base graph can still request a render.
+/// leases last while the base graph can still request a render. The base
+/// source reader shares the extraction lease.
 pub struct BaseSide {
     /// Extracted immutable source root.
-    pub sources: Lease,
+    pub sources: Arc<Lease>,
     /// Selected dependencies, repository mappings, and optional install lease.
     pub dependencies: Resolved,
     /// Pinned commit identity used for the stylesheet context.
@@ -61,19 +62,19 @@ pub(crate) fn inputs(
         package_roots: Vec::new(),
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
     };
-    resolution.package_roots = ancestor_roots::directories(&configuration_directory)
-        .into_iter()
-        .chain(config.package_roots())
-        .map(|root| {
-            if root.is_empty() {
-                config.repo_root.clone()
-            } else {
-                config.repo_root.join(root)
-            }
-            .to_string_lossy()
-            .into_owned()
-        })
-        .collect();
+    resolution.package_roots =
+        ancestor_roots::package_roots(&configuration_directory, config.package_roots())
+            .into_iter()
+            .map(|root| {
+                if root.is_empty() {
+                    config.repo_root.clone()
+                } else {
+                    config.repo_root.join(root)
+                }
+                .to_string_lossy()
+                .into_owned()
+            })
+            .collect();
     let (source_root, repository_roots, module_resolution, identity) = match base {
         Some(base) => (
             base.sources.directory.clone(),
@@ -178,3 +179,7 @@ impl SideInputs {
         Ok(self.source_root.join(path))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/side_roots_tests.rs"]
+mod side_roots_tests;

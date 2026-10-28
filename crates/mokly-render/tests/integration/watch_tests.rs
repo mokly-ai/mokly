@@ -94,11 +94,28 @@ fn javascript_edit_bundles_once_and_leaves_pure_html_documents_cached() {
     let first = consumer.generation(consumer.prepare().unwrap());
     let original = documents(first.as_ref());
     let initial = calls(&consumer);
+    let rendered = consumer.pool.calls.lock().unwrap().len();
     consumer.replace("specs/screen.mockup.tsx", "Hello", "Changed");
     let second = consumer.generation(consumer.prepare().unwrap());
     let next = documents(second.as_ref());
     assert_eq!(calls(&consumer).0, initial.0 + 1);
-    assert_eq!(calls(&consumer).1, initial.1 * 2);
+    let again: Vec<_> = consumer.pool.calls.lock().unwrap()[rendered..]
+        .iter()
+        .filter_map(|call| match call {
+            Call::RenderScreen(render) => Some(render.entry.path.clone()),
+            Call::RenderComponent(_) | Call::RenderPage(_) | Call::RenderStory(_) => {
+                Some("another definition".into())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(again.len(), 8, "{again:?}");
+    assert!(
+        again
+            .iter()
+            .all(|path| path == "screen" || path == "screen/other"),
+        "only the edited module's views render again: {again:?}"
+    );
     assert!(Arc::ptr_eq(
         &original["plain/index.mobile.html"],
         &next["plain/index.mobile.html"]

@@ -17,6 +17,35 @@ import { flush } from "./data_fakes.js";
 const HOME = "product/browse/home";
 const OTHER = "1".repeat(64);
 const GENERATION = "2".repeat(64);
+const SECOND_VARIANT = "components/action/second";
+
+function indexWithSecondVariant() {
+  return indexFixture((index) => {
+    const original = index.components.find(
+      (entry) => entry.path === "components/action/default",
+    )!;
+    index.components = [
+      ...index.components,
+      {
+        ...structuredClone(original),
+        path: SECOND_VARIANT,
+        title: "Second",
+        views: original.views.map((view) => structuredClone(view)),
+      },
+    ];
+    const componentFolder = index.tree.find(
+      (node) => node.kind === "folder" && node.path === "components",
+    );
+    const actionNode = componentFolder?.children?.find(
+      (node) => node.kind === "entry" && node.path === "components/action",
+    );
+    if (actionNode?.kind === "entry")
+      actionNode.children = [
+        ...(actionNode.children ?? []),
+        { kind: "entry", path: SECOND_VARIANT },
+      ];
+  });
+}
 
 /** The route's delivery as the shell store computes it from the controller. */
 function deliveryOf(
@@ -131,6 +160,32 @@ test("navigating away aborts the load the new route no longer wants", async () =
   assert.equal(fixture.commits.length, 0);
   fixture.navigate(`/view/${HOME}/`);
   assert.equal(fixture.source.details.length, 3);
+});
+
+test("a sibling variant keeps its held parent detail", async () => {
+  const fixture = controllerFixture(indexWithSecondVariant());
+  fixture.navigate("/view/components/action/default/");
+  const firstVariant = fixture.source.detail("components/action/default");
+  const parent = fixture.source.detail("components/action");
+  parent.resolve(detailFixture({ path: "components/action" }));
+  await flush();
+
+  fixture.navigate(`/view/${SECOND_VARIANT}/`);
+
+  assert.equal(firstVariant.signal.aborted, true);
+  assert.ok(
+    fixture.controller.snapshot.details.has(
+      detailKey({ path: "components/action" }),
+    ),
+  );
+  assert.deepEqual(
+    fixture.source.details.map((item) => item.input),
+    [
+      { path: "components/action/default" },
+      { path: "components/action" },
+      { path: SECOND_VARIANT },
+    ],
+  );
 });
 
 test("a failed detail stays unavailable until a retry", async () => {

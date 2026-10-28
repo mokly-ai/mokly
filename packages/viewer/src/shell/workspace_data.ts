@@ -23,7 +23,7 @@ export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
   controlOrder?: EntryDetailV3["controlOrder"];
-  /** False when no detail carried the Usage lists of this entry. */
+  /** False when the detail that carries this entry's Usage lists is absent. */
   usageComplete?: boolean;
   /** Selected views are waiting for the routed entry's detail. */
   viewUsagePending?: boolean;
@@ -78,8 +78,9 @@ export interface WorkspaceData {
 
 /**
  * The routed entry's workspace, projected from the published index and the
- * routed entry's detail. Entry state and actual saved views stay independent
- * of Changes membership. Every catalogue of a delivery carries its published
+ * route's held details. A current component variant uses its parent's detail
+ * for Usage lists. Entry state and actual saved views stay independent of
+ * Changes membership. Every catalogue of a delivery carries its published
  * records.
  */
 export function workspaceData(

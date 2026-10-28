@@ -111,9 +111,13 @@ pub struct Workspace {
     /// Whether this entry has an eligible comparison.
     pub comparison_eligible: bool,
     /// Current consuming uses.
-    pub used_by: Vec<UsageLink>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub used_by: Option<Vec<UsageLink>>,
     /// Affected consumers.
-    pub affected: Vec<UsageLink>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub affected: Option<Vec<UsageLink>>,
     /// Changed components affecting this entry.
     pub related_components: Vec<RelatedComponent>,
     /// Instances with changed data props.

@@ -72,11 +72,17 @@ test("each route requests the details its frames and lists read", () => {
     "product/browse/home",
     "product/browse/home/empty",
     "components/action",
-    "components/action/default",
     "guide",
     "product",
   ])
     assert.deepEqual(requests(`/view/${path}/`), [{ path }]);
+  assert.deepEqual(requests("/view/components/action/default/"), [
+    { path: "components/action/default" },
+    { path: "components/action" },
+  ]);
+  assert.deepEqual(requests("/view/product/browse/home/empty/"), [
+    { path: "product/browse/home/empty" },
+  ]);
   const tour = index.useCases.find((entry) => entry.path === "tour")!;
   assert.deepEqual(requests("/view/tour/"), [
     { path: "tour" },

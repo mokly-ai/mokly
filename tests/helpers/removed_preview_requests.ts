@@ -46,6 +46,13 @@ export function removedDetail(
       resourceEvidence: { rules: [], resources: [] },
     })),
     controlOrder: [],
+    workspace: {
+      comparisonEligible: false,
+      usedBy: [],
+      affected: [],
+      relatedComponents: [],
+      inputChanges: [],
+    },
   };
 }
 

@@ -35,15 +35,27 @@ one location before the diagnostic code. PostCSS requests carry logical
 stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
 Runtime allocates context ids from one process-wide sequence.
+A per-context request lock keeps the sidecar requests of one context one at a
+time, and equal inputs make one request. The shared PostCSS cache lock covers
+only lookups, inserts, and the dependency inventory. Round trips and read
+inventories therefore never wait for each other, and the stylesheet roots of
+one preparation overlap that work. A failed input keeps its diagnostic for the
+rest of its context. A timeout or a crash after its retry also fails every
+request of the context that already waits for its turn. The cache keeps a running byte charge, so
+an insert charges one record instead of recounting the cache.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
 directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
 
 The graph installs every definition binding and uses `MemoFragments` for
-screens, components, stories, and pages. Its fingerprint includes the bundle,
-binding table, and class maps. Requests add effective entry identity, handle,
-props, saved slots, view axes, and ignore scope. HTML slot content stays in the
+screens, components, stories, and pages. A fragment key uses the render input
+key of the handle's entry module: its module closure, the renderer or
+Storybook preview closure, the class maps, bindings, and resolution files of
+that closure, and the bundle environment. The bundle fingerprint of the
+generation, binding table, and class maps stays the fallback for an unknown
+module and an input of the live generation. Requests add effective entry
+identity, handle, props, saved slots, view axes, and ignore scope. HTML slot content stays in the
 core and enters authenticated placeholders with their reported scope. A private
 adapter-output placement keeps renderer wrappers outside a component's root.
 The graph's `render_props` method serves temporary previews through this path.
@@ -96,8 +108,9 @@ when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
-`BaseSide` takes the source lease and the complete dependency selection from
-`mokly-compare`. Bundle requests use that extraction, its selected dependencies,
+`BaseSide` takes the shared source lease and the complete dependency selection
+from `mokly-compare`. The base source reader holds the same lease. Bundle
+requests use that extraction, its selected dependencies,
 and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS

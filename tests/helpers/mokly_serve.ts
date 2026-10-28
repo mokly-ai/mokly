@@ -134,7 +134,7 @@ export async function completed(
       if (
         detail.revision === index.revision &&
         ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
-        Array.isArray(detail.workspace?.usedBy) &&
+        detail.workspace !== undefined &&
         Array.isArray(index.screens) &&
         Array.isArray(index.components)
       )
@@ -147,7 +147,7 @@ export async function completed(
       if (
         detail.revision === index.revision &&
         ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
-        Array.isArray(detail.workspace?.usedBy)
+        detail.workspace !== undefined
       )
         return { index, detail };
       await stream.read();

@@ -133,8 +133,8 @@ pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV3>) {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
             detail.workspace = Some(Workspace {
                 comparison_eligible: false,
-                used_by: Vec::new(),
-                affected: Vec::new(),
+                used_by: Some(Vec::new()),
+                affected: Some(Vec::new()),
                 related_components: Vec::new(),
                 input_changes: Vec::new(),
             });

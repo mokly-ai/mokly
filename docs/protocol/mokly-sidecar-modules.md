@@ -115,6 +115,12 @@ and retains the old generation until its final graph or request releases it.
 An evaluation-only change reuses compiled code without another compilation.
 Replays never compile the current filesystem for an old generation.
 
+The bundle keeps the authored name of every function and class, also when
+two modules declare the same top-level name. A function's `name` and its
+stack frame names show the authored name. Decision: names stay authored, so
+a module outside a definition's imports cannot change its render. A guide
+note alone was rejected, because a cached render could then stay stale.
+
 The sidecar performs no file writes. A resolution diagnostic names the logical module and the
 authored importer location. It does not expose another checkout, a dependency
 cache, or the bundler's implementation path.

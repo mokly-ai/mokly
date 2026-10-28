@@ -38,6 +38,7 @@ fn strict_reader_preserves_absent_empty_and_review_reason_records() {
     value["entry"]["snapshotId"] = json!("d".repeat(64));
     value["entry"]["kind"] = json!("component");
     value["controlOrder"] = json!([]);
+    value["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
     value["reasons"] = json!([{ "kind": "removed" }]);
     let read = readers::detail(&value.to_string()).unwrap();
     assert_eq!(serde_json::to_value(read).unwrap(), value);
