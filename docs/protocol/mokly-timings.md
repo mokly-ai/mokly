@@ -52,6 +52,7 @@ its files are installed. Its Serve duration includes queue time.
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                                  |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                              |
 | `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation            |
+| `review.base-extraction`                         | the base source key, the cache lookup, and the extraction when no complete entry exists; carries `action`, `reuse` or `extract`      |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
 | `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
@@ -79,8 +80,8 @@ Dependency `tier` is numeric: 1 for working dependencies, 2 for the base
 installation, and 3 for fallback. A successful fallback has status `ok`.
 Comparison counts cover the final view and document union. `changed` includes
 added and removed views; `unchanged` and `ignoredOnly` are separate totals.
-Only a completed comparison emits these counts. `review.base-dependencies`
-and `review.compare-views` start with error status and
+Only a completed comparison emits these counts. `review.base-extraction`,
+`review.base-dependencies`, and `review.compare-views` start with error status and
 record `ok` only after successful work.
 
 Static input counters on `output.*` stages are observations. Their

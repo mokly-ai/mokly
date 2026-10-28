@@ -20,8 +20,8 @@ A command therefore reads the requested checkout and its history even when
 Mokly starts inside a Git hook. `GIT_CONFIG_*` variables stay inherited.
 This preserves CI overrides such as `safe.directory`. Other environment
 values stay inherited. Checkout conversion preserves the user's repository
-working-directory context for filters. Converted output uses owned temporary
-storage outside the repository. Git and LFS downloads retain their normal
+working-directory context for filters. Converted output stays in memory or in
+owned temporary storage outside the repository. Git and LFS downloads retain their normal
 object stores. An inherited attribute source cannot replace
 the pinned commit's attributes.
 
@@ -90,6 +90,12 @@ cancellation, and exit validation.
 A comparison budget failure makes Changes unavailable with its limit and
 requested path; it does not fail the current build.
 
+One Git process converts each bounded batch of base files. A batch returns
+the same bytes as the conversion of each file alone. A file larger than the
+batch byte bound converts alone. Decision: one process converts a whole batch.
+Rejected: one process for each converted file, because process start-up
+dominated base preparation.
+
 A source archive contains checkout-converted regular files from the commit.
 Extraction checks leaf count and total converted bytes before file writes.
 The total converted bytes are a disk bound, which base extraction sets from
@@ -97,7 +103,11 @@ the source cache capacity. Extraction preserves executable files and omits links
 submodules. It does not apply archive-only substitutions. If a conversion
 filter fails, reaches its time limit, or exceeds a byte bound, that resource is
 unavailable with a `base-conversion` warning and independent resources continue.
-Each conversion has a 120-second time limit. Optional
+Each conversion process has a 120-second time limit. When a batch
+conversion fails, reaches that limit, or exceeds a byte bound, each of its
+files converts again alone, so a file is unavailable only when its own
+conversion fails. A file whose own conversion reached the time limit stays
+unavailable for the rest of that base preparation, without another attempt. Optional
 filter failures also make the resource unavailable; raw fallback bytes are not
 valid comparison evidence. Partial archives retain these warnings and do not
 become reusable cache entries.
