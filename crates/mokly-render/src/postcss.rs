@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config::relative;
 use mokly_css::error::{CssError, InternalError};
 use mokly_css::resolver::ImportResolver;
 use mokly_css::types::{CssProcessor, ProcessedCss};
@@ -33,7 +32,7 @@ pub(crate) struct PostCss {
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
     pub(crate) root: PathBuf,
     pub(crate) side: SideInputs,
-    pub(crate) module: PathBuf,
+    pub(crate) module: String,
     pub(crate) cache: Arc<Mutex<CssCache>>,
     pub(crate) resolver: Arc<dyn ImportResolver>,
     /// One sidecar request of this context at a time, held outside the shared cache lock.
@@ -173,7 +172,7 @@ impl PostCss {
             context: self.side.context.clone(),
             source_root: self.side.source_root.to_string_lossy().into_owned(),
             module_resolution: self.side.module_resolution.clone(),
-            postcss: relative(&self.module, &self.root),
+            postcss: self.module.clone(),
             source_path: path.into(),
             text: source.into(),
         });

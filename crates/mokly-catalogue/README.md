@@ -27,14 +27,19 @@ use the catalogued `config-invalid` diagnostics before a sidecar starts. Git
 root validation belongs to the Git boundary. The [configuration contract](../../docs/protocol/mokly-configuration.md)
 owns the accepted fields, the path rules, and the stylesheet matcher warnings.
 
-`ResolvedConfig::package_roots` returns each package root as a
-repository-relative path without `.` or `..` segments. The repository root is
-empty. The file policy, the static output boundary, the sidecar settings, and
-base dependency selection read this form, so a working tree and a Git tree name
-the same package root. `ResolvedConfig::package_root_aliases` keeps each
-authored spelling with `..`. The file policy and the output boundary project
-it, so a symbolic link before `..` cannot remove the protection of the
-directory that the spelling reaches.
+`ResolvedConfig::repository_path` returns the repository-relative POSIX path
+that a config-relative value names, without `.`, `..`, or empty segments. The
+repository root is empty. `ResolvedConfig::renderer`,
+`ResolvedConfig::postcss`, and `ResolvedConfig::package_roots` give that form
+for their fields. The file policy, the static output boundary, the sidecar
+settings, and base dependency selection read package roots in this form, so a
+working tree and a Git tree name the same package root. A symbolic link
+before `..` does not change that root, and the manifest check reads only it.
+
+`mokly-render` and `mokly-graph` read the renderer, the PostCSS module, and
+stylesheets in the same form. Bundle requests, render input keys, stylesheet
+roots and links, the declared stylesheet check, and every PostCSS request use
+that form.
 
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
@@ -95,12 +100,18 @@ unknown element checks. Unknown ignore-wrapper attributes warn once per shared
 body and attribute, and their values are ignored. They do not validate
 logical links or select component slots. Every consumer of authored-HTML
 tokens must call `html_tokens::parse`, which removes these attributes before
-validation, link checks, or source-location collection. Direct construction of
-an `html5gum::Tokenizer` is outside the catalogue boundary. The token boundary
-retains the attribute names for warnings and preserves reserved-navigation
-evidence and duplicate-attribute errors. Token checks follow markup contexts
-inside `noscript` and foreign `style` or `title` elements. Opaque wrapper
-signatures retain source identity without exposing discarded values.
+validation or link checks. The authored tree parse removes them too. The token
+boundary retains the attribute names for warnings and preserves
+reserved-navigation evidence and duplicate-attribute errors. Token checks read
+each body in the text modes that the HTML tree builder chooses, with scripting
+disabled, so the checks and the tree agree on which text is markup.
+Typed HTML inputs name each parse purpose. Templates and saved slots create
+`AuthoredHtml`, so a caller that holds one of them gets the authored parse.
+All other HTML is `DeliveredHtml`. The HTML token boundary returns Mokly-owned
+token and span types, and it is the only html5gum user: other code must not
+construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
+the html5ever tree builder for any `DriverSink`: the token checks pass a sink
+that records tokens, and `mokly-html` passes its tree arena.
 Composition owns literal attribute coercion, rendered document safety, assets,
 and anchors. `SourcePolicy` classifies root matches, reserved basenames, and
 inventoried inputs in that precedence order, including physical aliases.
@@ -169,8 +180,8 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
   shape and the `ResolvedConfig` that later stages read.
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
-  gives `ResolvedConfig::package_roots` and
-  `ResolvedConfig::package_root_aliases`.
+  gives `ResolvedConfig::repository_path`, the one resolver of
+  config-relative paths, with `renderer`, `postcss`, and `package_roots`.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
@@ -181,8 +192,14 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
   working-tree `SourceTree` adapter.
 - [`src/protection.rs`](./src/protection.rs) defines `SourcePolicy`, which
   classifies private sources and their physical aliases.
+- [`src/html_input.rs`](./src/html_input.rs) defines `AuthoredHtml` and
+  `DeliveredHtml`, the typed parse inputs. `Template::html`,
+  `Template::located_html`, and `SavedSlot::html` create authored inputs.
 - [`src/html_tokens.rs`](./src/html_tokens.rs) provides `parse`, the one token
-  boundary for authored HTML.
+  boundary for authored and delivered HTML.
+- [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
+  `DriverSink`, which run html5gum under the html5ever tree builder for the
+  checks and for the tree.
 - [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides `for_entry`,
   which reports each unsafe integer in the complete props of one entry.
 - [`src/diagnostic.rs`](./src/diagnostic.rs) and

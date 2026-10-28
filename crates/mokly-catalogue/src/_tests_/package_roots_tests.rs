@@ -1,7 +1,7 @@
 //! Package roots keep one normalized meaning in every source tree.
 
 use std::io;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Component, Path};
 use std::sync::Arc;
 
 use mokly_source_interface::error::SourceError;
@@ -107,26 +107,18 @@ fn rejected_roots_keep_their_authored_spelling_and_message() {
 }
 
 #[test]
-fn the_authored_spelling_target_still_satisfies_the_manifest_rule() {
-    let tree = tree(&[
+fn only_the_normalized_root_satisfies_the_manifest_rule() {
+    let link_target_only = tree(&[
         ("/repo/tools/ui", FileKind::Directory),
         ("/repo/tools/link/../ui/package.json", FileKind::File),
     ]);
-    let config = config(&["link/../ui"]);
-    validate_inputs(&tree, &config).unwrap();
-    assert_eq!(config.package_roots(), ["tools/ui"]);
-}
-
-#[test]
-fn package_root_aliases_keep_only_parent_segment_spellings() {
-    let config = config(&["../packages/ui", "./ui", "link/../ui", ".."]);
     assert_eq!(
-        config.package_root_aliases(),
-        [
-            "/repo/tools/../packages/ui",
-            "/repo/tools/link/../ui",
-            "/repo/tools/..",
-        ]
-        .map(PathBuf::from)
+        message(&link_target_only, &["link/../ui"]),
+        "moduleResolution.packageRoots[0]: link/../ui must contain package.json"
     );
+    let normalized_root = tree(&[
+        ("/repo/tools/ui", FileKind::Directory),
+        ("/repo/tools/ui/package.json", FileKind::File),
+    ]);
+    validate_inputs(&normalized_root, &config(&["link/../ui"])).unwrap();
 }

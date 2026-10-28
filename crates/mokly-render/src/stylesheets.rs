@@ -41,7 +41,7 @@ pub(crate) fn compiler(
         },
     });
 
-    let processor = match &config.input.postcss {
+    let processor = match config.postcss() {
         Some(module) => Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
             lease: Arc::new(ContextLease {
@@ -63,11 +63,7 @@ pub(crate) fn compiler(
             resolver: resolver.clone(),
             root: config.repo_root.clone(),
             side: side.clone(),
-            module: config
-                .file
-                .parent()
-                .unwrap_or(&config.repo_root)
-                .join(module),
+            module,
             cache: runtime.css.clone(),
             turns: Turns::default(),
             module_digests: Default::default(),

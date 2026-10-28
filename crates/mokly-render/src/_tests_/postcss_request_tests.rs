@@ -60,7 +60,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                     "/installed/two/node_modules".into(),
                 ],
             },
-            module: "/head/postcss.mjs".into(),
+            module: "postcss.mjs".into(),
             cache: Arc::new(Mutex::new(CssCache::default())),
             resolver: Arc::new(Unimock::new(())),
             turns: Default::default(),

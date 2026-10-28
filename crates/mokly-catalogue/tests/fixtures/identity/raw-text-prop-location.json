@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<p>intro</p>\n\n\n<style>\n.x{color:{{missing}}}</style>\n"
+  },
+  "errors": [
+    {
+      "code": "html-props",
+      "message": "undeclared prop reference missing",
+      "path": "specs/home.screen.html",
+      "line": 8,
+      "column": 10
+    }
+  ]
+}

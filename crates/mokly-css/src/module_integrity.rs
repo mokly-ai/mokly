@@ -62,7 +62,7 @@ impl Entry {
 fn fingerprint(source: &str, prefix: &str) -> Vec<Entry> {
     let tokens = Tokens::new(source);
     let mut output = Vec::new();
-    let mut pending = vec![Work::Block(tokens.root(), Grammar::Rules)];
+    let mut pending = vec![Work::Block(tokens.root(), Grammar::Stylesheet)];
     while let Some(work) = pending.pop() {
         match work {
             Work::Emit(text, offset) => output.push(Entry::new(text, offset)),

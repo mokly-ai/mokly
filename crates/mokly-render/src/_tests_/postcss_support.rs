@@ -55,7 +55,7 @@ pub(super) fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -
             context: "context".into(),
             dependency_roots: Vec::new(),
         },
-        module: "/repo/postcss.mjs".into(),
+        module: "postcss.mjs".into(),
         cache: Arc::new(Mutex::new(CssCache::default())),
         resolver: Arc::new(Unimock::new(())),
         turns: Default::default(),

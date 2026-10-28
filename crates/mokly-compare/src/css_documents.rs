@@ -2,14 +2,15 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_css::match_tree::MatchTree;
 use mokly_graph::urls::local_target;
 use mokly_html::parse;
+use mokly_model::review_affected::ReviewSide;
 
 use crate::error::Result;
 use crate::matching_tree;
 use crate::resource_memo::ResourceMemo;
-use mokly_model::review_affected::ReviewSide;
 
 pub(crate) struct CssDocument {
     pub(crate) id: String,
@@ -51,7 +52,7 @@ pub(crate) fn collect(
             }
             if let Some(srcdoc) = element.attributes.get("srcdoc") {
                 let embedded = matching_tree::embedded(
-                    &parse::document(srcdoc),
+                    &parse::html(DeliveredHtml::document(srcdoc)),
                     &element.regions,
                     &element.owner,
                 );
@@ -75,7 +76,7 @@ pub(crate) fn collect(
             let Some(bytes) = memo.read(side, &route)? else {
                 continue;
             };
-            let nodes = parse::document(&String::from_utf8_lossy(&bytes));
+            let nodes = parse::html(DeliveredHtml::document(&String::from_utf8_lossy(&bytes)));
             let embedded = matching_tree::embedded(&nodes, &element.regions, &element.owner);
             let id = aliases.get(&route).unwrap_or(&route).clone();
             queue.push_back((id, route, embedded));

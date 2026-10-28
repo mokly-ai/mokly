@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -32,7 +31,6 @@ pub(crate) fn validate(
             });
         }
     };
-    let directory = config.file.parent().unwrap_or(&config.repo_root);
     let configured: BTreeSet<_> = config
         .input
         .stylesheets
@@ -44,7 +42,10 @@ pub(crate) fn validate(
                 .chain(rule.light_stylesheets.iter().flatten())
                 .chain(rule.dark_stylesheets.iter().flatten())
         })
-        .map(|path| relative(&directory.join(path), &config.repo_root))
+        .filter(|path| {
+            !path.starts_with('$') && !path.starts_with("http://") && !path.starts_with("https://")
+        })
+        .filter_map(|path| config.repository_path(path))
         .collect();
     let mut declarations = BTreeMap::new();
     for entry in catalogue
@@ -70,7 +71,12 @@ pub(crate) fn validate(
                     path: path.clone(),
                 });
             }
-            let logical = relative(&directory.join(path), &config.repo_root);
+            let Some(logical) = config.repository_path(path) else {
+                return Err(RenderError::StylesheetPath {
+                    component: entry.metadata.path.clone(),
+                    path: path.clone(),
+                });
+            };
             if let Err(source) = policy.stylesheet_input(&logical, configured.contains(&logical)) {
                 return Err(RenderError::StylesheetPolicy {
                     component: entry.metadata.path.clone(),
