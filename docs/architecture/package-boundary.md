@@ -1,7 +1,5 @@
 # Package And Consumer Boundary
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 ## Rule
 
 Mokly owns the mechanics shared by any mockup catalogue. A consumer owns
@@ -68,15 +66,15 @@ in the browser under the
 [shell delivery contract](../protocol/mokly-shell-delivery.md).
 
 `@mokly/viewer` depends on the exact coordinated release version of
-`@mokly/ui`, the shared UI package of the
-[viewer contract](../protocol/mokly-viewer.md#shared-ui-package). The UI
+`@mokly/ui`, the [shared UI package](../protocol/mokly-ui-package.md). The UI
 package owns the shell's presentational components and their stylesheets:
 markup, styles, and local interaction, driven by props and callbacks. It has
 no store, no catalogue read model, no network, no history, and no frame
-access, and React is its only peer. The viewer composes those components,
-supplies their props from the shell state, and bundles their CSS. The design
-mockup catalogue renders the same components. The dependency direction is the
-CLI, then the viewer, then the UI package; nothing imports upward.
+access, and React and React DOM are its only peers. The viewer composes those
+components, supplies their props from the shell state, and bundles their CSS.
+The design mockup catalogue renders the same components. The dependency
+direction is the CLI, then the viewer, then the UI package; nothing imports
+upward.
 
 The public boundary consists of
 [scoped instances](../protocol/mokly-instances.md), the

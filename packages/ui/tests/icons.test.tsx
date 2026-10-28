@@ -8,6 +8,7 @@ import type { ComponentType } from "react";
 
 import {
   BrandIcon,
+  ChevronDownIcon,
   ChevronIcon,
   CollapseIcon,
   ComponentVariantIcon,
@@ -30,6 +31,7 @@ import {
 /** Each glyph with the size it draws when the caller names none. */
 const GLYPHS: readonly [string, ComponentType<{ size?: number }>, number][] = [
   ["BrandIcon", BrandIcon, 22],
+  ["ChevronDownIcon", ChevronDownIcon, 13],
   ["ChevronIcon", ChevronIcon, 13],
   ["CollapseIcon", CollapseIcon, 13],
   ["ComponentVariantIcon", ComponentVariantIcon, 15],
@@ -65,6 +67,32 @@ function drawn(container: HTMLElement): SVGSVGElement {
   const svg = svgs[0];
   assert.ok(svg);
   return svg;
+}
+
+/** A point of a glyph on its 24-unit grid, x then y. */
+type Point = readonly [number, number];
+
+/** The start, the tip, and the end of the one polyline a chevron draws. */
+function chevronCorners(container: HTMLElement): [Point, Point, Point] {
+  const points = drawn(container)
+    .querySelector("polyline")
+    ?.getAttribute("points");
+  assert.ok(points);
+  const numbers = points
+    .trim()
+    .split(/[\s,]+/u)
+    .map(Number);
+  assert.equal(numbers.length, 6, points);
+  const corner = (at: number): Point => {
+    const x = numbers[at];
+    const y = numbers[at + 1];
+    assert.ok(
+      x !== undefined && y !== undefined && Number.isFinite(x + y),
+      points,
+    );
+    return [x, y];
+  };
+  return [corner(0), corner(2), corner(4)];
 }
 
 test("the icon frame is a decorative 24-unit stroke in the current colour", () => {
@@ -127,4 +155,21 @@ test("each workspace icon draws its own shape in the 18px frame", () => {
   assert.equal(shapes.size, WORKSPACE_ICONS.length);
   const { container } = render(<WorkspaceIcon name="close" size={12} />);
   assert.equal(drawn(container).getAttribute("width"), "12");
+});
+
+test("the down chevron points down and the disclosure chevron points right", () => {
+  // A chevron's middle corner is its tip, centred past the line of its ends.
+  const [downStart, downTip, downEnd] = chevronCorners(
+    render(<ChevronDownIcon />).container,
+  );
+  assert.equal(downStart[1], downEnd[1]);
+  assert.ok(downTip[1] > downStart[1]);
+  assert.equal(downTip[0], (downStart[0] + downEnd[0]) / 2);
+
+  const [rightStart, rightTip, rightEnd] = chevronCorners(
+    render(<ChevronIcon />).container,
+  );
+  assert.equal(rightStart[0], rightEnd[0]);
+  assert.ok(rightTip[0] > rightStart[0]);
+  assert.equal(rightTip[1], (rightStart[1] + rightEnd[1]) / 2);
 });

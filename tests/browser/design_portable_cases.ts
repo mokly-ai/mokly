@@ -118,7 +118,7 @@ export function registerDesignPortable(
         "design/changes/impact/empty",
       ]) {
         await page.goto(design(route, viewport));
-        await expect(page.locator(".mbk-cmp-toolbar a")).toHaveCount(0);
+        await expect(page.locator(".mbk-diff-toolbar a")).toHaveCount(0);
         for (const control of await page
           .locator(".mbk-pathchip, .mbk-search-tag")
           .all())

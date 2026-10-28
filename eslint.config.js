@@ -86,6 +86,7 @@ export default tseslint.config(
   {
     files: [
       "tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
+      "packages/viewer/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
       "packages/ui/tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}",
     ],
     ignores: ["tests/helpers/durations.ts"],

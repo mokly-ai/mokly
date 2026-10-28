@@ -9,6 +9,7 @@ import {
   AppearanceSelector,
   type Appearance,
 } from "../src/appearance-selector/appearance-selector.js";
+import { ChevronDownIcon } from "../src/icons/icons.js";
 
 const MARK = {
   changedId: "root-mb-view-changed-scheme",
@@ -55,6 +56,21 @@ test("the control offers Auto, Light, and Dark under the name the shell specs qu
       ["dark", "Dark"],
     ],
   );
+});
+
+test("the control ends in the 12px down chevron of a select", () => {
+  const { container } = render(
+    <AppearanceSelector {...MARK} changed={false} value="auto" />,
+  );
+  const control = container.querySelector("[data-mokly-appearance-control]");
+  assert.ok(control);
+  // The faces hold the scheme glyphs; the chevron is the control's own glyph.
+  const glyphs = [...control.children].filter(
+    (child) => child.tagName.toLowerCase() === "svg",
+  );
+  assert.equal(glyphs.length, 1);
+  const chevron = render(<ChevronDownIcon size={12} />).container;
+  assert.equal(glyphs[0]?.outerHTML, chevron.innerHTML);
 });
 
 test("each choice reaches the callback once and in order, and Escape chooses nothing", () => {

@@ -118,7 +118,7 @@ export function registerDesignIndexEntries(
       await expect(control.locator(".ce-view-changed")).toBeVisible();
       await expect(
         page.locator(".mbk-appearance .mbk-view-changed"),
-      ).toHaveCount(0);
-      await expect(page.locator(".mbk-cmp-toolbar")).toBeVisible();
+      ).toBeHidden();
+      await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
     });
 }

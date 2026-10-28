@@ -1,7 +1,5 @@
 # @mokly/ui
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 `@mokly/ui` holds the presentational components of the Mokly Browse shell and
 their stylesheets. `@mokly/viewer` composes them into the shell that Serve,
 the static build, and React hosts render, and the design mockup catalogue
@@ -27,7 +25,9 @@ with its CSS at the matching `.css` subpath. The package has no root entry.
 `styles.css` holds the rules of every component; a component's own stylesheet
 leaves out the components it renders, such as the change mark of the
 appearance selector. The rules read the shell's colour tokens, such as
-`--chrome-surface`, which the `@mokly/viewer` stylesheet declares. The viewer
+`--chrome-surface`, which the `@mokly/viewer` stylesheet declares; a host that
+renders a component without that stylesheet declares them itself, as the
+design catalogue's `examples/basic/design.css` does. The viewer
 bundles `styles.css` into its own `shell.css` and `styles.css`, so a delivery
 or a host loads one stylesheet as before. A shell container that needs the
 store stays in `@mokly/viewer` and composes a package component.
@@ -74,6 +74,13 @@ File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`; a lint
 holds the rule. A component imports only `react`, `react-dom`, and the other
 components of this package by relative path; a lint holds that rule too.
 
+The design library under `examples/basic/specs/design/library` imports the
+appearance selector and the comparison toolbar, with their stylesheets, from
+`src/` by repository path, not from `dist`: the base side of a Changes
+comparison renders from Git, which holds no build output. A change here
+therefore also changes their design mockups, so run the mockup check of
+[`AGENTS.md`](../../AGENTS.md) after it.
+
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
 styles. Its subpaths in the `exports` map are `./<name>`, with `types` and
 `import` targets in `dist/<name>/`, and `./<name>.css`. The build copies
@@ -105,7 +112,7 @@ an unlayered shell or host rule wins over them; a test holds the rule.
 
 ### Related Docs
 
-- [Embeddable viewer contract](../../docs/protocol/mokly-viewer.md#shared-ui-package)
+- [Shared UI package contract](../../docs/protocol/mokly-ui-package.md)
 - [Package and consumer boundary](../../docs/architecture/package-boundary.md)
 - [Design components](../../docs/protocol/mokly-design-components.md)
 - [Viewer appearance](../../docs/protocol/mokly-viewer-appearance.md)

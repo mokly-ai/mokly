@@ -86,12 +86,17 @@ Open decisions found during milestone 2, asked on 2026-10-27:
 - Decision 7 is answered: see milestone 5.
 - Decision 8 is answered: see milestone 4.
 
+Open decision found during milestone 4, asked on 2026-10-28: decision 10,
+see milestone 4.
+
 Evidence goes under `.context/ui-package/`.
 
 Contract owners:
 
 - [Embeddable viewer contract](../docs/protocol/mokly-viewer.md), the
-  package set and the package boundary.
+  package set and the host stylesheet rule.
+- [Shared UI package](../docs/protocol/mokly-ui-package.md), the package,
+  its boundary, and its stylesheets.
 - [Viewer appearance](../docs/protocol/mokly-viewer-appearance.md), the host
   stylesheet precedence.
 - [Design components](../docs/protocol/mokly-design-components.md), the
@@ -352,34 +357,57 @@ Decision 8 (2026-10-28, the user): option A, `packages/viewer/tests/**`
 joins the elapsed-time lint, with zero findings today. Rejected: B, narrow
 the contract. Reason: the contract already states the rule.
 
-- [ ] `chrome/appearance-selector`: `appearance-selector.view.tsx` renders
-      `@mokly/ui/appearance-selector`. Delete the hand-written markup and
-      `examples/basic/design-library/chrome/appearance-selector.css`. The
-      component's `stylesheets` field names the package stylesheet by its
-      dependency path under the imported-styles contract. Delete the icons in
-      `specs/design/parts/icons.tsx` that only this view used, and record the
-      search.
-- [ ] `controls/comparison-toolbar`: the same for its view file and its
-      stylesheet.
-- [ ] Finding 1, option B: the package appearance selector draws a down
+Verified on 2026-10-28 after the merge of `origin/main` in `bd435625`: the
+mockups differ from the approved artboards only by findings 1 to 4, and the
+product differs only by the down chevron. Finding 3 measures 1px on desktop
+and 1.5px on mobile. Evidence: `.context/ui-package/mockups/final/report-ui.md`.
+
+Decision 10 (asked on 2026-10-28, open): on eight component pages, a
+keyboard-focused mode link draws its focus outline 3px from the link instead
+of 2px. The package draws a plain link, and the component pages' link rule
+sets that offset; the mockup copy drew a link control with a 2px offset.
+Options: A, accept, so that every mode of one band shares one focus ring; B,
+add one rule to `examples/basic/design-components.css` that keeps 2px.
+Recommended: A.
+
+- [x] `chrome/appearance-selector`: `appearance-selector.view.tsx` renders
+      the package `AppearanceSelector` from its source under
+      `packages/ui/src`, inside a wrapper that carries the compact flag. The
+      hand-written markup is gone. Under decision 9,
+      `examples/basic/design-library/chrome/appearance-selector.css` stays
+      the registration's stylesheet: it imports the package stylesheets of
+      the control and its change mark by repository path and keeps only the
+      compact-flag rule. The icons in `specs/design/parts/icons.tsx` that
+      only this view used are deleted, with the searches under
+      `.context/ui-package/mockups/final/deletions/`.
+- [x] `controls/comparison-toolbar`: the same for its view file and its
+      stylesheet. The view maps the saved modes to the package modes, links a
+      mode through `modeHref`, and sets `interactive` from `accessible`.
+      `specs/design/parts/selection_control.tsx` is deleted.
+- [x] Finding 1, option B: the package appearance selector draws a down
       chevron, as the artboards do, with its tests and the viewer's
-      string-rendered expectations updated.
-- [ ] Decision 8, option A: `packages/viewer/tests/**` joins the elapsed-time
-      lint in `eslint.config.js` and its test.
-- [ ] Decision 9, option A: the "by its dependency path" sentences of
+      string-rendered expectations updated. `ChevronDownIcon` joins
+      `packages/ui/src/icons/icons.tsx`. No viewer test asserted the glyph.
+- [x] Decision 8, option A: `packages/viewer/tests/**` joins the elapsed-time
+      lint in `eslint.config.js` and its test. The viewer tests have no
+      finding.
+- [x] Decision 9, option A: the "by its dependency path" sentences of
       `docs/protocol/mokly-design-components.md`, the design library README,
       and `AGENTS.md` say "by its repository path".
-- [ ] `tests/design_boundaries.test.ts` and `tests/helpers/design_styles.ts`:
+- [x] `tests/design_boundaries.test.ts` and `tests/helpers/design_styles.ts`:
       the audited boundaries of the adopted components read the package CSS.
-- [ ] The design browser specs keep passing. Replace an assertion that only
-      compared the mockup copy with the shell control by one against the
-      shared implementation.
-- [ ] Mockup check: `npm run build`, then
+      The palette reader also reads private token names, and a new test
+      checks that the palette declares every token that a package
+      stylesheet reads.
+- [x] The design browser specs keep passing. No assertion compared only the
+      mockup copy with the shell control, so none was replaced.
+- [x] Mockup check: `npm run build`, then
       `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
       Smoke test through `npm run dev`: the Shared components pages of both
       components, the Appearance artboards, and the Changes diff-controls
       artboards, in both viewports and both schemes. Save screenshots under
-      `.context/ui-package/mockups/`.
+      `.context/ui-package/mockups/`. Changes is ready against `origin/main`
+      with 216 changed design entries.
 
 ## Milestone 5: UI package registration
 
@@ -409,13 +437,23 @@ seven packages.
       2026-10-28 by the user's account with a one-time password.
 - [ ] Configure the package's trusted publisher and access settings like the
       other packages, and read them back.
-- [ ] Record the registration version under Registered Packages of
-      `docs/protocol/npm-bootstrap.md`.
+- [x] Record the registration version under Registered Packages of
+      `docs/protocol/npm-bootstrap.md`. Done on 2026-10-28 in `de199142`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-- [ ] Remove the status lines that milestone 1 added, because the behaviour
+- [x] Remove the status lines that milestone 1 added, because the behaviour
       is implemented.
+- [x] Merge `origin/main` at `aab537bd` into the branch, in `bd435625`. The
+      remerge diff is empty. Evidence: `.context/ui-package/merge-main-2/`.
+- [x] Found after the merge: the Rust design fixtures under
+      `crates/mokly-cli/tests` copy `packages/ui/src` too, because the design
+      library imports it by repository path.
+- [x] Found after the merge: `docs/protocol/mokly-viewer.md` passed its
+      250-line cap. The shared UI package requirements move to their own
+      page, `docs/protocol/mokly-ui-package.md`, with every sentence and
+      decision 1, and the design components contract names the registration's
+      own stylesheet, which imports the package stylesheet.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

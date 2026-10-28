@@ -1,7 +1,5 @@
 # Shared Browse shell
 
-Status: In progress under the [shared UI package plan](../../../../plans/ui-package.md).
-
 Serve, the static build, and React hosts render this same tree in the
 browser.
 
@@ -183,7 +181,10 @@ owner never reads the address.
 
 The icons, the change mark, the appearance selector and the comparison
 toolbar are `@mokly/ui` components under `packages/ui/src`: props in,
-callbacks out, no store. `appearance.tsx` is the viewer's wrapper that reads
+callbacks out, no store. The design library under
+`examples/basic/specs/design/library` renders the appearance selector and the
+comparison toolbar from the same sources, so a change to either also changes
+their design mockups. `appearance.tsx` is the viewer's wrapper that reads
 the identifier and workspace contexts and renders
 `@mokly/ui/appearance-selector`; `view_marks.ts` still owns the ids and the
 wording of the change marks, which the shell passes in. The package CSS files

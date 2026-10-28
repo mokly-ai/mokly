@@ -5,7 +5,7 @@
  */
 
 import { ChangeMark } from "../change-mark/change-mark.js";
-import { ChevronIcon, IconSvg } from "../icons/icons.js";
+import { ChevronDownIcon, IconSvg } from "../icons/icons.js";
 
 /** An interface appearance; Auto follows the reader's system. */
 export type Appearance = "auto" | "light" | "dark";
@@ -51,11 +51,11 @@ function appearanceOf(value: string): Appearance | undefined {
 }
 
 /**
- * A native select laid over the face of the current appearance. Every face is
- * rendered and the stylesheet reveals the one `data-appearance-value` names, so
- * a script that applies a choice changes the face by setting one attribute.
- * The select is uncontrolled: `value` is its first choice, and `onChange`
- * reports each choice the reader makes.
+ * A native select laid over the face of the current appearance and the down
+ * chevron of a select. Every face is rendered and the stylesheet reveals the
+ * one `data-appearance-value` names, so a script that applies a choice changes
+ * the face by setting one attribute. The select is uncontrolled: `value` is
+ * its first choice, and `onChange` reports each choice the reader makes.
  */
 export function AppearanceSelector(props: {
   /** The appearance the control shows. */
@@ -92,7 +92,7 @@ export function AppearanceSelector(props: {
           </span>
         );
       })}
-      <ChevronIcon size={12} />
+      <ChevronDownIcon size={12} />
       <select
         aria-describedby={props.changed ? props.changedId : undefined}
         aria-label="Appearance"

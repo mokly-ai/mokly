@@ -1,11 +1,11 @@
-// Shared Mokly shell glyphs: the disclosure chevron, the closed / open
-// folder icons for collapsible folders, the screen / page / use-case leaf
-// icons, the top bar's brand, search and tag controls, the device chrome's
-// copy and expand / collapse controls, and the workspace controls' icons.
-// Icons are stroke-based on a 24-unit viewBox and inherit `currentColor`; the
-// brand mark is the filled Mokly logo on its own 32-unit grid. Authored folder
-// groups swap closed and open folder icons; top-level catalogue sections and
-// the details inspector use the chevron.
+// Shared Mokly shell glyphs: the disclosure chevron, the down chevron of a
+// select, the closed / open folder icons for collapsible folders, the screen /
+// page / use-case leaf icons, the top bar's brand, search and tag controls,
+// the device chrome's copy and expand / collapse controls, and the workspace
+// controls' icons. Icons are stroke-based on a 24-unit viewBox and inherit
+// `currentColor`; the brand mark is the filled Mokly logo on its own 32-unit
+// grid. Authored folder groups swap closed and open folder icons; top-level
+// catalogue sections and the details inspector use the disclosure chevron.
 
 import type { ReactNode } from "react";
 
@@ -62,6 +62,15 @@ export function ChevronIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
       <polyline points="9 6 15 12 9 18" />
+    </IconSvg>
+  );
+}
+
+/** Down chevron of a control that opens a list of choices, such as a select. */
+export function ChevronDownIcon(props: { size?: number }) {
+  return (
+    <IconSvg size={props.size ?? 13}>
+      <polyline points="6 9 12 15 18 9" />
     </IconSvg>
   );
 }

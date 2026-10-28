@@ -8,6 +8,8 @@ const testPaths = extensions.flatMap((extension) => [
   `tests/example.test.${extension}`,
   `tests/browser/example.spec.${extension}`,
   `tests/helpers/nested/example.${extension}`,
+  `packages/viewer/tests/example.test.${extension}`,
+  `packages/viewer/tests/nested/example.${extension}`,
   `packages/ui/tests/example.test.${extension}`,
   `packages/ui/tests/nested/example.${extension}`,
 ]);

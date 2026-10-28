@@ -1,7 +1,5 @@
 # npm Release Management
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management

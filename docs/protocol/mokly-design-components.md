@@ -1,7 +1,5 @@
 # Registered Components In Mokly's Design Catalogue
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 ## Scope
 
 Mokly's shared design UI has its own component pages, saved variants,
@@ -14,13 +12,12 @@ they also have independent changes.
 The components live in the repository's mockup catalogue under
 `examples/basic/specs/design`. The package's browser shell stays in the
 package source, and consumer fixtures stay out of package runtime code. An
-inventory component that the shared UI package of the
-[viewer contract](./mokly-viewer.md#shared-ui-package) provides renders that
-package component through its `defineComponent` registration, with the
-package stylesheet as its public stylesheet, and keeps no copy of that markup
-or CSS. Decision: the mockup renders the package component, not its own
-copy kept aligned by tests, because two implementations drift and one serves
-the product and its mockups. The
+inventory component that the [shared UI package](./mokly-ui-package.md)
+provides renders that package component through its `defineComponent`
+registration. Its public stylesheet imports the package stylesheet. The
+component keeps no copy of that markup or CSS. Decision: the mockup renders
+the package component, not its own copy kept aligned by tests, because two
+implementations drift and one serves the product and its mockups. The
 Example Action and Toolbar components, the miniature subject screens and the
 pictured usage fixtures keep their separate roles. Usage in the outer
 inspector comes from the entry detail Mokly records, not from those pictured
@@ -52,9 +49,12 @@ slug `S`:
 - Component slug: `S` (for example, `style`); its path places it in gallery `G` under the
   [path contract](./mokly-paths.md).
 - Public stylesheet: `design-library/G/S.css` when styles are owned
-  exclusively by that component, or the shared UI package's stylesheet, named
-  by its dependency path, when that package provides the component. It is
-  authored CSS, not generated HTML.
+  exclusively by that component. It is authored CSS, not generated HTML. When
+  the shared UI package provides the component, that sheet imports the package
+  stylesheet by its repository path and adds only mockup rules. Decision: the
+  repository path, not the package name, because a comparison's base side
+  renders from Git, which holds the package sources and not their build
+  output; the core fix for built repository packages is a separate plan.
 - Variant entry slugs, exposed props, and the parent's own props follow the
   [inventory](./mokly-design-component-library.md). Each variant entry
   renders in both viewports.

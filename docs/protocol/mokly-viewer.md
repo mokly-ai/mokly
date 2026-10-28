@@ -1,7 +1,5 @@
 # Embeddable Mokly Viewer
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 ## Package And Props
 
 `@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
@@ -20,22 +18,8 @@ The package has four entry points:
   `build` deliver it as `/mokly-viewer/client/shell.js`.
 - `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), the link grammar of the [authoring links contract](./mokly-authoring.md#links), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the scoped stylesheet of an embedded root.
 
-### Shared UI Package
-
-`@mokly/ui` is an MIT, ESM npm package under `packages/ui`, with React and
-React DOM `>=19.0.0` as its only peers. It holds presentational shell
-components and their stylesheets as CSS files. `@mokly/viewer` depends on its
-exact released version and bundles its CSS, so `shell.css` and `styles.css`
-stay the only stylesheets that a delivery or a host loads. A package component
-takes props and callbacks only. It reads no store, no context, no catalogue
-read model type, no network, no history, and no frame. Each component is
-reachable by its own subpath, such as `@mokly/ui/appearance-selector`, and the
-package has no root entry. The viewer reaches the package through those
-subpaths only. The package never imports the viewer, the CLI, or consumer
-code. Decision: a separate package, not a directory in the viewer with an
-import lint, because only a package boundary stops a relative import of the
-viewer internals at the resolver, and one implementation then serves the
-product and its design mockups.
+The viewer depends on the [shared UI package](./mokly-ui-package.md) for the
+presentational components of its shell.
 
 Every delivery renders the shell from data in the browser.
 

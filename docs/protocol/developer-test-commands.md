@@ -1,7 +1,5 @@
 # Developer Test Commands
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 ## Public Commands And Preparation
 
 - `npm test -- [<file> ...] [<pattern> ...]` builds first with `npm run build`,

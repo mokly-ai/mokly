@@ -1,7 +1,5 @@
 # Mokly CI And Npm Release Contract
 
-Status: In progress under the [shared UI package plan](../../plans/ui-package.md).
-
 Breaking changes and their upgrade steps: the
 [upgrade guide](../guides/start/upgrade.md). The root `CHANGELOG.md` records
 every release.
