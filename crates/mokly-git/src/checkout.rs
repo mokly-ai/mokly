@@ -20,21 +20,7 @@ impl GitRepository {
         entries: &[Entry],
         limits: Limits,
     ) -> Result<Vec<Vec<u8>>> {
-        validate_entries(entries, limits)?;
-        for entry in entries {
-            if entry.size > limits.blob {
-                return Err(Error::ByteLimit { limit: limits.blob });
-            }
-        }
-        if entries
-            .iter()
-            .fold(0usize, |total, entry| total.saturating_add(entry.size))
-            > limits.bytes
-        {
-            return Err(Error::ByteLimit {
-                limit: limits.bytes,
-            });
-        }
+        admit(entries, limits)?;
         if entries.is_empty() {
             return Ok(Vec::new());
         }
@@ -44,24 +30,7 @@ impl GitRepository {
             convert_entries(self, commit, entries, &mut files, limits.bytes),
             entries,
         )?;
-        let mut total = 0usize;
-        let mut result = Vec::with_capacity(entries.len());
-        for (entry, bytes) in entries.iter().zip(files.into_files()) {
-            if bytes.len() > limits.blob {
-                return conversion(
-                    Err(Error::ByteLimit { limit: limits.blob }),
-                    std::slice::from_ref(entry),
-                );
-            }
-            total = total.saturating_add(bytes.len());
-            if total > limits.bytes {
-                return Err(Error::ByteLimit {
-                    limit: limits.bytes,
-                });
-            }
-            result.push(bytes);
-        }
-        Ok(result)
+        bounded(entries, files.into_files(), limits)
     }
 
     pub(crate) fn checkout_digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String> {
@@ -95,6 +64,52 @@ impl GitRepository {
         self.ensure_checkout_objects(commit, entries)?;
         conversion(Checkout::new(self, commit, entries, limits.bytes), entries)
     }
+}
+
+/// The count, mode, and raw byte checks that precede every converted read.
+pub(crate) fn admit(entries: &[Entry], limits: Limits) -> Result<()> {
+    validate_entries(entries, limits)?;
+    for entry in entries {
+        if entry.size > limits.blob {
+            return Err(Error::ByteLimit { limit: limits.blob });
+        }
+    }
+    if entries
+        .iter()
+        .fold(0usize, |total, entry| total.saturating_add(entry.size))
+        > limits.bytes
+    {
+        return Err(Error::ByteLimit {
+            limit: limits.bytes,
+        });
+    }
+    Ok(())
+}
+
+/// Applies the converted file and total bounds to the converted files of `entries`.
+pub(crate) fn bounded(
+    entries: &[Entry],
+    files: Vec<Vec<u8>>,
+    limits: Limits,
+) -> Result<Vec<Vec<u8>>> {
+    let mut total = 0usize;
+    let mut result = Vec::with_capacity(files.len());
+    for (entry, bytes) in entries.iter().zip(files) {
+        if bytes.len() > limits.blob {
+            return conversion(
+                Err(Error::ByteLimit { limit: limits.blob }),
+                std::slice::from_ref(entry),
+            );
+        }
+        total = total.saturating_add(bytes.len());
+        if total > limits.bytes {
+            return Err(Error::ByteLimit {
+                limit: limits.bytes,
+            });
+        }
+        result.push(bytes);
+    }
+    Ok(result)
 }
 
 fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
