@@ -313,11 +313,11 @@ The READMEs describe the code of Milestones 3 to 5.
 - [x] In the mokly-compare README, state that the cache location check
       compares both paths in one form, and update the Key Code line of
       `locations.rs`.
-- [ ] In the mokly-catalogue README, state that a configured path that
+- [x] In the mokly-catalogue README, state that a configured path that
       reaches an unresolved link fails with a message that names the link,
       and add a Key Code line for `config_links.rs`.
-- [ ] Remove the status line of the root discovery page.
-- [ ] Run `npm run format:check` and
+- [x] Remove the status line of the root discovery page.
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
 ## Milestone 7: Verification, commit, review, and handoff
