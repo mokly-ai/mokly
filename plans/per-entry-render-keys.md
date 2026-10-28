@@ -398,8 +398,11 @@ Let equal head and base inputs share render cache entries under decision 1.
 ## Milestone 6: Measurement and output check
 
 - [ ] Rebuild the release binary and the packages, then repeat the baseline
-      method on this branch on the same machine. Rerun when two runs differ
-      by more than ten percent. Save the records under `.context/perf/after-*`.
+      method on this branch on the same machine.
+  - Finding: the first run used a tier-two base, because the new fixture's
+    tracked `package.json` changed the repository's dependency identity.
+    The fixture now writes that file at test time. Rerun when two runs differ
+    by more than ten percent. Save the records under `.context/perf/after-*`.
 - [ ] Repeat the two `build` runs around the edit. Compare the index keys and
       the rendered bytes with the baseline outputs. Expected: only the edited
       entry's keys move, and the rendered bytes match the baseline build.

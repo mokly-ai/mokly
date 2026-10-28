@@ -7,8 +7,15 @@ use mokly_sidecar::methods::Call;
 use super::support::Consumer;
 
 /// The render keys fixture, with a dependency that only component C imports.
+///
+/// The test writes the root manifest, because a tracked package manifest would join
+/// the repository's dependency identity and give Changes a base installation.
 pub(super) fn consumer() -> Consumer {
     let consumer = Consumer::fixture("render-keys");
+    consumer.write(
+        "package.json",
+        "{\n  \"name\": \"render-keys-fixture\",\n  \"private\": true\n}\n",
+    );
     dependency(&consumer, "1.0.0", "dep-1");
     consumer
 }
