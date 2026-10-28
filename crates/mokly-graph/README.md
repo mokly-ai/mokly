@@ -178,6 +178,9 @@ retention disabled.
   `ThreadWorkers`, the injected worker pool.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
+- [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
+  `RenderKeys`, the render input key of each entry module over its module
+  closure, resolution files, bindings, and bundle environment.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.

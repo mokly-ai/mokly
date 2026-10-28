@@ -291,17 +291,17 @@ that no module outside a closure can change a render through renaming.
 Compute one render input key per entry module from the explicit input list.
 Nothing uses the keys yet, so the product does not change.
 
-- [ ] Add the bundle environment digest, the resolution file digests by
+- [x] Add the bundle environment digest, the resolution file digests by
       logical name, and the per-stylesheet class map digests to
       `JavaScriptGeneration` in `crates/mokly-catalogue/src/render_sources.rs`.
       Compute them in `crates/mokly-render/src/bundle.rs` and keep them in
       the bundle state, so that a reused bundle keeps them.
-- [ ] Add a render input key builder to `crates/mokly-graph`, with a new key
+- [x] Add a render input key builder to `crates/mokly-graph`, with a new key
       kind in `key.rs`. It computes each closure once over the module graph,
       puts each resolution file on the chains of the closures that contain
       it or into the environment, and maps a handle to its module by the
       longest module path before a `#`.
-- [ ] Write the unit tests first, one per input kind, each asserting the
+- [x] Write the unit tests first, one per input kind, each asserting the
       exact set of module keys that move. The seven key tests of the item: a
       module edit, a dependency upgrade, a preview edit, a resolution file
       edit, a class map change, a slot provider edit, and a link target
@@ -311,7 +311,11 @@ Nothing uses the keys yet, so the product does not change.
       keys, another installation that moves every key, an installed-input
       name that matches the working name, and an unknown handle that uses the
       fallback.
-- [ ] Add the builder to `### Key Code` in `crates/mokly-graph/README.md`.
+- [x] Add the builder to `### Key Code` in `crates/mokly-graph/README.md`.
+- [x] The environment tests are in
+      `crates/mokly-render/src/_tests_/render_environment_tests.rs`, and the
+      key tests in `crates/mokly-graph/src/_tests_/render_inputs_tests.rs`
+      and `render_closure_tests.rs`.
 
 ## Milestone 4: Keys use the render input keys
 

@@ -1,0 +1,148 @@
+//! Per-entry-module render input keys: every input that can change a module's renders.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use mokly_catalogue::render_sources::{JavaScriptGeneration, ResolvedDefinition};
+use mokly_model::material::digest;
+use serde_json::{Value, json};
+
+use crate::error::{InternalError, Result};
+use crate::key::{NodeKey, NodeKind, data_key};
+use crate::render_closure::{chain, closure, handle_module};
+
+/// Storybook preview candidates in the sidecar's selection order.
+const PREVIEWS: [&str; 6] = [
+    ".storybook/preview.tsx",
+    ".storybook/preview.ts",
+    ".storybook/preview.jsx",
+    ".storybook/preview.js",
+    ".storybook/preview.mjs",
+    ".storybook/preview.cjs",
+];
+
+/// The inputs of one side's render input keys.
+pub struct RenderInputs<'a> {
+    /// The side's bundle: module graph, digests, class maps, resolution files, environment.
+    pub generation: &'a JavaScriptGeneration,
+    /// Every resolved definition handle with its path and title.
+    pub bindings: &'a BTreeMap<String, ResolvedDefinition>,
+    /// Logical path of the configured renderer module.
+    pub renderer: Option<&'a str>,
+    /// Stories files, which render with the Storybook preview and without the renderer.
+    pub stories: &'a BTreeSet<String>,
+}
+
+/// Render input keys by entry module, with the whole-bundle fallback for any other module.
+#[derive(Clone, Debug)]
+pub struct RenderKeys {
+    modules: BTreeMap<String, NodeKey>,
+    fallback: NodeKey,
+}
+
+impl RenderKeys {
+    /// Key every module that exports a binding. Other modules use `fallback`.
+    pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Result<Self> {
+        let generation = inputs.generation;
+        let graph = &generation.modules;
+        let records = records(generation)?;
+        let chains: BTreeMap<_, _> = graph.keys().map(|path| (path, chain(path))).collect();
+        let chained: BTreeSet<&String> = chains.values().flatten().collect();
+        let shared: Vec<_> = generation
+            .resolution_digests
+            .iter()
+            .filter(|(name, _)| !chained.contains(name))
+            .collect();
+        let shared = text_digest(&json!([generation.environment, shared]))?;
+        let preview = PREVIEWS
+            .iter()
+            .find(|candidate| graph.contains_key(**candidate))
+            .map(|candidate| closure(graph, [(*candidate).to_owned()]));
+        let renderer = inputs
+            .renderer
+            .map(|renderer| closure(graph, [renderer.to_owned()]));
+        let mut bindings: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
+        for (handle, binding) in inputs.bindings {
+            if let Some(module) = handle_module(graph, handle) {
+                bindings.entry(module).or_default().push(json!([
+                    handle,
+                    binding.path,
+                    binding.title
+                ]));
+            }
+        }
+        let mut modules = BTreeMap::new();
+        for &module in bindings.keys() {
+            let extra = if inputs.stories.contains(module) {
+                preview.as_ref()
+            } else {
+                renderer.as_ref()
+            };
+            let mut members = closure(graph, [module.to_owned()]);
+            members.extend(extra.into_iter().flatten().cloned());
+            let resolution: BTreeSet<_> = members
+                .iter()
+                .filter_map(|path| chains.get(path))
+                .flatten()
+                .filter_map(|name| generation.resolution_digests.get_key_value(name))
+                .collect();
+            let exported: Vec<_> = members
+                .iter()
+                .filter_map(|path| bindings.get(path.as_str()))
+                .flatten()
+                .collect();
+            let key = data_key(
+                NodeKind::RenderInputs,
+                json!({
+                    "shared": shared,
+                    "modules": members.iter().map(|path| (path, records.get(path))).collect::<Vec<_>>(),
+                    "resolution": resolution,
+                    "bindings": exported,
+                }),
+            )?;
+            modules.insert(module.to_owned(), key);
+        }
+        Ok(Self { modules, fallback })
+    }
+
+    /// The key of one entry module, or the fallback when it has none.
+    pub fn module(&self, module: &str) -> &NodeKey {
+        self.modules.get(module).unwrap_or(&self.fallback)
+    }
+
+    /// The key of a definition, story, or saved slot handle's entry module.
+    pub fn handle(&self, handle: &str) -> &NodeKey {
+        handle
+            .match_indices('#')
+            .rev()
+            .map(|(index, _)| &handle[..index])
+            .find_map(|module| self.modules.get(module))
+            .unwrap_or(&self.fallback)
+    }
+}
+
+/// One digest per module: its path, its ordered imports, and its content value.
+fn records(generation: &JavaScriptGeneration) -> Result<BTreeMap<&String, String>> {
+    let mut records = BTreeMap::new();
+    for (path, imports) in &generation.modules {
+        let content = if path.ends_with(".module.css") {
+            generation.class_map_digests.get(path).cloned()
+        } else if path.ends_with(".css") {
+            None
+        } else {
+            generation.module_digests.get(path).cloned().flatten()
+        };
+        records.insert(path, text_digest(&json!([path, imports, content]))?);
+    }
+    Ok(records)
+}
+
+fn text_digest(value: &Value) -> Result<String> {
+    match serde_json::to_vec(value) {
+        Ok(bytes) => Ok(digest(&bytes)),
+        Err(source) => Err(InternalError::Json { source }.into()),
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/render_inputs_tests.rs"]
+mod render_inputs_tests;
