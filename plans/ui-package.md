@@ -392,11 +392,15 @@ seven packages.
       version, and a dirty tree; the fixture gains `packages/ui`.
 - [x] `docs/protocol/npm-bootstrap.md` gains the UI Package Registration
       section, and `scripts/release/README.md` names the package.
-- [ ] Pack the registration archive from the reviewed commit of this branch
+- [x] Pack the registration archive from the reviewed commit of this branch
       on the maintainer's machine and review `pack-report.json` against the
-      contract.
-- [ ] Publish the reviewed archive with the `bootstrap` dist-tag and public
-      access, then compare the registry entry with the report.
+      contract. Done on 2026-10-28 from commit `33538e49` in the clone
+      `~/mokly-ui-bootstrap` on the user's Mac: `@mokly/ui@0.16.1`, 24
+      files, shasum `5295449e64abf47ee6eee0c7c11ad2bf06420996`, source tree
+      `a95c0762`. The archive and the report stay under its `.context/`.
+- [x] Publish the reviewed archive with the `bootstrap` dist-tag and public
+      access, then compare the registry entry with the report. Published on
+      2026-10-28 by the user's account with a one-time password.
 - [ ] Configure the package's trusted publisher and access settings like the
       other packages, and read them back.
 - [ ] Record the registration version under Registered Packages of

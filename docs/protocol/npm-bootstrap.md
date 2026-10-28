@@ -8,10 +8,10 @@ release-please state to recreate a version.
 
 ## Registered Packages
 
-`@mokly/mokly`, `@mokly/viewer`, and the five `@mokly/native-{target}`
-packages are registered. The `bootstrap` dist-tag stays on each registration
-version: `@mokly/mokly` 0.8.0, `@mokly/viewer` 0.1.0, and each native package
-0.0.0. Reviewed releases advance `latest`. Never repeat a registration,
+`@mokly/mokly`, `@mokly/viewer`, `@mokly/ui`, and the five
+`@mokly/native-{target}` packages are registered. The `bootstrap` dist-tag
+stays on each registration version: `@mokly/mokly` 0.8.0, `@mokly/viewer`
+0.1.0, `@mokly/ui` 0.16.1, and each native package 0.0.0. Reviewed releases advance `latest`. Never repeat a registration,
 republish a registration version, remove `latest`, or unpublish a package to
 undo a registration.
 
