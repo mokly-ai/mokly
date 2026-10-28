@@ -135,7 +135,7 @@ fn resolution_names_drop_the_installed_prefix_previews_and_absent_files() {
         ),
     ]);
     assert_eq!(
-        resolution(&inputs),
+        resolution(&inputs, true),
         BTreeMap::from([
             ("node_modules/pkg/package.json".to_owned(), "pkg".to_owned()),
             ("package.json".to_owned(), "root".to_owned()),
@@ -151,4 +151,17 @@ fn runtime_package_names_drop_subpaths_and_keep_scopes() {
         "@emotion/server"
     );
     assert_eq!(package("react"), "react");
+}
+
+#[test]
+fn preview_candidates_stay_when_the_graph_names_no_preview() {
+    let inputs = BTreeMap::from([(
+        ".storybook/preview.tsx".to_owned(),
+        Some("preview".to_owned()),
+    )]);
+    assert_eq!(
+        resolution(&inputs, false),
+        BTreeMap::from([(".storybook/preview.tsx".to_owned(), "preview".to_owned())])
+    );
+    assert_eq!(resolution(&inputs, true), BTreeMap::new());
 }

@@ -77,6 +77,10 @@ inputs changes, and only then:
   through its path only, and its manifest only on a closure module's
   directory chain, because only some sides read that manifest.
 
+When the module graph does not name the configured renderer, every entry
+module uses the whole bundle as its key. When it does not name the Storybook
+preview, every stories file does.
+
 A render reads only its imports, its props and slots, and its render
 context. A module side effect of one entry module that changes another entry
 module's render is unsupported: import the setup module from each entry

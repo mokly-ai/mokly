@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use mokly_graph::render_inputs::PREVIEWS;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
@@ -11,16 +12,6 @@ use crate::error::{InternalError, Result};
 
 /// The reserved logical prefix of installation metadata outside a side's source root.
 const INSTALLED: &str = "node_modules/.mokly-roots/installed/";
-
-/// Storybook preview candidates. Story keys cover the preview through its module closure.
-const PREVIEWS: [&str; 6] = [
-    ".storybook/preview.tsx",
-    ".storybook/preview.ts",
-    ".storybook/preview.jsx",
-    ".storybook/preview.js",
-    ".storybook/preview.mjs",
-    ".storybook/preview.cjs",
-];
 
 /// Stylesheet path to its local-to-scoped CSS Modules class names.
 pub(crate) type ClassMaps = BTreeMap<String, BTreeMap<String, String>>;
@@ -64,8 +55,12 @@ pub(crate) fn derive(
         dependency_roots: compiled.map_or(&[], |compiled| &compiled.dependency_roots),
         peers: compiled.map(|compiled| &compiled.peers),
     };
+    let previewed = result
+        .modules
+        .iter()
+        .any(|module| PREVIEWS.contains(&module.path.as_str()));
     let resolution_digests = compiled
-        .map(|compiled| resolution(&compiled.metadata_inputs))
+        .map(|compiled| resolution(&compiled.metadata_inputs, previewed))
         .unwrap_or_default();
     let mut class_map_digests = BTreeMap::new();
     for (path, map) in maps {
@@ -93,10 +88,17 @@ fn package(specifier: &str) -> String {
 }
 
 /// Keep present resolution files under the names that both sides give them.
-pub(crate) fn resolution(inputs: &BTreeMap<String, Option<String>>) -> BTreeMap<String, String> {
+///
+/// The preview candidates leave only when the module graph names the preview, because
+/// story keys then cover it through its closure. A preview that the graph does not
+/// name stays, so that story keys fall back to the whole bundle.
+pub(crate) fn resolution(
+    inputs: &BTreeMap<String, Option<String>>,
+    previewed: bool,
+) -> BTreeMap<String, String> {
     inputs
         .iter()
-        .filter(|(name, _)| !PREVIEWS.contains(&name.as_str()))
+        .filter(|(name, _)| !previewed || !PREVIEWS.contains(&name.as_str()))
         .filter_map(|(name, value)| {
             let name = name.strip_prefix(INSTALLED).unwrap_or(name);
             value.as_ref().map(|value| (name.to_owned(), value.clone()))

@@ -14,7 +14,7 @@ use crate::key::{NodeKey, NodeKind, data_key};
 use crate::render_closure::{chain, closure, handle_module};
 
 /// Storybook preview candidates in the sidecar's selection order.
-const PREVIEWS: [&str; 6] = [
+pub const PREVIEWS: [&str; 6] = [
     ".storybook/preview.tsx",
     ".storybook/preview.ts",
     ".storybook/preview.jsx",
@@ -82,6 +82,14 @@ impl RenderKeys {
         let renderer = inputs
             .renderer
             .map(|renderer| closure(graph, [renderer.to_owned()]));
+        // A renderer or preview that the module graph does not name has no content to
+        // key, so the modules that render with it keep the whole-bundle fallback.
+        let unnamed_renderer = inputs
+            .renderer
+            .is_some_and(|renderer| !graph.contains_key(renderer));
+        let unnamed_preview = PREVIEWS
+            .iter()
+            .any(|candidate| generation.resolution_digests.contains_key(*candidate));
         let mut bindings: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
         let mut exporters = BTreeSet::new();
         for (handle, binding) in inputs.bindings {
@@ -104,6 +112,11 @@ impl RenderKeys {
         }
         let mut modules = BTreeMap::new();
         for module in exporters {
+            if (stories.contains(module) && unnamed_preview)
+                || (!stories.contains(module) && unnamed_renderer)
+            {
+                continue;
+            }
             let extra = if stories.contains(module) {
                 preview.as_ref()
             } else {
@@ -219,6 +232,9 @@ fn text_digest(value: &Value) -> Result<String> {
 #[cfg(test)]
 #[path = "_tests_/render_bindings_tests.rs"]
 mod render_bindings_tests;
+#[cfg(test)]
+#[path = "_tests_/render_fallback_tests.rs"]
+mod render_fallback_tests;
 #[cfg(test)]
 #[path = "_tests_/render_inputs_tests.rs"]
 mod render_inputs_tests;
