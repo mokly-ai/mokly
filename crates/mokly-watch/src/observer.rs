@@ -1,7 +1,7 @@
 //! Injected filesystem observation and a lossless path-coalesced inbox.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use async_trait::async_trait;
@@ -22,6 +22,9 @@ pub trait Observer: Send + Sync {
     /// Whether this observer already watches every directory that the roots of `plan`
     /// need. A failed directory walk and a closed observer report `false`.
     fn covers(&self, plan: &Plan) -> bool;
+    /// Whether this observer watches `directory` itself, so a change of a direct child
+    /// produces an event. A closed observer watches nothing.
+    fn observes(&self, directory: &Path) -> bool;
     /// Wait for at least one pending event without consuming it.
     async fn changed(&self);
     /// Drain the latest descriptor per path and each observer error.

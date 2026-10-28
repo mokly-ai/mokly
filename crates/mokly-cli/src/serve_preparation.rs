@@ -1,4 +1,5 @@
 //! Startup prepares again before readiness when new watch roots reach unwatched directories.
+//! Each preparation first records its start, so files that change while it reads replay.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -32,6 +33,9 @@ pub(super) async fn initial(
     let parent = tracing::Span::current();
     match tokio::task::spawn_blocking(move || {
         parent.in_scope(|| {
+            if let Some(watch) = &watching {
+                watch.begin();
+            }
             let mut prepared = match preparation.prepare(&cwd, &options) {
                 Ok(prepared) => prepared,
                 Err(error) => return Ok(Err(error)),
@@ -46,6 +50,7 @@ pub(super) async fn initial(
                 };
                 if candidate.recheck {
                     let first_warnings = prepared.summary.warnings.clone();
+                    watch.begin();
                     prepared = match preparation.prepare(&cwd, &options) {
                         Ok(prepared) => prepared,
                         Err(error) => {

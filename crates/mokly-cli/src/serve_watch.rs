@@ -2,10 +2,13 @@
 
 use std::collections::BTreeSet;
 use std::future::Future;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
+use std::time::SystemTime;
 
 use crate::serve_watch_events;
+use crate::serve_watch_files::{self, NativeObservers, Observers};
 use async_trait::async_trait;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::serve::PreparedServe;
@@ -14,7 +17,6 @@ use mokly_graph::types::RenderGeneration;
 use mokly_server::error::{InternalError, Result, ServerError};
 use mokly_source_interface::tree::SourceTree;
 use mokly_watch::event::Batch;
-use mokly_watch::native::NativeObserver;
 use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
 use tokio::sync::Notify;
@@ -27,6 +29,8 @@ pub type WatchWait = Pin<Box<dyn Future<Output = ()> + Send>>;
 #[cfg_attr(test, unimock::unimock(api = WatchInputsMock))]
 #[async_trait]
 pub(super) trait WatchInputs: Send + Sync {
+    /// Record that a preparation starts now, before it reads any input.
+    fn begin(&self);
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch>;
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()>;
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe);
@@ -35,20 +39,6 @@ pub(super) trait WatchInputs: Send + Sync {
     async fn stop(&self) -> Result<()>;
     fn failed(&self);
     fn plan(&self) -> Plan;
-}
-
-#[cfg_attr(test, unimock::unimock(api = ObserversMock))]
-pub(super) trait Observers: Send + Sync {
-    fn attach(&self, plan: &Plan) -> Result<Arc<dyn Observer>>;
-}
-struct NativeObservers(Arc<dyn SourceTree>);
-impl Observers for NativeObservers {
-    fn attach(&self, plan: &Plan) -> Result<Arc<dyn Observer>> {
-        Ok(Arc::new(watch_result(NativeObserver::new(
-            self.0.clone(),
-            plan,
-        ))?))
-    }
 }
 
 pub(super) struct WatchedInputs {
@@ -65,6 +55,8 @@ pub(super) struct State {
     pub(super) failed: bool,
     pub(super) attach_reported: bool,
     pub(super) closed: bool,
+    /// When the latest preparation began.
+    pub(super) started: SystemTime,
 }
 /// Prepared observer state exposed inside this private module for generated mocks.
 pub struct CandidateWatch {
@@ -79,6 +71,7 @@ impl WatchedInputs {
         let plan = watch_result(Plan::new(config, &[], &[], &BTreeSet::new()))?;
         let factory: Arc<dyn Observers> = Arc::new(NativeObservers(tree));
         let observer = factory.attach(&plan)?;
+        let started = factory.now();
         Ok(Self {
             factory,
             state: Arc::new(Mutex::new(State {
@@ -90,14 +83,31 @@ impl WatchedInputs {
                 failed: false,
                 attach_reported: false,
                 closed: false,
+                started,
             })),
             ready: Arc::new(Notify::new()),
         })
+    }
+
+    /// Replay a change for each file among `paths` modified since the preparation began.
+    fn replay(&self, observer: &Arc<dyn Observer>, paths: &[PathBuf]) {
+        if paths.is_empty() {
+            return;
+        }
+        let started = self.state.lock().unwrap_or_else(|e| e.into_inner()).started;
+        let events = serve_watch_files::changed(paths, started, self.factory.as_ref());
+        if !events.is_empty() {
+            observer.replay(events);
+        }
     }
 }
 
 #[async_trait]
 impl WatchInputs for WatchedInputs {
+    fn begin(&self) {
+        let started = self.factory.now();
+        self.state.lock().unwrap_or_else(|e| e.into_inner()).started = started;
+    }
     fn candidate(&self, prepared: &PreparedServe) -> Result<CandidateWatch> {
         let plan = plan(prepared)?;
         let (changed, old, previous) = {
@@ -108,9 +118,13 @@ impl WatchInputs for WatchedInputs {
                 current.plan.clone(),
             )
         };
+        let unobserved = serve_watch_files::unobserved(&plan, old.as_ref());
         if changed {
             let observer = self.factory.attach(&plan)?;
             let recheck = !old.covers(&plan);
+            if !recheck {
+                self.replay(&observer, &unobserved);
+            }
             return Ok(CandidateWatch {
                 plan,
                 observer,
@@ -120,6 +134,7 @@ impl WatchInputs for WatchedInputs {
         let mut attachment = plan.clone();
         attachment.extend_required(&previous);
         watch_result(old.replace(&attachment))?;
+        self.replay(&old, &unobserved);
         Ok(CandidateWatch {
             plan,
             observer: old,
@@ -128,7 +143,11 @@ impl WatchInputs for WatchedInputs {
     }
     fn recheck(&self, candidate: &mut CandidateWatch, prepared: &PreparedServe) -> Result<()> {
         candidate.plan = plan(prepared)?;
-        watch_result(candidate.observer.replace(&candidate.plan))
+        let unobserved =
+            serve_watch_files::unobserved(&candidate.plan, candidate.observer.as_ref());
+        watch_result(candidate.observer.replace(&candidate.plan))?;
+        self.replay(&candidate.observer, &unobserved);
+        Ok(())
     }
     fn adopt(self: Arc<Self>, candidate: CandidateWatch, prepared: &PreparedServe) {
         let old = {
@@ -239,7 +258,7 @@ pub(super) fn failure(source: mokly_watch::error::Error) -> ServerError {
         source: Box::new(source),
     })
 }
-fn watch_result<T>(result: mokly_watch::error::Result<T>) -> Result<T> {
+pub(super) fn watch_result<T>(result: mokly_watch::error::Result<T>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
         Err(source) => Err(failure(source)),
@@ -268,3 +287,7 @@ mod serve_watch_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_watch_coverage_tests.rs"]
 mod serve_watch_coverage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_watch_stale_tests.rs"]
+mod serve_watch_stale_tests;

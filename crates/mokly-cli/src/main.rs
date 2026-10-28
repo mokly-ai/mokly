@@ -40,6 +40,7 @@ mod serve_trace_stages;
 mod serve_warnings;
 mod serve_watch;
 mod serve_watch_events;
+mod serve_watch_files;
 mod static_runtime;
 mod static_setup;
 mod terminal;

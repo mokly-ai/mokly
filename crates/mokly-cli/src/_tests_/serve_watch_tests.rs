@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::SystemTime;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -20,7 +21,8 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporterMock;
 
-use super::{CandidateWatch, ObserversMock, State, WatchInputs, WatchedInputs};
+use super::{CandidateWatch, State, WatchInputs, WatchedInputs};
+use crate::serve_watch_files::ObserversMock;
 
 fn config(dir: &str) -> ResolvedConfig {
     ResolvedConfig {
@@ -88,6 +90,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
             failed: false,
             attach_reported: false,
             closed: false,
+            started: SystemTime::UNIX_EPOCH,
         })),
     })
 }
@@ -100,7 +103,10 @@ fn event(path: &str, kind: Kind) -> Event {
 
 #[test]
 fn exact_additions_extend_the_active_observer_without_a_second_preparation() {
-    let observer = Arc::new(Unimock::new(ObserverMock::replace.next_call(matching!((plan) if plan.exact.contains_key(std::path::Path::new("/repo/src/new.ts")))).returns(Ok(()))));
+    let observer = Arc::new(Unimock::new((
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+        ObserverMock::replace.next_call(matching!((plan) if plan.exact.contains_key(std::path::Path::new("/repo/src/new.ts")))).returns(Ok(())),
+    )));
     let watch = watch(observer.clone(), Unimock::new(()));
     let generation = Unimock::new((
         RenderGenerationMock::catalogue
@@ -124,7 +130,9 @@ fn exact_additions_extend_the_active_observer_without_a_second_preparation() {
 
 #[test]
 fn failed_root_attachment_retains_the_active_observer_and_plan() {
-    let observer = Arc::new(Unimock::new(()));
+    let observer = Arc::new(Unimock::new(
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+    ));
     let factory = Unimock::new(
         ObserversMock::attach
             .next_call(matching!(_))

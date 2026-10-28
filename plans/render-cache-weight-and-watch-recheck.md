@@ -73,6 +73,28 @@ Decisions D1 to D4 were asked on 2026-10-27. The user answered on
   guide. Rejected: fix the upgrade guide here, because it is outside this
   change, and wait for a fix, because the failures do not depend on this
   change.
+- D6 (2026-10-28, orchestrator for the user): review finding 1, option D.
+  After the candidate's watcher attaches, Serve compares the modification
+  time of each exact file in a directory that the active watcher did not
+  observe with the start of the preparation. It replays a change event for
+  each changed file, so a rebuild follows adoption. The check runs with
+  changed and with unchanged roots, so it also closes the gap that the
+  review put outside the scope. Rejected: A, document the limit; B, which
+  makes `examples/basic` prepare twice again; C, content digests, Large; E,
+  change detection in the watch layer without a second preparation, Large.
+- D7 (2026-10-28, orchestrator for the user): review finding 3, option D.
+  Check the `render.cache` record of a real Serve run and of the build and
+  publish timing cases. Rejected: A and B, which leave commands unchecked,
+  and C, one helper for the cache and the timing layer, Medium.
+- D8 (2026-10-28, agent, under the user's rule to apply the recommended
+  option): the D6 check reads only regular files whose own directory the
+  active watcher did not register, with a margin of two seconds. Missing
+  files and directory targets are not read. Reason: a file in a registered
+  directory already buffered its event, so a second look only adds rebuilds
+  for files written just before startup. A directory's time changes with
+  any entry, so a tool that writes into it during each preparation would
+  start rebuilds without end. Rejected: every target that is not a root,
+  as the option text said.
 - D4, the recheck: B, the coverage rule. It supersedes decision 2. Rejected:
   A, decision 2 as written, because discovery reports no roots, C, a narrow
   stylesheet recheck, because it changes the code of perf 5, and D, no
@@ -80,7 +102,8 @@ Decisions D1 to D4 were asked on 2026-10-27. The user answered on
   removes the second preparation of `examples/basic` and loses no edit.
   Note of 2026-10-28: review finding 1 showed that B loses an edit made
   during the preparation to an exact file in a directory that the active
-  watcher did not observe. The finding waits for the orchestrator.
+  watcher did not observe. The orchestrator chose option D of the finding on
+  2026-10-28, recorded as D6.
 
 ## Corrections To The Item Text
 
@@ -402,6 +425,30 @@ above.
       the before and after table in its body and its link in the status
       paragraph. The orchestrator asked for the pull request before the
       review: [PR #222](https://github.com/mokly-ai/mokly/pull/222).
+
+## Milestone 7: Review answers
+
+Apply the orchestrator's answers D6 and D7 to review findings 1 and 3.
+
+- [x] Write the failing process test first:
+      `an_edit_to_an_unobserved_exact_file_during_startup_rebuilds_after_readiness`
+      in `crates/mokly-cli/tests/serve_js/startup_edit_tests.rs`. It failed
+      with "PostCSS run 2 never started".
+- [x] Add `Observer::observes` to `mokly-watch`, with a test.
+- [x] Write the unit tests in
+      `crates/mokly-cli/src/_tests_/serve_watch_stale_tests.rs`: the time
+      window, the replay into a new observer for covered roots, and the
+      replay after the second preparation.
+- [x] Add `WatchInputs::begin` and call it before each preparation in
+      `serve_preparation.rs` and `serve_rebuild_action.rs`. Move `Observers`
+      into the new `serve_watch_files.rs` with the clock, the file times,
+      and the check.
+- [x] Update the readiness rule in `docs/protocol/mokly-watch.md` and the
+      `mokly-watch` README.
+- [x] Check the `render.cache` record in `serve_process_tests.rs` and in
+      `tests/static_publication_cases.test.ts`. A timing layer with a
+      separate cache fails both checks.
+- [x] Run the checks, commit, and push. Update the pull request.
 
 ## Post-merge follow-up (non-blocking)
 

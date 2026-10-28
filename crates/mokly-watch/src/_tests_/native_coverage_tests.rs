@@ -122,3 +122,13 @@ fn a_failed_walk_and_a_closed_observer_cover_nothing() {
     observer.close();
     assert!(!observer.covers(&configured()));
 }
+
+#[test]
+fn observes_reports_each_registered_directory_until_close() {
+    let observer = observer(false, &configured());
+    assert!(observer.observes(&path("/repo")));
+    assert!(observer.observes(&path("/repo/specs/src")));
+    assert!(!observer.observes(&path("/repo/outside")));
+    observer.close();
+    assert!(!observer.observes(&path("/repo/specs")));
+}

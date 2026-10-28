@@ -1,7 +1,7 @@
 //! Native directory observation extends exact inputs without replacing root observers.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -139,6 +139,13 @@ impl Observer for NativeObserver {
     }
     fn rescan(&self, plan: &Plan) -> Result<()> {
         self.update(plan, true)
+    }
+    fn observes(&self, directory: &Path) -> bool {
+        self.state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .is_some_and(|state| state.directories.contains(directory))
     }
     fn covers(&self, plan: &Plan) -> bool {
         let Ok(needed) = native_scan::directories(self.tree.as_ref(), plan) else {

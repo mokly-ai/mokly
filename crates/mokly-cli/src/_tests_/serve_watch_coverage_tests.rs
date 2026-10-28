@@ -7,8 +7,9 @@ use mokly_graph::types::RenderGenerationMock;
 use mokly_watch::observer::{Observer, ObserverMock};
 use unimock::{MockFn, Unimock, matching};
 
+use super::WatchInputs;
 use super::serve_watch_tests::{catalogue, plan, prepared, watch};
-use super::{ObserversMock, WatchInputs};
+use crate::serve_watch_files::ObserversMock;
 
 fn generation() -> Unimock {
     Unimock::new((
@@ -27,13 +28,14 @@ fn generation() -> Unimock {
 #[test]
 fn changed_roots_attach_a_new_observer_and_recheck_only_when_uncovered() {
     for covered in [true, false] {
-        let active = Arc::new(Unimock::new(
+        let active = Arc::new(Unimock::new((
+            ObserverMock::observes.each_call(matching!(_)).returns(true),
             ObserverMock::covers
                 .next_call(
                     matching!((plan) if plan.roots.contains(std::path::Path::new("/repo/next"))),
                 )
                 .returns(covered),
-        ));
+        )));
         let next: Arc<dyn Observer> = Arc::new(Unimock::new(()));
         let factory = Unimock::new(
             ObserversMock::attach

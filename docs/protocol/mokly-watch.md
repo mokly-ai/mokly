@@ -130,6 +130,18 @@ first watch plan from discovery was rejected, because discovery reports no
 roots. No second preparation at all was rejected, because an edit under an
 unobserved directory during the preparation would stay unseen.
 
+An exact input file outside the roots can lie in a directory that the active
+watcher did not observe when the preparation began. After the candidate's
+watcher attaches, Serve treats each such regular file as changed when its
+modification time falls between two seconds before the preparation began and
+the moment of the check. Serve rebuilds for that change after it adopts the
+candidate, at startup and on every rebuild. When Serve prepares again, the
+check follows the second preparation.
+Decision: modification times decide for exact files. Requiring their
+directories in the coverage rule was rejected, because every catalogue then
+prepares twice again. Comparing content digests was rejected, because the
+core and the sidecar read the files and no one record holds every digest.
+
 Initial startup selects its port under the
 [package contract](./mokly-package.md#cli). Exhausting the range or another
 bind error fails with `server-failed` without leaking watchers. The resolved

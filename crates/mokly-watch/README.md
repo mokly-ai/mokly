@@ -28,7 +28,9 @@ backend. It attaches nonrecursive directory watches after a confined walk.
 It replaces the native observer only when effective roots change.
 `covers` reports whether its registrations already hold every directory that
 the roots of a plan need. Serve uses it to decide whether a candidate with
-changed roots must prepare again. Exact
+changed roots must prepare again. `observes` reports whether one directory is
+registered, so Serve checks the modification times of exact files only where
+no event could arrive. Exact
 inputs extend registrations without repeating the root walk. `dyn WatchFactory`
 and `dyn DirectoryWatch` own native handle creation and batched updates.
 Existing paths remain attached. Linux and Windows renew replaced directories. Failed attachments recheck
