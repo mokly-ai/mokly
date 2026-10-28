@@ -24,10 +24,10 @@ fn aliases() -> BTreeMap<String, String> {
 fn tree(sources: Unimock, dependencies: Unimock, usage: Unimock) -> SideTree {
     SideTree {
         _base: Some(Arc::new(BaseSide {
-            sources: Lease {
+            sources: Arc::new(Lease {
                 directory: "/base".into(),
                 guard: Box::new(Unimock::new(())),
-            },
+            }),
             dependencies: Resolved {
                 tier: Tier::Working,
                 node_modules: "/deps/node_modules".into(),

@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_compare::base_render::{BaseSourceFactory, GitSourceFactory};
+use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_git::control::{SystemClock, Token};
 use mokly_git::disk::SystemDisk;
 use mokly_git::repository::{GitRepositories, Repositories};
@@ -88,6 +89,7 @@ fn parent_package_root_is_private_in_current_and_historical_policy() {
     let historical = GitSourceFactory {
         limits: Limits::default(),
         batch_bytes: 48 * 1024 * 1024,
+        snapshots: Arc::new(ProcessSnapshots::default()),
     }
     .create(repository, commit, directory.path())
     .unwrap();

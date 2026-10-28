@@ -1,5 +1,7 @@
 //! Describe feeds every exported definition into the catalogue's one validator.
 
+use std::collections::BTreeSet;
+
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::Definitions;
 use mokly_catalogue::discovery::{SourceFile, SourceKind};
@@ -19,7 +21,8 @@ pub(crate) fn describe(
     if files.is_empty() && config.input.renderer.is_none() {
         return Ok(Definitions::default());
     }
-    let (generation, described) = bundle::describe(runtime, config, files)?;
+    let (mut generation, described) = bundle::describe(runtime, config, files)?;
+    generation.unattributed = unattributed(&described, files);
     let mut result = Definitions {
         sources: generation
             .modules
@@ -41,10 +44,7 @@ pub(crate) fn describe(
         (EntryKind::UseCase, described.use_cases),
     ] {
         for definition in definitions {
-            let story = files.iter().any(|file| {
-                file.kind == SourceKind::Stories
-                    && definition.handle.starts_with(&format!("{}#", file.path))
-            });
+            let story = story(files, &definition.handle);
             let mut entry = definition_input::entry(&definition, kind, story)?;
             let (owned, remaining): (Vec<_>, Vec<_>) =
                 diagnostics.into_iter().partition(|diagnostic| {
@@ -109,3 +109,34 @@ pub(crate) fn describe(
     );
     Ok(result)
 }
+
+/// Handles of the definitions that the unattributed API made: the sidecar reports no
+/// source path for them, and they are not the parent of a stories file.
+fn unattributed(
+    described: &mokly_sidecar::definitions::Definitions,
+    files: &[SourceFile],
+) -> BTreeSet<String> {
+    [
+        &described.screens,
+        &described.components,
+        &described.pages,
+        &described.use_cases,
+        &described.folders,
+    ]
+    .into_iter()
+    .flatten()
+    .filter(|definition| definition.source_path.is_none() && !story(files, &definition.handle))
+    .map(|definition| definition.handle.clone())
+    .collect()
+}
+
+/// Whether a stories file exports the definition handle.
+fn story(files: &[SourceFile], handle: &str) -> bool {
+    files.iter().any(|file| {
+        file.kind == SourceKind::Stories && handle.starts_with(&format!("{}#", file.path))
+    })
+}
+
+#[cfg(test)]
+#[path = "_tests_/definitions_tests.rs"]
+mod definitions_tests;

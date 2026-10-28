@@ -9,15 +9,19 @@ use crate::key::{NodeKey, NodeKind, key};
 
 const SCREEN: &str = "specs/screen.mockup.tsx";
 const STORIES: &str = "specs/label.stories.tsx";
+/// The preview's name when the module graph names it.
+const NAMED: &str = ".storybook/preview.tsx";
+/// The real path that the module graph names for a preview in a linked `.storybook`.
+const LINKED: &str = "storybook/preview.tsx";
 
 fn fallback() -> NodeKey {
     key(NodeKind::RenderInputs, &[b"whole bundle"])
 }
 
-/// A screen, a stories file, a renderer, and a preview that the graph names.
-fn keys(renderer: &str, resolution: &[(&str, &str)]) -> RenderKeys {
+/// A screen, a stories file, a renderer, and the module graph's name of the preview.
+fn keys(renderer: &str, preview: &str, resolution: &[(&str, &str)]) -> RenderKeys {
     let generation = JavaScriptGeneration {
-        modules: [SCREEN, STORIES, "renderer.tsx", ".storybook/preview.tsx"]
+        modules: [SCREEN, STORIES, "renderer.tsx", preview]
             .into_iter()
             .map(|path| (path.to_owned(), Vec::new()))
             .collect(),
@@ -62,9 +66,9 @@ fn keys(renderer: &str, resolution: &[(&str, &str)]) -> RenderKeys {
 
 #[test]
 fn a_renderer_that_the_graph_does_not_name_gives_non_story_modules_the_fallback() {
-    let named = keys("renderer.tsx", &[]);
+    let named = keys("renderer.tsx", NAMED, &[]);
     assert_ne!(named.module(SCREEN), &fallback());
-    let unnamed = keys("app/../renderer.tsx", &[]);
+    let unnamed = keys("app/../renderer.tsx", NAMED, &[]);
     assert_eq!(unnamed.module(SCREEN), &fallback());
     assert_ne!(unnamed.module(STORIES), &fallback());
     assert_eq!(unnamed.module(STORIES), named.module(STORIES));
@@ -72,9 +76,17 @@ fn a_renderer_that_the_graph_does_not_name_gives_non_story_modules_the_fallback(
 
 #[test]
 fn a_preview_that_the_graph_does_not_name_gives_stories_the_fallback() {
-    let named = keys("renderer.tsx", &[]);
+    let named = keys("renderer.tsx", NAMED, &[]);
     assert_ne!(named.module(STORIES), &fallback());
-    let unnamed = keys("renderer.tsx", &[(".storybook/preview.tsx", "preview")]);
+    let unnamed = keys("renderer.tsx", LINKED, &[(NAMED, "preview")]);
     assert_eq!(unnamed.module(STORIES), &fallback());
     assert_ne!(unnamed.module(SCREEN), &fallback());
+}
+
+#[test]
+fn an_edit_to_a_preview_that_the_graph_does_not_name_keeps_the_other_keys() {
+    let before = keys("renderer.tsx", LINKED, &[(NAMED, "one")]);
+    let after = keys("renderer.tsx", LINKED, &[(NAMED, "two")]);
+    assert_eq!(before.module(SCREEN), after.module(SCREEN));
+    assert_eq!(after.module(STORIES), &fallback());
 }

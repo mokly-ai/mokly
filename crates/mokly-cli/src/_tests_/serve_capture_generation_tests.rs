@@ -50,6 +50,9 @@ fn source(
             progress: Arc::new(Unimock::new(())),
             refreshes: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),
+            extraction_snapshots: Arc::new(
+                mokly_compare::extraction_snapshots::ProcessSnapshots::default(),
+            ),
             warnings: Arc::new(Unimock::new(())),
             runtime: head,
             git: Arc::new(Unimock::new(())),
