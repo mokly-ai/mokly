@@ -118,6 +118,7 @@ impl Source {
             sources: Arc::new(GitSourceFactory {
                 limits: Limits::default(),
                 batch_bytes: 48 * 1024 * 1024,
+                snapshots: self.services.extraction_snapshots.clone(),
             }),
             provider: Arc::new(AttemptBase {
                 warnings: self.pending.clone(),

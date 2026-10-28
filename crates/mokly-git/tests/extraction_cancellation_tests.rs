@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use mokly_git::control::Token;
 use mokly_git::disk::{Archive, Disk, SystemDisk};
 use mokly_git::error::{Error, Result};
+use mokly_git::fingerprint::Fingerprint;
 use mokly_git::identity::RepoPath;
 use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::tree::Limits;
@@ -30,6 +31,26 @@ impl Disk for CancelDisk {
     }
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
         SystemDisk.read(root, path, limit)
+    }
+    fn fingerprint(&self, root: &Path, path: &RepoPath) -> Result<Option<Fingerprint>> {
+        SystemDisk.fingerprint(root, path)
+    }
+    fn read_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        limit: usize,
+        expected: &Fingerprint,
+    ) -> Result<Option<Vec<u8>>> {
+        SystemDisk.read_pinned(root, path, limit, expected)
+    }
+    fn digest_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        expected: &Fingerprint,
+    ) -> Result<Option<String>> {
+        SystemDisk.digest_pinned(root, path, expected)
     }
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>> {
         Ok(Box::new(CancelArchive {

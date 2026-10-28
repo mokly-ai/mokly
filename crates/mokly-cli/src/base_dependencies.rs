@@ -1,5 +1,6 @@
 //! Native base extraction and dependency selection retain both leases for the runtime.
 
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -7,7 +8,7 @@ use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::base_render::BaseRequest;
 use mokly_compare::cache::DiskCache;
-use mokly_compare::cache_types::{Cache, Reporter, Storage};
+use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
@@ -29,13 +30,24 @@ use mokly_sidecar::methods::ModuleResolution;
 
 #[cfg_attr(test, unimock::unimock(api = BaseDependenciesMock))]
 pub(super) trait BaseDependencies: Send + Sync {
+    /// Lease the complete extraction of the base commit when one exists, without a build.
+    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>>;
+    /// Lease the extraction, reusing `sources` when given, and select the dependency tier.
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used_directories: &[String],
         unmapped_directories: &[String],
+        sources: Option<Arc<Lease>>,
     ) -> Result<Arc<BaseSide>>;
+}
+
+/// The source and dependency caches of one repository, with their storage and clock.
+struct Caches {
+    cache: Arc<dyn Cache>,
+    storage: Arc<dyn Storage>,
+    clock: Arc<SystemClock>,
 }
 
 pub(super) struct NativeDependencies {
@@ -44,14 +56,31 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
+    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
+        let caches = self.caches(&request.working_config.repo_root)?;
+        let extraction: &dyn Extraction = &CachedExtraction {
+            repository: request.repository.clone(),
+            cache: caches.cache,
+            files: Limits::default().files,
+        };
+        Ok(extraction.existing(&request.commit)?.map(Arc::new))
+    }
+
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used_directories: &[String],
         unmapped_directories: &[String],
+        sources: Option<Arc<Lease>>,
     ) -> Result<Arc<BaseSide>> {
-        match self.prepare_side(request, config, used_directories, unmapped_directories) {
+        match self.prepare_side(
+            request,
+            config,
+            used_directories,
+            unmapped_directories,
+            sources,
+        ) {
             Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
                 path: ".".into(),
                 source,
@@ -68,15 +97,10 @@ impl BaseDependencies for NativeDependencies {
 }
 
 impl NativeDependencies {
-    fn prepare_side(
-        &self,
-        request: &BaseRequest<'_>,
-        config: &ResolvedConfig,
-        used_directories: &[String],
-        unmapped_directories: &[String],
-    ) -> Result<Arc<BaseSide>> {
+    /// The repository's source and dependency caches, composed for one preparation.
+    fn caches(&self, repo_root: &Path) -> Result<Caches> {
         let locations: &dyn Locations = &SystemLocations;
-        let root = locations.repository(&config.repo_root)?;
+        let root = locations.repository(repo_root)?;
         let clock = Arc::new(SystemClock::default());
         let storage: Arc<dyn Storage> = Arc::new(SystemStorage {
             root: root.clone(),
@@ -93,12 +117,37 @@ impl NativeDependencies {
             cancellation: self.cancellation.clone(),
             reporter: self.reporter.clone(),
         });
-        let extraction: &dyn Extraction = &CachedExtraction {
-            repository: request.repository.clone(),
-            cache: cache.clone(),
-            files: Limits::default().files,
+        Ok(Caches {
+            cache,
+            storage,
+            clock,
+        })
+    }
+
+    fn prepare_side(
+        &self,
+        request: &BaseRequest<'_>,
+        config: &ResolvedConfig,
+        used_directories: &[String],
+        unmapped_directories: &[String],
+        sources: Option<Arc<Lease>>,
+    ) -> Result<Arc<BaseSide>> {
+        let Caches {
+            cache,
+            storage,
+            clock,
+        } = self.caches(&config.repo_root)?;
+        let sources = match sources {
+            Some(sources) => sources,
+            None => {
+                let extraction: &dyn Extraction = &CachedExtraction {
+                    repository: request.repository.clone(),
+                    cache: cache.clone(),
+                    files: Limits::default().files,
+                };
+                Arc::new(extraction.acquire(&request.commit)?)
+            }
         };
-        let sources = extraction.acquire(&request.commit)?;
         let span = tracing::info_span!(
             "review.base-dependencies",
             status = "error",

@@ -68,10 +68,10 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     assert!(String::from_utf8_lossy(&head_css).contains("var(--head-cwd)"));
     let dependencies = workspace();
     let leased = Arc::new(BaseSide {
-        sources: Lease {
+        sources: Arc::new(Lease {
             directory: base.root().into(),
             guard: Box::new(Unimock::new(())),
-        },
+        }),
         dependencies: Resolved {
             tier: Tier::Working,
             node_modules: dependencies.join("node_modules"),

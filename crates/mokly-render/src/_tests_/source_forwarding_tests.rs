@@ -82,10 +82,10 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
     ));
     let tree: &dyn SourceTree = &SideTree {
         _base: Some(Arc::new(BaseSide {
-            sources: Lease {
-                directory: "/base".into(),
-                guard: Box::new(Unimock::new(())),
-            },
+            sources: Arc::new(Lease {
+                    directory: "/base".into(),
+                    guard: Box::new(Unimock::new(())),
+            }),
             dependencies: Resolved {
                 tier: Tier::Installed,
                 node_modules: "/deps/node_modules".into(),
