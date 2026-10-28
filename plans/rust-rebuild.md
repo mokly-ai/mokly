@@ -5506,6 +5506,8 @@ check passes on this commit.
       that line to 138. Keep one line when both reach the plan.
   - User decision 138 (2026-10-21): A, as work after the merge.
 
+- [ ] Support built repository packages in Changes under the [built repository packages plan](./built-repository-packages.md).
+
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.
 - Reset Mokly Cloud and republish its catalogue with the released CLI.
