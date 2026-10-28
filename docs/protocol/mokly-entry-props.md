@@ -1,5 +1,7 @@
 # Entry Props And Variants
 
+Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
+
 ## One Model
 
 Every screen and component is a render over props:
@@ -76,6 +78,20 @@ rule. Each affected saved entry or component invocation emits a
 The core and viewer use that same rounded value. Safe integers and negative zero
 keep their values. Rounding with a warning keeps recoverable inputs usable and
 visible, instead of rejecting them or rounding silently.
+Saved props are the entry's own props or a variant's merged props. A warning
+for saved props names that entry or variant. Its message is
+`prop <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`,
+with a JSON pointer relative to those props, such as `"/count"` or
+`"/user/count"`.
+A component invocation is a component element in HTML or a component wrapper
+in React. A warning for an invocation names the rendered entry, including a
+variant. Its message is
+`component <JSON-quoted-path> instance <JSON-quoted-id> prop <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`,
+with the invoked component's resolved path, the instance id under the
+[instance contract](./mokly-instances.md), and a JSON pointer relative to the
+invocation's props. Naming only the prop path in an invocation warning was
+rejected, because the warning would then name an entry that has no such prop,
+and the warnings of different instances would merge into one line.
 Each unsafe schema keyword emits `props-unsafe-integer` once for its parent
 entry, with a JSON pointer relative to `propSchema`. Its message is
 `schema keyword <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`.

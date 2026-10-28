@@ -1,5 +1,7 @@
 # Component Controls
 
+Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
+
 ## Scope And User Behaviour
 
 Saved variants work in every catalogue. Serve renders temporary edits of
@@ -55,6 +57,10 @@ Step uses the control's own value, else the schema's `multipleOf`, else 1 for
 an integer, else no step. Parents and saved variants carry the same limits.
 Saved props or story args outside their controls produce `props-control-bounds`
 build warnings. This includes complete merged variants and Storybook hints.
+Each warning names the entry or the variant, including a Storybook story. Its
+message is `saved prop <JSON-quoted-pointer> is outside its control bounds`,
+with a JSON pointer to the top-level prop, such as `"/count"`. The pointer
+form matches the [`props-unsafe-integer` messages](./mokly-entry-props.md#schema-inference).
 The viewer accepts these saved values when they satisfy the prop schema.
 The values still render. `--strict` makes the warnings fatal. Live validation
 keeps the complete merged-props check so every accepted preview meets its bounds.

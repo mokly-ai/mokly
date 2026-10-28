@@ -1,5 +1,7 @@
 # Build Warnings
 
+Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
+
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
@@ -53,7 +55,7 @@ order, the operating system, or the absolute checkout path.
 | `duplicate-component-stylesheet` | A component that declares one real file twice ([component stylesheets](./mokly-component-stylesheets.md))                                                                                                                                           |
 | `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                               |
 | `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))                                                                                                                                                  |
-| `html-ignore-attribute`          | An unknown attribute on an ignore wrapper ([HTML screens](./mokly-html-screens.md#links-and-markers))                                                                                                                                               |
+| `html-ignore-attribute`          | An unknown attribute on an ignore wrapper in an authored body or a page callback document ([HTML screens](./mokly-html-screens.md#links-and-markers))                                                                                               |
 | `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                                                                                                                                                    |
 | `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                                                                                                                                              |
 | `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                                                                                                                                                        |
