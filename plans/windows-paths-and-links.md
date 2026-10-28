@@ -238,14 +238,14 @@ roots. The other pages keep their requirements. No code changes.
 
 This milestone applies decision 173 A. It changes tests only.
 
-- [ ] Add `git_input` to `crates/mokly-compare/tests/support/mod.rs` and
+- [x] Add `git_input` to `crates/mokly-compare/tests/support/mod.rs` and
       make `git` delegate to it.
-- [ ] Replace the private helper of `large_sources_tests.rs` with the
+- [x] Replace the private helper of `large_sources_tests.rs` with the
       support module.
-- [ ] Rerun the probe with a global `commit.gpgsign = true` and
+- [x] Rerun the probe with a global `commit.gpgsign = true` and
       `gpg.program = false` through `GIT_CONFIG_GLOBAL`, and save the passing
       log as `.context/windows-paths-and-links/item-173-after.log`.
-- [ ] Run `cargo test -p mokly-compare --test large_sources_tests`.
+- [x] Run `cargo test -p mokly-compare --test large_sources_tests`.
 
 ## Milestone 3: Plain canonical paths in mokly-git and the sidecar
 
