@@ -70,10 +70,6 @@ attribute is ordinary HTML and is never interpreted. A component body uses
 this template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
 One parser and one renderer serve both. Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
 
-Authored HTML removes unknown wrapper attributes and attaches source locations.
-Delivered documents, sidecar pages, and `srcdoc` values keep authored attributes for resource and style checks.
-Composition filters unknown wrapper attributes before it evaluates conditions.
-
 Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
 `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
@@ -140,8 +136,9 @@ Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 `material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
 warn once per shared body and attribute. Their values are not evaluated and do not enter document keys.
-Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected. Delivered HTML keeps unknown attributes on these wrappers;
-authored composition removes them before closure and Changes inspect the tree.
+Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected.
+Delivered documents and `srcdoc` values keep unknown wrapper attributes for resource and style checks.
+The [public closure](./mokly-public-closure.md) and Changes never see unknown attributes on wrappers in authored bodies or in sidecar output.
 
 ## Variants
 
