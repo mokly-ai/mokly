@@ -222,6 +222,38 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
     2026-10-28 under the user's rule: A, `evicted`. Rejected: B,
     `no-record`, because the bound is the cause, and decision 4 added
     `evicted` to name that cause.
+14. Review finding 2, stale miss reasons count toward the record bound,
+    decided on 2026-10-29 under the user's rule: A. The store keeps each
+    miss reason under a digest of its key, so a reason costs about 100
+    bytes. Rejected: B, forget the reasons before records, because some
+    `evicted` reasons then become `no-record`. Rejected for now: C, a
+    separate bounded ledger, because A removes almost all of the crowding
+    with a smaller change.
+15. Review finding 3, module evidence that grows within a context makes
+    one entry for each distinct evidence, decided on 2026-10-29 under the
+    user's rule: C, the recommendation of the options check. A later
+    entry links to the largest earlier entry whose evidence it contains
+    and stores only the added versions. Rejected: A, narrow the docs to
+    one entry for each distinct evidence, because it weakens decision 1
+    and leaves the duplication. Rejected: B, measure first, because C
+    keeps decision 1 whatever the measurement shows. The first pass
+    recommended A.
+16. Review finding 4, no test reads the `cache` field of a real span,
+    decided on 2026-10-29 under the user's rule: A, a test subscriber
+    around real cache bundles, one bundle for each miss reason. Rejected
+    for now: B, one reason list shared by the render and CLI crates.
+17. Review finding 5, no test covers the reuse of a stored context entry
+    by a new bundle, decided on 2026-10-29 under the user's rule: A, a
+    unit test that edits one root in a later attempt and checks the
+    reused entry, with a changed-module case and a growth case.
+    Rejected: B, a real-sidecar test, because A checks the same branch
+    deterministically.
+18. Review finding 7, two parallel read inventories can repeat the work
+    for one module, decided on 2026-10-29 under the user's rule: B, one
+    in-flight cell for each module. Different modules still overlap, and
+    a failed lookup is asked again. Rejected: A, hold the memo lock
+    during the tree calls, because it removes the overlap of decision 2.
+    Rejected: C, a test only, because it detects the repeat but keeps it.
 
 ## Design
 
@@ -580,11 +612,21 @@ Evidence: `.context/perf5-step-b/step-b-measurements.md`.
       and `npm run format:check`.
 - [ ] Run `cargo xtask check --suite repository`, then the complete gate
       `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Round 1 at `37b26750`: five Low findings, all confirmed. Finding 1,
+    the store could end above its bound after an eviction, fixed in
+    `aba621bb`.
+  - Round 2 at `d3e280f7`: findings 2 to 5 again, and two new Low
+    findings, all confirmed. Finding 6, keys counted by length and not by
+    capacity, is `Auto-fix: yes`, B: one byte-charge helper for every
+    owner. Findings 2, 3, 4, 5, and 7 follow decisions 14 to 18.
+  - Outside the scope, from round 2:
+    `crates/mokly-graph/src/workers.rs`: the request order of parallel
+    PostCSS roots can change cumulative evidence. Separate branch.
 - [ ] Open the step B pull request with the before and after table. Put its
       link in the status paragraph.
 
