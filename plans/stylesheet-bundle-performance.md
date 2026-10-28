@@ -536,15 +536,21 @@ Write each failing test first.
   - [x] The store charges a shared entry once, charges a separate entry with
         equal evidence again, drops an entry that no record uses, and
         forgets the miss reasons that do not fit.
-- [ ] Integration tests in `crates/mokly-render/tests/integration` with the
-      real sidecar:
-  - [ ] A second preparation with no change makes no `processCss` call and
+- [x] Integration tests in `crates/mokly-render/tests/integration` with the
+      real sidecar. The reuse fixture has 64 roots and a PostCSS
+      configuration that loads 1,000 installed modules, so 64 copies of the
+      module evidence exceed the bound. The tests count `processCss`
+      requests: each attempt has its own PostCSS context, so each inner
+      bundle of these roots sends one. Both reuse tests fail on `d4c6f6a8`.
+  - [x] A second preparation with no change makes no `processCss` call and
         no inner bundle.
-  - [ ] A preparation after a JavaScript edit makes no inner bundle.
-  - [ ] An edit to one stylesheet bundles only the roots that import it.
-  - [ ] A Tailwind fixture: a new file with a new class name in the scanned
+  - [x] A preparation after a JavaScript edit makes no inner bundle.
+  - [x] An edit to one stylesheet bundles only the roots that import it.
+  - [x] A Tailwind fixture: a new file with a new class name in the scanned
         directory makes the Tailwind root bundle again, and its CSS contains
         the new class.
+
+Evidence: `.context/perf5-step-b/baseline-integration.log`.
 
 ## Milestone 10: Measurement, step B
 
@@ -574,3 +580,9 @@ Write each failing test first.
 - [ ] Decision 9: give Serve's background base work its own render pool in a
       separate branch. It also covers the base comparison capture in
       `crates/mokly-graph/src/session_collection.rs`.
+- [ ] Follow-up found by the step B integration fixture: share the PostCSS
+      configuration's own source files across the records of a context. A
+      configuration that loads many files outside `node_modules` still gives
+      each record its own copy of their inputs, dependency digests, and
+      evidence, so such a catalogue can exceed the bound again. Effort
+      Medium. Separate branch.
