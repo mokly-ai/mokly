@@ -65,6 +65,15 @@ Decisions D1 to D4 were asked on 2026-10-27. The user answered on
   the existing `cacheHits` and loses the counts of a failed review phase,
   and C, totals since the process started, because every reader must
   subtract. Reason: one shape serves all five phases.
+- D5 (2026-10-28, agent, under the user's rule of 2026-10-28 to apply the
+  recommended option without stopping): open the pull request although the
+  local gate fails two release-note checks. The public package export
+  ratchet and the test "the repository public surface has complete release
+  notes" fail the same way on `origin/main` at `2dd2937f`, because exports
+  removed since `v0.14.0` and `viewer-v0.5.0` are not named in the upgrade
+  guide. Rejected: fix the upgrade guide here, because it is outside this
+  change, and wait for a fix, because the failures do not depend on this
+  change.
 - D4, the recheck: B, the coverage rule. It supersedes decision 2. Rejected:
   A, decision 2 as written, because discovery reports no roots, C, a narrow
   stylesheet recheck, because it changes the code of perf 5, and D, no
@@ -341,12 +350,24 @@ above.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-- [ ] Run `cargo xtask check --suite repository` early.
-- [ ] Smoke-test watched Serve with `npm run dev -- --port 0`: open a screen,
-      edit a screen module, and see the rebuilt screen.
-- [ ] Run the targeted tests and the complete gate `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch after each
-      milestone.
+- [x] Run `cargo xtask check --suite repository` early. It failed at the
+      public package export ratchet, which fails the same way on
+      `origin/main` (D5). The steps after it passed when run by hand:
+      `cargo fmt`, both clippy runs, the package builds, and
+      `cargo test --workspace`. The file-length lints passed after the
+      candidate test moved into its own file.
+- [x] Smoke-test watched Serve with `npm run dev -- --port 0`: open a screen,
+      edit a screen module, and see the rebuilt screen. The edited title of
+      `example/team/invite` reached the served document after a rebuild,
+      and the Browse shell rendered the screen.
+- [x] Run the targeted tests and the complete gate `cargo xtask check`. The
+      local gate stops at the first failed suite, so each suite ran on its
+      own: viewer 2,473 of 2,474 passed, with the same pre-existing
+      release-note failure (D5), native and browser passed. Logs:
+      `.context/render-cache-weight-and-watch-recheck/gate-*.log`.
+- [x] Commit with Conventional Commits and push the branch after each
+      milestone. `origin/main` moved to `2dd2937f` and was merged in, with no
+      overlapping path.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
