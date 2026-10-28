@@ -178,6 +178,27 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
    for each context and would rework the same path. Reason: the floor is
    the serial PostCSS chain, which no step A change removes, and the
    acceptance holds in the faster state and in the cold pairs.
+9. Wider fix of review round 1 finding 1, answered by the orchestrator on
+   2026-10-28: B. Give Serve's background base work its own render pool in a
+   separate branch later. This plan keeps the shared render pool. Rejected:
+   A, the same change in this branch, because the base comparison capture on
+   `origin/main` has the same problem and needs its own review.
+10. Review round 2 finding 4, answered on 2026-10-28: E. A failed input keeps
+    its diagnostic for the rest of its PostCSS context, and a timeout or a
+    crash after its retry fails every request of the context that already
+    waits for its turn. Rejected: A and D, because a root that reaches a
+    failed input later would send it again. Rejected: B alone, because a hang
+    on every input would still cost one deadline pair for each waiting
+    request. Rejected: C, failing every later request after a timeout,
+    because one transient fault would fail every new stylesheet of a live
+    generation until the next rebuild.
+11. Review round 2 finding 5, answered on 2026-10-28: D. The generation key
+    hashes the output key of each resource in place of its input key, so
+    worker timing reaches no published identity. Rejected: A, correct the
+    docs only, because the key would still change between equal runs.
+    Rejected: B, merge the read evidence for the keys, because it misses the
+    dependency digests that also grow. Rejected: C, a fixed request order,
+    because it removes much of the gain.
 
 ## Design
 
@@ -391,7 +412,27 @@ Evidence: `.context/perf5-parallel-stylesheets/review-a1.md`,
 - [x] Open the step A pull request with the before and after table. Put its
       link in the status paragraph.
 
-## Milestone 6: Documentation and protocol, step B
+## Milestone 6: Answers to review round 2, step A
+
+Decisions 10 and 11 change behaviour, so the contract and the READMEs change
+in the same commits. Write each failing test first.
+
+- [x] Apply decision 10 in `crates/mokly-render/src/postcss_turns.rs`,
+      `crates/mokly-render/src/postcss.rs`, and
+      `crates/mokly-render/src/failures.rs`. State the rule and the decision
+      in `docs/protocol/mokly-sidecar-postcss.md` and the render README.
+- [x] Apply decision 11 in `crates/mokly-graph/src/graph.rs`. Update the
+      graph README and the server index snapshot, whose `live.generation`
+      value changes.
+- [x] Tests: a failed input fails again for its context without another
+      request. Waiting requests receive a lost child, and a later request
+      starts again. Private read evidence keeps the generation key, and a
+      delivered CSS change changes it.
+- [x] Run the `cargo test` suites of `mokly-graph`, `mokly-render`,
+      `mokly-cli`, and `mokly-server`.
+- [ ] Commit, push, and wait for CI on PR #228.
+
+## Milestone 7: Documentation and protocol, step B
 
 Step B starts after the step A pull request merges. Its pull request opens
 after the orchestrator reports that perf 4 merged. perf 0 also changes
@@ -413,7 +454,7 @@ after the orchestrator reports that perf 4 merged. perf 0 also changes
       evidence, and the miss reasons. Update `crates/mokly-cli/README.md`
       when it lists timing fields.
 
-## Milestone 7: Miss reason on `css.bundle`, step B
+## Milestone 8: Miss reason on `css.bundle`, step B
 
 Write each failing test first.
 
@@ -429,7 +470,7 @@ Write each failing test first.
   - [ ] `crates/mokly-cli`: the timing layer copies `cache` to the
         `css.bundle` end record and logs no path.
 
-## Milestone 8: Gate fix, step B
+## Milestone 9: Gate fix, step B
 
 Write each failing test first.
 
@@ -456,7 +497,7 @@ Write each failing test first.
         directory makes the Tailwind root bundle again, and its CSS contains
         the new class.
 
-## Milestone 9: Measurement, step B
+## Milestone 10: Measurement, step B
 
 - [ ] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Add an edit to one stylesheet. Check the acceptance:
@@ -464,7 +505,7 @@ Write each failing test first.
       edit have no `css.bundle` span, and the stylesheet edit bundles only
       the roots that import it. Add one line for each catalogue below.
 
-## Milestone 10: Verification, commit, review, and pull request, step B
+## Milestone 11: Verification, commit, review, and pull request, step B
 
 - [ ] Run the targeted tests: `cargo test -p mokly-render`,
       `cargo test -p mokly-cli`, `npm test -- tests/markdown_links.test.ts`,
@@ -478,3 +519,9 @@ Write each failing test first.
       re-review once, and report the rest.
 - [ ] Open the step B pull request with the before and after table. Put its
       link in the status paragraph.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Decision 9: give Serve's background base work its own render pool in a
+      separate branch. It also covers the base comparison capture in
+      `crates/mokly-graph/src/session_collection.rs`.
