@@ -14,6 +14,12 @@ use oxc_span::SourceType;
 use crate::error::{Error, Result};
 
 /// Every decoded static, re-export, and literal dynamic request names an owned file.
+///
+/// Each `mokly-viewer/**/*.js` file parses as an ES module with the oxc parser,
+/// so comments, quoted prose, regular expressions, and `import.meta` are never
+/// requests. A request drops its query and hash suffix before the lookup. Only
+/// `./`, `../`, and single-slash specifiers are local, so a relative specifier
+/// that contains `+` or `:` resolves like any other.
 pub fn validate(files: &[File]) -> Result<()> {
     let paths: BTreeSet<_> = files.iter().map(|file| file.path.as_str()).collect();
     for file in files
@@ -91,6 +97,9 @@ pub fn validate(files: &[File]) -> Result<()> {
     Ok(())
 }
 
+/// Module requests: the module record's static imports and re-exports, plus
+/// each dynamic import whose source is a string literal or a template literal
+/// without expressions. A computed source is never evaluated.
 #[derive(Default)]
 struct Requests(Vec<String>);
 impl<'a> Visit<'a> for Requests {

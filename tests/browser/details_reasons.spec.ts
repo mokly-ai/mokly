@@ -7,7 +7,6 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { parseReviewResult } from "../../packages/viewer/src/review/result_validation.js";
 import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 
 import {
@@ -32,11 +31,14 @@ const MATERIAL = "Rendered content changed.";
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
-/** Count the selected comparison's review requests from the page's start. */
-function reviewRequests(page: Page): { count: number } {
+/** A snapshot document of a comparison generation. */
+const SNAPSHOT = /\/diffs\/generations\/[^/]+\/snapshots\//u;
+
+/** Count the comparison's snapshot document requests from the page's start. */
+function comparisonRequests(page: Page): { count: number } {
   const seen = { count: 0 };
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname.endsWith("/review.json")) seen.count++;
+    if (SNAPSHOT.test(new URL(request.url()).pathname)) seen.count++;
   });
   return seen;
 }
@@ -66,7 +68,7 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
   request,
   baseURL,
 }) => {
-  const requests = reviewRequests(page);
+  const requests = comparisonRequests(page);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   const evidence = await openEvidence(page);
   const expected = {
@@ -105,7 +107,7 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
 test("classification evidence arrives first and survives the comparison", async ({
   page,
 }) => {
-  const requests = reviewRequests(page);
+  const requests = comparisonRequests(page);
   await page.goto(`/view/${comparisonPaths.mobileOnlyChange}/`);
   const evidence = await openEvidence(page);
   const expected = {
@@ -119,12 +121,10 @@ test("classification evidence arrives first and survives the comparison", async 
   const response = page.waitForResponse(
     (candidate) =>
       candidate.status() === 200 &&
-      new URL(candidate.url()).pathname.endsWith("/review.json"),
+      SNAPSHOT.test(new URL(candidate.url()).pathname),
   );
   await showMode(page, "Side by side", 4);
-  expect(parseReviewResult(await (await response).json()).schemaVersion).toBe(
-    8,
-  );
+  await response;
   await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
   await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
   await expect(

@@ -1,4 +1,7 @@
 //! Canonical JSON encoding; array order is supplied by each shape owner.
+//! Number spelling comes from serde_json's float formatter, so a serde_json upgrade can
+//! change canonical bytes and the deployment ids derived from them. For example,
+//! serde_json 1.0.154 uses zmij, which writes `1e+16` where ryu wrote `1e16`.
 
 use std::cmp::Ordering;
 
@@ -34,24 +37,11 @@ pub fn sorted(value: Value) -> Value {
 /// Shape owners sort entries, instances, slots and regions before encoding.
 /// Authored variant, step and tag order is retained.
 pub fn to_string(value: &impl Serialize) -> Result<String> {
-    encode(value, serde_json::to_string_pretty)
-}
-
-/// Encode like [`to_string`] without insignificant whitespace.
-/// Only a comparison's review result uses this form, because it can be the largest file.
-pub fn to_compact_string(value: &impl Serialize) -> Result<String> {
-    encode(value, serde_json::to_string)
-}
-
-fn encode(
-    value: &impl Serialize,
-    write: fn(&Value) -> serde_json::Result<String>,
-) -> Result<String> {
     let value = match serde_json::to_value(value) {
         Ok(value) => value,
         Err(source) => return Err(ModelError::Internal(InternalError::Json { source })),
     };
-    match write(&sorted(value)) {
+    match serde_json::to_string_pretty(&sorted(value)) {
         Ok(mut text) => {
             text.push('\n');
             Ok(text)

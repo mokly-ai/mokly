@@ -39,7 +39,28 @@ cargo test -p mokly-cli --test design_behaviour_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
-Process recovery tests use the [debug fault adapters](../src/test_faults/mod.rs).
+Process recovery tests are Node tests under the repository `tests/` folder.
+They start the debug binary through
+[`tests/helpers/static_publication.ts`](../../../tests/helpers/static_publication.ts)
+and set faults through
+[`tests/helpers/static_faults.ts`](../../../tests/helpers/static_faults.ts):
+
+- [`static_recovery_process.test.ts`](../../../tests/static_recovery_process.test.ts)
+  injects filesystem failures.
+- [`static_recovery_signals.test.ts`](../../../tests/static_recovery_signals.test.ts)
+  sends `SIGINT` at signal gates.
+- [`static_recovery_paths.test.ts`](../../../tests/static_recovery_paths.test.ts)
+  checks the printed recovery paths.
+- [`static_signal_readiness.test.ts`](../../../tests/static_signal_readiness.test.ts)
+  checks the readiness markers and the abort regression.
+- [`static_fault_seam.test.ts`](../../../tests/static_fault_seam.test.ts) holds
+  the compiler probe and the signal-session probe.
+
+```bash
+npm test -- tests/static_recovery_signals.test.ts
+```
+
+These tests use the [debug fault adapters](../src/test_faults/mod.rs).
 `MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
 The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
 `MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide

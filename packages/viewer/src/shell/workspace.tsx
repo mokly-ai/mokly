@@ -233,6 +233,7 @@ export function ComponentWorkspace({
               <RemovedPreviewStage data={preview} />
             ) : data.comparisons ? (
               <ControlledDiffScreen
+                compared={data.compared}
                 comparison={comparison}
                 entryId={variantPath ?? entry.path}
                 entryKind={entry.kind}
@@ -270,10 +271,8 @@ export function ComponentWorkspace({
               : {}),
             details: (
               <WorkspaceEvidence
+                compared={comparison.loaded !== undefined}
                 data={data}
-                {...(comparison.loaded
-                  ? { loaded: comparison.loaded.result }
-                  : {})}
                 {...(previousPath ? { previousPath } : {})}
                 {...(variantPath ? { variantPath } : {})}
               />

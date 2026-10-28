@@ -1,7 +1,5 @@
 # @mokly/native-darwin-x64
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This package carries the Mokly binary for `darwin-x64`. Install
 `@mokly/mokly` to use the CLI. Its shim selects this package and requires the
 exact same version.

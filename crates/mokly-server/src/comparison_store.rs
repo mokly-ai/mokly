@@ -16,6 +16,7 @@ use crate::entropy::Entropy;
 use crate::error::{Result, ServerError};
 use crate::publication::Publications;
 
+/// Idle milliseconds before `collect` releases a generation or trims its snapshots.
 pub(crate) const RETENTION: u64 = 60_000;
 const MAX_TOTAL: usize = 128 * 1024 * 1024;
 const MAX_GENERATIONS: usize = 64;
@@ -34,17 +35,23 @@ pub trait Comparisons: Send + Sync {
     async fn selected(&self, accepted: Arc<Accepted>, path: String, refresh: bool) -> Outcome;
     /// Read an immutable generation, capturing a removed document only on demand.
     async fn file(&self, generation: &str, path: &str) -> Result<Option<File>>;
+    /// Renew a retained generation's idle window; false when it is gone.
+    fn renew(&self, generation: &str) -> bool;
     /// Collect idle generations and cancel captures from replaced classifications.
     fn collect(&self);
     /// Stop admission, cancel captures, and wait for every worker before releasing bytes.
     async fn stop(&self);
 }
 
+/// One immutable generation's files. `accepted` is weak, so cached files never keep an
+/// old classification or its base capture alive. A missing snapshot is restored only
+/// while another owner still holds the classification.
 pub(crate) struct Bundle {
     pub(crate) files: BTreeMap<String, File>,
     pub(crate) accepted: Option<Weak<Accepted>>,
     pub(crate) touched: u64,
 }
+/// One selected generation of a classification. `owner` is weak for the same reason.
 pub(crate) struct Selection {
     pub(crate) owner: Weak<Accepted>,
     pub(crate) generation: String,
@@ -96,6 +103,10 @@ impl MemoryComparisons {
     }
 }
 
+/// Release generations idle for `RETENTION` and stale selections, and cancel captures of
+/// replaced classifications. The current classification keeps its JSON and drops only
+/// its snapshot files, because they duplicate the base capture, which can restore a
+/// document without another base render.
 pub(crate) fn collect(state: &mut State, now: u64, current: Option<&Arc<Accepted>>) {
     state.bundles.retain(|id, bundle| {
         if now.saturating_sub(bundle.touched) < RETENTION {

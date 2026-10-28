@@ -135,6 +135,10 @@ struct PhasedChanges {
     install_scripts: Option<bool>,
 }
 impl ChangesService for PhasedChanges {
+    fn capture_head(&self, head: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
+        self.changes.capture_head(head)
+    }
+
     fn classify(
         &self,
         config: &ResolvedConfig,

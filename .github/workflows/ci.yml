@@ -10,6 +10,10 @@ permissions:
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
 jobs:
   profile:
     name: Runtime profile
@@ -46,6 +50,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+      # Read the exact version that floating Node 24 resolved to; the repository
+      # job and every Node 24 job request it. The `node-version` output of
+      # actions/setup-node holds the same version with a leading `v`; this step
+      # omits the `v`.
       - name: Capture exact Node.js version
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
@@ -53,7 +61,7 @@ jobs:
     name: Repository
     needs:
       - profile
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 75
     steps:
       - name: Check out repository
@@ -71,6 +79,13 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
+          cache-directories: .context/rust-audit-tool
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Build native artifacts
@@ -93,7 +108,7 @@ jobs:
     name: Viewer (Node ${{ matrix.node }})
     needs:
       - profile
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -118,6 +133,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Run viewer verification
@@ -135,7 +156,7 @@ jobs:
   browser:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [profile]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -162,6 +183,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -216,6 +243,11 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Build viewer package
@@ -227,7 +259,7 @@ jobs:
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }})
     needs: [profile]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -252,6 +284,12 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: native-binary
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium

@@ -123,6 +123,6 @@ test("the public test host applies exact-origin CORS and headers to copied files
       ).json(),
     fixture.frames.url,
   );
-  expect(index.schemaVersion).toBe(7);
+  expect(index.schemaVersion).toBe(8);
   expect(index).not.toHaveProperty("live");
 });

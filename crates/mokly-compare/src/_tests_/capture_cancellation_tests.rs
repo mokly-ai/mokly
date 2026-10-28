@@ -15,7 +15,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::capture_producer;
 
-use super::{CapturedGeneration, capture};
+use super::{CaptureSide, CapturedGeneration, capture};
 
 #[test]
 fn a_retained_capture_forwards_cancellation_to_its_source() {
@@ -108,7 +108,7 @@ fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() 
                     Ok(Closure::default())
                 })),
         )));
-        capture(source).err()
+        capture(source, CaptureSide::Base).err()
     };
     let Some(GraphError::Attempt { failures, .. }) = error else {
         panic!("expected capture cancellation")

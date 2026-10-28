@@ -4,6 +4,7 @@
 
 pub mod accounting;
 mod archive;
+mod blob_body;
 pub mod checkout;
 pub mod completion;
 pub mod error;
@@ -11,11 +12,11 @@ pub mod exchange;
 pub mod hints;
 pub mod http;
 pub mod identity;
+mod index_identity;
+mod json_skip;
 pub mod plan;
 pub mod redaction;
 mod retry;
-mod review;
-mod review_json;
 pub mod runtime;
 pub mod settings;
 pub mod snapshot;

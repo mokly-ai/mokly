@@ -36,7 +36,7 @@ async function openRetiredPage(page: Page, snapshot: string): Promise<void> {
 
 /** The site path of the removed page's previous document. */
 function retiredPageDocument(index: ComparisonIndex): string {
-  const generation = index.comparisonUrl.replace(/review\.json$/, "");
+  const generation = index.comparisonUrl;
   return `/${generation}snapshots/before/mokly-generated/${comparisonPaths.removedPage}/index.html`;
 }
 

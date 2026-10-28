@@ -1,8 +1,7 @@
-//! Upload metadata v2, constructed before static ownership finalization.
+//! Upload metadata v3, constructed before static ownership finalization.
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::namespace;
 use crate::output::error::{FormatError, Result};
 use crate::output::json::unique;
 use crate::output::numbers;
@@ -18,8 +17,6 @@ pub struct Comparison {
     pub base_ref: String,
     /// Full merge-base object id, never the base ref's current tip.
     pub base_sha: String,
-    /// Exact generation review path; no newest-file lookup is allowed.
-    pub path: String,
 }
 
 /// Finalization inputs supplied by the static output inventory.
@@ -52,7 +49,7 @@ pub struct Publication {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UploadMetadata {
-    /// Independent envelope version, always 2.
+    /// Independent envelope version, always 3.
     #[serde(deserialize_with = "numbers::version")]
     pub schema_version: u32,
     /// Installed Mokly package SemVer.
@@ -76,9 +73,6 @@ pub struct UploadMetadata {
     pub config_path: String,
     /// UTC timestamp with exactly millisecond precision.
     pub exported_at: String,
-    /// One pinned generation review path or explicit null.
-    #[serde(deserialize_with = "nullable")]
-    pub comparison_path: Option<String>,
 }
 
 fn nullable<'de, T: Deserialize<'de>, D: Deserializer<'de>>(
@@ -107,7 +101,6 @@ impl Publication {
             pull_request: self.pull_request,
             config_path: inventory.config_path.clone(),
             exported_at: inventory.exported_at.clone(),
-            comparison_path: inventory.comparison.as_ref().map(|base| base.path.clone()),
         };
         document.validate()?;
         Ok(document)
@@ -155,19 +148,10 @@ impl UploadMetadata {
         }
         portable_path(&self.config_path)?;
         timestamp(&self.exported_at)?;
-        match (&self.base_ref, &self.base_sha, &self.comparison_path) {
-            (None, None, None) => Ok(()),
-            (Some(reference), Some(sha), Some(path))
-                if text(reference, 255) && hexadecimal(sha, &[40, 64]) =>
-            {
-                let generation = path
-                    .strip_prefix(&namespace::viewer("diffs/generations/"))
-                    .and_then(|path| path.strip_suffix("/review.json"));
-                if generation.is_some_and(|generation| hexadecimal(generation, &[64])) {
-                    Ok(())
-                } else {
-                    Err(FormatError::InvalidBundle)
-                }
+        match (&self.base_ref, &self.base_sha) {
+            (None, None) => Ok(()),
+            (Some(reference), Some(sha)) if text(reference, 255) && hexadecimal(sha, &[40, 64]) => {
+                Ok(())
             }
             _ => Err(FormatError::InvalidBundle),
         }

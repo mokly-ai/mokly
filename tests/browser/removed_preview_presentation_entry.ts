@@ -70,7 +70,7 @@ window.loadPreviewPresentation = async (options = {}) => {
   const loader = createSnapshotPresentationLoader(
     generation,
     ["before"],
-    { kind: "pinned", comparisonUrl: `${generation}review.json` },
+    { kind: "pinned", comparisonUrl: generation },
     {
       baseUrl: generation,
       fetch: async (_input, init) => {

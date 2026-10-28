@@ -54,6 +54,11 @@ export function consumerPlugins(
           inputs.files.set(args.path, contents);
           return { contents, loader: loader as Loader };
         });
+        // A repository-owned importer of `@mokly/mokly` (real path in the
+        // repository, outside node_modules, dependency roots and this package)
+        // gets a virtual module whose helpers are bound to its logical path,
+        // so attribution needs no process-global state. Other importers share
+        // the unattributed API.
         build.onResolve({ filter: /^@mokly\/mokly$/ }, async (args) => {
           const importer =
             args.importer &&
@@ -94,6 +99,9 @@ export function consumerPlugins(
             };
           return { path: runtimeKey + args.path, external: true };
         });
+        // The development JSX runtime is a shim: `jsxDEV` forwards to the
+        // consumer's `react/jsx-runtime` and passes the call site as
+        // `__moklySource` only to `defineComponent` wrappers, which strip it.
         build.onResolve({ filter: /^react\/jsx-dev-runtime$/ }, () => ({
           path: "jsx",
           namespace: "mokly-jsx",

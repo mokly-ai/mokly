@@ -1,7 +1,5 @@
 # Entry Props And Variants
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## One Model
 
 Every screen and component is a render over props:
@@ -59,13 +57,13 @@ Every schema declares `type`, or one of `enum`, `const`, `oneOf`, and
 `patternProperties`, `dependentSchemas`, and every other keyword are rejected,
 so a schema is self-contained, declares no default, and coerces nothing. Props
 are plain JSON: a function, a React element, a class instance, a non-finite
-number, or a cycle is not a prop. The Rust core validates schemas and props
-with one validator on the `jsonschema` crate. The viewer validates control
-input with a validator for this profile that generates no code, so an
-exported site needs no `unsafe-eval`. `json-schema-to-ts` derives the
-TypeScript props type of `render(props, context)` from an `as const` schema; a
-`defineScreen` input without `propSchema` is generic over the type of its
-`props` literal, and a variant's `props` is a `Partial` of it.
+number, or a cycle is not a prop. The core validates schemas and props
+against this profile. The viewer validates control input with a validator for
+this profile that generates no code, so an exported site needs no
+`unsafe-eval`. The TypeScript props type of `render(props, context)` derives
+from an `as const` schema. A `defineScreen` input without `propSchema` is
+generic over the type of its `props` literal, and a variant's `props` is a
+`Partial` of it.
 
 ## Schema Inference
 
@@ -101,9 +99,9 @@ with inferred properties and `additionalProperties: false`, or `array` whose
 `items` is inferred from every element across the sets. Kinds that differ across sets or across elements form a `type`
 list, and an array that is empty in every set has no `items`. A function, a
 React element, or any other non-data value is not a prop: it is excluded from
-the schema, from the props, and from the fragment key, with the
-`props-not-data` warning naming the entry and the key. A declared `propSchema`
-is the schema, and props it rejects fail.
+the schema and from the props, with the `props-not-data` warning naming the
+entry and the key. A declared `propSchema` is the schema, and props it rejects
+fail.
 
 ## Kinds
 
@@ -149,16 +147,17 @@ slots default to the parent's; its supplied slots default to empty.
 
 ## Read Model
 
-Read model v7 gives every screen and component the same prop fields in the
-[public catalogue read model](./mokly-catalogue.md): `propSchema`, `props`,
-which holds the entry's own props or a variant's merged props, and
-`controls`. A component parent has its own `views`, rendered from its own
-props without caller slot content, and an empty `suppliedSlots`; only a
-variant's `slots` and a composing caller fill slots. `variantOf` is present
-exactly on the variants of either kind. `propSchema` is the declared or inferred schema,
-unchanged, as a JSON Schema object under the profile; the viewer exports its
-type as `PropSchema`. The catalogue page's block is the one shape until the
-generated TypeScript types of the model crate replace it.
+The [public catalogue read model](./mokly-catalogue.md) gives every screen
+and component the same prop fields: `propSchema`, `props`, which holds the
+entry's own props or a variant's merged props, and `controls`. A component
+parent has its own `views`, rendered from its own props without caller slot
+content, and an empty `suppliedSlots`; only a variant's `slots` and a
+composing caller fill slots. `variantOf` is present exactly on the variants of
+either kind. `propSchema` is the declared or inferred schema, unchanged, as a
+JSON Schema object under the profile; the viewer exports its type as
+`PropSchema`. The generated
+[`PropSchema`](../../packages/viewer/src/generated/catalogue/PropSchema.ts)
+type defines its shape.
 
 ## Related Docs
 

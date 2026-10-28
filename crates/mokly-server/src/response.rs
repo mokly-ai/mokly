@@ -35,6 +35,20 @@ pub(crate) fn bytes(status: StatusCode, content_type: &str, bytes: Bytes) -> Res
     response
 }
 
+/// A bodiless answer, such as a redirect or a 204, with the uniform caching and sniffing headers.
+pub(crate) fn empty(status: StatusCode) -> Response {
+    let mut response = Response::new(Body::empty());
+    *response.status_mut() = status;
+    response
+        .headers_mut()
+        .insert("cache-control", HeaderValue::from_static("no-store"));
+    response.headers_mut().insert(
+        "x-content-type-options",
+        HeaderValue::from_static("nosniff"),
+    );
+    response
+}
+
 pub(crate) fn error(status: StatusCode, code: &'static str, message: &'static str) -> Response {
     let bytes = serde_json::to_vec(&PublicError { code, message }).unwrap_or_default();
     self::bytes(status, "application/json; charset=utf-8", bytes.into())

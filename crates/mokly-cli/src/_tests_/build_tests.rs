@@ -10,6 +10,7 @@ use mokly_catalogue::diagnostic::{Code, Issue, Warning, WarningSubject};
 use mokly_catalogue::discovery::Inventory;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::{CatalogueBuilderMock, PreparedCatalogue};
+use mokly_compare::base_render::ChangesServiceMock;
 use mokly_graph::types::{
     GraphFactory, GraphFactoryMock, RenderGeneration, RenderGenerationMock, RenderGraph,
     RenderGraphMock, RenderSummary,
@@ -21,7 +22,7 @@ use mokly_model::catalogue::{
 use mokly_model::data::Props;
 use mokly_model::inference::infer;
 use mokly_sidecar::workers::ClockMock;
-use unimock::{MockFn, Unimock, matching};
+use unimock::{Clause, MockFn, Unimock, matching};
 
 use crate::build::{BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::{BuildCancellation, Cancellation};
@@ -44,6 +45,12 @@ pub(super) fn options() -> Build {
         strict: false,
         no_changes: true,
     }
+}
+
+pub(super) fn capture_head() -> impl Clause {
+    ChangesServiceMock::capture_head
+        .next_call(matching!(_))
+        .answers_arc(Arc::new(|_, head| Ok(head)))
 }
 
 pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
@@ -140,7 +147,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
         .returns(Ok(prepared(Vec::new())))));
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
-        changes: Arc::new(Unimock::new(())),
+        changes: Arc::new(Unimock::new(capture_head())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
@@ -173,7 +180,7 @@ fn strict_build_keeps_warnings_and_resolves_output_from_config() {
     ));
     let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
-        changes: Arc::new(Unimock::new(())),
+        changes: Arc::new(Unimock::new(capture_head())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,

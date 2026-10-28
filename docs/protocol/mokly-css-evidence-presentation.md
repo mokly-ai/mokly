@@ -1,17 +1,14 @@
 # CSS Evidence Presentation
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Shell Derivation
 
-The entry detail v2 of the [shell delivery contract](./mokly-shell-delivery.md)
+The entry detail of the [shell delivery contract](./mokly-shell-delivery.md)
 carries one `resourceEvidence` record per view and per whole-document page,
-typed `ViewEvidence`: `rules`, the review v8 rule records with `stylesheet`,
+typed `ViewEvidence`: `rules`, the review rule records with `stylesheet`,
 `selector`, `status`, and `owner`, and `resources`, the rendered-resource
 records with `path` and `owner`, under the
 [evidence schema](./mokly-css-attribution-membership.md). This page reads only
-those records, and the static build reads the same records from review result
-v8. In this page, a file is a rule's `stylesheet` or a resource's `path`; a
+those records, in Serve and in a static build alike. In this page, a file is a rule's `stylesheet` or a resource's `path`; a
 matched, unresolved, or excluded file is a file with a rule of that `status`;
 a page selector is the `selector` of a rule whose owner is the entry; a
 component selector is the `selector` of a rule whose owner is a component, and
@@ -25,7 +22,7 @@ reasons, component results, or comparison states. A new classification
 generation replaces the projection and clears stale evidence while Changes is
 pending or unavailable.
 
-One inspector renderer merges classification evidence with a loaded selected
+The inspector merges classification evidence with a loaded selected
 comparison. Classification evidence is the review entry's `reasons`, the
 projected records, and the live comparison's views of the selected screen or
 variant, so Current shows the same files and sentences as a loaded
@@ -65,13 +62,10 @@ label.
 A view says “Components this screen uses changed”, or “Components this variant
 uses changed” for a component variant, when its state is `unchanged` and
 changed components affect it: the view keeps a `matched` or `unresolved` rule
-or a resource that a component owns, its usage holds an instance of a changed
-component that the entry detail's `relatedComponents` names, or an `affected`
-evidence item of the loaded review names it by side, entry path, viewport, and
-colour scheme, so a moved entry's before side matches its previous path. A
-selected comparison in Serve carries no `affected` records, so a component's
-markup change reaches the heading through usage there. Every other `unchanged`
-view keeps the ordinary label below.
+or a resource that a component owns, or its usage holds an instance of a
+changed component that the entry detail's `relatedComponents` names, so a
+component's markup change reaches the heading through usage. Every other
+`unchanged` view keeps the ordinary label below.
 
 | View state     | Screen                          | Component                       |
 | -------------- | ------------------------------- | ------------------------------- |
@@ -92,13 +86,12 @@ Keep the “Comparison details” heading and the rest of Details, including its
 metadata, evidence, exclusions and status lines. An index with `base` shows
 the sentence in every delivery.
 
-During navigation, the temporary workspace built from the index uses the
-`base` ref the index already carries. Show the same sentence while the
-destination's detail loads and after it loads. Pass the known name to that
-fallback; do not infer it from a route or invent a default. An index without
-`base` still shows no sentence and keeps its other Details.
+During navigation, Details show the same sentence while the destination's
+detail loads and after it loads. The sentence uses the `base` ref that the
+index already carries. The name never comes from a route or from a default.
+An index without `base` still shows no sentence and keeps its other Details.
 
-For a component entry, the shared wording helper selects:
+For a component entry, Details use these sentences:
 
 | Evidence                     | Sentence                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------- |
@@ -164,13 +157,6 @@ were proved. A file with both proven outside matches and unresolved evidence
 gets both paragraphs. Do not hide the proven list because the file's summary
 status is unresolved.
 
-For example, a declared stylesheet that styles a screen heading shows
-`action.css`, “Changed styles that apply to this screen:”, and
-`.checkout-heading`. If another rule in that file also changes Action on its
-own pages, its component-only selectors are not added to this page list.
-A screen-only `.checkout .action` rule shows that selector even though its
-matches are inside an unchanged component invocation.
-
 Component-only rules keep the matched-component copy and affected consumer
 links. They do not get an outside-component paragraph. An affected-only
 screen can retain its full matched-style evidence without an entry-owned rule.
@@ -218,11 +204,10 @@ in a component workspace. It names the kind as the terminal line does, so it
 never calls a screen or a variant a page. It appears
 when the routed entry's index record is ready and not `included` and changed
 components affect it: its detail's `relatedComponents` names a changed
-component, which the review's `affected` records give for the entry whose views
-they name, a shown view keeps a
-`matched` or `unresolved` rule or a resource that a component owns, or the
-loaded review's `affected` evidence names the entry. It shows in Current and
-in a loaded comparison alike. A variant whose rules are all owned by the
+component, which the comparison's affected consumers give for the entry whose
+views they name, or a shown view keeps a `matched` or `unresolved` rule or a
+resource that a component owns. It shows in Current and in a loaded
+comparison alike. A variant whose rules are all owned by the
 entry gains no sentence from those rules.
 
 A whole-document page may use component elements

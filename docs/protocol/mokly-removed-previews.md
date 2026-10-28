@@ -1,7 +1,5 @@
 # Removed Content Previews
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Behavior
 
 Opening a removed screen, page, or document shows its previous version: the
@@ -75,23 +73,15 @@ entry path and the view axes: one document per historical view for a screen,
 the light document for a page, and one document per scheme in the removed
 record's `colorSchemes` for a document.
 
-A removed screen's historical views are the `removed` views of its entry in
-the generation's review result v8. Pages and documents have no comparison
+A removed screen's historical views are the views of its removed detail,
+each with the `removed` state. Pages and documents have no comparison
 record; their documents are delivered the same way. A removed page or
-document also carries the removed preview metadata v3 at
-`previews/<path>/index.json` inside the generation:
-
-```ts
-interface RemovedPagePreview {
-  schemaVersion: 3;
-  baseRef: string;
-  baseCommit: string;
-  path: string;
-}
-```
-
-It names the entry's path and the base commit of the generation; readers
-accept only version 3.
+document also carries the removed preview metadata at
+`previews/<path>/index.json` inside the generation. The
+[generated `RemovedPagePreview` type](../../packages/viewer/src/generated/catalogue/RemovedPagePreview.ts)
+is its shape. It names the entry's path and the base commit of the
+generation; readers accept only the version of the
+[format inventory](./mokly-format-versions.md).
 
 Serve answers the generation's before-side routes for a removed entry from
 the bounded base capture or pinned-source fallback from the background
@@ -110,17 +100,10 @@ current files never replace historical bytes.
 ## Public Descriptor
 
 The removed record of the [catalogue index](./mokly-catalogue.md) carries
-`snapshotId` and the optional `preview` descriptor:
-
-```ts
-interface RemovedEntry {
-  entry: CatalogueRecord;
-  folderTitles: readonly string[];
-  parentTitle?: string;
-  snapshotId?: string;
-  preview?: { kind: "screen" } | { kind: "page" } | { kind: "document" };
-}
-```
+`snapshotId` and the optional `preview` descriptor. The generated
+[`RemovedEntry`](../../packages/viewer/src/generated/catalogue/RemovedEntry.ts)
+and [`RemovedPreview`](../../packages/viewer/src/generated/catalogue/RemovedPreview.ts)
+types are the shapes.
 
 `snapshotId` is the opaque identity the
 [catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions)
@@ -133,7 +116,7 @@ generation exists, and a removed component entry carries none.
 Removed entries have no current files and no route field; their URL is
 `/view/<path>/`, and historical HTML is never disguised as current output.
 The descriptor contains no base metadata, source paths, or commit identifiers
-beyond those public in the review JSON. Readers validate each `snapshotId` as
+beyond those public in the index and the details. Readers validate each `snapshotId` as
 a unique lowercase 64-hex identity. Every removed record requires
 `snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
 identity. With a null comparison URL, the field may be absent. Readers
@@ -152,9 +135,7 @@ a removed entry's path as current output. A catalogue with
 `comparisonUrl: null` shows the unavailable state without a request. Neither
 frame adapter mounts a preview frame: previews are viewer-owned documents, so
 no adapter handshake or inspection, marker, or navigation message exists for
-them. Serve and the static build include the preview controller once in the
-shell bundle; `@mokly/viewer` hosts use the same React components and request
-lifecycle.
+them.
 
 ## Frames And Lifecycle
 
@@ -207,10 +188,9 @@ the artifact origin and historical inline styles for resources the document
 needs.
 
 From document commit, and again after replacement and load, the parent
-installs the guard before slow resources can leave links active. It finds
-links through the event's composed path; cancels every click, auxiliary
-click, and Enter activation regardless of target or download attributes; and
-cancels form submission. When a link has a nonempty fragment and its resolved
+installs the guard before slow resources can leave links active. The guard
+cancels every click, auxiliary click, and Enter activation on a link
+regardless of target or download attributes, and it cancels form submission. When a link has a nonempty fragment and its resolved
 URL without that fragment equals the document address, the guard scrolls the
 matching target into view. Navigation stays cancelled, so `:target` does not
 apply. Space keeps its scrolling default. If a later load is not the recorded
@@ -227,7 +207,3 @@ controlled selection, and several viewers on one page follow the
 contract and the pane [lifecycle](./mokly-comparison-panes.md#lifecycle).
 Saved viewport and scheme choices are revalidated against the historical
 views without inventing views.
-
-## Acceptance
-
-See [removed preview acceptance](./mokly-removed-preview-acceptance.md).

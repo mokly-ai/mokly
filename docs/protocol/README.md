@@ -3,9 +3,9 @@
 These documents are Mokly's specification. They define the intended behaviour
 of the product: the Rust core, the render sidecar, the Browse shell, and the
 release and verification tooling around them. A page that describes behaviour
-which is not implemented yet starts with one line, `Status: In progress under
-the Rust rebuild plan`; every other page describes implemented behaviour. The
-[documentation policy](./documentation-policy.md) holds the rule.
+which is not implemented yet starts with a status line that names its plan.
+Every other page describes implemented behaviour. The
+[repository rules](../../AGENTS.md#repository-rules) hold the rule.
 
 The [path contract](./mokly-paths.md) defines the path-based model: every entry
 is identified by a path derived from its file, Markdown files are documents,
@@ -22,8 +22,8 @@ strict mode.
 ## Supported Formats
 
 The [format inventory](./mokly-format-versions.md) lists the catalogue index,
-entry detail, review result, and change snapshot versions. A reader rejects an
-unsupported number before it interprets content.
+entry detail, and upload versions, the versions of the in-memory review result
+and change snapshot, and the rule for an unsupported version.
 
 ## Authoring
 
@@ -92,11 +92,9 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [Component Usage Records](./mokly-component-usage-records.md)
 - [CSS Attribution Membership](./mokly-css-attribution-membership.md)
 - [CSS Change Attribution](./mokly-css-attribution.md)
-- [CSS Document Matching](./mokly-css-document-matching.md)
 - [CSS Rule Membership And Identity](./mokly-css-attribution-rules.md)
 - [Moves](./mokly-moves.md)
 - [Removed Content Previews](./mokly-removed-previews.md)
-- [Removed Preview Acceptance](./mokly-removed-preview-acceptance.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Tree Comparison And Changes](./mokly-comparison.md)
 - [Comparison Tree Model](./mokly-comparison-tree.md)
@@ -136,8 +134,8 @@ The development server, on-demand rendering, the watcher, live controls, termina
 The static output of `build`, its safety and ownership rules, publication, and the upload exchange.
 
 - [Catalogue Upload Exchange v1](./mokly-upload-exchange.md)
-- [Catalogue Upload v2](./mokly-upload.md)
-- [Catalogue Upload Validation v2](./mokly-upload-validation.md)
+- [Catalogue Upload v3](./mokly-upload.md)
+- [Catalogue Upload Validation v3](./mokly-upload-validation.md)
 - [Export Ownership v3](./mokly-export-ownership.md)
 - [Optional Changes In Published Catalogues](./mokly-publication.md)
 - [Static Build](./mokly-export.md)
@@ -160,6 +158,8 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
+- [Inspector Handshake And Wire Protocol](./mokly-inspector-wire.md)
+- [Logical Link Composition](./mokly-logical-links.md)
 - [Mokly Catalogue Navigation Contract](./mokly-navigation.md)
 - [Mokly Shell Brand](./mokly-shell-brand.md)
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
@@ -169,6 +169,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [Viewer Appearance](./mokly-viewer-appearance.md)
 - [Viewer Frame Adapter](./mokly-frame-adapter.md)
 - [Viewer Markers And Multi-Instance Highlights](./mokly-viewer-markers.md)
+- [Viewer Selection, Events And Shell State](./mokly-viewer-selection.md)
 - [Viewer Semantic Palette](./mokly-viewer-palette.md)
 
 ## Design Mockups
@@ -182,7 +183,6 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Component Inspector Design](./mokly-component-inspector-design.md)
 - [Component Workspace Design](./mokly-component-workspace-design.md)
 - [Depicted Design Catalogue](./mokly-shell-design-catalogue.md)
-- [Design Component Attribution](./mokly-design-component-attribution.md)
 - [Design Mockup Navigation Links](./mokly-design-links-navigation.md)
 - [Design Mockup Scheme, Comparison, And Tag Links](./mokly-design-links-comparisons.md)
 - [Mokly Design Component Library Inventory](./mokly-design-component-library.md)
@@ -190,6 +190,8 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Mokly Shell Design Contract](./mokly-shell-design.md)
 - [Registered Components In Mokly's Design Catalogue](./mokly-design-components.md)
 - [Shell Design Inventory](./mokly-shell-design-inventory.md)
+- [Shell Navigation Column Design](./mokly-shell-design-navigation.md)
+- [Viewer Appearance Mockups](./mokly-viewer-appearance-mockups.md)
 
 ## CI, Verification, And Release
 
@@ -205,19 +207,14 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Dependency Update Pull Request](./dependency-audit-update-pr.md)
 - [Deterministic Test Repository Inputs](./ci-test-repository-inputs.md)
 - [Developer Test Commands](./developer-test-commands.md)
-- [Developer browser commands](./developer-browser-commands.md) — browser selection and static delivery.
+- [Developer Browser Commands](./developer-browser-commands.md)
 - [Packed Consumer Smoke](./packed-consumer-smoke.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
-- [Historical npm Upgrade Notes](./npm-release-history.md)
-- [npm 0.15.0 Upgrade Notes](./npm-release-history-0-15.md)
 - [Mokly CI And Npm Release Contract](./npm-release.md)
-- [npm Format And Tooling Release Notes](./npm-release-notes-formats.md)
 - [npm Release Management](./npm-release-management.md)
-- [npm Release Notes](./npm-release-notes.md)
 - [Npm Release Operations](./npm-release-operations.md)
 - [Npm Release Verification Evidence](./npm-release-evidence.md)
 - [One-Time Mokly Registry Bootstrap](./npm-bootstrap.md)
-- [Public API Reports And Unused Members](./verification-api-members.md)
 - [Remote Verification](./remote-verification.md)
 - [Remote Verification: Base Commit Sync](./remote-verification-base.md)
 - [Remote Verification: Cleanup And Interrupts](./remote-verification-cleanup.md)
@@ -226,10 +223,3 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Repository Preview Deployments](./npm-preview-deployments.md)
 - [Repository Verification Ratchets](./verification-ratchets.md)
 - [Selected Developer Test Results](./developer-test-results.md)
-
-## Process
-
-The documentation rule and the rebuild procedures.
-
-- [Documentation Policy](./documentation-policy.md)
-- [Rust Rebuild Procedures](./rust-rebuild-procedures.md)

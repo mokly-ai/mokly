@@ -8,7 +8,7 @@ import { VIEWER_DIRECTORY } from "./delivery_paths.js";
 const HASH_40_OR_64 = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 const HASH_64 = /^[a-f0-9]{64}$/;
 const COMPARISON_GENERATION = new RegExp(
-  `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/review\\.json$`,
+  `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/$`,
 );
 
 /** Whether a value is one public historical snapshot identity. */

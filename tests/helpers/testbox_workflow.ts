@@ -31,7 +31,7 @@ export interface TestboxWorkflow {
     };
   };
   permissions: Readonly<Record<string, string>>;
-  env: Readonly<Record<string, string>>;
+  env?: Readonly<Record<string, unknown>>;
   jobs: Readonly<Record<string, TestboxWorkflowJob>>;
 }
 

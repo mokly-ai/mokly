@@ -2,6 +2,7 @@
 
 import type { CatalogueUsage } from "./CatalogueUsage.js";
 import type { ColorScheme } from "./ColorScheme.js";
+import type { ReviewState } from "./ReviewState.js";
 import type { ViewEvidence } from "./ViewEvidence.js";
 import type { Viewport } from "./Viewport.js";
 
@@ -19,6 +20,14 @@ colorScheme: ColorScheme,
  * Usage readiness, never absent.
  */
 usage: CatalogueUsage,
+/**
+ * Review state of the view, present exactly with `resource_evidence`.
+ */
+state?: ReviewState,
+/**
+ * Paired ignore ids, sorted and unique, present exactly with `resource_evidence`.
+ */
+ignoredIds?: Array<string>,
 /**
  * Present exactly when comparison evidence is ready.
  */

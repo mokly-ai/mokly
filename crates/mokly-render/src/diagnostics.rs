@@ -41,6 +41,9 @@ pub(crate) fn issue(diagnostic: &DefinitionDiagnostic) -> Issue {
     issue
 }
 
+/// Convert a sidecar render result's warnings into build warning records for `route`.
+/// They stay in the fragment and the composed document, never in document bytes, so
+/// the render cache keeps them with the output of the generation that produced them.
 pub(crate) fn warnings(values: &[results::Warning], route: &str) -> Vec<Warning> {
     values
         .iter()

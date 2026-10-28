@@ -1,18 +1,16 @@
 # Static Build Public Files And Package Boundary
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 Continuation of [Static Build](./mokly-export.md).
 
 ## Output Inventory
 
 `build` selects output from its render generation: rendered views, pages,
 document scheme files, document resources of the closure, bundled stylesheets,
-and opaque asset plans. It takes rendered documents and bundled CSS from the
-render cache and captures opaque assets through digest-checked streams. It
-never scans an output directory to find files or reads installed output back.
-Entry segments such as `coverage`, `dist`, `node_modules`, and `README` do not
-make those files private. Ancestor directories are derived from that set to
+and opaque assets. An opaque asset follows the capture rule of the
+[asset delivery contract](./mokly-imported-styles-assets.md#validation-and-the-render-cache).
+`build` never scans an output directory to find files or reads installed
+output back. Entry segments such as `coverage`, `dist`, `node_modules`, and
+`README` do not make those files private. Ancestor directories are derived from that set to
 reach exact members, not to admit siblings or a whole subtree. The catalogue
 model and the stylesheet bundling metadata stay private. Confinement,
 regular-file checks, source protection, and file and alias collision checks
@@ -32,9 +30,8 @@ to add a file to the inventory.
 ## Public Files And Package Boundary
 
 Write every rendered HTML document, bundled stylesheet, and opaque asset
-beneath `static/mokly-generated/`. Use render-cache bytes for HTML and CSS,
-and verified immutable captures for opaque assets. Copy only the authored
-`assetClosure` beneath `static/`, keeping its repository-relative paths.
+beneath `static/mokly-generated/`. Copy only the authored closure beneath
+`static/`, keeping its repository-relative paths.
 No stale output and no unreferenced authored file participates.
 Imported CSS and PostCSS sources stay private; scoped npm asset URLs are
 validated against the same inventory. Keep relative resource and document
@@ -79,10 +76,12 @@ private comparison data.
 
 `mokly-viewer/index.json` and `mokly-viewer/entries/**` enter the same
 collision-checked ownership and upload inventories as every other file,
-alongside `mokly-viewer/client/inspector.js`. The index v7 is the public form
-of the catalogue model under the [catalogue contract](./mokly-catalogue.md);
-the details carry each entry's usage, resource evidence, and workspace lists.
-Ownership v3 and upload v2 gate the viewer namespace; the review result is v8.
+alongside `mokly-viewer/client/inspector.js`. The index is the public form
+of the catalogue model under the [catalogue contract](./mokly-catalogue.md).
+The details carry each entry's usage, review states, resource evidence, and
+workspace lists. The ownership marker and the upload metadata gate the viewer
+namespace at the versions of the [format inventory](./mokly-format-versions.md).
+The review result stays in memory.
 The deployment identity includes the index and the details under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
 includes the inspector.
@@ -90,25 +89,20 @@ includes the inspector.
 Only current rendered HTML copies in the output gain the Mokly-owned inspector
 script and its bounded inert boundary metadata under the
 [published inspector contract](./mokly-published-inspector.md). The
-[inspector contract](./mokly-frame-adapter.md) requires a host handshake
+[inspector contract](./mokly-inspector-wire.md#cross-origin-mount-and-handshake) requires a host handshake
 before activation. Authored files and snapshot document bytes are unchanged;
 consumer content and portable links are not rewritten to implement
 inspection. Default local frames keep scripts disabled.
 
-The static build belongs to the Rust core, in the static crate of the
-[architecture](../architecture/rust-core.md#crates). Consumers must not
-deep-import package internals or copy repository scripts. The CLI is the
-supported interface; there is no public JavaScript build engine API. The
+Consumers must not deep-import package internals or copy repository scripts.
+The CLI is the supported interface; there is no public JavaScript build engine
+API. The
 [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported browser
 viewer API that consumes the index and the details, not a build engine and
 not permission to import CLI internals. Serve and `build` are its first hosts:
 they deliver the stub and ship its standalone bundle, including React, so a
 built catalogue runs the same shell in the browser as Serve. Consumer code
 never enters that bundle.
-
-Keep typed options and results and narrow, testable filesystem, Git, and
-capture boundaries. Reuse the render graph and the composition rules rather
-than creating a second screen renderer or weakening validation.
 
 ## Compatibility And Non-Goals
 
@@ -120,30 +114,16 @@ every consumer build. Host routing and header files belong to the deployment
 step, which must not mutate an installed output or relax confinement. `build`
 adopts only an empty destination or one with a valid current ownership marker.
 
-The first version supports HTTP(S) deployment at the origin root. Subpath
+Static delivery supports HTTP(S) deployment at the origin root. Subpath
 hosting, `file://` catalogue browsing, incremental or watched builds, Changes
 without Git, hosting adapters in the CLI, deployment credentials, and a new
 visual design are outside this contract. Portable individual fragments keep
 their direct-from-disk behaviour.
 
-## Verification
-
-Rust tests of the static crate cover option validation and config-relative
-paths, custom renderer and module resolution, pages and documents, both
-schemes and viewports, invalid empty and removed catalogues, non-default bases,
-missing history and resources, output overlap, symlinks, ownership and
-collisions, concurrent writers, input changes, rollback, shutdown,
-self-attribution, public-file exclusion, and the asset closure.
-
-Browser tests serve only the completed output through a basic static file
-server with no Mokly routes, rewrite rules, Git, or source tree, and verify
-every static delivery behaviour. The repository preview keeps its Cloudflare
-regression coverage.
-
 ## Registered Components
 
 Component catalogues carry component and variant entries in the index, with
-removed variants in `removedEntries`, and review v8 evidence with actual
+removed variants in `removedEntries`, and comparison evidence with actual
 affected consumers in the details. The same inspector renders in served and
 built shells. The static build supplies no render capability and no token;
 controls are read-only and make no render requests. The resource validation,

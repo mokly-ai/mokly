@@ -4,7 +4,7 @@ import test from "node:test";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { homeSummary } from "../src/shell/home_summary.js";
 
-import { indexFixture } from "./catalogue_v7_fixture.js";
+import { indexFixture } from "./catalogue_v8_fixture.js";
 import { standaloneMarkup } from "./shell_markup.js";
 
 /** The summary line the home page renders, or undefined without one. */

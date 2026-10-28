@@ -12,7 +12,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const ORIGIN = "http://localhost:4810";
 const RETIRED =
@@ -49,7 +49,7 @@ test("the standalone shell reads the index at the stub's origin", async () => {
     "/mokly-viewer/index.json": rawIndexFixture(),
   });
   const index = await fetchStandaloneIndex(win, signal);
-  assert.equal(index.schemaVersion, 7);
+  assert.equal(index.schemaVersion, 8);
   assert.deepEqual(requests, [
     {
       url: `${ORIGIN}/mokly-viewer/index.json`,

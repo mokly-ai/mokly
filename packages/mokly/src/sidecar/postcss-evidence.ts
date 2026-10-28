@@ -1,3 +1,9 @@
+/**
+ * Read evidence of the PostCSS worker's current generation. Each observed read
+ * digests the raw bytes before BOM handling or decoding: compiler inputs, JSON
+ * and configured loaders included, native module source buffers, and the
+ * path, descriptor, `FileHandle` and stream reads that the preload wraps.
+ */
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import promises from "node:fs/promises";

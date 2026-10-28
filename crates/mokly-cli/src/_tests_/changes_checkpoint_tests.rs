@@ -17,7 +17,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::build::{BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::{BuildCancellation, Cancellation};
 
-use super::build_tests::{config, options, prepared};
+use super::build_tests::{capture_head, config, options, prepared};
 
 #[test]
 fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
@@ -47,9 +47,10 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
         )));
         let interrupt = cancellation.clone();
         let changes: Arc<dyn ChangesService> = if before {
-            Arc::new(Unimock::new(()))
+            Arc::new(Unimock::new(capture_head()))
         } else {
-            Arc::new(Unimock::new(
+            Arc::new(Unimock::new((
+                capture_head(),
                 ChangesServiceMock::classify
                     .next_call(matching!(_, _, _, _))
                     .answers_arc(Arc::new(move |_, _, _, _, _| {
@@ -64,7 +65,7 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
                             }),
                         })
                     })),
-            ))
+            )))
         };
         let service: &dyn BuildService = &CatalogueBuild {
             inputs: None,

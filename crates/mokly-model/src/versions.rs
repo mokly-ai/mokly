@@ -1,10 +1,10 @@
 //! Independent protocol version numbers; package versions are separate.
 
 /// Public catalogue index version.
-pub const CATALOGUE_INDEX: u32 = 7;
+pub const CATALOGUE_INDEX: u32 = 8;
 /// Per-entry detail version.
 pub const ENTRY_DETAIL: u32 = 2;
-/// Material and resource review version.
+/// In-memory material and resource review version; never written.
 pub const REVIEW_RESULT: u32 = 8;
 /// Catalogue change snapshot version.
 pub const CHANGE_SNAPSHOT: u32 = 4;
@@ -17,7 +17,7 @@ pub const REMOVED_PREVIEW: u32 = 3;
 /// Static output ownership version.
 pub const EXPORT_OWNERSHIP: u32 = 3;
 /// Upload metadata version.
-pub const UPLOAD_METADATA: u32 = 2;
+pub const UPLOAD_METADATA: u32 = 3;
 /// Upload plan exchange version.
 pub const PLAN_EXCHANGE: u32 = 1;
 /// Navigation disclosure storage key.

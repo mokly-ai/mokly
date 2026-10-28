@@ -416,7 +416,7 @@ expression: bytes
   ],
   "removedEntries": [],
   "revision": 1,
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "screens": [
     {
       "changes": {

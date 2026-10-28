@@ -1,10 +1,9 @@
 # Sidecar Render Records
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page defines resolved bindings, render inputs, and usage drafts for the
-[sidecar contract](./mokly-sidecar.md). The generated modules under
-`packages/mokly/src/generated/sidecar/` define the exact wire shapes.
+[sidecar contract](./mokly-sidecar.md). The
+[generated modules](../../packages/mokly/src/generated/sidecar/) define the
+exact wire shapes.
 
 ## Results
 
@@ -27,7 +26,7 @@ even when the styling library emits it only once. Ownership does not depend on
 render order or Suspense scheduling. Collection keeps HTML, class names, CSS
 text, rule order, and style-block grouping identical. Inline styles retain
 the component or slot supplier whose output produced them. Persistent native
-registries keep their existing selector attribution and delivery grouping.
+registries keep selector attribution and their delivery grouping.
 Comparison uses the shared [style ownership](./mokly-comparison.md#style-ownership)
 and evidence reduction rules.
 
@@ -76,8 +75,7 @@ class maps and `describe`, before a render on a replacement process.
 `renderScreen` and `renderComponent` also carry `entry: { path, title }`.
 These are the effective path and title of the rendered entry, including a
 variant. The consumer renderer receives this entry, rather than the parent's
-metadata. The fragment key includes the binding table fingerprint and the
-effective entry fingerprint, in addition to the other render inputs.
+metadata.
 
 ## Instance Drafts
 

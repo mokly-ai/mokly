@@ -1,7 +1,5 @@
 # Variant Navigation And Changes
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Navigation Rows
 
 The catalogue groups variants under their parent's row in Specs or Components,
@@ -111,11 +109,3 @@ Viewer reconstructs the same grouping, aggregate marks, fallback rows,
 breadcrumbs, icon by parent kind, and dark availability from current entries and
 `removedEntries`. A controlled selection stays a proposal until the host
 commits it; variant navigation proposes the variant's ordinary entry path.
-
-## Verification
-
-Unit and browser coverage must compare runtime rows with the owning mobile and
-desktop mockups. Cover both parent kinds, authored order, disclosure persistence,
-search and tags, active rows, aggregate navigation, sibling comparison-mode
-retention, moved rows, removed attachment and fallback, plain former-parent
-breadcrumbs, dark availability, Back/Forward, and controlled selection.

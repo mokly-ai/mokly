@@ -6,6 +6,26 @@ describes the complete gate and focused commands.
 Public test commands and strict evidence rules live in the
 [verification contract](../../docs/protocol/ci-verification.md).
 
+## Key code
+
+- [`run-viewer.mjs`](./run-viewer.mjs) runs the viewer suite for `npm test`
+  and, with `--strict`, for `npm run test:viewer:prepared`.
+- [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
+  Playwright specs of `npm run test:browser` after it checks the build.
+- [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
+  shard of it, and writes its report.
+- [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and
+  `file://` delivery checks of `npm run test:delivery:prepared`.
+- [`dependency-audit.mjs`](./dependency-audit.mjs) and
+  [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
+- [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
+  that a commit has every CI suite report for each runtime profile.
+- [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
+  `runRepositoryRatchets`, which runs every maintainability ratchet of the
+  Repository suite.
+- [`testbox-suite.mjs`](./testbox-suite.mjs) runs one suite command on a remote
+  Testbox.
+
 ## Workflow syntax
 
 Run `actionlint` without arguments from the repository root to check every
@@ -54,6 +74,16 @@ Failed or interrupted installs cannot become cache hits. It removes the
 temporary source tree after installation. Compiled dependencies use
 `target/rust-audit-tool/`. Both locations stay ignored.
 
+In CI, the Repository job's Rust build cache restores
+`.context/rust-audit-tool/`, so most runs reuse the installed tool. The cache
+key hashes the tool lockfile and this installer. A new pin or lock therefore
+misses the cache, and the next `main` run saves the new tool.
+`tests/ci_rust_cache.test.ts` imports the directory and lockfile paths from
+the installer to keep the workflow aligned. It checks that every CI cargo job
+restores the Rust build cache, that only `main` saves it, that Testboxes never
+save it, and that the audit tool key covers the tool inputs. It also checks the
+CI build settings and that the release workflows use no build cache.
+
 The installer returns the exact installed executable. The wrapper runs the
 live workspace advisory query with it on every invocation, including cache
 hits. The installer does not change the wrapper's advisory policy. The daily
@@ -80,10 +110,7 @@ aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
 inputs in estimated milliseconds per test. They use the median per-test cost
-from hosted runs `39581933162`, `39586827857`, and `39592076732`, all on
-`cdb32803`. Each run kept the same four-shard assignment and all browser
-reports passed. Earlier remote observations remain in the plan and its
-evidence; they do not replace these hosted measurements.
+of complete, successful hosted browser runs.
 
 For each sample and `specFile`, sum `observedTests.durationMs` and divide by
 its observed test count. Take the median of the available per-test sample
@@ -136,8 +163,12 @@ validates its own HTTP and file reports before returning success.
 [`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
 executes the lockfile stamp step and the environment step on Linux hosts with
 controlled inputs and asserts the written files. The environment run redirects
-`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
-pins are review-owned literals.
+`/etc/environment` to a temporary file and stubs `sudo`. It also requires the
+environment step to write every workflow `env` entry.
+[`tests/ci_testbox_alignment.test.ts`](../../tests/ci_testbox_alignment.test.ts)
+keeps the Testbox runner, workflow `env`, and Rust cache options equal to those
+of the CI suite jobs, and requires the Testbox cache to never save. Step order
+and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 
@@ -146,4 +177,5 @@ Pin each action to these immutable revisions. Keep the version comments.
 | `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
 | `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
 | `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
+| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3` |
 | `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |

@@ -31,48 +31,49 @@ async function documentsLoaded(frames: Locator): Promise<void> {
 }
 
 /**
- * Remove the generation of `review` once every document in `frames` has
- * loaded. Its first renewal answers 404, and every other request for one of
- * its files answers 404 too and is refused, so a viewer that reuses an old
- * address fails.
+ * Remove the generation whose root is `generation` once every document in
+ * `frames` has loaded. Its first renewal at `renewal`, the root of a
+ * comparison or the removed detail of a preview, answers 404, and every other
+ * request for one of its files answers 404 too and is refused, so a viewer
+ * that reuses an old address fails.
  *
  * A selected generation stays gone, as after Serve collects it. The next
  * request to the stable endpoint then captures a new generation; the
  * emulation forwards that one request as a refresh.
  *
- * Serve keeps the `review.json` of the classification generation that the
- * index advertises, and recaptures its snapshots on request, so that renewal
- * does not fail in Serve. The emulation fails it only to exercise the
- * shell's reacquire of the advertised URL: the generation comes back when
- * the shell reacquires its `review.json` after the renewal.
+ * Serve keeps the classification generation that the index advertises, and
+ * recaptures its snapshots on request, so that renewal does not fail in
+ * Serve. The emulation fails it only to exercise the shell's reacquire of the
+ * advertised root: the generation comes back when the shell requests the
+ * renewal address again after the renewal.
  */
 export async function removeGeneration(
   page: Page,
-  review: string,
+  generation: string,
   frames: Locator,
+  renewal = generation,
 ): Promise<RemovedGeneration> {
   await documentsLoaded(frames);
-  const directory = review.slice(0, review.lastIndexOf("/") + 1);
-  const selected = new URL(directory).pathname.includes(
+  const selected = new URL(generation).pathname.includes(
     "/generations/selected-",
   );
   let renewed = false;
   let restored = false;
   const refused: string[] = [];
-  await page.route(`${directory}**`, async (route) => {
+  await page.route(`${generation}**`, async (route) => {
     const request = route.request();
-    const metadata = request.url() === review;
+    const root = request.url() === renewal;
     if (restored) {
       await route.continue();
       return;
     }
-    if (metadata && request.method() === "HEAD" && !renewed) {
+    if (root && request.method() === "HEAD" && !renewed) {
       // The renewal finds the generation gone, as the journey expects.
       renewed = true;
       await route.fulfill({ status: 404 });
       return;
     }
-    if (!selected && renewed && metadata && request.method() === "GET") {
+    if (!selected && renewed && root && request.method() === "GET") {
       await route.fulfill({ response: await route.fetch() });
       restored = true;
       return;

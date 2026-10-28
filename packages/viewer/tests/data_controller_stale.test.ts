@@ -9,7 +9,7 @@ import {
 } from "../src/components/render_types.js";
 import { routeKey } from "../src/shell/data_requests.js";
 
-import { detailFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush, liveDescriptor } from "./data_fakes.js";
 

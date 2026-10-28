@@ -15,7 +15,7 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
     let Some(store) = &app.comparisons else {
         return Some(response::missing());
     };
-    if rest == "review.json" {
+    if rest == "selection" {
         let Some((path, refresh)) = selection(uri.query().unwrap_or("")) else {
             return Some(response::error(
                 StatusCode::BAD_REQUEST,
@@ -28,13 +28,9 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
         };
         return Some(match store.selected(accepted, path, refresh).await {
             Ok(id) => {
-                let mut response = response::bytes(
-                    StatusCode::FOUND,
-                    "application/json; charset=utf-8",
-                    Default::default(),
-                );
+                let mut response = response::empty(StatusCode::FOUND);
                 if let Ok(location) =
-                    HeaderValue::from_str(&format!("/{}", routes::comparison_review(&id)))
+                    HeaderValue::from_str(&format!("/{}", routes::comparison_generation(&id)))
                 {
                     response.headers_mut().insert("location", location);
                 }
@@ -51,6 +47,13 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
     };
     if uri.query().is_some() {
         return Some(response::missing());
+    }
+    if file.is_empty() {
+        return Some(if store.renew(generation) {
+            response::empty(StatusCode::NO_CONTENT)
+        } else {
+            response::missing()
+        });
     }
     Some(match store.file(generation, file).await {
         Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),

@@ -120,7 +120,7 @@ test("a pane document that cannot be presented fails and recovers with Try again
   allowBrowserError,
 }) => {
   const index = await comparisonIndex(request, baseURL);
-  const generation = index.comparisonUrl.replace(/review\.json$/u, "");
+  const generation = index.comparisonUrl;
   const document = `/${generation}${DOCUMENT.slice(1)}`;
   // The host answers the current version's pane document with 404 once.
   allowBrowserError(responseFailure(baseURL!, document, 404));

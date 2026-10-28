@@ -29,6 +29,7 @@ async fn namespace_path_attacks_and_foreign_hosts_fail_closed() {
         "http://foreign.test/static/specs/home.screen.html",
         "/mokly-viewer/source.json",
         "/mokly-viewer/diffs/review.json",
+        "/mokly-viewer/diffs/selection?path=home",
         "/mokly-viewer/usage/home.json",
         "/static/specs/home.screen.html",
         "/static/mokly-generated/missing/index.html",

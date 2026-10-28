@@ -1,11 +1,10 @@
 # mokly-css
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 `mokly-css` prepares stylesheet delivery for Mokly. Depend on it to bundle
 local CSS, scope CSS Modules, deliver opaque CSS assets, and attribute changed
-public stylesheet rules. The render graph
-owns cache keys and resource routes. The sidecar supplies consumer PostCSS.
+public stylesheet rules. `mokly-graph` owns cache keys and resource routes.
+`mokly-render` supplies consumer PostCSS through the sidecar. `mokly-compare`
+calls the matching and attribution functions for Changes.
 
 ## Responsibilities
 
@@ -30,133 +29,97 @@ returns plugin provenance and directory watch recipes beside the transformed
 text. The graph protects those inputs and reports plugin-specific recovery
 actions. Selected dependency roots keep their logical `node_modules` names.
 
-Package aliases use the configuration directory's Node ancestor lookup,
-then the configured package roots, as the JavaScript graph does. Imports
-without an alias use the importing stylesheet's directory.
-The core supplies configured package roots as ordered logical dependency
-directories. Ancestor aliases map each physical lookup position to its side's
-selected logical dependency root. The resolver applies only one longest-key
-alias substitution. Imports inside a logical dependency root try package-local
-`node_modules`, then siblings at that root, then the mapped authored ancestors.
-This keeps package CSS and JavaScript on the same copy.
+`SourceResolver` implements `ImportResolver`. Imports share aliases, package
+roots, and the other resolution settings with the JavaScript graph under the
+[imported styles contract](../../docs/protocol/mokly-imported-styles.md). The
+core supplies configured package roots as ordered logical dependency
+directories. Imports inside a logical dependency root try package-local
+`node_modules`, then siblings at that root, then the mapped authored
+ancestors. This keeps package CSS and JavaScript on the same copy.
 
-A configured root delivers `styles/{repository-path}`. A JavaScript root
-delivers `styles/{module-path}.css`. Assets use `assets/{repository-path}`.
-URLs keep query and fragment suffixes. Public resources never read private
-CSS inputs by their authored paths.
+The same contract owns the `styles/` and `assets/` delivery routes. URLs keep
+query and fragment suffixes. Public resources never read private CSS inputs by
+their authored paths.
 
-`modules::scope` returns CSS and sorted class exports from one naming rule:
-`mokly_{first-12-SHA256-path-digits}_{local}`. The map is suitable for the
-sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
-retain their values. An independent token check rejects scoping that changes
-anything beyond local names and the module scope/composition syntax.
+`modules::scope` returns CSS and sorted class exports from the one naming rule
+of the [CSS Modules contract](../../docs/protocol/mokly-imported-styles-modules.md).
+The map is suitable for the sidecar's CSS Modules table. Plain CSS has no map.
+Declaration-list at-rules retain their values. An independent token check
+rejects scoping that changes anything beyond local names and the module
+scope and composition syntax. Declaration-only at-rules such as `@font-face`
+end a non-custom statement at its first `{}` block, as postcss does. A nested
+at-rule keeps its prelude as authored, except the keyframes name and an
+`@scope` selector.
 
-The renamer, the module check, and the token check share one statement
-grammar. The section reader classifies each statement once for all three,
-matching `lightningcss` for the supported statement starts and block grammar.
-There is a known parity gap for an HTML comment token (`<!--` or `-->`) before
-a stylesheet statement: cssparser skips the token, but the section reader
-keeps it. Such a statement can receive a different kind in the scanners and
-in `lightningcss`; post-merge work will align the scanners. The grammar of a
-block depends on its statement and on the block around it:
-
-- The stylesheet is a rule list. The block of a conditional, layer, scope, or
-  starting-style rule in a rule list is a rule list too. Every statement in a
-  rule list is a rule or an at-rule.
-- The block of a style rule or an `@-moz-document` rule in a rule list or in
-  a style block is a style block. The block of a conditional, layer, scope,
-  or starting-style rule in a style block is a style block too. There, a
-  custom property runs through its `{}` blocks to the next `;` and keeps its
-  value as authored. A statement without a block is a declaration when it
-  starts with an identifier and a colon. Any other statement is a rule or an
-  at-rule, also while it is still open at the end of input. An at-rule
-  without a block under a keyframes name that `lightningcss` does not know
-  stays as authored text.
-- The block of a keyframes or `@document` rule in a rule list is a lenient
-  rule list. So is the block of a keyframes, conditional, layer, `@document`,
-  scope, or starting-style rule in a lenient rule list. A keyframes rule
-  there is any at-rule whose name ends with `keyframes`. A lenient rule list
-  reads its statements as rules, but every other block in it is a
-  declarations block, also an `@-moz-document` block.
-- Every other block is a declarations block, for example `@font-face`, a
-  keyframe, an unknown at-rule, or a rule's block in a keyframes or
-  `@document` block. A rule that starts with an HTML comment token also opens
-  one in the section reader. `lightningcss` skips that token before reading
-  the statement. It keeps, drops, or rejects the text of a declarations block.
-  A statement without a block there is a declaration or text that stays as
-  authored, except that `@value` fails.
-
-Declaration-only at-rules such as `@font-face` end a non-custom statement at
-its first `{}` block, as postcss does. A nested at-rule keeps its prelude as
-authored, except the keyframes name and an `@scope` selector.
+The renamer, the module check, and the token check share one statement reader.
+It matches `lightningcss` for the supported statement starts and block
+grammar. There is a known parity gap for an HTML comment token (`<!--` or
+`-->`) before a stylesheet statement: cssparser skips the token, but the
+section reader keeps it. Such a statement can receive a different kind in the
+scanners and in `lightningcss`.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration
 edits. `rule_matching::match_document` uses Servo `selectors` against both
 available document arenas. It keeps every matching element until attribution.
-The matcher checks element depth once with an explicit stack. When either
-tree exceeds 512 levels, changed `:has()` selectors produce unresolved evidence.
-Other selectors retain their normal matching. The limit rounds down from a
-2 MiB worker stack divided by a measured 288-byte recursive frame and an
-eightfold safety factor. It leaves room for caller and selector frames.
-`MatchTree` preserves parsed element relationships and component containment;
-the HTML adapter omits ignored regions and inert template contents.
-`ContainmentPath` shares immutable parent links between elements, copied
-matching trees, embedded documents, and detached match proof. It visits
-regions innermost first and releases deep paths iteratively. Every source
-keeps physical containment. Owned proof also keeps the shared supplier path
-for its nested filter. Linked and ownerless proof retain no supplier path.
-Callers read `MatchProof::regions()` for physical ancestry; storage stays private.
-Physical and supplier links share exact instance identities, so repeated
-component paths cannot make a receiving copy look like the supplying instance.
+Deep documents follow the `:has()` rule of the
+[attribution rules](../../docs/protocol/mokly-css-attribution-rules.md), with
+the depth bound in `rule_matching::MAX_HAS_TREE_DEPTH`. `MatchTree` preserves
+parsed element relationships and component containment. The HTML adapter
+omits ignored regions and inert template contents. `ContainmentPath` shares
+immutable parent links between elements, copied matching trees, embedded
+documents, and detached match proof. Every source keeps physical containment.
+Owned proof also keeps the shared supplier path for its nested filter. Linked
+and ownerless proof retain no supplier path. Callers read
+`MatchProof::regions()` for physical ancestry. Physical and supplier links
+share exact instance identities, so repeated component paths cannot make a
+receiving copy look like the supplying instance.
 
 `attribution::attribute` joins equal rule observations, collects unfiltered
 own-page matches, and filters nested components before one record reduction.
-It consumes the observation vector and moves retained paths into the reducer.
 Owned head styles, ownerless head styles, and linked CSS share that reducer.
 Kept own-page source paths remain separate from published ownership records.
-Callers use those paths for direct preview states and dependency reasons.
-A source with no kept rule has one empty-selector `excluded` record.
-Unresolved proof takes precedence for the same selector and source.
-`inline_attribution` uses the linked observation boundary for ownerless head
-rules. `observe_owned` retains the declared owner and supplier filter.
-Declared owners claim physical instances even when their own pages have no
-match. Ownerless rules require catalogue-wide own-page proof, as linked CSS does.
-`MemoryParsedCss` shares equal bytes across paths and sides; eviction changes
-work only. Evidence retains each source's public route.
+Callers use those paths for direct preview states and dependency reasons. A
+source with no kept rule has one empty-selector `excluded` record. Unresolved
+proof takes precedence for the same selector and source. `inline_attribution`
+uses the linked observation boundary for ownerless head rules. `observe_owned`
+retains the declared owner and supplier filter. Declared owners claim physical
+instances even when their own pages have no match. Ownerless rules require
+catalogue-wide own-page proof, as linked CSS does. The
+[CSS change attribution contract](../../docs/protocol/mokly-css-attribution.md)
+owns the published evidence.
+
+`MemoryParsedCss` shares equal bytes across paths and sides. Its eviction
+changes work only. Evidence retains each source's public route.
 
 Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
 
 `Bundle.read_evidence` retains distinct observed and late input versions.
-Combining stylesheets preserves both kinds without overwriting earlier witnesses.
-Plugin dependency inputs use digests, separate from parsed CSS bytes.
-They keep source protection and graph invalidation without retaining file bodies.
+Combining stylesheets preserves both kinds without overwriting earlier
+witnesses. Plugin dependency inputs use digests, separate from parsed CSS
+bytes. They keep source protection and graph invalidation without retaining
+file bodies.
 
-Mokly's CSS scanners read a flat token arena with matched block extents. URL
-references, HTML boundary stripping, CSS Modules renaming, and its token check
-keep nesting on the heap; a 100,000-level stylesheet uses an ordinary worker
-thread in each of them. The rule walk also keeps its frames on the heap, but
-each rule copies its inherited conditions, so its work grows with the square
-of the depth. Selector broadening and nesting substitution use cssparser 0.38,
-whose 75-level nested-block allowance bounds their recursion. `lightningcss`
-recurses once per nesting level while it parses, prints, and drops a sheet.
-Compilation and bundling stop at its limit. So do CSS Modules scoping, which
-parses the renamed sheet with `lightningcss`, and rule collection, which runs
-`lightningcss` before the rule walk. That limit depends on the nesting form
-and the build profile. Every measured form survives at least 32 levels on a
-2 MiB worker stack, far more than authored stylesheets nest.
+`lightningcss` recurses once per nesting level, so compilation, bundling, CSS
+Modules scoping, and rule collection stop at its nesting limit. That limit
+depends on the nesting form and the build profile. Every measured form
+survives at least 32 levels on a 2 MiB worker stack, far more than authored
+stylesheets nest.
 
 ## Quick Start
 
 ```rust
+use mokly_css::error::Result;
 use mokly_css::modules;
 
-let (css, exports) = modules::scope("ui/card.module.css", ".card { color: red }")?;
-assert!(exports["card"].starts_with("mokly_"));
-assert!(css.contains(&exports["card"]));
-# Ok::<(), mokly_css::error::CssError>(())
+fn scope_card() -> Result<()> {
+    let (css, exports) = modules::scope("ui/card.module.css", ".card { color: red }")?;
+    assert!(exports["card"].starts_with("mokly_"));
+    assert!(css.contains(&exports["card"]));
+    Ok(())
+}
 ```
 
 ## Development
@@ -174,15 +137,26 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 
 ### Key Code
 
-- [Compiler](./src/compiler.rs) and [delivery](./src/delivery.rs).
-- [Rule collection](./src/rule_collection.rs), [diff](./src/rules.rs), and [matching](./src/rule_matching.rs).
-- [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs),
-  [shared containment](./src/containment.rs), and [parsed cache](./src/parsed_cache.rs).
-- [Record reduction](./src/attribution_records.rs) publishes evidence for every CSS source.
-- [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
-- [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
-- [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).
-- [Injected interfaces](./src/types.rs) and [resolver](./src/resolver.rs).
+- [`src/compiler.rs`](./src/compiler.rs) defines `Compiler`, the
+  `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
+- [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
+  `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
+- [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
+  `SourceResolver`, which resolve imports through the injected source tree.
+- [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the
+  CSS Modules renamer.
+- [`src/rule_collection.rs`](./src/rule_collection.rs) and
+  [`src/rules.rs`](./src/rules.rs) provide `collect` and `diff`, which read a
+  complete rule list and pair the changed rules.
+- [`src/rule_matching.rs`](./src/rule_matching.rs) provides `match_document`,
+  which matches changed selectors against a `MatchTree` from
+  [`src/match_tree.rs`](./src/match_tree.rs).
+- [`src/attribution.rs`](./src/attribution.rs) provides `attribute`, which
+  reduces page observations into an `Attribution` with rule evidence.
+- [`src/parsed_cache.rs`](./src/parsed_cache.rs) defines `ParsedCssCache` and
+  `MemoryParsedCss`, the byte-bounded parsed sheet cache.
+- [`src/error.rs`](./src/error.rs) defines `CssError`, the typed stylesheet
+  failure with authored diagnostics.
 
 ### Related Docs
 
@@ -191,3 +165,5 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 - [CSS assets](../../docs/protocol/mokly-imported-styles-assets.md).
 - [PostCSS boundary](../../docs/protocol/mokly-imported-styles-postcss.md).
 - [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
+- [CSS attribution rules](../../docs/protocol/mokly-css-attribution-rules.md).
+- [Rust core architecture](../../docs/architecture/rust-core.md).

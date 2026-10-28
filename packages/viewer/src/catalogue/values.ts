@@ -58,15 +58,23 @@ export function repositoryPath(value: unknown): string {
     invalidData("$catalogue", "expected repository-relative path");
   return result;
 }
+/** A comparison generation's root: the artifact-root-relative path ending with `/`. */
 export function comparisonPath(value: unknown): string | null {
   if (value === null) return null;
   const result = string(value);
   if (
     !new RegExp(
-      `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+      `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/$`,
     ).test(result)
   )
     invalidData("$catalogue", "invalid comparison path");
+  return result;
+}
+/** A full lowercase hexadecimal Git object id. */
+export function commitId(value: unknown): string {
+  const result = string(value);
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(result))
+    invalidData("$catalogue", "invalid base commit");
   return result;
 }
 export function relatedDoc(value: unknown): string {

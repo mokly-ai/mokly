@@ -2,12 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
-import type { ReviewEntry } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import {
   entry,
-  loaded,
   PAGE,
   record,
   renderEvidence,
@@ -132,14 +130,15 @@ function renderKindEvidence(
     .sort()
     .map((path) => ({ kind: "dependency" as const, path }));
   const views = [view("mobile", "changed", rules)];
-  const comparison: ReviewEntry =
-    kind === "screen"
-      ? entry(kind, "home", "Home", reasons, views)
-      : {
-          ...entry(kind, "action", "Action", reasons, views),
-          variants: [entry(kind, "action/default", "Default", reasons, views)],
-        };
-  const { path, title } = comparison;
+  const [path, title] =
+    kind === "screen" ? ["home", "Home"] : ["action", "Action"];
+  // A component workspace compares its routed variant.
+  const comparison = entry(
+    kind,
+    kind === "screen" ? path : "action/default",
+    reasons,
+    views,
+  );
   return renderEvidence(
     {
       base: "origin/main",
@@ -158,6 +157,6 @@ function renderKindEvidence(
       views: [],
     } as unknown as WorkspaceData,
     kind === "component" ? "action/default" : undefined,
-    loaded(comparison),
+    comparison,
   );
 }

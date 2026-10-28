@@ -18,7 +18,7 @@ import type {
 import type { Catalogue } from "../src/shell/catalogue.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
-import { rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawIndexFixture } from "./catalogue_v8_fixture.js";
 
 /** The Changes state of one published entry. */
 export type ScreenChange = "changed" | "removed" | "unmodified";

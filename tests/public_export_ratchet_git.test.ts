@@ -35,7 +35,7 @@ test("removed public names require an exact release-note code span", async (cont
   const unnoted = publicPackageExportAudit(fixture.root);
   assert.match(
     unnoted.findings.join("\n"),
-    /@fixture\/package.*removed.*v1\.0\.0.*npm-release-notes\.md/u,
+    /@fixture\/package.*removed.*v1\.0\.0.*docs\/guides\/start\/upgrade\.md/u,
   );
 
   await writeNotes(fixture.root, "Replace `removed` with `kept`.\n");

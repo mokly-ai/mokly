@@ -10,6 +10,10 @@ use crate::repository::GitRepository;
 use crate::tree::{self, text};
 
 impl GitRepository {
+    /// Resolves `base` as exactly one commit, then returns its merge base with
+    /// `HEAD`. `--end-of-options` keeps a `base` that starts with `-` from being
+    /// read as an option. `merge-base` exit status 1 means no common ancestor,
+    /// as in unrelated or shallow histories, and maps to `NoMergeBase`.
     pub(crate) fn merge_base_of(&self, base: &str) -> Result<ObjectId> {
         let reference = format!("{base}^{{commit}}");
         let resolved = self.command(
@@ -27,6 +31,11 @@ impl GitRepository {
         }
     }
 
+    /// Lists the paths that differ from `base`. One NUL-delimited, rename-aware
+    /// diff against the working tree covers committed, indexed, and unindexed
+    /// edits, and runs no external diff driver or textconv filter. `ls-files`
+    /// then adds the untracked paths that the ignore rules keep. An indexed
+    /// deletion that is still an untracked working file becomes `Modified`.
     pub(crate) fn changes_from(&self, base: &ObjectId) -> Result<Vec<Change>> {
         let tracked = self.command(
             &[

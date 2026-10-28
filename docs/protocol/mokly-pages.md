@@ -1,7 +1,5 @@
 # Pages In The Catalogue
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Purpose And Boundary
 
 A page is one complete authored HTML document that belongs to the same
@@ -30,7 +28,7 @@ component elements with literal attribute values, `to` link controls, `mock:`
 links, and `mokly-ignore` markers like a screen body. A page has no props, so
 a `$name`, `{{name}}`, or `mokly-if` reference fails with `html-props`.
 The slug is the file name with `.page.html` removed. The core composes an
-HTML page in Rust; no sidecar starts for it.
+HTML page without JavaScript; no sidecar starts for it.
 
 ```html
 ---
@@ -115,7 +113,7 @@ The core applies these rules to every page, whichever form produced it:
   `render-failed`, presented as `build-invalid` naming the page. The callback
   writes no files; the core owns every write.
 - `mock:` links and `to` link controls are rewritten and validated under the
-  [navigation](./mokly-navigation.md) and
+  [logical link](./mokly-navigation.md#logical-catalogue-links) and
   [link control](./mokly-link-controls.md) contracts, and anchors are checked
   against the composed document under
   [link validation](./mokly-link-validation.md). A document with an

@@ -69,7 +69,7 @@ impl EncodedResource {
     }
 }
 
-/// Capture generated facts in the base pass within the shared byte budget.
+/// Capture generated facts for one side within its byte budget.
 pub(crate) fn capture(
     source: &dyn RenderGeneration,
     budget: &mut Budget,

@@ -97,8 +97,6 @@ async fn selected_variant_with_parent_owned_rules_redirects_and_captures_only_va
     let before = graph(b"<h2>Featured Before</h2>");
     let after = graph(b"<h2>Featured After</h2>");
     let input = family(Arc::new(before.clone()), Arc::new(after.clone()));
-    let mut expected = input.result.review.entries[0].clone();
-    expected.variants.as_mut().unwrap().truncate(1);
     let publications = Arc::new(SharedPublication::new(snapshot(Some(input))));
     let diagnostics = Unimock::new(());
     let store = Arc::new(MemoryComparisons::new(
@@ -124,27 +122,28 @@ async fn selected_variant_with_parent_owned_rules_redirects_and_captures_only_va
         Arc::new(diagnostics.clone()),
     );
     app.comparisons = Some(store.clone());
-    let path = "mokly-viewer/diffs/review.json";
+    let path = "mokly-viewer/diffs/selection";
     let uri: Uri = format!("/{path}?path={VARIANT}").parse().unwrap();
     let response = comparison_routes::route(&app, path, &uri).await.unwrap();
     let status = response.status();
     let location = response.headers().get("location").cloned();
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     assert_eq!(status, StatusCode::FOUND, "{body:?}");
+    assert!(body.is_empty());
     let uri: Uri = location.unwrap().to_str().unwrap().parse().unwrap();
+    assert!(uri.path().ends_with('/'));
     let response = comparison_routes::route(&app, uri.path().trim_start_matches('/'), &uri)
         .await
         .unwrap();
-    assert_eq!(response.status(), StatusCode::OK);
-    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-    let review = readers::review(std::str::from_utf8(&body).unwrap()).unwrap();
-    assert_eq!(
-        serde_json::to_string(&review.entries).unwrap(),
-        serde_json::to_string(&[expected]).unwrap()
-    );
-    assert!(review.affected.is_empty());
-    assert!(review.diagnostics.is_empty());
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
     let generation = uri.path().split('/').nth(4).unwrap();
+    assert!(
+        store
+            .file(generation, "review.json")
+            .await
+            .unwrap()
+            .is_none()
+    );
     for (side, expected) in [("before", "Featured Before"), ("after", "Featured After")] {
         let file = store
             .file(

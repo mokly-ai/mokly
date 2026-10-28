@@ -66,7 +66,7 @@ async fn an_identical_replacement_uses_its_live_owner_for_historical_capture() {
     );
     assert_eq!(
         store
-            .file(&next.id, "review.json")
+            .file(&next.id, "entries/sample.json")
             .await
             .unwrap()
             .unwrap()

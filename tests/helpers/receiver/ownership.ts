@@ -74,9 +74,15 @@ export function verifyInventory(entries: Array<[string, Uint8Array]>): Owned[] {
       throw new Error("invalid");
   }
   const metadata = upload(map.get("mokly-upload.json")!);
+  const catalogue = map.get("mokly-viewer/index.json");
+  if (!catalogue) throw new Error("invalid");
+  const index = object(decode(catalogue));
+  const compared = metadata.baseSha !== null;
   if (
-    metadata.comparisonPath === null &&
-    [...map.keys()].some((name) => name.startsWith("mokly-viewer/diffs/"))
+    (index.baseCommit ?? null) !== metadata.baseSha ||
+    (compared && index.base !== metadata.baseRef) ||
+    (!compared &&
+      [...map.keys()].some((name) => name.startsWith("mokly-viewer/diffs/")))
   )
     throw new Error("invalid");
   return owned;
