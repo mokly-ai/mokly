@@ -5805,7 +5805,7 @@ does not ask the user before the merge.
       every descendant, also in new sessions, Large. Recommended: C.
   - Security: the hub recommends a decision before the first npm release.
 
-- [ ] Resolve user item 151 (135 B review finding 43): a script can read the
+- [x] Resolve user item 151 (135 B review finding 43): a script can read the
       publish token. A script reads `MOKLY_TOKEN` from Mokly's own
       `/proc/{pid}/environ`. Severity Medium, security, effort Small.
       Options: A, document it and advise `--no-base-install-scripts`,
@@ -5813,12 +5813,16 @@ does not ask the user before the merge.
       a warning, Small; C, a separate process space, effort not recorded.
       Recommended: B.
   - Security: the hub recommends a decision before the first npm release.
+  - User decision 151 (2026-10-28): A. Documented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
-- [ ] Resolve user item 152 (135 B review finding 44, wider part): the
+- [x] Resolve user item 152 (135 B review finding 44, wider part): the
       scripts hint misses render failures. Severity Medium, effort Large.
       Options: B, show the hint where changes are classified, effort not
       recorded; C, a typed field and one helper, Large. Recommended: C.
       Option A is an auto-fix in progress.
+  - User decision 152 (2026-10-28): C. Implemented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
 - [ ] Resolve user item 153 (145 B probe): Yarn TLS file settings read
       outside files. Severity Medium, security, effort Small. Options: A,
@@ -5832,20 +5836,26 @@ does not ask the user before the merge.
       missing. Severity Low. Recommended: B, an end-to-end test for each
       package manager. The 135 B review record holds the other options.
 
-- [ ] Resolve user item 155 (135 B review finding 51): the scripts mode is
+- [x] Resolve user item 155 (135 B review finding 51): the scripts mode is
       stored in several places. Severity Low. Recommended: B, keep the mode
       on the install command. The 135 B review record holds the other
       options.
+  - User decision 155 (2026-10-28): B. Implemented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
-- [ ] Resolve user item 156 (135 B review finding 52): the hint has no
+- [x] Resolve user item 156 (135 B review finding 52): the hint has no
       final period. Severity Low. Recommended: A. The 135 B review record
       holds the options.
+  - User decision 156 (2026-10-28): A. Implemented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
-- [ ] Resolve user item 157 (135 B review finding 53): the scripts flags
+- [x] Resolve user item 157 (135 B review finding 53): the scripts flags
       are ignored with `--no-changes`. Severity Low. Recommended: A,
       document it. The 135 B review record holds the other options.
+  - User decision 157 (2026-10-28): A. Documented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
-- [ ] Resolve user item 158 (pnpm CI fix finding 1): pnpm recreates a
+- [x] Resolve user item 158 (pnpm CI fix finding 1): pnpm recreates a
       tracked `node_modules` only under CI. A tracked
       `node_modules/.modules.yaml` that needs recreation fails locally with
       `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`, which gives tier three,
@@ -5853,6 +5863,8 @@ does not ask the user before the merge.
       bug, effort Small. Options: A, turn off the recreation prompt for
       private installs, Small; B, document the CI-dependent result, effort
       not recorded. Recommended: A.
+  - User decision 158 (2026-10-28): A, for pnpm 10 and 11. Implemented in the
+    [base install fixes plan](./base-install-scripts-and-manager-fixes.md).
 
 - [x] Resolve user item 159 (release-lockstep review finding 1): fixed test
       versions block the first release PR. `tests/release_config.test.ts:64`

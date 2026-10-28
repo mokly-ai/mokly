@@ -236,9 +236,12 @@ scope. Do not start it before the answer.
 
 ## Milestone 6: Crate READMEs and doc alignment
 
-- [ ] Update the platform, compare, and CLI READMEs for the changed entry
+- [x] Update the platform, compare, and CLI READMEs for the changed entry
       points and behaviour.
-- [ ] Check the protocol docs and guides against the final code.
+- [x] Check the protocol docs and guides against the final code.
+- Commits `646ba07a` and `2884bb79`. The compare and CLI READMEs name the
+  landed entry points. The platform README waits for item 150, so the base
+  install processes page carries a status line until then.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -249,6 +252,8 @@ scope. Do not start it before the answer.
 - [ ] Tick user items 150, 151, 152, 155, 156, 157, and 158 in
       `plans/rust-rebuild.md` with the smallest edit. Do not tick 153, 154,
       or 180.
+  - Items 151, 152, 155, 156, 157, and 158 are ticked. Item 150 waits for
+    Milestone 2.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
