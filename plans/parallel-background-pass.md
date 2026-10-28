@@ -64,6 +64,31 @@ pass discards a failure that ends after one.
    showed 1 start out of catalogue order. A worker freed on a blocking thread
    between two polls of one sweep let a later render take it. The window's
    poll order alone cannot prevent that, and the turn needs about ten lines.
+6. Acceptance targets, decided on 2026-10-28 during milestone 3 under the same
+   rule: A, keep the bounded window as built and report the targets as
+   missed. On this machine the example pass takes 4.9 to 5.3 s against the
+   4 s target, and the React fixture pass 1.8 to 2.0 s against 1 s.
+   Rejected: B, extend this branch into the sidecar pool and the graph,
+   because the remaining time lies outside the pass scheduler and this
+   item's files, and the perf 1, 4, and 5 items change those areas. Reason:
+   the measured causes are outside the window:
+   - The first wave waits 0.75 to 0.85 s while the pool spawns five more
+     sidecars and replays the generation on each.
+   - Sidecar renders run about 1.7 times slower under eight-way load. The
+     example pass uses 70 to 85 % of the eight cores.
+   - The completion publication takes about 0.35 s after the last render.
+     Decision A of item 5 keeps it as one step.
+   - Concurrent misses repeat about 6 document compositions and 11
+     stylesheet bundles per example pass, about 0.2 s of work in total.
+
+   Follow-up: start the sidecars and replay the generation before the pass,
+   or let a request take the first sidecar that becomes ready. Expected gain
+   about 0.8 s per pass. Area: the sidecar pool and Serve startup.
+   Follow-up: coalesce concurrent stylesheet bundles of one root; the pass
+   bundles 14 instead of 3. Area: the stylesheet cache of the perf 5 item.
+   Follow-up: coalesce concurrent compositions of one document key; cache
+   hits drop from 106 to 99 or 100 on the example and from 408 to 377 to 380
+   on the React fixture. Area: the graph session render.
 
 ## Corrections to the item text
 
@@ -86,6 +111,9 @@ pass discards a failure that ends after one.
 - On this machine the baseline differs from the item's table: warm
   `changes.classify` takes 83.0 s, and the React fixture's pass takes 2.8 s.
   The targets stay: under 4 s on the example, under 1 s on the fixture.
+- The React fixture pass has 166 routes: 160 views, 2 pages, and 2 Markdown
+  documents in two schemes. Its 574 documents also count the reads of linked
+  documents that link validation makes.
 
 ## Baseline
 
@@ -225,27 +253,72 @@ Evidence: `.context/parallel-background-pass/tests-before-fix.txt`,
 Measure after the change with the same method and machine, and prove that
 Browse works.
 
-- [ ] Rebuild the release binary. Run the example serve run, the edit run,
+- [x] Rebuild the release binary. Run the example serve run, the edit run,
       and the React fixture run with the shared method. Rerun when two runs
       differ by more than ten percent. Report every baseline number for the
       new build in this plan and in the pull request body.
-- [ ] Check the acceptance: `serve.background` under 4 s on the example with
+  - The machine drifted between the baseline and the first after-runs:
+    `serve.ready` fell from 21.1 s to 16.6 s with no related change. The
+    table below therefore pairs the baseline binary with the new binary in
+    interleaved runs on the same machine state.
+- [x] Check the acceptance: `serve.background` under 4 s on the example with
       702 documents and 606 fragments, and under 1 s on the React fixture.
-- [ ] Run the foreground probe, `.context/perf/run-probe.mjs`, on the new
+      Not met: see decision 6.
+- [x] Run the foreground probe, `.context/perf/run-probe.mjs`, on the new
       build, and compare it with the baseline probe.
-- [ ] Smoke test: run `npm run dev`, open Browse in Chrome while the pass
+- [x] Smoke test: run `npm run dev`, open Browse in Chrome while the pass
       runs, open one screen and its Changes state, and save a screenshot
-      under `.context/parallel-background-pass/`.
+      under `.context/parallel-background-pass/`. The screen opened 2.6 s
+      after listening while the pass ran. After Changes, it shows
+      Unmodified, with no console or page errors.
+
+Paired runs on 2026-10-28, baseline `a9dd1e81` against `e7a0d824`, two
+interleaved pairs per catalogue and one edit pair:
+
+| Number                                  | Baseline                   | Bounded batches               |
+| --------------------------------------- | -------------------------- | ----------------------------- |
+| Example `serve.ready`                   | 20.0 s, 21.4 s             | 18.7 s, 18.9 s                |
+| Example `serve.background`              | 20.7 s, 20.1 s             | 5.3 s, 4.9 s                  |
+| Example pass counts                     | 702, 606, 106 cache hits   | 702, 606, 99 to 100           |
+| Example `changes.classify`, warm        | 78.5 s                     | 85.9 s, 70.5 s                |
+| of which `review.base-tree`, warm       | 49.3 s                     | 52.7 s, 42.9 s                |
+| of which `review.capture-side`          | 7.2 s, 7.2 s               | 8.1 s, 6.9 s                  |
+| of which `review.compare-views`         | 29.8 s, 27.9 s             | 31.3 s, 26.3 s                |
+| Example `sidecar.render` count          | 2,184, 2,182               | 2,183, 2,186                  |
+| Example `css.bundle` count and union    | 152, 13.9 s and 15.3 s     | 162 to 163, 14.7 s and 12.5 s |
+| Edit run: `watch.action`                | 14.1 s                     | 15.5 s                        |
+| Edit run: `serve.background` after edit | 19.0 s                     | 4.1 s                         |
+| Edit run: `changes.classify` after edit | 93.3 s                     | 94.0 s                        |
+| Edit run: edit to second classification | 126.3 s                    | 113.6 s                       |
+| React `serve.ready`                     | 9.8 s, 11.1 s              | 10.2 s, 10.3 s                |
+| React `serve.background`                | 2.5 s, 2.9 s               | 2.0 s, 1.8 s                  |
+| React pass counts                       | 574, 162, 408 cache hits   | 574, 162, 377 to 379          |
+| React `changes.classify`                | 13.7 s, 14.3 s             | 13.5 s, 14.8 s                |
+| React `sidecar.render` count            | 324                        | 324                           |
+| React `css.bundle` count and union      | 12, 0.4 s and 0.3 s        | 12, 0.3 s and 0.4 s           |
+| Probe during the pass, p50 and p90      | 7 ms, 12 to 13 ms          | 8 to 9 ms, 31 to 32 ms        |
+| Probe during the pass, max              | 702 to 713 ms, one request | 41 to 53 ms                   |
+
+The first baseline example run made a cold base extraction, 167.4 s, so the
+warm `changes.classify` row uses the other run. The pass now uses 70 to 85 %
+of the eight cores, against 15 % before.
+
+Evidence: `.context/parallel-background-pass/after.md`, `smoke.txt`, and the
+two `smoke-*.png` screenshots, with the raw records `pair-*`, `after-*`,
+`probe-after-*`, `cpu-*`, `scale-react-*`, and `exp*` under `.context/perf/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
-- [ ] Run `npm test -- tests/markdown_links.test.ts` and
+The perf brief orders the pull request before the review, so the pull
+request TODO comes before the review TODO here.
+
+- [x] Run `npm test -- tests/markdown_links.test.ts` and
       `npm run format:check`.
 - [ ] Run the complete gate, `cargo xtask check`.
 - [ ] Commit with Conventional Commits and push the branch.
+- [ ] Open the pull request with the before and after table. Put its link in
+      the status paragraph.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the pull request with the before and after table when every other
-      milestone TODO is ticked. Put its link in the status paragraph.
