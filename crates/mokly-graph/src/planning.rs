@@ -1,6 +1,7 @@
 //! Compute document input hashes before any document is rendered.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::iter;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -134,13 +135,18 @@ pub(crate) fn documents(
                 inputs.push(reload.into());
             }
             if !matches!(entry.content, EntryContent::Document { .. })
-                && (!catalogue.templates.contains_key(parent)
-                    || components
-                        .iter()
-                        .any(|component| !catalogue.templates.contains_key(component)))
-                && let Some(generation) = &delivery.fragment_generation
+                && let Some(keys) = &delivery.render_keys
             {
-                inputs.push(generation.clone());
+                let definitions: BTreeSet<_> = iter::once(parent)
+                    .chain(&components)
+                    .filter(|path| !catalogue.templates.contains_key(*path))
+                    .map(|path| {
+                        keys.definition(&catalogue.javascript.entries, path)
+                            .0
+                            .clone()
+                    })
+                    .collect();
+                inputs.extend(definitions);
             }
             inputs.extend(
                 components

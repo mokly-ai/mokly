@@ -2293,6 +2293,7 @@ dependencies = [
  "mokly-catalogue",
  "mokly-compare",
  "mokly-css",
+ "mokly-git",
  "mokly-graph",
  "mokly-html",
  "mokly-model",

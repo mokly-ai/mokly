@@ -14,8 +14,10 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::{MemoryCache, RenderCache};
 use crate::fragments::MemoFragments;
+use crate::key::NodeKey;
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::public_denial::PublicDenial;
+use crate::render_inputs::RenderKeys;
 use crate::source_snapshot::SourceSnapshot;
 
 #[test]
@@ -140,8 +142,11 @@ fn fragment_cache_reuses_equal_props_and_separates_ignore_scope() {
             })),
     )));
     let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024));
-    let memo: &dyn FragmentRenderer =
-        &MemoFragments::new("generation".into(), renderer, cache.clone());
+    let memo: &dyn FragmentRenderer = &MemoFragments::new(
+        Arc::new(RenderKeys::whole(NodeKey("generation".into()))),
+        renderer,
+        cache.clone(),
+    );
     let mut request = FragmentRequest {
         entry_path: "components/chip".into(),
         entry_title: "Chip".into(),

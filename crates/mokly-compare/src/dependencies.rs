@@ -192,13 +192,10 @@ fn package_roots(request: &Request) -> Vec<String> {
     let directory = Path::new(request.configuration.as_str())
         .parent()
         .unwrap_or(Path::new(""));
-    let mut roots = ancestor_roots::directories(&directory.to_string_lossy());
-    for root in &request.resolution.package_roots {
-        if !roots.contains(root) {
-            roots.push(root.clone());
-        }
-    }
-    roots
+    ancestor_roots::package_roots(
+        &directory.to_string_lossy(),
+        request.resolution.package_roots.iter().cloned(),
+    )
 }
 
 fn fallback(request: &Request, reason: Fallback) -> Resolved {

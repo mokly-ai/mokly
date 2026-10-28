@@ -264,8 +264,8 @@ impl Graph {
         for resource in resources.values() {
             generation_inputs.push(resource.document_key.0.as_bytes());
         }
-        if let Some(bundle) = self.inputs.fragment_generation.as_deref() {
-            generation_inputs.push(bundle.as_bytes());
+        if let Some(keys) = &self.inputs.render_keys {
+            generation_inputs.push(keys.fallback().0.as_bytes());
         }
         let generation_key = key(NodeKind::Document, &generation_inputs).0;
         Ok(Arc::new(Session::new(

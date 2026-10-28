@@ -34,13 +34,15 @@ until an input changes or the byte bound evicts it; the next request for an
 evicted document renders it again.
 
 Concurrent requests for one document share one render. Foreground requests
-take priority over background work: a background render yields between
-documents, and a foreground render that needs a sidecar does not wait behind
-queued background renders. A failed render answers 500, enters no cache,
-and makes no other route unavailable. Its typed diagnostic goes to the
-selected CLI reporter on stderr; the HTTP response carries the safe error envelope. A render
-that passes its deadline fails the same way after the sidecar contract's one
-retry.
+take priority over background work: a background render that has not started
+does not start while a foreground request is active, and a foreground render
+that needs a sidecar does not wait behind queued background renders. A
+foreground request that finds every worker busy with background renders waits
+for the first of them to end; an active render is not interrupted. A failed
+render answers 500, enters no cache, and makes no other route unavailable.
+Its typed diagnostic goes to the selected CLI reporter on stderr; the HTTP
+response carries the safe error envelope. A render that passes its deadline
+fails the same way after the sidecar contract's one retry.
 
 Stylesheet and asset routes answer from the same graph: a bundled stylesheet
 from the stylesheet bundle node with its CSS content type, an imported asset
@@ -59,19 +61,42 @@ model.
 
 ## Background Work And Replacement
 
-After readiness, Serve renders every view in the background in catalogue
-order, which fills the render cache and the usage of every detail, then
-classifies Changes, which renders the base side under the
-[comparison contract](./mokly-comparison.md#sides). A completion that changes
-the index or a detail publishes one revision under the
-[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Background work is bounded, yields to foreground renders, and
-cannot publish after its state is superseded by a watched change; a
-superseded result is discarded. `--no-watch` runs this work once.
+After readiness, Serve renders every view in the background, which fills the
+render cache and the usage of every detail, then classifies Changes, which
+renders the base side under the
+[comparison contract](./mokly-comparison.md#sides). This background pass
+renders a bounded batch of views at a time: at most the smaller of the worker
+count and the [sidecar pool size](./mokly-sidecar.md#lifecycle), and at least
+one. The worker count is the machine's core count, up to eight. The next view
+starts as soon as any view of the batch ends, and views start in catalogue
+order: when several views wait for one free worker, the first in catalogue
+order starts. Each view's build warnings and a failed render's diagnostic
+report once, in catalogue order, after every earlier view of the pass has
+ended; a failed view's warnings come directly before its diagnostic. The
+pass publishes the
+usage of its views together after its last view ends: a completion that
+changes the index or a detail publishes one revision under the
+[Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Background
+work is bounded, yields to foreground renders, and cannot publish after its
+state is superseded by a watched change; a superseded result is discarded. A
+stop or a replacement starts no further view of the superseded pass and
+discards its unreported warnings and failures; a view that already renders
+finishes under its deadlines. `--no-watch` runs this work once.
+
+Decision: the batch is a sliding window. Fixed batches, which wait for their
+slowest view before the next batch starts, were rejected, because one slow
+view leaves the other workers idle. Decision: the batch is bounded by the
+smaller of the worker count and the sidecar pool size. The worker count alone
+was rejected, because with fewer sidecars its extra renders wait in the
+sidecar queue beside foreground calls. Keeping one worker free for foreground
+requests was rejected, because it slows every pass. Decision: warnings and
+failures report in catalogue order. Reporting each view when its render ends
+was rejected, because the order of the lines would change between runs.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
 Queued base calls wait until those requests finish their sidecar work. Active
-calls finish under their deadlines. Both sides share the configured worker
-bound, including when the pool has one worker.
+calls finish under their deadlines. Both sides share the configured sidecar
+pool size, including when the pool has one sidecar.
 
 The event stream sends a comment after 15 seconds without a publication to
 keep idle connections active during background work. These comments carry no
