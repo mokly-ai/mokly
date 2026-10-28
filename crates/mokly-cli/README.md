@@ -53,7 +53,10 @@ failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
 Both source roots share the configured sidecar pool bound. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
-requests start. Serve captures one warning sink per preparation attempt and
+requests start. The base preparation bundles its stylesheet roots on the
+classification thread, not on the shared render workers. A base root that
+waits at the gate then never holds a worker that a foreground render needs.
+Serve captures one warning sink per preparation attempt and
 reports each warning once under the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).
 Shutdown follows the [runtime shutdown order](../../docs/protocol/mokly-runtime.md).

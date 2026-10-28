@@ -18,6 +18,7 @@ pub mod publish_errors;
 pub mod recovery_output;
 pub mod redaction;
 mod render_errors;
+pub mod serial_stylesheets;
 pub mod serve;
 pub mod serve_errors;
 pub mod serve_output;
