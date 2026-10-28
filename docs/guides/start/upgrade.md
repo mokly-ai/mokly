@@ -150,8 +150,7 @@ and the entry details carry every public comparison fact.
   root of the comparison generation, which ends with `/`, instead of a file.
 - Read each view's comparison `state` and `ignoredIds` from the entry detail,
   beside its `resourceEvidence`. A ready current screen or component also
-  carries `before`, the address of its base side. The entry detail stays
-  version 2.
+  carries `before`, the address of its base side.
 - In Serve, request `/mokly-viewer/diffs/selection?path={path}` instead of
   `/mokly-viewer/diffs/review.json?path={path}`. It redirects to the root of
   the selected generation.
@@ -160,3 +159,9 @@ and the entry details carry every public comparison fact.
   the Plan request carries. Mokly Cloud must accept upload version 3 and index
   version 8 before it stores a publication of this release.
 - `MoklyVersionError` no longer reports a `review` boundary.
+
+## Upgrade entry detail version 3
+
+Entry detail version 3 omits `usedBy` and `affected` from current component
+variants. Their pages request the parent detail and read both lists there.
+Rename `EntryDetailV2` to `EntryDetailV3` in viewer integrations.

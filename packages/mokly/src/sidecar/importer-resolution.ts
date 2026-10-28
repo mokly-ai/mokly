@@ -8,6 +8,7 @@ import type { PluginBuild, ResolveOptions, ResolveResult } from "esbuild";
 import type { ModulePaths } from "./module-paths.js";
 import { packageDirectory } from "./package-directory.js";
 import { inside, logical } from "./path-scope.js";
+import { bareSpecifier } from "./specifier.js";
 
 /** Map a bare importer's position into the selected installation repository. */
 export function importerDirectory(
@@ -17,7 +18,7 @@ export function importerDirectory(
 ): string {
   if (
     !paths.dependencyRoot ||
-    /^(\.|\/|#|[a-z]+:)/i.test(name) ||
+    !bareSpecifier(name) ||
     !paths.repositoryOwned(directory)
   )
     return directory;

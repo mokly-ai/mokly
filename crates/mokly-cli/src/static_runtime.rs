@@ -20,6 +20,7 @@ use mokly_cli::pre_installation;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_admission::{Admission, OutputAdmission};
 use mokly_cli::static_build::{self, Drain, Phases, Request, StaticBuild, Timestamp};
+use mokly_graph::cache::RenderCache;
 use mokly_model::output::artifact::Artifact;
 use mokly_model::output::upload::Publication;
 use mokly_platform::rename::{Rename, SystemRename};
@@ -41,6 +42,7 @@ pub(super) struct Context {
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
     pub(super) phases: Arc<dyn Phases>,
+    pub(super) cache: Arc<dyn RenderCache>,
 }
 
 pub(super) struct PublicationInput {

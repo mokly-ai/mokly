@@ -97,6 +97,24 @@ inner cache hits and bundle copies do not appear as captured reads.
 including failed compilations. Replay and evaluation-only reuse add no
 `esbuild` count. These records contain no authored data.
 
+`render.cache` carries `event: "counts"` once for each `serve.background`,
+`changes.classify`, `review.capture-side`, `review.compare-views`, and
+`output.write` span. It comes before that span's end record, also when the
+span ends with `error`. Its `parentId` is that span, and `phase` names the
+span's stage. Between the start and the end of the span, `hits` counts the
+render cache lookups that found an entry, `misses` the lookups that found
+none, and `evictions` the entries removed to make room. These counts cover
+every cache operation of the process in that interval, including nested
+spans and concurrent foreground work. `chargedBytes` and `entries` give the
+cache's charged bytes and retained entries at the end of the span. Charged
+bytes are the cache's estimate under the
+[runtime bound](./mokly-runtime.md#render-graph-and-cache), not measured
+memory. The `cacheHits` count of `serve.background` counts only the
+documents of that pass that came from the cache.
+Decision: one counts record for each phase. Fields on each phase's own
+counts record were rejected, because they would rename `cacheHits` and lose
+the counts of a failed review phase.
+
 `review.capture-side` starts with status `error` and records `ok` only after
 successful work. Completed captures emit counts, including a zero-view capture
 when no input fits. `views` counts retained documents on `side`.

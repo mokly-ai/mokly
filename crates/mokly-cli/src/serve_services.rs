@@ -13,6 +13,7 @@ use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Common;
 use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
 use mokly_cli::serve_settings::ServeSettings;
+use mokly_graph::cache::RenderCache;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
@@ -38,6 +39,7 @@ impl ServeServices {
         common: &Common,
         diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
+        cache: Arc<dyn RenderCache>,
     ) -> Result<Self, BuildError> {
         let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
             inner: Arc::new(WorkingTree),
@@ -56,6 +58,7 @@ impl ServeServices {
             common,
             diagnostics,
             cancellation,
+            cache,
         ) {
             Ok(services) => services,
             Err(source) => {

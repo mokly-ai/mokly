@@ -150,8 +150,8 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
     projection_removed::workspaces(&mut details);
     let workspace = details["removed"].workspace.as_ref().unwrap();
     assert!(!workspace.comparison_eligible);
-    assert!(workspace.used_by.is_empty());
-    assert!(workspace.affected.is_empty());
+    assert!(workspace.used_by.as_ref().unwrap().is_empty());
+    assert!(workspace.affected.as_ref().unwrap().is_empty());
     assert!(workspace.related_components.is_empty());
     assert!(workspace.input_changes.is_empty());
 }

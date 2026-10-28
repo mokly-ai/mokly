@@ -58,6 +58,7 @@ impl Session {
             &common,
             Arc::new(ProbeDiagnostics),
             cancellation.clone(),
+            render_runtime::cache(),
         )
         .unwrap();
         let catalogue: Arc<dyn CatalogueBuilder> = Arc::new(Builder {

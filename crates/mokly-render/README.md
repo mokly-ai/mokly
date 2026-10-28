@@ -35,6 +35,14 @@ one location before the diagnostic code. PostCSS requests carry logical
 stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
 Runtime allocates context ids from one process-wide sequence.
+A per-context request lock keeps the sidecar requests of one context one at a
+time, and equal inputs make one request. The shared PostCSS cache lock covers
+only lookups, inserts, and the dependency inventory. Round trips and read
+inventories therefore never wait for each other, and the stylesheet roots of
+one preparation overlap that work. A failed input keeps its diagnostic for the
+rest of its context. A timeout or a crash after its retry also fails every
+request of the context that already waits for its turn. The cache keeps a running byte charge, so
+an insert charges one record instead of recounting the cache.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency

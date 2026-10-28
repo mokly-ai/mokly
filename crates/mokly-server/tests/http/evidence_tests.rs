@@ -87,11 +87,19 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
     for path in completed.details.keys() {
         detail_context::validate(&completed.detail(path).unwrap(), &completed.index).unwrap();
     }
+    let variant = completed.details["components/button/disabled"]
+        .workspace
+        .as_ref()
+        .unwrap();
+    assert!(variant.used_by.is_none());
+    assert!(variant.affected.is_none());
     let used = &completed.details["components/button"]
         .workspace
         .as_ref()
         .unwrap()
-        .used_by;
+        .used_by
+        .as_ref()
+        .unwrap();
     assert!(
         used.iter()
             .any(|link| link.entry_path == "home" && link.direct)

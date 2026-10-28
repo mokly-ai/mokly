@@ -1,4 +1,4 @@
-/** The stage while the routed entry's detail loads, or after its load failed. */
+/** The stage while the route's details load, or after one route detail fails. */
 
 import type { CatalogueRecord } from "../catalogue/types.js";
 
@@ -12,7 +12,7 @@ const NOUNS: Readonly<Record<CatalogueRecord["kind"], string>> = {
   "use-case": "user flow",
 };
 
-/** Frames render once the detail arrives; a failure offers one retry. */
+/** Frames render once the route's details arrive; a failure offers one retry. */
 export function StageDelivery({
   delivery,
   kind,

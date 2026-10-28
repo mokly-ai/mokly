@@ -35,6 +35,7 @@ fn failed_catalogue_combines_pending_and_error_warnings_and_repair_reports_only_
     let observer = Unimock::new(());
     let origin = initial();
     let mock = Unimock::new((
+        WatchInputsMock::begin.each_call(matching!()).returns(()),
         WatchInputsMock::candidate.next_call(matching!(_)).returns(Ok(CandidateWatch {
             plan: plan(), observer: Arc::new(observer.clone()), recheck: true,
         })),
@@ -79,7 +80,10 @@ fn a_retired_failed_candidate_still_sets_the_watch_retry_flag() {
     let script = Scripted::new(vec![Err(invalid(vec![warning("ignored")]))]);
     let terminal = Unimock::new(());
     let scopes = scopes(&terminal);
-    let watch = Unimock::new(WatchInputsMock::failed.next_call(matching!()).returns(()));
+    let watch = Unimock::new((
+        WatchInputsMock::begin.each_call(matching!()).returns(()),
+        WatchInputsMock::failed.next_call(matching!()).returns(()),
+    ));
     let action = ManualRebuilds {
         warnings: scopes.clone(),
         watching: Some(Arc::new(watch.clone())),
@@ -116,7 +120,7 @@ fn watched_recheck_keeps_first_pass_warnings_only_when_its_recheck_fails() {
             }));
         let origin = initial();
         let mock = if fails {
-            Unimock::new((candidate,
+            Unimock::new((WatchInputsMock::begin.each_call(matching!()).returns(()), candidate,
                 WatchInputsMock::recheck.next_call(matching!(_, _)).returns(Err(ServerError::InvalidAssets)),
                 WatchInputsMock::failed.next_call(matching!()).returns(()),
                 WatchInputsMock::plan.next_call(matching!()).returns(plan()),
@@ -124,6 +128,7 @@ fn watched_recheck_keeps_first_pass_warnings_only_when_its_recheck_fails() {
             ))
         } else {
             Unimock::new((
+                WatchInputsMock::begin.each_call(matching!()).returns(()),
                 candidate,
                 WatchInputsMock::recheck
                     .next_call(matching!(_, _))

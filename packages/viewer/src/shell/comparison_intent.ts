@@ -9,7 +9,7 @@ import { useOptionalShellStore } from "./store_context.js";
 
 /**
  * Whether the routed view's comparison eligibility is final: the index
- * classification is complete, and the routed entry's detail has arrived or
+ * classification is complete, and the route's details have arrived or
  * failed. A pending or preparing index can still classify the view, and an
  * arriving detail can still make an affected-only entry eligible.
  */

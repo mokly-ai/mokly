@@ -30,9 +30,10 @@ async fn start(extra: &[&str]) -> Running {
     write(
         root.path(),
         "mokly.config.json",
-        r#"{"stylesheets":[{"match":"**","stylesheets":["styles.css"]}]}"#,
+        r#"{"stylesheets":[{"match":"**","stylesheets":["styles.css","theme.css"]}]}"#,
     );
     write(root.path(), "styles.css", "button { color: blue; }");
+    write(root.path(), "theme.css", "h1 { margin: 0; }");
     write(
         root.path(),
         "specs/button.component.html",
@@ -191,6 +192,15 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
             "missing {stage}"
         );
     }
+    let bundles: Vec<_> = records
+        .iter()
+        .filter(|record| record["stage"] == "css.bundle" && record["event"] == "start")
+        .collect();
+    assert!(bundles.len() >= 2, "{stderr}");
+    for bundle in bundles {
+        let parent = bundle["parentId"].as_u64().unwrap();
+        assert_eq!(starts[&parent], "graph.prepare");
+    }
     let position = |stage, event| {
         records
             .iter()
@@ -207,6 +217,18 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
     assert_eq!(counts["documents"], 4);
     assert!(counts["fragments"].as_u64().unwrap() > 0);
     assert!(counts["cacheHits"].is_u64());
+    let background = records
+        .iter()
+        .find(|record| record["stage"] == "serve.background" && record["event"] == "start")
+        .unwrap();
+    let cache = records
+        .iter()
+        .find(|record| record["stage"] == "render.cache" && record["phase"] == "serve.background")
+        .unwrap();
+    assert_eq!(cache["event"], "counts");
+    assert_eq!(cache["parentId"], background["id"]);
+    assert!(cache["misses"].as_u64().unwrap() > 0);
+    assert!(cache["chargedBytes"].as_u64().unwrap() > 0);
     for record in &records {
         assert_eq!(record["schemaVersion"], 1);
         assert_eq!(record["role"], "core");
@@ -225,7 +247,7 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
             assert_eq!(record["scheme"], "light");
         }
     }
-    for source_text in ["Home", "styles.css", "label", "<button>"] {
+    for source_text in ["Home", "styles.css", "theme.css", "label", "<button>"] {
         assert!(!stderr.contains(source_text));
     }
 }

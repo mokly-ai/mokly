@@ -19,7 +19,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -67,7 +67,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -114,7 +114,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -157,7 +157,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": []
   },
   "home": {
@@ -176,7 +176,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -224,7 +224,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": [
       {
         "colorScheme": "light",
@@ -267,7 +267,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "views": []
   }
 }
