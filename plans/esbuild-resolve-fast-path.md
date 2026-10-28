@@ -1,7 +1,8 @@
 # esbuild Resolve Fast Path
 
-Status: Active. [PR #226](https://github.com/mokly-ai/mokly/pull/226) is
-open. The plan closes when its PR merges.
+Status: Completed. [PR #226](https://github.com/mokly-ai/mokly/pull/226)
+merged on 2026-10-28. No review finding stays open. The review record lists
+six problems outside the scope for separate branches.
 
 The sidecar compiles every entry file and the renderer with one esbuild
 call. A catch-all resolve callback in the sidecar plugins handles every
