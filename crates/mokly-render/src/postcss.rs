@@ -63,39 +63,45 @@ impl PostCss {
         excluded: &BTreeSet<String>,
     ) -> Result<ProcessedCss> {
         let key = format!("{}:{path}:{}", self.side.context, digest(source.as_bytes()));
-        let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
-        cache.purge();
-        let mut record = match cache.records.get(&key) {
-            Some(record) => record.clone(),
-            None => CssRecord {
-                result: self.process_css(path, source)?,
-                processed: None,
-            },
+        let (mut record, inventory) = {
+            let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
+            cache.purge();
+            let record = match cache.records.get(&key) {
+                Some(record) => record.clone(),
+                None => {
+                    let record = CssRecord {
+                        result: self.process_css(path, source)?,
+                        processed: None,
+                    };
+                    cache.insert(key.clone(), record.clone());
+                    record
+                }
+            };
+            postcss_nested::validate(&postcss_nested::Input {
+                tree: self.tree.as_ref(),
+                sources: self.inventory_tree.as_ref(),
+                resolver: self.resolver.as_ref(),
+                root: &self.root,
+                side: &self.side,
+                path,
+                source,
+                excluded,
+                dependencies: &record.result.dependencies,
+            })?;
+            if let Some(processed) = &record.processed {
+                return Ok(processed.clone());
+            }
+            let inventory = postcss_inventory::collect(
+                self.inventory_tree.as_ref(),
+                cache.scans.entry(self.side.context.clone()).or_default(),
+                &self.root,
+                &self.side.source_root,
+                path,
+                record.result.dependencies.clone(),
+            );
+            cache.trim();
+            (record, inventory?)
         };
-        postcss_nested::validate(&postcss_nested::Input {
-            tree: self.tree.as_ref(),
-            sources: self.inventory_tree.as_ref(),
-            resolver: self.resolver.as_ref(),
-            root: &self.root,
-            side: &self.side,
-            path,
-            source,
-            excluded,
-            dependencies: &record.result.dependencies,
-        })?;
-        if let Some(processed) = &record.processed {
-            return Ok(processed.clone());
-        }
-        let inventory = postcss_inventory::collect(
-            self.inventory_tree.as_ref(),
-            cache.scans.entry(self.side.context.clone()).or_default(),
-            &self.root,
-            &self.side.source_root,
-            path,
-            record.result.dependencies.clone(),
-        );
-        cache.trim();
-        let inventory = inventory?;
         let read_evidence = postcss_read_inventory::collect(
             self.tree.as_ref(),
             &self.root,
@@ -111,7 +117,10 @@ impl PostCss {
             directories: inventory.directories,
         };
         record.processed = Some(processed.clone());
-        cache.insert(key, record);
+        self.cache
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .insert(key, record);
         Ok(processed)
     }
 
@@ -158,3 +167,7 @@ impl PostCss {
 #[cfg(test)]
 #[path = "_tests_/postcss_request_tests.rs"]
 mod postcss_request_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_lock_tests.rs"]
+mod postcss_lock_tests;
