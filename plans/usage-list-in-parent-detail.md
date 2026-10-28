@@ -375,6 +375,11 @@ version.
   - Plan review 1, finding 4, no test of the embedded viewer's parent request:
     user decision (2026-10-27) A. Milestone 2 has the test.
   - Implementation review 1 (2026-10-27): `.context/usage-list-in-parent-detail/impl-review-1.md`. Findings 1 to 11 were fixed.
+  - Implementation review 2 (2026-10-28), of the fix round: `.context/usage-list-in-parent-detail/impl-review-2.md`. Its findings 1, 2, 3, and 5 were fixed.
+  - Review 1, finding 12. Three places decide the workspace list placement. Severity Low, effort Small. Recommended: D, build the test fixtures' workspaces with `projection_usage::workspaces`, and let `apply` fill only the lists that exist.
+  - Review 2, finding 4. The viewer fence keeps its own copy of the current-variant rule. Severity Low, effort Small. Recommended: A, require the lists only when `workspaceDetailRequest` names the entry's own detail.
+  - Follow-up: an xtask check that every Rust file starts with a module doc. Effort Medium. Covers review 1 finding 7. Previous examples: none found.
+  - Follow-up: a table test with one rejected document for each `ContractViolation`. Effort Medium. Covers review 1 finding 11. Previous examples: none found.
   - `plans/remove-review-json.md` and `plans/build-head-capture.md`: their
     status paragraphs still say Active after their pull requests merged.
     Separate branch.

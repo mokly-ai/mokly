@@ -12,7 +12,7 @@ const NOUNS: Readonly<Record<CatalogueRecord["kind"], string>> = {
   "use-case": "user flow",
 };
 
-/** Frames render once the detail arrives; a failure offers one retry. */
+/** Frames render once the route's details arrive; a failure offers one retry. */
 export function StageDelivery({
   delivery,
   kind,

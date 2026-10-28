@@ -59,11 +59,9 @@ test("the native comparison copy remains usable after its two-commit source repo
   await page.goto(`/view/${comparisonPaths.changedVariant}/`);
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
-  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
-  for (const title of ["Changed screen", "Consumer screen"])
-    await expect(
-      usage.getByRole("link", { name: title, exact: true }).first(),
-    ).toBeVisible();
+  await expect(
+    usage.locator('[data-usage-section="used-by"]').getByRole("link"),
+  ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
 
   const parentRequests: string[] = [];
   page.on("request", (request) => {
@@ -85,12 +83,11 @@ test("the native comparison copy remains usable after its two-commit source repo
     removedUsage.getByRole("heading", { name: "Used by" }),
   ).toBeVisible();
   await expect(removedUsage).toContainText("No recorded consumers.");
-  if (removedDetail.workspace?.affected?.length)
-    await expect(
-      removedUsage.getByRole("heading", {
-        name: "Affected screens and components",
-      }),
-    ).toBeVisible();
+  await expect(
+    removedUsage.getByRole("heading", {
+      name: "Affected screens and components",
+    }),
+  ).toBeVisible();
   expect(parentRequests).toEqual([]);
   expect(
     index.screens.find(

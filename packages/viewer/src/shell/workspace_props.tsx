@@ -108,7 +108,7 @@ export function WorkspacePropsTab({
 }: {
   controls: ReactNode;
   data: WorkspaceData;
-  /** The route's details, which together carry the fields' order. */
+  /** The route's details. The routed entry's own detail carries the fields' order. */
   delivery: DetailDelivery;
   instance: ComponentInstanceRecord | undefined;
   target: ControlTarget | undefined;
