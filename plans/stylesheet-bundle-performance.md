@@ -452,20 +452,22 @@ from `origin/main` at `d4c6f6a8` after step A merged. Its pull request opens
 after the orchestrator reports that perf 4 (#227) merged, with `origin/main`
 merged first.
 
-- [ ] Update `docs/protocol/mokly-timings.md`: define the `cache` field of
+- [x] Update `docs/protocol/mokly-timings.md`: define the `cache` field of
       the `css.bundle` end record and its values, under decisions 3 and 4.
-- [ ] Update the read evidence bound sentence of
+- [x] Update the read evidence bound sentence of
       `docs/protocol/mokly-sidecar-postcss.md` under decision 1.
-- [ ] Update the dependency retention section of
+- [x] Update the dependency retention section of
       `docs/protocol/mokly-imported-styles-postcss.md`: a cached stylesheet
       bundle is reused only while its sources, assets, plugin-reported files,
       reported directory listings, and PostCSS module evidence are unchanged.
       Record decision 1 next to the rule.
-- [ ] Confirm that the invalidation section of `docs/protocol/mokly-watch.md`
+- [x] Confirm that the invalidation section of `docs/protocol/mokly-watch.md`
       stays true.
-- [ ] Update `crates/mokly-render/README.md`: the bounds, the shared module
+- [x] Update `crates/mokly-render/README.md`: the bounds, the shared module
       evidence, and the miss reasons. Update `crates/mokly-cli/README.md`
       when it lists timing fields.
+  - The watch contract stays true. The CLI README lists no timing field, so
+    it does not change.
 
 ## Milestone 8: Miss reason on `css.bundle`, step B
 

@@ -44,7 +44,7 @@ its files are installed. Its Serve duration includes queue time.
 | `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
 | `render.fragment`                                | the wait for one sidecar render, or an HTML component render in the core                                                             |
-| `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module                                       |
+| `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module; the end carries `cache`              |
 | `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                             |
 | `serve.ready`                                    | command start to the listening URL                                                                                                   |
 | `serve.background`                               | the background pass over every view, with a `counts` record of `documents`, `fragments`, and `cacheHits`                             |
@@ -89,6 +89,12 @@ Static input counters on `output.*` stages are observations. Their
 It excludes map metadata and other byte owners.
 Reads below a `css.bundle` span describe calls that reach the captured tree;
 inner cache hits and bundle copies do not appear as captured reads.
+A stylesheet that the stylesheet cache serves makes no `css.bundle` span. The
+`cache` field of each `css.bundle` end record names why the cache could not
+serve the stylesheet: `no-record` when no record for its key exists, `evicted`
+when the cache removed the record under its byte bound, `stamp-mismatch` when
+an input of the record changed, and `inconsistent-evidence` when the read
+evidence of the earlier bundle disagreed, so its record stayed in its attempt.
 
 `sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
 `worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
