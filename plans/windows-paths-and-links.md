@@ -4,7 +4,10 @@ Status: Active. On branch
 `conductor/rust-rebuild-166-windows-paths-and-links`, no pull request yet.
 The plan closes when its PR merges. The coordinator answered every decision
 on 2026-10-28. The Clippy rule of item 166 B waits for the user and is not
-part of this change.
+part of this change. Milestones 1 to 4 are done. Milestone 5 is blocked: on
+2026-10-28 from 20:17 UTC the Codex delegate failed with "429 Too Many
+Requests" for more than 30 minutes, so the orchestrator stopped that part,
+as the coordinator's rule for a Codex usage limit says.
 
 This plan resolves user items 179, 174, and 173 of the
 [Rust rebuild plan](./rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21),
@@ -278,7 +281,9 @@ This milestone applies decision 179 A.
 
 ## Milestone 5: The loader names the base link
 
-This milestone applies decision 174 C.
+This milestone applies decision 174 C. It is blocked by the Codex usage
+limit of 2026-10-28. Its brief is
+`.context/windows-paths-and-links/briefs/m2-fix-and-m5.md`.
 
 - [ ] Add the regression test first in
       `crates/mokly-compare/tests/linked_roots_tests.rs`, and save its
@@ -320,9 +325,16 @@ The READMEs describe the code of Milestones 3 to 5.
 - [ ] Tick items 179, 174, and 173 in `plans/rust-rebuild.md` with the
       decisions, their date, and a link to this plan. Under item 166, record
       the product part and the open Clippy rule. Use the smallest edit.
+- [ ] Apply the orchestrator's change request for `git_input` in
+      `crates/mokly-compare/tests/support/mod.rs`: bind the spawned process
+      to `child`, and assert the Git status before the input write result,
+      so a failed Git command shows its standard error. The brief above
+      holds the request.
 - [ ] Merge `origin/main` with the `git-merge` skill.
 - [ ] Run the targeted tests, `cargo xtask check --suite repository`, and
-      then the complete gate `cargo xtask check` once, on the final commit.
+      then the complete gate `cargo xtask check --executor local` once, on
+      the final commit. The `auto` executor warms Blacksmith Testboxes,
+      which dispatches the `Blacksmith Testbox` workflow.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
