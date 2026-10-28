@@ -19,6 +19,12 @@ pub(crate) enum Miss {
     InconsistentEvidence,
 }
 
+enum Charge<'a> {
+    Record { key: &'a String, record: &'a Record },
+    Context(&'a ContextEvidence),
+    Miss(&'a String),
+}
+
 impl Miss {
     pub(crate) fn as_str(self) -> &'static str {
         match self {
@@ -87,12 +93,17 @@ impl StylesheetCache {
         self.records.remove(&key);
         self.misses.remove(&key);
         self.prune();
-        let alone =
-            key.len() + record.bytes + record.context.as_ref().map_or(0, |context| context.bytes);
+        let alone = Self::charge(Charge::Record {
+            key: &key,
+            record: &record,
+        }) + record
+            .context
+            .as_ref()
+            .map_or(0, |context| Self::charge(Charge::Context(context)));
         if alone > self.limit {
             self.misses.insert(key, Miss::Evicted);
         } else {
-            if self.retained() + self.charge(&key, &record) > self.limit {
+            if self.retained() + self.record_charge(&key, &record) > self.limit {
                 self.evict();
             }
             if let Some(context) = &record.context
@@ -107,14 +118,21 @@ impl StylesheetCache {
 
     /// The bytes that a record adds: its key, itself, and its context entry when not yet held.
     /// A record also fits after an eviction, because `insert` checks it with its entry first.
-    fn charge(&self, key: &str, record: &Record) -> usize {
-        key.len()
-            + record.bytes
+    fn record_charge(&self, key: &String, record: &Record) -> usize {
+        Self::charge(Charge::Record { key, record })
             + record
                 .context
                 .as_ref()
                 .filter(|context| !self.holds(context))
-                .map_or(0, |context| context.bytes)
+                .map_or(0, |context| Self::charge(Charge::Context(context)))
+    }
+
+    fn charge(owner: Charge<'_>) -> usize {
+        match owner {
+            Charge::Record { key, record } => size_of::<String>() + key.capacity() + record.bytes,
+            Charge::Context(context) => context.bytes,
+            Charge::Miss(key) => size_of::<(String, Miss)>() + key.capacity(),
+        }
     }
 
     fn holds(&self, context: &Arc<ContextEvidence>) -> bool {
@@ -153,13 +171,17 @@ impl StylesheetCache {
         let records: usize = self
             .records
             .iter()
-            .map(|(key, record)| key.len() + record.bytes)
+            .map(|(key, record)| Self::charge(Charge::Record { key, record }))
             .sum();
-        let contexts: usize = self.contexts.iter().map(|context| context.bytes).sum();
+        let contexts: usize = self
+            .contexts
+            .iter()
+            .map(|context| Self::charge(Charge::Context(context)))
+            .sum();
         let misses: usize = self
             .misses
             .keys()
-            .map(|key| size_of::<(String, Miss)>() + key.len())
+            .map(|key| Self::charge(Charge::Miss(key)))
             .sum();
         records + contexts + misses
     }

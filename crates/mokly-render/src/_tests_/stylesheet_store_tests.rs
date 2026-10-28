@@ -59,6 +59,10 @@ fn context(record: &Record) -> Arc<ContextEvidence> {
     record.context.clone().unwrap()
 }
 
+fn key_bytes(key: &str) -> usize {
+    size_of::<String>() + key.len()
+}
+
 #[test]
 fn a_key_without_a_record_misses_with_no_record() {
     assert_eq!(StylesheetCache::default().miss("a"), Miss::NoRecord);
@@ -69,7 +73,9 @@ fn records_that_share_a_context_entry_charge_it_once() {
     let first = record("a.css", MODULE, None);
     let shared = context(&first);
     let second = record("b.css", MODULE, Some(&shared));
-    let mut store = StylesheetCache::new(2 + first.bytes + second.bytes + shared.bytes);
+    let mut store = StylesheetCache::new(
+        key_bytes("a") + key_bytes("b") + first.bytes + second.bytes + shared.bytes,
+    );
     store.insert("a".into(), first);
     store.insert("b".into(), second);
     assert!(store.record("a").is_some());
@@ -85,7 +91,8 @@ fn a_separate_entry_with_equal_evidence_is_charged_again() {
     let first = record("a.css", MODULE, None);
     let second = record("b.css", MODULE, None);
     assert_eq!(context(&first).digest, context(&second).digest);
-    let limit = 2 + first.bytes + second.bytes + context(&first).bytes;
+    let limit =
+        key_bytes("a") + key_bytes("b") + first.bytes + second.bytes + context(&first).bytes;
     let mut store = StylesheetCache::new(limit);
     store.insert("a".into(), first);
     store.insert("b".into(), second);
@@ -98,7 +105,12 @@ fn a_separate_entry_with_equal_evidence_is_charged_again() {
 fn a_record_that_does_not_fit_removes_the_others_and_their_keys_miss_with_evicted() {
     let first = record("a.css", "node_modules/a/index.js", None);
     let second = record("b.css", "node_modules/b/index.js", None);
-    let limit = 2 + first.bytes + second.bytes + context(&first).bytes + context(&second).bytes;
+    let limit = key_bytes("a")
+        + key_bytes("b")
+        + first.bytes
+        + second.bytes
+        + context(&first).bytes
+        + context(&second).bytes;
     let mut store = StylesheetCache::new(limit - 1);
     store.insert("a".into(), first);
     store.insert("b".into(), second.clone());
@@ -115,6 +127,25 @@ fn a_record_larger_than_the_bound_misses_with_evicted() {
     store.insert("a".into(), first);
     assert!(store.record("a").is_none());
     assert_eq!(store.miss("a"), Miss::Evicted);
+}
+
+#[test]
+fn finding_6_a_key_capacity_counts_toward_the_store_bound() {
+    let first = record("a.css", MODULE, None);
+    let shared = context(&first);
+    let mut key = String::with_capacity(128);
+    key.push('a');
+    assert!(key.capacity() > key.len());
+    let key_bytes = size_of::<String>() + key.capacity();
+    let limit = key_bytes + first.bytes + shared.bytes;
+    let mut store = StylesheetCache::new(limit - 1);
+    let lookup = key.clone();
+
+    store.insert(key, first);
+
+    assert!(store.record(&lookup).is_none());
+    assert_eq!(store.miss(&lookup), Miss::Evicted);
+    assert!(store.retained() <= limit - 1);
 }
 
 #[test]
@@ -142,7 +173,7 @@ fn the_store_drops_a_context_entry_that_no_record_uses() {
 #[test]
 fn miss_reasons_that_do_not_fit_beside_the_records_are_forgotten() {
     let first = record("a.css", MODULE, None);
-    let charge = 1 + first.bytes + context(&first).bytes;
+    let charge = key_bytes("b") + first.bytes + context(&first).bytes;
     let mut store = StylesheetCache::new(charge);
     store.insert("b".into(), first);
     store.reject("a".into());
@@ -158,9 +189,9 @@ fn a_record_that_fits_only_without_its_held_context_entry_stays_out() {
     larger.css.push_str(&"b{color:blue}".repeat(8));
     let second = stored(larger, Some(&shared));
     let reason = size_of::<(String, Miss)>() + 1;
-    let limit = 1 + first.bytes + shared.bytes + reason;
+    let limit = key_bytes("a") + first.bytes + shared.bytes + reason;
     assert!(second.bytes < limit);
-    assert!(1 + second.bytes + shared.bytes > limit);
+    assert!(key_bytes("b") + second.bytes + shared.bytes > limit);
     let mut store = StylesheetCache::new(limit);
     store.insert("a".into(), first);
     store.insert("b".into(), second);
