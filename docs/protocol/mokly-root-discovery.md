@@ -1,5 +1,7 @@
 # Root Discovery And Source Membership
 
+Status: In progress under the [Windows Paths And Base-Tree Links](../../plans/windows-paths-and-links.md) plan.
+
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and
 Changes share. Discovery walks a source tree: the working tree for Serve,
@@ -7,7 +9,15 @@ Changes share. Discovery walks a source tree: the working tree for Serve,
 Git tree for the base side under the
 [comparison contract](./mokly-comparison.md#sides). The same roots, globs,
 and diagnostics apply to both trees. In a Git tree a symbolic link entry is
-not a file and never matches; the race rules below concern the working tree.
+not a file and never matches. The base Git tree does not resolve symbolic links.
+After [lexical normalization](./mokly-configuration.md#module-resolution), a
+root or package root that is a link in the base commit, or lies below one,
+fails base validation with `config-invalid`. The message names the link. The
+working tree resolves the same path to its target. Resolving links in the base
+Git tree was rejected: the
+[base extraction](./mokly-base-preparation.md#sources) holds regular files
+only, so JavaScript below a linked root would still fail. The race rules below
+concern the working tree.
 
 ## Traversal And Races
 

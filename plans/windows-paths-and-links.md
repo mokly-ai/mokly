@@ -221,17 +221,17 @@ Contract owners:
 The root discovery page states the base link rule for roots and package
 roots. The other pages keep their requirements. No code changes.
 
-- [ ] In `docs/protocol/mokly-root-discovery.md`, after the sentence on
+- [x] In `docs/protocol/mokly-root-discovery.md`, after the sentence on
       link entries in a Git tree, state the rule of 174 C: the base Git tree
       does not resolve symbolic links, so after lexical normalization a root
       or package root that is a link in the base commit, or lies below one,
       fails base validation with `config-invalid`, and the message names the
       link. Give the decision in force: resolving links in the base tree was
       rejected, because the base extraction holds regular files only.
-- [ ] Add the line
+- [x] Add the line
       `Status: In progress under the [Windows Paths And Base-Tree Links](../../plans/windows-paths-and-links.md) plan.`
       below the title of the root discovery page.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
 ## Milestone 2: Isolated Git in the large-sources tests
