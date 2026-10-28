@@ -5,10 +5,11 @@ use std::collections::BTreeSet;
 use mokly_model::output::validation::{RESPONSE_LIMIT, hexadecimal, timestamp};
 use mokly_model::versions::PLAN_EXCHANGE;
 use serde::Deserialize;
+use serde_json::value::RawValue;
 use url::Url;
 
 use crate::error::{Error, Result};
-use crate::http::{Body, Response, is_json};
+use crate::http::{Body, Encoding, Response, is_json};
 use crate::settings::Settings;
 
 /// Validated receiver Plan. Its paths are opaque to the client.
@@ -24,6 +25,8 @@ pub struct Plan {
     pub blob_url: String,
     /// Same-origin completion URL.
     pub complete_url: Url,
+    /// Encoding offered for Blob bodies in this Plan round.
+    pub blob_encoding: Encoding,
 }
 
 #[derive(Deserialize)]
@@ -34,6 +37,8 @@ struct Document {
     missing: Vec<String>,
     blob_url: String,
     complete_url: String,
+    #[serde(default)]
+    blob_encodings: Option<Box<RawValue>>,
 }
 
 #[derive(Deserialize)]
@@ -83,6 +88,11 @@ impl Plan {
             missing: document.missing,
             blob_url: document.blob_url,
             complete_url: settings.receiver_url(&document.complete_url)?,
+            blob_encoding: if document.blob_encodings.as_deref().is_some_and(offers_gzip) {
+                Encoding::Gzip
+            } else {
+                Encoding::Identity
+            },
         };
         plan.blob_target(&"0".repeat(64), settings)?;
         Ok(plan)
@@ -107,4 +117,14 @@ impl Plan {
         }
         Ok(url)
     }
+}
+
+/// Keep each item raw so an item serde_json cannot decode is ignored and never
+/// fails the Plan.
+fn offers_gzip(raw: &RawValue) -> bool {
+    serde_json::from_str::<Vec<Box<RawValue>>>(raw.get()).is_ok_and(|items| {
+        items
+            .iter()
+            .any(|item| serde_json::from_str::<String>(item.get()).is_ok_and(|name| name == "gzip"))
+    })
 }
