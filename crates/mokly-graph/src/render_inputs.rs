@@ -1,6 +1,7 @@
 //! Per-entry-module render input keys: every input that can change a module's renders.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::iter;
 
 use mokly_catalogue::render_sources::{
     JavaScriptGeneration, RenderMethod, RenderSource, ResolvedDefinition,
@@ -33,6 +34,10 @@ pub struct RenderInputs<'a> {
     /// Rendering recipes by entry path. A story recipe's module renders with the
     /// Storybook preview and without the renderer.
     pub entries: &'a BTreeMap<String, RenderSource>,
+    /// Definition handle to the module that declares the definition. A module that
+    /// imports the declaring module reads the binding of a definition that an entry
+    /// module only re-exports.
+    pub declarations: &'a BTreeMap<String, String>,
 }
 
 /// Render input keys by entry module, with the whole-bundle fallback for any other module.
@@ -78,8 +83,18 @@ impl RenderKeys {
             .renderer
             .map(|renderer| closure(graph, [renderer.to_owned()]));
         let mut bindings: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
+        let mut exporters = BTreeSet::new();
         for (handle, binding) in inputs.bindings {
-            if let Some(module) = handle_module(graph, handle) {
+            let Some(exporter) = handle_module(graph, handle) else {
+                continue;
+            };
+            exporters.insert(exporter);
+            let declarer = inputs
+                .declarations
+                .get(handle)
+                .map(String::as_str)
+                .filter(|module| *module != exporter && graph.contains_key(*module));
+            for module in iter::once(exporter).chain(declarer) {
                 bindings.entry(module).or_default().push(json!([
                     handle,
                     binding.path,
@@ -88,7 +103,7 @@ impl RenderKeys {
             }
         }
         let mut modules = BTreeMap::new();
-        for &module in bindings.keys() {
+        for module in exporters {
             let extra = if stories.contains(module) {
                 preview.as_ref()
             } else {

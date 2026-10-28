@@ -16,31 +16,33 @@ use mokly_sidecar::methods::{Call, ModuleResolution};
 use unimock::Unimock;
 
 use super::render_key_tests::{consumer, dependency, render_calls};
-use super::support::{Consumer, package_version, workspace};
+use super::support::{Consumer, link_directory, package_version, workspace};
 
 /// A base copy of the fixture. A base extraction holds no `node_modules`, because
 /// Git does not track it, so the copy drops the consumer's installation link.
 fn base() -> Consumer {
     let base = consumer();
-    std::fs::remove_file(base.root().join("node_modules")).unwrap();
+    base.without_installation();
     base
 }
 
 /// A base runtime over `base`'s sources that reads its packages from `installation`,
-/// sharing the head's pool, render cache, and workers, as Changes does.
+/// sharing the head's pool, render cache, and workers, as Changes does. Every root
+/// uses the loaded repository spelling, as the product's base preparation does.
 fn base_runtime(head: &Consumer, base: &Consumer, installation: &Path) -> Arc<Runtime> {
+    let head_root = head.repository();
     let root = installation.to_string_lossy().into_owned();
-    let mut repository_roots = vec![head.root().to_path_buf()];
-    if installation != head.root() {
+    let mut repository_roots = vec![head_root.clone()];
+    if installation != head_root {
         repository_roots.push(installation.to_path_buf());
     }
     let side = Arc::new(BaseSide {
         sources: Lease {
-            directory: base.root().into(),
+            directory: base.repository(),
             guard: Box::new(Unimock::new(())),
         },
         dependencies: Resolved {
-            tier: if installation == head.root() {
+            tier: if installation == head_root {
                 Tier::Working
             } else {
                 Tier::Installed
@@ -116,7 +118,7 @@ fn an_unchanged_base_reuses_head_renders_and_a_changed_entry_renders_on_its_side
     let base = base();
     let head_generation = head.generation(head.prepare().unwrap());
     render_all(head_generation.as_ref());
-    let runtime = base_runtime(&head, &base, head.root());
+    let runtime = base_runtime(&head, &base, &head.repository());
     let unchanged = base_generation(&runtime, &base);
     assert_eq!(keys(unchanged.as_ref()), keys(head_generation.as_ref()));
     assert_ne!(
@@ -153,18 +155,10 @@ fn a_base_with_its_own_installation_shares_no_javascript_render() {
     let head = consumer();
     let base = base();
     let installation = tempfile::tempdir().unwrap();
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(
-        workspace().join("node_modules"),
-        installation.path().join("node_modules"),
-    )
-    .unwrap();
-    #[cfg(windows)]
-    std::os::windows::fs::symlink_dir(
-        workspace().join("node_modules"),
-        installation.path().join("node_modules"),
-    )
-    .unwrap();
+    link_directory(
+        &workspace().join("node_modules"),
+        &installation.path().join("node_modules"),
+    );
     let installed = Consumer::fixture("render-keys");
     dependency(&installed, "1.0.0", "dep-1");
     std::fs::create_dir_all(installation.path().join("specs")).unwrap();
@@ -174,7 +168,11 @@ fn a_base_with_its_own_installation_shares_no_javascript_render() {
     )
     .unwrap();
     let head_generation = head.generation(head.prepare().unwrap());
-    let runtime = base_runtime(&head, &base, installation.path());
+    let runtime = base_runtime(
+        &head,
+        &base,
+        &dunce::canonicalize(installation.path()).unwrap(),
+    );
     let installed_base = base_generation(&runtime, &base);
     let (head_keys, base_keys) = (
         keys(head_generation.as_ref()),

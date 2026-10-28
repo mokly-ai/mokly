@@ -86,7 +86,8 @@ bindings. Render cache keys never contain a generation id. They use the
 so equal head and base inputs share cache entries under the
 [runtime contract](./mokly-runtime.md#render-graph-and-cache), and a cache miss
 renders with its own side's generation. A selected dependency installation is
-part of the key, so a base with its own installation shares no entry.
+part of the key, so a base with its own installation shares no JavaScript
+render.
 Decision: equal inputs share entries across sides. A side marker in every key
 was rejected, because the base would render every unchanged view again.
 [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release)

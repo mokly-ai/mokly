@@ -199,3 +199,34 @@ fn a_rebuild_renders_again_only_the_views_whose_render_inputs_moved() {
         .collect();
     assert_eq!(after_rename, expected);
 }
+
+#[test]
+fn moving_a_re_exporting_module_renders_the_screens_that_import_its_declaration_again() {
+    let consumer = consumer();
+    consumer.write(
+        "specs/kit/badge.mokly.tsx",
+        "import { defineComponent } from \"@mokly/mokly\";\n\nexport const badge = defineComponent({\n  element: \"app-badge\",\n  title: \"Badge\",\n  description: \"Badge.\",\n  relatedDocs: [],\n  propSchema: { type: \"object\", additionalProperties: false, properties: {} } as const,\n  props: {},\n  render: () => <span>Badge</span>,\n});\n",
+    );
+    consumer.write(
+        "specs/kit/badge.mockup.tsx",
+        "export { badge } from \"./badge.mokly.js\";\n",
+    );
+    consumer.write(
+        "specs/board/board.mockup.tsx",
+        "import { defineScreen } from \"@mokly/mokly\";\n\nimport { badge } from \"../kit/badge.mokly.js\";\n\nexport const board = defineScreen({\n  title: \"Board\",\n  description: \"Board.\",\n  relatedDocs: [],\n  props: {},\n  render: () => (\n    <main>\n      <badge.Component />\n    </main>\n  ),\n});\n",
+    );
+    let first = consumer.generation(consumer.prepare().unwrap());
+    first.render("board/board/index.mobile.html").unwrap();
+    std::fs::remove_file(consumer.root().join("specs/kit/badge.mockup.tsx")).unwrap();
+    consumer.write(
+        "specs/moved/badge.mockup.tsx",
+        "export { badge } from \"../kit/badge.mokly.js\";\n",
+    );
+    let calls = render_calls(&consumer).len();
+    let second = consumer.generation(consumer.prepare().unwrap());
+    second.render("board/board/index.mobile.html").unwrap();
+    assert_eq!(
+        render_calls(&consumer).split_off(calls),
+        [("board/board".to_owned(), "mobile".to_owned())]
+    );
+}

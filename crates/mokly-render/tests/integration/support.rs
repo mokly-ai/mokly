@@ -109,18 +109,10 @@ impl Consumer {
             &workspace.join("tests/fixtures").join(fixture),
             directory.path(),
         );
-        #[cfg(unix)]
-        std::os::unix::fs::symlink(
-            workspace.join("node_modules"),
-            directory.path().join("node_modules"),
-        )
-        .unwrap();
-        #[cfg(windows)]
-        std::os::windows::fs::symlink_dir(
-            workspace.join("node_modules"),
-            directory.path().join("node_modules"),
-        )
-        .unwrap();
+        link_directory(
+            &workspace.join("node_modules"),
+            &directory.path().join("node_modules"),
+        );
         let clock = Arc::new(SystemClock::new());
         let processes = Arc::new(ProcessCounts::default());
         let pool = Arc::new(CapturedPool {
@@ -170,6 +162,17 @@ impl Consumer {
 
     pub(super) fn root(&self) -> &Path {
         self.directory.path()
+    }
+
+    /// The repository root as the configuration loader resolves it, such as the
+    /// canonical `/private/var/...` form of a macOS temporary directory.
+    pub(super) fn repository(&self) -> PathBuf {
+        self.config().repo_root
+    }
+
+    /// Drop the link to the workspace installation, as a base extraction has none.
+    pub(super) fn without_installation(&self) {
+        unlink_directory(&self.root().join("node_modules"));
     }
 
     pub(super) fn config(&self) -> ResolvedConfig {
@@ -234,6 +237,22 @@ impl Drop for Consumer {
 /// treat it as the same root as the plain drive path.
 pub(super) fn workspace() -> PathBuf {
     dunce::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap()
+}
+
+/// Link `link` to the directory `target` on every platform.
+pub(super) fn link_directory(target: &Path, link: &Path) {
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(target, link).unwrap();
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_dir(target, link).unwrap();
+}
+
+/// Remove a directory link. Windows removes a directory link as a directory.
+pub(super) fn unlink_directory(link: &Path) {
+    #[cfg(windows)]
+    fs::remove_dir(link).unwrap();
+    #[cfg(not(windows))]
+    fs::remove_file(link).unwrap();
 }
 
 fn copy(source: &Path, destination: &Path) {

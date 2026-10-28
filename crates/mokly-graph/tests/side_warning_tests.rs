@@ -136,10 +136,15 @@ fn a_base_only_conversion_warning_never_reaches_the_head() {
     let base_root = catalogue();
     let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(16 * 1024 * 1024));
     let head = generation(head_root.path(), Arc::new(WorkingTree), cache.clone());
+    let loaded = Loader {
+        tree: Arc::new(WorkingTree),
+    }
+    .load(base_root.path(), None)
+    .unwrap();
     let base = generation(
         base_root.path(),
         Arc::new(Unconverted {
-            missing: base_root.path().join("specs/logo.png"),
+            missing: loaded.repo_root.join("specs/logo.png"),
         }),
         cache,
     );

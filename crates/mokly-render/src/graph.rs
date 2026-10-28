@@ -142,12 +142,22 @@ impl JavaScriptGraph {
                     &config.repo_root,
                 )
             });
+            let declaring: BTreeMap<_, _> = catalogue
+                .model
+                .entries
+                .iter()
+                .filter_map(|entry| {
+                    let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
+                    Some((source.handle.clone(), entry.metadata.source.path.clone()))
+                })
+                .collect();
             let keys = match RenderKeys::build(
                 &RenderInputs {
                     generation,
                     bindings: &catalogue.javascript.bindings,
                     renderer: renderer.as_deref(),
                     entries: &catalogue.javascript.entries,
+                    declarations: &declaring,
                 },
                 NodeKey(fingerprint),
             ) {

@@ -494,6 +494,22 @@ Let equal head and base inputs share render cache entries under decision 1.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 at `dbc2e7ca` found six findings, and the validity check
+    confirmed all six. The fix round applied findings 1, 3, and 6. Summary:
+    `.context/per-entry-render-keys/review-1-summary.md`.
+  - 2. Raw renderer spelling drops the renderer closure. Severity High,
+       effort Large. Recommended: B, one accessor for config-relative paths,
+       which open user item 167 also needs.
+  - 4. Head and base hash different package roots. Severity Low, effort
+       Small. Recommended: B, one package-root builder for both sides.
+  - 5. Preview candidates are listed twice in Rust. Severity Low, effort
+       Small. Recommended: A, share one list.
+  - Outside the scope: `crates/mokly-render/src/graph.rs`. `entry_modules`
+    splits a handle at its first `#`, so a module path with `#` gets the
+    wrong stylesheet module. Separate branch.
+  - Outside the scope: `crates/mokly-render/src/bundle_inputs.rs`. The raw
+    renderer spelling drops the renderer stylesheet root for nested
+    configurations, which open user item 167 tracks. Separate branch.
 - [x] Open the pull request with the before and after table when every other
       milestone TODO is ticked. Put its link in the status paragraph.
 

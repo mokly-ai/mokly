@@ -65,8 +65,8 @@ inputs changes, and only then:
   Storybook preview, for a stories file;
 - the class map of a CSS Module in the closure. A stylesheet edit that keeps
   every class map moves only stylesheet keys;
-- the path or title of a definition that a closure module exports, also
-  when only a folder record changed;
+- the path or title of a definition that a closure module exports or
+  declares, also when an entry module only re-exports it;
 - a `package.json` or `tsconfig.json` candidate in the directory of a
   closure module or of its parents, up to its source or dependency root. A
   resolution file outside all of these directories, such as the React
