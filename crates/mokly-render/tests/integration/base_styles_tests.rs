@@ -52,10 +52,10 @@ fn historical(head: &Consumer, base: &Consumer) -> Arc<dyn RenderGeneration> {
         head.runtime.workers.clone(),
         super::support::package_version::read(),
         Some(Arc::new(BaseSide {
-            sources: Lease {
+            sources: Arc::new(Lease {
                 directory: base.root().into(),
                 guard: Box::new(Unimock::new(())),
-            },
+            }),
             dependencies: Resolved {
                 tier: Tier::Working,
                 node_modules: root.join("node_modules"),

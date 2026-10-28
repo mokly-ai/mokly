@@ -50,10 +50,10 @@ fn linked_workspace_stylesheets_keep_both_repository_aliases_in_sources() {
     );
     let workspace = workspace();
     let base = Arc::new(BaseSide {
-        sources: Lease {
+        sources: Arc::new(Lease {
             directory: consumer.root().into(),
             guard: Box::new(Unimock::new(())),
-        },
+        }),
         dependencies: Resolved {
             tier: Tier::Working,
             node_modules: installation.path().join("node_modules"),
