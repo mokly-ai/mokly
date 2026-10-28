@@ -455,8 +455,9 @@ seven packages.
       decision 1, and the design components contract names the registration's
       own stylesheet, which imports the package stylesheet.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
-      The remote gate passed 7 of 7 suites on `1a53e123`. Evidence:
-      `.context/ui-package/gate/run-2.log`.
+      The remote gate passed 7 of 7 suites on `1a53e123` and again on
+      `9d48a909`, after the review fixes and the merges. Evidence:
+      `.context/ui-package/gate/run-2.log` and `run-3.log`.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
