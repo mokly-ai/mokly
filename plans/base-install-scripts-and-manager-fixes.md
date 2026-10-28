@@ -2,247 +2,238 @@
 
 Status: Active. On branch `conductor/rust-rebuild-150-base-install-scripts-and-managers`, no pull request yet. The plan closes when its implementation pull request merges.
 
-Base dependency installs disable lifecycle scripts by default. The current
-implementation has eight follow-ups in that area. Yarn Classic can move a
-script into a new Unix session, a script can inspect the parent Mokly process,
-Yarn Berry can read TLS files named outside the base, and pnpm can stop on a
-noninteractive modules-directory prompt. The scripts hint also misses base
-render failures, the mode has several sources of truth, the hint lacks a
-period, and the flags are silent with `--no-changes`.
+Base dependency installs disable lifecycle scripts by default. The
+`review.baseInstallScripts` setting and `--base-install-scripts` turn them on.
+This plan resolves the open follow-ups of that opt-in from the Rust rebuild:
+user items 150, 151, 152, 155, 156, 157, and 158. Item 153 waits for Cal.
 
-This plan keeps the opt-in disabled until the owner answers the recorded
-decisions. The implementation will make the process owner stop descendants,
-apply the selected token policy, confine the selected manager settings, carry
-one typed scripts mode through the install command, and present one typed
-diagnostic for every base failure. It does not port item 154's end-to-end
-tests, which workspace 353 owns, and it does not implement item 180's sidecar
-environment change. The item 151 decision must state that its base-install
-token rule does not change the sidecar environment owned by item 180.
+- Item 150: Yarn Classic 1.22.22 starts each dependency script in a new Unix
+  session, so the process-group signal of a stop misses it.
+- Item 151: a script runs as the same user as Mokly, so it can read
+  `MOKLY_TOKEN` from the start environment of Mokly or of its launcher.
+- Item 152: the scripts hint misses base render failures, because only
+  preparation failures carry the scripts-off marker.
+- Item 153: a base `.yarnrc.yml` can make Yarn Berry read TLS files outside
+  the repository. npm and pnpm read `.npmrc` TLS files in the same way.
+- Item 155: the scripts mode has several sources of truth, and the install
+  environment guesses it from the arguments.
+- Item 156: the hint sentence has no final period.
+- Item 157: the scripts flags have no effect with `--no-changes`, and no page
+  says so.
+- Item 158: pnpm 10 and 11 stop on a modules-directory prompt when a tracked
+  `node_modules` state needs recreation.
 
-Evidence from `origin/main` is saved under
-`.context/base-install-scripts-managers/`:
-
-- `probes/item150_yarn_classic_session.log` shows a Yarn Classic script and
-  its child surviving group signals after a new session.
-- `probes/item153_berry_tls_files.log` shows Yarn Berry opening all three
-  configured TLS FIFOs outside the repository.
-- `probes/item153_npm_pnpm_tls_files.log` shows the same wider file-read class
-  for npm and pnpm. That wider class is a follow-up to the recorded item.
-- `probes/item158_pnpm_prompt/result-with-dep.txt` shows pnpm 10.34.7 failing
-  with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` and succeeding with
-  `confirmModulesPurge=false`.
-- `records/review-135b-record.md` holds the review findings and their exact
-  options. `cargo-build-compare.log` and `npm-ci.log` record the earlier
-  read-only build and install checks.
+The change does not port the item 154 end-to-end tests, which workspace 353
+owns, and it does not change the sidecar environment of item 180, which
+workspace 407 owns. Workspace 353 moves `tests/static_base_*.test.ts` and
+`tests/helpers/base_*` to Rust, so this plan edits none of those Node files
+and writes its new tests in Rust.
 
 Contract owners:
 
 - [Base Dependencies](../docs/protocol/mokly-base-dependencies.md).
 - [Base Source And Dependency Preparation](../docs/protocol/mokly-base-preparation.md).
 - [Terminal Errors](../docs/protocol/mokly-terminal-errors.md).
-- [Comparison Package Selection](../docs/protocol/mokly-comparison-packages.md).
-- [Git Command Runtime](../docs/protocol/mokly-git.md), for the shared
-  process-tree ownership rule.
-- [mokly-compare README](../crates/mokly-compare/README.md),
-  [mokly-cli README](../crates/mokly-cli/README.md), and
-  [mokly-platform README](../crates/mokly-platform/README.md).
+- [Runtime shutdown](../docs/protocol/mokly-runtime.md#shutdown), for the rule
+  that no orphan process survives.
+- The [build](../docs/guides/cli/build.md) and
+  [publish](../docs/guides/cli/publish.md) command guides.
+- The [mokly-platform](../crates/mokly-platform/README.md),
+  [mokly-compare](../crates/mokly-compare/README.md), and
+  [mokly-cli](../crates/mokly-cli/README.md) READMEs.
 
-The performance work owns `crates/mokly-cli/src/serve_services.rs`,
-`crates/mokly-cli/src/static_runtime.rs`, and
-`crates/mokly-cli/src/serve_delivery.rs`, plus the render-cache, stylesheet,
-and `crates/mokly-git` changes. The implementation must preserve those edits
-when it removes the configuration mutation or threads the effective mode.
-The implementation must not edit `plans/rust-rebuild.md` until its final
-bookkeeping milestone.
+Files that other work in flight also changes:
+
+- The performance work owns `crates/mokly-cli/src/serve_services.rs`,
+  `crates/mokly-cli/src/static_runtime.rs`, and
+  `crates/mokly-cli/src/serve_delivery.rs`. This plan does not edit them.
+- Item 152 can change the base provider implementations in
+  `crates/mokly-cli/src/changes_static.rs` and
+  `crates/mokly-cli/src/serve_changes_base.rs`, and the classification in
+  `crates/mokly-compare/src/base_render.rs`, which the performance work also
+  changed.
+- Workspace 407 owns `docs/protocol/mokly-sidecar-modules.md` and the sidecar
+  environment. Items 151 and 180 share one token rule, recorded below. This
+  plan does not edit that page.
 
 ## Decisions
 
-The following decisions are open. The recorded recommendations are proposals,
-not defaults. No option is applied until the coordinator answers.
+The coordinator answered every decision except item 153 on 2026-10-28, for
+Cal. Cal accepts the recorded recommendations unless the coordinator's check
+changes them.
 
-1. **User item 150, recorded review finding 42.** Severity High. The
-   process owner must stop Yarn Classic scripts that leave the manager's Unix
-   session. Option A documents the limit. Option B keeps scripts disabled for
-   Classic on Unix and warns. Option C extends the Unix process owner to find
-   descendants through parent links and signal every descendant, including new
-   sessions. C is recommended because only it meets the existing stop-tree
-   requirement. Effort: Large.
-2. **User item 151, recorded review finding 43.** Severity Medium and
-   security. Option A documents the `/proc/{pid}/environ` limit and advises
-   `--no-base-install-scripts`. Option B keeps base scripts disabled when
-   `MOKLY_TOKEN` or `--token` is present and warns. Option C uses a separate
-   process space. B is recommended for the recorded scope. Effort: Small.
-   Item 180 remains the separate sidecar environment decision. The protocol
-   text must not claim that B protects the sidecar until item 180 is fixed.
-3. **User item 152, recorded review finding 44.** Severity Medium. The
-   current option A, a separate hint for preparation failures, is already on
-   `origin/main`. Option B also shows the hint where Changes classifies the
-   failure. Option C carries a typed scripts-off field with `Error::Base` and
-   uses one helper in every presentation path. C is recommended because it
-   covers preparation, capture, and later presentation paths together. Effort:
-   Large.
-4. **User item 153, recorded probe 145 B.** Severity Medium and security.
-   Option A sends a base with `httpsCaFilePath`, `httpsKeyFilePath`, or
-   `httpsCertFilePath` to tier three. Option B clears those settings. Option C
-   confines them to the repository. A is recommended because it prevents the
-   read without changing the base configuration. Effort: Small.
-5. **User item 158, recorded pnpm CI fix finding 1.** Severity Medium.
-   Option A passes pnpm's noninteractive `confirmModulesPurge=false` setting
-   for private installs. Option B documents the CI-dependent tier. A is
-   recommended because the private install can recreate its own directory
-   without prompting. Effort: Small.
-6. **User item 155, recorded review finding 51.** Severity Low. Option A
-   removes the unused configuration mutation and passes the existing value
-   through every phase. Option B stores the mode on the install `Command`, so
-   environment construction reads the same value as argument construction. B
-   is recommended because it removes argument-shape guessing. Effort: Medium.
-7. **User item 156, recorded review finding 52.** Severity Low. Option A
-   adds the final period. Option B also replaces the rich error hint with the
-   scripts action so rich output has one recovery action. A is recommended for
-   the smallest visible correction. Effort: Small.
-8. **User item 157, recorded review finding 53.** Severity Low. Option A
-   documents that the scripts flags have no effect with `--no-changes`.
-   Option B rejects that pair. A is recommended because the command accepts
-   other harmless unused input and the rejection would be a new gate. Effort:
-   Small.
+- User decision 150 (2026-10-28): C. The Unix process owner enumerates the
+  descendants of the owned process through parent links and signals every
+  one, also in new sessions. Rejected: A, document the limit, because the
+  [runtime shutdown](../docs/protocol/mokly-runtime.md#shutdown) contract
+  already says that no orphan process survives; B, keep scripts off for Yarn
+  Classic on Unix, because it removes the opt-in for Classic projects.
+- User decision 151 (2026-10-28): A. Document the limit under one rule, which
+  workspace 407 also states for sidecars:
+  - Mokly passes no inherited `MOKLY_` variable to any child process. User
+    decision 145 B already does this for package managers.
+  - Mokly cannot stop code that runs as the same user from reading the
+    environment of Mokly, or of the shell and launcher that started it,
+    through `/proc/{pid}/environ`, `ps -E`, or the Windows process block.
+  - The docs say that lifecycle scripts do not receive the token, not that
+    they cannot read it. They advise the environment variable over
+    `--token`, because `/proc/{pid}/cmdline` shows arguments to every user.
 
-## Corrections And Planning Findings
+  Rejected: B, keep scripts off when a token is present, because
+  `validate_publish` in `crates/mokly-cli/src/options.rs` requires a token for
+  every publish, so B turns off the opt-in for every publish run. B also closes
+  little: the sidecar runs the renderer's dependencies with the inherited
+  environment, and the shell and launcher that start Mokly hold the token too.
+  C, a separate process space, is not selected. The planning probe found that
+  an unprivileged PID namespace here cannot mount its own `/proc`.
 
-- `crates/mokly-platform/src/unix.rs` uses `setsid` and signals only the
-  manager's process group. `crates/mokly-compare/src/process.rs` owns the
-  group but has no descendant enumeration. Windows already uses a kill-on-close
-  job, so the Unix implementation is the item 150 focus.
-- `crates/mokly-compare/src/process.rs` removes `MOKLY_TOKEN` from the child
-  environment. It cannot remove the token from the already-running parent
-  process, which is the item 151 read path on Linux.
-- `crates/mokly-compare/src/manager_plan.rs` reads Berry root fields and
-  validates ranges, but it does not inspect Berry's TLS file settings. The
-  item 153 probe therefore reaches the manager with outside paths.
-- `crates/mokly-compare/src/manager_command.rs` fixes pnpm's cache and module
-  paths but does not set `confirmModulesPurge=false`. The item 158 probe uses
-  the same pnpm behavior outside Mokly.
-- `crates/mokly-compare/src/base_render.rs` captures the base after
-  `NativeBase::prepare` returns. `crates/mokly-cli/src/changes_base.rs` wraps
-  preparation and graph errors in `BaseInstallScripts`, but capture errors do
-  not carry that wrapper. `changes_diagnostics.rs` therefore cannot show the
-  hint for every render failure.
-- `manager_command::variables` infers the mode from the first argument while
-  `options::apply_base_install_scripts` mutates configuration and
-  `PhasedChanges` stores another copy. These are the sources of truth covered
-  by item 155.
-- The wider TLS probe proves that npm and pnpm also open configured files.
-  The recorded item covers Yarn Berry only. The broader npm and pnpm rule is
-  an open follow-up unless the coordinator widens item 153.
+- User decision 152 (2026-10-28): C. `Error::Base` carries a typed scripts-off
+  field, and one helper presents the hint in every path. Rejected: B, which
+  moves the wrap into classification but keeps a separate wrapper variant.
+- User item 153 waits for Cal. The coordinator's independent reviewer
+  recommends option C for all four managers: a TLS file setting that names a
+  path outside the repository sends the base to tier three with a warning,
+  through `RepositoryPath::confine` in `crates/mokly-compare/src/manager.rs`,
+  and npm-only repositories add `.npmrc` to their input set. That option is a
+  stricter check, so Cal must approve it. The other recorded options are A,
+  tier three for any Berry TLS file setting, and B, clear the settings.
+- User decision 155 (2026-10-28): B. `Command` stores the scripts mode, and
+  the install environment reads it. Option A, which removes the redundant
+  configuration write `apply_base_install_scripts`, is not selected.
+- User decision 156 (2026-10-28): A. The hint ends with a period.
+- User decision 157 (2026-10-28): A. The build and publish guides say that
+  the scripts flags have no effect with `--no-changes`. Option B, a new
+  rejection of the pair, is not selected.
+- User decision 158 (2026-10-28): A, for pnpm 10 and 11 only. Their private
+  installs pass `--config.confirm-modules-purge=false`. pnpm 12 lists
+  `confirmModulesPurge` as a setting of another version and recreates a
+  drifted modules directory on a plain install, so pnpm 12 gets no flag.
+  Correction to the record: the 145 B allowlist removes `CI` and
+  `GITHUB_ACTIONS` from the install environment, so pnpm 10 and 11 also abort
+  under CI. The tests prove all three pnpm versions.
 
-## Design
+## Evidence
 
-### Milestone 1: Documentation and protocol
+Planning evidence is under `.context/base-install-scripts-managers/`:
 
-Update the requirements before changing the implementation. Keep
-`docs/protocol/mokly-base-dependencies.md` below its 250-line cap by replacing
-existing installation sentences or moving a large new requirement to the
-linked base-preparation page.
+- `probes/item150_yarn_classic_session.log`: Yarn Classic scripts and their
+  children survive group signals in four stop cases.
+- `probes/item151_parent_environ.log`: a child without `MOKLY_TOKEN` reads
+  the token from `/proc/{pid}/environ` of its parent.
+  `probes/item151_pid_namespace.log`: an unprivileged PID namespace here
+  still sees the host `/proc` and cannot mount its own.
+- `probes/item153_berry_tls_files.log` and
+  `probes/item153_npm_pnpm_tls_files.log`: Yarn Berry opens all three TLS
+  files, and npm and pnpm open `cafile`, outside the repository.
+- `probes/item158_pnpm_prompt/result-with-dep.txt`: pnpm 10.34.7 aborts with
+  `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` and succeeds with
+  `confirmModulesPurge=false`.
+- `records/review-135b-record.md`: the 135 B review findings 42 to 53 with
+  their options.
 
-- [ ] Record the accepted item 150 process-tree requirement and the accepted
-      item 151 token rule in the base dependency and runtime contracts.
-- [ ] Record the accepted item 153 Berry TLS fallback and item 158 pnpm
-      private-install setting.
-- [ ] State that the scripts hint applies to preparation and base-render
-      failures, and end the hint with a period.
-- [ ] Add the item 157 `--no-changes` behavior to the build and publish
-      guides. Keep CLI option tables and protocol text aligned.
-- [ ] Add the changed entry points to the compare, CLI, and platform READMEs.
-- [ ] State the boundary with item 180: item 151 protects base lifecycle
-      scripts only until the sidecar environment decision is implemented.
+## Milestone 1: Documentation and protocol
 
-### Milestone 2: Process ownership for escaped lifecycle scripts
+The protocol docs and guides state the requirements of the answered items
+before the code changes. Item 153 text waits for its decision.
 
-Implement item 150 after its decision. Preserve the existing Windows job
-behavior and Unix process-group fast path.
+- [ ] Item 150: a stop of a base install signals every process that descends
+      from the manager through parent links, also in new sessions. State the
+      remaining limits beside the requirement.
+- [ ] Item 151: state the token rule of decision 151 in the base install
+      contract, and advise the environment variable over `--token` in the
+      publish guide.
+- [ ] Item 152 and item 156: the scripts hint follows every base failure after
+      a scripts-off tier-two install, preparation and render alike, in every
+      command. The hint is a complete sentence.
+- [ ] Item 157: the build and publish guides say that the scripts flags have
+      no effect with `--no-changes`.
+- [ ] Item 158: the pnpm row of the install policy names the
+      modules-directory setting for pnpm 10 and 11.
+- [ ] Keep each protocol page under its 250-line cap, and validate the
+      changed Markdown.
 
-- [ ] Extend the Unix process owner to enumerate descendant PIDs through parent
-      links, including descendants that call `setsid`, and signal each owned
-      PID during termination and forceful kill. Retain PIDs needed after a
-      script reparents during shutdown.
-- [ ] Keep enumeration failure conservative. Do not report a stopped tree
-      when the platform cannot read its process state.
-- [ ] Add deterministic platform tests for a manager script that creates a new
-      session and a child that reparents before the second signal. Synchronize
-      each case with readiness and stopped-event pipes.
-- [ ] Run `cargo test -p mokly-platform` on the supported host and record any
-      unhosted macOS or Windows coverage as skipped evidence.
+## Milestone 2: Process ownership for escaped scripts
 
-### Milestone 3: Manager policy and one scripts mode
+Item 150. The Unix owner of a process tree finds and signals descendants in
+new sessions. Windows keeps its kill-on-close job.
 
-Implement the accepted manager decisions in `mokly-compare` and the CLI
-composition boundary.
+- [ ] Add failing tests first: a descendant in a new session survives a
+      group kill and a terminate-then-kill on the current code.
+- [ ] Enumerate the descendants through parent links on Linux and macOS,
+      stop them before the signal, and signal each one. Keep the identities
+      found by a first signal for the second signal.
+- [ ] Keep the cost of a stop of a reaped or childless tree to a few system
+      calls, because the Git runner kills its group after every command.
+- [ ] Add a `mokly-compare` integration test with a manager that starts a
+      detached child, as Yarn Classic does, for the time limit and for
+      cancellation.
+- [ ] Check that the macOS and Windows code compiles.
 
-- [ ] Apply item 151's token-aware scripts policy at the effective mode
-      boundary. Emit one warning when a requested scripts opt-in is disabled
-      because `MOKLY_TOKEN` or `--token` is present. Keep the token out of the
-      child environment and do not change item 180 here.
-- [ ] Add Berry TLS file-setting detection before a manager process starts.
-      Return a typed tier-three fallback and preserve the existing warning
-      subject and lockfile selection.
-- [ ] Add pnpm's `--config.confirm-modules-purge=false` to the private install
-      command. Do not add `--force`, because it would request extra refetching.
-- [ ] Add an install-mode field to `Command`. Pass it only for install
-      commands, and make `variables` consume that field instead of inspecting
-      argument order. Remove the ineffective configuration mutation while
-      preserving the performance branch's Serve wiring.
-- [ ] Add unit tests for the token override, Berry fallback, pnpm argument,
-      scripts-mode field, and all manager argument and environment pairs.
+## Milestone 3: One scripts mode and the pnpm purge setting
 
-### Milestone 4: Typed diagnostics and CLI wording
+Items 155 and 158 in `mokly-compare`.
 
-Implement item 152's structural option and the low-severity terminal fixes.
+- [ ] Add failing tests first: an install whose arguments do not start with
+      `install` keeps its scripts mode, and pnpm 10 and 11 abort on a tracked
+      modules state that needs recreation.
+- [ ] Store the scripts mode on `Command`. Install commands carry the
+      effective mode. Version and Node probes carry scripts off.
+      `manager_command::variables` reads the field.
+- [ ] Pass `--config.confirm-modules-purge=false` to pnpm 10 and 11 private
+      installs only.
+- [ ] Prove pnpm 10.34.7, 11.20.0, and 12.14.0 in a Rust integration test with
+      the pinned development CLIs, with and without `CI=true` in the parent
+      environment.
+- [ ] Reword the code comments that say a lifecycle script cannot read an
+      inherited secret. A script does not receive it.
 
-- [ ] Carry a typed scripts-off tier-two marker from base dependency
-      preparation through base capture and `Error::Base`.
-- [ ] Use one diagnostic helper in Changes-unavailable details, comparison
-      failures, Serve errors, and build or publish output. Preserve the
-      original error code and base commit in every path.
-- [ ] Add the final period to the scripts hint. Keep one recovery action in
-      rich output if the accepted item 156 option requires it.
-- [ ] Document item 157 in both command guides and keep the grammar tests
-      explicit about `--base` versus `--no-changes`.
-- [ ] Add Rust regression tests for preparation failures, capture render
-      failures, limit failures, Serve presentation, and plain and rich output.
+## Milestone 4: Typed scripts-off diagnostics
 
-### Milestone 5: Verification and bookkeeping
+Items 152 and 156 in `mokly-compare` and `mokly-cli`.
 
-Verify the complete behavior and record the resolved items in the rebuild plan
-after implementation decisions are answered.
+- [ ] Add failing tests first: a base render failure in capture after a
+      scripts-off tier-two install shows no hint on the current code.
+- [ ] Replace `Error::BaseInstallScripts` with a typed scripts-off field on
+      `Error::Base`. Classification sets it for preparation, capture, and
+      every later failure that it attributes to the base.
+- [ ] Present the hint through one helper in build and publish details, the
+      limit path, fatal comparison failures, and Serve errors and reasons.
+      Keep the original code and base commit.
+- [ ] End the hint with a period, and join sentences without a double period.
 
-- [ ] Run the focused `mokly-platform`, `mokly-compare`, and `mokly-cli` Rust
-      tests. Add no Node test in the files owned by workspace 353.
-- [ ] Run the early repository check and the complete `cargo xtask check`.
-      Run the base-manager smoke command with a private pnpm install and the
-      supported lifecycle-script modes.
-- [ ] Update `plans/rust-rebuild.md` in one smallest final bookkeeping edit,
-      ticking only items 150, 151, 152, 153, 155, 156, 157, and 158. Do not
-      tick item 154 or item 180 here.
-- [ ] Save all test output and review evidence under
-      `.context/base-install-scripts-managers/`.
+## Milestone 5: Item 153 TLS file settings
 
-### Milestone 6: Commit, review, and pull request
+This milestone waits for Cal's decision on item 153 and on the npm and pnpm
+scope. Do not start it before the answer.
 
-Finish the implementation branch under the shared review workflow.
+- [ ] Record Cal's decision on item 153 and its scope.
+- [ ] Implement the selected option with failing tests first, and update the
+      protocol docs.
 
-- [ ] Run the deletion audit, commit with a Conventional Commits message, and
-      push the branch.
+## Milestone 6: Crate READMEs and doc alignment
+
+- [ ] Update the platform, compare, and CLI READMEs for the changed entry
+      points and behaviour.
+- [ ] Check the protocol docs and guides against the final code.
+
+## Milestone 7: Verification, commit, review, and pull request
+
+- [ ] Run the targeted Rust tests of `mokly-platform`, `mokly-compare`, and
+      `mokly-cli`. Add no Node test in the files that workspace 353 owns.
+- [ ] Merge `origin/main` with the `git-merge` skill, then run the complete
+      gate `cargo xtask check` once on the final commit.
+- [ ] Tick user items 150, 151, 152, 155, 156, 157, and 158 in
+      `plans/rust-rebuild.md` with the smallest edit. Do not tick 153, 154,
+      or 180.
+- [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete diff against `origin/main` with the
-      `implementation-review` skill. Run its validity and options checks.
-      Apply only confirmed auto-fixes, re-review once, and record open findings
-      and follow-ups in this plan.
-- [ ] Open the pull request after every required milestone is complete. Put
-      its link in this status paragraph.
+      `implementation-review` skill after the push. Report the findings,
+      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
+- [ ] The coordinator opens the pull request when every other milestone TODO
+      is ticked. Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Run a macOS and Windows process-tree smoke test for escaped manager
-      sessions when hosted runners are available.
-- [ ] Decide whether the wider npm and pnpm TLS-file probe becomes a separate
-      item or a widened implementation of item 153.
-- [ ] Recheck the item 151 and item 180 environment rules together before the
-      first release that enables either privileged child path.
+- [ ] Run a macOS process-tree smoke test for escaped manager sessions on a
+      hosted runner.
