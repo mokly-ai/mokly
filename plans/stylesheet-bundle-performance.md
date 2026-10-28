@@ -1,9 +1,10 @@
 # Stylesheet Bundle Performance
 
-Status: Active. The step A pull request,
-[PR #228](https://github.com/mokly-ai/mokly/pull/228), is open. Step B follows
-on the same branch after step A merges. The plan closes when the step B pull
-request merges.
+Status: Active. Step A merged in
+[PR #228](https://github.com/mokly-ai/mokly/pull/228) on 2026-10-28. Step B is
+on branch `conductor/perf-5-step-b-stylesheet-cache-reuse`, no pull request
+yet. Its pull request opens after perf 4 (#227) merges and `origin/main` is
+merged once more. The plan closes when the step B pull request merges.
 
 Graph preparation bundles the stylesheet roots on one thread, one root after
 another. On `examples/basic`, one preparation bundles 35 roots in 1.3 to
@@ -117,6 +118,13 @@ Evidence: `.context/perf5-parallel-stylesheets/baseline.md` and
 5. Parallel roots alone do not reach 0.8 s. The PostCSS lock serializes about
    34 ms for each root, about 1.2 s for one preparation. Decision 2 resolves
    it.
+6. perf 0 (#222) removed the second startup preparation. Step B's acceptance
+   therefore applies to rebuilds and to the bundles that one attempt makes
+   again: a rebuild after a JavaScript edit has no `css.bundle` span, the
+   background pass and Changes bundle no root again, and a stylesheet edit
+   bundles only the roots that import it. On `d4c6f6a8` such a rebuild still
+   bundled 2 roots in 1.26 s, and every run bundled 36 roots again during
+   Changes.
 
 ## Decisions
 
@@ -439,10 +447,10 @@ in the same commits. Write each failing test first.
 
 ## Milestone 7: Documentation and protocol, step B
 
-Step B starts after the step A pull request merges. Its pull request opens
-after the orchestrator reports that perf 4 merged. perf 0 also changes
-`crates/mokly-cli/src/serve_trace.rs` and the timings contract, so merge
-`origin/main` first.
+Step B runs on branch `conductor/perf-5-step-b-stylesheet-cache-reuse`, made
+from `origin/main` at `d4c6f6a8` after step A merged. Its pull request opens
+after the orchestrator reports that perf 4 (#227) merged, with `origin/main`
+merged first.
 
 - [ ] Update `docs/protocol/mokly-timings.md`: define the `cache` field of
       the `css.bundle` end record and its values, under decisions 3 and 4.
@@ -482,6 +490,10 @@ Write each failing test first.
 - [ ] Apply decision 1 in `crates/mokly-render/src/stylesheet_cache.rs`,
       `crates/mokly-render/src/input_stamp.rs`, and new modules beside them.
       Keep each file under 300 lines.
+- [ ] Apply decision 8: keep the module baselines of the PostCSS read
+      inventory once for each context, so each later result of that context
+      projects and hashes no module again. Test it with counted tree calls
+      for two and eight results.
 - [ ] Unit tests in `crates/mokly-render`:
   - [ ] Thirty-nine records with 551 shared module paths fit in one 64 MiB
         store.
@@ -506,9 +518,9 @@ Write each failing test first.
 
 - [ ] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Add an edit to one stylesheet. Check the acceptance:
-      the second startup preparation and the rebuild after the JavaScript
-      edit have no `css.bundle` span, and the stylesheet edit bundles only
-      the roots that import it. Add one line for each catalogue below.
+      the rebuild after the JavaScript edit and the Changes classification
+      have no `css.bundle` span, and the stylesheet edit bundles only the
+      roots that import it. Add one line for each catalogue below.
 
 ## Milestone 11: Verification, commit, review, and pull request, step B
 
