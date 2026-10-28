@@ -1,8 +1,7 @@
 # Render Cache Weight, Cache Counts, And Watch Recheck
 
-Status: Active. On branch
-`conductor/perf-0-cache-weights-cache-counts-and-the-watch-recheck`, no pull
-request yet. The plan closes when its PR merges.
+Status: Active. [PR #222](https://github.com/mokly-ai/mokly/pull/222) is
+open. The plan closes when its PR merges.
 
 This plan is item perf 0 of the startup performance work. An orchestrator
 coordinates seven `perf N` workspaces and merges their pull requests. This
@@ -372,9 +371,10 @@ above.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the pull request when every other milestone TODO is ticked. Put
+- [x] Open the pull request when every other milestone TODO is ticked. Put
       the before and after table in its body and its link in the status
-      paragraph.
+      paragraph. The orchestrator asked for the pull request before the
+      review: [PR #222](https://github.com/mokly-ai/mokly/pull/222).
 
 ## Post-merge follow-up (non-blocking)
 
