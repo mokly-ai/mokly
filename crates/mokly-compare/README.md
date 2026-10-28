@@ -36,7 +36,10 @@ cached metadata and bounded path queries. Catalogue inventories and planning
 inputs request generation-wide prefetch sets before reading bytes. Reads retain
 a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
-package manager. Conversion failures become `SourceError::Unavailable` and
+package manager. `Sources::attach` gives `GitSources` a leased extraction of
+the same commit: it lists the whole tree once, and later reads and digests use
+the extracted files, with Git for each file that the extraction lacks.
+Conversion failures become `SourceError::Unavailable` and
 `base-conversion` warnings. The resource memo keeps unavailable bytes distinct
 from missing paths. The
 [base preparation contract](../../docs/protocol/mokly-base-preparation.md)

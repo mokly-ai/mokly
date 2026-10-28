@@ -31,6 +31,9 @@ impl Disk for CancelDisk {
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
         SystemDisk.read(root, path, limit)
     }
+    fn digest(&self, root: &Path, path: &RepoPath) -> Result<Option<String>> {
+        SystemDisk.digest(root, path)
+    }
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>> {
         Ok(Box::new(CancelArchive {
             archive: SystemDisk.archive(destination)?,

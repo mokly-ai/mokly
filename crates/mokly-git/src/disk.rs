@@ -6,6 +6,8 @@ use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
+use sha2::{Digest, Sha256};
+
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::identity::RepoPath;
 
@@ -25,6 +27,8 @@ pub trait Disk: Send + Sync {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf>;
     /// Read a confined regular working file; a vanished candidate returns none.
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
+    /// Hash a confined regular file with SHA-256 without retaining it; a vanished file returns none.
+    fn digest(&self, root: &Path, path: &RepoPath) -> Result<Option<String>>;
     /// Start incremental extraction in a fresh directory.
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>>;
 }
@@ -43,36 +47,9 @@ impl Disk for SystemDisk {
     }
 
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
-        if !host_path(path) {
-            tracing::trace!(path = %path, "skipping a name unsupported by the host");
+        let Some((file, metadata)) = confined(root, path)? else {
             return Ok(None);
-        }
-        let file = root.join(path.as_str());
-        for ancestor in file.ancestors().take_while(|ancestor| *ancestor != root) {
-            let metadata = match fs::symlink_metadata(ancestor) {
-                Ok(metadata) => metadata,
-                Err(error)
-                    if matches!(
-                        error.kind(),
-                        std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
-                    ) =>
-                {
-                    return Ok(None);
-                }
-                Err(source) => return Err(InternalError::Io { source }.into()),
-            };
-            if metadata.is_symlink() {
-                return Err(Error::NotRegular {
-                    path: path.to_string(),
-                });
-            }
-        }
-        let metadata = fs::metadata(&file).git()?;
-        if !metadata.is_file() {
-            return Err(Error::NotRegular {
-                path: path.to_string(),
-            });
-        }
+        };
         if metadata.len() > limit as u64 {
             return Err(Error::ByteLimit { limit });
         }
@@ -86,6 +63,28 @@ impl Disk for SystemDisk {
             return Err(Error::ByteLimit { limit });
         }
         Ok(Some(bytes))
+    }
+
+    fn digest(&self, root: &Path, path: &RepoPath) -> Result<Option<String>> {
+        let Some((file, _)) = confined(root, path)? else {
+            return Ok(None);
+        };
+        let mut input = fs::File::open(file).git()?;
+        let mut hash = Sha256::new();
+        let mut chunk = vec![0; 64 * 1024];
+        loop {
+            let count = input.read(&mut chunk).git()?;
+            if count == 0 {
+                break;
+            }
+            hash.update(&chunk[..count]);
+        }
+        Ok(Some(
+            hash.finalize()
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect(),
+        ))
     }
 
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>> {
@@ -146,6 +145,43 @@ impl Drop for Extraction {
             let _ = fs::remove_dir_all(&self.destination);
         }
     }
+}
+
+/// The regular file at `path` below `root`. A vanished file and a name that
+/// the host cannot store return none. A link below the root or a nonregular
+/// file is an error.
+fn confined(root: &Path, path: &RepoPath) -> Result<Option<(PathBuf, fs::Metadata)>> {
+    if !host_path(path) {
+        tracing::trace!(path = %path, "skipping a name unsupported by the host");
+        return Ok(None);
+    }
+    let file = root.join(path.as_str());
+    for ancestor in file.ancestors().take_while(|ancestor| *ancestor != root) {
+        let metadata = match fs::symlink_metadata(ancestor) {
+            Ok(metadata) => metadata,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
+                ) =>
+            {
+                return Ok(None);
+            }
+            Err(source) => return Err(InternalError::Io { source }.into()),
+        };
+        if metadata.is_symlink() {
+            return Err(Error::NotRegular {
+                path: path.to_string(),
+            });
+        }
+    }
+    let metadata = fs::metadata(&file).git()?;
+    if !metadata.is_file() {
+        return Err(Error::NotRegular {
+            path: path.to_string(),
+        });
+    }
+    Ok(Some((file, metadata)))
 }
 
 fn host_path(path: &RepoPath) -> bool {

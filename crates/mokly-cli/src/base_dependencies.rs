@@ -143,7 +143,7 @@ impl NativeDependencies {
         span.record("tier", tier_number(dependencies.tier));
         span.record("status", "ok");
         Ok(Arc::new(BaseSide {
-            sources,
+            sources: Arc::new(sources),
             dependencies,
             identity: request.commit.to_string(),
         }))

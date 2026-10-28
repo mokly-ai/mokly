@@ -75,6 +75,12 @@ cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
 
+`Repository::read_extracted` and `Repository::digest_extracted` read the
+converted files of an extraction back, with the count and byte checks and the
+error kinds of a Git read. `Disk` confines each file below the extraction
+root. A file that the extraction does not hold as a regular file reads through
+Git.
+
 Opaque digests stream converted stdout into SHA-256 without a temporary spool.
 Working dependency inputs retain Git clean normalization through
 `hash-object --stdin-paths`. Extraction copies regular converted files in
@@ -149,7 +155,10 @@ extraction cleanup after cancellation during a streamed copy.
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk` and `Archive`, the filesystem
-  boundary for checkout identity, working reads, and extraction.
+  boundary for checkout identity, working reads, confined digests, and
+  extraction.
+- [`src/extracted.rs`](./src/extracted.rs) reads and hashes the converted
+  files of an extraction, with Git for the files that it lacks.
 - [`src/checkout.rs`](./src/checkout.rs) defines `Checkout`, the converted
   files of one batch. [`src/checkout_batch.rs`](./src/checkout_batch.rs) builds
   the filtered batch request, and

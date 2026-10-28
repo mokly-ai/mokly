@@ -17,10 +17,11 @@ use crate::source_paths;
 
 /// A base extraction and its selected dependency tier stay leased together.
 /// The base runtime and the source trees of its graphs hold this value, so both
-/// leases last while the base graph can still request a render.
+/// leases last while the base graph can still request a render. The base
+/// source reader shares the extraction lease.
 pub struct BaseSide {
     /// Extracted immutable source root.
-    pub sources: Lease,
+    pub sources: Arc<Lease>,
     /// Selected dependencies, repository mappings, and optional install lease.
     pub dependencies: Resolved,
     /// Pinned commit identity used for the stylesheet context.

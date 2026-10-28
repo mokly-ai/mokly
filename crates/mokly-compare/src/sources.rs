@@ -9,6 +9,7 @@ use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::repository::Repository;
 use mokly_git::tree::{Entry, Limits};
 
+use crate::cache_types::Lease;
 use crate::error::{Error, GitResult, Result};
 
 /// Immutable metadata for every Git mode, including directories and links.
@@ -39,6 +40,11 @@ pub trait Sources: Send + Sync {
     fn expand(&self, _root: Option<&RepoPath>) -> Result<()> {
         Ok(())
     }
+    /// Read regular files from a leased extraction of the same commit; the
+    /// first attached lease stays for the life of the reader.
+    fn attach(&self, _extraction: Arc<Lease>) -> Result<()> {
+        Ok(())
+    }
     /// Stream one blob's SHA-256 digest without retaining its bytes.
     fn digest(&self, path: &RepoPath) -> Result<String>;
     /// Return commit-pinned metadata for a later SourceTree adapter.
@@ -51,6 +57,7 @@ pub struct GitSources {
     commit: ObjectId,
     limits: Limits,
     state: Mutex<SourceIndex>,
+    extraction: Mutex<Option<Arc<Lease>>>,
 }
 
 impl GitSources {
@@ -61,7 +68,15 @@ impl GitSources {
             commit,
             limits,
             state: Mutex::new(SourceIndex::default()),
+            extraction: Mutex::new(None),
         }
+    }
+
+    fn extraction(&self) -> Option<Arc<Lease>> {
+        self.extraction
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
     }
 }
 
@@ -149,9 +164,14 @@ impl Sources for GitSources {
                 });
             }
         }
-        self.repository
-            .read_many(&self.commit, &entries, limits)
-            .at_path(paths.first().map_or(".", RepoPath::as_str))
+        match self.extraction() {
+            Some(lease) => {
+                self.repository
+                    .read_extracted(&self.commit, &entries, limits, &lease.directory)
+            }
+            None => self.repository.read_many(&self.commit, &entries, limits),
+        }
+        .at_path(paths.first().map_or(".", RepoPath::as_str))
     }
 
     fn index(&self) -> Result<Arc<TreeIndex>> {
@@ -215,9 +235,30 @@ impl Sources for GitSources {
                 path: path.to_string(),
             },
         })?;
-        self.repository
-            .digest(&self.commit, entry)
-            .at_path(path.as_str())
+        match self.extraction() {
+            Some(lease) => self
+                .repository
+                .digest_extracted(&self.commit, entry, &lease.directory),
+            None => self.repository.digest(&self.commit, entry),
+        }
+        .at_path(path.as_str())
+    }
+
+    /// Lists the whole tree once, as the extraction did, so a later projection
+    /// needs no Git lookup.
+    fn attach(&self, extraction: Arc<Lease>) -> Result<()> {
+        if self.extraction().is_some() {
+            return Ok(());
+        }
+        self.expand(None)?;
+        let mut attached = self
+            .extraction
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if attached.is_none() {
+            *attached = Some(extraction);
+        }
+        Ok(())
     }
 }
 

@@ -30,6 +30,7 @@ mod checkout_files;
 mod checkout_index;
 mod checkout_output;
 mod conversion_paths;
+mod extracted;
 mod extraction;
 mod fetch;
 mod history;

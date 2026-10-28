@@ -41,6 +41,18 @@ pub trait Repository: Send + Sync {
         entries: &[Entry],
         limits: Limits,
     ) -> Result<Vec<Vec<u8>>>;
+    /// Read regular commit files from an extraction of the commit under `root`,
+    /// and through Git for each file that the extraction does not hold.
+    fn read_extracted(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+        root: &Path,
+    ) -> Result<Vec<Vec<u8>>>;
+    /// Hash a commit file from an extraction of the commit under `root`, or
+    /// through Git when the extraction does not hold it.
+    fn digest_extracted(&self, commit: &ObjectId, entry: &Entry, root: &Path) -> Result<String>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
@@ -208,19 +220,21 @@ impl Repository for GitRepository {
         entries: &[Entry],
         limits: Limits,
     ) -> Result<Vec<Vec<u8>>> {
-        if entries.len() > limits.files {
-            return Err(Error::FileCount {
-                limit: limits.files,
-            });
-        }
-        for entry in entries {
-            if !entry.mode.regular() {
-                return Err(Error::NotRegular {
-                    path: entry.path.to_string(),
-                });
-            }
-        }
         self.checkout_read(commit, entries, limits)
+    }
+
+    fn read_extracted(
+        &self,
+        commit: &ObjectId,
+        entries: &[Entry],
+        limits: Limits,
+        root: &Path,
+    ) -> Result<Vec<Vec<u8>>> {
+        self.extracted_read(commit, entries, limits, root)
+    }
+
+    fn digest_extracted(&self, commit: &ObjectId, entry: &Entry, root: &Path) -> Result<String> {
+        self.extracted_digest(commit, entry, root)
     }
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {

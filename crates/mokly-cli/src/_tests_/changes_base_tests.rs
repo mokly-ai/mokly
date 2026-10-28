@@ -75,10 +75,10 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
             BaseDependenciesMock::prepare
                 .next_call(matching!((_, _, directories, unmapped) if *directories == [String::from("node_modules")] && unmapped.is_empty()))
                 .returns(Ok(Arc::new(BaseSide {
-                    sources: Lease {
+                    sources: Arc::new(Lease {
                         directory: "/base".into(),
                         guard: Box::new(Unimock::new(())),
-                    },
+                    }),
                     dependencies: Resolved {
                         tier: Tier::Working,
                         node_modules: "/deps/node_modules".into(),
