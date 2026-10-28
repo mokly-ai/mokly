@@ -359,7 +359,8 @@ version.
       report-process failure. The browser assertion passed after its version
       fixture fix. The final complete gate passed all seven suites.
       Evidence is in `.context/usage-list-in-parent-detail/milestone-5-*.log`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch. Commit
+      `0d954296` is pushed to the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
