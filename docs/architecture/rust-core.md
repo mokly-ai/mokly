@@ -123,8 +123,18 @@ Every output is a node whose key is the hash of its inputs. A node is
 recomputed only when its key changes, in parallel across a worker pool sized
 to the machine. A watched change recomputes only the nodes whose keys moved.
 An HTML-only edit never rebundles JavaScript. A JavaScript edit rebundles once
-and renders again only the fragments whose generation changed. A component
-rendered with the same props on many screens renders once.
+and renders again only the definitions whose render input key moved. A
+component rendered with the same props on many screens renders once.
+
+The render input key belongs to one entry module. It covers the modules that
+the entry module imports, directly or through other modules, the renderer or
+Storybook preview modules, their class maps, the paths and titles of the
+definitions that they export or declare, their resolution files, and the
+bundle settings and dependency installation. It contains no source root. The
+[watch contract](../protocol/mokly-watch.md#invalidation-through-the-render-graph)
+lists the inputs and the render inputs that are unsupported. Both sides of
+Changes share the render cache, so an unchanged base view reuses the head's
+render. Each side keeps its own sidecar generation for its cache misses.
 
 No node is written to the repository. The render cache is process memory,
 bounded by bytes and evicted least recently used. Serve reads head documents

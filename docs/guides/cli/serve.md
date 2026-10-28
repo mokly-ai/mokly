@@ -56,7 +56,10 @@ Use [build](/docs/cli/build/) to write the catalogue as files. A watched
 server that fails to rebuild keeps serving the last good catalogue.
 
 A watched server also notices Git ref changes, reloads the page when your
-sources change and keeps your place. `--no-watch` starts the same way but does
+sources change and keeps your place. After an edit it renders again only the
+views whose inputs changed, as
+[Keep a render self-contained](/docs/authoring/screens/#keep-a-render-self-contained)
+explains, and reloads only those previews. `--no-watch` starts the same way but does
 not follow later edits. If an imported stylesheet asset changes, its request
 fails and the terminal names the asset. Restart Serve or use watching to
 load the edited asset.
