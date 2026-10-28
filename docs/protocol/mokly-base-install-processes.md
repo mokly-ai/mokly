@@ -58,13 +58,13 @@ When Mokly stops a manager because of cancellation, the time limit, the byte
 bound, or the bound on its output, it signals the manager's process group and
 every process that descends from the manager through parent links when the
 stop starts. This includes a process in a new session, such as a dependency
-script that Yarn Classic starts in a new session on Linux and macOS. On Linux
-the manager adopts orphaned descendants while it runs, so they stay in its
-tree. Windows uses the manager's owned job. Decision: signal every descendant.
-Rejected: scripts off for Yarn Classic on Unix, because Classic projects would
-lose the opt-in.
+script that Yarn Classic starts in a new session on Linux and macOS. On Linux,
+a stop while the manager runs also signals a descendant whose parent exited
+before the stop. Windows uses the manager's owned job. Decision: signal every
+descendant. Rejected: scripts off for Yarn Classic on Unix, because Classic
+projects would lose the opt-in.
 
-Two limits remain. On macOS, a descendant whose parent exited before the stop
-has left the tree, so the stop does not signal it. After a normal finish,
-Mokly signals only the manager's process group, so a process in a new session
-that a finished script left behind is outside that signal.
+Two limits remain. On macOS, a stop does not signal a descendant whose parent
+exited before the stop. After a normal finish, Mokly signals only the manager's
+process group, so a process in a new session that a finished script left behind
+is outside that signal.
