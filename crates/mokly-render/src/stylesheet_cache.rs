@@ -1,169 +1,171 @@
 //! Byte-bounded cross-generation stylesheet reuse with dependency validation.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
-use mokly_source_interface::range_evidence;
+use mokly_source_interface::read_evidence::ReadEvidence;
 use mokly_source_interface::tree::SourceTree;
 
-use crate::input_stamp::InputStamp;
-use crate::stylesheet_weight;
+use crate::stylesheet_record::{ContextEvidence, Record};
+use crate::stylesheet_store::{Miss, StylesheetCache};
 
-struct Record {
-    stamp: InputStamp,
-    bundle: Bundle,
-    bytes: usize,
-}
-
-pub(crate) struct StylesheetCache {
-    records: BTreeMap<String, Arc<Record>>,
-    limit: usize,
-}
-impl Default for StylesheetCache {
-    fn default() -> Self {
-        Self {
-            records: BTreeMap::new(),
-            limit: 64 * 1024 * 1024,
-        }
-    }
-}
-impl StylesheetCache {
-    pub(crate) fn new(limit: usize) -> Self {
-        Self {
-            records: BTreeMap::new(),
-            limit,
-        }
-    }
-    pub(crate) fn empty_peer(&self) -> Self {
-        Self::new(self.limit)
-    }
-    fn insert(&mut self, key: String, record: Arc<Record>) {
-        let size = record.bytes + key.capacity();
-        if size > self.limit {
-            return;
-        }
-        self.records.remove(&key);
-        let retained: usize = self
-            .records
-            .iter()
-            .map(|(key, record)| key.capacity() + record.bytes)
-            .sum();
-        if retained + size > self.limit {
-            self.records.clear();
-        }
-        self.records.insert(key, record);
-    }
-}
-
+/// One attempt's stylesheet bundler: an attempt-local store in front of the shared store.
 pub(crate) struct CachedStylesheets {
-    pub(crate) inner: Arc<dyn StylesheetBundler>,
-    pub(crate) tree: Arc<dyn SourceTree>,
-    pub(crate) root: PathBuf,
-    pub(crate) settings: String,
-    pub(crate) shared: Arc<Mutex<StylesheetCache>>,
-    pub(crate) local: Mutex<StylesheetCache>,
-}
-
-impl StylesheetBundler for CachedStylesheets {
-    fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
-        let key = format!("{}:{root:?}", self.settings);
-        if let Some(record) = self
-            .local
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .records
-            .get(&key)
-        {
-            return self.deliver(&record.bundle);
-        }
-        let previous = self
-            .shared
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .records
-            .get(&key)
-            .cloned();
-        if let Some(previous) = previous
-            && previous.stamp.current(self.tree.as_ref()) == previous.stamp
-        {
-            self.local
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .insert(key, previous.clone());
-            return self.deliver(&previous.bundle);
-        }
-        let bundle = self.inner.bundle(root)?;
-        let mut stamp = InputStamp::default();
-        for path in bundle.inputs.keys().chain(bundle.dependency_digests.keys()) {
-            stamp.file(self.tree.as_ref(), self.root.join(path));
-        }
-        for asset in bundle.assets.values() {
-            for path in asset.input_paths() {
-                stamp.asset(self.tree.as_ref(), self.root.join(path));
-            }
-        }
-        stamp.directories(self.tree.as_ref(), &self.root, &bundle.directories);
-        let mut consistent = true;
-        for (path, versions) in &bundle.read_evidence.inputs {
-            if versions.iter().any(|version| version.identity().is_some()) {
-                let absolute = self.root.join(path);
-                stamp.identity(self.tree.as_ref(), absolute.clone());
-                consistent &= versions
-                    .iter()
-                    .filter_map(|version| version.identity())
-                    .all(|identity| {
-                        stamp.identities[&absolute]
-                            .as_ref()
-                            .is_some_and(|(_, object)| *object == identity.object)
-                    });
-            }
-            let mut versions = versions.iter().filter_map(|version| version.whole_digest());
-            if let Some(first) = versions.next() {
-                consistent &= versions.all(|other| other == first);
-                consistent &= range_evidence::verify(
-                    self.tree.as_ref(),
-                    &self.root.join(path),
-                    &bundle.read_evidence.inputs[path],
-                    first,
-                );
-                stamp.files.insert(self.root.join(path), Some(first.into()));
-            }
-        }
-        let bytes =
-            size_of::<Record>() + stylesheet_weight::bundle(&bundle) + stamp.retained_bytes();
-        let record = Arc::new(Record {
-            stamp,
-            bundle,
-            bytes,
-        });
-        if consistent {
-            self.shared
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .insert(key.clone(), record.clone());
-        }
-        self.local
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(key, record.clone());
-        self.deliver(&record.bundle)
-    }
+    inner: Arc<dyn StylesheetBundler>,
+    tree: Arc<dyn SourceTree>,
+    root: PathBuf,
+    settings: String,
+    shared: Arc<Mutex<StylesheetCache>>,
+    local: Mutex<StylesheetCache>,
+    /// The context entries of this attempt's new records, by evidence digest.
+    contexts: Mutex<BTreeMap<String, Arc<ContextEvidence>>>,
+    /// The stored context entries whose stamp this attempt checked, with the result.
+    checked: Mutex<Vec<(Arc<ContextEvidence>, bool)>>,
+    /// The evidence digests of the context entries that this attempt replayed.
+    replayed: Mutex<BTreeSet<String>>,
 }
 
 impl CachedStylesheets {
-    fn deliver(&self, bundle: &Bundle) -> Result<Bundle> {
-        for (path, versions) in &bundle.read_evidence.inputs {
+    pub(crate) fn new(
+        inner: Arc<dyn StylesheetBundler>,
+        tree: Arc<dyn SourceTree>,
+        root: PathBuf,
+        settings: String,
+        shared: Arc<Mutex<StylesheetCache>>,
+    ) -> Self {
+        let local = Mutex::new(lock(&shared).empty_peer());
+        Self {
+            inner,
+            tree,
+            root,
+            settings,
+            shared,
+            local,
+            contexts: Mutex::default(),
+            checked: Mutex::default(),
+            replayed: Mutex::default(),
+        }
+    }
+
+    /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
+    fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
+        if let Some(record) = lock(&self.local).record(key) {
+            return Ok(record);
+        }
+        let (record, miss) = {
+            let shared = lock(&self.shared);
+            (shared.record(key), shared.miss(key))
+        };
+        let record = record.ok_or(miss)?;
+        if record.stamp.current(self.tree.as_ref()) != record.stamp
+            || record
+                .context
+                .as_ref()
+                .is_some_and(|context| !self.current(context))
+        {
+            return Err(Miss::StampMismatch);
+        }
+        lock(&self.local).insert(key.into(), record.clone());
+        Ok(record)
+    }
+
+    /// Check the stamp of a stored context entry once for each attempt.
+    fn current(&self, context: &Arc<ContextEvidence>) -> bool {
+        let mut checked = lock(&self.checked);
+        if let Some((_, current)) = checked
+            .iter()
+            .find(|(entry, _)| Arc::ptr_eq(entry, context))
+        {
+            return *current;
+        }
+        let current = context.stamp.current(self.tree.as_ref()) == context.stamp;
+        checked.push((context.clone(), current));
+        current
+    }
+
+    /// The entry for a new bundle's module evidence: this attempt's entry, a stored entry
+    /// whose stamp holds, or a new entry.
+    fn context(&self, digest: String, evidence: ReadEvidence) -> Arc<ContextEvidence> {
+        let mut contexts = lock(&self.contexts);
+        if let Some(entry) = contexts.get(&digest) {
+            return entry.clone();
+        }
+        let stored = lock(&self.shared).context(&digest);
+        let entry = match stored {
+            Some(entry) if self.current(&entry) => entry,
+            _ => Arc::new(ContextEvidence::new(
+                self.tree.as_ref(),
+                &self.root,
+                digest.clone(),
+                evidence,
+            )),
+        };
+        contexts.insert(digest, entry.clone());
+        entry
+    }
+
+    #[tracing::instrument(name = "css.bundle", skip_all, err, fields(cache = miss.as_str()))]
+    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Bundle> {
+        self.inner.bundle(root)
+    }
+
+    /// Replay a record's observations into this attempt's tree. Context evidence replays once.
+    fn deliver(&self, record: &Record) -> Result<Bundle> {
+        self.observe(record.evidence())?;
+        if let Some(context) = &record.context {
+            let mut replayed = lock(&self.replayed);
+            if !replayed.contains(&context.digest) {
+                self.observe(&context.evidence)?;
+                replayed.insert(context.digest.clone());
+            }
+        }
+        Ok(record.complete())
+    }
+
+    fn observe(&self, evidence: &ReadEvidence) -> Result<()> {
+        for (path, versions) in &evidence.inputs {
             if let Err(source) = self.tree.observe_inputs(&self.root.join(path), versions) {
                 return Err(CssError::Internal(InternalError::Provider {
                     source: Box::new(source),
                 }));
             }
         }
-        Ok(bundle.clone())
+        Ok(())
     }
+}
+
+impl StylesheetBundler for CachedStylesheets {
+    fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
+        let key = format!("{}:{root:?}", self.settings);
+        let miss = match self.lookup(&key) {
+            Ok(record) => return self.deliver(&record),
+            Err(miss) => miss,
+        };
+        let bundle = self.compile(root, miss)?;
+        let record = Arc::new(Record::new(
+            self.tree.as_ref(),
+            &self.root,
+            bundle,
+            |digest, evidence| self.context(digest, evidence),
+        ));
+        {
+            let mut shared = lock(&self.shared);
+            if record.shareable() {
+                shared.insert(key.clone(), record.clone());
+            } else {
+                shared.reject(key.clone());
+            }
+        }
+        lock(&self.local).insert(key, record.clone());
+        self.deliver(&record)
+    }
+}
+
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|error| error.into_inner())
 }
 
 #[cfg(test)]
@@ -173,3 +175,15 @@ mod stylesheet_cache_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_evidence_tests.rs"]
 mod stylesheet_evidence_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_miss_tests.rs"]
+mod stylesheet_miss_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_reuse_tests.rs"]
+mod stylesheet_reuse_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_support.rs"]
+mod stylesheet_support;

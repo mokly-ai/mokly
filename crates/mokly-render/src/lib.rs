@@ -30,6 +30,8 @@ mod source_lease;
 mod source_paths;
 mod sources;
 mod stylesheet_cache;
+mod stylesheet_record;
+mod stylesheet_store;
 mod stylesheet_weight;
 mod stylesheets;
 

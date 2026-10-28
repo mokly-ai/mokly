@@ -214,6 +214,13 @@ view after the edit and counts real process starts and hello calls.
   isolates class maps across retained graphs.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
+- [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
+  `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
+  attempt-local store and the shared store, and times each real bundle as
+  `css.bundle` with its miss reason.
+- [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
+  `StylesheetCache`, the byte-bounded store of records, shared context
+  entries, and miss reasons.
 
 ### Related Docs
 
