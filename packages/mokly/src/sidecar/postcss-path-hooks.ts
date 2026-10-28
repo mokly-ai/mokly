@@ -4,7 +4,13 @@ import { recordModulePath } from "./postcss-evidence.js";
 
 let installed = false;
 
-/** Keep path observation outside consumer hooks without witnessing their bytes. */
+/**
+ * Keep path observation outside consumer hooks without witnessing their bytes.
+ * The resolve hook installs itself again after each `registerHooks` call, so it
+ * stays outside every consumer hook. Synchronous hooks also wrap asynchronous
+ * loaders, so it reports the modules that those loaders supply, and Mokly
+ * registers no asynchronous hook of its own.
+ */
 export function observeModulePaths(): void {
   if (installed || typeof nodeModule.registerHooks !== "function") return;
   installed = true;
