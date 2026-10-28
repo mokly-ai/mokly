@@ -121,7 +121,7 @@ export function plan(
   marker: string[],
   status = 200,
   contentType: string | null = "application/json",
-) {
+): "gzip" | "identity" {
   if (
     status !== 200 ||
     bytes.length > 16_777_216 ||
@@ -166,6 +166,10 @@ export function plan(
   )
     throw new Error("invalid");
   requestUrl(root.completeUrl, endpoint);
+  return Array.isArray(root.blobEncodings) &&
+    root.blobEncodings.some((item: unknown) => item === "gzip")
+    ? "gzip"
+    : "identity";
 }
 export function complete(
   bytes: Uint8Array,
