@@ -301,10 +301,36 @@ milestone.
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`. Evidence: `.context/deployment-id-detail-ids/milestone-6-checks.log`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 of `4d5bbff4` found eight findings, and its validity check
+    confirmed all of them. `35ee08e0` fixed findings 1 to 5. The re-review of
+    `35ee08e0` found five findings, all confirmed, and `35649380` fixed its
+    findings 1 and 2. Reports: `.context/deployment-id-detail-ids/review/`.
+  - Merged `origin/main` at `2dd2937f` (#221) without conflicts.
+  - 6. Rust version-gate test still exempts detail v2. Severity Low, effort
+       Small. Recommended: C, a table-driven gate test over all four readers.
+  - 7. Browser test no longer covers its named case. Severity Low, effort
+       Small. Recommended: E, an unreadable deployment file and a page-load
+       tripwire.
+  - 8. Serve end-to-end tests dropped detail pairing checks. Severity Low,
+       effort Small. Recommended: D, check the pairing in the shared Serve
+       readiness helpers.
+  - 9. Re-review finding 3: an HTTP test lost its `id: 2` event-stream
+       assertion. Severity Low, effort Small. Recommended: A, restore it.
+  - 10. Re-review finding 4: eight `map_err` calls in production code.
+        Severity Low, effort Large. Recommended: B, one detail id helper per
+        crate.
+  - 11. Re-review finding 5: a byte test still rewrites a generation name.
+        Severity Low, effort Small. Recommended: A, compare the exact bytes.
+  - 12. Decision raised by Mokly Cloud: a private publication answers the
+        deployment file request with 401. Severity Low, effort Small.
+        Recommended: B, an embedded viewer with an index object skips the
+        check.
+  - `packages/viewer/src/shell/data_store.ts`: a StrictMode mount replay calls
+    a host's `detail` source twice. Separate branch.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
