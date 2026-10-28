@@ -325,23 +325,27 @@ failing test first.
 - [x] Build `examples/basic` with `--strict --base fc8535b0` with the
       baseline binary and with the new binary. Compare the two output
       directories byte for byte. Record the result.
-- Results, medians against the baseline medians:
-  - Cold `examples/basic`: `review.base-extraction` 0.8 s versus an untimed
-    gap of 74.6 s. `changes.classify` 46.0 s versus 129.6 s.
-  - Warm `examples/basic`: `changes.classify` 46.3 s versus 51.4 s. The four
-    base spans together 13.2 s versus 16.1 s.
-  - Edit run: second `changes.classify` 62.7 s versus 68.6 s. Edit to the
-    end of the second classification 84.3 s versus 93.5 s.
-  - Small React fixture: `changes.classify` 10.0 s cold and 9.5 s warm
-    versus 11.4 s and 11.2 s. Small HTML fixture with `* text=auto`: 0.9 s
-    versus 1.2 s.
+- Results of the final binary of `cc41de93`, interleaved run by run with
+  the baseline binary on 2026-10-28, because the machine had slowed since
+  the morning baseline. Medians, baseline first:
+  - Cold `examples/basic`: `changes.classify` 155.8 s and 58.6 s. The
+    untimed extraction gap of 98.1 s became a `review.base-extraction` span
+    of 1.1 s.
+  - Warm `examples/basic`: `changes.classify` 73.6 s and 67.7 s. The four
+    base spans together 24.5 s and 21.0 s.
+  - Edit run: second `changes.classify` 96.9 s and 80.6 s. Edit to the end
+    of the second classification 125.4 s and 111.5 s.
+  - Small React fixture, one run each: `changes.classify` 13.2 s and 13.9 s
+    cold, 13.2 s and 12.9 s warm. Small HTML fixture with `* text=auto`:
+    1.5 s and 0.9 s.
   - The build with base `fc8535b0` wrote identical output, 2,382 files, in
-    47 s versus 98 s.
-- Evidence: `.context/batched-base-reads/after-a.md` and
-  `.context/batched-base-reads/m4-repository-check.log`.
+    53 s; the baseline took 98 s in the earlier run.
+- Evidence: `.context/batched-base-reads/after-a-final.md`,
+  `.context/batched-base-reads/after-a.md`, and the gate logs
+  `.context/batched-base-reads/gate-a.log` and `gate-a2.log`.
 - [x] Merge `origin/main` with the `git-merge` skill. Commit and push.
       Merge `d385bb75` took #221 with no conflict and an empty remerge diff.
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill. Apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - Review 1 of `c7202754` found four Low findings. The validity check
