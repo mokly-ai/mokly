@@ -304,13 +304,15 @@ The failures before the fix are in
       link to this plan.
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Review 1 at `b4a288cd` found two Low findings, and the validity check
     confirmed both. The fix round applies finding 2. Report:
     `.context/normalize-config-relative-paths/review-1.md`.
+  - Re-review at `61f24e57` found no new findings. Report:
+    `.context/normalize-config-relative-paths/review-2.md`.
   - 1. Completed plan still lists the fixed renderer item. Severity Low,
        effort Small. Recommended: D, mark the renderer half of the #227
        follow-up and its `bundle_inputs.rs` line fixed in
