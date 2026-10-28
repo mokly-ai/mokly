@@ -5402,10 +5402,17 @@ check passes on this commit.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Resolve user item 111 with option C: take each statement's start and
+- [x] Resolve user item 111 with option C: take each statement's start and
       kind from cssparser's parsers so the CSS Modules scanners align with
       `lightningcss`. Keep the iterative, heap-only depth guarantee and add
       differential coverage for repository stylesheets and a generated corpus.
+  - User decision 111 (2026-10-21): C, ported in `f4558272`. The section
+    reader takes each statement's start and kind from cssparser's rule
+    parsers, so the stylesheet skips `<!--` and `-->` before a statement
+    for all three scanners. Differential tests compare the old and the new
+    reader on the 51 repository stylesheets and five generated ones, and
+    check 40 HTML comment prefix cases exactly. Evidence:
+    `.context/port-111c/`.
 
 - [ ] Add a byte-bounded cache of unused compiled recipes, revalidated before
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution
@@ -6619,6 +6626,91 @@ does not ask the user before the merge.
       mutex. A test that fails while it holds the lock poisons the mutex, and
       a later unwrap then aborts the test binary and hides the failure
       messages. Use the poisoned value.
+
+- [x] Decide the open findings of the post-push review of
+      `rebuild/port-111c`, the port of user decision 111 C (report:
+      `.context/port-111c/review/review-1-full.md`). Finding 1 (Low, product
+      bug: the probe read no qualified rules in rule lists and keyframes
+      blocks) is fixed with option B in the same commit as this record.
+  - Finding 2: rule-list statements still end at semicolons. Severity Low,
+    effort Small. Recommended: A, narrow the protocol and README parity
+    sentences to say that a `;` also ends a rule-list statement for the
+    scoper, and add a follow-up for that boundary.
+  - Finding 3: HTML comment tests cover only the first statement. Severity
+    Low, effort Small. Recommended: B, add later-statement cases and check
+    an exact expected walk after each HTML comment prefix.
+  - Finding 4: the prefix rule record can replace the result. Severity Low,
+    effort Small. Recommended: B, document the `a{}` prefix and discard a
+    record that starts inside it.
+  - User decisions (2026-10-26): finding 2 A, finding 3 B, and finding 4 B,
+    done in the same commit as this record. The protocol page and the crate
+    README name the `;` boundary, and the follow-up below keeps it. The
+    regression test covers a later statement, and the differential test
+    checks each HTML comment prefix exactly. The probe ignores a record of
+    its `a{}` prefix.
+
+- [ ] Follow-up (Low, from finding 2 of the `rebuild/port-111c` review): in a
+      rule list, the CSS Modules section reader ends a statement at `;`, but
+      cssparser ends a style rule or a keyframe only at its `{}` block. The
+      protocol page records the boundary. Aligning it, option B of the
+      finding, changes diagnostics and touches user item 113.
+
+- [x] Decide finding 1 of the review of the decisions above on
+      `rebuild/port-111c` (report: `.context/port-111c/review/review-3.md`).
+      Finding 2 (Low: a probe test name contradicted its third case) is
+      fixed with option B in `920754fd`. Its re-review
+      (`.context/port-111c/review/review-4.md`) found the old test name
+      still wrong, fixed with option A in `c662bdb1`.
+  - Finding 1: the parity sentence misses two other differences, a
+    declarations-block statement that ends at its first `{}` block and an
+    `@-moz-document` block outside a style rule. Severity Low, effort
+    Small. Recommended: B, replace the count of exceptions with one rule:
+    the scoper reads each statement that the bundler keeps with the same
+    start and kind.
+  - User decision (2026-10-26): B, done in the same commit as this record.
+    The protocol page and the crate README state the one rule, give the
+    `;` boundary as an example, and keep its reason.
+  - Correction: only the protocol page gives the reason for the `;`
+    boundary. The crate README gives the boundary as an example only.
+- Outside the `rebuild/port-111c` review scope:
+  `crates/mokly-css/src/token_grammar.rs:68`: the scanners read an
+  `@-moz-document` block outside a style rule as a style block, but
+  lightningcss parses it as an `@media` block. Separate branch.
+
+- [x] Decide finding 1 of the review of `3066e47a` on `rebuild/port-111c`
+      (report: `.context/port-111c/review/review-5.md`). Finding 2 (Low: the
+      plan record said that the README keeps the `;` reason) is fixed with
+      option A in the same commit as this record.
+  - Finding 1: the parity rule is false for descriptor blocks. The scoper
+    ends a non-custom `@font-face` or `@property` statement at its first
+    `{}` block, as postcss does, but the bundler keeps the text up to `;`.
+    Severity Low, effort Small. Recommended: A, name the descriptor case in
+    both docs.
+  - User decision (2026-10-28): A, without option D, done in the commit
+    that adds this line. The protocol page names the descriptor-block case
+    beside the rule, with its reason. The crate README, which names the
+    `@font-face` boundary, points its parity sentence at it. The same commit
+    removes the Status line of `docs/protocol/mokly-imported-styles-modules.md`,
+    which user decision 185 kept for item 111 only.
+- Outside the `rebuild/port-111c` review scope:
+  `crates/mokly-css/src/token_sections.rs:59`: the `Statement` doc says that
+  a statement reads as lightningcss reads the block that holds it, but the
+  section reader reads an `@font-face` descriptor with a `{}` block as a
+  rule. Separate branch.
+
+- [ ] Decide finding 1 of the final review of `rebuild/port-111c` at
+      `b152d0dc` (report: `.context/port-111c/review/review-7.md`). The
+      validity check confirmed it. The options check added options E to G
+      and changed the recommendation from A to C.
+  - Finding 1: the differential fixture list misses two repository
+    stylesheets that #227 added, and a moved or deleted listed file breaks
+    the `mokly-css` test build. Severity Low, effort Medium. Recommended: C,
+    read the tracked stylesheets at test time in an integration test behind
+    a test-support feature.
+  - Open problem found by the options check:
+    `crates/mokly-css/src/_tests_/token_differential_tests.rs:200`: the
+    assertion that the sources are not empty cannot fail, because the five
+    generated stylesheets are always present.
 
 - [ ] Follow-up (Low, cost, not a user item): move the Linux CI jobs that
       compile Rust back to 2 vCPUs. On 2026-10-26 the user raised them from
