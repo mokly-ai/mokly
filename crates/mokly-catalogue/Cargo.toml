@@ -12,6 +12,7 @@ cap-fs-ext = "4.0.3"
 cap-std = "4.0.3"
 dunce = "1.0.5"
 globset = "0.4.20"
+html5ever = "0.39.0"
 html5gum = "0.8.4"
 jsonschema = { version = "0.58.6", default-features = false }
 mokly-model = { workspace = true }

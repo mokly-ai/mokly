@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde_json::Value;
 
-use crate::config::{invalid_path_text, normalize};
+use crate::config::invalid_path_text;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::{CatalogueError, Result};
@@ -32,8 +32,7 @@ pub(crate) fn validate(tree: &dyn SourceTree, config: &ResolvedConfig) -> Result
     {
         return Err(path_error(value));
     }
-    let base = config.file.parent().unwrap_or(&config.repo_root);
-    let path = normalize(&base.join(value));
+    let path = config.local_path(value);
     if !path.starts_with(&config.repo_root) {
         return Err(path_error(value));
     }

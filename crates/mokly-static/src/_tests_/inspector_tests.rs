@@ -1,5 +1,6 @@
 //! Published metadata stays inert, bounded, and inside even an implicit head.
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::composition::Composed;
 use mokly_html::parse;
 use mokly_model::usage::{CatalogueUsage, ComponentRangeRecord, ComponentRangeTarget};
@@ -10,7 +11,7 @@ use crate::inspector_error::InspectorFailure;
 
 pub(super) fn document(html: &str) -> Composed {
     Composed {
-        tree: parse::document(html),
+        tree: parse::html(DeliveredHtml::document(html)),
         usage: CatalogueUsage::Ready {
             instances: vec![],
             slots: vec![],

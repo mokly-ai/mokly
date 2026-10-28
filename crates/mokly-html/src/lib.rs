@@ -49,6 +49,7 @@ mod normalized_plaintext;
 mod normalized_regions;
 mod normalized_usage;
 mod noscript_text;
+mod pipeline;
 mod placeholders;
 mod raw_markers;
 mod regions;
@@ -123,5 +124,21 @@ mod style_metadata_tests;
 mod plaintext_root_tests;
 
 #[cfg(test)]
+#[path = "_tests_/ignore_composition_tests.rs"]
+mod ignore_composition_tests;
+#[cfg(test)]
 #[path = "_tests_/ignore_parsing_tests.rs"]
 mod ignore_parsing_tests;
+
+#[cfg(test)]
+#[path = "_tests_/html5lib_corpus_tests.rs"]
+mod html5lib_corpus_tests;
+#[cfg(test)]
+#[path = "_tests_/pipeline_differential_tests.rs"]
+mod pipeline_differential_tests;
+#[cfg(test)]
+#[path = "_tests_/pipeline_tests.rs"]
+mod pipeline_tests;
+#[cfg(test)]
+#[path = "_tests_/token_tree_agreement_tests.rs"]
+mod token_tree_agreement_tests;

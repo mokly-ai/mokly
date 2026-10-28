@@ -1,0 +1,18 @@
+---
+source: crates/mokly-html/src/_tests_/pipeline_differential_tests.rs
+expression: position_table(&nodes)
+---
+html -
+  head -
+  body -
+    meta 11:5
+    meta 12:5
+    title 13:5
+    style 14:5
+    main 61:5
+      p 62:7
+      h1 63:7
+      p 64:7
+      p 68:7
+        a 69:9
+      p 71:7

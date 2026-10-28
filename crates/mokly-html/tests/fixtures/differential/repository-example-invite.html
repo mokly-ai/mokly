@@ -1,0 +1,72 @@
+---
+title: New invitation
+description: The form that invites a person to the workspace.
+tags: [team, forms]
+address: example.test/team/invite
+relatedDocs: [examples/basic/specs/example/team/member-roles.md]
+useCasePaths: [example/team/invite-teammate]
+props:
+  workspace: { name: Fernhill Studio, plan: Team plan }
+  openSeats: 2
+---
+
+<div class="app" lang="en">
+  <workspace-nav workspace="$workspace" current="Team"></workspace-nav>
+  <main class="app-main">
+    <header class="app-head">
+      <h1>Invite a teammate</h1>
+      <p>
+        {{workspace.name}} has {{openSeats}} open seats on the
+        {{workspace.plan}}.
+      </p>
+    </header>
+    <div class="columns">
+      <workspace-panel heading="Invitation">
+        <form class="form">
+          <label class="field">
+            Name
+            <input name="name" type="text" autocomplete="name" />
+          </label>
+          <label class="field">
+            Email address
+            <input
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="name@fernhill.example"
+              required
+            />
+          </label>
+          <label class="field">
+            Role
+            <select name="role">
+              <option>Member</option>
+              <option>Admin</option>
+            </select>
+          </label>
+        </form>
+        <p class="panel-text">
+          <a href="mock:./invitation">Preview the invitation email</a>
+        </p>
+        <a class="text-link" slot="actions" href="mock:./members">Cancel</a>
+        <button
+          class="button"
+          slot="actions"
+          type="button"
+          to="./members/invited"
+        >
+          Send invitation
+        </button>
+      </workspace-panel>
+      <aside class="aside" mokly-viewport="desktop">
+        <h2>Roles</h2>
+        <p><strong>Admins</strong> invite people and manage billing.</p>
+        <p><strong>Members</strong> open and edit shared projects.</p>
+        <a href="mock:./member-roles">Read about roles</a>
+      </aside>
+      <p class="help" mokly-viewport="mobile">
+        <a href="mock:./member-roles">Read about roles</a>
+      </p>
+    </div>
+  </main>
+</div>

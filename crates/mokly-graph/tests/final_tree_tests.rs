@@ -2,6 +2,7 @@
 
 use std::fs;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::{parse, serialize};
 use tempfile::TempDir;
 
@@ -30,7 +31,10 @@ fn a_control_adapted_to_an_anchor_is_valid_inside_a_paragraph() {
     let html = String::from_utf8(artifact.bytes.clone()).unwrap();
     assert!(html.contains("<p>Intro <!--mokly-instance:start"));
     assert!(html.contains("<a class=\"card\""));
-    assert_eq!(serialize::html(&parse::document(&html)), html);
+    assert_eq!(
+        serialize::html(&parse::html(DeliveredHtml::document(&html))),
+        html
+    );
 }
 
 #[test]

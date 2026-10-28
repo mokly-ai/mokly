@@ -12,6 +12,7 @@ import {
   shareReadEvidence,
   trustEarlyReaders,
 } from "./postcss-evidence.js";
+import { observeModulePaths } from "./postcss-path-hooks.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { observeDescriptorSharing } from "./postcss-read-sharing.js";
@@ -30,5 +31,6 @@ if (isMainThread) {
   observeDescriptors();
   observeDescriptorSharing();
   observeModuleLoads();
+  observeModulePaths();
   shareReadEvidence();
 }

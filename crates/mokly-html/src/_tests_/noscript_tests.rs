@@ -5,6 +5,7 @@ use std::sync::Arc;
 use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{ParseOpts, parse_document};
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_model::axes::{ColorScheme, Viewport};
 use unimock::Unimock;
 
@@ -75,9 +76,9 @@ fn noscript_later_comments_and_literal_end_tags_cannot_expose_markup() {
 
 #[test]
 fn noscript_raw_text_guard_ends_with_its_html_ancestor() {
-    let nodes = parse::document(
+    let nodes = parse::html(DeliveredHtml::document(
         "<!doctype html><html><head></head><body><noscript><xmp>Inside </NoScript><img src=x></xmp></noscript><plaintext>Outside </NoScript><img src=x>",
-    );
+    ));
     let html = serialize::html(&nodes);
     assert!(html.contains("Inside &lt;/NoScript><img src=x>"), "{html}");
     assert!(html.contains("Outside </NoScript><img src=x>"), "{html}");
@@ -158,10 +159,10 @@ fn assert_inert_and_stable(html: &str) {
         !walk(&browser).any(|node| matches!(node, Node::Element(element) if element.name == "img")),
         "{html}"
     );
-    let first = parse::document(html);
+    let first = parse::html(DeliveredHtml::document(html));
     let second_bytes = serialize::html(&first);
     assert_eq!(html, second_bytes);
-    let second = parse::document(&second_bytes);
+    let second = parse::html(DeliveredHtml::document(&second_bytes));
     assert_eq!(first, second);
     assert_eq!(second_bytes, serialize::html(&second));
 }

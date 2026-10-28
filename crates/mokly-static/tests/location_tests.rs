@@ -4,6 +4,8 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::working_tree::WorkingTree;
 use mokly_platform::rename::SystemRename;
 use mokly_static::filesystem::SystemFiles;
 use mokly_static::location::Boundary;
@@ -168,4 +170,34 @@ fn repository_aliases_keep_outer_protections_and_detect_retargeting() {
     assert!(transaction.protect(vec![]).is_err());
     transaction.abandon().unwrap();
     assert!(!outside.path().join("site").exists());
+}
+
+#[test]
+fn a_package_root_spelled_through_a_file_keeps_the_output_open() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    fs::create_dir_all(root.join("specs")).unwrap();
+    fs::create_dir_all(root.join("ui")).unwrap();
+    fs::write(root.join("ui/package.json"), "{}").unwrap();
+    fs::write(root.join("file.txt"), "text").unwrap();
+    fs::write(
+        root.join("mokly.config.json"),
+        r#"{"moduleResolution":{"packageRoots":["file.txt/../ui"]}}"#,
+    )
+    .unwrap();
+    let loader: &dyn ConfigLoader = &Loader {
+        tree: Arc::new(WorkingTree),
+    };
+    let config = loader.load(&root, Some("mokly.config.json")).unwrap();
+    let writer: &dyn Transactions = &OutputTransactions {
+        files: Arc::new(SystemFiles),
+        rename: Arc::new(SystemRename),
+    };
+    let transaction = writer
+        .open(
+            &root.join("mokly-static"),
+            Boundary::catalogue(&config, root.clone()),
+        )
+        .unwrap();
+    transaction.abandon().unwrap();
 }
