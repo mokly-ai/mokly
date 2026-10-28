@@ -42,7 +42,7 @@ async fn foreground_precedes_waiting_background_and_jobs_remain_bounded() {
                             released = gate.1.wait(released).unwrap();
                         }
                     }
-                    Ok(())
+                    Ok(Vec::new())
                 }
             })),
         DocumentsMock::generated
@@ -76,4 +76,60 @@ async fn foreground_precedes_waiting_background_and_jobs_remain_bounded() {
     second.unwrap();
     work.stop().await;
     assert_eq!(*order.lock().unwrap(), ["first", "foreground", "second"]);
+}
+
+#[tokio::test]
+async fn queued_background_renders_admit_in_request_order() {
+    let order = Arc::new(Mutex::new(Vec::new()));
+    let started = Arc::new(Notify::new());
+    let gate = Arc::new((Mutex::new(false), Condvar::new()));
+    let _cleanup = cleanup(gate.clone());
+    let mock = Unimock::new((
+        DocumentsMock::background
+            .each_call(matching!(_))
+            .answers_arc(Arc::new({
+                let order = order.clone();
+                move |_, route| {
+                    order.lock().unwrap().push(route.to_owned());
+                    Ok(Vec::new())
+                }
+            })),
+        DocumentsMock::generated
+            .each_call(matching!("foreground"))
+            .answers_arc(Arc::new({
+                let order = order.clone();
+                let started = started.clone();
+                let gate = gate.clone();
+                move |_, _| {
+                    order.lock().unwrap().push("foreground".into());
+                    started.notify_one();
+                    let mut released = gate.0.lock().unwrap();
+                    while !*released {
+                        released = gate.1.wait(released).unwrap();
+                    }
+                    Ok(None)
+                }
+            })),
+    ))
+    .no_verify_in_drop();
+    let work = Arc::new(Workers::new(1, Arc::new(Unimock::new(()))));
+    let documents = Arc::new(mock.clone());
+    let foreground = tokio::spawn({
+        let work = work.clone();
+        let documents = documents.clone();
+        async move { work.generated(documents, "foreground".into()).await }
+    });
+    started.notified().await;
+    let mut first = work.background(documents.clone(), "first".into());
+    let mut second = work.background(documents, "second".into());
+    let mut context = Context::from_waker(Waker::noop());
+    assert!(first.as_mut().poll(&mut context).is_pending());
+    assert!(second.as_mut().poll(&mut context).is_pending());
+    release(&gate);
+    assert!(foreground.await.unwrap().unwrap().is_none());
+    assert!(second.as_mut().poll(&mut context).is_pending());
+    first.await.unwrap();
+    second.await.unwrap();
+    work.stop().await;
+    assert_eq!(*order.lock().unwrap(), ["foreground", "first", "second"]);
 }
