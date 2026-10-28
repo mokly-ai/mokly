@@ -387,10 +387,19 @@ request TODO comes before the review TODO here.
   - `scripts/verification/rust-audit-tool.mjs`: the repository suite installs
     cargo-audit 0.22.2 with `--locked`, which pins the yanked tokio 1.54.0.
     Separate branch.
+  - `Cargo.lock`: `pulldown-cmark` 0.13.4 has RUSTSEC-2026-0414, fixed in
+    0.13.5. Since the advisory database update of 2026-10-28, the Rust
+    dependency audit fails on `origin/main` and on every branch. Separate
+    branch.
 
   Evidence: `.context/parallel-background-pass/review-1.md`,
   `validity-1.md`, `options-1.md`, `review-2.md`, `validity-2.md`, and
   `mutation-checks.txt`.
 
-- [ ] Rerun the complete gate after the review fixes, and update the pull
-      request body with the review outcome.
+- [x] Update the pull request body with the review outcome.
+- [ ] The complete gate passes on the final commit. Blocked: on `9e9a2b0f`,
+      six of the seven remote suites passed. The repository suite stopped at
+      the Rust dependency audit on RUSTSEC-2026-0414, which `origin/main` has
+      too. Its later steps passed locally, including `cargo test
+    --workspace` and both clippy runs. CI on PR #225 shows the same
+      failure. `a260d9f7` passed all seven suites before the advisory.
