@@ -112,8 +112,9 @@ when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
 reachability index excludes module branches that cannot contribute CSS.
 
-`BaseSide` takes the source lease and the complete dependency selection from
-`mokly-compare`. Bundle requests use that extraction, its selected dependencies,
+`BaseSide` takes the shared source lease and the complete dependency selection
+from `mokly-compare`. The base source reader holds the same lease. Bundle
+requests use that extraction, its selected dependencies,
 and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS

@@ -57,6 +57,12 @@ impl RenderKeys {
     }
 
     /// Key every module that exports a binding. Other modules use `fallback`.
+    ///
+    /// Every key of the side shares the environment, the resolution files on no module
+    /// chain, and the bindings of the unattributed definitions, because no closure shows
+    /// which modules read them. A preview digest stays only for a preview that the graph
+    /// does not name. The stories then use `fallback`, which covers the preview, and the
+    /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Result<Self> {
         let generation = inputs.generation;
         let graph = &generation.modules;
@@ -72,9 +78,19 @@ impl RenderKeys {
         let shared: Vec<_> = generation
             .resolution_digests
             .iter()
-            .filter(|(name, _)| !chained.contains(name) && !runtime_manifest(generation, name))
+            .filter(|(name, _)| {
+                !chained.contains(name)
+                    && !runtime_manifest(generation, name)
+                    && !PREVIEWS.contains(&name.as_str())
+            })
             .collect();
-        let shared = text_digest(&json!([generation.environment, shared]))?;
+        let unattributed: Vec<_> = inputs
+            .bindings
+            .iter()
+            .filter(|(handle, _)| generation.unattributed.contains(*handle))
+            .map(|(handle, binding)| json!([handle, binding.path, binding.title]))
+            .collect();
+        let shared = text_digest(&json!([generation.environment, shared, unattributed]))?;
         let preview = PREVIEWS
             .iter()
             .find(|candidate| graph.contains_key(**candidate))

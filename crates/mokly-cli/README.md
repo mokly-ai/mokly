@@ -38,7 +38,11 @@ supplied `MOKLY_NODE_EXECUTABLE`. An HTML-only catalogue without a renderer or
 PostCSS starts no sidecar and needs no package lookup result. A configured
 renderer contributes its complete bundle source inventory even when the
 catalogue has only HTML entries. The browser bundle comes from the matching
-installed `@mokly/viewer` package.
+installed `@mokly/viewer` package. When the working configuration names a
+renderer or PostCSS, base preparation leases an existing extraction of the
+base commit before it loads the base configuration, and base reads use it. The
+dependency step then reuses that lease, or it extracts the sources and
+attaches the new lease before catalogue and graph preparation.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
