@@ -204,8 +204,8 @@ line and the durable completion line. Completion summaries are:
 `Deploy this directory at your site's root with your hosting provider.`
 Publish follows its summary with the receiver's viewer URL on its own unstyled
 line when the completion response supplied an accepted URL, and adds nothing
-otherwise; the line is omitted when the normalized URL contains the bearer
-token or its `encodeURIComponent` form. The counted summary uses `file` only
+otherwise. The [viewer URL rule](./mokly-upload-exchange.md#complete)
+defines an accepted URL. The counted summary uses `file` only
 for one uploaded marker entry; zero and every other count use `files`.
 `unchanged` has no following noun. The already-published summary replaces the
 counted one only when Complete returns `200`.

@@ -1,24 +1,44 @@
 # Token Redaction Fixes
 
-Status: Active. Branch `conductor/rust-rebuild-177-token-redaction` has no pull request.
+Status: Active. On branch `conductor/rust-rebuild-177-token-redaction`, no
+pull request yet. The plan closes when its PR merges.
 
 Plan date: 2026-10-28.
 
 Mokly publishes a static catalogue with a bearer token. The CLI must keep that
 token out of terminal output. The optional viewer URL from Complete must also
-stay safe. The Node sidecar runs consumer code, so it must not expose the
-publish token to that code. Parsed CLI values must stay safe when formatted for
+stay safe. The Node sidecar runs consumer code, so it must not pass the publish
+token to that code. Parsed CLI values must stay safe when formatted for
 diagnostics.
 
 This plan resolves user items 177, 178, 180, and 181 from the post-merge
-follow-up in `plans/rust-rebuild.md`. It does not edit that coordinator plan
-in this plan-only phase. The implementation ticks those four items in its
-last milestone.
+follow-up in `plans/rust-rebuild.md`. Its last milestone ticks those four items
+in that coordinator plan. The plan makes no other edit there.
 
-The saved audit and reproductions are in
-`.context/token-redaction/code-audit.md` and the files it names. The audit
-uses `origin/main` at `9ce7585394f36c01aa54cd2a274f2d46fd672d6b`. PR #227 did
-not change any affected file.
+The saved audit and reproductions are in `.context/token-redaction-fixes/`.
+`code-audit.md` records the audit at `origin/main`
+`9ce7585394f36c01aa54cd2a274f2d46fd672d6b`. PR #227 did not change any
+affected file. `probe-publish-main.log` and `probe-cli-main.log` show the
+matcher, host, terminal, and `Debug` leaks. The `e2e-*-main.log` files show the
+token in consumer environments and in a printed viewer URL. The probes are in
+the `probes/` and `e2e/` directories there.
+
+Contract owners:
+
+- [Catalogue upload](../docs/protocol/mokly-upload.md): the token exposure
+  rules.
+- [Upload exchange](../docs/protocol/mokly-upload-exchange.md): the viewer URL
+  rule.
+- [CLI terminal output](../docs/protocol/mokly-terminal-output.md): the viewer
+  URL line.
+- [Render sidecar](../docs/protocol/mokly-sidecar.md): the sidecar security
+  rule.
+- [Sidecar module sources](../docs/protocol/mokly-sidecar-modules.md): the
+  source worker environment.
+- The [mokly-publish README](../crates/mokly-publish/README.md), the
+  [mokly-sidecar README](../crates/mokly-sidecar/README.md), and the
+  [mokly-cli README](../crates/mokly-cli/README.md).
+- The [project tokens guide](../docs/guides/ci/project-tokens.md).
 
 ## Scope and ownership
 
@@ -27,241 +47,262 @@ the clap grammar and terminal redaction. The sidecar crate owns the Node
 process environment. New regression tests belong in those Rust crates.
 
 The plan does not edit `crates/mokly-compare/src/manager_environment.rs` or
-the item 151 branch. That module keeps the allowlist selected by user
-decision 145 B for base installs. The shared security rule is that consumer
-build code and base install code cannot read `MOKLY_TOKEN`. Item 180 option A
-keeps other sidecar environment variables for compatibility. It does not adopt
-the base-install allowlist.
+the item 151 branch. That module keeps the allowed list of decision 145 B for
+base installs. The shared rule below covers both changes.
 
 The performance hub owns Serve wiring, render reuse, stylesheet bundling, and
-Git reads. This plan does not touch those files. It also does not edit the
-Node test files owned by workspace 353.
+Git reads. This plan does not touch those files. It renames one variable in
+each of three Node tests that workspace 353 ports to Rust. The design section
+"Test variables" names them.
 
-There is no UI or mockup work. The recommended options add no new gate,
-rejection, lint, or stricter token grammar. Item 178 option B adds a new
-rejection and item 180 option B removes all non-allowlisted sidecar variables.
-Both options need explicit approval.
+There is no UI or mockup work. The chosen options add no new gate, rejection,
+lint, or stricter token grammar.
 
 ## Decisions
 
-The coordinator must choose one option for each item before implementation.
-Silence does not select an option.
+The coordinator answered all four items on 2026-10-28.
 
-### User item 177: literal percent matching
+Decision 177 (2026-10-28): A. The matcher matches a literal `%` before it
+tries a `%HH` escape, with tests. Rejected: B, document that a token cannot
+contain `%`, because the CLI redactor collects `--token` and `MOKLY_TOKEN`
+before it checks the grammar. A malformed value with `%` therefore printed in
+full. Reason: A protects malformed values and keeps the token grammar.
 
-`SecretMatcher` treats every percent byte as the start of a percent escape.
-It therefore misses a literal percent in a malformed or pre-validation
-credential. The token grammar rejects percent bytes, but the CLI redactor
-collects malformed values before validation.
+Decision 178 (2026-10-28): A. The viewer URL check matches the parsed host
+without regard to ASCII case, with mixed-case and encoded-host tests.
+Rejected: B, reject such a viewer URL as a failure, because publication
+success never depends on the optional Complete body. Reason: A closes the leak
+through host normalization and keeps the body optional.
 
-- **Severity:** Low. **Category:** security. **Effort:** Small (estimate).
-- **Location:** `crates/mokly-publish/src/redaction.rs:85`.
-- **Background:** The matcher protects publish completion URLs and terminal
-  diagnostics. It matches literal bytes and percent-encoded bytes.
-- **Problem:** A literal percent cannot match because the matcher always tries
-  to decode it as `%HH`.
-- **Impact if no action:** An invalid credential that contains `%` can appear
-  in terminal diagnostics.
-- **Options:**
-  - **A.** Match a literal percent byte before trying `%HH` decoding. Keep all
-    existing encoded matching. Add regression tests. Effort: Small.
-  - **B.** Keep the matcher and document that tokens cannot contain `%`.
-    Malformed credentials can still leak. Effort: Small.
-- **Wider fix:** A. The matcher handles both literal and encoded forms at one
-  shared boundary.
-- **Previous examples:** None found. The current matcher came from
-  `eea49480`.
-- **Recommendation:** A. It protects malformed credentials without changing
-  the accepted token grammar.
-- **Auto-fix:** no, because the coordinator must select the option.
+Decision 180 (2026-10-28): A, widened. The coordinator widened A from "remove
+`MOKLY_TOKEN` only" to "remove every inherited `MOKLY_` variable, then set
+Mokly's own names". Every other variable stays. Rejected: B, an allowed list
+as for base installs, because consumer PostCSS settings and render code read
+other variables. Reason: sidecars get the same prefix rule that decision 145 B
+gives package managers. Consumer code then no longer receives any inherited
+`MOKLY_` variable. The coordinator approved that removal with this decision.
 
-### User item 178: mixed-case token in viewer host
+Decision 181 (2026-10-28): B. One redacting secret type holds the raw and the
+validated token fields. Rejected: A, a redacting `Debug` for `Publish` only,
+because a later token field could leak again. Reason: every token field gets
+the same formatting rule. The coordinator's reviewer grades B Medium, not
+Large.
 
-`Url::parse` lowercases DNS hosts before `completion.rs` checks the serialized
-URL. A mixed-case token in the host can therefore print in lower case.
+## Shared rule with item 151
 
-- **Severity:** Low. **Category:** security. **Effort:** Small (estimate).
-- **Location:** `crates/mokly-publish/src/completion.rs:69`.
-- **Background:** Publish accepts an optional viewer URL from a successful
-  Complete response. It normalizes usable HTTP(S) URLs before printing them.
-- **Problem:** The token matcher checks the normalized host with case-sensitive
-  literal matching. DNS hosts are case-insensitive.
-- **Impact if no action:** A successful publish can print a viewer URL that
-  contains the token in a lower-case host.
-- **Options:**
-  - **A.** Match the token in the parsed host with ASCII case-insensitive
-    matching, while keeping existing path, query, fragment, and encoded-byte
-    checks. Add mixed-case and encoded-host tests. Effort: Small.
-  - **B.** Reject a viewer URL whose host contains the token. This adds a new
-    rejection to the optional Complete body and needs approval. Effort: Small.
-- **Wider fix:** A. A host-aware matcher keeps URL filtering in one boundary
-  and preserves successful publication.
-- **Previous examples:** None found. The old redactor also had this gap.
-- **Recommendation:** A. It keeps the optional body non-fatal and prevents the
-  host normalization leak. Option B changes the upload contract.
-- **Auto-fix:** no, because option B changes the public failure behavior.
+The coordinator set one rule for this plan and for item 151 of workspace 406.
+Item 151 changes base installs. Mokly passes no inherited `MOKLY_` variable to
+package managers and their lifecycle scripts, under decision 145 B, which is
+already in force. Mokly passes no inherited `MOKLY_` variable to sidecars and
+their PostCSS children, under decision 180.
 
-### User item 180: token inherited by sidecars
+Mokly cannot stop code that runs as the same user from reading the environment
+of Mokly itself, or of the shell and launcher that started it. Such code can
+read it through `/proc/{pid}/environ`, `ps -E`, or the Windows process
+environment block. The protocol text therefore says that such code "does not
+receive" the token. It never says that such code "cannot read" the token, and
+it states the limit. It advises `MOKLY_TOKEN` over `--token`, because
+`/proc/{pid}/cmdline` shows the arguments to every user.
 
-`NodeFactory` inherits the parent environment and removes only three package
-launcher variables. It does not remove `MOKLY_TOKEN`.
+The words of the rule and its limit have one home:
+[token exposure](../docs/protocol/mokly-upload.md#token-exposure). Workspace
+406 links to that section or uses its words for lifecycle scripts.
 
-- **Severity:** Low. **Category:** security. **Effort:** Small (estimate).
-- **Location:** `crates/mokly-sidecar/src/process_factory.rs:91-93`.
-- **Background:** The sidecar runs consumer renderers, components, and
-  PostCSS. Those programs inherit the sidecar environment.
-- **Problem:** Consumer code can read the publish token from
-  `process.env.MOKLY_TOKEN` or from a descendant process environment.
-- **Impact if no action:** A consumer can copy the token into generated output,
-  diagnostics, or a child process.
-- **Options:**
-  - **A.** Remove `MOKLY_TOKEN` from every sidecar process environment. Keep
-    other inherited variables. Update the sidecar environment contract and
-    add renderer, component, and PostCSS coverage. Effort: Small.
-  - **B.** Start sidecars from an allowlisted environment, using the base
-    install model. This protects more inherited secrets but can break consumer
-    PostCSS and renderer settings that read other variables. Effort: Medium.
-- **Wider fix:** B. An allowlist protects every inherited secret, but it has a
-  larger compatibility impact than this item.
-- **Previous examples:** User item 151 and
-  `crates/mokly-compare/src/manager_environment.rs` use the base-install
-  allowlist. No sidecar allowlist exists.
-- **Recommendation:** A. It closes the named token path and keeps the current
-  sidecar compatibility rule for other variables.
-- **Auto-fix:** no, because both options change the sidecar environment
-  contract and option B removes additional functionality.
+Boundary: Git commands and the Serve browser opener are child processes that
+run the user's own tools, not project code. They still inherit `MOKLY_`
+variables. This plan does not change them. The orchestrator reports that gap
+to the coordinator.
 
-### User item 181: raw token in CLI Debug
+## Design
 
-`Publish` and `Cli` derive `Debug`, and `Publish.token` stores the raw value.
-No current product path formats them, but future diagnostics can do so.
+### Matcher (177)
 
-- **Severity:** Low. **Category:** security. **Effort:** Large (estimate).
-- **Location:** `crates/mokly-cli/src/grammar.rs:116`.
-- **Background:** Clap parses the raw token before `options::validate` creates
-  the validated publish settings. The grammar values can be formatted before
-  validation.
-- **Problem:** Derived `Debug` includes the raw token.
-- **Impact if no action:** A diagnostic or test failure can expose a token.
-- **Options:**
-  - **A.** Implement a redacting `Debug` for `Publish`. This protects one
-    command type and allows future token fields to leak. Effort: Small.
-  - **B.** Add one secret value type with a redacting `Debug` implementation.
-    Use it for raw CLI token fields and the validated publish token while
-    keeping explicit accessors for HTTP and validation. Effort: Large.
-- **Wider fix:** B. One wrapper gives every token field the same formatting
-  rule.
-- **Previous examples:** `SecretMatcher` and `mokly_publish::settings::Token`
-  already redact their `Debug` values.
-- **Recommendation:** B. It prevents the same leak in future token fields and
-  keeps raw values available only through explicit accessors.
-- **Auto-fix:** no, because the shared type changes two Rust crate APIs.
+- Each byte of a secret matches the same input byte, or a `%HH` escape in
+  either hex case that decodes to it.
+- An input `%` matches a literal `%` in the secret first. It can also start a
+  `%HH` escape.
+- The matcher follows both readings together, as a set of input positions for
+  each secret position. No reading needs backtracking.
+- When both readings match from one start, the longer match wins. From one
+  start, the reading of the matcher on `main`, which reads every `%` as an
+  escape, always gives the longest match.
+- A secret without `%`, which includes every valid token, therefore keeps the
+  exact match spans of `main`. A literal `%` now matches too.
+- For a secret with `%`, a literal match can start before the match that
+  `main` finds. The leftmost match wins, as on `main`.
+- The work stays linear in the text length for a secret without `%`. It uses
+  no recursion and allocates no buffer for each start position.
 
-## Milestone 1: Documentation and contracts
+### Viewer host (178)
 
-Record the selected requirements before changing code. Do not start this
-milestone until the coordinator answers all four items.
+- `SecretMatcher::contains_url` stays the one URL check.
+- It keeps the check of the serialized URL. It adds a check of the parsed host
+  without regard to ASCII case.
+- The parser already decodes `%HH` in a host and maps it to lower case. The
+  encoded and mixed-case forms therefore reach the same host check.
+- Terminal redaction keeps exact matching.
 
-- [ ] Record the four selected options and their dates in this plan.
-- [ ] Update `docs/protocol/mokly-upload-exchange.md` to state that a viewer
-      URL with the token in a DNS host is omitted using ASCII case-insensitive
-      host matching. If item 178 B is selected, record its new rejection
-      instead of the omission rule.
-- [ ] Keep the existing token grammar in `docs/protocol/mokly-upload.md`.
-      Confirm that item 177 changes malformed-value redaction only.
-- [ ] Update `docs/protocol/mokly-sidecar.md` and
-      `docs/protocol/mokly-sidecar-modules.md` for the selected item 180
-      environment rule. State the relationship to the base-install allowlist
-      without changing the item 151 branch.
-- [ ] Update the `### Key Code` or behavior paragraphs in
-      `crates/mokly-publish/README.md`, `crates/mokly-sidecar/README.md`, and
-      `crates/mokly-cli/README.md` when their entry-point behavior changes.
-- [ ] Run the Markdown link and format checks for the changed documents.
+### Sidecar environment (180)
 
-Evidence: `.context/token-redaction/code-audit.md` and the saved probe logs.
+- A pure function builds the sidecar command environment from the inherited
+  variable names.
+- It removes every inherited name that starts with `MOKLY_`, matched without
+  case on Windows only. It also removes `INIT_CWD`, `npm_package_json`, and
+  `npm_config_local_prefix`.
+- Then it sets `PWD` and Mokly's own `MOKLY_POSTCSS_PHASES=1`.
+- PostCSS children inherit that environment.
+- Every other variable stays.
+- The rule has the same effect as decision 145 B for package managers. It is a
+  removal rule, not an allowed list.
 
-## Milestone 2: Matcher and viewer URL filtering
+### Test variables (180)
 
-Fix the publish redaction paths without changing valid token syntax or the
-successful Complete status rules.
+Three Node tests on `main` pass a `MOKLY_TEST_` variable to consumer PostCSS
+code. The new rule removes these variables, so the tests rename them:
 
-- [ ] Apply the selected item 177 matcher behavior in
+- `tests/static_postcss_ranges.test.ts`: `MOKLY_TEST_RANGE_EDIT` becomes
+  `FIXTURE_RANGE_EDIT`.
+- `tests/static_postcss_identity.test.ts`: `MOKLY_TEST_RETARGET` becomes
+  `FIXTURE_RETARGET`.
+- `tests/static_postcss_base_evidence.test.ts`: `MOKLY_TEST_POSTCSS_BASE_EDIT`
+  becomes `FIXTURE_POSTCSS_BASE_EDIT`.
+- The test logic and every assertion stay.
+- Workspace 353 ports these three tests to Rust on its branch with the old
+  names. Its ports must use the new names. The orchestrator reports this to the
+  coordinator.
+
+### Secret type (181)
+
+- `mokly_publish::redaction::Secret` holds a credential value as supplied,
+  valid or not.
+- Its `Debug` prints `Secret([redacted])`.
+- It has no `Display`, `Deref`, `AsRef`, or serde support.
+- Only `expose()` returns the value, for validation, matching, and the HTTP
+  header.
+- `Token` wraps a `Secret` after the grammar check. `SecretMatcher` holds a
+  `Secret`.
+- `Publish.token` in `crates/mokly-cli/src/grammar.rs` and `Environment.token`
+  in `crates/mokly-cli/src/options.rs` hold `Option<Secret>`.
+- The CLI grammar check calls `Token::new`, so the bearer-token grammar has
+  one implementation.
+- Clap parsing, the help text, environment precedence, and the error codes do
+  not change.
+
+## Milestone 1: Documentation and protocol
+
+Write the dated decisions and the design into this plan. Write the
+requirements and the decisions in force into the protocol docs. A page whose
+own text the code does not implement yet gets a status line. Milestone 5
+removes these lines.
+
+- [x] Record the four dated decisions, the shared rule, and the design in this
+      plan.
+- [x] Add the `Token Exposure` section to `docs/protocol/mokly-upload.md`: the
+      redaction rule, decision 177, the process rule, and its limit.
+- [x] State the viewer URL rule and decision 178 in
+      `docs/protocol/mokly-upload-exchange.md`.
+- [x] Link the viewer URL line of `docs/protocol/mokly-terminal-output.md` to
+      the viewer URL rule.
+- [x] State the source worker environment and decision 180 in
+      `docs/protocol/mokly-sidecar-modules.md`.
+- [x] State the sidecar environment exception in the security section of
+      `docs/protocol/mokly-sidecar.md`.
+- [x] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+Evidence: `.context/token-redaction-fixes/docs-1/`, with the matcher check
+and the Markdown check logs.
+
+## Milestone 2: Matcher and viewer host (177, 178)
+
+Redact a literal `%`, and omit a viewer URL whose host holds the token in any
+ASCII case. Valid token syntax and the Complete status rules do not change.
+
+- [ ] Add tests that fail first in
+      `crates/mokly-publish/src/_tests_/redaction_tests.rs`. Cover literal and
+      malformed `%` values, and both readings from one start.
+- [ ] Add mixed-case and percent-encoded host cases that fail first in
+      `crates/mokly-publish/src/_tests_/completion_tests.rs`. Keep the path,
+      query, fragment, and percent-encoding cases.
+- [ ] Add a malformed `%` value case that fails first in
+      `crates/mokly-cli/src/_tests_/redaction_tests.rs`, for `--token` and
+      `MOKLY_TOKEN`.
+- [ ] Implement the matcher of the design in
       `crates/mokly-publish/src/redaction.rs`.
-- [ ] Add literal-percent and malformed-percent regression cases in
-      `crates/mokly-publish/src/_tests_/redaction_tests.rs`.
-- [ ] Apply the selected item 178 host check in
-      `crates/mokly-publish/src/completion.rs`.
-- [ ] Add mixed-case and percent-encoded host cases in
-      `crates/mokly-publish/src/_tests_/completion_tests.rs`.
-- [ ] Preserve the existing path, query, fragment, and percent-encoding cases.
-- [ ] Run `cargo test -p mokly-publish` with 100% pass rate.
+- [ ] Add the host check to `SecretMatcher::contains_url`.
+- [ ] Run `cargo test -p mokly-publish` and
+      `cargo test -p mokly-cli redaction`.
 
-## Milestone 3: Sidecar environment boundary
+## Milestone 3: Sidecar environment (180)
 
-Prevent the publish token from reaching sidecar consumer code while preserving
-the selected compatibility rule for other environment values.
+Sidecars and their PostCSS children get no inherited `MOKLY_` variable. They
+keep every other variable and see Mokly's own names.
 
-- [ ] Apply the selected item 180 environment rule in
-      `crates/mokly-sidecar/src/process_factory.rs` and its launch
-      documentation.
-- [ ] Add a Rust real-process regression test in the sidecar crate. Set
-      `MOKLY_TOKEN` in the test parent and prove that a renderer, a component,
-      and a PostCSS plugin cannot read it. Prove that an unrelated supported
-      environment value remains available under option A.
-- [ ] If option B is selected, centralize the allowlist and test its Windows
-      name matching. Do not duplicate the base-install rule without recording
-      the ownership boundary.
-- [ ] Run `cargo test -p mokly-sidecar` and the affected Rust integration test.
+- [ ] Add a unit test that fails first for the pure environment function. Use
+      captured `Command::get_envs()` values. Cover the Windows case rule.
+- [ ] Add a real-process test in `crates/mokly-sidecar/tests/`. It starts the
+      test binary again with `MOKLY_TOKEN`, `MOKLY_ENDPOINT`, a spoofed
+      `MOKLY_POSTCSS_PHASES`, and a plain variable.
+  - [ ] Prove that a renderer, a component, and a PostCSS plugin do not
+        receive the `MOKLY_` values.
+  - [ ] Prove that they keep the plain variable and see
+        `MOKLY_POSTCSS_PHASES=1`.
+- [ ] Implement the pure function and use it in the sidecar process factory.
+- [ ] Rename the three test variables of the design in the Node tests.
+- [ ] Run `npm run build`, then `cargo test -p mokly-sidecar` and the three
+      Node tests.
 
-## Milestone 4: Shared secret type and CLI Debug safety
+## Milestone 4: Secret type (181)
 
-Make token formatting safe before and after publish validation.
+One redacting secret type holds every token value, before and after the
+grammar check.
 
-- [ ] Apply item 181 option A or B in the owning Rust crates. Keep clap value
-      parsing, environment fallback precedence, and bearer-token validation
-      unchanged.
-- [ ] Under option B, place the shared secret wrapper in the publish redaction
-      module. Use explicit accessors for `Settings`, HTTP, validation, and the
-      CLI redactor. Keep `SecretMatcher` behavior separate from validation.
-- [ ] Add tests that format `Publish`, `Cli`, validated `Token`, and
-      `Settings` without the raw token. Keep tests for malformed-token terminal
-      redaction.
-- [ ] Run `cargo test -p mokly-cli` and the affected publish tests.
+- [ ] Add tests that fail first for `Debug` of `Cli`, `Publish`, `Secret`,
+      `Token`, `Settings`, and `SecretMatcher`. No output holds the token.
+- [ ] Add `Secret` to `mokly_publish::redaction`. Use it in `Token`,
+      `SecretMatcher`, `Publish.token`, and `Environment.token`.
+- [ ] Make the CLI grammar check call `Token::new`.
+- [ ] Keep clap parsing, the help text, environment precedence, the error
+      codes, and the malformed-token terminal redaction tests.
+- [ ] Run `cargo test -p mokly-publish` and `cargo test -p mokly-cli`.
 
-## Milestone 5: Verification, bookkeeping, and handoff
+## Milestone 5: READMEs, guide, and status lines
 
-Prove the selected behavior, update the coordinator plan, and prepare the
-implementation branch for review. The coordinator opens the pull request.
+The READMEs and the guide describe the implemented behaviour. The protocol
+pages lose their status lines.
 
-- [ ] Run `cargo fmt --all` and `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository` before the long gate.
-- [ ] Run the required publish and sidecar smoke commands with a test token.
+- [ ] Update the behaviour paragraphs and `### Key Code` of the
+      `crates/mokly-publish`, `crates/mokly-sidecar`, and `crates/mokly-cli`
+      READMEs.
+- [ ] Update `docs/guides/ci/project-tokens.md` in user words:
+  - [ ] The processes that render the catalogue do not receive the token.
+  - [ ] Code that runs as the same user can still read the environment of
+        Mokly and of the shell that started it.
+  - [ ] Prefer `MOKLY_TOKEN`, because every user can see a command line.
+- [ ] Remove the status lines that Milestone 1 adds to
+      `docs/protocol/mokly-upload.md`, `mokly-upload-exchange.md`,
+      `mokly-sidecar.md`, and `mokly-sidecar-modules.md`.
+- [ ] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`.
+
+## Milestone 6: Verification, commit, review, and handoff
+
+Prove the behaviour on the final branch, tick the coordinator items, and hand
+the branch to the coordinator.
+
+- [ ] Merge `origin/main` under the `git-merge` skill.
+- [ ] Smoke test: rerun the saved probes of
+      `.context/token-redaction-fixes/probes/` and `e2e/` on the branch build.
       Confirm that no terminal line, viewer URL, renderer output, component
-      output, PostCSS output, or Debug value contains that token.
-- [ ] Run `cargo xtask check` once. Fix failures and rerun the failed suite
-      before rerunning the complete gate.
+      output, PostCSS output, or `Debug` value holds the test token.
+- [ ] Run `cargo xtask check --suite repository`.
+- [ ] Run the complete gate `cargo xtask check` once on the final commit.
 - [ ] Tick user items 177, 178, 180, and 181 in `plans/rust-rebuild.md` with
-      the smallest edit after their selected fixes land.
-- [ ] Run the `git-commit` deletion audit. Use
-      `scripts/audit-deletions.sh` when available, or its documented three
-      diff commands when the repository does not provide the script. Then
-      commit with a Conventional Commits message. Push only this branch.
-- [ ] After the push, run the `implementation-review` validity check against
-      `origin/main`. Apply only confirmed `Auto-fix: yes` findings, rerun the
-      required checks, commit, push, and re-review once.
-      Open review items: 177, literal percent matching, Low, Small, A;
-      178, mixed-case viewer host matching, Low, Small, A; 180, sidecar token
-      environment, Low, Small, A; 181, shared secret type, Low, Large, B.
-- [ ] The coordinator opens the implementation pull request after all earlier
-      tasks and decisions are complete. Do not open it in this workspace.
-
-## Open review items
-
-- User item 177. Severity Low. Effort Small. Recommended: A, match literal
-  percent bytes.
-- User item 178. Severity Low. Effort Small. Recommended: A, match the token
-  in DNS hosts without regard to ASCII case.
-- User item 180. Severity Low. Effort Small. Recommended: A, remove only
-  `MOKLY_TOKEN` from sidecars.
-- User item 181. Severity Low. Effort Large. Recommended: B, share one
-  redacting secret type.
+      the smallest edit.
+- [ ] Run the deletion audit of the `git-commit` skill. Commit and push this
+      branch.
+- [ ] Review the diff against `origin/main` with the `implementation-review`
+      skill after the push. Apply its review-fix rule: fix the
+      `Auto-fix: yes` findings, re-review once, and report the rest.
+- [ ] Handoff: the coordinator opens the pull request. Then put its link in
+      the status paragraph.
