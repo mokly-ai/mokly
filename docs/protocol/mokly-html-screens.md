@@ -137,7 +137,7 @@ Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
 and `mokly-viewport`. Invalid ids fail with `html-element`. Unknown attributes
 warn once per shared body and attribute. Their values are not evaluated and do not enter document keys.
 Strict builds fail. The reserved navigation names `data-mokly-link` and `data-mokly-link-control…` are not unknown attributes: a body or callback output that supplies one fails, and a saved slot warns that the name is rejected.
-Delivered documents and `srcdoc` values keep unknown wrapper attributes for resource and style checks.
+In referenced authored HTML files and `srcdoc` values, elements named `mokly-ignore` or `mokly-ignore-scope` keep every attribute for resource and style checks.
 The [public closure](./mokly-public-closure.md) and Changes never see unknown attributes on wrappers in authored bodies or in sidecar output.
 
 ## Variants
