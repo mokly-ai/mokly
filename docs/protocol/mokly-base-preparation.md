@@ -1,5 +1,7 @@
 # Base Source And Dependency Preparation
 
+Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
+
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns
 rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and
@@ -24,6 +26,18 @@ Memory use stays bounded independently of repository size. The comparison of
 an opaque public resource also uses bounded memory, whatever the size of the
 resource. The resource closure checks that each opaque resource is a confined
 regular file. Only HTML and CSS files need reference parsing.
+
+While a base preparation leases a complete extraction of the base commit,
+base reads use the files of that extraction, which hold the same
+checkout-converted bytes. A file that the extraction does not hold, such as a
+name that the host cannot store, reads through Git. Before it loads the base
+configuration, a preparation leases an existing complete extraction when the
+working configuration names a renderer or a PostCSS module. That lookup never
+builds an extraction. Decision: lease only an existing extraction before the
+configuration loads. Rejected: a build at that point, because a base that
+needs no sidecar would then get an extraction. Rejected: a switch only after
+the dependency step, because configuration and discovery would keep their Git
+reads.
 
 If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.

@@ -1,5 +1,7 @@
 # Base Preparation Cache
 
+Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
+
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 
@@ -28,7 +30,10 @@ that exceeds the bound rebuilds.
 
 Any number of callers may lease one completed entry. One caller at a time
 builds or repairs an entry. A caller that waits for that build uses the
-completed entry. An unfinished key does not block access to another key.
+completed entry. An unfinished key does not block access to another key. A
+lookup without a build leases a completed entry or returns nothing. It
+creates no directory, and it reports the cache directory only when it leases
+an entry.
 
 Shared leases and active builds are never evicted. Eviction removes the least
 recently used entries first. That order does not depend on wall-clock time.
