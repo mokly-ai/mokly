@@ -11,13 +11,38 @@ use crate::config_validation::invalid;
 use crate::error::Result;
 
 impl ResolvedConfig {
-    /// Package roots as repository-relative POSIX paths without `.` or `..`
-    /// segments, in authored order. The repository root itself is empty.
-    /// Every consumer reads this form; loading confines each root inside
-    /// `repo_root`.
+    /// The repository-relative POSIX path that a config-relative value names:
+    /// the value joined to the configuration directory, without `.`, `..`, or
+    /// empty segments. A symbolic link before `..` does not change it. The
+    /// repository root itself is empty. A value that leaves `repo_root` has
+    /// no repository path; loading rejects every such configured value.
+    pub fn repository_path(&self, value: &str) -> Option<String> {
+        let path = self.local_path(value);
+        path.starts_with(&self.repo_root)
+            .then(|| relative(&path, &self.repo_root))
+    }
+
+    /// The configured renderer module as its repository path.
+    pub fn renderer(&self) -> Option<String> {
+        self.input
+            .renderer
+            .as_deref()
+            .and_then(|value| self.repository_path(value))
+    }
+
+    /// The configured PostCSS module as its repository path.
+    pub fn postcss(&self) -> Option<String> {
+        self.input
+            .postcss
+            .as_deref()
+            .and_then(|value| self.repository_path(value))
+    }
+
+    /// Package roots as repository paths, in authored order. Every consumer
+    /// reads this form.
     pub fn package_roots(&self) -> Vec<String> {
         self.authored_package_roots()
-            .map(|root| relative(&self.local_path(root), &self.repo_root))
+            .filter_map(|root| self.repository_path(root))
             .collect()
     }
 
@@ -47,7 +72,9 @@ impl ResolvedConfig {
         self.file.parent().unwrap_or(&self.repo_root).join(value)
     }
 
-    fn local_path(&self, value: &str) -> PathBuf {
+    /// The source-tree path that a config-relative value names. Loading
+    /// projects this path for every check.
+    pub(crate) fn local_path(&self, value: &str) -> PathBuf {
         normalize(&self.spelling(value))
     }
 }
@@ -224,3 +251,7 @@ fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> 
 #[cfg(test)]
 #[path = "_tests_/package_roots_tests.rs"]
 mod package_roots_tests;
+
+#[cfg(test)]
+#[path = "_tests_/repository_path_tests.rs"]
+mod repository_path_tests;

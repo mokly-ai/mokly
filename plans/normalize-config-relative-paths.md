@@ -186,16 +186,16 @@ changes.
 `mokly-catalogue` gains the public resolver. The catalogue's own path code
 reads it. The behaviour does not change.
 
-- [ ] Add `repository_path()`, `renderer()`, and `postcss()` to
+- [x] Add `repository_path()`, `renderer()`, and `postcss()` to
       `ResolvedConfig` in `crates/mokly-catalogue/src/config_paths.rs`.
-- [ ] Derive `package_roots()` from `repository_path()`. Replace the private
+- [x] Derive `package_roots()` from `repository_path()`. Replace the private
       join in `config_postcss::validate` with `local_path()`.
-- [ ] Add unit tests for `../x` from a nested configuration, `a/../x`,
+- [x] Add unit tests for `../x` from a nested configuration, `a/../x`,
       `a/./x`, `a//x`, `./x`, `x/`, `.`, a path outside `repo_root`, and both
       accessors.
-- [ ] Describe the resolver in the mokly-catalogue README and its Key Code
+- [x] Describe the resolver in the mokly-catalogue README and its Key Code
       line for `config_paths.rs`.
-- [ ] Run `cargo test -p mokly-catalogue`, Clippy, `cargo fmt --all -- --check`,
+- [x] Run `cargo test -p mokly-catalogue`, Clippy, `cargo fmt --all -- --check`,
       and `cargo xtask rust-file-length-lint`. `config_paths.rs` has 226 lines
       now.
 
