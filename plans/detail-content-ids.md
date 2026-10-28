@@ -1,8 +1,8 @@
 # Detail Content Ids
 
-Status: Active. On branch `conductor/dedup-1-detail-content-ids`, no pull
-request yet. The plan closes when its PR merges. The user answered the
-decisions on 2026-10-27.
+Status: Active. [PR #224](https://github.com/mokly-ai/mokly/pull/224) is open.
+The plan closes when its PR merges. The user answered the decisions on
+2026-10-27.
 
 `build` stamps one `deploymentId` into the catalogue index and into every
 current entry detail. The id is a SHA-256 over every output file, so any edit
@@ -331,7 +331,7 @@ milestone.
         check.
   - `packages/viewer/src/shell/data_store.ts`: a StrictMode mount replay calls
     a host's `detail` source twice. Separate branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
