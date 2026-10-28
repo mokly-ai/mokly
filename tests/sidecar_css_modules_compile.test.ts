@@ -115,7 +115,7 @@ test("CSS Modules compile each generation once at one and four imports", async (
   assert.equal(compilations, 2);
 });
 
-test("CSS Modules and runtime style adapters share one compilation", async (context) => {
+test("CSS Modules and runtime style adapters add no compile to a bundle", async (context) => {
   let compilations = 0;
   const session = new Session(
     "test",
@@ -127,8 +127,22 @@ test("CSS Modules and runtime style adapters share one compilation", async (cont
   );
   context.after(() => session.dispose());
   await session.call({ id: 0, method: "hello", params: {} });
-  const { generation, modules } = (await session.call({
+  // A plain entry of the same fixture sets the compile count of one bundle:
+  // the native compile, and a planned compile when esbuild gives the native
+  // modules a package type or TypeScript settings.
+  await session.call({
     id: 1,
+    method: "bundle",
+    params: bundleParams({
+      entryFiles: ["page.mockup.ts"],
+      storiesFiles: [],
+      renderer: null,
+    }),
+  });
+  const plain = compilations;
+  assert.ok(plain >= 1);
+  const { generation, modules } = (await session.call({
+    id: 2,
     method: "bundle",
     params: bundleParams({
       entryFiles: ["module-exports.mockup.tsx", "runtime-styles.mockup.tsx"],
@@ -136,7 +150,7 @@ test("CSS Modules and runtime style adapters share one compilation", async (cont
       renderer: null,
     }),
   })) as BundleResult;
-  assert.equal(compilations, 1);
+  assert.equal(compilations - plain, plain);
   assert.ok(modules.every((module) => !module.path.startsWith("mokly-")));
   const imports = modules.find(
     (module) => module.path === "runtime-styles.mockup.tsx",
@@ -151,7 +165,7 @@ test("CSS Modules and runtime style adapters share one compilation", async (cont
       name,
     );
   await session.call({
-    id: 2,
+    id: 3,
     method: "cssModules",
     params: {
       generation,
@@ -165,10 +179,10 @@ test("CSS Modules and runtime style adapters share one compilation", async (cont
     },
   });
   const definitions = (await session.call({
-    id: 3,
+    id: 4,
     method: "describe",
     params: { generation },
   })) as Definitions;
   assert.equal(definitions.screens.length, 2);
-  assert.equal(compilations, 1);
+  assert.equal(compilations - plain, plain);
 });
