@@ -1,4 +1,5 @@
-//! Saved, background, and transient renders retain their captured warning hook.
+//! Saved, background, and transient renders retain their captured warning hook. A
+//! background render returns its warnings for the usage pass to report in order.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -14,6 +15,7 @@ use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{Documents, GraphDocuments};
+use crate::error::ServerError;
 use crate::public_read::PublicReaderMock;
 use crate::warnings::RenderWarningsMock;
 
@@ -84,8 +86,9 @@ fn build_warning_hook_delivers_cached_demand_and_background_records_without_chan
             Arc::new(Unimock::new(())),
         );
         if background {
-            documents.background(ROUTE).unwrap();
-            documents.background(ROUTE).unwrap();
+            assert_eq!(documents.background(ROUTE).unwrap(), [warning()]);
+            assert!(documents.background(ROUTE).unwrap().is_empty());
+            documents.report(&[warning()], false);
         } else {
             for _ in 0..2 {
                 let file = documents.generated(ROUTE).unwrap().unwrap();
@@ -97,7 +100,7 @@ fn build_warning_hook_delivers_cached_demand_and_background_records_without_chan
 }
 
 #[test]
-fn build_warning_hook_flushes_retained_records_before_each_render_failure_returns() {
+fn build_warning_hook_delivers_retained_records_of_each_render_failure() {
     for background in [false, true] {
         let mock = Unimock::new((
             RenderGenerationMock::plans
@@ -120,7 +123,11 @@ fn build_warning_hook_flushes_retained_records_before_each_render_failure_return
             Arc::new(Unimock::new(())),
         );
         if background {
-            assert!(documents.background(ROUTE).is_err());
+            let Err(ServerError::Render { source }) = documents.background(ROUTE) else {
+                panic!("the background render keeps its failure");
+            };
+            assert_eq!(source.warnings(), [warning()]);
+            documents.report(&source.warnings(), true);
         } else {
             assert!(documents.generated(ROUTE).is_err());
         }
