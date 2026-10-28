@@ -495,15 +495,19 @@ Let equal head and base inputs share render cache entries under decision 1.
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Review 1 at `dbc2e7ca` found six findings, and the validity check
-    confirmed all six. The fix round applied findings 1, 3, and 6. Summary:
-    `.context/per-entry-render-keys/review-1-summary.md`.
-  - 2. Raw renderer spelling drops the renderer closure. Severity High,
-       effort Large. Recommended: B, one accessor for config-relative paths,
-       which open user item 167 also needs.
-  - 4. Head and base hash different package roots. Severity Low, effort
-       Small. Recommended: B, one package-root builder for both sides.
-  - 5. Preview candidates are listed twice in Rust. Severity Low, effort
-       Small. Recommended: A, share one list.
+    confirmed all six. The fix round applied findings 1, 3, and 6 in
+    `523efe7d`, and `84773b8a` split a test file that then passed the
+    300-line cap. Summary: `.context/per-entry-render-keys/review-1-summary.md`.
+  - The orchestrator answered the open findings on 2026-10-28. Finding 2:
+    C, the whole-bundle key when the module graph does not name the
+    renderer, in `8a9debb8`. Finding 4: B, one package-root rule for both
+    sides, with the test of C written first, in `ad86ebb7`. Finding 5: C,
+    one preview list and the whole-bundle key for stories when the graph
+    does not name the preview, in `8a9debb8`. Finding 3 was already fixed.
+  - Follow-up: one normalized accessor for config-relative paths, so that
+    the renderer and the preview get their own render input keys under
+    every spelling. Effort Large. Covers findings 2 and 5. Previous
+    examples: user item 167 in the Rust rebuild plan.
   - Outside the scope: `crates/mokly-render/src/graph.rs`. `entry_modules`
     splits a handle at its first `#`, so a module path with `#` gets the
     wrong stylesheet module. Separate branch.
