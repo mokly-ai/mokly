@@ -1,5 +1,7 @@
 # Base Install Processes
 
+Status: In progress under the [Base Install Scripts And Manager Fixes plan](../../plans/base-install-scripts-and-manager-fixes.md).
+
 This page defines how Mokly runs the package managers of a
 [base dependency install](./mokly-base-dependencies.md#installation-and-bundle-settings):
 the environment that each manager starts from, the executables, the bounds,
