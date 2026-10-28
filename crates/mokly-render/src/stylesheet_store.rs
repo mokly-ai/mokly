@@ -87,11 +87,12 @@ impl StylesheetCache {
         self.records.remove(&key);
         self.misses.remove(&key);
         self.prune();
-        let charge = self.charge(&key, &record);
-        if charge > self.limit {
+        let alone =
+            key.len() + record.bytes + record.context.as_ref().map_or(0, |context| context.bytes);
+        if alone > self.limit {
             self.misses.insert(key, Miss::Evicted);
         } else {
-            if self.retained() + charge > self.limit {
+            if self.retained() + self.charge(&key, &record) > self.limit {
                 self.evict();
             }
             if let Some(context) = &record.context
@@ -105,6 +106,7 @@ impl StylesheetCache {
     }
 
     /// The bytes that a record adds: its key, itself, and its context entry when not yet held.
+    /// A record also fits after an eviction, because `insert` checks it with its entry first.
     fn charge(&self, key: &str, record: &Record) -> usize {
         key.len()
             + record.bytes

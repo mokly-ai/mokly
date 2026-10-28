@@ -38,12 +38,16 @@ fn bundle(name: &str, module: &str) -> Bundle {
 
 /// A record whose module evidence uses `context` when given, or a new entry.
 fn record(name: &str, module: &str, context: Option<&Arc<ContextEvidence>>) -> Arc<Record> {
+    stored(bundle(name, module), context)
+}
+
+fn stored(bundle: Bundle, context: Option<&Arc<ContextEvidence>>) -> Arc<Record> {
     let tree = Unimock::new(());
     let root = Path::new("/repo");
     Arc::new(Record::new(
         &tree,
         root,
-        bundle(name, module),
+        bundle,
         |digest, evidence| match context {
             Some(context) => context.clone(),
             None => Arc::new(ContextEvidence::new(&tree, root, digest, evidence)),
@@ -144,4 +148,24 @@ fn miss_reasons_that_do_not_fit_beside_the_records_are_forgotten() {
     store.reject("a".into());
     assert_eq!(store.miss("a"), Miss::NoRecord);
     assert!(store.record("b").is_some());
+}
+
+#[test]
+fn a_record_that_fits_only_without_its_held_context_entry_stays_out() {
+    let first = record("a.css", MODULE, None);
+    let shared = context(&first);
+    let mut larger = bundle("b.css", MODULE);
+    larger.css.push_str(&"b{color:blue}".repeat(8));
+    let second = stored(larger, Some(&shared));
+    let reason = size_of::<(String, Miss)>() + 1;
+    let limit = 1 + first.bytes + shared.bytes + reason;
+    assert!(second.bytes < limit);
+    assert!(1 + second.bytes + shared.bytes > limit);
+    let mut store = StylesheetCache::new(limit);
+    store.insert("a".into(), first);
+    store.insert("b".into(), second);
+    assert!(store.retained() <= limit);
+    assert!(store.record("a").is_some());
+    assert!(store.record("b").is_none());
+    assert_eq!(store.miss("b"), Miss::Evicted);
 }
