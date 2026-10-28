@@ -20,6 +20,8 @@ pub(crate) struct CssCache {
     pub(crate) records: BTreeMap<String, CssRecord>,
     pub(crate) scans: BTreeMap<String, Scan>,
     pub(crate) limit: usize,
+    /// Running charge of `records`, so a change costs one record's size, not the whole cache.
+    pub(crate) record_bytes: usize,
 }
 
 impl Default for CssCache {
@@ -31,6 +33,7 @@ impl Default for CssCache {
             records: BTreeMap::new(),
             scans: BTreeMap::new(),
             limit: 64 * 1024 * 1024,
+            record_bytes: 0,
         }
     }
 }
@@ -40,27 +43,39 @@ impl CssCache {
         for id in self.released.try_iter() {
             self.scans.remove(&id);
             let prefix = format!("{id}:");
-            self.records.retain(|key, _| !key.starts_with(&prefix));
+            let mut removed = 0;
+            self.records.retain(|key, record| {
+                let keep = !key.starts_with(&prefix);
+                if !keep {
+                    removed += key.capacity() + record.retained_bytes();
+                }
+                keep
+            });
+            self.record_bytes = self.record_bytes.saturating_sub(removed);
         }
     }
 
     pub(crate) fn trim(&mut self) {
         self.purge();
         if self.retained_bytes() > self.limit {
-            self.records.clear();
-            self.scans.clear();
+            self.clear();
         }
     }
 
     pub(crate) fn insert(&mut self, key: String, record: CssRecord) {
         self.purge();
-        self.records.insert(key.clone(), record.clone());
-        if self.retained_bytes() > self.limit {
-            self.records.clear();
-            self.scans.clear();
-            if key.capacity() + record.retained_bytes() <= self.limit {
-                self.records.insert(key, record);
-            }
+        if let Some((previous, replaced)) = self.records.remove_entry(&key) {
+            self.record_bytes = self
+                .record_bytes
+                .saturating_sub(previous.capacity() + replaced.retained_bytes());
+        }
+        let size = key.capacity() + record.retained_bytes();
+        if self.retained_bytes() + size > self.limit {
+            self.clear();
+        }
+        if size <= self.limit {
+            self.records.insert(key, record);
+            self.record_bytes += size;
         }
         tracing::trace!(
             retained_bytes = self.retained_bytes(),
@@ -70,15 +85,18 @@ impl CssCache {
     }
 
     pub(crate) fn retained_bytes(&self) -> usize {
-        self.records
-            .iter()
-            .map(|(key, record)| key.capacity() + record.retained_bytes())
-            .sum::<usize>()
+        self.record_bytes
             + self
                 .scans
                 .iter()
                 .map(|(key, scan)| key.capacity() + scan.retained_bytes())
                 .sum::<usize>()
+    }
+
+    fn clear(&mut self) {
+        self.records.clear();
+        self.scans.clear();
+        self.record_bytes = 0;
     }
 }
 
@@ -141,3 +159,7 @@ impl CssRecord {
         size_of::<Self>() + result + processed
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/postcss_cache_charge_tests.rs"]
+mod postcss_cache_charge_tests;

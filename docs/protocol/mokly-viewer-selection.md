@@ -129,8 +129,8 @@ The shell is one React component tree that renders only in the browser:
 `MoklyViewer` in React hosts, and the `./browser` entry in the stub that Serve
 and `build` deliver. There are no runtime-owned islands, no string-rendered
 markup injected into the tree, and no second implementation of any shell
-interaction. Route content renders from the validated index and the current
-entry's detail; navigation never fetches shell HTML. Controlled props and
+interaction. Route content renders from the validated index and the route's
+details; navigation never fetches shell HTML. Controlled props and
 handle methods update shell state. The bundle reads the stored appearance,
 disclosure and navigation-width preferences before its first render, so no
 pre-render script and no ownership handoff exists. Frames are static

@@ -4,7 +4,7 @@
 
 The browser renders Browse from a stub, an index, and entry details. The index
 holds navigation and metadata. Details hold usage, comparison evidence and
-workspaces. Serve and `build` deliver them. Navigation fetches the next detail.
+workspaces. Serve and `build` deliver them. Navigation fetches the route's details.
 No process renders shell HTML.
 
 ## Routes
@@ -18,9 +18,9 @@ rewrite rules.
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
 | `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v8                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v2                                        |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v3                                        |
 | `/mokly-viewer/diffs/generations/<generation>/`                                              | live      | absent                                  | the generation root: 204 while Serve retains it            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v2 of a removed entry's historical record |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v3 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
 | `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
@@ -77,7 +77,7 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v2 type](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).
@@ -118,6 +118,17 @@ Serve a view's usage is `pending` until its first render completes and the
 next publication replaces the detail; `build` renders every view before it
 writes, so a built detail carries no `pending` view.
 
+The workspace of a current component variant omits `usedBy` and `affected`.
+Its page reads both lists from its component parent's detail. Screens,
+component parents, and removed entries keep both lists in their own workspaces.
+Keeping copies on current variants was rejected because it repeats most of the
+usage data. Moving `affected` in a later format change was rejected because
+the same parent request carries both lists. The core rejects either list on a
+current component variant under the
+[misplaced-field rule](./mokly-catalogue-serialization.md#versions).
+Checking this placement only in tests was rejected because a writer bug must
+fail before a build or publication exposes it.
+
 A screen or component detail omits `workspace` until every input of its lists
 is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
@@ -137,17 +148,20 @@ retries on the next publication message. Static builds have no descriptor.
 
 ## Fetch And Fences
 
-At start the shell fetches the index, then the detail of the routed entry and,
-for a use case, the detail of each step screen whose views its frames show; it
-renders the navigation when the index arrives and the frames when those
-details arrive. On navigation inside the shell it commits the route from the
-index at once and fetches the destination's details. It accepts a current entry's
-detail only when `identity`, `deploymentId`, and `revision` equal the
-installed index. On a revision mismatch it refetches the index once; if the
-pair still disagrees, the entry shows its unavailable state with retry. A use
-case shows its unavailable state only after each of its details has arrived,
-failed, or been replaced; until then its stage keeps loading, and an embedded
-host still receives the `onError` of each failure at once. A
+At start the shell fetches the index, then the routed entry's detail. A current
+component variant also needs its parent's detail. A use case also needs the
+detail of each step screen whose views its frames show. The navigation renders
+when the index arrives. The stage, Props, and Usage wait for all route details.
+On navigation inside the shell it commits the route from the index at once and
+fetches the destination's details. Every current detail, including the parent's,
+must have `identity`, `deploymentId`, and `revision` equal to the installed index.
+On a revision mismatch the shell refetches the index once. If the details still
+disagree, the entry shows its unavailable state with retry. A route shows that
+state only after each of its details has arrived, failed, or been replaced.
+Until then its stage keeps loading. An embedded host still receives the
+`onError` of each failure at once. A failed parent detail makes the variant
+page unavailable with `Try again`. Separate delivery for Usage was rejected
+because it adds delivery state without reducing the first load's data. A
 different `deploymentId` means another deployment replaced the files: the
 standalone shell performs a full page load of the requested URL, and an
 embedded React host receives one `onError` and keeps its state. From then on
@@ -183,7 +197,8 @@ On a message whose `data` differs from the installed `deploymentId`, another
 server process answers, and the standalone shell performs a full page load of
 the current URL. On a message whose id is above the installed revision, the
 shell cancels a refresh still in flight, fetches the index and the current
-route's details, requires one `revision` on all of them at or above the message id,
+route's details, including a current component variant's parent detail,
+requires one `revision` on all of them at or above the message id,
 and adopts them in one store commit: the navigation, the Changes marks,
 Usage, and the details panel update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
@@ -191,10 +206,11 @@ shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and
 replaces the render capability; a current entry the index no longer lists
 shows the missing state under the kept URL until an index lists it again; no
-other update reloads the page. When a fetch fails or the pair disagrees after
+other update reloads the page. When a fetch fails or the details disagree after
 one more index fetch, the shell keeps its state, shows the entry as
-unavailable with retry, and waits for the next message; a use case shows that
-state only after each of its details has arrived, failed, or been replaced.
+unavailable with retry, and waits for the next message. That state waits until
+each route detail, including a current component variant's parent detail, has
+arrived, failed, or been replaced.
 
 ## Identity
 
@@ -214,10 +230,11 @@ The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 
 ## Fail-Closed Rules
 
-| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
-| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
-| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                      | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
-| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry; for a use case, once each of its details arrived, failed, or was replaced     |
+| Condition                                                                                                                                                                                                                                                             | Shell behaviour                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                               | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
+| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                   | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
+| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                    | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
+| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                           | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
+| a current route detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry after every route detail arrived, failed, or was replaced                      |
+| a current component variant's parent detail that fails or is rejected under those rules                                                                                                                                                                               | the same unavailable state for the variant page, with `Try again`, after both details settle                            |

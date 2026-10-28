@@ -4,7 +4,7 @@ import type {
   ShellCatalogueComponent,
   ShellCatalogueScreen,
 } from "../catalogue/scoped_types.js";
-import type { EntryDetailV2 } from "../catalogue/types.js";
+import type { EntryDetailV3 } from "../catalogue/types.js";
 import type { ComparedEntry, ReviewView } from "../review/types.js";
 
 /**
@@ -15,7 +15,7 @@ import type { ComparedEntry, ReviewView } from "../review/types.js";
  */
 export function publicComparedEntry(
   entry: ShellCatalogueScreen | ShellCatalogueComponent,
-  detail: EntryDetailV2 | undefined,
+  detail: EntryDetailV3 | undefined,
 ): ComparedEntry | undefined {
   const views = entry.views.flatMap((view): ReviewView[] =>
     view.state && view.ignoredIds && view.resourceEvidence

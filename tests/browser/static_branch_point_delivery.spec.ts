@@ -48,7 +48,7 @@ for (const width of [390, 1280]) {
         const detail = await copiedDetail(
           `${branchCopy.url}/mokly-viewer/entries/${scenario.affectedComponent}.json`,
         );
-        expectBadgeAffected(detail.workspace!.affected);
+        expectBadgeAffected(detail.workspace!.affected!);
       }
       for (const pair of scenario.pairs) {
         // The current entry's detail names the base side it compares with.

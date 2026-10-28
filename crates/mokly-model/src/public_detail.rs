@@ -1,4 +1,4 @@
-//! Entry detail v2 and live descriptor v3 public contracts.
+//! Entry detail v3 and live descriptor v3 public contracts.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -111,9 +111,13 @@ pub struct Workspace {
     /// Whether this entry has an eligible comparison.
     pub comparison_eligible: bool,
     /// Current consuming uses.
-    pub used_by: Vec<UsageLink>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub used_by: Option<Vec<UsageLink>>,
     /// Affected consumers.
-    pub affected: Vec<UsageLink>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub affected: Option<Vec<UsageLink>>,
     /// Changed components affecting this entry.
     pub related_components: Vec<RelatedComponent>,
     /// Instances with changed data props.
@@ -133,9 +137,9 @@ pub struct RelatedComponent {
 /// One public entry detail, current or historical.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct EntryDetailV2 {
-    /// Must equal 2; readers gate it first.
-    #[ts(type = "2")]
+pub struct EntryDetailV3 {
+    /// Must equal 3; readers gate it first.
+    #[ts(type = "3")]
     pub schema_version: u32,
     /// Catalogue identity equal to the installed index.
     pub identity: CatalogueIdentity,

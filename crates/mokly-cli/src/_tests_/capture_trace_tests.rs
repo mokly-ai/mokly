@@ -135,7 +135,7 @@ fn successful_capture_emits_retention_counts_and_keeps_view_counts_off_end_recor
         span.record("encoded_bytes", 64u64);
         span.record("status", "ok");
     });
-    assert_eq!(records.len(), 3);
+    assert_eq!(records.len(), 4);
     assert_eq!(records[0]["event"], "start");
     assert_eq!(records[0]["side"], "base");
     assert_eq!(records[1]["event"], "counts");
@@ -143,11 +143,13 @@ fn successful_capture_emits_retention_counts_and_keeps_view_counts_off_end_recor
     assert_eq!(records[1]["uncapturedViews"], 2);
     assert_eq!(records[1]["retainedBytes"], 128);
     assert_eq!(records[1]["encodedBytes"], 64);
-    assert_eq!(records[2]["status"], "ok");
-    assert!(records[0].get("views").is_none());
+    assert_eq!(records[2]["stage"], "render.cache");
     assert!(records[2].get("views").is_none());
+    assert_eq!(records[3]["status"], "ok");
+    assert!(records[0].get("views").is_none());
+    assert!(records[3].get("views").is_none());
     assert!(records[0].get("uncapturedViews").is_none());
-    assert!(records[2].get("uncapturedViews").is_none());
+    assert!(records[3].get("uncapturedViews").is_none());
     assert!(
         records
             .iter()

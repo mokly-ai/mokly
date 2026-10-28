@@ -46,7 +46,9 @@ not fill the source-byte LRU.
 
 `CachedExtraction` implements `dyn Extraction`. It extracts one commit into
 the source cache only when JavaScript, a renderer module, or consumer PostCSS
-needs files on disk. `DiskCache` keeps the source and dependency namespaces
+needs files on disk. Its `review.base-extraction` span times the source key,
+the cache lookup, and a build, and records `action`: `reuse` for a complete
+entry and `extract` for a build. `DiskCache` keeps the source and dependency namespaces
 under the directory that `SystemLocations` selects, with OS locks for
 namespace mutation and entry leases. The
 [base cache contract](../../docs/protocol/mokly-base-cache.md) owns the
@@ -145,7 +147,8 @@ component's base side, for current and removed details. These records carry
 every public fact of the review result, which no file holds.
 `projection_workspace::apply`
 joins ready usage with indexed affected links and caller-owned input changes.
-An absent workspace stays absent until the caller proves usage.
+An absent workspace stays absent. An absent list stays absent until the caller
+proves usage.
 `projection_removed` assembles historical records, details with base usage,
 and typed preview metadata. Its `workspaces` initializer prepares removed
 visual details after the caller proves base usage. The static caller owns file

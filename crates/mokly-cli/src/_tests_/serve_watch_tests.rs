@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::SystemTime;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::preparation::PreparedCatalogue;
@@ -20,7 +21,8 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporterMock;
 
-use super::{CandidateWatch, ObserversMock, State, WatchInputs, WatchedInputs};
+use super::{CandidateWatch, State, WatchInputs, WatchedInputs};
+use crate::serve_watch_files::ObserversMock;
 
 fn config(dir: &str) -> ResolvedConfig {
     ResolvedConfig {
@@ -40,10 +42,10 @@ fn config(dir: &str) -> ResolvedConfig {
         }],
     }
 }
-fn plan(dir: &str) -> Plan {
+pub(super) fn plan(dir: &str) -> Plan {
     Plan::new(&config(dir), &[], &[], &BTreeSet::new()).unwrap()
 }
-fn catalogue() -> PreparedCatalogue {
+pub(super) fn catalogue() -> PreparedCatalogue {
     PreparedCatalogue {
         model: CatalogueModel {
             entries: vec![],
@@ -62,7 +64,7 @@ fn catalogue() -> PreparedCatalogue {
         warnings: vec![],
     }
 }
-fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
+pub(super) fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
     PreparedServe {
         config: config(dir),
         generation: Arc::new(generation),
@@ -75,7 +77,7 @@ fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
         },
     }
 }
-fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<WatchedInputs> {
+pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<WatchedInputs> {
     Arc::new(WatchedInputs {
         factory: Arc::new(factory),
         ready: Arc::new(Notify::new()),
@@ -88,6 +90,7 @@ fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<WatchedInputs> {
             failed: false,
             attach_reported: false,
             closed: false,
+            started: SystemTime::UNIX_EPOCH,
         })),
     })
 }
@@ -100,7 +103,10 @@ fn event(path: &str, kind: Kind) -> Event {
 
 #[test]
 fn exact_additions_extend_the_active_observer_without_a_second_preparation() {
-    let observer = Arc::new(Unimock::new(ObserverMock::replace.next_call(matching!((plan) if plan.exact.contains_key(std::path::Path::new("/repo/src/new.ts")))).returns(Ok(()))));
+    let observer = Arc::new(Unimock::new((
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+        ObserverMock::replace.next_call(matching!((plan) if plan.exact.contains_key(std::path::Path::new("/repo/src/new.ts")))).returns(Ok(())),
+    )));
     let watch = watch(observer.clone(), Unimock::new(()));
     let generation = Unimock::new((
         RenderGenerationMock::catalogue
@@ -124,7 +130,9 @@ fn exact_additions_extend_the_active_observer_without_a_second_preparation() {
 
 #[test]
 fn failed_root_attachment_retains_the_active_observer_and_plan() {
-    let observer = Arc::new(Unimock::new(()));
+    let observer = Arc::new(Unimock::new(
+        ObserverMock::observes.each_call(matching!(_)).returns(true),
+    ));
     let factory = Unimock::new(
         ObserversMock::attach
             .next_call(matching!(_))

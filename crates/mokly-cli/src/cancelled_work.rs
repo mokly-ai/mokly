@@ -4,12 +4,14 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use mokly_css::types::{Bundle, StylesheetRoot};
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, ValidatedView,
+    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, StylesheetWorker,
+    ValidatedView,
 };
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
@@ -167,6 +169,19 @@ impl RenderWorkers for CancellableWorkers {
         check(self.cancellation.as_ref())?;
         self.inner.document(route, worker)
     }
+    fn stylesheets(
+        &self,
+        roots: &[StylesheetRoot],
+        worker: &dyn StylesheetWorker,
+    ) -> Result<Vec<Bundle>> {
+        self.inner.stylesheets(
+            roots,
+            &StylesheetJobs {
+                cancellation: self.cancellation.as_ref(),
+                inner: worker,
+            },
+        )
+    }
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>> {
         self.inner.run(
             routes,
@@ -188,6 +203,18 @@ struct ComparisonJobs<'a> {
     inner: &'a dyn ComparisonWorker,
 }
 
+struct StylesheetJobs<'a> {
+    cancellation: &'a dyn Cancellation,
+    inner: &'a dyn StylesheetWorker,
+}
+
+impl StylesheetWorker for StylesheetJobs<'_> {
+    fn stylesheet(&self, root: &StylesheetRoot) -> Result<Bundle> {
+        check(self.cancellation)?;
+        self.inner.stylesheet(root)
+    }
+}
+
 impl ComparisonWorker for ComparisonJobs<'_> {
     fn input(&self, route: &str) -> Result<ComparisonDocument> {
         check(self.cancellation)?;
@@ -204,3 +231,7 @@ impl DocumentWorker for Jobs<'_> {
 #[cfg(test)]
 #[path = "_tests_/comparison_cancellation_tests.rs"]
 mod comparison_cancellation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_cancellation_tests.rs"]
+mod stylesheet_cancellation_tests;
