@@ -1,6 +1,7 @@
 //! Invalid PostCSS paths use the catalogue text before process or file work.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use serde_json::json;
@@ -105,8 +106,8 @@ fn missing_non_file_and_physical_escape_have_the_catalogued_diagnostics() {
     ] {
         let tree = Unimock::new(
             SourceTreeMock::project
-                .next_call(matching!((path) if *path == Path::new("/repo/postcss.mjs")))
-                .returns(Ok(node)),
+                .each_call(matching!((path) if *path == Path::new("/repo/postcss.mjs")))
+                .answers_arc(Arc::new(move |_, _| Ok(node.clone()))),
         );
         let error = config_postcss::validate(&tree, &config("../postcss.mjs")).unwrap_err();
         assert_message(error, if escaped {
@@ -115,6 +116,27 @@ fn missing_non_file_and_physical_escape_have_the_catalogued_diagnostics() {
             "postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: ../postcss.mjs"
         }.into());
     }
+}
+
+#[test]
+fn a_linked_postcss_module_names_the_link() {
+    let tree = Unimock::new(
+        SourceTreeMock::project
+            .each_call(matching!((path) if *path == Path::new("/repo/postcss.mjs")))
+            .answers(&|_, _| {
+                Ok(Some(Node {
+                    identity: "/repo/postcss.mjs".into(),
+                    kind: FileKind::Symlink,
+                    lexical_kind: FileKind::Symlink,
+                }))
+            }),
+    );
+    let error = config_postcss::validate(&tree, &config("../postcss.mjs")).unwrap_err();
+    assert_message(
+        error,
+        "postcss: ../postcss.mjs uses the symbolic link postcss.mjs; name the target path instead"
+            .into(),
+    );
 }
 
 #[test]

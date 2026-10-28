@@ -6,6 +6,7 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde_json::Value;
 
 use crate::config::invalid_path_text;
+use crate::config_links;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::{CatalogueError, Result};
@@ -44,12 +45,25 @@ pub(crate) fn validate(tree: &dyn SourceTree, config: &ResolvedConfig) -> Result
     }
     let node = match tree.project(&path) {
         Ok(Some(node)) => node,
-        _ => return Err(file_error(value)),
+        Ok(None) => {
+            if let Some(error) =
+                config_links::link_error(tree, &path, &config.repo_root, "postcss", value)
+            {
+                return Err(error);
+            }
+            return Err(file_error(value));
+        }
+        Err(_) => return Err(file_error(value)),
     };
     if !node.identity.starts_with(&config.repo_root) {
         return Err(path_error(value));
     }
     if node.kind != FileKind::File {
+        if let Some(error) =
+            config_links::link_error(tree, &path, &config.repo_root, "postcss", value)
+        {
+            return Err(error);
+        }
         return Err(file_error(value));
     }
     Ok(vec![path, node.identity])

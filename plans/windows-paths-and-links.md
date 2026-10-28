@@ -285,7 +285,7 @@ This milestone applies decision 174 C. It is blocked by the Codex usage
 limit of 2026-10-28. Its brief is
 `.context/windows-paths-and-links/briefs/m2-fix-and-m5.md`.
 
-- [ ] Add the regression test first in
+- [x] Add the regression test first in
       `crates/mokly-compare/tests/linked_roots_tests.rs`, and save its
       failure on `main` as
       `.context/windows-paths-and-links/item-174c-main-failure.log`. A base
@@ -294,13 +294,13 @@ limit of 2026-10-28. Its brief is
       fails with `config-invalid` and the message that names the link. A
       Unix-only test loads the same configurations from the working tree
       with filesystem links.
-- [ ] Add unit tests with `SourceTreeMock` in `mokly-catalogue`: the helper
+- [x] Add unit tests with `SourceTreeMock` in `mokly-catalogue`: the helper
       names a final link and a link above the path, and ends with no link at
       a missing prefix and at a file. Each of the three checks gives the new
       message for a link and its existing message without one.
-- [ ] Add `config_links.rs` and call it from `config.rs`, `config_paths.rs`,
+- [x] Add `config_links.rs` and call it from `config.rs`, `config_paths.rs`,
       and `config_postcss.rs`.
-- [ ] Run `cargo test -p mokly-catalogue`,
+- [x] Run `cargo test -p mokly-catalogue`,
       `cargo test -p mokly-compare --test linked_roots_tests`, Clippy, and
       `cargo xtask rust-file-length-lint`.
 
