@@ -1,5 +1,7 @@
 # Mokly Build And Browse Runtime
 
+Status: In progress under the [Base Install Scripts And Manager Fixes plan](../../plans/base-install-scripts-and-manager-fixes.md).
+
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
 [Rust core architecture](../architecture/rust-core.md) is the map of the
@@ -118,8 +120,7 @@ HTML, YAML, and Markdown alone start no sidecar. The
 [sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,
 and failure codes. The core selects renders, cache keys, invalidation, and
 document composition. A sidecar failure fails only the request that needs it,
-with its typed code.
-Other routes and shutdown stay available.
+with its typed code. Other routes and shutdown stay available.
 
 ## Routes
 
