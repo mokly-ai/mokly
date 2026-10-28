@@ -222,9 +222,10 @@ npm run build
 npm run dev
 ```
 
-`npm run build` builds the native binary, the shim, the sidecar, and the
-viewer. `npm run dev` runs watched Serve on this configuration and prints its
-URL. Put Serve options after `--`, for example `npm run dev -- --port 0`.
+`npm run build` builds the native binary, the UI package, the viewer, the shim,
+and the sidecar. `npm run dev` runs watched Serve on this configuration and
+prints its URL. Put Serve options after `--`, for example
+`npm run dev -- --port 0`.
 
 To validate the catalogue and write the static site:
 
@@ -250,13 +251,14 @@ To check the packed packages against this example:
 npm run package:smoke
 ```
 
-It packs the viewer, the CLI, and the host's native package and installs them
-into a copy of this example outside the repository. It starts the installed
-`mokly serve` in a directory below `mokly.config.json` and opens a React, a
-design, and an HTML screen and a Markdown document in headless Chrome. It
-builds the copy with `--strict` and opens the same entries in the built site.
-Last, it builds the copy again through `npx` with an empty npm cache and no
-Mokly package in the copy. The
+It packs the UI package, the viewer, the CLI, and the host's native package and
+installs them into a copy of this example outside the repository. The copy also
+holds the UI package sources that the design mockups import by repository path.
+It starts the installed `mokly serve` in a directory below `mokly.config.json`
+and opens a React, a design, and an HTML screen and a Markdown document in
+headless Chrome. It builds the copy with `--strict` and opens the same entries
+in the built site. Last, it builds the copy again through `npx` with an empty
+npm cache and no Mokly package in the copy. The
 [developer test commands](../../docs/protocol/developer-test-commands.md#packed-consumer-smoke)
 own its rules.
 

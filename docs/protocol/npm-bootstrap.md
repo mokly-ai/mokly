@@ -132,7 +132,7 @@ meets these requirements:
 
 4. The package has its own trusted publisher and the access settings of
    [every registered package](#registered-packages). The maintainer reads
-   back the CLI and viewer publishers too.
+   back the CLI, UI package, and viewer publishers too.
 
 Then the coordinated release, or a retry under the
 [release recovery rules](./npm-release-management.md#release-recovery),
