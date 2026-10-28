@@ -136,8 +136,9 @@ The design follows the decisions below.
 - **Full compile.** A failed native compile, or a failed classification,
   compiles again on the full path, the current code path.
 - **Modules.** `native-resolution.ts` holds the rule and the plan types,
-  `native-plan.ts` the classification, and `package-scope.ts` esbuild's
-  package.json and tsconfig lookups. `bundle-entry.ts` and `bundle-recipe.ts`
+  `native-plan.ts` the classification, `package-scope.ts` esbuild's
+  package.json and tsconfig lookups, and `specifier.ts` the bare-specifier
+  and package-name rules. `bundle-entry.ts` and `bundle-recipe.ts`
   split the entry module and the recipe out of `bundle.ts`. Each attempt
   reports its own esbuild operation and compile span.
 
@@ -400,15 +401,14 @@ Evidence: `.context/esbuild-resolve-fast-path/identity.txt`,
     `.context/esbuild-resolve-fast-path/review-1.md`, `review-2.md`, and
     the validity files beside them.
   - 2. No test pins the planned side-effects flag in both directions.
-       Severity Low, effort Small. Recommended: C, a row with a side-effect-free
-       and a side-effecting package whose imports come from the plan. Option B
-       is already in place through the fix of finding 1.
+       Severity Low, effort Small. Answered C by the orchestrator on
+       2026-10-28, fixed in `195872eb`.
   - 4. The bare-specifier rule still has inline copies. Severity Low, effort
-       Medium. Recommended: C, a `specifier.ts` module for the bare-specifier
-       and package-name rules.
+       Medium. Answered C by the orchestrator on 2026-10-28, fixed in
+       `195872eb`.
   - 6. The plan table does not prove that planned compiles use the plan.
-       Severity Low, effort Small. Recommended: B, assert in the row loop that
-       the planned compile finds every plan entry.
+       Severity Low, effort Small. Answered B by the orchestrator on
+       2026-10-28, fixed in `195872eb`.
   - Outside the scope: `packages/mokly/src/sidecar/bundle-recipe.ts`. An
     import with a `?query` or `#hash` suffix fails every bundle with
     "Bundled source bytes were not recorded", also on `origin/main`.
@@ -434,3 +434,7 @@ Evidence: `.context/esbuild-resolve-fast-path/identity.txt`,
     during the handoff race. Separate branch.
 - [x] Open the pull request with the before and after table when every
       other milestone TODO is ticked. Put its link in the status paragraph.
+- [x] Apply the orchestrator's answers to the open review findings of
+      2026-10-28: finding 2 option C, finding 4 option C, and finding 6
+      option B. Reason: the review recommended these options after the
+      options check. Commit `195872eb`.
