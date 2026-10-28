@@ -52,11 +52,15 @@ at-rule keeps its prelude as authored, except the keyframes name and an
 `@scope` selector.
 
 The renamer, the module check, and the token check share one statement reader.
-It matches `lightningcss` for the supported statement starts and block
-grammar. There is a known parity gap for an HTML comment token (`<!--` or
-`-->`) before a stylesheet statement: cssparser skips the token, but the
-section reader keeps it. Such a statement can receive a different kind in the
-scanners and in `lightningcss`.
+It takes each statement's start and kind from cssparser's own rule parsers, so
+all three scanners agree with `lightningcss` on each statement that
+`lightningcss` keeps, except in the declaration-only at-rules above, where kept
+text can read as other statements. Before each stylesheet statement, the
+reader skips the HTML comment tokens `<!--` and `-->`, as cssparser does. Text
+that `lightningcss` drops or rejects can read as other statements. For
+example, in a rule list such as the stylesheet or a keyframes block, a `;` also
+ends a statement for the reader, but cssparser ends a style rule or a keyframe
+only at its `{}` block.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration

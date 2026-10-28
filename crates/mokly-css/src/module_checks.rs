@@ -9,7 +9,7 @@ use crate::token_tree::Tokens;
 /// Custom property values are not rules.
 pub(crate) fn check(path: &str, source: &str) -> Result<()> {
     let tokens = Tokens::new(source);
-    let mut pending = vec![(tokens.root(), Grammar::Rules)];
+    let mut pending = vec![(tokens.root(), Grammar::Stylesheet)];
     while let Some((range, grammar)) = pending.last_mut() {
         let Some(section) = token_sections::next(&tokens, range, *grammar) else {
             pending.pop();
@@ -19,7 +19,7 @@ pub(crate) fn check(path: &str, source: &str) -> Result<()> {
             &section.statement,
             Statement::AtRule(name) | Statement::Text(Some(name)) if name == "value"
         ) {
-            let (line, column) = line_column(source, section.lead(&tokens));
+            let (line, column) = line_column(source, section.lead());
             return Err(CssError::Transform {
                 kind: TransformFailure::Modules,
                 message: format!(
