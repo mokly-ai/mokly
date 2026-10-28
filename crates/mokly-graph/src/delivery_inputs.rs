@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_css::types::StylesheetRoot;
 
+use crate::render_inputs::RenderKeys;
 use crate::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 
 /// Validated source metadata supplied by a bundle and description adapter.
@@ -14,8 +15,8 @@ pub struct DeliveryInputs {
     pub resources: Arc<dyn ResourceInputs>,
     /// Authored dependency directories mapped to the bundle's logical root prefixes.
     pub dependency_aliases: BTreeMap<String, String>,
-    /// Sidecar bundle generation used by the fragment provider, when JavaScript renders.
-    pub fragment_generation: Option<String>,
+    /// Render input keys of the sidecar bundle's entry modules, when JavaScript renders.
+    pub render_keys: Option<Arc<RenderKeys>>,
     /// Renderer and entry-module CSS roots from the module graph.
     pub stylesheet_roots: Vec<StylesheetRoot>,
     /// Component parent path to config-relative declared public CSS, in authored order.
@@ -29,7 +30,7 @@ impl Default for DeliveryInputs {
         Self {
             resources: Arc::new(MemoryResourceInputs::default()),
             dependency_aliases: BTreeMap::new(),
-            fragment_generation: None,
+            render_keys: None,
             stylesheet_roots: Vec::new(),
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),

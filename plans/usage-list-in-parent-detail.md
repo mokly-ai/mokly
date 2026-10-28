@@ -1,6 +1,6 @@
 # Keep A Component's Usage Lists In Its Parent Detail
 
-Status: Active. [PR #223](https://github.com/mokly-ai/mokly/pull/223) is open. The plan closes when its PR merges.
+Status: Completed. [PR #223](https://github.com/mokly-ai/mokly/pull/223) merged on 2026-10-28. No review finding is open. Two review follow-ups and two separate-branch items stay listed under the Milestone 5 review TODO, and the post-merge follow-ups stay open below. None of them has an owner yet.
 
 Each screen and component has an entry detail: a JSON file that the Browse
 shell fetches for the routed entry. A component's detail carries
