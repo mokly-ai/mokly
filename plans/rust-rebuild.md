@@ -5927,7 +5927,7 @@ does not ask the user before the merge.
       in product code with a Clippy `disallowed-methods` rule (a new lint,
       which needs the user's approval). Recommended: B.
 
-- [ ] Resolve user item 167 (W8 finding 1): a nested configuration with
+- [x] Resolve user item 167 (W8 finding 1): a nested configuration with
       `"renderer": "../renderer.tsx"` gets no renderer stylesheet, because
       `crates/mokly-render/src/bundle_inputs.rs:26` and
       `crates/mokly-render/src/graph.rs:159` use the raw spelling while
@@ -5938,6 +5938,9 @@ does not ask the user before the merge.
       normalized form of a config-relative path, and use it for the
       renderer, the PostCSS module, and the configured stylesheets in the
       render crate, Large, which also fixes 169 and 170. Recommended: B.
+  - User decision 167 (2026-10-28): B. One public resolver for every
+    config-relative path, read by every consumer. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
 - [x] Resolve user item 168 (W8 finding 2): the manifest rule
       (`crates/mokly-catalogue/src/config_paths.rs:210`, `has_manifest`) now
@@ -5957,18 +5960,24 @@ does not ask the user before the merge.
     projects `file.txt/../ui/package.json`. Fixed under the
     [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
+- [x] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
       `sub/../first.css` fails a component build with "listed authoring
       input" (`crates/mokly-render/src/declarations.rs:35`). Severity Low,
       effort Large for B. Options: A, normalize the configured list there,
       Small; B, the method of 167 B, Large. Recommended: B.
+  - User decision 169 (2026-10-28): B. The declared-stylesheet check reads
+    the resolver. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 170 (W8 finding 4): PostCSS load errors show
+- [x] Resolve user item 170 (W8 finding 4): PostCSS load errors show
       `tools/../postcss.mjs` instead of `postcss.mjs`
       (`crates/mokly-render/src/stylesheets.rs:63`, `postcss.rs:131`).
       Severity Low, UX wording, effort Large for B. Options: A, normalize
       before the sidecar call, Small; B, the method of 167 B, Large.
       Recommended: B.
+  - User decision 170 (2026-10-28): B. Every `processCss` request names the
+    normalized module path. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
 - [x] Resolve user item 171 (W8 decision 5): in a spelling such as
       `link/../ui`, where `link` is a symbolic link, one package root has two
@@ -5986,12 +5995,16 @@ does not ask the user before the merge.
     rule of the configuration contract. Fixed under the
     [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
-- [ ] Resolve user item 172 (W8 decision 6): a Rust test that compares
+- [x] Resolve user item 172 (W8 decision 6): a Rust test that compares
       joined paths as `/` strings fails only on Windows. Severity Low,
       effort Small. Options: A, keep the convention of comparing `Path`
       values, which the hosted Windows job enforces, Small; B, a shared test
       helper that compares path lists by components, in a new shared test
       crate, Large. Recommended: A.
+  - User decision 172 (2026-10-28): A. Keep the convention of comparing
+    `Path` values. The tests of the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md)
+    follow it. It needs no code change.
 
 - [ ] Resolve user item 173 (W8 decision 7):
       `crates/mokly-compare/tests/large_sources_tests.rs:17` runs `git`
@@ -6076,7 +6089,7 @@ does not ask the user before the merge.
       `Debug` for `Publish`; B, one secret type with a redacting `Debug` for
       every token field. Recommended: B.
 
-- [ ] Resolve user item 182 (delta review 7, older than the delta):
+- [x] Resolve user item 182 (delta review 7, older than the delta):
       `crates/mokly-render/src/side.rs:62` keeps duplicate package roots, but
       `crates/mokly-compare/src/dependencies.rs:191` removes them on the base
       side. With `packageRoots: [".", "packages/ui"]` in a root
@@ -6085,6 +6098,13 @@ does not ask the user before the merge.
       not recorded. Options (estimate): A, remove duplicates on the head side
       too; B, make `ResolvedConfig::package_roots()` return the list without
       duplicates for both sides. Recommended: B.
+  - User decision 182 (2026-10-28): C, one function builds the ancestor and
+    package-root list for both sides. Fixed by
+    [PR #227](https://github.com/mokly-ai/mokly/pull/227) in `ad86ebb7`:
+    `ancestor_roots::package_roots`, which `side::inputs` and
+    `dependencies::package_roots` call. The
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md)
+    ticks the item, because #227 does not name it.
 
 - [x] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
       protocol pages, still start with

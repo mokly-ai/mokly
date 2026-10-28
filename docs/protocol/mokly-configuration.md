@@ -1,7 +1,5 @@
 # Mokly Configuration Contract
 
-Status: In progress under the [Normalize Config-Relative Paths plan](../../plans/normalize-config-relative-paths.md).
-
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.

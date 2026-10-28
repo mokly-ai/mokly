@@ -207,45 +207,51 @@ first, and its failure is saved under `.context/normalize-config-relative-paths/
 
 Stylesheet and PostCSS part, after #228:
 
-- [ ] 169: add a regression test. A configured `sub/../first.css` and a
+- [x] 169: add a regression test. A configured `sub/../first.css` and a
       component that declares `first.css` prepare, and the document links
       `styles/first.css` once. Then `declarations.rs` reads the resolver.
-- [ ] 170: add a regression test. With `"postcss": "tools/../postcss.mjs"`,
+- [x] 170: add a regression test. With `"postcss": "tools/../postcss.mjs"`,
       every `processCss` request names `postcss.mjs`. Then `PostCss.module`
       becomes the repository-relative path from `ResolvedConfig::postcss()`.
-- [ ] Replace the private `logical()` of `crates/mokly-graph/src/styles.rs`
+- [x] Replace the private `logical()` of `crates/mokly-graph/src/styles.rs`
       with the resolver.
-- [ ] State the normalized repository-relative form in the doc comments of
+- [x] State the normalized repository-relative form in the doc comments of
       `ProcessCss.postcss` and the `PostcssFailure` module fields.
       `Load.module` says "Configuration-relative" now. Regenerate the
       TypeScript types with `cargo xtask generate-types`.
-- [ ] Update the mokly-render and mokly-graph READMEs.
-- [ ] Rerun the probes of 169 and 170 on the fixed build, and run the mockup
+- [x] Update the mokly-render and mokly-graph READMEs.
+- [x] Rerun the probes of 169 and 170 on the fixed build, and run the mockup
       check of `AGENTS.md`.
-- [ ] Tick item 172 in `plans/rust-rebuild.md` with decision 172 A.
-- [ ] Run the tests of the touched crates and the new tests.
+- [x] Tick item 172 in `plans/rust-rebuild.md` with decision 172 A.
+- [x] Run the tests of the touched crates and the new tests.
 
 Renderer part, after #227 merges:
 
-- [ ] 167: add the regression tests.
-  - [ ] An integration test with a configuration in `app/`,
+- [x] 167: add the regression tests.
+  - [x] An integration test with a configuration in `app/`,
         `repoRoot: ".."`, and `"renderer": "../renderer.tsx"`. The generation
         has `styles/renderer.tsx.css`, the screen links it, and the `bundle`
         request names `renderer.tsx`.
-  - [ ] Unit tests of `bundle_inputs::params` for `app/../renderer.tsx`,
+  - [x] Unit tests of `bundle_inputs::params` for `app/../renderer.tsx`,
         `lib/./renderer.tsx`, and `lib//renderer.tsx`.
-  - [ ] A render-key test with the nested configuration: the graph names
+  - [x] A render-key test with the nested configuration: the graph names
         `renderer.tsx`, `unnamed_renderer` is false, and a renderer edit
         moves the entry keys instead of the whole-bundle fallback.
-  - [ ] A CLI comparison test with the nested configuration. A branch edit
+  - [x] A CLI comparison test with the nested configuration. A branch edit
         of the renderer's CSS gives `Changes ready · 1 change`.
-- [ ] `bundle_inputs.rs` and `mokly-render/src/graph.rs` read
+- [x] `bundle_inputs.rs` and `mokly-render/src/graph.rs` read
       `ResolvedConfig::renderer()`. State the normalized form in the doc
       comment of `Bundle.renderer`, and regenerate the TypeScript types.
-- [ ] Update the mokly-render README.
-- [ ] Rerun every probe on the fixed build. Run the mockup check of
+- [x] Update the mokly-render README.
+- [x] Rerun every probe on the fixed build. Run the mockup check of
       `AGENTS.md`, and smoke-test the example through `npm run dev`.
-- [ ] Run the tests of the touched crates and the new tests.
+- [x] Run the tests of the touched crates and the new tests.
+
+The failures before the fix are in
+`.context/normalize-config-relative-paths/m3-failing-before-fix.log`. The
+checks after the fix are in `m3-orchestrator-check.log`, `after-probe.log`,
+`after-probe-169-170.log`, `after-probe-links.log`, `after-probe-changes.log`,
+`mockup-check.log`, and `smoke-serve.log`, in the same folder.
 
 ## Milestone 4: One lexical normalizer
 
@@ -291,9 +297,9 @@ The failures before the fix are in
 
 ## Milestone 6: Verification, commit, review, and pull request
 
-- [ ] Remove the status line of the configuration page when every rule of
+- [x] Remove the status line of the configuration page when every rule of
       Milestone 1 is implemented.
-- [ ] After #227 merges, tick items 167, 169, 170, and 182 in
+- [x] After #227 merges, tick items 167, 169, 170, and 182 in
       `plans/rust-rebuild.md`, with the user decisions, their dates, and a
       link to this plan.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.

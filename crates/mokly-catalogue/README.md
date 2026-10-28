@@ -36,6 +36,11 @@ settings, and base dependency selection read package roots in this form, so a
 working tree and a Git tree name the same package root. A symbolic link
 before `..` does not change that root, and the manifest check reads only it.
 
+`mokly-render` and `mokly-graph` read the renderer, the PostCSS module, and
+stylesheets in the same form. Bundle requests, render input keys, stylesheet
+roots and links, the declared stylesheet check, and every PostCSS request use
+that form.
+
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
 paths on Windows too. Its file-object metadata lets static builds detect
