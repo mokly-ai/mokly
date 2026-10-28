@@ -23,10 +23,12 @@ modules from the sidecar adapter. Its `prepare` method reads stylesheet inputs
 and computes document plans. Completed JavaScript, stylesheet, PostCSS, and
 asset inputs populate the prepared catalogue's dependency-directory set.
 Cached bundles supply the same set. Old cache-validation reads and filename
-suffixes cannot add or hide dependency usage. It checks worker cancellation
-before each entry and stylesheet root. A prepared generation exposes the same
-worker cancellation through `check_cancelled` for callers that process
-views in a loop.
+suffixes cannot add or hide dependency usage. Preparation bundles the
+stylesheet roots on the render workers, then registers the bundles in root
+order. The generation and its first error therefore do not depend on worker
+timing. Each root job checks worker cancellation, and preparation checks it
+before each entry. A prepared generation exposes the same worker cancellation
+through `check_cancelled` for callers that process views in a loop.
 
 Preparation renders no document. Each plan carries a route and the document
 node's input hash, which is the public `documentKey` of the
@@ -175,7 +177,8 @@ retention disabled.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`, and
   `Artifact`, the byte-bounded LRU render cache.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
-  `ThreadWorkers`, the injected worker pool.
+  `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
+  `StylesheetWorker` job for each stylesheet root and keeps the root order.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
