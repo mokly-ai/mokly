@@ -5596,6 +5596,23 @@ check passes on this commit.
   `crates/mokly-html/src/source_checks.rs` at line 18 reports reserved
   navigation metadata in an authored template body as "in consumer output",
   also on `origin/main`. Separate branch.
+- Re-review of the implementation review of 2026-10-28:
+  `.context/html-pipeline-2-decisions/rereview-8af28b75.md`. Finding 1 is
+  fixed in `8ffb63dd`.
+- [ ] Re-review finding 2: the plan does not say why the tick of the
+      implementation review finding 2 needed no user answer. Severity Low,
+      effort Small, category process. Options: A, add the reason to the
+      review line: the `plans` skill says to tick TODOs as you complete
+      them, and the work was done under user decision A in `e236ea78`,
+      Small; B, remove the tick and keep the item open until the user
+      answers, Small; C, add a rule to the shared `implementation-review`
+      skill that a missed tick is not a process finding when the plan
+      already records the decision and the commit, Small (estimate).
+      Recommended: A. C best protects the codebase. No option is applied.
+- Outside the re-review of the implementation review of 2026-10-28:
+  `docs/protocol/mokly-html-screens.md` at line 71 says "One parser and one
+  renderer serve both.", which describes the implementation, not a result,
+  also on `origin/main`. Separate branch.
 - Outside phase 2 review 1, resolved by the one-tokenizer decision B
   (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
   kept its own integration point list without SVG `desc` or encoded MathML
