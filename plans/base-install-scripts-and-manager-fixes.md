@@ -33,6 +33,8 @@ Contract owners:
 
 - [Base Dependencies](../docs/protocol/mokly-base-dependencies.md).
 - [Base Source And Dependency Preparation](../docs/protocol/mokly-base-preparation.md).
+- [Base Install Processes](../docs/protocol/mokly-base-install-processes.md),
+  which Milestone 1 split from the base dependencies page for its line cap.
 - [Terminal Errors](../docs/protocol/mokly-terminal-errors.md).
 - [Runtime shutdown](../docs/protocol/mokly-runtime.md#shutdown), for the rule
   that no orphan process survives.
@@ -136,21 +138,24 @@ Planning evidence is under `.context/base-install-scripts-managers/`:
 The protocol docs and guides state the requirements of the answered items
 before the code changes. Item 153 text waits for its decision.
 
-- [ ] Item 150: a stop of a base install signals every process that descends
+- [x] Item 150: a stop of a base install signals every process that descends
       from the manager through parent links, also in new sessions. State the
       remaining limits beside the requirement.
-- [ ] Item 151: state the token rule of decision 151 in the base install
+- [x] Item 151: state the token rule of decision 151 in the base install
       contract, and advise the environment variable over `--token` in the
       publish guide.
-- [ ] Item 152 and item 156: the scripts hint follows every base failure after
+- [x] Item 152 and item 156: the scripts hint follows every base failure after
       a scripts-off tier-two install, preparation and render alike, in every
       command. The hint is a complete sentence.
-- [ ] Item 157: the build and publish guides say that the scripts flags have
+- [x] Item 157: the build and publish guides say that the scripts flags have
       no effect with `--no-changes`.
-- [ ] Item 158: the pnpm row of the install policy names the
+- [x] Item 158: the pnpm row of the install policy names the
       modules-directory setting for pnpm 10 and 11.
-- [ ] Keep each protocol page under its 250-line cap, and validate the
+- [x] Keep each protocol page under its 250-line cap, and validate the
       changed Markdown.
+- Commit `15f91820`. The base dependencies page passed its cap, so the
+  environment, executable, bound, and stop rules moved to the new base install
+  processes page, which the protocol index lists.
 
 ## Milestone 2: Process ownership for escaped scripts
 
