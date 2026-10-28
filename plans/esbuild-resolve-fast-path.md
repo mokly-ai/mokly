@@ -359,22 +359,36 @@ and `sidecar-tests.txt`.
       the React fixture. Add the after values to the baseline section. The
       machine slowed down, so interleaved runs of both builds give the
       comparison.
-- [ ] Run the mockup check: `npm run build`, then
+- [x] Run the mockup check: `npm run build`, then
       `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
       Smoke-test a React screen and the Changes view through `npm run dev`.
+      The strict build wrote 2,382 files. Serve rendered the Details screen
+      in both frames, and Changes reported no changes. The smoke test used
+      the release binary, because the debug binary of `npm run dev` took
+      longer than ten minutes to classify Changes.
 
-Evidence: `.context/esbuild-resolve-fast-path/identity.txt` and
-`measurements.md`.
+Evidence: `.context/esbuild-resolve-fast-path/identity.txt`,
+`measurements.md`, `mockup-build.txt`, and `smoke-screen.png`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
-- [ ] Run `cargo xtask check --suite repository` early, the targeted tests,
-      and then the complete gate `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch after each
-      milestone.
+- [x] Run `cargo xtask check --suite repository` early, the targeted tests,
+      and then the complete gate `cargo xtask check`. The remote gate passed
+      every suite except browser shard 2 of 4, where one unrelated test
+      failed once. The shard passed on its rerun, and the test passed ten of
+      ten local runs.
+- [x] Commit with Conventional Commits and push the branch after each
+      milestone. `origin/main` at `2dd2937f` merged cleanly.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
-      re-review once, and report the rest.
+      re-review once, and report the rest. The orchestrator's process runs
+      the review after the pull request opens.
+  - Outside the scope: `tests/browser/same_origin_identity.spec.ts`. "An
+    unowned exact-resource document gains no navigation privilege during
+    handoff" failed once in the remote gate with "Cannot read properties of
+    null (reading 'dispatchEvent')", then passed on the shard rerun and in
+    ten local runs. Suspected source: the probe reads the frame document
+    during the handoff race. Separate branch.
 - [ ] Open the pull request with the before and after table when every
       other milestone TODO is ticked. Put its link in the status paragraph.
