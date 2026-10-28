@@ -24,7 +24,7 @@ pub struct Artifact {
 }
 
 impl Artifact {
-    /// Conservative retained-memory charge, including the tree and evidence.
+    /// Estimated retained-memory charge, including the tree and evidence.
     pub fn byte_cost(&self) -> usize {
         mem::size_of::<Self>()
             + self.bytes.capacity()
