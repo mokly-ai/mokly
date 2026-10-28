@@ -217,5 +217,8 @@ fn text_digest(value: &Value) -> Result<String> {
 }
 
 #[cfg(test)]
+#[path = "_tests_/render_bindings_tests.rs"]
+mod render_bindings_tests;
+#[cfg(test)]
 #[path = "_tests_/render_inputs_tests.rs"]
 mod render_inputs_tests;
