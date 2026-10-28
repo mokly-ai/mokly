@@ -72,7 +72,7 @@ pub fn git(root: &Path, args: &[&str]) -> Vec<u8> {
 
 /// Run Git with isolated configuration and piped standard input.
 pub fn git_input(root: &Path, args: &[&str], input: &[u8]) -> Vec<u8> {
-    let output = Command::new("git")
+    let mut child = Command::new("git")
         .env(
             "GIT_CONFIG_GLOBAL",
             if cfg!(windows) { "NUL" } else { "/dev/null" },
@@ -85,13 +85,12 @@ pub fn git_input(root: &Path, args: &[&str], input: &[u8]) -> Vec<u8> {
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    let mut child = output;
     let mut stdin = child.stdin.take().unwrap();
-    let output = thread::scope(|scope| {
+    let (output, write_result) = thread::scope(|scope| {
         let writer = scope.spawn(move || stdin.write_all(input));
         let output = child.wait_with_output().unwrap();
-        writer.join().unwrap().unwrap();
-        output
+        let write_result = writer.join().unwrap();
+        (output, write_result)
     });
     assert!(
         output.status.success(),
@@ -99,6 +98,7 @@ pub fn git_input(root: &Path, args: &[&str], input: &[u8]) -> Vec<u8> {
         args,
         String::from_utf8_lossy(&output.stderr)
     );
+    write_result.unwrap();
     output.stdout
 }
 
