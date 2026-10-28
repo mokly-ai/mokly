@@ -2,15 +2,14 @@
 
 Status: Active. On branch
 `conductor/rust-rebuild-167-normalize-config-relative-paths`, no pull request
-yet. The plan closes when its PR merges. Every decision below waits for the
-user, so no implementation milestone has started.
+yet. The plan closes when its PR merges.
 
 This plan resolves user item 167 of the
 [Rust rebuild plan](./rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21),
-and items 169 and 170, which the recommended option 167 B also fixes. It
-proposes to resolve items 168 and 171 here too, because they decide the same
-path rule for package roots. The rebuild review W8 recorded items 167 to 174
-on 2026-10-22.
+and items 169 and 170, which option 167 B also fixes. It also resolves items
+168 and 171, because they decide the same path rule for package roots. It
+ticks items 172 and 182, which need no code here. The rebuild review W8
+recorded items 167 to 174 on 2026-10-22.
 
 `mokly.config.json` names the renderer, the PostCSS module, package roots,
 and local stylesheets relative to the configuration file. The loader checks
@@ -34,49 +33,56 @@ and the source inventory:
 The probes on `main` at `89c12ef1` are in
 `.context/normalize-config-relative-paths/probe-summary.md`.
 
-Not covered: item 182, duplicate package roots on the head side; item 174,
-symbolic links in the base Git tree; and the decision of item 172, path
-comparison in Rust tests. The decisions say why. The tests of this plan
-follow the convention of 172 A.
+Not covered: item 174, symbolic links in the base Git tree, which its own
+change plans.
 
 ## Decisions
 
-All decisions are open on 2026-10-27. The milestones follow the recommended
-options. A different answer changes the milestones that the decision names.
+The user answered every decision on 2026-10-28, through the coordinator
+workspace "rust rebuild - outstanding items". The coordinator's independent
+reviewer kept every recommended option.
 
-- 167, renderer stylesheet lost (Medium). A: normalize the renderer path at
-  the two render call sites, Small. B: one public `ResolvedConfig` resolver
-  for every config-relative path, read by every consumer, with the path rule
-  in the configuration page, Large. Recommended: B. One resolver also fixes
-  169 and 170, and the next consumer has no reason to join the authored
-  spelling. `2261fa43` gave package roots the same fix after a High security
-  finding.
-- 169, configured stylesheet overlap (Low). A: normalize the configured list
-  in `declarations.rs`, Small. B: the resolver of 167 B, Large. Recommended:
-  B.
-- 170, PostCSS module spelling in messages (Low). A: normalize before the
-  sidecar call, Small. B: the resolver of 167 B, Large. Recommended: B.
-- 168, the manifest rule accepts two rare roots (Low). A to D as recorded. E,
-  new: close it with 171 B. Recommended: E. Under the lexical rule both roots
-  are valid, and without the aliases the output boundary no longer projects
-  `file.txt/../ui/package.json`. Under 171 A, the recommendation is A.
-- 171, a symbolic link before `..` in a package root (Low). A: keep the
-  aliases and state the exception. B: use only the normalized root and
-  remove the aliases, Large. C: reject such a spelling with a new message.
-  Recommended: B. The loader, the graph crate, and the sidecar already read
-  the renderer, the PostCSS module, and stylesheets lexically, so B gives
-  every field one rule.
-  B removes behaviour that is on `main`, so it needs the user's approval.
-  Milestone 5 depends on it.
-- 182, duplicate package roots on the head side (Low). Recommended: C, new:
-  one function builds the ancestor and package-root list for both sides, in
-  its own change. The recorded B does not fix the recorded example, because
-  the duplicate comes from the ancestor list, not from `package_roots()`.
-- 174, symbolic links in the base Git tree (Low). Recommended: keep it out of
-  this plan and write its options in its own change. After 171 B, a link
-  before `..` no longer reaches the Git tree.
-- 172, path comparison in Rust tests (Low). Recommended: A. The tests of this
-  plan follow it. Under A, Milestone 3 also ticks 172.
+- 167 B: one public `ResolvedConfig` resolver for every config-relative path,
+  read by every consumer, with the path rule in the configuration page.
+  Rejected: A, normalize the renderer path at the two render call sites.
+  Reason: one resolver also fixes 169 and 170, and the next consumer has no
+  reason to join the authored spelling. `2261fa43` gave package roots the
+  same fix after a High security finding.
+- 169 B: `declarations.rs` reads the resolver. Rejected: A, a local
+  normalization of the configured list.
+- 170 B: the PostCSS module path comes from the resolver. Rejected: A, a
+  local normalization before the sidecar call.
+- 168 E: close it with 171 B. Rejected: A to D as recorded. Reason: under
+  the lexical rule both roots are valid, and without the aliases the output
+  boundary no longer projects `file.txt/../ui/package.json`.
+- 171 B: package roots use only the normalized root, and the aliases go. The
+  user approved this removal of behaviour that is on `main`. Rejected: A,
+  keep the aliases and state the exception; C, reject such a spelling with a
+  new message. Reason: the loader, the graph crate, and the sidecar already
+  read the renderer, the PostCSS module, and stylesheets lexically, so B
+  gives every field one rule.
+- 182 C: one function builds the ancestor and package-root list for both
+  sides. [PR #227](https://github.com/mokly-ai/mokly/pull/227) does it in
+  `ad86ebb7` with `ancestor_roots::package_roots`, which `side::inputs` and
+  `dependencies::package_roots` call. This plan changes no code for 182. It
+  ticks 182 in Milestone 6 after #227 merges, because #227 does not name the
+  item. Rejected: A, remove duplicates on the head side only; B,
+  `package_roots()` without duplicates, which misses the recorded example.
+- 174 A: its own change, which the workspace "rust rebuild: 166 Windows
+  paths and links" plans. Rejected: B, add it to this plan.
+- 172 A: keep the convention of comparing `Path` values. The tests of this
+  plan follow it, and Milestone 3 ticks 172. Rejected: B, a shared helper in
+  a new test crate.
+
+### Order of work
+
+PRs #227 and #228 change some files of Milestone 3. Milestones 1, 2, 4, and
+5 come first. The PostCSS part of Milestone 3 follows #228, which merged on
+2026-10-28. The renderer part waits for #227, which moves the renderer
+computation in `mokly-render/src/graph.rs` and digests the bundle's renderer
+path in `render_environment.rs`. The renderer part also closes the renderer
+half of #227's recorded follow-up. Its preview half stays with #227, because
+the preview has one fixed spelling relative to the source root.
 
 ## Design
 
@@ -159,20 +165,20 @@ The configuration page states one path rule for every config-relative field.
 The diagnostics catalogue defines its PostCSS path placeholders. No code
 changes.
 
-- [ ] In `docs/protocol/mokly-configuration.md`, Shape, state the path rule
+- [x] In `docs/protocol/mokly-configuration.md`, Shape, state the path rule
       above for every filesystem field, with the decision in force: `..` is
       removed lexically, not after a symbolic link is followed, so each field
       has one meaning on both comparison sides and in the sidecar.
-- [ ] Remove the package-root sentence from Module Resolution, because the
+- [x] Remove the package-root sentence from Module Resolution, because the
       rule covers it. Under 171 A, keep it and add the alias exception.
-- [ ] Add the line
+- [x] Add the line
       `Status: In progress under the [Normalize Config-Relative Paths](../../plans/normalize-config-relative-paths.md) plan.`
       below the title of the configuration page.
-- [ ] In `docs/protocol/mokly-imported-styles-errors.md`, define
+- [x] In `docs/protocol/mokly-imported-styles-errors.md`, define
       `{config-path}` as the `postcss` value as the configuration spells it.
       Write `{module}`, the repository-relative path, in the load and plugin
       factory rows. The code already prints these forms.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
 ## Milestone 2: One config-relative path resolver
@@ -196,40 +202,49 @@ reads it. The behaviour does not change.
 ## Milestone 3: Every consumer reads the resolver
 
 The render and graph consumers read the resolver. This fixes 167, 169, and
-170 on both comparison sides.
+170 on both comparison sides. Each regression test runs on the unfixed code
+first, and its failure is saved under `.context/normalize-config-relative-paths/`.
 
-- [ ] Add the regression tests first. Run them on the unfixed code and save
-      the failures under `.context/normalize-config-relative-paths/`.
-  - [ ] 167: a new `crates/mokly-render/tests/integration/config_path_tests.rs`
-        with a configuration in `app/`, `repoRoot: ".."`, and
-        `"renderer": "../renderer.tsx"`. The generation has
-        `styles/renderer.tsx.css`, the screen links it, and the captured
-        `bundle` request names `renderer.tsx`.
-  - [ ] 167: unit tests of `bundle_inputs::params` for
-        `app/../renderer.tsx`, `lib/./renderer.tsx`, and `lib//renderer.tsx`.
-  - [ ] 167: a CLI comparison test with the nested configuration. A branch
-        edit of the renderer's CSS gives `Changes ready · 1 change`.
-  - [ ] 169: a configured `sub/../first.css` and a component that declares
-        `first.css` prepare, and the document links `styles/first.css` once.
-  - [ ] 170: with `"postcss": "tools/../postcss.mjs"`, every captured
-        `processCss` request names `postcss.mjs`. The disconnect message and
-        the timeout label read this request field.
-- [ ] Read the resolver in `bundle_inputs.rs`, `mokly-render/src/graph.rs`,
-      `declarations.rs`, `stylesheets.rs`, and `postcss.rs`. `PostCss.module`
-      becomes the repository-relative path.
+Stylesheet and PostCSS part, after #228:
+
+- [ ] 169: add a regression test. A configured `sub/../first.css` and a
+      component that declares `first.css` prepare, and the document links
+      `styles/first.css` once. Then `declarations.rs` reads the resolver.
+- [ ] 170: add a regression test. With `"postcss": "tools/../postcss.mjs"`,
+      every `processCss` request names `postcss.mjs`. Then `PostCss.module`
+      becomes the repository-relative path from `ResolvedConfig::postcss()`.
 - [ ] Replace the private `logical()` of `crates/mokly-graph/src/styles.rs`
       with the resolver.
 - [ ] State the normalized repository-relative form in the doc comments of
-      `Bundle.renderer`, `ProcessCss.postcss`, and `PostcssFailure` module
-      fields. `Load.module` says "Configuration-relative" now. Regenerate the
+      `ProcessCss.postcss` and the `PostcssFailure` module fields.
+      `Load.module` says "Configuration-relative" now. Regenerate the
       TypeScript types with `cargo xtask generate-types`.
 - [ ] Update the mokly-render and mokly-graph READMEs.
-- [ ] Rerun the probes under `.context/normalize-config-relative-paths/probes`
-      on the fixed build and save the logs.
-- [ ] Run the mockup check of `AGENTS.md` and smoke-test the example through
-      `npm run dev`.
-- [ ] Tick items 167, 169, and 170 in `plans/rust-rebuild.md`, with the user
-      decisions, their dates, and a link to this plan. Under 172 A, tick 172.
+- [ ] Rerun the probes of 169 and 170 on the fixed build, and run the mockup
+      check of `AGENTS.md`.
+- [ ] Tick item 172 in `plans/rust-rebuild.md` with decision 172 A.
+- [ ] Run the tests of the touched crates and the new tests.
+
+Renderer part, after #227 merges:
+
+- [ ] 167: add the regression tests.
+  - [ ] An integration test with a configuration in `app/`,
+        `repoRoot: ".."`, and `"renderer": "../renderer.tsx"`. The generation
+        has `styles/renderer.tsx.css`, the screen links it, and the `bundle`
+        request names `renderer.tsx`.
+  - [ ] Unit tests of `bundle_inputs::params` for `app/../renderer.tsx`,
+        `lib/./renderer.tsx`, and `lib//renderer.tsx`.
+  - [ ] A render-key test with the nested configuration: the graph names
+        `renderer.tsx`, `unnamed_renderer` is false, and a renderer edit
+        moves the entry keys instead of the whole-bundle fallback.
+  - [ ] A CLI comparison test with the nested configuration. A branch edit
+        of the renderer's CSS gives `Changes ready · 1 change`.
+- [ ] `bundle_inputs.rs` and `mokly-render/src/graph.rs` read
+      `ResolvedConfig::renderer()`. State the normalized form in the doc
+      comment of `Bundle.renderer`, and regenerate the TypeScript types.
+- [ ] Update the mokly-render README.
+- [ ] Rerun every probe on the fixed build. Run the mockup check of
+      `AGENTS.md`, and smoke-test the example through `npm run dev`.
 - [ ] Run the tests of the touched crates and the new tests.
 
 ## Milestone 4: One lexical normalizer
@@ -273,6 +288,9 @@ replace it with that option.
 
 - [ ] Remove the status line of the configuration page when every rule of
       Milestone 1 is implemented.
+- [ ] After #227 merges, tick items 167, 169, 170, and 182 in
+      `plans/rust-rebuild.md`, with the user decisions, their dates, and a
+      link to this plan.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
