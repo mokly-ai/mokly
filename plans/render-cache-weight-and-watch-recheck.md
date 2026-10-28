@@ -78,6 +78,9 @@ Decisions D1 to D4 were asked on 2026-10-27. The user answered on
   stylesheet recheck, because it changes the code of perf 5, and D, no
   recheck, because an edit during startup could stay unseen. Reason: B
   removes the second preparation of `examples/basic` and loses no edit.
+  Note of 2026-10-28: review finding 1 showed that B loses an edit made
+  during the preparation to an exact file in a directory that the active
+  watcher did not observe. The finding waits for the orchestrator.
 
 ## Corrections To The Item Text
 
@@ -95,8 +98,10 @@ The item text was written from commit `89c12ef1`. This plan was measured at
 2. The first watcher already observes all 63 directories that the extra
    root needs: the root's own directory is the parent of the configured
    `src/components` root. An edit in these directories during the first
-   preparation is already buffered. The second preparation protects nothing
-   on this catalogue.
+   preparation is already buffered. Note of 2026-10-28: review finding 1
+   showed that the second preparation also read exact files again in eight
+   directories that the first watcher did not observe, such as
+   `examples/basic/design-library`, so it did protect edits to those files.
 3. The head already evicts itself in the background pass: 913 evictions at
    the current charge. The base render is not the only cause.
 4. A 256 MiB bound cannot hold both sides of `examples/basic` at a
@@ -367,10 +372,32 @@ above.
 - [x] Commit with Conventional Commits and push the branch after each
       milestone. `origin/main` moved to `2dd2937f` and was merged in, with no
       overlapping path.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
-      re-review once, and report the rest.
+      re-review once, and report the rest. Fixed: finding 2 in `50ba4c5b`
+      and re-review finding 4 in `2ff4a964`. Reports:
+      `.context/render-cache-weight-and-watch-recheck/review-1*.md`.
+  - 1. Coverage rule loses edits to exact files. Severity Medium, effort
+       Medium. Recommended: D, compare the modification times of exact
+       targets with the preparation start and replay a change event for each
+       changed one. Wider fix E, change detection in the watch layer, Large.
+  - 3. No process test checks real cache counts. Severity Low, effort
+       Small. Recommended: D, check the `render.cache` record in the serve
+       process test and in the build and publish timing cases.
+  - Residual risk: `publish` holds the render cache through the upload,
+    because the publish `Output` keeps it. Not measured. Separate decision.
+  - Outside the scope: `crates/mokly-cli/src/serve_watch.rs`, an edit during
+    a preparation to an exact target in an unobserved directory never
+    rebuilds when the roots do not change, as on `origin/main`. Separate
+    branch.
+  - Outside the scope: `crates/mokly-graph/src/session_render.rs`, a render
+    digests a new resource before its directory attaches, so an edit in
+    that gap makes no event, as on `origin/main`. Separate branch.
+  - Outside the scope: `scripts/verification/ratchets/public-exports.mjs`
+    and `tests/public_export_ratchet_git.test.ts` fail on `origin/main`,
+    because `docs/guides/start/upgrade.md` does not name the exports removed
+    since `v0.14.0` and `viewer-v0.5.0`. Separate branch.
 - [x] Open the pull request when every other milestone TODO is ticked. Put
       the before and after table in its body and its link in the status
       paragraph. The orchestrator asked for the pull request before the
