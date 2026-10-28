@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::prop_schema::PropSchema;
 
-use crate::diagnostic::{Code, Issue, Warning};
+use crate::diagnostic::{Code, Issue, Warning, json_quoted};
 use crate::html_tokens::{self, StartTag, Token};
 use crate::references::{boolean, reference, substitutions, use_reference};
 use crate::template_role::TemplateRole;
@@ -100,7 +100,7 @@ pub(crate) fn validate(
             checker.result.warnings.push(Warning {
                 code: "html-unused-props",
                 subject: role.warning_subject(),
-                message: format!("prop {name:?} is not read by the body"),
+                message: format!("prop {} is not read by the body", json_quoted(name)),
             });
         }
     }

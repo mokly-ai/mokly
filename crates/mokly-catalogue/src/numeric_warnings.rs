@@ -6,11 +6,12 @@ use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::controls::{ComponentControl, ControlInput};
 use mokly_model::data::{Props, unsafe_integer_paths};
 use mokly_model::limits::pointer;
-use mokly_model::prop_schema::{Primitive, PropSchema};
+use mokly_model::prop_schema::Primitive;
 use serde_json::Number;
 
-use crate::diagnostic::{Warning, WarningSubject};
+use crate::diagnostic::{Warning, WarningSubject, json_quoted};
 use crate::render_sources::StoryControlHint;
+use crate::schema_warnings;
 
 enum Field {
     Prop,
@@ -28,9 +29,9 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
         warnings.extend(for_entry(&visual.props, entry));
         if entry.metadata.variant_of.is_none() {
             warnings.extend(
-                schema_paths(&visual.prop_schema)
+                schema_warnings::schema_paths(&visual.prop_schema)
                     .into_iter()
-                    .map(|path| warning(Field::Schema, &path, entry)),
+                    .map(|path| warning(Field::Schema, &path, entry, None)),
             );
         }
     }
@@ -38,19 +39,40 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
 }
 
 /// Diagnose each unsafe complete prop value without exposing its data in the message.
-pub fn for_entry(props: &Props, entry: &ModelEntry) -> Vec<Warning> {
+fn for_entry(props: &Props, entry: &ModelEntry) -> Vec<Warning> {
     unsafe_integer_paths(props)
         .into_iter()
-        .map(|path| warning(Field::Prop, &path, entry))
+        .map(|path| warning(Field::Prop, &path, entry, None))
         .collect()
 }
 
-fn warning(field: Field, path: &str, entry: &ModelEntry) -> Warning {
-    let kind = match field {
-        Field::Prop => "prop",
-        Field::Schema => "schema keyword",
-        Field::Control => "control",
-    };
+/// Diagnose unsafe integer props returned by one component invocation.
+pub fn for_invocation(
+    props: &Props,
+    entry: &ModelEntry,
+    component_path: &str,
+    instance_id: &str,
+) -> Vec<Warning> {
+    unsafe_integer_paths(props)
+        .into_iter()
+        .map(|path| {
+            warning(
+                Field::Prop,
+                &path,
+                entry,
+                Some((component_path, instance_id)),
+            )
+        })
+        .collect()
+}
+
+fn warning(
+    field: Field,
+    path: &str,
+    entry: &ModelEntry,
+    invocation: Option<(&str, &str)>,
+) -> Warning {
+    let message = format_message(field, path, invocation);
     let subject = if matches!(entry.content, EntryContent::Component { .. }) {
         WarningSubject::Component(entry.metadata.path.clone())
     } else {
@@ -59,10 +81,28 @@ fn warning(field: Field, path: &str, entry: &ModelEntry) -> Warning {
     Warning {
         code: "props-unsafe-integer",
         subject,
-        message: format!(
-            "{kind} {path:?} is outside the JavaScript safe integer range and uses the nearest binary64 value"
-        ),
+        message,
     }
+}
+
+fn format_message(field: Field, path: &str, invocation: Option<(&str, &str)>) -> String {
+    if let Some((component_path, instance_id)) = invocation {
+        return format!(
+            "component {} instance {} prop {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+            json_quoted(component_path),
+            json_quoted(instance_id),
+            json_quoted(path),
+        );
+    }
+    let kind = match field {
+        Field::Prop => "prop",
+        Field::Schema => "schema keyword",
+        Field::Control => "control",
+    };
+    format!(
+        "{kind} {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+        json_quoted(path)
+    )
 }
 
 /// Authored control metadata is checked once, before schema defaults are added.
@@ -96,7 +136,7 @@ pub(crate) fn for_controls(
     }
     paths
         .into_iter()
-        .map(|path| warning(Field::Control, &path, entry))
+        .map(|path| warning(Field::Control, &path, entry, None))
         .collect()
 }
 
@@ -125,7 +165,7 @@ pub(crate) fn for_story_hints(
     }
     paths
         .into_iter()
-        .map(|path| warning(Field::Control, &path, entry))
+        .map(|path| warning(Field::Control, &path, entry, None))
         .collect()
 }
 
@@ -154,85 +194,6 @@ fn choices<'a>(path: &str, values: impl Iterator<Item = &'a Primitive>, paths: &
             );
         }
     }
-}
-
-fn schema_paths(schema: &PropSchema) -> Vec<String> {
-    let mut paths = Vec::new();
-    let mut pending = vec![(String::new(), schema)];
-    while let Some((path, schema)) = pending.pop() {
-        for (keyword, value) in [
-            ("minimum", &schema.minimum),
-            ("maximum", &schema.maximum),
-            ("multipleOf", &schema.multiple_of),
-            ("minLength", &schema.min_length),
-            ("maxLength", &schema.max_length),
-            ("minItems", &schema.min_items),
-            ("maxItems", &schema.max_items),
-        ] {
-            record(value.as_ref(), pointer(&path, keyword), &mut paths);
-        }
-        let choices = schema
-            .enumeration
-            .iter()
-            .flatten()
-            .enumerate()
-            .map(|(index, value)| (pointer(&pointer(&path, "enum"), &index.to_string()), value))
-            .chain(
-                schema
-                    .constant
-                    .iter()
-                    .map(|value| (pointer(&path, "const"), value)),
-            )
-            .chain(
-                schema
-                    .one_of
-                    .iter()
-                    .flatten()
-                    .enumerate()
-                    .map(|(index, value)| {
-                        (
-                            pointer(
-                                &pointer(&pointer(&path, "oneOf"), &index.to_string()),
-                                "const",
-                            ),
-                            &value.value,
-                        )
-                    }),
-            );
-        for (path, value) in choices {
-            if let Primitive::Number(value) = value {
-                record(Some(value), path, &mut paths);
-            }
-        }
-        pending.extend(
-            schema
-                .properties
-                .iter()
-                .flatten()
-                .map(|(key, schema)| (pointer(&pointer(&path, "properties"), key), schema)),
-        );
-        pending.extend(
-            schema
-                .items
-                .iter()
-                .map(|schema| (pointer(&path, "items"), schema.as_ref())),
-        );
-        pending.extend(
-            schema
-                .any_of
-                .iter()
-                .flatten()
-                .enumerate()
-                .map(|(index, schema)| {
-                    (
-                        pointer(&pointer(&path, "anyOf"), &index.to_string()),
-                        schema,
-                    )
-                }),
-        );
-    }
-    paths.sort();
-    paths
 }
 
 fn record(number: Option<&Number>, path: String, paths: &mut Vec<String>) {

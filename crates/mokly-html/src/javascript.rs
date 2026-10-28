@@ -140,8 +140,12 @@ impl Engine<'_> {
         )?;
         for instance in result.instances {
             if let Ok(props) = wire_decode::decode(&instance.props) {
-                self.warnings
-                    .extend(numeric_warnings::for_entry(&props, self.request.entry));
+                self.warnings.extend(numeric_warnings::for_invocation(
+                    &props,
+                    self.request.entry,
+                    &instance.component_id,
+                    &instance.id,
+                ));
             }
             if let Some(existing) = self.instances.get(&instance.key) {
                 if !context.replay

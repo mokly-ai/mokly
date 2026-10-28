@@ -87,6 +87,9 @@ mod navigation_sweep_tests;
 #[path = "_tests_/noscript_tests.rs"]
 mod noscript_tests;
 #[cfg(test)]
+#[path = "_tests_/numeric_warning_tests.rs"]
+mod numeric_warning_tests;
+#[cfg(test)]
 #[path = "_tests_/parser_tests.rs"]
 mod parser_tests;
 #[cfg(test)]
