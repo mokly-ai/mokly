@@ -9,7 +9,7 @@ use mokly_model::usage::CatalogueUsage;
 use mokly_server::background::{Background, UsagePass};
 use mokly_server::diagnostics::TracingDiagnostics;
 use mokly_server::publication::{PublicationWriter, Publications};
-use mokly_server::snapshot::{Projector, Snapshot, SnapshotFactory, SnapshotInput};
+use mokly_server::snapshot::{Projector, SnapshotFactory, SnapshotInput};
 use mokly_server::work::Workers;
 use tokio::sync::watch;
 
@@ -50,8 +50,7 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
         .await
         .unwrap();
     assert_eq!(response.status(), 200);
-    assert!(String::from_utf8_lossy(&stream.chunk().await.unwrap().unwrap()).contains("id: 2\n"));
-    let current = harness.publications.current();
+    let current = harness.wait_revision(2).await;
     assert_eq!(current.index.revision, 2);
     assert!(matches!(
         current.details["home"].views[0].usage,
@@ -141,6 +140,7 @@ async fn served_index_lists_the_id_of_a_completed_detail() {
         .await
         .unwrap();
     assert_eq!(response.status(), 200);
+    harness.wait_revision(2).await;
     let detail = readers::detail(
         &harness
             .client
@@ -153,6 +153,7 @@ async fn served_index_lists_the_id_of_a_completed_detail() {
             .unwrap(),
     )
     .unwrap();
+    assert_eq!(detail.revision, Some(2));
     let index = readers::index(
         &harness
             .client
@@ -194,7 +195,7 @@ async fn failed_renders_publish_unavailable_usage_without_inventing_consumer_lis
         .await
         .unwrap();
     assert_eq!(response.status(), 500);
-    let current = wait_revision(&harness, 2).await;
+    let current = harness.wait_revision(2).await;
     assert_eq!(current.index.revision, 2);
     assert!(matches!(
         current.details["home"].views[0].usage,
@@ -211,7 +212,7 @@ async fn failed_renders_publish_unavailable_usage_without_inventing_consumer_lis
         .await
         .unwrap();
     assert_eq!(response.status(), 200);
-    let current = wait_revision(&harness, 3).await;
+    let current = harness.wait_revision(3).await;
     assert_eq!(current.index.revision, 3);
     assert!(matches!(
         current.details["components/button"].views[0].usage,
@@ -260,21 +261,6 @@ async fn a_completion_from_a_replaced_backend_cannot_publish_even_when_keys_matc
     assert!(current.completed.is_empty());
     replacement.close().await;
     harness.close().await;
-}
-
-async fn wait_revision(harness: &support::Harness, revision: u64) -> Arc<Snapshot> {
-    tokio::time::timeout(Duration::from_secs(15), async {
-        let mut updates = harness.publications.subscribe().updates;
-        loop {
-            let current = harness.publications.current();
-            if current.index.revision >= revision {
-                return current;
-            }
-            updates.recv().await.unwrap();
-        }
-    })
-    .await
-    .unwrap()
 }
 
 #[tokio::test]

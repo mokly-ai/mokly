@@ -26,7 +26,6 @@ export function controllerFixture(
   const warnings: string[] = [];
   const initial = initialSnapshot(index);
   let route = routeAt(initial, options.path ?? "/");
-  let firstRequest = true;
   const controller = new ShellDataController(initial, source, {
     commit: (next) => commits.push(next),
     route: () => route,
@@ -44,8 +43,7 @@ export function controllerFixture(
     navigate(path: string): ShellRoute {
       route = routeAt(controller.snapshot, path);
       const requests = routeDetailRequests(controller.snapshot.index, route);
-      controller.request(requests, !firstRequest);
-      firstRequest = false;
+      controller.request(requests);
       return route;
     },
     route: () => route,

@@ -249,7 +249,6 @@ fn json_file(text: std::result::Result<String, ModelError>) -> Result<File> {
     }
 }
 
-#[tracing::instrument(name = "index.build", skip_all, err)]
 fn build_index(
     model: &CatalogueModel,
     keys: &[ViewKey],
@@ -262,6 +261,7 @@ fn build_index(
     Ok(index)
 }
 
+#[tracing::instrument(name = "index.build", skip_all, err)]
 pub(crate) fn checked_index(index: &CatalogueReadModel) -> Result<File> {
     let encoded = encode(index)?;
     if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {

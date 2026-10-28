@@ -78,7 +78,6 @@ export function useShellDataStore(input: {
         warn: (message, cause) => console.warn(message, cause),
       }),
   );
-  const firstRequest = useRef(true);
   const version = useSyncExternalStore(
     controller.subscribe,
     controller.version,
@@ -92,9 +91,7 @@ export function useShellDataStore(input: {
 
   useEffect(() => {
     if (!input.interactive) return;
-    const checkDeployment = !firstRequest.current;
-    firstRequest.current = false;
-    controller.request(requests, checkDeployment);
+    controller.request(requests);
   }, [controller, input.interactive, requests]);
   useEffect(() => () => controller.abortLoads(), [controller]);
   useEffect(() => {

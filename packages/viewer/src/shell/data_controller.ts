@@ -131,8 +131,8 @@ export class ShellDataController {
   };
 
   /** Load each missing detail of a route; abort the loads it no longer wants. */
-  request(requests: readonly DetailRequest[], checkDeployment = true): void {
-    this.#details.request(requests, checkDeployment);
+  request(requests: readonly DetailRequest[]): void {
+    this.#details.request(requests);
   }
 
   /** Forget the failures of these keys and load the wanted details again. */

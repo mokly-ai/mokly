@@ -29,6 +29,7 @@ export class DetailLoader {
   #deploymentLoading: AbortController | undefined;
   #wanted: readonly DetailRequest[] = [];
   #failed: ReadonlySet<string> = new Set();
+  #initialized = false;
 
   constructor(source: ShellDataSource | undefined, host: DetailLoaderHost) {
     this.#source = source;
@@ -39,16 +40,30 @@ export class DetailLoader {
     return this.#failed;
   }
 
-  request(requests: readonly DetailRequest[], checkDeployment = true): void {
-    const sameRequest = this.#wanted === requests;
+  request(requests: readonly DetailRequest[]): void {
     this.#wanted = requests;
     const source = this.#source;
     if (!source || this.#host.replaced()) return;
     this.#deploymentLoading?.abort();
+    const wanted = new Set(requests.map(detailKey));
+    for (const [key, controller] of this.#loading)
+      if (!wanted.has(key)) {
+        controller.abort();
+        this.#loading.delete(key);
+      }
+    const loads = requests.filter((request) => {
+      const key = detailKey(request);
+      return (
+        !this.#host.snapshot().details.has(key) &&
+        !this.#failed.has(key) &&
+        !this.#loading.has(key)
+      );
+    });
     const deploymentRequest =
-      checkDeployment && !sameRequest
-        ? startDeploymentCheck(source, requests)
+      this.#initialized && loads.length
+        ? startDeploymentCheck(source, loads)
         : undefined;
+    this.#initialized = true;
     this.#deploymentLoading = deploymentRequest?.controller;
     if (deploymentRequest)
       void deploymentRequest.promise.then((deployment) => {
@@ -58,20 +73,8 @@ export class DetailLoader {
         )
           this.#host.replace();
       });
-    const wanted = new Set(requests.map(detailKey));
-    for (const [key, controller] of this.#loading)
-      if (!wanted.has(key)) {
-        controller.abort();
-        this.#loading.delete(key);
-      }
-    for (const request of requests) {
+    for (const request of loads) {
       const key = detailKey(request);
-      if (
-        this.#host.snapshot().details.has(key) ||
-        this.#failed.has(key) ||
-        this.#loading.has(key)
-      )
-        continue;
       const controller = new AbortController();
       this.#loading.set(key, controller);
       void loadFencedDetail(

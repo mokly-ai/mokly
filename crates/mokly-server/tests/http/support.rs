@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::definition_provider::DeferredDefinitions;
@@ -28,7 +29,7 @@ use mokly_server::backend::GraphDocuments;
 use mokly_server::clock::MonotonicClock;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::public_read::ConfinedReader;
-use mokly_server::publication::SharedPublication;
+use mokly_server::publication::{Publications, SharedPublication};
 use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::{Projector, Snapshot, SnapshotFactory, SnapshotInput};
@@ -195,6 +196,22 @@ impl Harness {
     pub async fn close(self) {
         self.close_result().await.unwrap();
     }
+
+    pub async fn wait_revision(&self, revision: u64) -> Arc<Snapshot> {
+        tokio::time::timeout(Duration::from_secs(15), async {
+            let mut updates = self.publications.subscribe().updates;
+            loop {
+                let current = self.publications.current();
+                if current.index.revision >= revision {
+                    return current;
+                }
+                updates.recv().await.unwrap();
+            }
+        })
+        .await
+        .unwrap()
+    }
+
     pub async fn close_result(self) -> mokly_server::error::Result<()> {
         self.stop.send_replace(true);
         self.handle.await.unwrap()

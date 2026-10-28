@@ -131,7 +131,7 @@ pub(crate) fn complete(
             );
         }
     }
-    let index_file = tracing::info_span!("index.build").in_scope(|| checked_index(&next.index))?;
+    let index_file = checked_index(&next.index)?;
     next.files.insert(
         viewer("index.json"),
         crate::revision_file::RevisionFile::new(index_file)?,
