@@ -15,6 +15,8 @@ mod system_runner;
 
 pub mod changes;
 pub mod disk;
+pub mod extracted;
+pub mod fingerprint;
 pub mod identity;
 pub mod repository;
 pub mod tree;
@@ -22,6 +24,7 @@ pub mod tree;
 pub mod access;
 
 mod lookup;
+mod repository_command;
 
 mod checkout;
 mod checkout_batch;

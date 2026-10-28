@@ -79,7 +79,10 @@ inputs changes, and only then:
 
 When the module graph does not name the configured renderer, every entry
 module uses the whole bundle as its key. When it does not name the Storybook
-preview, every stories file does.
+preview, every stories file does. The path or title of a definition that an
+installed package makes through the unattributed API moves every key. The
+sidecar does not report which module declares such a definition, so no
+closure shows which renders read it.
 
 A render reads only its imports, its props and slots, and its render
 context. A module side effect of one entry module that changes another entry

@@ -37,10 +37,10 @@ fn base_runtime(head: &Consumer, base: &Consumer, installation: &Path) -> Arc<Ru
         repository_roots.push(installation.to_path_buf());
     }
     let side = Arc::new(BaseSide {
-        sources: Lease {
+        sources: Arc::new(Lease {
             directory: base.repository(),
             guard: Box::new(Unimock::new(())),
-        },
+        }),
         dependencies: Resolved {
             tier: if installation == head_root {
                 Tier::Working
