@@ -1,14 +1,12 @@
 //! Filtered conversion requests: one Git process for each batch of files.
 
-use std::fs;
 use std::hash::{BuildHasher, RandomState};
-use std::io::Write;
-use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use crate::checkout_output::{BatchFiles, BatchSink, HEADER_BYTES};
+use crate::checkout_files::{BatchFiles, EntryWriter, Indexed};
+use crate::checkout_output::{BatchSink, HEADER_BYTES, conversion};
 use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
-use crate::error::{IoResult, Result};
+use crate::error::{Error, Result};
 use crate::identity::ObjectId;
 use crate::repository::GitRepository;
 use crate::tree::Entry;
@@ -28,20 +26,104 @@ impl Cancellation for Active {
 
 /// Git strips leading spaces and tabs from a batch path, so such a path
 /// converts alone with an exact `--path` argument.
-pub(crate) fn batchable(entry: &Entry) -> bool {
+fn batchable(entry: &Entry) -> bool {
     !entry.path.as_str().starts_with([' ', '\t'])
 }
 
-/// Converts `entries` with one `cat-file --batch --filters -Z` process and
-/// writes each file into `directory`. Returns the files in batch order and
-/// their total converted bytes, which stay within `limit`.
-pub(crate) fn convert(
+/// Converts `entries` into `files` and returns their total converted bytes,
+/// which stay within `limit`. Two or more entries within 48 MiB convert in
+/// one batch process. When that process reaches its deadline, each of its
+/// files converts again alone with its own deadline. Every other entry, and
+/// every entry of a larger call, converts alone, and its failure names it.
+pub(crate) fn convert_entries(
     repository: &GitRepository,
     commit: &ObjectId,
     entries: &[Entry],
-    directory: &Path,
+    files: &mut dyn BatchFiles,
     limit: usize,
-) -> Result<(Vec<PathBuf>, usize)> {
+) -> Result<usize> {
+    let mut remaining = limit;
+    let mut done = vec![false; entries.len()];
+    let bytes = entries
+        .iter()
+        .fold(0usize, |total, entry| total.saturating_add(entry.size));
+    let converted = if bytes <= BATCH_BYTES {
+        let indices: Vec<_> = (0..entries.len())
+            .filter(|index| batchable(&entries[*index]))
+            .collect();
+        if indices.len() > 1 {
+            let batch: Vec<_> = indices
+                .iter()
+                .map(|index| entries[*index].clone())
+                .collect();
+            let mut subset = Indexed {
+                files: &mut *files,
+                indices: &indices,
+            };
+            match convert(repository, commit, &batch, &mut subset, remaining) {
+                Ok(written) => {
+                    remaining -= written;
+                    for index in &indices {
+                        done[*index] = true;
+                    }
+                }
+                Err(Error::CheckoutTimeout) => {
+                    tracing::debug!(
+                        files = batch.len(),
+                        "a conversion batch reached its deadline"
+                    );
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        None
+    } else {
+        Some(repository.converted_paths(commit, entries)?)
+    };
+    for (index, entry) in entries.iter().enumerate() {
+        if done[index] {
+            continue;
+        }
+        files.open(index)?;
+        let mut output = EntryWriter {
+            files: &mut *files,
+            index,
+            written: 0,
+        };
+        let converted = converted
+            .as_ref()
+            .is_none_or(|converted| converted.contains(&entry.path));
+        let request = request(
+            repository,
+            commit,
+            conversion_args(entry, converted),
+            Vec::new(),
+        );
+        let streamed = repository
+            .runner
+            .stream_cancellable_with_environment_timeout(
+                &request,
+                &Active,
+                &[("LC_ALL", "C".into())],
+                FILTER_TIMEOUT,
+                &mut output,
+                remaining,
+            );
+        conversion(streamed, std::slice::from_ref(entry))?;
+        remaining = remaining.saturating_sub(output.written);
+    }
+    Ok(limit - remaining)
+}
+
+/// Converts `entries` with one `cat-file --batch --filters -Z` process into
+/// `files`, at batch positions. Returns the converted bytes.
+fn convert(
+    repository: &GitRepository,
+    commit: &ObjectId,
+    entries: &[Entry],
+    files: &mut dyn BatchFiles,
+    limit: usize,
+) -> Result<usize> {
     let sentinel = sentinel();
     let mut input = Vec::new();
     for entry in entries {
@@ -59,11 +141,7 @@ pub(crate) fn convert(
             .saturating_add(sentinel.len())
             .saturating_add(16),
     );
-    let mut files = DirectoryFiles {
-        directory,
-        paths: Vec::with_capacity(entries.len()),
-    };
-    let mut sink = BatchSink::new(entries, &mut files, &sentinel, limit);
+    let mut sink = BatchSink::new(entries, files, &sentinel, limit);
     let streamed = repository
         .runner
         .stream_cancellable_with_environment_timeout(
@@ -78,8 +156,7 @@ pub(crate) fn convert(
         return Err(error);
     }
     streamed?;
-    let written = sink.finish()?;
-    Ok((files.paths, written))
+    sink.finish()
 }
 
 pub(crate) fn request(
@@ -123,20 +200,6 @@ fn sentinel() -> String {
     let first = RandomState::new().hash_one(0u8);
     let second = RandomState::new().hash_one(1u8);
     format!("mokly-end-{first:016x}{second:016x}")
-}
-
-struct DirectoryFiles<'a> {
-    directory: &'a Path,
-    paths: Vec<PathBuf>,
-}
-
-impl BatchFiles for DirectoryFiles<'_> {
-    fn open(&mut self, index: usize) -> Result<Box<dyn Write + Send>> {
-        let path = self.directory.join(format!("batch-{index}"));
-        let file = fs::File::create(&path).git()?;
-        self.paths.push(path);
-        Ok(Box::new(file))
-    }
 }
 
 #[cfg(test)]

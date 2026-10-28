@@ -1,39 +1,14 @@
 //! Sentinel framing keeps converted payloads exact, whatever their bytes or chunking.
 
 use std::io::Write;
-use std::sync::{Arc, Mutex};
 
-use crate::checkout_output::{BatchFiles, BatchSink};
+use crate::checkout_files::MemoryFiles;
+use crate::checkout_output::BatchSink;
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::tree::{Entry, Mode};
 
 const SENTINEL: &str = "mokly-end-0123456789abcdef0123456789abcdef";
-
-/// In-memory files that record their bytes and their opening order.
-#[derive(Default)]
-struct Memory(Arc<Mutex<Vec<Vec<u8>>>>);
-
-struct Writer(Arc<Mutex<Vec<Vec<u8>>>>, usize);
-
-impl Write for Writer {
-    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        self.0.lock().unwrap()[self.1].extend_from_slice(bytes);
-        Ok(bytes.len())
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-
-impl BatchFiles for Memory {
-    fn open(&mut self, index: usize) -> Result<Box<dyn Write + Send>> {
-        let mut files = self.0.lock().unwrap();
-        assert_eq!(files.len(), index);
-        files.push(Vec::new());
-        Ok(Box::new(Writer(self.0.clone(), index)))
-    }
-}
 
 fn entry(name: &str, object: char) -> Entry {
     Entry {
@@ -62,8 +37,7 @@ fn decode(
     chunks: &[usize],
     limit: usize,
 ) -> Result<Vec<Vec<u8>>> {
-    let mut memory = Memory::default();
-    let files = memory.0.clone();
+    let mut memory = MemoryFiles::new(entries.len());
     let mut sink = BatchSink::new(entries, &mut memory, SENTINEL, limit);
     let mut rest = output;
     let mut sizes = chunks.iter().cycle();
@@ -75,7 +49,7 @@ fn decode(
         rest = &rest[size..];
     }
     sink.finish()?;
-    Ok(files.lock().unwrap().clone())
+    Ok(memory.into_files())
 }
 
 #[test]

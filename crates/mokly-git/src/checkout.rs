@@ -1,13 +1,10 @@
 //! Checkout-converted bytes retain the user's real repository filter context.
 
 use std::collections::BTreeMap;
-use std::fs;
-use std::io::Read;
 use std::path::PathBuf;
 
-use crate::checkout_batch::{
-    Active, BATCH_BYTES, FILTER_TIMEOUT, batchable, conversion_args, convert, request,
-};
+use crate::checkout_batch::{Active, FILTER_TIMEOUT, conversion_args, convert_entries, request};
+use crate::checkout_files::{DirectoryFiles, MemoryFiles};
 use crate::checkout_output::conversion;
 use crate::error::{Error, IoResult, Result};
 use crate::identity::{ObjectId, RepoPath};
@@ -15,9 +12,8 @@ use crate::repository::GitRepository;
 use crate::tree::{Entry, Limits};
 
 impl GitRepository {
-    /// Reads one batch after checkout conversion. The batch is written to its
-    /// private directory and read back, and that directory is removed when this
-    /// call returns, before the caller reads the next batch.
+    /// Reads one batch after checkout conversion. The converted bytes stay in
+    /// memory within the batch byte bound and never touch the disk.
     pub(crate) fn checkout_read(
         &self,
         commit: &ObjectId,
@@ -42,14 +38,21 @@ impl GitRepository {
         if entries.is_empty() {
             return Ok(Vec::new());
         }
-        let checkout = self.checkout(entries, commit, limits)?;
+        self.ensure_checkout_objects(commit, entries)?;
+        let mut files = MemoryFiles::new(entries.len());
+        conversion(
+            convert_entries(self, commit, entries, &mut files, limits.bytes),
+            entries,
+        )?;
         let mut total = 0usize;
         let mut result = Vec::with_capacity(entries.len());
-        for entry in entries {
-            let bytes = conversion(
-                checkout.read(&entry.path, limits.blob),
-                std::slice::from_ref(entry),
-            )?;
+        for (entry, bytes) in entries.iter().zip(files.into_files()) {
+            if bytes.len() > limits.blob {
+                return conversion(
+                    Err(Error::ByteLimit { limit: limits.blob }),
+                    std::slice::from_ref(entry),
+                );
+            }
             total = total.saturating_add(bytes.len());
             if total > limits.bytes {
                 return Err(Error::ByteLimit {
@@ -110,11 +113,8 @@ fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
     Ok(())
 }
 
-/// Converted files of one batch in a private temporary directory, removed on
-/// drop. A batch of two or more files within 48 MiB converts in one filtered
-/// `cat-file --batch` process. A single file, a path that starts with
-/// whitespace, and every file of a larger batch stream alone straight to disk,
-/// so a large file never has to fit in memory.
+/// Converted files of one extraction batch in a private temporary directory,
+/// removed on drop, so a large file never has to fit in memory.
 pub(crate) struct Checkout {
     _root: tempfile::TempDir,
     files: BTreeMap<RepoPath, PathBuf>,
@@ -131,49 +131,13 @@ impl Checkout {
             .prefix("mokly-git-converted-")
             .tempdir()
             .git()?;
+        let mut directory = DirectoryFiles::new(root.path(), entries.len());
+        convert_entries(repository, commit, entries, &mut directory, limit)?;
         let mut files = BTreeMap::new();
-        let mut remaining = limit;
-        let batch_bytes = entries
-            .iter()
-            .fold(0usize, |total, entry| total.saturating_add(entry.size));
-        let converted = if batch_bytes <= BATCH_BYTES {
-            let batch: Vec<_> = entries.iter().filter(|entry| batchable(entry)).collect();
-            if batch.len() > 1 {
-                let batch: Vec<_> = batch.into_iter().cloned().collect();
-                let (paths, written) = convert(repository, commit, &batch, root.path(), remaining)?;
-                remaining -= written;
-                files.extend(batch.into_iter().map(|entry| entry.path).zip(paths));
-            }
-            None
-        } else {
-            Some(repository.converted_paths(commit, entries)?)
-        };
-        for (index, entry) in entries.iter().enumerate() {
-            if files.contains_key(&entry.path) {
-                continue;
-            }
-            let path = root.path().join(format!("single-{index}"));
-            let mut output = fs::File::create(&path).git()?;
-            let converted = converted
-                .as_ref()
-                .is_none_or(|converted| converted.contains(&entry.path));
-            let request = request(
-                repository,
-                commit,
-                conversion_args(entry, converted),
-                Vec::new(),
-            );
-            repository
-                .runner
-                .stream_cancellable_with_environment_timeout(
-                    &request,
-                    &Active,
-                    &[("LC_ALL", "C".into())],
-                    FILTER_TIMEOUT,
-                    &mut output,
-                    remaining,
-                )?;
-            remaining = remaining.saturating_sub(output.metadata().git()?.len() as usize);
+        for (entry, path) in entries.iter().zip(directory.into_paths()) {
+            let Some(path) = path else {
+                return Err(Error::MalformedOutput);
+            };
             files.insert(entry.path.clone(), path);
         }
         Ok(Self { _root: root, files })
@@ -181,22 +145,5 @@ impl Checkout {
 
     pub(crate) fn file(&self, path: &RepoPath) -> Result<PathBuf> {
         self.files.get(path).cloned().ok_or(Error::MalformedOutput)
-    }
-
-    fn read(&self, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
-        let file = self.file(path)?;
-        if fs::metadata(&file).git()?.len() > limit as u64 {
-            return Err(Error::ByteLimit { limit });
-        }
-        let mut bytes = Vec::new();
-        fs::File::open(file)
-            .git()?
-            .take(limit.saturating_add(1) as u64)
-            .read_to_end(&mut bytes)
-            .git()?;
-        if bytes.len() > limit {
-            return Err(Error::ByteLimit { limit });
-        }
-        Ok(bytes)
     }
 }

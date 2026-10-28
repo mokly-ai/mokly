@@ -1,4 +1,4 @@
-//! Batch requests name each blob with its path, and a stopped batch is a conversion failure.
+//! Batch requests name each blob with its path, and a batch past its deadline converts each file alone.
 
 use std::ffi::OsString;
 use std::sync::Arc;
@@ -105,17 +105,59 @@ fn a_batch_names_each_blob_and_path_and_a_leading_space_converts_alone() {
     );
 }
 
+fn single(request: &Request) -> bool {
+    request.args.get(3).is_some_and(|arg| arg == "--filters")
+}
+
+/// The next single-file `--filters` stream, for `name`: it writes `content`,
+/// or reaches its deadline when there is no content.
+fn alone(name: &'static str, content: Option<&'static [u8]>) -> impl unimock::Clause {
+    RunnerMock::stream_cancellable_with_environment_timeout
+        .next_call(matching!((request, _, _, _, _, _) if single(request)))
+        .answers_arc(Arc::new(move |_, request, _, _, _, output, _| {
+            assert_eq!(request.args[4], OsString::from(format!("--path={name}")));
+            match content {
+                Some(content) => {
+                    output.write_all(content).unwrap();
+                    Ok(())
+                }
+                None => Err(Error::CheckoutTimeout),
+            }
+        }))
+}
+
 #[test]
-fn a_batch_that_reaches_its_deadline_is_a_conversion_failure() {
+fn a_batch_that_reaches_its_deadline_converts_each_file_alone() {
     let entries = [entry("a.txt", 'a'), entry("z.txt", 'd')];
     let repository = repository(Unimock::new((
         preflight(&entries),
         RunnerMock::stream_cancellable_with_environment_timeout
             .next_call(matching!((request, _, _, _, _, _) if batch(request)))
             .returns(Err(Error::CheckoutTimeout)),
+        alone("a.txt", Some(b"A\r\n")),
+        alone("z.txt", Some(b"Z\r\n")),
+    )));
+    assert_eq!(
+        repository
+            .checkout_read(&commit(), &entries, Limits::default())
+            .unwrap(),
+        [b"A\r\n".to_vec(), b"Z\r\n".to_vec()]
+    );
+}
+
+#[test]
+fn a_file_that_reaches_its_own_deadline_names_itself() {
+    let entries = [entry("a.txt", 'a'), entry("z.txt", 'd')];
+    let repository = repository(Unimock::new((
+        preflight(&entries),
+        RunnerMock::stream_cancellable_with_environment_timeout
+            .next_call(matching!((request, _, _, _, _, _) if batch(request)))
+            .returns(Err(Error::CheckoutTimeout)),
+        alone("a.txt", Some(b"A\r\n")),
+        alone("z.txt", None),
     )));
     assert!(matches!(
         repository.checkout_read(&commit(), &entries, Limits::default()),
-        Err(Error::Conversion { source, .. }) if matches!(*source, Error::CheckoutTimeout)
+        Err(Error::Conversion { path, source }) if path == "z.txt" && matches!(*source, Error::CheckoutTimeout)
     ));
 }

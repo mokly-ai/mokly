@@ -2,17 +2,12 @@
 
 use std::io::{self, Write};
 
-use crate::error::{Error, IoResult, Result};
+use crate::checkout_files::BatchFiles;
+use crate::error::{Error, Result};
 use crate::tree::Entry;
 
 /// The longest header record, `{object} blob {size}`, that a batch may print.
 pub(crate) const HEADER_BYTES: usize = 256;
-
-/// Destinations of the converted files of one batch, opened in batch order.
-pub(crate) trait BatchFiles: Send {
-    /// Open the destination of the entry at `index` of the batch.
-    fn open(&mut self, index: usize) -> Result<Box<dyn Write + Send>>;
-}
 
 /// Decodes `git cat-file --batch --filters -Z` output while Git writes it. Git
 /// prints the raw blob size in each header, not the converted size, so the
@@ -23,7 +18,7 @@ pub(crate) struct BatchSink<'a> {
     files: &'a mut dyn BatchFiles,
     delimiter: Vec<u8>,
     pending: Vec<u8>,
-    output: Option<Box<dyn Write + Send>>,
+    open: bool,
     next: usize,
     written: usize,
     limit: usize,
@@ -42,7 +37,7 @@ impl<'a> BatchSink<'a> {
             files,
             delimiter: format!("\0{sentinel} missing\0").into_bytes(),
             pending: Vec::new(),
-            output: None,
+            open: false,
             next: 0,
             written: 0,
             limit,
@@ -60,7 +55,7 @@ impl<'a> BatchSink<'a> {
         if let Some(error) = self.failure.take() {
             return Err(error);
         }
-        if self.output.is_some() || !self.pending.is_empty() || self.next != self.entries.len() {
+        if self.open || !self.pending.is_empty() || self.next != self.entries.len() {
             return Err(Error::MalformedOutput);
         }
         Ok(self.written)
@@ -69,7 +64,7 @@ impl<'a> BatchSink<'a> {
     fn consume(&mut self, bytes: &[u8]) -> Result<()> {
         self.pending.extend_from_slice(bytes);
         loop {
-            if self.output.is_none() {
+            if !self.open {
                 if self.pending.is_empty() {
                     return Ok(());
                 }
@@ -84,13 +79,12 @@ impl<'a> BatchSink<'a> {
                 };
                 header(&self.pending[..end], entry)?;
                 self.pending.drain(..=end);
-                self.output = Some(self.files.open(self.next)?);
+                self.files.open(self.next)?;
+                self.open = true;
             } else if let Some(end) = find(&self.pending, &self.delimiter) {
                 self.emit(end)?;
                 self.pending.drain(..end + self.delimiter.len());
-                if let Some(mut output) = self.output.take() {
-                    output.flush().git()?;
-                }
+                self.open = false;
                 self.next += 1;
             } else {
                 let keep = self.delimiter.len() - 1;
@@ -109,10 +103,7 @@ impl<'a> BatchSink<'a> {
         if self.written > self.limit {
             return Err(Error::ByteLimit { limit: self.limit });
         }
-        let Some(output) = self.output.as_mut() else {
-            return Err(Error::MalformedOutput);
-        };
-        output.write_all(&self.pending[..end]).git()
+        self.files.write(self.next, &self.pending[..end])
     }
 }
 

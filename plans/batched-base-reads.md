@@ -94,7 +94,8 @@ from the code at `a9dd1e81` or from Git's behaviour:
 - A streaming decoder implements `Write`, so the batch uses the runner's
   existing bounded stream with its deadline and cancellation. The decoder
   checks each header's blob id and type, writes the content to the file's
-  private temporary file, and ends the file at the sentinel record. A wrong
+  store, and ends the file at the sentinel record. A read keeps its files in
+  memory. The extraction keeps them in a private temporary directory. A wrong
   id, an unexpected record, trailing bytes, or a truncated stream give
   `MalformedOutput`. The decoder counts content bytes against the batch bound.
 - The sentinel is new for each batch. It comes from the standard library's
@@ -105,16 +106,17 @@ from the code at `a9dd1e81` or from Git's behaviour:
   more process steps.
 - A path that starts with a space or a tab streams alone with
   `--filters --path`.
-- A batch above 48 MiB, which callers form only for one large file, keeps the
-  per-file stream: raw `cat-file blob` for an unconverted path and `--filters`
-  for a converted path. `converted_paths` stays for this case and for opaque
+- Every file of a call above 48 MiB keeps the per-file stream: raw
+  `cat-file blob` for an unconverted path and `--filters` for a converted
+  path. The extraction forms such a call only for one large file, but the
+  dependency input read can form one with many files. `converted_paths` stays for this case and for opaque
   digests.
-- The callers keep their failure handling. A batch that fails, times out, or
-  exceeds a bound returns `Conversion`. The extraction and the prefetch then
-  convert one file at a time, as today, so a failure stays with its file and
-  each file keeps its own 120-second allowance. An optional filter failure
-  prints `external filter ... failed`, which the stream check already maps to
-  `CheckoutFailed`.
+- When a batch reaches its deadline, each of its files converts again alone
+  with its own deadline, and a failure names its file. A batch that fails or
+  exceeds a bound returns `Conversion`, and the extraction and the prefetch
+  convert one file at a time, as before, so a failure stays with its file. An
+  optional filter failure prints `external filter ... failed`, which the
+  stream check already maps to `CheckoutFailed`.
 - After this change, the raw `--batch -Z` capture and its decoder
   `decode_batch` have no caller. Delete them as dead code and record the
   search in the commit.
@@ -210,6 +212,20 @@ The user answered each decision on 2026-10-27 with the recommended option.
 5. No follow-up for an HTML-only base prefetch, option A. Rejected: B, a
    follow-up, because the small HTML fixture classifies in 1.2 s with
    `* text=auto`, and design A already batches its prefetch reads.
+6. Review finding 1 of 2026-10-28: when a batch reaches its deadline, the
+   conversion engine converts each of its files again alone, option E of the
+   options check. Applied with the recommended option under the user's rule
+   for decisions that come up during the work. Reason: every caller,
+   including the dependency input read, keeps 120 seconds for each file.
+   Rejected: A, a retry only in the dependency input read, because a later
+   caller would share one deadline again. Rejected: D, a per-file result API,
+   because it is Large.
+7. Review finding 4 of 2026-10-28: a read converts into memory, and only the
+   extraction keeps a temporary directory, option D of the options check.
+   Applied under the same rule. Reason: with decision 6, the fallback needs
+   unit tests without disk IO, and a read no longer writes and reads back a
+   temporary file. Rejected: B, a file sink parameter for the batch only,
+   because the single-file path of a read would still need the disk.
 
 ## Milestone 1: Documentation and protocol for batch conversion
 
@@ -313,6 +329,16 @@ failing test first.
 - [ ] Review the complete diff against `origin/main` with the
       `implementation-review` skill. Apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+  - Review 1 of `c7202754` found four Low findings. The validity check
+    confirmed all four. The fix round fixed findings 2 and 3, and applied
+    decisions 6 and 7 for findings 1 and 4. Reports:
+    `.context/batched-base-reads/review-1.md`.
+  - Outside the scope: `crates/mokly-git/src/extraction.rs` and
+    `crates/mokly-compare/src/git_prefetch.rs` repeat the 48 MiB batch bound as
+    a literal. Separate branch.
+  - Outside the scope: `crates/mokly-git/src/checkout.rs`, a failed batch
+    still names the first file of the call in its `Conversion` error.
+    Separate branch.
 - [ ] Open the first pull request, for design A, with the before and after
       table in its body. Put its link in the status paragraph.
 

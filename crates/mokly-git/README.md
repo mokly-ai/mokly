@@ -58,17 +58,20 @@ A batch of two or more files within 48 MiB converts in one
 path, and a sentinel name follows each file. Git prints the raw blob size in
 each header, not the converted size, so the decoder ends each converted file
 at the sentinel's `missing` record. The sentinel is random for each batch, so
-no file content can predict it. The decoder streams each file into an owned
-temporary file outside the repository. It validates the blob id, the NUL
-framing, and the batch byte bound. A path that starts with a space or a tab
-converts alone, because Git strips that whitespace from a batch line. A
-single file also converts alone with `--filters`. A larger batch holds one
-large file, which streams alone: effective attributes and `core.autocrlf`
-select raw `cat-file blob` for a path without conversion and `--filters` for
-the others. The byte bound stops the process before more data is written. A
-failed, timed-out, or oversized batch returns a typed `Conversion` error, and
-extraction converts the files of that batch again one at a time. A deadline
-and process-tree cancellation supervise every conversion. Failed optional filters return typed
+no file content can predict it. The decoder validates the blob id, the NUL
+framing, and the batch byte bound. A read keeps the converted files in memory
+within its byte bound. The extraction streams each file into an owned
+temporary file outside the repository. A path that starts with a space or a
+tab converts alone, because Git strips that whitespace from a batch line. A
+single file also converts alone with `--filters`. Every file of a call above
+48 MiB streams alone: effective attributes and `core.autocrlf` select raw
+`cat-file blob` for a path without conversion and `--filters` for the others.
+The byte bound stops the process before more data is written. When a batch
+reaches its deadline, each of its files converts again alone with its own
+deadline, and a failure names its file. A batch that fails or exceeds a bound
+returns a typed `Conversion` error, and the extraction and the prefetch
+convert its files again one at a time. A deadline and process-tree
+cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
 
@@ -152,6 +155,8 @@ extraction cleanup after cancellation during a streamed copy.
   the filtered batch request, and
   [`src/checkout_output.rs`](./src/checkout_output.rs) defines `BatchSink`,
   the decoder that splits its output at the sentinel records.
+  [`src/checkout_files.rs`](./src/checkout_files.rs) defines `BatchFiles`, with
+  `MemoryFiles` for reads and `DirectoryFiles` for the extraction.
 - [`src/tree.rs`](./src/tree.rs) and [`src/changes.rs`](./src/changes.rs)
   define the tree `Entry` and `Limits` records and the changed-path `Change`
   records.
