@@ -82,7 +82,8 @@ Comparison counts cover the final view and document union. `changed` includes
 added and removed views; `unchanged` and `ignoredOnly` are separate totals.
 Only a completed comparison emits these counts. `review.base-extraction`,
 `review.base-dependencies`, and `review.compare-views` start with error status and
-record `ok` only after successful work.
+record `ok` only after successful work. A `review.base-extraction` lookup
+without a build that finds no complete entry ends without an `action`.
 
 Static input counters on `output.*` stages are observations. Their
 `retainedBytes` counts private source payload once per captured path.

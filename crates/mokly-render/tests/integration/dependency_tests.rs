@@ -62,10 +62,10 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     );
     let workspace = workspace();
     let base = Arc::new(BaseSide {
-        sources: Lease {
+        sources: Arc::new(Lease {
             directory: consumer.root().into(),
             guard: Box::new(Unimock::new(())),
-        },
+        }),
         dependencies: Resolved {
             tier: Tier::Installed,
             node_modules: workspace.join("node_modules"),

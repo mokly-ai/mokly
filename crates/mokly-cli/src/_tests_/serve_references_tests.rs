@@ -50,6 +50,9 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),
+            extraction_snapshots: Arc::new(
+                mokly_compare::extraction_snapshots::ProcessSnapshots::default(),
+            ),
             refreshes: Arc::new(Unimock::new(())),
             warnings: Arc::new(Unimock::new(())),
             runtime: Arc::new(Runtime::new(

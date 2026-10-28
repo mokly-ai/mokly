@@ -70,6 +70,8 @@ pub trait Cache: Send + Sync {
     fn capacity(&self, kind: Kind) -> u64;
     /// Open or build an immutable entry and retain its shared lease.
     fn get(&self, kind: Kind, key: &str, builder: &dyn Builder) -> Result<Lease>;
+    /// Lease a complete entry without building one; none when no complete entry exists.
+    fn lease(&self, kind: Kind, key: &str) -> Result<Option<Lease>>;
 }
 
 /// Filesystem boundary of cache orchestration and install size supervision.

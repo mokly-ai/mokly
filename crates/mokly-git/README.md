@@ -77,6 +77,14 @@ cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
 
+`Repository::fingerprint_extracted` records a `Fingerprint` of each confined
+regular file of an extraction: its size, its times, and on Unix its change
+time and inode. `Repository::read_extracted` and
+`Repository::digest_extracted` read the converted files back with the count
+and byte checks and the error kinds of a Git read. A file reads from the
+extraction only while it matches its fingerprint before and after the read. A
+file that the extraction does not hold, or that changed, reads through Git.
+
 Opaque digests stream converted stdout into SHA-256 without a temporary spool.
 Working dependency inputs retain Git clean normalization through
 `hash-object --stdin-paths`. Extraction copies regular converted files in
@@ -151,7 +159,13 @@ extraction cleanup after cancellation during a streamed copy.
   `GitRepositories`, and `Repository`, which validate a checkout and read merge
   bases, changed paths, trees, blobs, and archives.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk` and `Archive`, the filesystem
-  boundary for checkout identity, working reads, and extraction.
+  boundary for checkout identity, working reads, confined digests, and
+  extraction.
+- [`src/extracted.rs`](./src/extracted.rs) defines `ExtractedFiles` and reads
+  and hashes the converted files of an extraction, with Git for the files
+  that it lacks or that changed.
+  [`src/fingerprint.rs`](./src/fingerprint.rs) defines `Fingerprint` and the
+  checked reads.
 - [`src/checkout.rs`](./src/checkout.rs) defines `Checkout`, the converted
   files of one batch. [`src/checkout_batch.rs`](./src/checkout_batch.rs) builds
   the filtered batch request, and
