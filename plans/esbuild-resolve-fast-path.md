@@ -167,14 +167,49 @@ runs.
 | `sidecar.bundle.compile` after the edit, head | 7.1 s  | 6.9 to 7.9 s   |
 | `sidecar.bundle.compile` after the edit, base | 7.2 s  | 7.0 to 7.4 s   |
 
-A prototype of the design, a patched copy of the package build outside the
-source tree, compiled the head in 0.42 to 0.53 s and the base in 0.44 to
-0.59 s. Its classification took 0.10 to 0.21 s. On the React fixture, the
-compile took 0.35 to 0.50 s. Its bundle results matched the current results
-in every field, on both fixtures and both sides. The item rule without the
-fallback compiled in 0.44 to 0.69 s. Relative imports from repository-owned
-files on the full path added about 0.25 s. Evidence:
+A first prototype, a patched copy of the package build outside the source
+tree, measured the single native compile at 0.42 to 0.59 s. Decision 6 adds
+the planned compile, so the final numbers below replace it. Evidence:
 `.context/esbuild-resolve-fast-path/prototype.md`.
+
+## After the change
+
+On 2026-10-28 the machine ran about 1.5 to 2 times slower than during the
+baseline, so the comparison below interleaves runs of the `origin/main`
+sidecar build and the branch build in the same machine state. The table gives
+medians of three serve runs and two edit runs of `examples/basic`, and two
+serve runs of the React fixture. Each branch bundle of these fixtures runs a
+native and a planned compile, because their files sit under the repository's
+`"type": "module"`. Evidence:
+`.context/esbuild-resolve-fast-path/measurements.md`.
+
+| Measure                                      | `origin/main` | Branch      |
+| -------------------------------------------- | ------------- | ----------- |
+| `sidecar.bundle.compile`, head, all passes   | 12.3 s        | 2.3 s       |
+| `sidecar.bundle.compile`, base, all passes   | 14.6 s        | 1.8 s       |
+| `sidecar.bundle`, head and base              | 12.8, 15.5 s  | 3.0 s       |
+| `serve.ready`                                | 22.1 s        | 13.5 s      |
+| `serve.background`                           | 21.7 s        | 24.6 s      |
+| `changes.classify`                           | 93.6 s        | 90.3 s      |
+| `review.base-tree`                           | 58.1 s        | 51.4 s      |
+| `review.capture-side`                        | 9.3 s         | 8.4 s       |
+| `review.compare-views`                       | 34.9 s        | 29.6 s      |
+| Start to Changes ready                       | 136.1 s       | 128.6 s     |
+| `sidecar.render` count                       | 2,094         | 1,992       |
+| `css.bundle` count, union                    | 152, 17.2 s   | 152, 19.1 s |
+| `watch.action`                               | 14.6 s        | 6.1 s       |
+| `serve.background` after the edit            | 20.6 s        | 20.0 s      |
+| `changes.classify` after the edit            | 111.1 s       | 100.1 s     |
+| Edit to the end of the second classification | 146.4 s       | 126.2 s     |
+| React fixture `serve.ready`                  | 11.9 s        | 2.7 s       |
+| React fixture `changes.classify`             | 18.0 s        | 6.1 s       |
+| React fixture `sidecar.bundle`, head, base   | 11.2, 13.3 s  | 2.2, 2.2 s  |
+
+Each compile pass took 0.5 to 2.1 s on the slowed machine. In sequential
+runs before the slowdown, the passes took 0.5 to 0.9 s and a bundle 1.6 to
+2.7 s. `serve.background` and the render times vary more between runs than
+between the builds: the edit runs show the branch faster. The live heap after
+one bundle is 9 MB on both builds.
 
 ## Decisions
 
@@ -312,18 +347,24 @@ and `sidecar-tests.txt`.
 
 ## Milestone 3: Result identity and measurement
 
-- [ ] Compare the bundle results of the `origin/main` build and the branch
+- [x] Compare the bundle results of the `origin/main` build and the branch
       build with the captured head and base parameters of `examples/basic`
       and the React fixture. Every field must match: modules with imports
       and digests, compiled and metadata inputs, directory listings, peers,
       CSS Modules, unmapped dependency directories, and the identity. Save
-      the evidence under `.context/esbuild-resolve-fast-path/`.
-- [ ] Measure after the change with the shared method: three warm serve
+      the evidence under `.context/esbuild-resolve-fast-path/`. All 13 fields
+      match, the emitted code included, on all four bundles.
+- [x] Measure after the change with the shared method: three warm serve
       runs and three edit runs of `examples/basic`, and two serve runs of
-      the React fixture. Add the after values to the baseline section.
+      the React fixture. Add the after values to the baseline section. The
+      machine slowed down, so interleaved runs of both builds give the
+      comparison.
 - [ ] Run the mockup check: `npm run build`, then
       `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
       Smoke-test a React screen and the Changes view through `npm run dev`.
+
+Evidence: `.context/esbuild-resolve-fast-path/identity.txt` and
+`measurements.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
