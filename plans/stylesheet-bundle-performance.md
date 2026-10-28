@@ -163,6 +163,14 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
    Rejected: C, one in-flight cell for each input, because a per-context
    lock gives the same single request with less state. Reason: B removes
    both waits, and the probe measured 0.59 s and 0.57 s.
+7. Review finding 3 of step A, a missing test for the check under the
+   request lock, decided on 2026-10-28 under the user's rule: C, a test that
+   holds the shared cache lock until the request holds its turn, then stores
+   the result. The purge-sentinel test D that the fix round wrote stays,
+   because it checks the same single call through `process`. Rejected: A, a
+   test-only hook in product code, because C and D need none. Rejected: E, a
+   single-flight helper, because it has one user today. Reason: C fails when
+   the check is removed or moved before the lock.
 
 ## Design
 
@@ -304,6 +312,22 @@ Evidence: `.context/perf/probe-a2.jsonl` and `.context/perf/probe-a3.jsonl`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Round 1 at `a4c5ce6e`: three findings, all confirmed by the validity
+    check. Fixed 1, base stylesheet jobs could deadlock foreground renders,
+    High, in `512886be`. Fixed 2, a failed root did not stop later roots,
+    Medium, in `136815c6`. Finding 3, no test for the check under the
+    request lock, Low, applied under decision 7.
+  - Follow-up: give Serve's background base work its own render pool, so no
+    base job waits at the admission gate on a worker that a foreground
+    render needs. Effort Small. Covers finding 1 and the base comparison
+    capture below. Previous examples: none found.
+  - Outside the scope: `crates/mokly-graph/src/session_collection.rs`, the
+    base comparison capture can fill every render worker with jobs that
+    wait at the admission gate. Separate branch.
+
+Evidence: `.context/perf5-parallel-stylesheets/review-a1.md` and
+`.context/perf5-parallel-stylesheets/validity-a1.md`.
+
 - [ ] Open the step A pull request with the before and after table. Put its
       link in the status paragraph.
 
