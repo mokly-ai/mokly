@@ -12,7 +12,7 @@ use crate::projection_workspace;
 
 use super::support::{classified, details, entry, result, with_lookup};
 
-fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
+pub(super) fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
     AffectedConsumer {
         changed_component_id: "button".into(),
         consumer: AffectedConsumerAddress {

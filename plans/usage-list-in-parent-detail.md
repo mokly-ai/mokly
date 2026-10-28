@@ -373,6 +373,7 @@ version.
     parent's detail.
   - Plan review 1, finding 4, no test of the embedded viewer's parent request:
     user decision (2026-10-27) A. Milestone 2 has the test.
+  - Implementation review 1 (2026-10-27): `.context/usage-list-in-parent-detail/impl-review-1.md`. Findings 1 to 11 were fixed.
   - `plans/remove-review-json.md` and `plans/build-head-capture.md`: their
     status paragraphs still say Active after their pull requests merged.
     Separate branch.

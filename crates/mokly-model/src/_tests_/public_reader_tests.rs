@@ -3,6 +3,7 @@
 use serde_json::{Value, json};
 
 use crate::canonical;
+use crate::read_contract::ContractViolation;
 use crate::readers::{ReadError, detail, index};
 
 pub(super) fn empty_index() -> Value {
@@ -98,6 +99,26 @@ fn current_and_removed_detail_fences_are_exclusive() {
     assert!(detail(&value.to_string()).is_ok());
     value["workspace"] = json!({"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]});
     assert!(detail(&value.to_string()).is_ok());
+    value["workspace"].as_object_mut().unwrap().remove("usedBy");
+    assert!(matches!(
+        detail(&value.to_string()),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
+    value["workspace"]["usedBy"] = json!([]);
+    value["workspace"]
+        .as_object_mut()
+        .unwrap()
+        .remove("affected");
+    assert!(matches!(
+        detail(&value.to_string()),
+        Err(ReadError::Contract {
+            message: ContractViolation::Workspace,
+            ..
+        })
+    ));
     value["usage"] = json!({"status":"ready"});
     assert!(detail(&value.to_string()).is_err());
 }

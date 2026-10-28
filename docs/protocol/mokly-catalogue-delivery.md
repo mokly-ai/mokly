@@ -20,7 +20,8 @@ The index carries every current entry record with its document keys, the
 tree, the removed records, `changesStatus`, `baseCommit`, and
 `comparisonUrl`, and no per-view usage or resource evidence. The detail
 carries one entry's per-view usage, review states, ignore ids, resource
-evidence, its base side's address, and its workspace lists. No third public
+evidence, its base side's address, and its workspace lists under the
+[placement rule](./mokly-shell-delivery.md#entry-detail). No third public
 form exists: the review result v8 stays in memory. Serve projects both from one model
 state in one publication, and `build` writes both for every entry.
 

@@ -94,7 +94,9 @@ The route details' workspaces update comparison eligibility, Details evidence,
 and the complete Used by and Affected lists in place. A current component
 variant reads both lists from its parent's workspace. Only that workspace
 proves that its lists are complete. While any route detail is in flight the
-Usage panel shows the loading copy of the on-demand contract without counts,
+Usage panel shows `Loading usage…` of the
+[component pages contract](./mokly-component-explorer.md#catalogue-and-component-pages)
+without counts,
 an empty state, or rows. A failed or rejected read shows its failure copy with
 retry after all route details settle. The shell never derives a list from an
 incomplete record or shows a zero-consumer result it has not received.

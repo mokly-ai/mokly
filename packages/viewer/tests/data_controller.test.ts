@@ -106,7 +106,11 @@ test("a sibling variant keeps its held parent detail", async () => {
   fixture.navigate(`/view/${SECOND_VARIANT}/`);
 
   assert.equal(firstVariant.signal.aborted, true);
-  assert.equal(parent.signal.aborted, false);
+  assert.ok(
+    fixture.controller.snapshot.details.has(
+      detailKey({ path: "components/action" }),
+    ),
+  );
   assert.deepEqual(
     fixture.source.details.map((item) => item.input),
     [

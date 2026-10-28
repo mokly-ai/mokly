@@ -1,4 +1,4 @@
-/** The stage while the route's details load, or after a route detail fails. */
+/** The stage while the route's details load, or after one route detail fails. */
 
 import type { CatalogueRecord } from "../catalogue/types.js";
 

@@ -10,6 +10,7 @@ import {
 } from "./comparison_test.js";
 
 test("the native comparison copy remains usable after its two-commit source repository is removed", async ({
+  page,
   request,
   baseURL,
 }) => {
@@ -55,6 +56,42 @@ test("the native comparison copy remains usable after its two-commit source repo
   expect(removedDetail.workspace?.affected).toEqual(
     parentDetail.workspace?.affected,
   );
+  await page.goto(`/view/${comparisonPaths.changedVariant}/`);
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
+  for (const title of ["Changed screen", "Consumer screen"])
+    await expect(
+      usage.getByRole("link", { name: title, exact: true }).first(),
+    ).toBeVisible();
+
+  const parentRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/entries/components/card.json"))
+      parentRequests.push(request.url());
+  });
+  await page.goto(
+    `/view/${comparisonPaths.removedVariant}/?snapshot=${removed.snapshotId}`,
+  );
+  await expect(
+    page.getByRole("tab", { name: "Usage", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Usage", exact: true }).click();
+  const removedUsage = page.getByRole("tabpanel", {
+    name: "Usage",
+    exact: true,
+  });
+  await expect(
+    removedUsage.getByRole("heading", { name: "Used by" }),
+  ).toBeVisible();
+  await expect(removedUsage).toContainText("No recorded consumers.");
+  if (removedDetail.workspace?.affected?.length)
+    await expect(
+      removedUsage.getByRole("heading", {
+        name: "Affected screens and components",
+      }),
+    ).toBeVisible();
+  expect(parentRequests).toEqual([]);
   expect(
     index.screens.find(
       (entry: { path: string }) => entry.path === comparisonPaths.unchanged,

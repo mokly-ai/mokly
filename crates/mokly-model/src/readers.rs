@@ -55,7 +55,7 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     Ok(index)
 }
 
-/// Decode an entry detail after its v2 gate.
+/// Decode an entry detail after its version gate.
 pub fn detail(text: &str) -> Result<EntryDetailV3, ReadError> {
     let detail: EntryDetailV3 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
     detail_validation::validate(&detail)?;

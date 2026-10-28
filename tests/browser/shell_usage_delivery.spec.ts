@@ -101,11 +101,18 @@ test("a variant Usage waits for its parent detail and reuses it for a sibling", 
     ).toBeVisible();
   expect(detail.reads()).toBe(1);
 
+  const sibling = await holdDetail(page, "example/components/action/disabled");
   await page
     .getByRole("navigation", { name: "Saved variants" })
     .getByRole("link", { name: "Disabled", exact: true })
     .click();
+  await expect.poll(() => sibling.held.length).toBe(1);
+  await sibling.release();
+  await expect(page).toHaveURL(
+    /\/view\/example\/components\/action\/disabled\/$/u,
+  );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
+  await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
   expect(detail.reads()).toBe(1);
 });
 
