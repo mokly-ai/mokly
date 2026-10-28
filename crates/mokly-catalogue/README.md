@@ -27,14 +27,19 @@ use the catalogued `config-invalid` diagnostics before a sidecar starts. Git
 root validation belongs to the Git boundary. The [configuration contract](../../docs/protocol/mokly-configuration.md)
 owns the accepted fields, the path rules, and the stylesheet matcher warnings.
 
-`ResolvedConfig::package_roots` returns each package root as a
-repository-relative path without `.` or `..` segments. The repository root is
-empty. The file policy, the static output boundary, the sidecar settings, and
-base dependency selection read this form, so a working tree and a Git tree name
-the same package root. `ResolvedConfig::package_root_aliases` keeps each
-authored spelling with `..`. The file policy and the output boundary project
-it, so a symbolic link before `..` cannot remove the protection of the
-directory that the spelling reaches.
+`ResolvedConfig::repository_path` returns the repository-relative POSIX path
+that a config-relative value names, without `.`, `..`, or empty segments. The
+repository root is empty. `ResolvedConfig::renderer`,
+`ResolvedConfig::postcss`, and `ResolvedConfig::package_roots` give that form
+for their fields. The file policy, the static output boundary, the sidecar
+settings, and base dependency selection read package roots in this form, so a
+working tree and a Git tree name the same package root. A symbolic link
+before `..` does not change that root, and the manifest check reads only it.
+
+`mokly-render` and `mokly-graph` read the renderer, the PostCSS module, and
+stylesheets in the same form. Bundle requests, render input keys, stylesheet
+roots and links, the declared stylesheet check, and every PostCSS request use
+that form.
 
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
@@ -175,8 +180,8 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/config_types.rs`](./src/config_types.rs) defines the authored `Config`
   shape and the `ResolvedConfig` that later stages read.
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
-  gives `ResolvedConfig::package_roots` and
-  `ResolvedConfig::package_root_aliases`.
+  gives `ResolvedConfig::repository_path`, the one resolver of
+  config-relative paths, with `renderer`, `postcss`, and `package_roots`.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and

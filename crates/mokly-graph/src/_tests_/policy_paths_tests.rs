@@ -1,4 +1,5 @@
-//! Case and parent-segment aliases of private directories stay private.
+//! Case aliases of private directories stay private; a parent-segment
+//! spelling names only its normalized root.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -157,7 +158,7 @@ fn a_parent_segment_package_root_is_private_without_canonical_projection() {
 }
 
 #[test]
-fn a_parent_segment_spelling_keeps_its_physical_target_private() {
+fn a_parent_segment_spelling_keeps_only_its_normalized_root_private() {
     let tree = Arc::new(Unimock::new(
         SourceTreeMock::project
             .each_call(matching!(_))
@@ -193,11 +194,11 @@ fn a_parent_segment_spelling_keeps_its_physical_target_private() {
         roots: Vec::new(),
     };
     let policy = FilePolicy::new(tree, &config, &[], BTreeMap::new(), None).unwrap();
-    for path in ["tools/ui/private.txt", "deep/ui/private.txt"] {
-        assert_eq!(policy.check(path).unwrap_err(), PublicDenial::Private);
-    }
     assert_eq!(
-        policy.check("deep/other.txt").unwrap().path,
-        "deep/other.txt"
+        policy.check("tools/ui/private.txt").unwrap_err(),
+        PublicDenial::Private
     );
+    for path in ["deep/ui/public.txt", "deep/other.txt"] {
+        assert_eq!(policy.check(path).unwrap().path, path);
+    }
 }

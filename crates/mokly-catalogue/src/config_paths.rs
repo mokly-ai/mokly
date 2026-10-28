@@ -1,6 +1,6 @@
 //! Physical confinement for configuration filesystem fields.
 
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
@@ -11,28 +11,38 @@ use crate::config_validation::invalid;
 use crate::error::Result;
 
 impl ResolvedConfig {
-    /// Package roots as repository-relative POSIX paths without `.` or `..`
-    /// segments, in authored order. The repository root itself is empty.
-    /// Every consumer reads this form; loading confines each root inside
-    /// `repo_root`.
-    pub fn package_roots(&self) -> Vec<String> {
-        self.authored_package_roots()
-            .map(|root| relative(&self.local_path(root), &self.repo_root))
-            .collect()
+    /// The repository-relative POSIX path that a config-relative value names:
+    /// the value joined to the configuration directory, without `.`, `..`, or
+    /// empty segments. A symbolic link before `..` does not change it. The
+    /// repository root itself is empty. A value that leaves `repo_root` has
+    /// no repository path; loading rejects every such configured value.
+    pub fn repository_path(&self, value: &str) -> Option<String> {
+        let path = self.local_path(value);
+        path.starts_with(&self.repo_root)
+            .then(|| relative(&path, &self.repo_root))
     }
 
-    /// Authored package-root spellings that contain `..`, joined to the
-    /// configuration directory. A symbolic link before `..` can lead such a
-    /// spelling to another physical directory. Consumers only project these
-    /// paths, so that directory stays protected as before normalization.
-    pub fn package_root_aliases(&self) -> Vec<PathBuf> {
+    /// The configured renderer module as its repository path.
+    pub fn renderer(&self) -> Option<String> {
+        self.input
+            .renderer
+            .as_deref()
+            .and_then(|value| self.repository_path(value))
+    }
+
+    /// The configured PostCSS module as its repository path.
+    pub fn postcss(&self) -> Option<String> {
+        self.input
+            .postcss
+            .as_deref()
+            .and_then(|value| self.repository_path(value))
+    }
+
+    /// Package roots as repository paths, in authored order. Every consumer
+    /// reads this form.
+    pub fn package_roots(&self) -> Vec<String> {
         self.authored_package_roots()
-            .filter(|root| {
-                Path::new(root)
-                    .components()
-                    .any(|part| part == Component::ParentDir)
-            })
-            .map(|root| self.spelling(root))
+            .filter_map(|root| self.repository_path(root))
             .collect()
     }
 
@@ -43,12 +53,10 @@ impl ResolvedConfig {
             .flat_map(|module| module.package_roots.iter().flatten())
     }
 
-    fn spelling(&self, value: &str) -> PathBuf {
-        self.file.parent().unwrap_or(&self.repo_root).join(value)
-    }
-
-    fn local_path(&self, value: &str) -> PathBuf {
-        normalize(&self.spelling(value))
+    /// The source-tree path that a config-relative value names. Loading
+    /// projects this path for every check.
+    pub(crate) fn local_path(&self, value: &str) -> PathBuf {
+        normalize(&self.file.parent().unwrap_or(&self.repo_root).join(value))
     }
 }
 
@@ -207,20 +215,19 @@ fn confined(
     Ok(vec![path, node.identity])
 }
 
-/// The normalized root needs `package.json`. The authored spelling's target
-/// also counts, so a root spelled through a symbolic link before `..` keeps
-/// the acceptance that the unnormalized check gave it.
+/// The normalized root needs `package.json`. A symbolic link before `..` in
+/// the authored spelling does not change which directory that is.
 fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> bool {
-    [config.local_path(value), config.spelling(value)]
-        .iter()
-        .any(|directory| {
-            matches!(
-                tree.project(&directory.join("package.json")),
-                Ok(Some(node)) if node.kind == FileKind::File
-            )
-        })
+    matches!(
+        tree.project(&config.local_path(value).join("package.json")),
+        Ok(Some(node)) if node.kind == FileKind::File
+    )
 }
 
 #[cfg(test)]
 #[path = "_tests_/package_roots_tests.rs"]
 mod package_roots_tests;
+
+#[cfg(test)]
+#[path = "_tests_/repository_path_tests.rs"]
+mod repository_path_tests;

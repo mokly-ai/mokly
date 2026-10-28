@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use mokly_catalogue::config::relative;
+use mokly_catalogue::config::{normalize, relative};
 use mokly_css::dependencies::{DirectoryDependency, PluginInput};
 use mokly_model::canonical::compare_utf16;
 use mokly_sidecar::results::{Dependency, DependencyKind};
@@ -190,16 +190,4 @@ fn failure(
         path: path.into(),
         reason,
     }
-}
-
-pub(crate) fn normalize(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
-    for part in path.components() {
-        if part == std::path::Component::ParentDir {
-            result.pop();
-        } else if part != std::path::Component::CurDir {
-            result.push(part);
-        }
-    }
-    result
 }
