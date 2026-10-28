@@ -3,7 +3,9 @@
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
-use mokly_compare::base_render::{BaseProvider, BaseProviderMock, BaseRequest, HistoricalSources};
+use mokly_compare::base_render::{
+    BaseProvider, BaseProviderMock, BaseRequest, HistoricalSources, PreparedBase,
+};
 use mokly_compare::error::Error;
 use mokly_git::identity::ObjectId;
 use mokly_graph::error::GraphError;
@@ -21,7 +23,10 @@ fn static_base_admits_only_a_verified_prepared_generation() {
         let boundaries = Unimock::new((
             BaseProviderMock::prepare
                 .next_call(matching!(_))
-                .returns(Ok(generation.clone())),
+                .returns(Ok(PreparedBase {
+                    generation: generation.clone(),
+                    scripts_off: true,
+                })),
             InputTreeMock::verify
                 .next_call(matching!())
                 .returns(if changed {
@@ -56,11 +61,18 @@ fn static_base_admits_only_a_verified_prepared_generation() {
             },
         });
         if changed {
-            assert!(matches!(result, Err(Error::Graph {
-                source: GraphError::InputsChanged { path },
-            }) if path.to_str() == Some("/selected/plugin.mjs")));
+            assert!(matches!(
+                result,
+                Err(error)
+                    if error.scripts_off
+                        && matches!(&*error.source, Error::Graph {
+                            source: GraphError::InputsChanged { path },
+                        } if path.to_str() == Some("/selected/plugin.mjs"))
+            ));
         } else {
-            assert!(Arc::ptr_eq(&result.unwrap(), &generation));
+            let prepared = result.unwrap();
+            assert!(Arc::ptr_eq(&prepared.generation, &generation));
+            assert!(prepared.scripts_off);
         }
     }
 }
