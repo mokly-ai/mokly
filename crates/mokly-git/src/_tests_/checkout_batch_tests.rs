@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::checkout_batch::convert_entries;
+use crate::checkout_files::MemoryFiles;
 use crate::command::{Output, Request, RunnerMock};
 use crate::error::Error;
 use crate::identity::{ObjectId, RepoPath};
@@ -28,6 +30,7 @@ fn repository(mock: Unimock) -> GitRepository {
     GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
+        timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
         runner: Arc::new(mock),
         disk: Arc::new(Unimock::new(())),
@@ -126,22 +129,62 @@ fn alone(name: &'static str, content: Option<&'static [u8]>) -> impl unimock::Cl
         }))
 }
 
+/// Git's output for `a.txt` and `z.txt`, which a deadline can stop after any byte.
+fn stale(sentinel: &str) -> Vec<u8> {
+    format!(
+        "{} blob 2\0STALE-A\0{sentinel} missing\0{} blob 2\0STALE-Z\0{sentinel} missing\0",
+        "a".repeat(40),
+        "d".repeat(40)
+    )
+    .into_bytes()
+}
+
 #[test]
-fn a_batch_that_reaches_its_deadline_converts_each_file_alone() {
+fn a_batch_stopped_at_any_byte_by_its_deadline_converts_each_file_alone() {
     let entries = [entry("a.txt", 'a'), entry("z.txt", 'd')];
-    let repository = repository(Unimock::new((
-        preflight(&entries),
-        RunnerMock::stream_cancellable_with_environment_timeout
-            .next_call(matching!((request, _, _, _, _, _) if batch(request)))
-            .returns(Err(Error::CheckoutTimeout)),
-        alone("a.txt", Some(b"A\r\n")),
-        alone("z.txt", Some(b"Z\r\n")),
-    )));
-    assert_eq!(
-        repository
-            .checkout_read(&commit(), &entries, Limits::default())
-            .unwrap(),
-        [b"A\r\n".to_vec(), b"Z\r\n".to_vec()]
+    for stop in 0..=stale(&"x".repeat(42)).len() {
+        let repository = repository(Unimock::new((
+            RunnerMock::stream_cancellable_with_environment_timeout
+                .next_call(matching!((request, _, _, _, _, _) if batch(request)))
+                .answers_arc(Arc::new(move |_, request, _, _, _, output, _| {
+                    let fields: Vec<_> = request.stdin.split(|byte| *byte == 0).collect();
+                    let output_bytes = stale(str::from_utf8(fields[1]).unwrap());
+                    output.write_all(&output_bytes[..stop]).unwrap();
+                    Err(Error::CheckoutTimeout)
+                })),
+            alone("a.txt", Some(b"A\r\n")),
+            alone("z.txt", Some(b"Z\r\n")),
+        )));
+        let mut files = MemoryFiles::new(entries.len());
+        convert_entries(&repository, &commit(), &entries, &mut files, 1024).unwrap();
+        assert_eq!(
+            files.into_files(),
+            [b"A\r\n".to_vec(), b"Z\r\n".to_vec()],
+            "stopped after {stop} bytes"
+        );
+    }
+}
+
+#[test]
+fn a_file_that_reached_its_own_deadline_fails_at_once_in_a_later_call() {
+    let repository = repository(Unimock::new(alone("z.txt", None)));
+    let first = convert_entries(
+        &repository,
+        &commit(),
+        &[entry("z.txt", 'd')],
+        &mut MemoryFiles::new(1),
+        1024,
+    );
+    assert!(matches!(first, Err(Error::Conversion { path, .. }) if path == "z.txt"));
+    let later = convert_entries(
+        &repository,
+        &commit(),
+        &[entry("a.txt", 'a'), entry("z.txt", 'd')],
+        &mut MemoryFiles::new(2),
+        1024,
+    );
+    assert!(
+        matches!(later, Err(Error::Conversion { path, source }) if path == "z.txt" && matches!(*source, Error::CheckoutTimeout))
     );
 }
 
@@ -160,4 +203,53 @@ fn a_file_that_reaches_its_own_deadline_names_itself() {
         repository.checkout_read(&commit(), &entries, Limits::default()),
         Err(Error::Conversion { path, source }) if path == "z.txt" && matches!(*source, Error::CheckoutTimeout)
     ));
+}
+
+/// A store whose writes fail with a typed error, as a full disk would.
+struct FullDisk;
+
+impl crate::checkout_files::BatchFiles for FullDisk {
+    fn open(&mut self, _index: usize) -> crate::error::Result<()> {
+        Ok(())
+    }
+    fn write(&mut self, _index: usize, _bytes: &[u8]) -> crate::error::Result<()> {
+        Err(Error::InvalidPath {
+            path: "no space left".into(),
+        })
+    }
+}
+
+/// The runner's copy maps a failed write to an internal I/O error, which the typed failure replaces.
+fn copied(output: &mut (dyn std::io::Write + Send), bytes: &[u8]) -> crate::error::Result<()> {
+    output
+        .write_all(bytes)
+        .map_err(|source| Error::Internal(crate::error::InternalError::Io { source }))
+}
+
+#[test]
+fn a_failed_store_write_keeps_its_typed_error_in_both_paths() {
+    for entries in [
+        vec![entry("a.txt", 'a')],
+        vec![entry("a.txt", 'a'), entry("z.txt", 'd')],
+    ] {
+        let repository = repository(Unimock::new(
+            RunnerMock::stream_cancellable_with_environment_timeout
+                .next_call(matching!(_))
+                .answers(&|_, request, _, _, _, output, _| {
+                    if !batch(request) {
+                        return copied(output, b"bytes");
+                    }
+                    let fields: Vec<_> = request.stdin.split(|byte| *byte == 0).collect();
+                    let sentinel = String::from_utf8(fields[1].to_vec()).unwrap();
+                    let record = format!("{} blob 2\0bytes\0{sentinel} missing\0", "a".repeat(40));
+                    copied(output, record.as_bytes())
+                }),
+        ));
+        let result = convert_entries(&repository, &commit(), &entries, &mut FullDisk, 1024);
+        assert!(
+            matches!(&result, Err(Error::InvalidPath { path }) if path == "no space left"),
+            "{} files: {result:?}",
+            entries.len()
+        );
+    }
 }

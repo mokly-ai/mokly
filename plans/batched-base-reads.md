@@ -226,6 +226,21 @@ The user answered each decision on 2026-10-27 with the recommended option.
    unit tests without disk IO, and a read no longer writes and reads back a
    temporary file. Rejected: B, a file sink parameter for the batch only,
    because the single-file path of a read would still need the disk.
+8. Review 2 finding 2 of 2026-10-28: the repository session records each file
+   whose own conversion reached its deadline, and a later call fails at once
+   for that file, option D of the options check. Applied with the recommended
+   option under the user's rule. Reason: with decision 6, a hanging filter
+   waited for three deadlines in the extraction and the prefetch; the record
+   brings it back to two and stops every later repeat in the same
+   preparation. Rejected: A, keeping three deadlines, and C, per-file results
+   for every caller, because it is Large.
+9. Review 2 finding 3 of 2026-10-28: the deadline tests stop the mocked batch
+   at every byte of its output, and a Unix integration test runs a real
+   filter that hangs, under a clock that jumps past the deadline when the
+   filter logs a hang, option E of the options check. Applied under the same
+   rule. It replaces the milestone 3 decision against a hanging-filter test:
+   the event-driven clock never times out a fast conversion. Rejected: B, a
+   runner wrapper that only fakes the deadline.
 
 ## Milestone 1: Documentation and protocol for batch conversion
 
@@ -333,6 +348,17 @@ failing test first.
     confirmed all four. The fix round fixed findings 2 and 3, and applied
     decisions 6 and 7 for findings 1 and 4. Reports:
     `.context/batched-base-reads/review-1.md`.
+  - Review 2 of `86fc7df7` confirmed the four fixes and found three new Low
+    findings; the validity check confirmed all three. Finding 1, a
+    single-file stream that dropped the store's typed error, is fixed with a
+    shared stream helper, option B. Findings 2 and 3 are decisions 8 and 9.
+    Reports: `.context/batched-base-reads/review-2.md` and the validity and
+    options reports beside it. No third review runs, under the review-fix
+    rule.
+  - Outside the scope: `crates/mokly-git/src/extraction.rs` and
+    `crates/mokly-compare/src/git_prefetch.rs` convert each file of a failed
+    batch in its own call, at about three Git processes each. Separate
+    branch.
   - Outside the scope: `crates/mokly-git/src/extraction.rs` and
     `crates/mokly-compare/src/git_prefetch.rs` repeat the 48 MiB batch bound as
     a literal. Separate branch.

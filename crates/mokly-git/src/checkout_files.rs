@@ -6,6 +6,12 @@ use std::path::{Path, PathBuf};
 
 use crate::error::{Error, IoResult, Result};
 
+/// A conversion stream destination that keeps the typed failure that stopped it.
+pub(crate) trait Failing: Write + Send {
+    /// The typed failure that stopped the stream, which wins over the copy error.
+    fn failure(&mut self) -> Option<Error>;
+}
+
 /// The converted files of one conversion call, addressed by entry index.
 pub(crate) trait BatchFiles: Send {
     /// Start the file of the entry at `index`, replacing earlier bytes.
@@ -119,14 +125,35 @@ impl BatchFiles for Indexed<'_> {
 
 /// A `Write` view of one entry's file for a single-file stream; counts its bytes.
 pub(crate) struct EntryWriter<'a> {
-    pub(crate) files: &'a mut dyn BatchFiles,
-    pub(crate) index: usize,
-    pub(crate) written: usize,
+    files: &'a mut dyn BatchFiles,
+    index: usize,
+    written: usize,
+    failure: Option<Error>,
+}
+
+impl<'a> EntryWriter<'a> {
+    pub(crate) fn new(files: &'a mut dyn BatchFiles, index: usize) -> Self {
+        Self {
+            files,
+            index,
+            written: 0,
+            failure: None,
+        }
+    }
+
+    pub(crate) fn written(&self) -> usize {
+        self.written
+    }
 }
 
 impl Write for EntryWriter<'_> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if self.files.write(self.index, bytes).is_err() {
+        if self.failure.is_none()
+            && let Err(error) = self.files.write(self.index, bytes)
+        {
+            self.failure = Some(error);
+        }
+        if self.failure.is_some() {
             return Err(io::Error::other("the converted file stopped"));
         }
         self.written = self.written.saturating_add(bytes.len());
@@ -135,5 +162,11 @@ impl Write for EntryWriter<'_> {
 
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
+    }
+}
+
+impl Failing for EntryWriter<'_> {
+    fn failure(&mut self) -> Option<Error> {
+        self.failure.take()
     }
 }

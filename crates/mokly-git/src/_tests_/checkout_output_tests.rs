@@ -2,7 +2,7 @@
 
 use std::io::Write;
 
-use crate::checkout_files::MemoryFiles;
+use crate::checkout_files::{Failing, MemoryFiles};
 use crate::checkout_output::BatchSink;
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};

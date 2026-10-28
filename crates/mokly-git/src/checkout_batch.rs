@@ -3,7 +3,7 @@
 use std::hash::{BuildHasher, RandomState};
 use std::time::Duration;
 
-use crate::checkout_files::{BatchFiles, EntryWriter, Indexed};
+use crate::checkout_files::{BatchFiles, EntryWriter, Failing, Indexed};
 use crate::checkout_output::{BatchSink, HEADER_BYTES, conversion};
 use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
 use crate::error::{Error, Result};
@@ -42,6 +42,12 @@ pub(crate) fn convert_entries(
     files: &mut dyn BatchFiles,
     limit: usize,
 ) -> Result<usize> {
+    if let Some(entry) = timed_out(repository, commit, entries) {
+        return Err(Error::Conversion {
+            path: entry.path.to_string(),
+            source: Box::new(Error::CheckoutTimeout),
+        });
+    }
     let mut remaining = limit;
     let mut done = vec![false; entries.len()];
     let bytes = entries
@@ -85,11 +91,7 @@ pub(crate) fn convert_entries(
             continue;
         }
         files.open(index)?;
-        let mut output = EntryWriter {
-            files: &mut *files,
-            index,
-            written: 0,
-        };
+        let mut output = EntryWriter::new(&mut *files, index);
         let converted = converted
             .as_ref()
             .is_none_or(|converted| converted.contains(&entry.path));
@@ -99,20 +101,34 @@ pub(crate) fn convert_entries(
             conversion_args(entry, converted),
             Vec::new(),
         );
-        let streamed = repository
-            .runner
-            .stream_cancellable_with_environment_timeout(
-                &request,
-                &Active,
-                &[("LC_ALL", "C".into())],
-                FILTER_TIMEOUT,
-                &mut output,
-                remaining,
-            );
+        let streamed = stream(repository, &request, &mut output, remaining);
+        if matches!(streamed, Err(Error::CheckoutTimeout)) {
+            repository
+                .timed_out
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .insert((commit.clone(), entry.object.clone(), entry.path.clone()));
+        }
         conversion(streamed, std::slice::from_ref(entry))?;
-        remaining = remaining.saturating_sub(output.written);
+        remaining = remaining.saturating_sub(output.written());
     }
     Ok(limit - remaining)
+}
+
+/// The first entry whose own conversion already reached its deadline in this
+/// repository session. It fails at once, so no later call waits for it again.
+fn timed_out<'a>(
+    repository: &GitRepository,
+    commit: &ObjectId,
+    entries: &'a [Entry],
+) -> Option<&'a Entry> {
+    let timed_out = repository
+        .timed_out
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    entries.iter().find(|entry| {
+        timed_out.contains(&(commit.clone(), entry.object.clone(), entry.path.clone()))
+    })
 }
 
 /// Converts `entries` with one `cat-file --batch --filters -Z` process into
@@ -142,21 +158,37 @@ fn convert(
             .saturating_add(16),
     );
     let mut sink = BatchSink::new(entries, files, &sentinel, limit);
+    stream(
+        repository,
+        &request,
+        &mut sink,
+        limit.saturating_add(framing),
+    )?;
+    sink.finish()
+}
+
+/// Streams one conversion command into `output`. A typed failure of the
+/// output wins over the stream error that it caused.
+fn stream(
+    repository: &GitRepository,
+    request: &Request,
+    output: &mut dyn Failing,
+    limit: usize,
+) -> Result<()> {
     let streamed = repository
         .runner
         .stream_cancellable_with_environment_timeout(
-            &request,
+            request,
             &Active,
             &[("LC_ALL", "C".into())],
             FILTER_TIMEOUT,
-            &mut sink,
-            limit.saturating_add(framing),
+            output,
+            limit,
         );
-    if let Some(error) = sink.failure() {
+    if let Some(error) = output.failure() {
         return Err(error);
     }
-    streamed?;
-    sink.finish()
+    streamed
 }
 
 pub(crate) fn request(
