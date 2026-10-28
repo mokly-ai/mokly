@@ -3,12 +3,12 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use mokly_catalogue::config::relative;
+use mokly_catalogue::config::{normalize, relative};
 use mokly_sidecar::postcss_evidence::{Evidence, Read};
 use mokly_source_interface::read_evidence::{FileIdentity, ReadBaseline, ReadEvidence};
 use mokly_source_interface::tree::SourceTree;
 
-use crate::postcss_inventory::{Inventory, normalize};
+use crate::postcss_inventory::Inventory;
 use crate::side::SideInputs;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 

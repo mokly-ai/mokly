@@ -238,3 +238,30 @@ fn a_hanging_base_render_keeps_the_current_static_build_available() {
     );
     assert!(root.path().join("mokly-static/index.html").is_file());
 }
+
+#[test]
+fn a_renderer_named_through_a_parent_segment_compares_its_stylesheet() {
+    let root = base(&[
+        (
+            "app/mokly.config.json",
+            r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"renderer":"../renderer.tsx","review":{"base":"fixture-base"}}"#,
+        ),
+        ("specs/card.mockup.tsx", CARD),
+        (
+            "renderer.tsx",
+            "import type { RenderInput } from '@mokly/mokly'; import './renderer.css'; export default function render(input: RenderInput) { return input.node; }",
+        ),
+        ("renderer.css", ".card{color:red}"),
+    ]);
+    dependencies(root.path());
+    write(root.path(), "renderer.css", ".card{color:blue}");
+    let output = run(root.path(), &["build", "--config", "app/mokly.config.json"]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+}
