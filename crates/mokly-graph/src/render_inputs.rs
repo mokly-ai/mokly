@@ -163,9 +163,19 @@ fn runtime_manifest(generation: &JavaScriptGeneration, name: &str) -> bool {
             .any(|package| {
                 directory
                     .strip_suffix(package.as_str())
-                    .is_some_and(|prefix| prefix.ends_with("node_modules/"))
+                    .is_some_and(dependency_root)
             })
     })
+}
+
+/// Whether a logical prefix ends with a dependency root: a `node_modules` directory or
+/// a further selected root, `node_modules/.mokly-roots/{index}`.
+fn dependency_root(prefix: &str) -> bool {
+    prefix.ends_with("node_modules/")
+        || prefix
+            .strip_suffix('/')
+            .and_then(|prefix| prefix.rsplit_once("node_modules/.mokly-roots/"))
+            .is_some_and(|(_, index)| !index.is_empty() && !index.contains('/'))
 }
 
 /// One digest per module: its path, its ordered imports, and its content value.
