@@ -2,7 +2,7 @@
 
 use std::io::{self, Write};
 
-use crate::checkout_files::BatchFiles;
+use crate::checkout_files::{BatchFiles, Failing};
 use crate::error::{Error, Result};
 use crate::tree::Entry;
 
@@ -43,11 +43,6 @@ impl<'a> BatchSink<'a> {
             limit,
             failure: None,
         }
-    }
-
-    /// The typed failure that stopped the stream, which wins over the copy error.
-    pub(crate) fn failure(&mut self) -> Option<Error> {
-        self.failure.take()
     }
 
     /// Requires every file of the batch and nothing else; returns the content bytes.
@@ -104,6 +99,12 @@ impl<'a> BatchSink<'a> {
             return Err(Error::ByteLimit { limit: self.limit });
         }
         self.files.write(self.next, &self.pending[..end])
+    }
+}
+
+impl Failing for BatchSink<'_> {
+    fn failure(&mut self) -> Option<Error> {
+        self.failure.take()
     }
 }
 

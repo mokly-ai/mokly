@@ -1,8 +1,9 @@
 # Batched Base Reads
 
-Status: Active. On branch
-`conductor/perf-2-batched-git-reads-and-base-reads-from-the-extraction`, no
-pull request yet. The plan closes when its pull requests merge.
+Status: Active. [PR #229](https://github.com/mokly-ai/mokly/pull/229) is open
+for design A. Design B continues on the stacked branch
+`conductor/perf-2b-base-reads-from-the-extraction`, with no pull request yet.
+The plan closes when its pull requests merge.
 
 Changes renders the base commit a second time and compares it with the
 working tree. Mokly never checks out the base. It reads each base file through
@@ -226,6 +227,21 @@ The user answered each decision on 2026-10-27 with the recommended option.
    unit tests without disk IO, and a read no longer writes and reads back a
    temporary file. Rejected: B, a file sink parameter for the batch only,
    because the single-file path of a read would still need the disk.
+8. Review 2 finding 2 of 2026-10-28: the repository session records each file
+   whose own conversion reached its deadline, and a later call fails at once
+   for that file, option D of the options check. Applied with the recommended
+   option under the user's rule. Reason: with decision 6, a hanging filter
+   waited for three deadlines in the extraction and the prefetch; the record
+   brings it back to two and stops every later repeat in the same
+   preparation. Rejected: A, keeping three deadlines, and C, per-file results
+   for every caller, because it is Large.
+9. Review 2 finding 3 of 2026-10-28: the deadline tests stop the mocked batch
+   at every byte of its output, and a Unix integration test runs a real
+   filter that hangs, under a clock that jumps past the deadline when the
+   filter logs a hang, option E of the options check. Applied under the same
+   rule. It replaces the milestone 3 decision against a hanging-filter test:
+   the event-driven clock never times out a fast conversion. Rejected: B, a
+   runner wrapper that only fakes the deadline.
 
 ## Milestone 1: Documentation and protocol for batch conversion
 
@@ -310,36 +326,51 @@ failing test first.
 - [x] Build `examples/basic` with `--strict --base fc8535b0` with the
       baseline binary and with the new binary. Compare the two output
       directories byte for byte. Record the result.
-- Results, medians against the baseline medians:
-  - Cold `examples/basic`: `review.base-extraction` 0.8 s versus an untimed
-    gap of 74.6 s. `changes.classify` 46.0 s versus 129.6 s.
-  - Warm `examples/basic`: `changes.classify` 46.3 s versus 51.4 s. The four
-    base spans together 13.2 s versus 16.1 s.
-  - Edit run: second `changes.classify` 62.7 s versus 68.6 s. Edit to the
-    end of the second classification 84.3 s versus 93.5 s.
-  - Small React fixture: `changes.classify` 10.0 s cold and 9.5 s warm
-    versus 11.4 s and 11.2 s. Small HTML fixture with `* text=auto`: 0.9 s
-    versus 1.2 s.
+- Results of the final binary of `cc41de93`, interleaved run by run with
+  the baseline binary on 2026-10-28, because the machine had slowed since
+  the morning baseline. Medians, baseline first:
+  - Cold `examples/basic`: `changes.classify` 155.8 s and 58.6 s. The
+    untimed extraction gap of 98.1 s became a `review.base-extraction` span
+    of 1.1 s.
+  - Warm `examples/basic`: `changes.classify` 73.6 s and 67.7 s. The four
+    base spans together 24.5 s and 21.0 s.
+  - Edit run: second `changes.classify` 96.9 s and 80.6 s. Edit to the end
+    of the second classification 125.4 s and 111.5 s.
+  - Small React fixture, one run each: `changes.classify` 13.2 s and 13.9 s
+    cold, 13.2 s and 12.9 s warm. Small HTML fixture with `* text=auto`:
+    1.5 s and 0.9 s.
   - The build with base `fc8535b0` wrote identical output, 2,382 files, in
-    47 s versus 98 s.
-- Evidence: `.context/batched-base-reads/after-a.md` and
-  `.context/batched-base-reads/m4-repository-check.log`.
+    53 s; the baseline took 98 s in the earlier run.
+- Evidence: `.context/batched-base-reads/after-a-final.md`,
+  `.context/batched-base-reads/after-a.md`, and the gate logs
+  `.context/batched-base-reads/gate-a.log` and `gate-a2.log`.
 - [x] Merge `origin/main` with the `git-merge` skill. Commit and push.
       Merge `d385bb75` took #221 with no conflict and an empty remerge diff.
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill. Apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - Review 1 of `c7202754` found four Low findings. The validity check
     confirmed all four. The fix round fixed findings 2 and 3, and applied
     decisions 6 and 7 for findings 1 and 4. Reports:
     `.context/batched-base-reads/review-1.md`.
+  - Review 2 of `86fc7df7` confirmed the four fixes and found three new Low
+    findings; the validity check confirmed all three. Finding 1, a
+    single-file stream that dropped the store's typed error, is fixed with a
+    shared stream helper, option B. Findings 2 and 3 are decisions 8 and 9.
+    Reports: `.context/batched-base-reads/review-2.md` and the validity and
+    options reports beside it. No third review runs, under the review-fix
+    rule.
+  - Outside the scope: `crates/mokly-git/src/extraction.rs` and
+    `crates/mokly-compare/src/git_prefetch.rs` convert each file of a failed
+    batch in its own call, at about three Git processes each. Separate
+    branch.
   - Outside the scope: `crates/mokly-git/src/extraction.rs` and
     `crates/mokly-compare/src/git_prefetch.rs` repeat the 48 MiB batch bound as
     a literal. Separate branch.
   - Outside the scope: `crates/mokly-git/src/checkout.rs`, a failed batch
     still names the first file of the call in its `Conversion` error.
     Separate branch.
-- [ ] Open the first pull request, for design A, with the before and after
+- [x] Open the first pull request, for design A, with the before and after
       table in its body. Put its link in the status paragraph.
 
 ## Milestone 5: Documentation and protocol for extraction reads

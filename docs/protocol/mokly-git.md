@@ -106,7 +106,8 @@ unavailable with a `base-conversion` warning and independent resources continue.
 Each conversion process has a 120-second time limit. When a batch
 conversion fails, reaches that limit, or exceeds a byte bound, each of its
 files converts again alone, so a file is unavailable only when its own
-conversion fails. Optional
+conversion fails. A file whose own conversion reached the time limit stays
+unavailable for the rest of that base preparation, without another attempt. Optional
 filter failures also make the resource unavailable; raw fallback bytes are not
 valid comparison evidence. Partial archives retain these warnings and do not
 become reusable cache entries.

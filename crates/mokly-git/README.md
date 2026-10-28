@@ -68,7 +68,9 @@ single file also converts alone with `--filters`. Every file of a call above
 `cat-file blob` for a path without conversion and `--filters` for the others.
 The byte bound stops the process before more data is written. When a batch
 reaches its deadline, each of its files converts again alone with its own
-deadline, and a failure names its file. A batch that fails or exceeds a bound
+deadline, and a failure names its file. A file whose own conversion reaches
+its deadline fails at once in each later call of the same repository session.
+A store write failure keeps its typed error. A batch that fails or exceeds a bound
 returns a typed `Conversion` error, and the extraction and the prefetch
 convert its files again one at a time. A deadline and process-tree
 cancellation supervise every conversion. Failed optional filters return typed

@@ -1,6 +1,6 @@
 //! Validated checkout access through bounded Git commands and immutable blobs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -91,6 +91,8 @@ pub struct GitRepositories {
 pub(crate) struct GitRepository {
     pub(crate) fetch_lock: Mutex<()>,
     pub(crate) unavailable: Mutex<BTreeMap<String, String>>,
+    /// Files whose own conversion reached its deadline: commit, blob, and path.
+    pub(crate) timed_out: Mutex<BTreeSet<(ObjectId, ObjectId, RepoPath)>>,
     pub(crate) directory: PathBuf,
     pub(crate) runner: Arc<dyn Runner>,
     pub(crate) disk: Arc<dyn Disk>,
@@ -105,6 +107,7 @@ impl Repositories for GitRepositories {
         let repository = GitRepository {
             fetch_lock: Mutex::new(()),
             unavailable: Mutex::new(BTreeMap::new()),
+            timed_out: Mutex::new(BTreeSet::new()),
             directory: configured.clone(),
             runner: Arc::clone(&self.runner),
             disk: Arc::clone(&self.disk),
