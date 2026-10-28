@@ -56,7 +56,7 @@ pub trait RenderCache: Send + Sync {
     fn get(&self, key: &NodeKey) -> Option<Arc<Artifact>>;
     /// Retain a result when it fits. Oversized results still return to the caller.
     fn insert(&self, key: NodeKey, value: Arc<Artifact>);
-    /// Observe retained bytes and operation counts.
+    /// Observe charged bytes and operation counts.
     fn stats(&self) -> CacheStats;
 }
 
@@ -75,7 +75,7 @@ struct State {
 }
 
 impl MemoryCache {
-    /// Construct an empty cache with the supplied retained-byte bound.
+    /// Construct an empty cache with the supplied charged-byte bound.
     pub fn new(bytes: usize) -> Self {
         Self {
             bound: bytes,
