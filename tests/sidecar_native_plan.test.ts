@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
+import { build } from "esbuild";
+
 import type { BundleParams } from "../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { Bundled } from "../packages/mokly/src/sidecar/bundle.js";
-import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
+import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
+import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
+import type { PlannedImport } from "../packages/mokly/src/sidecar/native-resolution.js";
 
 import {
   assertFullPathResult,
@@ -25,6 +29,8 @@ const rows: Array<{
   name: string;
   setup(head: string): Promise<BundleParams>;
   check?(bundled: Bundled): void;
+  /** The consumer plugin's resolver round trips over both compiles. */
+  resolves?: number;
 }> = [
   {
     name: "a package type keeps bundler interop",
@@ -136,26 +142,34 @@ const rows: Array<{
     },
   })),
   {
-    name: "a side-effect-free package keeps its flag",
+    name: "side-effect flags reach the planned compile",
+    // The catalogue's bare import makes one round trip in each compile, so
+    // both dependency imports come from the plan.
+    resolves: 2,
     async setup(head) {
-      // The tsconfig makes the native result inexact, so the planned
-      // compile must carry the flag that drops the unused import.
+      // The tsconfig makes the native result inexact. The planned compile
+      // must drop the unused import of pure and keep the one of effectful.
       await write(
         path.join(head, "tsconfig.json"),
         JSON.stringify({ compilerOptions: { strict: true } }),
       );
-      await write(
-        path.join(head, "node_modules/pure/package.json"),
-        JSON.stringify({ name: "pure", main: "index.js", sideEffects: false }),
-      );
-      await write(
-        path.join(head, "node_modules/pure/index.js"),
-        "globalThis.pureRan = true;",
-      );
+      for (const [name, manifest] of [
+        ["pure", { sideEffects: false }],
+        ["effectful", {}],
+      ] as const) {
+        await write(
+          path.join(head, `node_modules/${name}/package.json`),
+          JSON.stringify({ name, main: "index.js", ...manifest }),
+        );
+        await write(
+          path.join(head, `node_modules/${name}/index.js`),
+          `globalThis.${name}Ran = true;`,
+        );
+      }
       await packageAt(
         path.join(head, "node_modules/uses-pure"),
         "uses-pure",
-        'import "pure";\nexport const used = 1;',
+        'import "pure";\nimport "effectful";\nexport const used = 1;',
         "index.mjs",
       );
       await write(
@@ -166,9 +180,33 @@ const rows: Array<{
     },
     check({ result }) {
       assert.doesNotMatch(result.compiled!.code, /pureRan/);
+      assert.match(result.compiled!.code, /effectfulRan/);
     },
   },
 ];
+
+/** A plan that records each import that the planned compile takes from it. */
+class RecordedPlan extends Map<string, PlannedImport> {
+  readonly found = new Set<string>();
+
+  override get(key: string): PlannedImport | undefined {
+    const planned = super.get(key);
+    if (planned) this.found.add(key);
+    return planned;
+  }
+}
+
+/** The planned compile takes every planned import from its plan. */
+async function assertPlanUsed(params: BundleParams): Promise<void> {
+  const native = await bundleWith(params, build, unmeasured, {
+    mode: "native",
+  });
+  assert.ok(!("generation" in native) && native.plan, "native result stood");
+  const plan = new RecordedPlan(native.plan);
+  await bundleWith(params, build, unmeasured, { mode: "planned", plan });
+  assert.ok(plan.size > 0);
+  assert.deepEqual([...plan.found].sort(), [...plan.keys()].sort());
+}
 
 for (const row of rows)
   test(`a planned compile matches the full path: ${row.name}`, async (context) => {
@@ -178,4 +216,7 @@ for (const row of rows)
     await assertFullPathResult(params, bundled.result);
     row.check?.(bundled);
     assert.equal(counted.counts.compilations, 2);
+    if (row.resolves !== undefined)
+      assert.equal(counted.consumerResolves(), row.resolves);
+    await assertPlanUsed(params);
   });

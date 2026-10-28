@@ -8,11 +8,7 @@ import type { PluginBuild, ResolveOptions, ResolveResult } from "esbuild";
 import type { ModulePaths } from "./module-paths.js";
 import { packageDirectory } from "./package-directory.js";
 import { inside, logical } from "./path-scope.js";
-
-/** A package specifier: not relative, absolute, a subpath import, or a URL. */
-export function bareSpecifier(name: string): boolean {
-  return !/^(\.|\/|#|[a-z]+:)/i.test(name);
-}
+import { bareSpecifier } from "./specifier.js";
 
 /** Map a bare importer's position into the selected installation repository. */
 export function importerDirectory(

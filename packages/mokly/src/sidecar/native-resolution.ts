@@ -1,7 +1,7 @@
 import type { OnResolveArgs } from "esbuild";
 
-import { bareSpecifier } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
+import { bareSpecifier } from "./specifier.js";
 
 /** The module and the esbuild side-effects flag of one planned import. */
 export interface PlannedImport {
