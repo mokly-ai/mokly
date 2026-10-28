@@ -400,6 +400,6 @@ request TODO comes before the review TODO here.
 - [ ] The complete gate passes on the final commit. Blocked: on `9e9a2b0f`,
       six of the seven remote suites passed. The repository suite stopped at
       the Rust dependency audit on RUSTSEC-2026-0414, which `origin/main` has
-      too. Its later steps passed locally, including `cargo test
-    --workspace` and both clippy runs. CI on PR #225 shows the same
-      failure. `a260d9f7` passed all seven suites before the advisory.
+      too. Its later steps passed locally, including the workspace tests
+      and both clippy runs. CI on PR #225 shows the same failure.
+      `a260d9f7` passed all seven suites before the advisory.
