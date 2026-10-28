@@ -27,6 +27,7 @@ fn repository(mock: Unimock) -> GitRepository {
     GitRepository {
         fetch_lock: std::sync::Mutex::new(()),
         unavailable: std::sync::Mutex::new(std::collections::BTreeMap::new()),
+        timed_out: std::sync::Mutex::new(std::collections::BTreeSet::new()),
         directory: "/repo".into(),
         runner: Arc::new(mock),
         disk: Arc::new(Unimock::new(())),

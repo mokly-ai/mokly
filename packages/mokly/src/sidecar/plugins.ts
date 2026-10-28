@@ -10,6 +10,9 @@ import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
+import { plannedResult } from "./native-plan.js";
+import { nativeResolution, planKey } from "./native-resolution.js";
+import type { Resolution } from "./native-resolution.js";
 import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
 import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
@@ -26,6 +29,7 @@ export function consumerPlugins(
   require: ConsumerRequire,
   paths: ModulePaths,
   runtimeKey = "mokly:runtime",
+  resolution: Resolution = { mode: "full" },
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
@@ -160,6 +164,17 @@ export function consumerPlugins(
             !["file", ""].includes(args.namespace)
           )
             return;
+          // esbuild resolves this import itself; the bundle classifies the
+          // module after the compile and can plan a second compile.
+          if (resolution.mode === "native" && nativeResolution(paths, args))
+            return;
+          const planned =
+            resolution.mode === "planned" && args.pluginData === undefined
+              ? resolution.plan.get(
+                  planKey(args.importer, args.path, args.kind),
+                )
+              : undefined;
+          if (planned) return await plannedResult(paths, args, planned);
           const resolved = await resolveImport(paths, build, args.path, {
             resolveDir: args.resolveDir,
             importer: args.importer,

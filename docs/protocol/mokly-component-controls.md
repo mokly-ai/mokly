@@ -31,9 +31,12 @@ property order. Inferred schemas use first-seen prop order: own props first,
 then variant props in variant order. Uneditable properties are omitted.
 Each visual entry's detail carries that order in `controlOrder`. Saved variants
 inherit it. The viewer follows the detail's order instead of sorting prop names.
-Until the routed entry's detail arrives, the Props tab shows `Loading props…`
-and no fields, so the fields first appear in that order and never move. A
-detail that fails to load shows `Props couldn’t be loaded.` with `Try again`.
+Until all route details arrive, the Props tab shows `Loading props…` and no
+fields, so the fields first appear in that order and never move. A current
+component variant waits for its own detail and its parent's detail under the
+[route delivery rules](./mokly-shell-delivery.md#fetch-and-fences). A failed
+detail shows `Props couldn’t be loaded.` with `Try again` after all route
+details settle.
 Showing the index's fields at once was rejected: the index carries no order.
 
 Text length is a non-negative integer of Unicode code points, as the schema's

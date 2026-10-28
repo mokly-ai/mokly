@@ -9,3 +9,4 @@ mod lookup_tests;
 mod removed_tests;
 mod support;
 mod workspace_tests;
+mod workspace_variant_tests;

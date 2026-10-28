@@ -19,7 +19,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -96,7 +96,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -164,11 +164,9 @@
         }
       ],
       "workspace": {
-        "affected": [],
         "comparisonEligible": false,
         "inputChanges": [],
-        "relatedComponents": [],
-        "usedBy": []
+        "relatedComponents": []
       },
       "controlOrder": ["label"]
     },
@@ -196,7 +194,7 @@
         ]
       },
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": []
     },
     "product": {
@@ -215,7 +213,7 @@
         }
       ],
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": []
     },
     "product/browse/details": {
@@ -235,7 +233,7 @@
       },
       "reasons": [],
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -309,7 +307,7 @@
         }
       ],
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -369,7 +367,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -424,7 +422,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": []
     }
   },
@@ -445,7 +443,7 @@
           "kind": "removed"
         }
       ],
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": [
         {
           "colorScheme": "light",
@@ -509,7 +507,7 @@
         "resources": [],
         "rules": []
       },
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "views": []
     }
   }

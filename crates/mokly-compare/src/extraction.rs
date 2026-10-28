@@ -2,6 +2,7 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
@@ -31,6 +32,7 @@ struct Extract<'a> {
     repository: &'a dyn Repository,
     commit: &'a ObjectId,
     limits: Limits,
+    built: AtomicBool,
 }
 
 impl Builder for Extract<'_> {
@@ -38,6 +40,7 @@ impl Builder for Extract<'_> {
         self.repository.conversion_warnings().is_empty()
     }
     fn build(&self, destination: &Path) -> Result<()> {
+        self.built.store(true, Ordering::Relaxed);
         self.repository
             .extract(self.commit, destination, self.limits)
             .at_path(".")
@@ -45,21 +48,41 @@ impl Builder for Extract<'_> {
 }
 
 impl Extraction for CachedExtraction {
+    /// Times the source key, the cache lookup, and a build as one
+    /// `review.base-extraction` span whose `action` names the outcome.
     fn acquire(&self, commit: &ObjectId) -> Result<Lease> {
+        let span = tracing::info_span!(
+            "review.base-extraction",
+            status = "error",
+            action = tracing::field::Empty
+        );
+        let _scope = span.enter();
         let limits = Limits {
             bytes: self.cache.capacity(Kind::Sources).saturating_sub(1024) as usize,
             files: self.files,
             nodes: Limits::default().nodes,
             ..Limits::default()
         };
-        self.cache.get(
+        let builder = Extract {
+            repository: self.repository.as_ref(),
+            commit,
+            limits,
+            built: AtomicBool::new(false),
+        };
+        let lease = self.cache.get(
             Kind::Sources,
             &self.repository.source_key(commit).base()?,
-            &Extract {
-                repository: self.repository.as_ref(),
-                commit,
-                limits,
+            &builder,
+        )?;
+        span.record(
+            "action",
+            if builder.built.load(Ordering::Relaxed) {
+                "extract"
+            } else {
+                "reuse"
             },
-        )
+        );
+        span.record("status", "ok");
+        Ok(lease)
     }
 }

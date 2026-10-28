@@ -57,6 +57,9 @@ impl ManualRebuilds {
         batch: &Batch,
         attempt: Arc<dyn AttemptWarnings>,
     ) -> Option<BuildSummary> {
+        if let Some(watch) = &self.watching {
+            watch.begin();
+        }
         let mut prepared = match self.preparation.prepare(&self.cwd, &self.options) {
             Ok(prepared) => prepared,
             Err(error) => {
@@ -83,6 +86,9 @@ impl ManualRebuilds {
             && candidate.recheck
         {
             let first_warnings = prepared.summary.warnings.clone();
+            if let Some(watch) = &self.watching {
+                watch.begin();
+            }
             prepared = match self.preparation.prepare(&self.cwd, &self.options) {
                 Ok(prepared) => prepared,
                 Err(error) => {

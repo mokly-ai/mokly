@@ -155,6 +155,7 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .n_times(2),
     ));
     let observer = Unimock::new((
+        WatchInputsMock::begin.each_call(matching!()).returns(()),
         WatchInputsMock::changed
             .each_call(matching!())
             .answers_arc(Arc::new({

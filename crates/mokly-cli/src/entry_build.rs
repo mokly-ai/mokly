@@ -15,7 +15,7 @@ use crate::interrupts::Interrupts;
 use crate::one_shot::Lines;
 use crate::static_runtime::{self, Context};
 use crate::terminal::Terminal;
-use crate::{command_diagnostics, serve_trace};
+use crate::{command_diagnostics, render_runtime, serve_trace};
 
 pub(super) fn run(
     options: &Build,
@@ -23,11 +23,13 @@ pub(super) fn run(
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
+    let cache = render_runtime::cache();
     if options.common.debug_timings {
         serve_trace::install(
             terminal.clone(),
             format!("build-{}", std::process::id()),
             redactor.clone(),
+            cache.clone(),
         );
     }
     let timing = tracing::info_span!("build", status = "error").entered();
@@ -58,6 +60,7 @@ pub(super) fn run(
         cancellation: interrupts.cancellation.clone(),
         pool: interrupts.pool.clone(),
         phases: lines.clone(),
+        cache,
     };
     let result = static_runtime::run(&cwd, options, &context, None);
     lines.clear();

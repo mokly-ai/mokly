@@ -10,7 +10,7 @@ use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
 use mokly_cli::version::VERSION;
 use mokly_compare::node_executable::{NodeExecutable, SystemNodeExecutable};
-use mokly_graph::cache::MemoryCache;
+use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_graph::error::Result;
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_platform::processes::SystemProcessGroups;
@@ -22,6 +22,14 @@ use mokly_sidecar::process_factory::NodeFactory;
 use mokly_sidecar::process_memory::SystemMemory;
 use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
+
+/// The render cache bound of the runtime contract.
+const RENDER_CACHE_BYTES: usize = 256 * 1024 * 1024;
+
+/// Create the one render cache of a command. Both sides and the timing layer share it.
+pub(super) fn cache() -> Arc<dyn RenderCache> {
+    Arc::new(MemoryCache::new(RENDER_CACHE_BYTES))
+}
 
 pub(super) struct Services {
     pub(super) runtime: Arc<Runtime>,
@@ -36,6 +44,7 @@ impl Services {
         common: &Common,
         diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
+        cache: Arc<dyn RenderCache>,
     ) -> Result<Self> {
         let clock = Arc::new(SystemClock::new());
         let size = common
@@ -74,25 +83,27 @@ impl Services {
                 std::thread::available_parallelism().map_or(1, usize::from),
             )?),
             cancellation,
+            cache,
         );
         Ok(Self { runtime, pool })
     }
 }
 
-/// Build the head runtime over one 256 MiB render cache and the command's cancellable
-/// workers. The base side builds its runtime from the same pool, cache, and workers, so
-/// both sides share one sidecar pool, one render cache, and the command's cancellation.
+/// Build the head runtime over the command's render cache and cancellable workers. The
+/// base side builds its runtime from the same pool, cache, and workers, so both sides
+/// share one sidecar pool, one render cache, and the command's cancellation.
 fn runtime(
     tree: Arc<dyn SourceTree>,
     pool: Arc<dyn SidecarPool>,
     workers: Arc<dyn RenderWorkers>,
     cancellation: Arc<dyn Cancellation>,
+    cache: Arc<dyn RenderCache>,
 ) -> Arc<Runtime> {
     Arc::new(Runtime::new(
         tree.clone(),
         tree,
         pool,
-        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        cache,
         Arc::new(CancellableWorkers {
             inner: workers,
             cancellation,

@@ -1,31 +1,19 @@
 //! Checkout-converted bytes retain the user's real repository filter context.
 
 use std::collections::BTreeMap;
-use std::fs;
-use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::time::Duration;
 
-use crate::checkout_output::{conversion, decode_batch};
-use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
+use crate::checkout_batch::{Active, FILTER_TIMEOUT, conversion_args, convert_entries, request};
+use crate::checkout_files::{DirectoryFiles, MemoryFiles};
+use crate::checkout_output::conversion;
 use crate::error::{Error, IoResult, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{Entry, Limits};
 
-const FILTER_TIMEOUT: Duration = Duration::from_secs(120);
-
-struct Active;
-impl Cancellation for Active {
-    fn is_cancelled(&self) -> bool {
-        false
-    }
-}
-
 impl GitRepository {
-    /// Reads one batch after checkout conversion. The batch is written to its
-    /// private directory and read back, and that directory is removed when this
-    /// call returns, before the caller reads the next batch.
+    /// Reads one batch after checkout conversion. The converted bytes stay in
+    /// memory within the batch byte bound and never touch the disk.
     pub(crate) fn checkout_read(
         &self,
         commit: &ObjectId,
@@ -50,14 +38,21 @@ impl GitRepository {
         if entries.is_empty() {
             return Ok(Vec::new());
         }
-        let checkout = self.checkout(entries, commit, limits)?;
+        self.ensure_checkout_objects(commit, entries)?;
+        let mut files = MemoryFiles::new(entries.len());
+        conversion(
+            convert_entries(self, commit, entries, &mut files, limits.bytes),
+            entries,
+        )?;
         let mut total = 0usize;
         let mut result = Vec::with_capacity(entries.len());
-        for entry in entries {
-            let bytes = conversion(
-                checkout.read(&entry.path, limits.blob),
-                std::slice::from_ref(entry),
-            )?;
+        for (entry, bytes) in entries.iter().zip(files.into_files()) {
+            if bytes.len() > limits.blob {
+                return conversion(
+                    Err(Error::ByteLimit { limit: limits.blob }),
+                    std::slice::from_ref(entry),
+                );
+            }
             total = total.saturating_add(bytes.len());
             if total > limits.bytes {
                 return Err(Error::ByteLimit {
@@ -118,10 +113,8 @@ fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
     Ok(())
 }
 
-/// Converted files of one batch in a private temporary directory, removed on
-/// drop. Unfiltered blobs of a batch up to 48 MiB come from one `cat-file`
-/// batch read. Filtered blobs, and every blob of a larger batch, stream straight
-/// to disk, so a large file never has to fit in memory.
+/// Converted files of one extraction batch in a private temporary directory,
+/// removed on drop, so a large file never has to fit in memory.
 pub(crate) struct Checkout {
     _root: tempfile::TempDir,
     files: BTreeMap<RepoPath, PathBuf>,
@@ -138,66 +131,13 @@ impl Checkout {
             .prefix("mokly-git-converted-")
             .tempdir()
             .git()?;
+        let mut directory = DirectoryFiles::new(root.path(), entries.len());
+        convert_entries(repository, commit, entries, &mut directory, limit)?;
         let mut files = BTreeMap::new();
-        let converted = repository.converted_paths(commit, entries)?;
-        let batch_bytes = entries
-            .iter()
-            .fold(0usize, |total, entry| total.saturating_add(entry.size));
-        let raw: Vec<_> = entries
-            .iter()
-            .filter(|entry| !converted.contains(&entry.path) && batch_bytes <= 48 * 1024 * 1024)
-            .cloned()
-            .collect();
-        let mut remaining = limit;
-        if !raw.is_empty() {
-            let input = raw
-                .iter()
-                .map(|entry| format!("{}\0", entry.object))
-                .collect::<String>()
-                .into_bytes();
-            let request = request(
-                repository,
-                commit,
-                vec!["--batch".into(), "-Z".into()],
-                input,
-            );
-            let output = repository.runner.run_cancellable_with_environment_timeout(
-                &request,
-                &Active,
-                &[("LC_ALL", "C".into())],
-                FILTER_TIMEOUT,
-            )?;
-            let bytes = decode_batch(&output.stdout, &raw, remaining)?;
-            for (index, (entry, bytes)) in raw.iter().zip(bytes).enumerate() {
-                let path = root.path().join(format!("raw-{index}"));
-                fs::File::create(&path).git()?.write_all(bytes).git()?;
-                remaining -= bytes.len();
-                files.insert(entry.path.clone(), path);
-            }
-        }
-        for (index, entry) in entries.iter().enumerate() {
-            if files.contains_key(&entry.path) {
-                continue;
-            }
-            let path = root.path().join(format!("converted-{index}"));
-            let mut output = fs::File::create(&path).git()?;
-            let request = request(
-                repository,
-                commit,
-                conversion_args(entry, converted.contains(&entry.path)),
-                Vec::new(),
-            );
-            repository
-                .runner
-                .stream_cancellable_with_environment_timeout(
-                    &request,
-                    &Active,
-                    &[("LC_ALL", "C".into())],
-                    FILTER_TIMEOUT,
-                    &mut output,
-                    remaining,
-                )?;
-            remaining = remaining.saturating_sub(output.metadata().git()?.len() as usize);
+        for (entry, path) in entries.iter().zip(directory.into_paths()) {
+            let Some(path) = path else {
+                return Err(Error::MalformedOutput);
+            };
             files.insert(entry.path.clone(), path);
         }
         Ok(Self { _root: root, files })
@@ -205,57 +145,5 @@ impl Checkout {
 
     pub(crate) fn file(&self, path: &RepoPath) -> Result<PathBuf> {
         self.files.get(path).cloned().ok_or(Error::MalformedOutput)
-    }
-
-    fn read(&self, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
-        let file = self.file(path)?;
-        if fs::metadata(&file).git()?.len() > limit as u64 {
-            return Err(Error::ByteLimit { limit });
-        }
-        let mut bytes = Vec::new();
-        fs::File::open(file)
-            .git()?
-            .take(limit.saturating_add(1) as u64)
-            .read_to_end(&mut bytes)
-            .git()?;
-        if bytes.len() > limit {
-            return Err(Error::ByteLimit { limit });
-        }
-        Ok(bytes)
-    }
-}
-
-fn request(
-    repository: &GitRepository,
-    commit: &ObjectId,
-    args: Vec<String>,
-    stdin: Vec<u8>,
-) -> Request {
-    Request {
-        directory: repository.directory.clone(),
-        args: [
-            "--no-optional-locks".to_owned(),
-            format!("--attr-source={commit}"),
-            "cat-file".into(),
-        ]
-        .into_iter()
-        .chain(args)
-        .map(Into::into)
-        .collect(),
-        stdin,
-        output_limit: DEFAULT_OUTPUT_LIMIT,
-        stderr_limit: DEFAULT_STDERR_LIMIT,
-    }
-}
-
-fn conversion_args(entry: &Entry, converted: bool) -> Vec<String> {
-    if converted {
-        vec![
-            "--filters".into(),
-            format!("--path={}", entry.path),
-            entry.object.to_string(),
-        ]
-    } else {
-        vec!["blob".into(), entry.object.to_string()]
     }
 }

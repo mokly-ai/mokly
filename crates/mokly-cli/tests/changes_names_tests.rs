@@ -133,6 +133,7 @@ fn inspect(root: &Path) {
         &common,
         Arc::new(ProbeDiagnostics),
         cancellation.clone(),
+        render_runtime::cache(),
     )
     .unwrap();
     let service: &dyn BuildService = &CatalogueBuild {
