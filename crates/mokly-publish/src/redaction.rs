@@ -43,9 +43,18 @@ impl SecretMatcher {
         self.find(text).is_some()
     }
 
-    /// Return true when a URL contains the secret in any serialized component.
+    /// Return true when a URL or its parsed host contains the secret.
+    ///
+    /// The serialized URL keeps exact matching for paths, queries, fragments,
+    /// and user information. The parsed host is checked with ASCII-insensitive
+    /// matching because URL parsing normalizes host names independently of the
+    /// spelling used in the input URL.
     pub fn contains_url(&self, url: &Url) -> bool {
         self.contains(url.as_str())
+            || url.host_str().is_some_and(|host| {
+                self.find_with_mode(host, MatchMode::AsciiInsensitive)
+                    .is_some()
+            })
     }
 
     /// Replace every literal or encoded secret with a redaction marker.
@@ -69,45 +78,72 @@ impl SecretMatcher {
     }
 
     fn find(&self, text: &str) -> Option<(usize, usize)> {
+        self.find_with_mode(text, MatchMode::Exact)
+    }
+
+    fn find_with_mode(&self, text: &str, mode: MatchMode) -> Option<(usize, usize)> {
         if self.secret.is_empty() {
             return None;
         }
         let input = text.as_bytes();
         let secret = self.secret.as_bytes();
+        let mut current = Vec::new();
+        let mut next = Vec::new();
         for start in 0..input.len() {
-            let mut cursor = start;
-            let mut matched = true;
+            if !text.is_char_boundary(start) {
+                continue;
+            }
+            current.clear();
+            current.push(start);
             for expected in secret {
-                let Some(&byte) = input.get(cursor) else {
-                    matched = false;
-                    break;
-                };
-                if byte == b'%' {
-                    let Some(bytes) = input.get(cursor + 1..cursor + 3) else {
-                        matched = false;
-                        break;
+                next.clear();
+                for &cursor in &current {
+                    let Some(&byte) = input.get(cursor) else {
+                        continue;
                     };
-                    let Some(decoded) = hex_pair(bytes) else {
-                        matched = false;
-                        break;
-                    };
-                    if decoded != *expected {
-                        matched = false;
-                        break;
+                    if equal(byte, *expected, mode) {
+                        next.push(cursor + 1);
                     }
-                    cursor += 3;
-                } else if byte == *expected {
-                    cursor += 1;
-                } else {
-                    matched = false;
+                    if byte == b'%' {
+                        let Some(decoded) = input.get(cursor + 1..cursor + 3).and_then(hex_pair)
+                        else {
+                            continue;
+                        };
+                        if equal(decoded, *expected, mode) {
+                            next.push(cursor + 3);
+                        }
+                    }
+                }
+                next.sort_unstable();
+                next.dedup();
+                if next.is_empty() {
+                    current.clear();
                     break;
                 }
+                std::mem::swap(&mut current, &mut next);
             }
-            if matched {
-                return Some((start, cursor));
+            if let Some(&end) = current
+                .iter()
+                .rev()
+                .find(|&&end| text.is_char_boundary(end))
+            {
+                return Some((start, end));
             }
         }
         None
+    }
+}
+
+#[derive(Clone, Copy)]
+enum MatchMode {
+    Exact,
+    AsciiInsensitive,
+}
+
+fn equal(actual: u8, expected: u8, mode: MatchMode) -> bool {
+    match mode {
+        MatchMode::Exact => actual == expected,
+        MatchMode::AsciiInsensitive => actual.eq_ignore_ascii_case(&expected),
     }
 }
 

@@ -90,6 +90,65 @@ fn completion_debug_does_not_expose_a_secret_bearing_viewer_url() {
 }
 
 #[test]
+fn viewer_hosts_match_the_token_without_ascii_case_sensitivity() {
+    let token = Token::new("AbCdEfGh1234".to_owned()).unwrap();
+    for input in [
+        "https://AbCdEfGh1234.example.com/catalogue",
+        "https://abcdefgh1234.example.com/catalogue",
+        "https://%41bCdEfGh1234.example.com/catalogue",
+        "https://x-AbCdEfGh1234-y.example.com/catalogue",
+        "https://ＡｂＣｄＥｆＧｈ１２３４.example.com/catalogue",
+    ] {
+        let body = serde_json::to_vec(&json!({"viewerUrl": input})).unwrap();
+        let viewer_response = Response {
+            body: Body::Bytes(body.into()),
+            ..response(201)
+        };
+        assert!(
+            Completion::parse(&viewer_response, &token)
+                .unwrap()
+                .viewer_url
+                .is_none(),
+            "viewer URL was not redacted: {input}"
+        );
+    }
+
+    let path = "https://example.com/abcdefgh1234/catalogue";
+    let path_response = Response {
+        body: Body::Bytes(
+            serde_json::to_vec(&json!({"viewerUrl": path}))
+                .unwrap()
+                .into(),
+        ),
+        ..response(201)
+    };
+    assert_eq!(
+        Completion::parse(&path_response, &token)
+            .unwrap()
+            .viewer_url
+            .as_deref(),
+        Some(path)
+    );
+
+    let short = "https://abcdefgh123.example.com/catalogue";
+    let short_response = Response {
+        body: Body::Bytes(
+            serde_json::to_vec(&json!({"viewerUrl": short}))
+                .unwrap()
+                .into(),
+        ),
+        ..response(201)
+    };
+    assert_eq!(
+        Completion::parse(&short_response, &token)
+            .unwrap()
+            .viewer_url
+            .as_deref(),
+        Some(short)
+    );
+}
+
+#[test]
 fn counted_and_progress_copy_has_exact_units_singular_and_plural() {
     for (uploaded, noun) in [(0, "files"), (1, "file"), (2, "files")] {
         let receipt = Receipt {
