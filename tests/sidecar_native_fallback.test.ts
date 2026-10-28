@@ -57,7 +57,8 @@ test("a base dependency maps a linked workspace package to the base copy", async
       ?.digest,
     digest("export const theme = 'base';"),
   );
-  // The native module is the head copy, so the full path compiles again.
+  // The native module is the head copy, so a planned compile maps it to the
+  // base copy.
   assert.equal(counted.counts.compilations, 2);
 });
 

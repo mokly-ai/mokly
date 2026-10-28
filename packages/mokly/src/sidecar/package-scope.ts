@@ -6,13 +6,16 @@ interface Manifest {
   directory: string;
   type: unknown;
   sideEffects: unknown;
+  main: unknown;
+  module: unknown;
 }
 
 /**
  * The per-file settings that esbuild's own resolver attaches and a resolve
  * callback result does not: the nearest package.json `type` and
- * `sideEffects`, and the nearest tsconfig.json or jsconfig.json outside
- * node_modules. The rules follow esbuild's resolver.
+ * `sideEffects`, the nearest tsconfig.json or jsconfig.json outside
+ * node_modules, and the fallback path of a package with only a `module`
+ * entry. The rules follow esbuild's resolver.
  */
 export class PackageScope {
   private readonly manifests = new Map<string, Promise<Manifest | undefined>>();
@@ -30,6 +33,24 @@ export class PackageScope {
     if (!Array.isArray(manifest.sideEffects)) return true;
     const lookup = file.replaceAll("\\", "/");
     return this.patterns(manifest).some((matches) => matches(lookup));
+  }
+
+  /**
+   * Without configured main fields, esbuild resolves an import of a package
+   * that has a `module` field and no `main` field to the `module` file, and
+   * keeps the package's index file as a fallback. It switches the import to
+   * that index file when another import loads it. A resolve callback result
+   * has no fallback, so a native import that ends at such an index file may
+   * differ from the full path.
+   */
+  async moduleFallback(file: string): Promise<boolean> {
+    if (!path.basename(file).startsWith("index.")) return false;
+    const manifest = await this.manifest(path.dirname(file));
+    return (
+      manifest?.directory === path.dirname(file) &&
+      typeof manifest.module === "string" &&
+      typeof manifest.main !== "string"
+    );
   }
 
   /** esbuild parses this file with a module type or TypeScript settings. */
@@ -68,6 +89,8 @@ export class PackageScope {
         directory,
         type: field("type"),
         sideEffects: field("sideEffects"),
+        main: field("main"),
+        module: field("module"),
       };
     }
     const parent = path.dirname(directory);
