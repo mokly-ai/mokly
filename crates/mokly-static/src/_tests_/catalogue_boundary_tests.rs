@@ -1,4 +1,4 @@
-//! Catalogue boundaries protect package manifests at normalized roots and `..` spellings.
+//! Catalogue boundaries protect package manifests at normalized roots only.
 
 use std::path::PathBuf;
 
@@ -7,7 +7,7 @@ use mokly_catalogue::config_types::{Config, ModuleResolution, ResolvedConfig};
 use crate::location::Boundary;
 
 #[test]
-fn package_manifests_use_normalized_roots_and_parent_spellings() {
+fn package_manifests_use_only_normalized_roots() {
     let config = ResolvedConfig {
         input: Config {
             module_resolution: Some(ModuleResolution {
@@ -29,8 +29,6 @@ fn package_manifests_use_normalized_roots_and_parent_spellings() {
             "/repo/package.json",
             "/repo/packages/ui/package.json",
             "/repo/package.json",
-            "/repo/tools/../packages/ui/package.json",
-            "/repo/tools/../package.json",
         ]
         .map(PathBuf::from)
     );

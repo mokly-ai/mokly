@@ -1,7 +1,8 @@
 //! Lexical and projected output boundaries pinned for the whole transaction.
 
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
+use mokly_catalogue::config::normalize;
 use mokly_catalogue::config_types::ResolvedConfig;
 
 use crate::error::{Error, Result};
@@ -29,9 +30,6 @@ impl Boundary {
         for root in config.package_roots() {
             inputs.push(config.repo_root.join(root).join("package.json"));
         }
-        for alias in config.package_root_aliases() {
-            inputs.push(alias.join("package.json"));
-        }
         Self {
             allowed,
             lexical_allowed: None,
@@ -51,20 +49,6 @@ pub fn output(config: &ResolvedConfig, requested: Option<&str>) -> PathBuf {
         || config.repo_root.join("mokly-static"),
         |path| config.file.parent().unwrap_or(&config.repo_root).join(path),
     ))
-}
-
-pub(crate) fn normalize(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
-    for part in path.components() {
-        match part {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                result.pop();
-            }
-            other => result.push(other),
-        }
-    }
-    result
 }
 
 pub(crate) fn validate(

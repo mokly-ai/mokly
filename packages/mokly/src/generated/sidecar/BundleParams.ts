@@ -13,7 +13,7 @@ evaluation?: string,
  */
 entryFiles: Array<string>,
 /**
- * Optional consumer renderer module.
+ * Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
  */
 renderer: string | null,
 /**

@@ -1,0 +1,11 @@
+---
+source: crates/mokly-html/src/_tests_/pipeline_differential_tests.rs
+expression: position_table(&nodes)
+---
+html -
+  head -
+    noframes 1:1
+  body -
+    svg 1:73
+      script 1:78
+        mokly-ignore-scope 1:86

@@ -63,7 +63,7 @@ pub struct Bundle {
     pub evaluation: Option<String>,
     /// Entry module files.
     pub entry_files: Vec<String>,
-    /// Optional consumer renderer module.
+    /// Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
     pub renderer: Option<String>,
     /// Storybook files.
     pub stories_files: Vec<String>,
@@ -171,7 +171,7 @@ pub struct ProcessCss {
     pub source_root: String,
     /// Consumer module resolution policy for this side.
     pub module_resolution: ModuleResolution,
-    /// Consumer PostCSS module path.
+    /// Consumer PostCSS module as a repository-relative path without `.` or `..` segments.
     pub postcss: String,
     /// Logical stylesheet source path, relative to sourceRoot or a selected dependency root.
     pub source_path: String,

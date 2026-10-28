@@ -2065,6 +2065,7 @@ dependencies = [
  "cap-std",
  "dunce",
  "globset",
+ "html5ever",
  "html5gum",
  "insta",
  "jsonschema",
@@ -2209,7 +2210,6 @@ name = "mokly-html"
 version = "0.14.0"
 dependencies = [
  "html5ever",
- "html5gum",
  "insta",
  "linkify",
  "mokly-catalogue",

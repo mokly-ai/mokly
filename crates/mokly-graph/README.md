@@ -20,8 +20,10 @@ writes no files.
 `Graph` implements `dyn RenderGraph`. `DeliveryInputs` supplies module CSS
 roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet inputs
-and computes document plans. Completed JavaScript, stylesheet, PostCSS, and
-asset inputs populate the prepared catalogue's dependency-directory set.
+and computes document plans. Configured and declared stylesheet roots and
+links name local stylesheets by `ResolvedConfig::repository_path`. Completed
+JavaScript, stylesheet, PostCSS, and asset inputs populate the prepared
+catalogue's dependency-directory set.
 Cached bundles supply the same set. Old cache-validation reads and filename
 suffixes cannot add or hide dependency usage. Preparation bundles the
 stylesheet roots on the render workers, then registers the bundles in root
@@ -48,12 +50,16 @@ resource digests to its key. Usage completion alone keeps the published key.
 A resource edit changes its consuming document keys and reuses JavaScript
 fragments. Missing and denied lexical resource paths stay observable for
 repair. Weak subscribers attach those paths before the background pass
-completes. `generation_key` hashes the configuration, the document plans, the
-delivered stylesheet and asset identities, and the fragment generation for the
-live descriptor. A private stylesheet input that changes no delivered byte
-keeps it. `public_files` lists authored files reached by completed renders.
-Serve rechecks their live eligibility at read time. Temporary closure
-membership stays separate from the catalogue's reached public files.
+completes. Markdown links to `plans/*.md` files render as plain text. Only the
+existence of such a file enters document keys, not its content. Key scans read
+template bodies and saved slots as authored HTML, so unknown ignore-wrapper
+attributes do not enter document keys.
+`generation_key` hashes the configuration, the document plans, the delivered
+stylesheet and asset identities, and the fragment generation for the live
+descriptor. A private stylesheet input that changes no delivered byte keeps it.
+`public_files` lists authored files reached by completed renders. Serve
+rechecks their live eligibility at read time. Temporary closure membership
+stays separate from the catalogue's reached public files.
 
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it
@@ -112,7 +118,6 @@ Production callers supply fresh base generations.
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
-The physical directory that a `..` spelling reaches also stays private.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
 platform. The working-tree adapter implements `mokly_source_interface::tree::SourceTree`. Historical rendering

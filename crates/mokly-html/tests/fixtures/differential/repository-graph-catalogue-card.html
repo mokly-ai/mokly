@@ -1,0 +1,21 @@
+---
+element: ui-card
+title: Card
+propSchema:
+  type: object
+  additionalProperties: false
+  properties: { title: { type: string }, ignored: { type: boolean } }
+  required: [title]
+props: { title: Card, ignored: false }
+slots: [children, header]
+---
+
+<article>
+  <h2>{{ title }}</h2>
+  <span mokly-if="$ignored">Optional</span>
+  <slot name="header"><p>Header default</p></slot>
+  <mokly-ignore-scope enabled="true"
+    ><mokly-ignore id="card-time"><time>Now</time></mokly-ignore
+    ><slot></slot><slot></slot
+  ></mokly-ignore-scope>
+</article>

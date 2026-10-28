@@ -1,0 +1,15 @@
+---
+source: crates/mokly-html/src/_tests_/pipeline_differential_tests.rs
+expression: position_table(&nodes)
+---
+html -
+  head -
+  body -
+    div 34:1
+      span 35:3
+      span 36:3
+        span 37:5
+        span 38:5
+      span 40:3
+        span 41:5
+        span 42:5
