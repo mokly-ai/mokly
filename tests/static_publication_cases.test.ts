@@ -187,6 +187,18 @@ test(
               record.parentId !== undefined,
           ),
         );
+        const write = records.find(
+          (record) =>
+            record.stage === "output.write" && record.event === "start",
+        );
+        const cache = records.filter(
+          (record) =>
+            record.stage === "render.cache" && record.phase === "output.write",
+        );
+        assert.equal(cache.length, 1);
+        assert.equal(cache[0]?.parentId, write?.id);
+        assert.ok((cache[0]?.misses ?? 0) > 0);
+        assert.ok((cache[0]?.chargedBytes ?? 0) > 0);
         assert.ok(!output.stdout.includes("✔"));
       }
       assert.ok(result.stderr.includes('"stage":"upload.plan"'));

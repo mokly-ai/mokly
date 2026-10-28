@@ -50,7 +50,7 @@ catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
 per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
 coordinates are one-based; a zero line or column means the coordinate is
 unavailable. JavaScript diagnostics can use the module and export instead. The public
-roots are `CatalogueReadModel`, `EntryDetailV2`, and `LiveDescriptorV3`.
+roots are `CatalogueReadModel`, `EntryDetailV3`, and `LiveDescriptorV3`.
 Their readers gate the version before decoding payload fields.
 Entry detail carries `controlOrder` for screens and components. It lists every
 editable key once, in declaration order, independently of canonical object keys.
@@ -155,7 +155,7 @@ cargo xtask generate-types
   private in-memory catalogue that the projection reads.
 - [`src/public_index.rs`](./src/public_index.rs) and
   [`src/public_detail.rs`](./src/public_detail.rs) define the public roots
-  `CatalogueReadModel`, `EntryDetailV2`, and `LiveDescriptorV3`.
+  `CatalogueReadModel`, `EntryDetailV3`, and `LiveDescriptorV3`.
 - [`src/projection.rs`](./src/projection.rs) provides `index` and
   `pending_details`, which project a validated model into public records.
 - [`src/readers.rs`](./src/readers.rs) provides the strict readers `index`,

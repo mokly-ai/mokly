@@ -1,15 +1,15 @@
 //! Complete workspace lists derived only from settled current usage.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::axes::EntryKind;
-use crate::public_detail::{EntryDetailV2, UsageLink, VisualKind, Workspace};
+use crate::public_detail::{EntryDetailV3, UsageLink, VisualKind, Workspace};
 use crate::public_index::CatalogueReadModel;
 use crate::usage::{CatalogueUsage, ComponentInputOwner};
 
 /// Omit unproven lists; install complete consumers once all visual usage is ready.
 pub fn workspaces(
-    details: &BTreeMap<String, &EntryDetailV2>,
+    details: &BTreeMap<String, &EntryDetailV3>,
     index: &CatalogueReadModel,
 ) -> BTreeMap<String, Workspace> {
     let ready = details
@@ -19,17 +19,14 @@ pub fn workspaces(
     if !ready {
         return BTreeMap::new();
     }
-    let parents: BTreeMap<_, _> = index
+    let variants: BTreeSet<&str> = index
         .components
         .iter()
-        .map(|component| {
-            (
-                component.entry.path.as_str(),
-                component
-                    .variant_of
-                    .as_deref()
-                    .unwrap_or(&component.entry.path),
-            )
+        .filter_map(|component| {
+            component
+                .variant_of
+                .as_ref()
+                .map(|_| component.entry.path.as_str())
         })
         .collect();
     let titles: BTreeMap<_, _> = index
@@ -75,24 +72,32 @@ pub fn workspaces(
             }
         }
     }
-    let lists: BTreeMap<String, Vec<UsageLink>> = parents
-        .into_iter()
-        .map(|(path, parent)| {
-            (
-                path.to_owned(),
-                consumers.get(parent).cloned().unwrap_or_default(),
-            )
+    let mut lists: BTreeMap<&str, Vec<UsageLink>> = index
+        .components
+        .iter()
+        .filter(|component| component.variant_of.is_none())
+        .map(|component| {
+            let path = component.entry.path.as_str();
+            (path, consumers.remove(path).unwrap_or_default())
         })
         .collect();
     let mut workspaces = BTreeMap::new();
     for (path, detail) in details {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            let component_parent =
+                detail.entry.kind == EntryKind::Component && !variants.contains(path.as_str());
             workspaces.insert(
                 path.clone(),
                 Workspace {
                     comparison_eligible: false,
-                    used_by: lists.get(path).cloned().unwrap_or_default(),
-                    affected: Vec::new(),
+                    used_by: (!variants.contains(path.as_str())).then(|| {
+                        if component_parent {
+                            lists.remove(path.as_str()).unwrap_or_default()
+                        } else {
+                            Vec::new()
+                        }
+                    }),
+                    affected: (!variants.contains(path.as_str())).then(Vec::new),
                     related_components: Vec::new(),
                     input_changes: Vec::new(),
                 },

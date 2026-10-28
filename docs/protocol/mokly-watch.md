@@ -150,6 +150,36 @@ event is dropped, and later notifications keep flowing. A rescan flag or a
 pathless native event queues a repository-root change and reports one loss
 warning per observer. The action rescans registrations and rebuilds inputs.
 
+A preparation can report a watch root that the active watcher lacks, such
+as a PostCSS directory dependency. The candidate then attaches a new watcher
+that includes it, and a failed candidate keeps the active watcher. When a
+new root reaches a directory that the active watcher did not observe when
+the preparation began, Serve prepares the catalogue again under the new
+watcher before it adopts the candidate. Otherwise the events that the active
+watcher buffered replay into the new watcher, and no second preparation
+runs. The rule applies at startup and on every rebuild.
+Decision: directory coverage decides the second preparation. Seeding the
+first watch plan from discovery was rejected, because discovery reports no
+roots. No second preparation at all was rejected, because an edit under an
+unobserved directory during the preparation would stay unseen.
+
+An exact input file outside the roots can lie in a directory that the active
+watcher did not observe when the preparation began. After the candidate's
+watcher attaches, Serve treats each such regular file as changed when its
+modification time falls between the start of the preparation and the moment
+of the check. The window opens 100 milliseconds before the start, because
+writes carry times from a coarse clock, or two seconds before the start for
+a time with no sub-second part, because some file systems keep whole
+seconds. Serve rebuilds for that change after it adopts the candidate, at
+startup and on every rebuild. When Serve prepares again, the check follows
+the second preparation.
+Decision: modification times decide for exact files. Requiring their
+directories in the coverage rule was rejected, because every catalogue then
+prepares twice again. Comparing content digests was rejected, because the
+core and the sidecar read the files and no one record holds every digest. A
+two-second window for every file was rejected, because files written just
+before startup, such as a generated catalogue, would rebuild it once more.
+
 Initial startup selects its port under the
 [package contract](./mokly-package.md#cli). Exhausting the range or another
 bind error fails with `server-failed` without leaking watchers. The resolved

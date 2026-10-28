@@ -41,6 +41,7 @@ mod routing_records;
 mod session;
 mod session_render;
 mod styles;
+mod stylesheet_jobs;
 mod stylesheet_keys;
 mod validation;
 mod watch_rules;

@@ -23,10 +23,13 @@ modules from the sidecar adapter. Its `prepare` method reads stylesheet inputs
 and computes document plans. Completed JavaScript, stylesheet, PostCSS, and
 asset inputs populate the prepared catalogue's dependency-directory set.
 Cached bundles supply the same set. Old cache-validation reads and filename
-suffixes cannot add or hide dependency usage. It checks worker cancellation
-before each entry and stylesheet root. A prepared generation exposes the same
-worker cancellation through `check_cancelled` for callers that process
-views in a loop.
+suffixes cannot add or hide dependency usage. Preparation bundles the
+stylesheet roots on the render workers, then registers the bundles in root
+order. With deterministic plugins, the delivered generation, its key, and its
+first error therefore do not depend on worker timing. No root starts after an
+earlier root failed. Each root job checks
+worker cancellation, and preparation checks it before each entry. A prepared generation exposes the same worker cancellation
+through `check_cancelled` for callers that process views in a loop.
 
 Preparation renders no document. Each plan carries a route and the document
 node's input hash, which is the public `documentKey` of the
@@ -45,8 +48,10 @@ resource digests to its key. Usage completion alone keeps the published key.
 A resource edit changes its consuming document keys and reuses JavaScript
 fragments. Missing and denied lexical resource paths stay observable for
 repair. Weak subscribers attach those paths before the background pass
-completes. `generation_key` hashes the complete render input set for the live
-descriptor. `public_files` lists authored files reached by completed renders.
+completes. `generation_key` hashes the configuration, the document plans, the
+delivered stylesheet and asset identities, and the fragment generation for the
+live descriptor. A private stylesheet input that changes no delivered byte
+keeps it. `public_files` lists authored files reached by completed renders.
 Serve rechecks their live eligibility at read time. Temporary closure
 membership stays separate from the catalogue's reached public files.
 
@@ -63,6 +68,9 @@ requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence, including registry ownership in documents and fragments.
+The charge is an estimate of retained memory. Usage, instance, and slot
+records count at twice their JSON length. `stats` reports the charged bytes,
+the retained entries, and the hit, miss, and eviction counts.
 It evicts by access order. Oversized artifacts return to the caller without
 retention. Plans keep recipes rather than a complete set of parsed documents.
 Eviction changes work only. Cross-view anchor checks retain successful
@@ -177,7 +185,9 @@ retention disabled.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`, and
   `Artifact`, the byte-bounded LRU render cache.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
-  `ThreadWorkers`, the injected worker pool.
+  `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
+  `StylesheetWorker` job for each stylesheet root, keeps the root order, and
+  returns the first failure in root order.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and

@@ -2,13 +2,13 @@
 
 import { readEntryDetail } from "../catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../catalogue/index_reader.js";
-import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV3 } from "../catalogue/types.js";
 
 /** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;
-/** One entry detail v2 as an object, or its URL on the artifact origin. */
-export type DetailResult = EntryDetailV2 | string | URL;
-/** One entry detail v2, or its URL; a removed entry names its snapshot. */
+/** One entry detail v3 as an object, or its URL on the artifact origin. */
+export type DetailResult = EntryDetailV3 | string | URL;
+/** One entry detail v3, or its URL; a removed entry names its snapshot. */
 export type DetailSource = (
   entryPath: string,
   snapshotId?: string,
@@ -96,7 +96,7 @@ export async function loadDetailResult(
   root: URL,
   signal: AbortSignal,
   fetchImpl?: JsonFetch,
-): Promise<EntryDetailV2> {
+): Promise<EntryDetailV3> {
   if (typeof result === "object" && !(result instanceof URL))
     return readEntryDetail(result);
   const url = sourceUrl(new URL(result, root));

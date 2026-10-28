@@ -1,8 +1,8 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { build, Loader } from "esbuild";
+import type { build, BuildResult, Loader } from "esbuild";
 
 import type { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
@@ -13,18 +13,19 @@ import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
+import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
-import { moduleGraph } from "./bundle-graph.js";
-import { bundleResult, fileDigest, restore } from "./compiled.js";
+import { bundleRecipe } from "./bundle-recipe.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
-import { logical } from "./path-scope.js";
-import { confinedFile, consumerRequire } from "./paths.js";
+import { planNative } from "./native-plan.js";
+import { nativeLogOverride } from "./native-resolution.js";
+import type { PlannedImport, Resolution } from "./native-resolution.js";
+import { consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
-import { resolutionInputs } from "./resolution-inputs.js";
 import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
@@ -57,11 +58,57 @@ export interface BundleExports {
   styleAdapters?: { styled?: unknown; native?: unknown; emotion?: unknown };
 }
 
+export interface Bundled {
+  generation: Generation;
+  result: BundleResult;
+}
+
+/** A native compile that is not final: its plan, or none after a failure. */
+interface NativeOutcome {
+  plan?: ReadonlyMap<string, PlannedImport>;
+}
+
+/**
+ * Compile with native resolution first. A native result that a resolve
+ * callback result could not reproduce compiles again from its plan, and a
+ * failed native compile compiles again on the full path.
+ */
 export async function bundle(
   params: BundleParams,
   compile: typeof build,
   measurements: Measurements = unmeasured,
-): Promise<{ generation: Generation; result: BundleResult }> {
+): Promise<Bundled> {
+  const native = await bundleWith(params, compile, measurements, {
+    mode: "native",
+  });
+  if ("generation" in native) return native;
+  return bundleWith(
+    params,
+    compile,
+    measurements,
+    native.plan ? { mode: "planned", plan: native.plan } : { mode: "full" },
+  );
+}
+
+/** One compile attempt; a native attempt reports a plan instead of failing. */
+export async function bundleWith(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: { mode: "native" },
+): Promise<Bundled | NativeOutcome>;
+export async function bundleWith(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: Exclude<Resolution, { mode: "native" }>,
+): Promise<Bundled>;
+export async function bundleWith(
+  params: BundleParams,
+  compile: typeof build,
+  measurements: Measurements,
+  resolution: Resolution,
+): Promise<Bundled | NativeOutcome> {
   const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
   try {
@@ -75,57 +122,15 @@ export async function bundle(
       cssModules: new Set<string>(),
       virtualOrigins,
     };
-    const files = [
-      ...params.entryFiles,
-      ...params.storiesFiles,
-      ...(params.renderer ? [params.renderer] : []),
-    ];
-    const inputPaths = new Map<string, string>();
-    for (const file of files)
-      inputPaths.set(
-        logical(params.sourceRoot, path.resolve(params.sourceRoot, file)),
-        await confinedFile(params.sourceRoot, file),
-      );
-    const previews = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
-      (extension) => `.storybook/preview.${extension}`,
-    );
-    const preview = params.storiesFiles.length
-      ? (
-          await Promise.all(
-            previews.map(
-              async (file) =>
-                await fs.access(path.resolve(params.sourceRoot, file)).then(
-                  () => file,
-                  () => null,
-                ),
-            ),
-          )
-        ).find(Boolean)
-      : null;
-    const imports = files.map(
-      (file, index) =>
-        `import * as m${index} from ${JSON.stringify(path.resolve(params.sourceRoot, file))};`,
-    );
-    if (preview)
-      imports.push(
-        `import * as preview from ${JSON.stringify(path.resolve(params.sourceRoot, preview))}; export { preview };`,
-      );
-    imports.push(
-      `export const entries = {${params.entryFiles.map((file, index) => `${JSON.stringify(logical(params.sourceRoot, path.resolve(params.sourceRoot, file)))}:m${index}`).join(",")}};`,
-    );
-    imports.push(
-      `export const stories = {${params.storiesFiles.map((file, index) => `${JSON.stringify(logical(params.sourceRoot, path.resolve(params.sourceRoot, file)))}:m${index + params.entryFiles.length}`).join(",")}};`,
-    );
-    if (params.renderer)
-      imports.push(`export const renderer = m${files.length - 1};`);
-    const resolution = params.moduleResolution;
+    const { contents, inputPaths, preview } = await entryModule(params);
+    const settings = params.moduleResolution;
     const loaders = Object.fromEntries(
-      Object.entries(resolution.loaders).filter(
+      Object.entries(settings.loaders).filter(
         ([extension]) => extension !== ".css" && extension !== ".module.css",
       ),
     );
     for (const extension of [".css", ".module.css"]) {
-      const value = resolution.loaders[extension];
+      const value = settings.loaders[extension];
       if (value !== undefined && value !== "empty")
         throw new Error(
           `moduleResolution.loaders[${extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`,
@@ -143,7 +148,7 @@ export async function bundle(
       ),
       absPaths: ["metafile", "log"],
       stdin: {
-        contents: imports.join("\n"),
+        contents,
         resolveDir: params.sourceRoot,
         sourcefile: path.resolve(params.sourceRoot, "mokly-entry"),
       },
@@ -160,115 +165,50 @@ export async function bundle(
       keepNames: true,
       metafile: true,
       logLevel: "silent",
-      plugins: consumerPlugins(params, inputs, require, paths, runtimeKey),
-      ...resolutionOptions(params.sourceRoot, resolution),
+      ...(resolution.mode === "native"
+        ? { logOverride: nativeLogOverride }
+        : {}),
+      plugins: consumerPlugins(
+        params,
+        inputs,
+        require,
+        paths,
+        runtimeKey,
+        resolution,
+      ),
+      ...resolutionOptions(params.sourceRoot, settings),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
-    const compiled = await measurements.run("sidecar.bundle.compile", () =>
-      compile(options),
-    );
-    const { modules: graph, physical } = measurements.runSync(
-      "sidecar.bundle.graph",
-      () => moduleGraph(compiled.metafile!, paths),
-    );
-    // The compilation identity: module paths, imports and non-CSS source and
-    // loader bytes, then the metadata inputs and the settings hashed below.
-    const hash = createHash("sha256");
-    const physicalInputs: Record<string, string | null> = {};
-    const metadataInputs: Record<string, string | null> = {};
-    measurements.runSync("sidecar.bundle.inputs", () => {
-      for (const module of graph) {
-        const absolute = physical.get(module.path)!;
-        // Digest the bytes the compiler consumed, as the plugins recorded
-        // them; a later read could see a newer file, so an unrecorded input
-        // fails the bundle.
-        const text = inputs.files.get(absolute);
-        if (text === undefined)
-          throw new Error(
-            `Bundled source bytes were not recorded: ${module.path}`,
-          );
-        module.digest = createHash("sha256").update(text).digest("hex");
-        hash.update(JSON.stringify([module.path, module.imports]));
-        if (!module.path.endsWith(".css")) {
-          hash.update(text);
-          physicalInputs[absolute] = module.digest;
-        }
-      }
-    });
-    for (const file of params.storiesFiles.length ? previews : []) {
-      const absolute = path.resolve(params.sourceRoot, file);
-      metadataInputs[file] = physicalInputs[absolute] =
-        await fileDigest(absolute);
-    }
-    for (const root of paths.dependencyRoots) {
-      const file = path.join(root, "react/package.json");
-      metadataInputs[paths.name(file)] = physicalInputs[file] =
-        await fileDigest(file);
-    }
-    let reactVersion: string | null = null;
+    let compiled: BuildResult<typeof options>;
     try {
-      const file = require.resolve("react/package.json");
-      const bytes = await fs.readFile(file);
-      reactVersion = JSON.parse(bytes.toString()).version;
-      metadataInputs[paths.name(file)] = physicalInputs[file] = createHash(
-        "sha256",
-      )
-        .update(bytes)
-        .digest("hex");
+      compiled = await measurements.run("sidecar.bundle.compile", () =>
+        compile(options),
+      );
     } catch (error) {
-      if (!(
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === "MODULE_NOT_FOUND"
-      ))
-        throw error;
+      if (resolution.mode === "native") return {};
+      throw error;
     }
-    const directories = await measurements.run(
-      "sidecar.bundle.resolution",
-      () =>
-        resolutionInputs(
-          paths,
-          physical.values(),
-          physicalInputs,
-          metadataInputs,
-        ),
-    );
-    hash.update(JSON.stringify(metadataInputs));
-    hash.update(
-      JSON.stringify([
-        params.sourceRoot,
-        paths.dependencyRoots,
-        params.entryFiles,
-        params.storiesFiles,
+    if (resolution.mode === "native") {
+      const { metafile } = compiled;
+      const plan = await measurements
+        .run("sidecar.bundle.classify", () => planNative(metafile, paths))
+        .catch(() => undefined);
+      if (!plan) return {};
+      if (!plan.exact) return { plan: plan.imports };
+    }
+    return await bundleRecipe(
+      {
+        params,
+        paths,
+        require,
+        inputs,
+        compiled,
+        inputPaths,
         preview,
-        params.renderer,
-        params.configurationDirectory,
-        params.repositoryRoots,
-        resolution,
-        reactVersion,
-      ]),
+        runtimeKey,
+      },
+      measurements,
     );
-    const compilation: CompiledGeneration = {
-      identity: hash.digest("hex"),
-      code: compiled.outputFiles![0]!.text,
-      runtimeKey,
-      dependencyRoots: paths.dependencyRoots,
-      cssModules: [...inputs.cssModules],
-      sources: Object.fromEntries(
-        [...inputPaths].map(([file, physical]) => [
-          file,
-          Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
-        ]),
-      ),
-      peers: require.snapshot(),
-      unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
-      ...directories,
-      inputs: physicalInputs,
-      metadataInputs,
-    };
-    const generation = restore(params, compilation, graph);
-    return { generation, result: bundleResult(generation) };
   } catch (error) {
     throw new SidecarError(
       "bundle-failed",

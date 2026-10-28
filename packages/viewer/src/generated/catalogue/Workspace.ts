@@ -13,11 +13,11 @@ comparisonEligible: boolean,
 /**
  * Current consuming uses.
  */
-usedBy: Array<UsageLink>,
+usedBy?: Array<UsageLink>,
 /**
  * Affected consumers.
  */
-affected: Array<UsageLink>,
+affected?: Array<UsageLink>,
 /**
  * Changed components affecting this entry.
  */
