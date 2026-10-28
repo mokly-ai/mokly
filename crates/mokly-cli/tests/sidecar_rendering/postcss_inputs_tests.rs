@@ -223,7 +223,7 @@ fn base_postcss_package_witnesses_reject_changes_before_document_callbacks() {
 import fs from 'node:fs';
 import value from './value.mjs';
 export default ()=>({postcssPlugin:'probe',Once(root){
-if(process.env.MOKLY_TEST_POSTCSS_BASE_EDIT && !fs.existsSync('.git'))
+if(process.env.FIXTURE_POSTCSS_BASE_EDIT && !fs.existsSync('.git'))
   fs.writeFileSync(new URL('./value.mjs',import.meta.url),\"export default 'blue';\");
 root.walkDecls('color',declaration=>{declaration.value=value});
 }});",
@@ -268,7 +268,7 @@ return '<!doctype html><html><head><title>Home</title></head><body>Home</body></
     all.extend_from_slice(&args);
     let result = mokly()
         .command(path, &all, "plain")
-        .env("MOKLY_TEST_POSTCSS_BASE_EDIT", "1")
+        .env("FIXTURE_POSTCSS_BASE_EDIT", "1")
         .run();
     assert_eq!(result.code, Some(1), "{}", result.stderr);
     assert!(changed(&result.stderr, "value.mjs"), "{}", result.stderr);

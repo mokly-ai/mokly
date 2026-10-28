@@ -57,12 +57,12 @@ import {{open,readFile}} from 'node:fs/promises';
 export default {{plugins:[{{postcssPlugin:'identity',async Once(root,{{result}}){{
 {read}
 root.walkDecls('color',declaration=>{{declaration.value=value}});
-if(process.env.MOKLY_TEST_RETARGET){{fs.unlinkSync('tokens.txt');fs.symlinkSync('b.txt','tokens.txt','file');}}
+if(process.env.FIXTURE_RETARGET){{fs.unlinkSync('tokens.txt');fs.symlinkSync('b.txt','tokens.txt','file');}}
 result.messages.push({{type:'dependency',file:'tokens.txt'}});
 }}}}]}};"
         ),
     );
-    rejects_the_changed_input(path, "MOKLY_TEST_RETARGET");
+    rejects_the_changed_input(path, "FIXTURE_RETARGET");
 }
 
 #[cfg(unix)]
@@ -103,12 +103,12 @@ export default {{plugins:[{{postcssPlugin:'range',async Once(root,{{result}}){{
 const buffer=Buffer.alloc(3);
 {read}
 root.walkDecls('color',declaration=>{{declaration.value=buffer.toString()}});
-if(process.env.MOKLY_TEST_RANGE_EDIT)fs.writeFileSync('tokens.txt','tan-unused');
+if(process.env.FIXTURE_RANGE_EDIT)fs.writeFileSync('tokens.txt','tan-unused');
 result.messages.push({{type:'dependency',file:'tokens.txt'}});
 }}}}]}};"
         ),
     );
-    rejects_the_changed_input(path, "MOKLY_TEST_RANGE_EDIT");
+    rejects_the_changed_input(path, "FIXTURE_RANGE_EDIT");
 }
 
 #[test]
