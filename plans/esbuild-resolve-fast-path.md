@@ -1,7 +1,7 @@
 # esbuild Resolve Fast Path
 
-Status: Active. On branch `conductor/perf-1-esbuild-resolve-fast-path`, no
-pull request yet. The plan closes when its PR merges.
+Status: Active. [PR #226](https://github.com/mokly-ai/mokly/pull/226) is
+open. The plan closes when its PR merges.
 
 The sidecar compiles every entry file and the renderer with one esbuild
 call. A catch-all resolve callback in the sidecar plugins handles every
@@ -390,5 +390,5 @@ Evidence: `.context/esbuild-resolve-fast-path/identity.txt`,
     null (reading 'dispatchEvent')", then passed on the shard rerun and in
     ten local runs. Suspected source: the probe reads the frame document
     during the handoff race. Separate branch.
-- [ ] Open the pull request with the before and after table when every
+- [x] Open the pull request with the before and after table when every
       other milestone TODO is ticked. Put its link in the status paragraph.
