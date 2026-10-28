@@ -208,6 +208,21 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
     dependency digests that also grow. Rejected: C, a fixed request order,
     because it removes much of the gain.
 
+12. Observation replay of shared module evidence, decided on 2026-10-28
+    under the user's rule: A. An attempt replays the observations of a
+    context entry once, and the observations of a record's own inputs on
+    each delivery. The replay test on `origin/main` used an input without
+    the source prefix, which is module evidence now, so its assertion moves
+    to an input with the prefix and keeps its three replays. Rejected: B,
+    replay the whole evidence on each delivery, because each hit then
+    replays about 1,100 module versions, about 3 ms. Reason: both admission
+    ledgers keep sets of observations, so one replay for each attempt gives
+    them the same evidence.
+13. Miss reason of a record larger than the byte bound, decided on
+    2026-10-28 under the user's rule: A, `evicted`. Rejected: B,
+    `no-record`, because the bound is the cause, and decision 4 added
+    `evicted` to name that cause.
+
 ## Design
 
 ### Step A
@@ -239,12 +254,18 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
 - The cache layer opens the `css.bundle` span around the inner bundle and
   records `cache` with the miss reason. The shared store keeps the keys of
   records that it removed under the byte bound or kept attempt-local, with
-  their reason. The timing layer copies the `cache` field to the end record.
-- Under decision 1, a record keeps its own read evidence. The context's
-  module evidence goes into one shared entry with its stamp and consistency,
-  keyed by its digest. The store charges the entry once. An
-  attempt checks the entry's stamp once and replays it once. A hit returns
+  their reason, while those keys fit in the bound beside the records. The
+  timing layer copies the `cache` field to the start and end records.
+- Under decision 1, a record keeps its own read evidence: the entries with
+  the source prefix. The context's module evidence goes into one shared
+  entry with its stamp and consistency, found by its digest. The store
+  charges each distinct entry once. An attempt checks the entry's stamp once
+  and replays it once. A new bundle reuses a stored entry with equal
+  evidence only when that entry's stamp holds in the attempt. A hit returns
   the same bundle and the same evidence as today.
+- Under decision 8, the PostCSS adapter keeps each module's late digest for
+  the rest of its context. The tree calls run outside that memo's lock, so
+  the read inventories of two inputs still overlap.
 - The stamp keeps every input: sources, assets, plugin dependency digests,
   directory listings, and the module evidence. Tailwind reports each scanned
   directory with a glob. The dependency inventory digests every matching
@@ -473,39 +494,48 @@ merged first.
 
 Write each failing test first.
 
-- [ ] Open the `css.bundle` span in
+- [x] Open the `css.bundle` span in
       `crates/mokly-render/src/stylesheet_cache.rs` around the inner bundle,
       with the `cache` field. Keep the keys of removed and attempt-local
       records with their reason in the shared store.
-- [ ] Copy the `cache` field to the end record in
+- [x] Copy the `cache` field to the `css.bundle` records in
       `crates/mokly-cli/src/serve_trace.rs`.
-- [ ] Tests:
-  - [ ] `crates/mokly-render`: each miss value under decision 4, with a
-        mocked tree and a mocked inner bundler.
-  - [ ] `crates/mokly-cli`: the timing layer copies `cache` to the
+- [x] Tests:
+  - [x] `crates/mokly-render`: each miss value under decision 4, with a
+        counting tree and a mocked inner bundler.
+  - [x] `crates/mokly-cli`: the timing layer copies `cache` to the
         `css.bundle` end record and logs no path.
+  - [x] `crates/mokly-cli/tests/serve_process_tests.rs`: the startup
+        `css.bundle` records of the real binary carry `no-record`.
 
 ## Milestone 9: Gate fix, step B
 
 Write each failing test first.
 
-- [ ] Apply decision 1 in `crates/mokly-render/src/stylesheet_cache.rs`,
-      `crates/mokly-render/src/input_stamp.rs`, and new modules beside them.
-      Keep each file under 300 lines.
-- [ ] Apply decision 8: keep the module baselines of the PostCSS read
+- [x] Apply decision 1 in `crates/mokly-render/src/stylesheet_cache.rs`
+      and the new `stylesheet_record.rs` and `stylesheet_store.rs` beside
+      it. `input_stamp.rs` needs no change. Keep each file under 300 lines.
+- [x] Apply decision 8: keep the module baselines of the PostCSS read
       inventory once for each context, so each later result of that context
       projects and hashes no module again. Test it with counted tree calls
       for two and eight results.
-- [ ] Unit tests in `crates/mokly-render`:
-  - [ ] Thirty-nine records with 551 shared module paths fit in one 64 MiB
-        store.
-  - [ ] Hits on two roots and on eight roots of one context check the shared
+- [x] Apply decision 12: move the replay assertion of
+      `local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transform`
+      to evidence with the source prefix. Keep its three replays.
+- [x] Unit tests in `crates/mokly-render`:
+  - [x] Thirty-nine records with 551 shared module paths fit in one 64 MiB
+        store. The test also shows that 39 copies of the module evidence
+        would not fit.
+  - [x] Hits on two roots and on eight roots of one context check the shared
         module stamp once for each attempt. Count the tree's digest and
         identity calls.
-  - [ ] A hit returns the same CSS and the same read evidence as the miss
+  - [x] A hit returns the same CSS and the same read evidence as the miss
         that made the record, and it replays the same observations.
-  - [ ] A changed module file makes every record of that context miss with
+  - [x] A changed module file makes every record of that context miss with
         `stamp-mismatch`.
+  - [x] The store charges a shared entry once, charges a separate entry with
+        equal evidence again, drops an entry that no record uses, and
+        forgets the miss reasons that do not fit.
 - [ ] Integration tests in `crates/mokly-render/tests/integration` with the
       real sidecar:
   - [ ] A second preparation with no change makes no `processCss` call and
