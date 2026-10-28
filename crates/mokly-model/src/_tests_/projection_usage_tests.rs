@@ -5,13 +5,13 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::projection_usage;
-use crate::public_detail::EntryDetailV2;
+use crate::public_detail::EntryDetailV3;
 use crate::readers;
 use crate::usage::{CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord};
 
 #[derive(Deserialize)]
 struct Fixtures {
-    current: BTreeMap<String, EntryDetailV2>,
+    current: BTreeMap<String, EntryDetailV3>,
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn variant_slot_self_use_is_retained_and_its_child_is_transitive() {
     ))
     .unwrap();
     let mut details: Fixtures = serde_json::from_str(include_str!(
-        "../../../../docs/protocol/fixtures/entry-details-v2.json"
+        "../../../../docs/protocol/fixtures/entry-details-v3.json"
     ))
     .unwrap();
     let variant = details
@@ -59,19 +59,18 @@ fn variant_slot_self_use_is_retained_and_its_child_is_transitive() {
         .map(|(path, detail)| (path.clone(), detail))
         .collect();
     let workspaces = projection_usage::workspaces(&borrowed, &index);
-    for path in ["components/action", "components/action/default"] {
-        let links = &workspaces[path].used_by;
-        assert_eq!(links.len(), 2);
-        assert!(
-            links
-                .iter()
-                .all(|link| link.entry_path == "components/action/default")
-        );
-        assert_eq!(links[0].instance_key, "a".repeat(64));
-        assert!(links[0].direct);
-        assert_eq!(links[1].instance_key, "b".repeat(64));
-        assert!(!links[1].direct);
-    }
+    let links = workspaces["components/action"].used_by.as_ref().unwrap();
+    assert_eq!(links.len(), 2);
+    assert!(
+        links
+            .iter()
+            .all(|link| link.entry_path == "components/action/default")
+    );
+    assert_eq!(links[0].instance_key, "a".repeat(64));
+    assert!(links[0].direct);
+    assert_eq!(links[1].instance_key, "b".repeat(64));
+    assert!(!links[1].direct);
+    assert!(workspaces["components/action/default"].used_by.is_none());
     details
         .current
         .get_mut("product/browse/home")

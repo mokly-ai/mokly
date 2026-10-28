@@ -143,6 +143,9 @@ pub enum ContractViolation {
     /// Views and workspace belong only to visual entries.
     #[error("views and workspace belong only to visual entries")]
     DetailKind,
+    /// Workspace lists must be present only on their detail owner.
+    #[error("workspace lists are misplaced or incomplete")]
+    Workspace,
     /// Detail control order must list every editable property exactly once.
     #[error("detail control order must list every editable property exactly once")]
     ControlOrder,

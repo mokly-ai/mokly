@@ -22,7 +22,7 @@ Every delivery renders the shell from data in the browser.
 
 ```ts
 import type { CSSProperties, ReactNode, Ref } from "react";
-import type { CatalogueReadModel, EntryDetailV2 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
 import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 import type { InstanceRef, ViewerMarker, MarkerState } from "@mokly/viewer";
 
@@ -39,8 +39,8 @@ interface ViewerSelection {
 }
 /** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
 type IndexSource = CatalogueReadModel | string | URL;
-type DetailResult = EntryDetailV2 | string | URL;
-/** One entry detail v2, or its URL; a removed entry names its snapshot. */
+type DetailResult = EntryDetailV3 | string | URL;
+/** One entry detail v3, or its URL; a removed entry names its snapshot. */
 type DetailSource = (
   entryPath: string,
   snapshotId?: string,
@@ -124,9 +124,14 @@ that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
 [read model v8](./mokly-catalogue.md) before it renders.
 
-`detail` supplies the entry detail v2 of one entry. The viewer calls it with the
+`detail` supplies the entry detail v3 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a
-selection whose detail it does not hold. The result is a detail object, a URL on
+selection whose detail it does not hold. For a current component variant, the
+viewer also calls `detail` with the parent's path and no `snapshotId` when it
+does not hold that detail. Screen variants and removed variants need no parent
+request. The stage, Props, and Usage wait for all route details under the
+[route delivery rules](./mokly-shell-delivery.md#fetch-and-fences).
+The result is a detail object, a URL on
 the artifact origin root, or a promise of either. A URL is fetched under the
 fetch rules of the shell delivery contract: same origin, `credentials: "omit"`,
 no redirect outside the origin. A detail is accepted only under the fences of
@@ -136,7 +141,7 @@ index's record for a removed entry. On a revision mismatch the viewer requests
 the index again once; a detail that still disagrees leaves the entry unavailable
 with a retry control. A different `deploymentId` emits one `onError` and keeps
 the installed state and the loading stage until the host replaces `index`. A
-detail that arrives after the selection moved on is discarded. Sources are
+detail that a newer selection does not need is discarded. Sources are
 host-supplied transports, not permission for viewer telemetry. A fetch failure
 renders an explicit error and retry state and emits `onError`. A version failure
 shows the headline of the [version contract](./mokly-viewer-namespace.md)
@@ -167,6 +172,8 @@ entries load their [previous version](./mokly-removed-previews.md) only from
 the advertised comparison generation. Details show the workspace of the entry
 detail in every delivery: Used by, Affected screens, related changed
 components, and input changes with Before and Current props.
+A current component variant shows Used by and Affected lists from its parent's
+detail. A removed variant shows those lists from its own detail.
 
 Slots are optional React-owned content containers. `topBarStart` and
 `topBarEnd` adjoin the top bar; `railStart` and `railEnd` adjoin the

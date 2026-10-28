@@ -29,7 +29,7 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
 
 for (const [boundary, supported, read] of [
   ["catalogue", 8, readCatalogueIndex],
-  ["detail", 2, readEntryDetail],
+  ["detail", 3, readEntryDetail],
   ["live", 3, readLiveDescriptor],
 ] as const) {
   test(`${boundary} rejects unsupported versions before consuming payload fields`, () => {

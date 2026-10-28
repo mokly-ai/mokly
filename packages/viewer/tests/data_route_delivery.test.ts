@@ -11,6 +11,8 @@ import { detailFixture } from "./catalogue_v8_fixture.js";
 
 const TOUR = { path: "tour" };
 const STEP = { path: "product/browse/home" };
+const VARIANT = { path: "components/action/default" };
+const PARENT = { path: "components/action" };
 
 /** The delivery of the tour route, whose details are all missing by default. */
 function delivery(
@@ -58,6 +60,24 @@ test("a route loads until every detail arrives, and a failed one offers a retry"
   assert.equal(refresh.result?.status, "failed");
   if (refresh.result?.status === "failed") refresh.result.retry();
   assert.deepEqual(refresh.retried, [["refresh"]]);
+});
+
+test("a component variant waits for its parent detail", () => {
+  assert.deepEqual(delivery({}, [VARIANT, PARENT]).result, {
+    status: "loading",
+  });
+  assert.deepEqual(delivery({ held: [VARIANT] }, [VARIANT, PARENT]).result, {
+    status: "loading",
+  });
+  assert.deepEqual(
+    delivery({ held: [VARIANT, PARENT] }, [VARIANT, PARENT]).result,
+    { status: "ready" },
+  );
+  assert.equal(
+    delivery({ held: [VARIANT], failed: [PARENT] }, [VARIANT, PARENT]).result
+      ?.status,
+    "failed",
+  );
 });
 
 test("a use case shows a failed step only after every detail settles", () => {

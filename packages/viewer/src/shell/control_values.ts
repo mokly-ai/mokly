@@ -1,6 +1,6 @@
 /** Pure draft and validation rules of the Props controls. */
 
-import type { EntryDetailV2 } from "../catalogue/types.js";
+import type { EntryDetailV3 } from "../catalogue/types.js";
 import { decodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
 import { validateControlledValues } from "../components/controls.js";
@@ -33,7 +33,7 @@ export interface ControlTarget {
   propSchema: PropSchema;
   props: ComponentWireProps;
   controls: Readonly<Record<string, ComponentControl>>;
-  controlOrder?: Readonly<NonNullable<EntryDetailV2["controlOrder"]>>;
+  controlOrder?: Readonly<NonNullable<EntryDetailV3["controlOrder"]>>;
   suppliedSlots: readonly string[];
   removed: boolean;
 }

@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::detail_validation;
 use crate::namespace;
-use crate::public_detail::{EntryDetailV2, LiveDescriptorV3};
+use crate::public_detail::{EntryDetailV3, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::read_contract::ContractViolation;
 use crate::review::ReviewResultV8;
@@ -55,9 +55,9 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     Ok(index)
 }
 
-/// Decode an entry detail after its v2 gate.
-pub fn detail(text: &str) -> Result<EntryDetailV2, ReadError> {
-    let detail: EntryDetailV2 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
+/// Decode an entry detail after its version gate.
+pub fn detail(text: &str) -> Result<EntryDetailV3, ReadError> {
+    let detail: EntryDetailV3 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
     detail_validation::validate(&detail)?;
     Ok(detail)
 }

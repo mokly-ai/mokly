@@ -10,7 +10,7 @@ import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV2,
+  EntryDetailV3,
 } from "../src/catalogue/types.js";
 import { EmbeddedViewerShell } from "../src/shell/embedded_viewer.js";
 import { ShellStoreProvider } from "../src/shell/store.js";
@@ -82,7 +82,7 @@ export interface HeldEmbeddedMarkupOptions {
   /** The raw index object a host passes; the protocol fixture by default. */
   index?: CatalogueReadModel;
   /** The held details; every fixture detail by default. */
-  details?: readonly (readonly [DetailRequest, EntryDetailV2])[];
+  details?: readonly (readonly [DetailRequest, EntryDetailV3])[];
   selection?: Partial<ViewerSelection>;
 }
 

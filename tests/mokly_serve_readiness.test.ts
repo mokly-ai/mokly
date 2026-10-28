@@ -58,3 +58,22 @@ for (const status of ["pending", "preparing"]) {
     assert.equal(detail.revision, 2);
   });
 }
+
+test("live-prop fixtures settle on a current variant workspace", async () => {
+  const events = new ReadableStream<Uint8Array>();
+  const request: typeof fetch = async (input) => {
+    const url = String(input);
+    if (url.endsWith("/events")) return new Response(events);
+    if (url.endsWith("/index.json"))
+      return Response.json({ revision: 1, changesStatus: "disabled" });
+    assert.ok(url.endsWith("/entries/card/disabled.json"));
+    return Response.json({ revision: 1, workspace: {} });
+  };
+  const result = await completed(
+    "http://fixture",
+    new AbortController().signal,
+    "card/disabled",
+    request,
+  );
+  assert.equal(result.detail.revision, 1);
+});
