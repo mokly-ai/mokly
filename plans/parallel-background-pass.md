@@ -397,9 +397,8 @@ request TODO comes before the review TODO here.
   `mutation-checks.txt`.
 
 - [x] Update the pull request body with the review outcome.
-- [ ] The complete gate passes on the final commit. Blocked: on `9e9a2b0f`,
-      six of the seven remote suites passed. The repository suite stopped at
-      the Rust dependency audit on RUSTSEC-2026-0414, which `origin/main` has
-      too. Its later steps passed locally, including the workspace tests
-      and both clippy runs. CI on PR #225 shows the same failure.
-      `a260d9f7` passed all seven suites before the advisory.
+- [x] The complete gate passes on the final commit. On `9e9a2b0f` the
+      repository suite stopped at the Rust dependency audit on
+      RUSTSEC-2026-0414, which `origin/main` had too. The merge `b91896c5`
+      brings the fix from PR #230, and CI on PR #225 then passed every
+      required check.
