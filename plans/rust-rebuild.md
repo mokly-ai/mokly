@@ -5518,7 +5518,7 @@ check passes on this commit.
       Severity Low, effort Medium, category performance. User decision 1
       (2026-10-26): A, exclude planning Markdown from document identity.
       Fixed in `735c7d2e` with a regression test and the document contract.
-- [ ] Decision work review of 2026-10-26, finding 2: a removed linked plan
+- [x] Decision work review of 2026-10-26, finding 2: a removed linked plan
       file keeps the document key. Since `735c7d2e`, linked `plans/*.md`
       files stay out of document identity, but the Markdown renderer still
       fails a missing link target. After the file is removed, a warm Serve
@@ -5585,6 +5585,17 @@ check passes on this commit.
   `crates/mokly-html/src/source_checks.rs` at lines 21-36 fails any
   duplicate attribute in callback output as a duplicate navigation
   attribute, also on `origin/main`. Separate branch.
+- Implementation review of 2026-10-28:
+  `.context/html-pipeline-2-decisions/review-db37e3d9.md`. Finding 1 is fixed
+  in `371d8d43`. Finding 2 is fixed by the tick on the decision work review
+  finding 2 item above.
+- Outside the implementation review of 2026-10-28: `.prettierignore` at
+  line 10 has the comment "Protocol fixtures keep their canonical bytes."
+  with no pattern below it, also on `origin/main`. Separate branch.
+- Outside the implementation review of 2026-10-28:
+  `crates/mokly-html/src/source_checks.rs` at line 18 reports reserved
+  navigation metadata in an authored template body as "in consumer output",
+  also on `origin/main`. Separate branch.
 - Outside phase 2 review 1, resolved by the one-tokenizer decision B
   (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
   kept its own integration point list without SVG `desc` or encoded MathML
