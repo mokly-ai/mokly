@@ -7,7 +7,7 @@ use std::time::Duration;
 use bytes::Bytes;
 use mokly_publish::completion::{Completion, Outcome, retryable};
 use mokly_publish::error::Error;
-use mokly_publish::http::{Http, Request, ReqwestHttp, Step};
+use mokly_publish::http::{Encoding, Http, Request, ReqwestHttp, Step};
 use mokly_publish::plan::Plan;
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
@@ -88,16 +88,21 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
             } else {
                 prepared.archive.clone()
             },
+            encoding: Encoding::Identity,
             timeout: Duration::from_secs(120),
         };
         let response = http.send(&request, settings.token()).await.unwrap();
         if step == Step::Plan {
-            assert_eq!(
-                Plan::parse(&response, &settings, &digests).is_ok(),
-                case["valid"] == true,
-                "{}",
-                case["name"]
-            );
+            let parsed = Plan::parse(&response, &settings, &digests);
+            assert_eq!(parsed.is_ok(), case["valid"] == true, "{}", case["name"]);
+            if let Ok(plan) = parsed {
+                let encoding = if case["blobEncoding"] == "gzip" {
+                    Encoding::Gzip
+                } else {
+                    Encoding::Identity
+                };
+                assert_eq!(plan.blob_encoding, encoding, "{}", case["name"]);
+            }
         } else if case["outcome"] == "retry" {
             assert_eq!(
                 completion_outcome(&response, &settings),
@@ -119,7 +124,7 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
             }
         }
     }
-    assert_eq!(index.load(Ordering::SeqCst), 67);
+    assert_eq!(index.load(Ordering::SeqCst), 74);
     server.finish().await;
 }
 
@@ -151,6 +156,7 @@ async fn redirects_are_returned_without_forwarding_the_bearer_credential() {
                 step: Step::Plan,
                 url: settings.endpoint().clone(),
                 body: Bytes::new(),
+                encoding: Encoding::Identity,
                 timeout: Duration::from_secs(120),
             },
             settings.token(),
@@ -186,6 +192,7 @@ async fn declared_and_streamed_excess_are_bounded_and_unreadable_completion_stil
                     step: Step::Plan,
                     url: settings.endpoint().clone(),
                     body: Bytes::new(),
+                    encoding: Encoding::Identity,
                     timeout: Duration::from_secs(120),
                 },
                 settings.token(),
@@ -218,6 +225,7 @@ async fn declared_and_streamed_excess_are_bounded_and_unreadable_completion_stil
                 step: Step::Complete,
                 url: settings.endpoint().clone(),
                 body: Bytes::new(),
+                encoding: Encoding::Identity,
                 timeout: Duration::from_secs(120),
             },
             settings.token(),
