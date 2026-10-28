@@ -375,47 +375,57 @@ failing test first.
 
 ## Milestone 5: Documentation and protocol for extraction reads
 
-- [ ] Update `docs/protocol/mokly-base-preparation.md`, section "Sources":
+- [x] Update `docs/protocol/mokly-base-preparation.md`, section "Sources":
       while a preparation leases a complete extraction of the base commit,
       base reads use its files; a file that it does not hold reads through
       Git, under decision 3; the early lease rule of decision 2,
       with its rejected options as the decision in force.
-- [ ] Update `docs/protocol/mokly-base-cache.md`: a lookup can lease a
+- [x] Update `docs/protocol/mokly-base-cache.md`: a lookup can lease a
       complete entry without a build, and it creates no entry.
-- [ ] Add the status line to each changed page.
+- [x] Add the status line to each changed page.
 
 ## Milestone 6: Extraction byte source
 
-- [ ] Tests first: a `mokly-git` integration test reads an extraction back
+- [x] Tests first: a `mokly-git` integration test reads an extraction back
       with the same bytes as the Git read, falls back to Git for a removed
       file and for a link, and keeps the byte-limit error kinds. A unit test
       covers the confined digest.
-- [ ] A `mokly-compare` unit test with mocks: after the attach, the index
+- [x] A `mokly-compare` unit test with mocks: after the attach, the index
       expands once, a projection makes no lookup, and reads and digests use
       the extraction root.
-- [ ] A `mokly-compare` integration test with a real repository: a `GitTree`
+- [x] A `mokly-compare` integration test with a real repository: a `GitTree`
       with an attached extraction returns the same bytes as one without it,
       and the recording runner sees no `cat-file` command after the attach.
-- [ ] Implement the extracted read and digest in `mokly-git`, the attach in
+- [x] Implement the extracted read and digest in `mokly-git`, the attach in
       `GitSources`, and `Arc<Lease>` in `BaseSide`. Split `sources.rs` if it
       passes 300 lines.
-- [ ] Update `crates/mokly-git/README.md`, `crates/mokly-compare/README.md`,
+- [x] Update `crates/mokly-git/README.md`, `crates/mokly-compare/README.md`,
       and `crates/mokly-render/README.md`.
+- Notes: the confined digest is covered by the `mokly-git` integration test,
+  because a unit test of real files would need disk IO. The `mokly-compare`
+  integration test hides `.git` after the attach, so any Git command would
+  fail; it then reads, hashes, and projects every base file. `sources.rs` has
+  290 lines, so it stays one file. Tests ran green at `8f2d811a`.
 
 ## Milestone 7: Early lease
 
-- [ ] Tests first: a cache test leases a complete entry without a build, and
+- [x] Tests first: a cache test leases a complete entry without a build, and
       a missing entry returns none, creates no directory, and makes no
       announcement. A `mokly-cli` test checks the call order: the early
       lease, the attach, and then the configuration read, for a working
       configuration with a renderer. A second test checks that an HTML-only
       working configuration makes no early lookup, and that the dependency
       step's lease is attached before graph preparation.
-- [ ] Implement the cache lookup, the `Extraction` and `BaseDependencies`
+- [x] Implement the cache lookup, the `Extraction` and `BaseDependencies`
       methods, the forwarding in `PreparingDependencies`, and the attach calls
       in `NativeBase`.
-- [ ] Update `crates/mokly-cli/README.md`. Remove the status line from the
+- [x] Update `crates/mokly-cli/README.md`. Remove the status line from the
       milestone 5 pages.
+- Notes: the HTML-only case is the first `NativeBase` test, whose working
+  configuration names no renderer, so a lookup would fail the mock. A third
+  test covers a failed lookup, which keeps the base reads on Git. After the
+  merge of the final design A at `0fd0351f`, the four crate suites passed:
+  856 tests.
 
 ## Milestone 8: Verification, measurement, review, and pull request
 
