@@ -8,6 +8,7 @@ mod application_evidence;
 pub mod assets;
 pub mod backend;
 pub mod background;
+mod background_batch;
 pub mod changes;
 pub mod changes_background;
 mod changes_detail;

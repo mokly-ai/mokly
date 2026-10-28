@@ -61,6 +61,9 @@ pub struct Workers {
     pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     pub(crate) workers: Arc<Semaphore>,
+    /// One fair permit: queued background renders wait for admission one at a time, in
+    /// request order, so a worker freed between two polls cannot reorder them.
+    turn: Semaphore,
     /// Eight preview queue tickets server-wide. A page reuses its live ticket, so its
     /// superseded jobs never hold more than one.
     queued: Arc<Semaphore>,
@@ -84,6 +87,7 @@ impl Workers {
             diagnostics,
             parallelism,
             workers: Arc::new(Semaphore::new(parallelism as usize)),
+            turn: Semaphore::new(1),
             queued: Arc::new(Semaphore::new(8)),
             pages: Mutex::new(BTreeMap::new()),
             closed: AtomicBool::new(false),
@@ -94,19 +98,24 @@ impl Workers {
 #[async_trait]
 impl Work for Workers {
     async fn background(&self, documents: Arc<dyn Documents>, route: String) -> Result<()> {
-        let permit = loop {
-            let changed = self.priority.changed.notified();
-            tokio::pin!(changed);
-            changed.as_mut().enable();
-            if self.closed.load(Ordering::SeqCst) {
+        let permit = {
+            let Ok(_turn) = self.turn.acquire().await else {
                 return Ok(());
+            };
+            loop {
+                let changed = self.priority.changed.notified();
+                tokio::pin!(changed);
+                changed.as_mut().enable();
+                if self.closed.load(Ordering::SeqCst) {
+                    return Ok(());
+                }
+                if self.priority.idle()
+                    && let Ok(permit) = self.workers.clone().try_acquire_owned()
+                {
+                    break permit;
+                }
+                changed.await;
             }
-            if self.priority.idle()
-                && let Ok(permit) = self.workers.clone().try_acquire_owned()
-            {
-                break permit;
-            }
-            changed.await;
         };
         let guard = self.priority.enter(false);
         let parent = tracing::Span::current();

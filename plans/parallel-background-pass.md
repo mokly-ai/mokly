@@ -56,6 +56,15 @@ Each failure is reported once, through `Diagnostics::failed`. A failure that
 is not reported before a stop or a replacement is discarded, as the serial
 pass discards a failure that ends after one.
 
+5. Admission order, decided on 2026-10-28 during milestone 2 under the user's
+   rule to apply the recommended option without a stop: A, a fair one-permit
+   turn in `Workers::background`, so queued background renders wait for a
+   worker one at a time, in request order. Rejected: B, weaken decision 3 to a
+   best-effort order. Reason: 500 stress runs of the first window design
+   showed 1 start out of catalogue order. A worker freed on a blocking thread
+   between two polls of one sweep let a later render take it. The window's
+   poll order alone cannot prevent that, and the turn needs about ten lines.
+
 ## Corrections to the item text
 
 - The pass bound is the Serve worker scheduler, `Workers` in
@@ -68,7 +77,9 @@ pass discards a failure that ends after one.
   costs about 0.3 s to spawn and 0.2 to 0.3 s to replay the generation, in
   parallel. The base side then reuses them.
 - `Workers::background` already admits concurrent calls with foreground
-  priority, so the change needs no edit in `work.rs`.
+  priority. It needs one change for decision 3: queued background renders
+  take a fair turn, so they reach a free worker in request order. See
+  decision 5.
 - `mokly-runtime.md` mentions the pass in one sentence of its Serve section.
   The on-demand contract owns the rules of the pass. The page has 247 of its
   250 lines, so its change keeps the line count.
@@ -116,13 +127,14 @@ The design follows the decisions above.
   completion. It then waits for the first render of the window to end, a
   stop, or a publication update. A new module beside `background.rs` holds
   the window, so both files stay under 200 lines.
-- **Admission.** Each render still calls `Work::background`. That call waits
-  until no foreground request is active and a worker permit is free. A
-  foreground request takes the next free permit before any queued
-  background render. An active background render is not interrupted.
+- **Admission.** Each render still calls `Work::background`. That call takes a
+  fair one-permit turn, then waits until no foreground request is active and a
+  worker permit is free. A foreground request takes the next free permit
+  before any queued background render. An active background render is not
+  interrupted.
 - **Order.** The window keeps its renders in start order and polls them in
-  that order. When several renders wait for one free permit, the first in
-  catalogue order takes it. The window needs no new dependency.
+  that order, so each render queues for the turn in catalogue order. The turn
+  then admits them in that order. The window needs no new dependency.
 - **Failures.** The window holds a failure until every earlier render has
   ended. Then it reports the held failures in catalogue order.
 - **Cancellation.** A stop or a replacement returns from `fill` and drops the
@@ -168,35 +180,45 @@ can check the code against them.
 Render the pass in bounded batches and size them in the Serve composition.
 Write each failing test before its code.
 
-- [ ] Add `crates/mokly-server/src/_tests_/background_batch_tests.rs` with
-      real `Workers`, gated `DocumentsMock` renders, and mocked
+- [x] Add the tests under `crates/mokly-server/src/_tests_/background_batch/`
+      with real `Workers`, gated `DocumentsMock` renders, and mocked
       publications. Use gates, event order, and counts, never elapsed time.
-  - [ ] A batch yields to a foreground request: two workers, a batch of
+  - [x] A batch yields to a foreground request: two workers, a batch of
         two, and four routes. At most two renders run at once. A foreground
         request that arrives while both run starts before the third route.
-  - [ ] Queued renders start in catalogue order: one worker and a batch of
+  - [x] Queued renders start in catalogue order: one worker and a batch of
         three wait behind a foreground request. They start in route order.
-  - [ ] A replacement during a batch cancels it: the replaced generation's
+  - [x] A replacement during a batch cancels it: the replaced generation's
         queued routes never render. The replacement's routes render. Only
         the replacement publishes its completion.
-  - [ ] A stop during a batch returns without a completion publication, and
+  - [x] A stop during a batch returns without a completion publication, and
         no queued route starts.
-  - [ ] Failures report once in catalogue order: routes end in the order
+  - [x] Failures report once in catalogue order: routes end in the order
         b, c, a, and c and a fail. The diagnostics receive a, then c, and
         receive nothing before a ends.
-- [ ] Add the window module and the `batch` field of `UsagePass`. Rewrite
+- [x] Add the window module and the `batch` field of `UsagePass`. Rewrite
       `fill` over the window. Add the module under `### Key Code` in
       `crates/mokly-server/README.md`.
-- [ ] Add `PoolScheduling::limit` in `crates/mokly-cli/src/serve_pool.rs`.
+- [x] Decision 5: add `queued_background_renders_admit_in_request_order` to
+      `crates/mokly-server/src/_tests_/work/background_tests.rs`, see it fail,
+      then add the fair turn to `Workers::background`.
+- [x] Add `PoolScheduling::limit` in `crates/mokly-cli/src/serve_pool.rs`.
       Add the batch size function to `crates/mokly-cli/src/serve_delivery.rs`
       with a unit test, and set the batch there.
-- [ ] Add the `batch` field to the existing pass tests and to
+- [x] Add the `batch` field to the existing pass tests and to
       `crates/mokly-server/tests/http/evidence_tests.rs`. Keep every
       assertion. Keep the existing foreground tests green.
-- [ ] Run `cargo test -p mokly-server`, `cargo test -p mokly-cli`,
+- [x] Repeat the pass and worker tests 500 times, and check that the two
+      order tests fail on mutated code.
+
+Evidence: `.context/parallel-background-pass/tests-before-fix.txt`,
+`admission-order-before-fix.txt`, `repeat-runs.txt`, and
+`mutation-checks.txt`.
+
+- [x] Run `cargo test -p mokly-server`, `cargo test -p mokly-cli`,
       `cargo clippy --all-targets -- -D warnings` for both crates, and
       `cargo fmt --all -- --check`.
-- [ ] Run `cargo xtask check --suite repository`.
+- [x] Run `cargo xtask check --suite repository`.
 
 ## Milestone 3: Measurement and smoke test
 

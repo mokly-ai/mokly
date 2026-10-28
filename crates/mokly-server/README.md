@@ -51,9 +51,11 @@ yield to foreground requests, publish changed evidence in one revision, and
 cannot publish into a replacement. `UsagePass` keeps a sliding window of at
 most `batch` renders. It starts them in catalogue order and reports each
 failed render once, in catalogue order, after every earlier render ends. The
-composition root sizes the window. Ready state installs the generation root,
-the base commit, Changes membership, moved paths, removed records, and per-view
-states, ignore ids, and evidence in one revision. Included details carry
+composition root sizes the window. `Workers` admits queued background renders
+one at a time, in request order, whenever no foreground request is active.
+Ready state installs the generation root, the base commit, Changes
+membership, moved paths, removed records, and per-view states, ignore ids, and
+evidence in one revision. Included details carry
 classification reasons and their base side even without a workspace.
 Workspace lists stay absent until all
 consumer usage is proven. One unavailable view keeps every Used by list absent
@@ -170,6 +172,9 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
+- [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
+  usage pass's bounded batch, which keeps catalogue order for starts and failure
+  reports.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
 - [`src/render_request.rs`](./src/render_request.rs) and

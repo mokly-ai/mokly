@@ -1,10 +1,11 @@
-//! One cancellable catalogue-order usage pass for each installed generation.
+//! One cancellable usage pass for each installed generation, in bounded batches.
 
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use tokio::sync::{broadcast, watch};
 
+use crate::background_batch::Window;
 use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, ServerError};
@@ -21,6 +22,8 @@ pub trait Background: Send + Sync {
 
 /// Evidence uses the same scheduler and document adapter as foreground requests.
 pub struct UsagePass {
+    /// At most this many background renders run at once; zero runs one.
+    pub batch: usize,
     /// Optional Changes continuation after every current document settles.
     pub changes: Option<Arc<dyn AfterUsage>>,
     /// Atomic states and completion publisher.
@@ -70,30 +73,37 @@ impl UsagePass {
         stop: &mut watch::Receiver<bool>,
         updates: &mut broadcast::Receiver<PublicationEvent>,
     ) -> bool {
-        for route in &origin.routes {
-            tokio::task::yield_now().await;
-            let current = self.publications.current();
-            if stopped(stop) || !Arc::ptr_eq(&current.documents, &origin.documents) {
-                return cancelled();
+        let mut window = Window::new(self.batch);
+        let mut routes = origin.routes.iter().enumerate();
+        loop {
+            while window.has_room()
+                && let Some((position, route)) = routes.next()
+            {
+                tokio::task::yield_now().await;
+                let current = self.publications.current();
+                if stopped(stop) || !Arc::ptr_eq(&current.documents, &origin.documents) {
+                    return cancelled();
+                }
+                if current.completed.contains_key(&route.route) {
+                    continue;
+                }
+                window.start(
+                    position,
+                    self.work
+                        .background(origin.documents.clone(), route.route.clone()),
+                );
             }
-            if current.completed.contains_key(&route.route) {
-                continue;
+            if window.is_empty() {
+                break;
             }
-            let work = self
-                .work
-                .background(origin.documents.clone(), route.route.clone());
-            tokio::pin!(work);
-            loop {
-                tokio::select! {
-                    _ = stop.changed() => return cancelled(),
-                    _ = updates.recv() => {
-                        if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
-                    },
-                    result = &mut work => {
-                        if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
-                        if let Err(error) = result { self.diagnostics.failed(&error); }
-                        break;
-                    }
+            tokio::select! {
+                _ = stop.changed() => return cancelled(),
+                _ = updates.recv() => {
+                    if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
+                },
+                (position, result) = window.next() => {
+                    if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
+                    for error in window.settle(position, result) { self.diagnostics.failed(&error); }
                 }
             }
         }
@@ -140,3 +150,7 @@ pub(crate) fn stopped(stop: &watch::Receiver<bool>) -> bool {
 #[cfg(test)]
 #[path = "_tests_/quiet_background_tests.rs"]
 mod quiet_background_tests;
+
+#[cfg(test)]
+#[path = "_tests_/background_batch/mod.rs"]
+mod background_batch_tests;

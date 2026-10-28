@@ -28,6 +28,7 @@ async fn background_equal_usage_is_complete_without_a_revision() {
     let mut events = shared.subscribe();
     let (_stop, mut stop) = watch::channel(false);
     let pass = UsagePass {
+        batch: 2,
         changes: None,
         publications: shared.clone(),
         work: Arc::new(mock.clone()),

@@ -130,6 +130,7 @@ async fn each_catalogue_route_runs_once_in_order_and_a_replacement_restarts_the_
         ));
         let diagnostics = Unimock::new(());
         let pass = UsagePass {
+            batch: 3,
             changes: None,
             publications: Arc::new(mock.clone()),
             work: Arc::new(mock.clone()),
