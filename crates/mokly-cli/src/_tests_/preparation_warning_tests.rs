@@ -31,15 +31,18 @@ async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
                 observer: Arc::new(observer.clone()),
                 recheck: true,
             }));
+        let begin = || WatchInputsMock::begin.each_call(matching!()).returns(());
         let watch = match outcome {
-            "preparation failure" => Unimock::new(candidate),
+            "preparation failure" => Unimock::new((begin(), candidate)),
             "recheck failure" => Unimock::new((
+                begin(),
                 candidate,
                 WatchInputsMock::recheck
                     .next_call(matching!(_, _))
                     .returns(Err(ServerError::InvalidAssets)),
             )),
             _ => Unimock::new((
+                begin(),
                 candidate,
                 WatchInputsMock::recheck
                     .next_call(matching!(_, _))

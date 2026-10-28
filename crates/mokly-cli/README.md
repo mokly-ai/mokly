@@ -27,8 +27,10 @@ mode.
 
 Build and Serve share the same runtime composition. Each command owns one
 lazy sidecar pool, sized from `--sidecars`, `MOKLY_SIDECARS`, or the core
-count. It also owns one render cache across catalogue preparation, document
-rendering, and live prop previews. Head and base renders use `mokly_render::runtime::Runtime` with that
+count. It also creates one render cache at its entry point and uses it
+across catalogue preparation, document rendering, and live prop previews.
+The timing layer of `--debug-timings` reads the same cache for its cache
+counts. Head and base renders use `mokly_render::runtime::Runtime` with that
 shared pool and cache. The npm shim supplies its package root and Node
 executable. Direct binary execution checks the adjacent installed package and
 development ancestors, and uses `node` from `PATH` when the shim has not
@@ -41,7 +43,9 @@ installed `@mokly/viewer` package.
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md). Watched
-Serve attaches a `mokly-watch` observer before module evaluation. One
+Serve attaches a `mokly-watch` observer before module evaluation. It prepares
+again before adoption only under the
+[readiness rule](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness). One
 serialized queue handles watch events and the rich-mode `r` shortcut under the
 [watch runtime contract](../../docs/protocol/mokly-watch-runtime.md). A valid
 candidate replaces the public state and backend with the next revision. A
@@ -122,8 +126,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
 - [`src/grammar.rs`](./src/grammar.rs) defines `Cli`, `Verb`, and `Common`,
   the clap grammar, and [`src/options.rs`](./src/options.rs) normalizes
   options and environment fallbacks.
-- [`src/render_runtime.rs`](./src/render_runtime.rs) composes the shared
-  JavaScript and HTML rendering services of one command.
+- [`src/render_runtime.rs`](./src/render_runtime.rs) creates the render cache
+  and composes the shared JavaScript and HTML rendering services of one
+  command.
 - [`src/entry_serve.rs`](./src/entry_serve.rs) and
   [`src/serve.rs`](./src/serve.rs) compose, prepare, and close Serve.
 - [`src/serve_services.rs`](./src/serve_services.rs) shares one pool and

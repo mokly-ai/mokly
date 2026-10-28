@@ -11,6 +11,7 @@ use mokly_cli::publication::error::{ExchangeResult, Result};
 use mokly_cli::publication::mapping;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
+use mokly_graph::cache::RenderCache;
 use mokly_publish::runtime;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot};
 use mokly_sidecar::pool::SidecarPool;
@@ -24,6 +25,7 @@ pub(super) struct Output {
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
     pub(super) phases: Arc<dyn Phases>,
+    pub(super) cache: Arc<dyn RenderCache>,
 }
 impl StaticOutput for Output {
     fn build(
@@ -50,6 +52,7 @@ impl StaticOutput for Output {
             cancellation: self.cancellation.clone(),
             pool: self.pool.clone(),
             phases: self.phases.clone(),
+            cache: self.cache.clone(),
         };
         let publication = PublicationInput {
             identity: request.publication.clone(),
