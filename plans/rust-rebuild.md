@@ -6367,6 +6367,20 @@ does not ask the user before the merge.
   section reader reads an `@font-face` descriptor with a `{}` block as a
   rule. Separate branch.
 
+- [ ] Decide finding 1 of the final review of `rebuild/port-111c` at
+      `b152d0dc` (report: `.context/port-111c/review/review-7.md`). The
+      validity check confirmed it. The options check added options E to G
+      and changed the recommendation from A to C.
+  - Finding 1: the differential fixture list misses two repository
+    stylesheets that #227 added, and a moved or deleted listed file breaks
+    the `mokly-css` test build. Severity Low, effort Medium. Recommended: C,
+    read the tracked stylesheets at test time in an integration test behind
+    a test-support feature.
+  - Open problem found by the options check:
+    `crates/mokly-css/src/_tests_/token_differential_tests.rs:200`: the
+    assertion that the sources are not empty cannot fail, because the five
+    generated stylesheets are always present.
+
 - [ ] Follow-up (Low, cost, not a user item): move the Linux CI jobs that
       compile Rust back to 2 vCPUs. On 2026-10-26 the user raised them from
       2 to 8 vCPUs for a limited time, until the Rust build cache of #215 and
