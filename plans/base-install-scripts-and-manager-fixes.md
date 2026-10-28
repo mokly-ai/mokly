@@ -208,13 +208,22 @@ Items 152 and 156 in `mokly-compare` and `mokly-cli`.
 
 - [ ] Add failing tests first: a base render failure in capture after a
       scripts-off tier-two install shows no hint on the current code.
-- [ ] Replace `Error::BaseInstallScripts` with a typed scripts-off field on
+- [x] Replace `Error::BaseInstallScripts` with a typed scripts-off field on
       `Error::Base`. Classification sets it for preparation, capture, and
       every later failure that it attributes to the base.
-- [ ] Present the hint through one helper in build and publish details, the
+- [x] Present the hint through one helper in build and publish details, the
       limit path, fatal comparison failures, and Serve errors and reasons.
       Keep the original code and base commit.
-- [ ] End the hint with a period, and join sentences without a double period.
+- [x] End the hint with a period, and join sentences without a double period.
+- Merge `ba8e4dde` of commit `7fce66c4`. The failing-first run failed only on
+  the missing period. The capture-path test needs the new provider types, so
+  it never ran on the unchanged code. Evidence:
+  `.context/base-install-scripts-managers/item152-156/`.
+- Open change request to the delegate, blocked by the Codex usage limit:
+  replace the five `map_err` calls in `changes_base.rs`, prefix the
+  `BasePreparationError` message, restore the `CatalogueError` import in
+  `serve_changes_base.rs`, move the preparation types out of the 282-line
+  `base_render.rs`, and use the imported `Error` in its test.
 
 ## Milestone 5: Item 153 TLS file settings
 
