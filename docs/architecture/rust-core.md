@@ -1,7 +1,5 @@
 # Rust Core Architecture
 
-Status: In progress under the [per-entry render keys plan](../../plans/per-entry-render-keys.md).
-
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
 boundaries between them, and the flow of data from the sources to a delivered

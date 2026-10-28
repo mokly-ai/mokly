@@ -50,7 +50,9 @@ descriptor. `public_files` lists authored files reached by completed renders.
 Serve rechecks their live eligibility at read time. Temporary closure
 membership stays separate from the catalogue's reached public files.
 
-Markdown document keys exclude the JavaScript generation fingerprint.
+A JavaScript document key includes the render input keys of the definitions
+that it renders, so an edit moves only the keys whose module closures it
+reaches. Markdown document keys include no render input key.
 Document keys include component paths and element names. Logical links depend
 on their destination routes, including use-case first steps. An unresolved
 link substitution inside a component depends on the routing inventory,

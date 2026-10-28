@@ -1,7 +1,5 @@
 # Watched Catalogue Development
 
-Status: In progress under the [per-entry render keys plan](../../plans/per-entry-render-keys.md).
-
 ## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch

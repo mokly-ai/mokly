@@ -93,16 +93,20 @@ pub(super) struct Consumer {
 
 impl Consumer {
     pub(super) fn new() -> Self {
-        Self::with_sidecars(2)
+        Self::with_sidecars("javascript", 2)
     }
     pub(super) fn single() -> Self {
-        Self::with_sidecars(1)
+        Self::with_sidecars("javascript", 1)
     }
-    fn with_sidecars(sidecars: usize) -> Self {
+    /// A consumer of another fixture under `tests/fixtures`, with two sidecars.
+    pub(super) fn fixture(name: &str) -> Self {
+        Self::with_sidecars(name, 2)
+    }
+    fn with_sidecars(fixture: &str, sidecars: usize) -> Self {
         let workspace = workspace();
         let directory = tempfile::tempdir().unwrap();
         copy(
-            &workspace.join("tests/fixtures/javascript"),
+            &workspace.join("tests/fixtures").join(fixture),
             directory.path(),
         );
         #[cfg(unix)]
@@ -193,6 +197,12 @@ impl Consumer {
             .unwrap()
             .prepare(self.config(), prepared, None)
             .unwrap()
+    }
+
+    pub(super) fn write(&self, path: &str, text: &str) {
+        let path = self.root().join(path);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, text).unwrap();
     }
 
     pub(super) fn replace(&self, path: &str, from: &str, to: &str) {

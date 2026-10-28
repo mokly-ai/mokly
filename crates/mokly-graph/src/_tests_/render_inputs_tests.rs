@@ -1,6 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use mokly_catalogue::render_sources::{JavaScriptGeneration, ResolvedDefinition};
+use mokly_catalogue::render_sources::{
+    JavaScriptGeneration, RenderMethod, RenderSource, ResolvedDefinition,
+};
 
 use super::{RenderInputs, RenderKeys};
 use crate::key::{NodeKey, NodeKind, key};
@@ -89,13 +91,20 @@ impl Fixture {
     }
 
     fn keys(&self) -> RenderKeys {
-        let stories = BTreeSet::from([STORIES.to_owned()]);
+        let entries = BTreeMap::from([(
+            "st".to_owned(),
+            RenderSource {
+                handle: format!("{STORIES}#default"),
+                method: RenderMethod::Story,
+                ..RenderSource::default()
+            },
+        )]);
         RenderKeys::build(
             &RenderInputs {
                 generation: &self.generation,
                 bindings: &self.bindings,
                 renderer: Some("renderer.tsx"),
-                stories: &stories,
+                entries: &entries,
             },
             fallback(),
         )

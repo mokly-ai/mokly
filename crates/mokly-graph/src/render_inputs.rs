@@ -2,7 +2,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use mokly_catalogue::render_sources::{JavaScriptGeneration, ResolvedDefinition};
+use mokly_catalogue::render_sources::{
+    JavaScriptGeneration, RenderMethod, RenderSource, ResolvedDefinition,
+};
 use mokly_model::material::digest;
 use serde_json::{Value, json};
 
@@ -28,8 +30,9 @@ pub struct RenderInputs<'a> {
     pub bindings: &'a BTreeMap<String, ResolvedDefinition>,
     /// Logical path of the configured renderer module.
     pub renderer: Option<&'a str>,
-    /// Stories files, which render with the Storybook preview and without the renderer.
-    pub stories: &'a BTreeSet<String>,
+    /// Rendering recipes by entry path. A story recipe's module renders with the
+    /// Storybook preview and without the renderer.
+    pub entries: &'a BTreeMap<String, RenderSource>,
 }
 
 /// Render input keys by entry module, with the whole-bundle fallback for any other module.
@@ -40,10 +43,24 @@ pub struct RenderKeys {
 }
 
 impl RenderKeys {
+    /// Keys that give every module the whole-bundle `fallback`.
+    pub fn whole(fallback: NodeKey) -> Self {
+        Self {
+            modules: BTreeMap::new(),
+            fallback,
+        }
+    }
+
     /// Key every module that exports a binding. Other modules use `fallback`.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Result<Self> {
         let generation = inputs.generation;
         let graph = &generation.modules;
+        let stories: BTreeSet<_> = inputs
+            .entries
+            .values()
+            .filter(|source| source.method == RenderMethod::Story)
+            .filter_map(|source| handle_module(graph, &source.handle))
+            .collect();
         let records = records(generation)?;
         let chains: BTreeMap<_, _> = graph.keys().map(|path| (path, chain(path))).collect();
         let chained: BTreeSet<&String> = chains.values().flatten().collect();
@@ -72,7 +89,7 @@ impl RenderKeys {
         }
         let mut modules = BTreeMap::new();
         for &module in bindings.keys() {
-            let extra = if inputs.stories.contains(module) {
+            let extra = if stories.contains(module) {
                 preview.as_ref()
             } else {
                 renderer.as_ref()
@@ -104,9 +121,21 @@ impl RenderKeys {
         Ok(Self { modules, fallback })
     }
 
+    /// The whole-bundle key, which every module without its own key uses.
+    pub fn fallback(&self) -> &NodeKey {
+        &self.fallback
+    }
+
     /// The key of one entry module, or the fallback when it has none.
     pub fn module(&self, module: &str) -> &NodeKey {
         self.modules.get(module).unwrap_or(&self.fallback)
+    }
+
+    /// The key of the JavaScript definition at a catalogue path, through its recipe.
+    pub fn definition(&self, entries: &BTreeMap<String, RenderSource>, path: &str) -> &NodeKey {
+        entries
+            .get(path)
+            .map_or(&self.fallback, |source| self.handle(&source.handle))
     }
 
     /// The key of a definition, story, or saved slot handle's entry module.

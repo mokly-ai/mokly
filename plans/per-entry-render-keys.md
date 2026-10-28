@@ -214,7 +214,7 @@ unrelated screen U, a stories file with a preview, and a renderer.
 | preview edit                                   | stories                          | S, C, P, T, U                |
 | class map change: class added to C's module    | C, S, the HTML screen            | P, T, U, stories             |
 | slot provider edit: P's module                 | P, C, S, the HTML screen         | T, U, stories                |
-| link target rename: folder record that moves T | S, and T's routes are replaced   | C, P, U, stories             |
+| link target rename: T's declared path          | every JavaScript key             | HTML-only documents          |
 | renderer edit                                  | every JavaScript key but stories | stories, HTML-only documents |
 
 ## Baseline
@@ -322,28 +322,41 @@ Nothing uses the keys yet, so the product does not change.
 Replace the fingerprint in fragment and document keys. After this milestone
 an edit re-renders only the affected definitions.
 
-- [ ] Write the failing integration tests first in
+- [x] Write the failing integration tests first in
       `crates/mokly-render/tests/integration/`, with a real sidecar and the
       fixture of the design table. Each test prepares, applies one edit,
       prepares again, and asserts the exact set of document keys that moved.
-      Cover every row of the table.
-- [ ] Add a test that the second preparation after a comment edit makes
+      Cover every row of the table. The fixture is
+      `tests/fixtures/render-keys`, and the tests are in
+      `render_key_tests.rs`.
+  - Finding: JavaScript document keys already read the whole routing
+    table, so a path change moves every JavaScript document key. The rename
+    test therefore asserts sidecar render calls: only T and S render again.
+  - Finding: a folder record carries no path, so a binding changes only with
+    a module or configuration edit. The binding input stays, as decided.
+  - The fixture cannot change the workspace's React, so the runtime package
+    row has unit tests only.
+- [x] Add a test that the second preparation after a comment edit makes
       sidecar render calls only for the moved views, from the captured pool.
-- [ ] Use the per-handle key in `MemoFragments` in
+- [x] Use the per-handle key in `MemoFragments` in
       `crates/mokly-graph/src/fragments.rs`.
-- [ ] Replace the fingerprint input in `crates/mokly-graph/src/planning.rs`
+- [x] Replace the fingerprint input in `crates/mokly-graph/src/planning.rs`
       and the field in `crates/mokly-graph/src/delivery_inputs.rs`. Apply
       decision 5 at `crates/mokly-graph/src/graph.rs:270`.
-- [ ] Build the keys in `crates/mokly-render/src/graph.rs` and pass them to
+- [x] Build the keys in `crates/mokly-render/src/graph.rs` and pass them to
       the fragment adapter and the delivery inputs.
-- [ ] Update the tests that assert the old behaviour, such as the fragment
-      request tests, and keep every other test unchanged.
-- [ ] Add the unsupported inputs to the authoring guide and one sentence on
+- [x] Update the tests that assert the old behaviour, such as the fragment
+      request tests, and keep every other test unchanged. Two integration
+      tests asserted whole-bundle invalidation and now assert the new exact
+      result: the mixed HTML screen keeps its key after a screen edit, and
+      only the edited module's eight views render again.
+- [x] Add the unsupported inputs to the authoring guide and one sentence on
       what an edit re-renders to the serve guide.
-- [ ] Update the fingerprint text in `crates/mokly-render/README.md` and the
+- [x] Update the fingerprint text in `crates/mokly-render/README.md` and the
       key text in `crates/mokly-graph/README.md`.
-- [ ] Remove the status lines of `docs/architecture/rust-core.md` and
+- [x] Remove the status lines of `docs/architecture/rust-core.md` and
       `docs/protocol/mokly-watch.md`.
+- [x] Run every Rust test of the workspace: all pass.
 
 ## Milestone 5: Cross-side reuse
 

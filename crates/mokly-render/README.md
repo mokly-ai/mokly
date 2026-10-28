@@ -41,9 +41,13 @@ extraction for a base render. Its `NODE_PATH` contains the selected dependency
 directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
 
 The graph installs every definition binding and uses `MemoFragments` for
-screens, components, stories, and pages. Its fingerprint includes the bundle,
-binding table, and class maps. Requests add effective entry identity, handle,
-props, saved slots, view axes, and ignore scope. HTML slot content stays in the
+screens, components, stories, and pages. A fragment key uses the render input
+key of the handle's entry module: its module closure, the renderer or
+Storybook preview closure, the class maps, bindings, and resolution files of
+that closure, and the bundle environment. The bundle fingerprint of the
+generation, binding table, and class maps stays the fallback for an unknown
+module and an input of the live generation. Requests add effective entry
+identity, handle, props, saved slots, view axes, and ignore scope. HTML slot content stays in the
 core and enters authenticated placeholders with their reported scope. A private
 adapter-output placement keeps renderer wrappers outside a component's root.
 The graph's `render_props` method serves temporary previews through this path.

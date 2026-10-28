@@ -73,7 +73,8 @@ fn javascript_changes_leave_markdown_document_keys_stable() {
         first.plans()["screen/index.mobile.html"].key,
         changed.plans()["screen/index.mobile.html"].key
     );
-    assert_ne!(
+    // The mixed HTML screen renders only the chip, whose modules did not change.
+    assert_eq!(
         first.plans()["mixed/index.mobile.html"].key,
         changed.plans()["mixed/index.mobile.html"].key
     );
