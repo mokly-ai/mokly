@@ -4,6 +4,7 @@
 
 pub mod accounting;
 mod archive;
+mod blob_body;
 pub mod checkout;
 pub mod completion;
 pub mod error;

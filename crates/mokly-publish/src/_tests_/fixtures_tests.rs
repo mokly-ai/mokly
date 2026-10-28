@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 
 use crate::completion::{Completion, Outcome, retryable};
 use crate::error::Error;
-use crate::http::{Body, Response};
+use crate::http::{Body, Encoding, Response};
 use crate::plan::Plan;
 use crate::settings::Settings;
 
@@ -73,7 +73,7 @@ fn every_plan_and_completion_fixture_matches_the_client_contract() {
         .map(|value| value.as_str().unwrap().to_owned())
         .collect();
     let cases = fixture["cases"].as_array().unwrap();
-    assert_eq!(cases.len(), 67);
+    assert_eq!(cases.len(), 74);
     for case in cases {
         let status = case["status"].as_u64().unwrap_or(200) as u16;
         let content_type = case
@@ -128,6 +128,14 @@ fn every_plan_and_completion_fixture_matches_the_client_contract() {
                 "{}: {result:?}",
                 case["name"]
             );
+            if let Ok(plan) = result {
+                let encoding = if case["blobEncoding"] == "gzip" {
+                    Encoding::Gzip
+                } else {
+                    Encoding::Identity
+                };
+                assert_eq!(plan.blob_encoding, encoding, "{}", case["name"]);
+            }
         }
     }
 }
