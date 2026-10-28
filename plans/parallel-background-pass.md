@@ -1,7 +1,7 @@
 # Parallel Background Pass
 
-Status: Active. On branch `conductor/perf-3-parallel-background-pass`, no
-pull request yet. The plan closes when its PR merges.
+Status: Active. [PR #225](https://github.com/mokly-ai/mokly/pull/225) is open.
+The plan closes when its PR merges.
 
 After Serve listens, its background pass renders every view. The pass fills
 the render cache and the usage of every entry detail, and Changes starts
@@ -314,9 +314,10 @@ request TODO comes before the review TODO here.
 
 - [x] Run `npm test -- tests/markdown_links.test.ts` and
       `npm run format:check`.
-- [ ] Run the complete gate, `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Open the pull request with the before and after table. Put its link in
+- [x] Run the complete gate, `cargo xtask check`. All seven remote suites
+      passed on `6a2361f1`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Open the pull request with the before and after table. Put its link in
       the status paragraph.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
