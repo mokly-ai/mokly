@@ -68,6 +68,7 @@ pub(crate) fn compiler(
                 .unwrap_or(&config.repo_root)
                 .join(module),
             cache: runtime.css.clone(),
+            requests: Mutex::new(()),
         }) as Arc<dyn CssProcessor>,
         None => Arc::new(IdentityProcessor),
     };

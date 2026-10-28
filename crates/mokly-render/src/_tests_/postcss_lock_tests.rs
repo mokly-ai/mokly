@@ -9,11 +9,11 @@ use std::time::Duration;
 
 use mokly_css::types::CssProcessor;
 use mokly_sidecar::methods::{Call, ModuleResolution};
-use mokly_sidecar::pool::PoolMock;
+use mokly_sidecar::pool::{PoolMock, SidecarPool};
 use mokly_sidecar::postcss_evidence::Evidence;
 use mokly_sidecar::results::Css;
 use mokly_sidecar::wire::MethodResult;
-use mokly_source_interface::tree::SourceTreeMock;
+use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::leases::ContextLease;
@@ -44,28 +44,20 @@ impl Gate {
     }
 }
 
-fn postcss(calls: Arc<AtomicUsize>, gate: Arc<Gate>) -> PostCss {
-    let pool = Arc::new(Unimock::new((
-        PoolMock::request
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, call| {
-                assert!(matches!(call, Call::ProcessCss(_)));
-                calls.fetch_add(1, Ordering::SeqCst);
-                Ok(MethodResult::Css(Css {
-                    read_evidence: Evidence {
-                        coverage: Default::default(),
-                        reads: Vec::new(),
-                        modules: vec!["/repo/postcss.mjs".into()],
-                    },
-                    unmapped_dependency_directories: None,
-                    text: "a{}".into(),
-                    dependencies: Vec::new(),
-                }))
-            })),
-        PoolMock::release_context
-            .each_call(matching!("context"))
-            .returns(()),
-    )));
+fn css(modules: Vec<String>) -> MethodResult {
+    MethodResult::Css(Css {
+        read_evidence: Evidence {
+            coverage: Default::default(),
+            reads: Vec::new(),
+            modules,
+        },
+        unmapped_dependency_directories: None,
+        text: "a{}".into(),
+        dependencies: Vec::new(),
+    })
+}
+
+fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -> PostCss {
     PostCss {
         usage: Arc::new(Unimock::new(())),
         lease: Arc::new(ContextLease {
@@ -75,14 +67,7 @@ fn postcss(calls: Arc<AtomicUsize>, gate: Arc<Gate>) -> PostCss {
             used: AtomicBool::new(false),
         }),
         pool,
-        tree: Arc::new(Unimock::new(
-            SourceTreeMock::project
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| {
-                    gate.pass();
-                    Ok(None)
-                })),
-        )),
+        tree,
         inventory_tree: Arc::new(Unimock::new(())),
         root: "/repo".into(),
         side: SideInputs {
@@ -97,7 +82,32 @@ fn postcss(calls: Arc<AtomicUsize>, gate: Arc<Gate>) -> PostCss {
         module: "/repo/postcss.mjs".into(),
         cache: Arc::new(Mutex::new(CssCache::default())),
         resolver: Arc::new(Unimock::new(())),
+        requests: Mutex::new(()),
     }
+}
+
+fn postcss(calls: Arc<AtomicUsize>, gate: Arc<Gate>) -> PostCss {
+    let pool = Arc::new(Unimock::new((
+        PoolMock::request
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, call| {
+                assert!(matches!(call, Call::ProcessCss(_)));
+                calls.fetch_add(1, Ordering::SeqCst);
+                Ok(css(vec!["/repo/postcss.mjs".into()]))
+            })),
+        PoolMock::release_context
+            .each_call(matching!("context"))
+            .returns(()),
+    )));
+    let tree = Arc::new(Unimock::new(
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                gate.pass();
+                Ok(None)
+            })),
+    ));
+    processor(pool, tree)
 }
 
 /// Process `first` until its read inventory waits, then process `second` beside it.
@@ -147,4 +157,43 @@ fn an_equal_input_reuses_the_sidecar_result_while_its_read_inventory_runs() {
     assert!(!timed_out);
     assert_eq!(calls, 1);
     assert_eq!(texts, ["a{}", "a{}"]);
+}
+
+#[test]
+fn a_cached_result_returns_while_another_input_waits_for_the_sidecar() {
+    let (calling, called) = mpsc::channel::<()>();
+    let (finish, finished) = mpsc::channel::<()>();
+    let finished = Mutex::new(finished);
+    let timed_out = Arc::new(AtomicBool::new(false));
+    let flag = timed_out.clone();
+    let pool = Arc::new(Unimock::new((
+        PoolMock::request
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, call| {
+                if matches!(&call, Call::ProcessCss(params) if params.source_path == "slow.css") {
+                    calling.send(()).unwrap();
+                    let waited = finished.lock().unwrap().recv_timeout(DEADLINE);
+                    flag.store(waited.is_err(), Ordering::SeqCst);
+                }
+                Ok(css(Vec::new()))
+            })),
+        PoolMock::release_context
+            .each_call(matching!("context"))
+            .returns(()),
+    )));
+    let processor = Arc::new(processor(pool, Arc::new(Unimock::new(()))));
+    let process = |processor: &PostCss, path: &str| {
+        processor
+            .process(path, ".a {}", &BTreeSet::new())
+            .unwrap()
+            .text
+    };
+    assert_eq!(process(&processor, "fast.css"), "a{}");
+    let background = processor.clone();
+    let slow = thread::spawn(move || process(&background, "slow.css"));
+    called.recv_timeout(DEADLINE).unwrap();
+    assert_eq!(process(&processor, "fast.css"), "a{}");
+    finish.send(()).unwrap();
+    assert_eq!(slow.join().unwrap(), "a{}");
+    assert!(!timed_out.load(Ordering::SeqCst));
 }
