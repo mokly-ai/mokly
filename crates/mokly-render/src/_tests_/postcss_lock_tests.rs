@@ -5,24 +5,21 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use mokly_css::types::CssProcessor;
 use mokly_model::material::digest;
-use mokly_sidecar::methods::{Call, ModuleResolution};
+use mokly_sidecar::methods::Call;
 use mokly_sidecar::pool::{PoolMock, SidecarPool};
 use mokly_sidecar::postcss_evidence::Evidence;
 use mokly_sidecar::results::Css;
-use mokly_sidecar::wire::MethodResult;
-use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
+use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::leases::ContextLease;
 use crate::postcss::PostCss;
-use crate::postcss_cache::{CssCache, CssRecord};
-use crate::side::SideInputs;
+use crate::postcss_cache::CssRecord;
 
-const DEADLINE: Duration = Duration::from_secs(30);
+use super::postcss_support::{DEADLINE, css, processor};
 
 /// The first read-inventory lookup waits until a second lookup starts.
 struct Gate {
@@ -42,48 +39,6 @@ impl Gate {
         } else {
             let _ = self.release.send(());
         }
-    }
-}
-
-fn css(modules: Vec<String>) -> MethodResult {
-    MethodResult::Css(Css {
-        read_evidence: Evidence {
-            coverage: Default::default(),
-            reads: Vec::new(),
-            modules,
-        },
-        unmapped_dependency_directories: None,
-        text: "a{}".into(),
-        dependencies: Vec::new(),
-    })
-}
-
-fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -> PostCss {
-    PostCss {
-        usage: Arc::new(Unimock::new(())),
-        lease: Arc::new(ContextLease {
-            id: "context".into(),
-            pool: pool.clone(),
-            released: CssCache::default().releases,
-            used: AtomicBool::new(false),
-        }),
-        pool,
-        tree,
-        inventory_tree: Arc::new(Unimock::new(())),
-        root: "/repo".into(),
-        side: SideInputs {
-            dependency_aliases: Default::default(),
-            source_root: "/repo".into(),
-            repository_roots: vec!["/repo".into()],
-            module_resolution: ModuleResolution::default(),
-            configuration_directory: String::new(),
-            context: "context".into(),
-            dependency_roots: Vec::new(),
-        },
-        module: "/repo/postcss.mjs".into(),
-        cache: Arc::new(Mutex::new(CssCache::default())),
-        resolver: Arc::new(Unimock::new(())),
-        requests: Mutex::new(()),
     }
 }
 
@@ -218,7 +173,7 @@ fn a_request_that_waited_for_its_turn_reuses_the_result_that_arrived_meanwhile()
         cache.releases.send("released".into()).unwrap();
     }
     let waiting = {
-        let _turn = processor.requests.lock().unwrap();
+        let _turn = processor.turns.queue.lock().unwrap();
         let background = processor.clone();
         let waiting = thread::spawn(move || {
             background
@@ -264,7 +219,7 @@ fn the_check_under_the_request_lock_reuses_a_result_stored_after_the_lock_was_ta
                 .text
         });
         let deadline = Instant::now() + DEADLINE;
-        while processor.requests.try_lock().is_ok() {
+        while processor.turns.queue.try_lock().is_ok() {
             assert!(Instant::now() < deadline, "the request never took its turn");
             thread::yield_now();
         }

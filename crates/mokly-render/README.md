@@ -39,7 +39,9 @@ A per-context request lock keeps the sidecar requests of one context one at a
 time, and equal inputs make one request. The shared PostCSS cache lock covers
 only lookups, inserts, and the dependency inventory. Round trips and read
 inventories therefore never wait for each other, and the stylesheet roots of
-one preparation overlap that work. The cache keeps a running byte charge, so
+one preparation overlap that work. A failed input keeps its diagnostic for the
+rest of its context. A timeout or a crash after its retry also fails every
+request of the context that already waits for its turn. The cache keeps a running byte charge, so
 an insert charges one record instead of recounting the cache.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical

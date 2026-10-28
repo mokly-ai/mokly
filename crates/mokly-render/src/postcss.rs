@@ -20,6 +20,7 @@ use crate::dependency_usage::DependencyUsage;
 use crate::error::{RenderError, Result};
 use crate::leases::ContextLease;
 use crate::postcss_cache::{CssCache, CssRecord};
+use crate::postcss_turns::Turns;
 use crate::side::SideInputs;
 use crate::{postcss_inventory, postcss_nested, postcss_read_inventory};
 
@@ -35,7 +36,7 @@ pub(crate) struct PostCss {
     pub(crate) cache: Arc<Mutex<CssCache>>,
     pub(crate) resolver: Arc<dyn ImportResolver>,
     /// One sidecar request of this context at a time, held outside the shared cache lock.
-    pub(crate) requests: Mutex<()>,
+    pub(crate) turns: Turns,
 }
 
 impl CssProcessor for PostCss {
@@ -124,17 +125,28 @@ impl PostCss {
         cache.records.get(key).cloned()
     }
 
-    /// Wait for this context's turn, then reuse a result that arrived meanwhile or request one.
+    /// Wait for this context's turn, then reuse a result or a failure that arrived meanwhile.
     fn request(&self, key: &str, path: &str, source: &str) -> Result<CssRecord> {
-        let _turn = self
-            .requests
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut turn = self.turns.take();
         if let Some(record) = self.cached(key) {
             return Ok(record);
         }
+        if let Some(source) = turn.failure(key) {
+            return Err(RenderError::Css {
+                source: CssError::Runtime { source },
+            });
+        }
+        let result = match self.process_css(path, source) {
+            Ok(result) => result,
+            Err(error) => {
+                if let Some(diagnostic) = error.diagnostic() {
+                    turn.fail(key, diagnostic, error.lost_child());
+                }
+                return Err(error);
+            }
+        };
         let record = CssRecord {
-            result: self.process_css(path, source)?,
+            result,
             processed: None,
         };
         let cached = record.clone();
@@ -190,5 +202,13 @@ impl PostCss {
 mod postcss_request_tests;
 
 #[cfg(test)]
+#[path = "_tests_/postcss_support.rs"]
+mod postcss_support;
+
+#[cfg(test)]
 #[path = "_tests_/postcss_lock_tests.rs"]
 mod postcss_lock_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_failure_tests.rs"]
+mod postcss_failure_tests;
