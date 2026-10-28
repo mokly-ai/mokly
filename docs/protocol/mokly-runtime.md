@@ -83,8 +83,7 @@ for the life of the process. Ref resolution and base preparation run in
 background work with their own cancellation. A request reads base sources from
 Git only through the bounded comparison work of the
 [selected comparison contract](./mokly-selected-comparisons.md).
-`--base <ref>` overrides `review.base` for the life of the
-process.
+`--base <ref>` overrides `review.base` for the life of the process.
 
 ## Build
 
@@ -222,14 +221,15 @@ Shutdown runs in this order:
    adopted.
 3. Cancel outstanding render, background, and comparison work; drain the
    comparison generation work in flight before any generation is released.
-4. Cancel every Git process through its process group, `SIGTERM` then
+4. Cancel every Git process through its owned process tree, `SIGTERM` then
    `SIGKILL` after one second, and wait for its pipes to close.
 5. Send `shutdown` to every sidecar and kill one that survives the grace
    period of the sidecar contract.
 6. Release the port and the file locks, and exit.
 
 No orphan process survives a normal shutdown, a failed startup, or an
-interruption, and a step that fails does not skip the steps after it. `build`
+interruption, except for the [base install limits](./mokly-base-install-processes.md#bounds-and-stops),
+and a step that fails does not skip the steps after it. `build`
 and `publish` check cancellation before and after the output transaction's
 commit point and never leave a partial output directory in place.
 

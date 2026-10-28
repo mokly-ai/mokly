@@ -78,6 +78,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 
 - [Base Source And Dependency Preparation](./mokly-base-preparation.md)
 - [Base Dependency Installation](./mokly-base-dependencies.md)
+- [Base Install Processes](./mokly-base-install-processes.md)
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)
 - [Catalogue Entry Records](./mokly-component-manifest.md)

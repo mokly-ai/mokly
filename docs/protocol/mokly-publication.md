@@ -17,8 +17,10 @@ npx mokly publish --no-changes
 current-only build. `--base <ref>` overrides `review.base`, whose default is
 `origin/main`. Options are accepted in any order; an unknown or repeated
 option, a missing value, and `--base` together with `--no-changes` fail as
-`cli-invalid` before consumer code is loaded or the output is touched. Git
-availability, branch names, and a configured review base never make a build
+`cli-invalid` before consumer code is loaded or the output is touched. `build`
+and `publish` accept `--base-install-scripts` or `--no-base-install-scripts`
+with `--no-changes`, and the flag has no effect, because no base install runs.
+Git availability, branch names, and a configured review base never make a build
 current-only by themselves, and a build with Changes requires a Git checkout
 with `HEAD`, the base, and their merge base under the
 [static build contract](./mokly-export.md#changes-in-the-output). A source

@@ -147,8 +147,14 @@ and fails `build` and `publish` with `git-failed`.
 A missing or invalid viewer package uses `server-failed` and asks the user to
 build or reinstall the matching `@mokly/viewer` package.
 
-When a base render fails after a scripts-off tier-two install, the diagnostic
-names `review.baseInstallScripts` and `--base-install-scripts` as the opt-in.
+After a [tier-two](./mokly-comparison-packages.md#javascript-package-selection)
+base install with lifecycle scripts off, every failure that Mokly attributes
+to the base gets the scripts hint, in preparation and while the base renders,
+in every command. The hint is one complete sentence that ends with a period
+and names `review.baseInstallScripts` and `--base-install-scripts`. In the
+Changes unavailable details of `build` and `publish`, also for a comparison
+limit, the hint is a separate diagnostic. In Serve and in a failed `build` or
+`publish`, the hint ends the failure detail without a doubled period.
 
 `git-uncommitted` shows the headline, detail and hint in both plain and rich
 output. Plain output keeps the `[mokly/<code>]` prefix and puts the detail and
