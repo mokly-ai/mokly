@@ -16,15 +16,17 @@ the 5,036 imports that the callback handles, 4 are bare imports from
 repository-owned files. Only these imports can need the base tier remap.
 
 This plan lets esbuild resolve the other imports natively: the fast path.
-After the compile, the sidecar classifies each natively resolved module with
-the rules of the full path, and records the dependency usage of the
-fast-path imports from the metafile. When a module would map to another
-file, when a classification fails, or when the compile fails, the sidecar
-compiles again with the full path and returns that result. So the bundle
-result stays the same: modules, digests, logical names, compiled inputs,
-unmapped dependency directories, and diagnostics. The plan keeps the CSS
-resolve callback, the style adapters plugin, `onLoad`, and peer resolution.
-It does not cover the sibling items perf 0 and perf 2 to perf 6.
+After the native compile, the sidecar classifies each native import target
+with the rules of the full path. When every target maps to itself and
+esbuild gave none a package type or TypeScript settings, the native result
+stands. Otherwise a second compile returns each classified target from the
+plan through the resolve callback, without a resolver round trip, so every
+module stays plugin-resolved as today. A failed native compile compiles
+again on the full path. So the bundle result stays the same: modules,
+digests, logical names, compiled code, compiled inputs, unmapped dependency
+directories, and diagnostics. The plan keeps the CSS resolve callback, the
+style adapters plugin, `onLoad`, and peer resolution. It does not cover the
+sibling items perf 0 and perf 2 to perf 6.
 
 The item decision, made by the user before this plan and recorded on
 2026-10-27: option A of item 1. Return at once from the catch-all callback
@@ -76,6 +78,18 @@ The item text came from a reading of `89c12ef1`. These points differ at
   the full path. The inner resolution that the style adapters request keeps
   the full path too, so that the replay finds every fast-path import in the
   metafile.
+- Native resolution is not the same as a resolve callback result. esbuild's
+  own resolver gives each `.js`, `.jsx`, `.ts`, and `.tsx` file the `type` of
+  its nearest package.json, and each file outside `node_modules` the parse
+  options of its nearest tsconfig.json. A callback result carries neither.
+  The [module sources contract](../docs/protocol/mokly-sidecar-modules.md)
+  requires the bundle to ignore both. In `examples/basic`, 1,032 of 5,010
+  native imports reach such a file: the catalogue files sit under the
+  repository's `"type": "module"`. See decision 6.
+- Each `build.resolve` call creates a new esbuild resolver, which reads the
+  directories and manifests again. That is the cost of the full path. A
+  separate resolve namespace that skips the inner callbacks made the compile
+  slower, 9.1 to 9.6 s.
 - On this machine the compile takes 6.7 to 7.9 s, not 12.3 to 12.9 s. The
   acceptance target of 1.5 s is unchanged. `repositoryOwned` is at
   `module-paths.ts:174`. The example bundle has 2,270 modules. The callback
@@ -91,26 +105,33 @@ The design follows the decisions below.
   repository-owned importer directory. A bare specifier does not start with
   `.`, `/`, `#`, or a URL scheme, the rule that `importerDirectory` already
   uses. One helper holds that rule.
-- **Native attempt.** The first compile uses the fast path. It raises
+- **Native compile.** The first compile uses the fast path. It raises
   esbuild's `ignored-dynamic-import` message to an error, so that a handled
-  `require` failure ends the attempt.
-- **Classification.** After a successful native compile, a new
-  `sidecar.bundle.classify` phase runs `paths.resolve` on each module input
-  in the file namespace, except the virtual entry. Each call must return the
-  same path, and it records the same observations as the full path. For
-  each import edge to a file-namespace module whose specifier and importer
-  directory match the fast-path rule, the phase calls
-  `dependencyUsage.resolved` with the edge's `original` specifier, the
-  importer directory, and the module. An edge without `original` is a
-  divergence. The calls run concurrently.
-- **Fallback.** A failed native compile, a divergence, or a failed
-  classification discards the native attempt. The full attempt starts from
-  new state: module paths, peers, recorded bytes, and virtual origins. It
-  runs the current code path. The error report uses the state of the final
-  attempt. Each attempt reports its own esbuild operation and compile span.
-- **Modules.** The fast-path rule and the classification live in a new
-  sidecar module. `bundle` runs the native attempt, then the full attempt.
-  `bundle.ts` stays under 300 lines.
+  `require` failure ends the compile.
+- **Classification.** After a successful native compile, the
+  `sidecar.bundle.classify` phase runs `paths.resolve` on each native import
+  target. It also reads the target's esbuild settings: the `sideEffects` flag
+  and whether esbuild gave the file a package type or tsconfig parse options.
+  A tsconfig counts when plain JSON cannot read it, when it extends another,
+  or when it sets a compiler option that esbuild reads for parsing. The plan
+  maps each native import, keyed by importer, specifier, and kind, to its
+  classified module and side-effects flag.
+- **Exact native result.** When every target maps to itself, carries no
+  such settings, and has an `original` specifier, the native result stands.
+  The phase then records the dependency usage of each native import, with
+  concurrent calls.
+- **Planned compile.** Otherwise a second compile starts from new state. Its
+  callback returns the planned module and side-effects flag for each planned
+  import, records the same observation and usage as the full path, and
+  resolves every other import on the full path. A target that the full path
+  rejects stays unplanned, so the full path reports its diagnostic.
+- **Full compile.** A failed native compile, or a failed classification,
+  compiles again on the full path, the current code path.
+- **Modules.** `native-resolution.ts` holds the rule and the plan types,
+  `native-plan.ts` the classification, and `package-scope.ts` esbuild's
+  package.json and tsconfig lookups. `bundle-entry.ts` and `bundle-recipe.ts`
+  split the entry module and the recipe out of `bundle.ts`. Each attempt
+  reports its own esbuild operation and compile span.
 
 ## Baseline
 
@@ -205,6 +226,20 @@ option: 1A, 2A, 3B, 4A, and 5A. Each entry keeps the rejected options.
    - B. One call at a time in metafile order.
    - Chosen: A. The order cannot change the result, so concurrent calls only
      save time.
+6. Keep the parse rule for natively resolved files. Found during the work and
+   decided on 2026-10-28 with the recommended option, under the user's rule
+   for decisions that come up during the work. Severity High, effort Large.
+   - A. Plan a second compile from the classified native imports whenever
+     the native result could differ, and keep the native result otherwise.
+     Every module stays plugin-resolved, so results stay identical. A bundle
+     then runs one or two esbuild compiles.
+   - B. Keep catalogue files on the full path and accept the package type for
+     dependency files. This changes the CommonJS interop of typed dependency
+     files and breaks the style wrapper rule, and the protocol must change.
+   - C. Fall back to the full path whenever a native target carries a
+     setting. `examples/basic` would always fall back.
+   - Chosen: A. It is the only option that keeps the results identical and
+     still removes the resolver round trips.
 
 ## Milestone 1: Documentation and protocol
 
@@ -226,41 +261,54 @@ The chosen options keep every requirement, so no protocol page changes.
 Write each test before its code. The behaviour stays the same, so the new
 tests pin today's results and the resolver round trips.
 
-- [ ] Add a test that counts resolver round trips at two sizes in a 1:4
+- [x] Add a test that counts resolver round trips at two sizes in a 1:4
       ratio: a dependency with N and 4N internal relative and bare imports.
       Count the `build.resolve` calls and the esbuild calls through a
       compile wrapper. Assert equal counts above zero at both sizes and the
       expected modules. The test fails before the change.
-- [ ] Add the shared bare-specifier rule and the fast-path rule. Use the
+- [x] Add the shared bare-specifier rule and the fast-path rule. Use the
       shared rule in `importerDirectory`.
-- [ ] Add a resolution mode to `consumerPlugins`. In native mode, the
+- [x] Add a resolution mode to `consumerPlugins`. In native mode, the
       catch-all callback returns at once for a fast-path import.
-- [ ] Add the `sidecar.bundle.classify` phase and the classification step.
-- [ ] Run the native attempt, then the full attempt on a failure or a
+- [x] Add the `sidecar.bundle.classify` phase and the classification step.
+- [x] Run the native attempt, then the full attempt on a failure or a
       divergence, each with new state. Add the log override to the native
       attempt.
-- [ ] Add fixture tests. Each asserts the modules, the digests, the unmapped
-      directories, and the esbuild call count.
-  - [ ] Nested `node_modules`: a relative import into a nested
+- [x] Add the planned compile of decision 6: the plan, the planned callback
+      result, and esbuild's side-effects and parse-setting lookups.
+- [x] Add fixture tests. Each asserts the modules, the digests, the unmapped
+      directories, and the esbuild call count. Each also compares the whole
+      result, compiled code included, with the full path.
+  - [x] Nested `node_modules`: a relative import into a nested
         `node_modules` directory outside the selected roots records that
         directory. A dependency with its own nested `node_modules` keeps its
         logical names. A bare import from a nested installation takes the
         fast path.
-  - [ ] pnpm layout: store packages that import each other through links
+  - [x] pnpm layout: store packages that import each other through links
         stay on the fast path with one esbuild call.
-  - [ ] Workspace link: on the head side, a dependency that imports a linked
+  - [x] Workspace link: on the head side, a dependency that imports a linked
         workspace package stays on the fast path. On the base side, the
         same layout falls back and maps the module to the base copy.
-  - [ ] Tracked dependency copy: on the base side, a dependency that imports
+  - [x] Tracked dependency copy: on the base side, a dependency that imports
         a tracked `node_modules` copy falls back and gets the base bytes.
-  - [ ] Diagnostics: an escape from a dependency fails with the importer
+  - [x] Diagnostics: an escape from a dependency fails with the importer
         location. A handled `require` failure fails with today's message.
         A `require.resolve` of an escaping path fails as today.
-- [ ] Run the existing sidecar tests unchanged: `tests/sidecar_*.test.ts`
-      and the Rust integration tests in `crates/mokly-render` that count
-      esbuild calls.
-- [ ] Add the bundle entry point to `### Key Code` in
+  - [x] Parse rule: a typed dependency keeps bundler interop through the
+        planned compile, and a classic-JSX tsconfig keeps the development
+        runtime.
+  - [x] esbuild settings: the side-effects flag matches esbuild's resolver
+        for each manifest shape, and the parse-setting rules hold.
+- [x] Run the existing sidecar tests: `tests/sidecar_*.test.ts` and the Rust
+      integration tests in `crates/mokly-render` that count esbuild calls.
+      One test changed: the CSS Modules compile-count test now compares with
+      a plain entry of its fixture, which compiles twice under the
+      repository's package type.
+- [x] Add the bundle entry point to `### Key Code` in
       `packages/mokly/README.md`.
+
+Evidence: `.context/esbuild-resolve-fast-path/red-run.txt`, `green-run.txt`,
+and `sidecar-tests.txt`.
 
 ## Milestone 3: Result identity and measurement
 

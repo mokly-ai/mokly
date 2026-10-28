@@ -212,10 +212,11 @@ export class ModulePaths {
     if (candidate.mapped && (!inside(this.sourceRoot, real) || !regular))
       throw this.missing(candidate.name);
     this.name(real);
-    return this.observed(real);
+    return this.observe(real);
   }
 
-  private observed(file: string): string {
+  /** Record a resolved module as a dependency lookup observation. */
+  observe(file: string): string {
     if (file.split(path.sep).includes("node_modules"))
       this.resolvedDependencies.add(file);
     this.dependencyUsage.file(file);
@@ -232,7 +233,7 @@ export class ModulePaths {
     const candidate = this.candidate(
       (await sourceDependency(this, real)) ?? real,
     );
-    if (!candidate.mapped) return this.observed(candidate.file);
+    if (!candidate.mapped) return this.observe(candidate.file);
     try {
       const real = await fs.promises.realpath(candidate.file);
       return this.checked(
@@ -249,7 +250,7 @@ export class ModulePaths {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
     const candidate = this.candidate(sourceDependencySync(this, real) ?? real);
-    if (!candidate.mapped) return this.observed(candidate.file);
+    if (!candidate.mapped) return this.observe(candidate.file);
     try {
       const real = fs.realpathSync(candidate.file);
       return this.checked(candidate, real, fs.statSync(real).isFile());
