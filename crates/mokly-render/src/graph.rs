@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::{Arc, Weak};
 
-use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_graph::delivery_inputs::DeliveryInputs;
@@ -132,16 +131,7 @@ impl JavaScriptGraph {
                 )
                 .as_bytes(),
             );
-            let renderer = config.input.renderer.as_ref().map(|renderer| {
-                relative(
-                    &config
-                        .file
-                        .parent()
-                        .unwrap_or(&config.repo_root)
-                        .join(renderer),
-                    &config.repo_root,
-                )
-            });
+            let renderer = config.renderer();
             let declaring: BTreeMap<_, _> = catalogue
                 .model
                 .entries
