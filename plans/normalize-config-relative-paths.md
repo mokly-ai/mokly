@@ -252,11 +252,11 @@ Renderer part, after #227 merges:
 The two private copies of the lexical normalizer go. The behaviour does not
 change.
 
-- [ ] Replace the private `normalize` of
+- [x] Replace the private `normalize` of
       `crates/mokly-render/src/postcss_inventory.rs`, which three PostCSS
       modules use, and of `crates/mokly-static/src/location.rs` with
       `mokly_catalogue::config::normalize`.
-- [ ] Run `cargo test -p mokly-render -p mokly-static`.
+- [x] Run `cargo test -p mokly-render -p mokly-static`.
 
 ## Milestone 5: One lexical rule for package roots
 
