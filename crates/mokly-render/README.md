@@ -42,7 +42,9 @@ inventories therefore never wait for each other, and the stylesheet roots of
 one preparation overlap that work. A failed input keeps its diagnostic for the
 rest of its context. A timeout or a crash after its retry also fails every
 request of the context that already waits for its turn. The cache keeps a running byte charge, so
-an insert charges one record instead of recounting the cache.
+an insert charges one record instead of recounting the cache. A context
+projects and hashes each of its modules once, and its later results reuse
+those late digests.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency

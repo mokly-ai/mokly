@@ -70,6 +70,7 @@ pub(crate) fn compiler(
                 .join(module),
             cache: runtime.css.clone(),
             turns: Turns::default(),
+            module_digests: Default::default(),
         }) as Arc<dyn CssProcessor>,
         None => Arc::new(IdentityProcessor),
     };

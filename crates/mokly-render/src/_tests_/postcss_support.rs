@@ -59,5 +59,6 @@ pub(super) fn processor(pool: Arc<dyn SidecarPool>, tree: Arc<dyn SourceTree>) -
         cache: Arc::new(Mutex::new(CssCache::default())),
         resolver: Arc::new(Unimock::new(())),
         turns: Default::default(),
+        module_digests: Default::default(),
     }
 }

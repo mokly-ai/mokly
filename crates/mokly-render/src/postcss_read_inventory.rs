@@ -1,7 +1,8 @@
 //! Select read witnesses without changing plugin privacy or catalogue membership.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+use std::sync::{Mutex, MutexGuard};
 
 use mokly_catalogue::config::relative;
 use mokly_sidecar::postcss_evidence::{Evidence, Read};
@@ -12,12 +13,36 @@ use crate::postcss_inventory::{Inventory, normalize};
 use crate::side::SideInputs;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 
+/// The late digests of one context's modules. The attempt's tree keeps each answer, so a
+/// context projects and hashes each module once. The tree calls run outside the lock.
+#[derive(Default)]
+pub(crate) struct ModuleDigests(Mutex<BTreeMap<String, Option<String>>>);
+
+impl ModuleDigests {
+    fn late(&self, tree: &dyn SourceTree, root: &Path, name: &str) -> Option<String> {
+        if let Some(digest) = self.known().get(name) {
+            return digest.clone();
+        }
+        let digest = match tree.project(&root.join(name)).ok()? {
+            Some(node) => Some(tree.digest(&node.identity).ok()?),
+            None => None,
+        };
+        self.known().insert(name.into(), digest.clone());
+        digest
+    }
+
+    fn known(&self) -> MutexGuard<'_, BTreeMap<String, Option<String>>> {
+        self.0.lock().unwrap_or_else(|error| error.into_inner())
+    }
+}
+
 pub(crate) fn collect(
     tree: &dyn SourceTree,
     root: &Path,
     side: &SideInputs,
     inventory: &Inventory,
     evidence: &Evidence,
+    digests: &ModuleDigests,
 ) -> ReadEvidence {
     let mut result = ReadEvidence::default();
     for (path, digest) in &inventory.inputs {
@@ -32,9 +57,7 @@ pub(crate) fn collect(
         .filter_map(|file| logical(file, side))
         .collect();
     for name in &modules {
-        if let Ok(Some(node)) = tree.project(&root.join(name))
-            && let Ok(digest) = tree.digest(&node.identity)
-        {
+        if let Some(digest) = digests.late(tree, root, name) {
             result.insert(name.clone(), ReadBaseline::Late(digest));
         }
     }
@@ -109,3 +132,7 @@ fn logical(file: &str, side: &SideInputs) -> Option<String> {
 #[cfg(test)]
 #[path = "_tests_/postcss_read_inventory_tests.rs"]
 mod postcss_read_inventory_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_module_digest_tests.rs"]
+mod postcss_module_digest_tests;
