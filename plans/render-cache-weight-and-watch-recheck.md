@@ -1,7 +1,10 @@
 # Render Cache Weight, Cache Counts, And Watch Recheck
 
-Status: Active. [PR #222](https://github.com/mokly-ai/mokly/pull/222) is
-open. The plan closes when its PR merges.
+Status: Completed. [PR #222](https://github.com/mokly-ai/mokly/pull/222)
+merged on 2026-10-28. No review finding is open. The post-merge follow-up
+below waits for perf 6 or a later workspace. The residual risk that `publish`
+holds the render cache through the upload is not measured and waits for a
+decision. The problems outside the scope wait for separate branches.
 
 This plan is item perf 0 of the startup performance work. An orchestrator
 coordinates seven `perf N` workspaces and merges their pull requests. This
