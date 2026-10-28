@@ -37,19 +37,21 @@ export class PackageScope {
 
   /**
    * Without configured main fields, esbuild resolves an import of a package
-   * that has a `module` field and no `main` field to the `module` file, and
-   * keeps the package's index file as a fallback. It switches the import to
-   * that index file when another import loads it. A resolve callback result
-   * has no fallback, so a native import that ends at such an index file may
-   * differ from the full path.
+   * that has a `module` field and no usable `main` field to the `module`
+   * file, and keeps the package's index file as a fallback. It switches the
+   * import to that index file when another import loads it. A resolve
+   * callback result has no fallback, so a native import that ends at such an
+   * index file may differ from the full path.
    */
   async moduleFallback(file: string): Promise<boolean> {
     if (!path.basename(file).startsWith("index.")) return false;
     const manifest = await this.manifest(path.dirname(file));
+    // esbuild reads a main field only when it is a non-empty string.
+    const field = (value: unknown) => typeof value === "string" && value !== "";
     return (
       manifest?.directory === path.dirname(file) &&
-      typeof manifest.module === "string" &&
-      typeof manifest.main !== "string"
+      field(manifest.module) &&
+      !field(manifest.main)
     );
   }
 

@@ -92,14 +92,14 @@ const rows: Array<{
       assert.doesNotMatch(result.compiled!.code, /\bh\(/);
     },
   },
-  {
-    name: "a module-only package keeps its module file for an import",
-    async setup(head) {
+  ...[{}, { main: "" }].map((main) => ({
+    name: `a module-only package keeps its module file for an import: ${JSON.stringify(main)}`,
+    async setup(head: string) {
       // Without main fields, esbuild keeps index.js as the fallback of the
       // import and switches to it because cjs-user requires the package.
       await write(
         path.join(head, "node_modules/dual/package.json"),
-        JSON.stringify({ name: "dual", module: "esm.js" }),
+        JSON.stringify({ name: "dual", module: "esm.js", ...main }),
       );
       await write(
         path.join(head, "node_modules/dual/esm.js"),
@@ -127,14 +127,14 @@ const rows: Array<{
       );
       return nativeParams(head);
     },
-    check({ result }) {
+    check({ result }: Bundled) {
       assert.ok(
         result.modules.some(
           (module) => module.path === "node_modules/dual/esm.js",
         ),
       );
     },
-  },
+  })),
   {
     name: "a side-effect-free package keeps its flag",
     async setup(head) {

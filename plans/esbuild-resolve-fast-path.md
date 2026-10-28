@@ -17,11 +17,12 @@ repository-owned files. Only these imports can need the base tier remap.
 
 This plan lets esbuild resolve the other imports natively: the fast path.
 After the native compile, the sidecar classifies each native import target
-with the rules of the full path. When every target maps to itself and
-esbuild gave none a package type or TypeScript settings, the native result
-stands. Otherwise a second compile returns each classified target from the
-plan through the resolve callback, without a resolver round trip, so every
-module stays plugin-resolved as today. A failed native compile compiles
+with the rules of the full path. When every target maps to itself, esbuild
+gave none a package type or TypeScript settings, and no import may have
+taken esbuild's module fallback, the native result stands. Otherwise a
+second compile returns each classified target from the plan through the
+resolve callback, without a resolver round trip, so every module stays
+plugin-resolved as today. A failed native compile compiles
 again on the full path. So the bundle result stays the same: modules,
 digests, logical names, compiled code, compiled inputs, unmapped dependency
 directories, and diagnostics. The plan keeps the CSS resolve callback, the
@@ -114,12 +115,19 @@ The design follows the decisions below.
   and whether esbuild gave the file a package type or tsconfig parse options.
   A tsconfig counts when plain JSON cannot read it, when it extends another,
   or when it sets a compiler option that esbuild reads for parsing. The plan
-  maps each native import, keyed by importer, specifier, and kind, to its
-  classified module and side-effects flag.
+  maps each native import that it can plan, keyed by importer, specifier,
+  and kind, to its classified module and side-effects flag.
+- **Module fallback.** Without configured main fields, esbuild resolves an
+  import of a package that has a `module` field and no usable `main` field
+  to the `module` file. It keeps the package's index file as a fallback and
+  switches the import to it when another import loads that file. A callback
+  result has no fallback. So a native import that is not a `require` and
+  ends at such an index file stays unplanned.
 - **Exact native result.** When every target maps to itself, carries no
-  such settings, and has an `original` specifier, the native result stands.
-  The phase then records the dependency usage of each native import, with
-  concurrent calls.
+  such settings, and has an `original` specifier, and no import stays
+  unplanned for the module fallback, the native result stands. The phase
+  then records the dependency usage of each native import, with concurrent
+  calls.
 - **Planned compile.** Otherwise a second compile starts from new state. Its
   callback returns the planned module and side-effects flag for each planned
   import, records the same observation and usage as the full path, and
@@ -379,11 +387,45 @@ Evidence: `.context/esbuild-resolve-fast-path/identity.txt`,
       ten local runs.
 - [x] Commit with Conventional Commits and push the branch after each
       milestone. `origin/main` at `2dd2937f` merged cleanly.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest. The orchestrator's process runs
       the review after the pull request opens.
+  - Review 1 found four Low findings, all confirmed. `1287a4f5` fixed
+    finding 1, the module fallback, with option B, and finding 3, a test
+    comment. The re-review found three Low findings, all confirmed. The
+    commit that ticks this TODO fixes finding 5, an empty `main` field,
+    with option B, and finding 7, this plan's design text. Reports:
+    `.context/esbuild-resolve-fast-path/review-1.md`, `review-2.md`, and
+    the validity files beside them.
+  - 2. No test pins the planned side-effects flag in both directions.
+       Severity Low, effort Small. Recommended: C, a row with a side-effect-free
+       and a side-effecting package whose imports come from the plan. Option B
+       is already in place through the fix of finding 1.
+  - 4. The bare-specifier rule still has inline copies. Severity Low, effort
+       Medium. Recommended: C, a `specifier.ts` module for the bare-specifier
+       and package-name rules.
+  - 6. The plan table does not prove that planned compiles use the plan.
+       Severity Low, effort Small. Recommended: B, assert in the row loop that
+       the planned compile finds every plan entry.
+  - Outside the scope: `packages/mokly/src/sidecar/bundle-recipe.ts`. An
+    import with a `?query` or `#hash` suffix fails every bundle with
+    "Bundled source bytes were not recorded", also on `origin/main`.
+    Separate branch.
+  - Outside the scope: `packages/mokly/src/sidecar/plugins.ts`. A
+    template-literal `import()` in a base-side dependency skips the resolve
+    callbacks and reads the head installation instead of a tracked base
+    copy, also on `origin/main`. Separate branch.
+  - Outside the scope: `packages/mokly/src/sidecar/resolution-inputs.ts`.
+    The reuse inputs omit `jsconfig.json`, which esbuild reads for `paths`.
+    Separate branch.
+  - Outside the scope: `packages/mokly/src/sidecar/dependency-usage.ts`. The
+    longest-alias rule has inline copies in `dependency-usage.ts` and
+    `postcss-resolution.ts`. Separate branch.
+  - Outside the scope: `scripts/verification/ratchets/internal-exports.mjs`.
+    `SOURCE_ROOTS` still names `src`, so the unused internal export audit
+    skips `packages/mokly/src`. Separate branch.
   - Outside the scope: `tests/browser/same_origin_identity.spec.ts`. "An
     unowned exact-resource document gains no navigation privilege during
     handoff" failed once in the remote gate with "Cannot read properties of

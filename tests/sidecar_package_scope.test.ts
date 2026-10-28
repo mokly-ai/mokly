@@ -157,3 +157,85 @@ for (const [config, expected] of [
       expected,
     );
   });
+
+test("the module fallback check flags each index file that esbuild moves an import to", async (context) => {
+  const root = await nativeRoot(context);
+  const shapes: Record<string, object> = {
+    "module-only": { module: "esm.js" },
+    "empty-main": { main: "", module: "esm.js" },
+    "null-main": { main: null, module: "esm.js" },
+    "missing-main": { main: "missing.js", module: "esm.js" },
+    "main-and-module": { main: "index.js", module: "esm.js" },
+    "empty-module": { main: "", module: "" },
+    exports: { exports: "./esm.js", module: "esm.js" },
+  };
+  const names = Object.keys(shapes);
+  for (const [name, manifest] of Object.entries(shapes)) {
+    const directory = path.join(root, "node_modules", name);
+    await write(path.join(directory, "package.json"), JSON.stringify(manifest));
+    await write(path.join(directory, "index.js"), 'module.exports = "main";');
+    await write(path.join(directory, "esm.js"), 'export default "module";');
+  }
+  // Each package is imported by the entry and required by the helper.
+  await write(
+    path.join(root, "helper.cjs"),
+    `module.exports = [${names.map((name) => `require(${JSON.stringify(name)})`).join(", ")}];`,
+  );
+  await write(
+    path.join(root, "entry.mjs"),
+    [
+      'import helper from "./helper.cjs";',
+      ...names.map(
+        (name, index) => `import p${index} from ${JSON.stringify(name)};`,
+      ),
+      `export default [helper, ${names.map((_, index) => `p${index}`).join(", ")}];`,
+    ].join("\n"),
+  );
+  const imports = async (callback: boolean) => {
+    const result = await build({
+      entryPoints: [path.join(root, "entry.mjs")],
+      bundle: true,
+      write: false,
+      metafile: true,
+      platform: "node",
+      logLevel: "silent",
+      plugins: callback
+        ? [
+            {
+              name: "callback-paths",
+              setup(builder) {
+                builder.onResolve({ filter: /.*/ }, async (args) => {
+                  if (args.pluginData) return undefined;
+                  const resolved = await builder.resolve(args.path, {
+                    kind: args.kind,
+                    resolveDir: args.resolveDir,
+                    importer: args.importer,
+                    pluginData: true,
+                  });
+                  return resolved.errors.length
+                    ? undefined
+                    : {
+                        path: resolved.path,
+                        sideEffects: resolved.sideEffects,
+                      };
+                });
+              },
+            },
+          ]
+        : [],
+    });
+    const entry = Object.entries(result.metafile.inputs).find(([file]) =>
+      file.endsWith("entry.mjs"),
+    )![1];
+    return new Map(
+      entry.imports.map((edge) => [edge.original, path.resolve(edge.path)]),
+    );
+  };
+  const native = await imports(false);
+  const callback = await imports(true);
+  const scope = new PackageScope();
+  const moved = names.filter((name) => native.get(name) !== callback.get(name));
+  for (const name of moved)
+    assert.equal(await scope.moduleFallback(native.get(name)!), true, name);
+  assert.deepEqual(moved, ["module-only", "empty-main", "null-main"]);
+});
