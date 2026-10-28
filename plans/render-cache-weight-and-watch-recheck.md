@@ -477,7 +477,8 @@ orchestrator fixes in PR #230.
       startup. D9 fixes it: the spec passed three times, also with both
       variants. Evidence:
       `.context/render-cache-weight-and-watch-recheck/large-watch-*.log`.
-- [ ] Merge `origin/main` when the orchestrator reports that PR #230 merged.
+- [x] Merge `origin/main` when the orchestrator reports that PR #230 merged.
+      Merged `9f78200e` in `19beb729`. `Cargo.lock` is the only path.
   - Outside the scope: `crates/mokly-server`, a page that requests an
     authored asset while a new generation publishes can get a 404 until a
     render of the new generation reaches the asset, as the extra rebuild
