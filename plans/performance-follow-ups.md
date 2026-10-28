@@ -11,8 +11,8 @@ code and the numbers, so this plan measured every item again on
 `origin/main` at `02eec937`. The measurements, probes, and logs are in
 `.context/performance-follow-ups/`, with a summary in `measurements.md`
 there. This plan covers the work for those items. It does not cover item 182,
-which the normalized config-relative paths workspace ticks, the bookfolio
-run, or the perf 6 item, the retained base generation.
+which #240 ticked, the bookfolio run, or the perf 6 item, the retained base
+generation.
 
 No user decision is recorded yet. Every item below waits for the answers
 under "Open decisions". No default is applied.
@@ -121,7 +121,10 @@ Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
   `tests/static_changes_capture.test.ts`, and
   `tests/static_publication_assets.test.ts`. This plan adds Rust tests in the
   owning crates instead.
-- Workspace 386 changes `crates/mokly-render`, beside item 133's key code.
+- Workspace 386 merged as #240 after this measurement. It changed
+  `crates/mokly-render/src/bundle_inputs.rs`, beside item 133's key code,
+  and `crates/mokly-sidecar/src/methods.rs`. The physical roots of item 133
+  stay.
 - Workspace 406 changes `docs/protocol/mokly-git.md` and
   `docs/protocol/mokly-base-preparation.md`.
 - Workspace 407 changes `docs/protocol/mokly-sidecar-modules.md`,
