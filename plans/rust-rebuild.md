@@ -5472,6 +5472,8 @@ check passes on this commit.
     under 98 B: serialization still predicts the plaintext point and keeps the
     escaped-text retry, instead of option B's escaped first pass that finds
     the HTML `plaintext` element by its repair id.
+  - User decision (2026-10-28): B. The serializer part stays an open
+    follow-up, and item 98 stays unticked.
 
 - [x] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
@@ -5492,13 +5494,18 @@ check passes on this commit.
     item, in `3c90b1e1`: the tree adapter moved into the catalogue boundary,
     and `mokly-html` no longer depends on html5gum.
 
-- [ ] HTML pipeline phase 2 review 1, finding 1: the differential harness
+- [x] HTML pipeline phase 2 review 1, finding 1: the differential harness
       reads repository HTML from disk, compares only bytes, and does not assert
       source positions. Severity Medium, effort Medium, category test.
       Options: A, use tracked fixtures, compare trees with positions removed,
       assert position tables, and add each phase 2 review case, Small; B, also
       run an html5lib tree-construction corpus, Medium. Recommended: B.
       Apply no option.
+  - User decision (2026-10-28): B. Done in `8bec2ca0`: 55 tracked fixtures
+    with position snapshots, and the html5lib tree-construction corpus. New
+    test data: the corpus from html5lib-tests commit `9329e64`, under its MIT
+    license, in `crates/mokly-html/tests/fixtures/html5lib`. It is test data
+    only and stays out of the product build. No new dependency.
 - [x] HTML pipeline phase 2 review 1, finding 2: graph key scans use delivered
       parsing for authored bodies. Severity Low, effort Medium, category
       performance. Options: A, use the authored parse without positions,
@@ -5524,6 +5531,13 @@ check passes on this commit.
       key inputs of every plain-text link target into content and existence
       inputs, which also removes the `plans/` special case, Medium.
       Recommended: A. C best protects the codebase. No option is applied.
+  - User decision (2026-10-28): A. Done in `e236ea78`. Option C stays a
+    possible later change, below.
+- [ ] Possible later change (decision work review finding 2, option C): key
+      every plain-text link target only by whether it exists, which also
+      removes the `plans/` special case. Preparation must then decide which
+      targets are resources, and a missed target would stop an edited asset
+      from changing its document key. Not decided.
 - Decision work review of 2026-10-26:
   `.context/html-pipeline-2-decisions/review-2000d402.md`. Findings 1, 3, 5,
   6, and 7 are fixed in `558e580b`, `f38cb325`, and `00fbc79e`. Finding 4 is
@@ -5534,7 +5548,7 @@ check passes on this commit.
 - Decision work review round 2:
   `.context/html-pipeline-2-decisions/review-round2-f87efa6b.md`. Findings 1
   and 2 are fixed in `e24a8270` and `05caa536`.
-- [ ] Decision work review round 2, finding 3: four commits on
+- [x] Decision work review round 2, finding 3: four commits on
       `rebuild/html-pipeline-2` name HTML tags in their messages: `75ec1ad4`,
       `3c90b1e1`, `558e580b`, and `f38cb325`. Release Please parses changelog
       text as HTML. Severity Low, effort Small, category repository rule.
@@ -5543,14 +5557,18 @@ check passes on this commit.
       rewrites pushed history, Small; C, add a check that rejects tag-like
       text in commit messages and pull request descriptions, Medium.
       Recommended: A. No option is applied.
+  - User decision (2026-10-28): A. The pull request description has no HTML
+    tags, and the coordinator uses it as the squash commit body.
 - [ ] Source offset maps for diagnostics (wider fix of round 1 finding 1 and
       round 2 finding 1). Give each text token and attribute value a map
       from value offsets to source offsets, so that every `{{...}}` failure
       points at its own characters. Severity Low, effort Large, category
       product bug. It also covers the attribute value and character
       reference locations of the outside-scope lines around it. Options: A,
-      keep the targeted span fixes,
-      Small; B, the offset maps, Large. Recommended: B. No option is applied.
+      keep the targeted span fixes, Small; B, the offset maps, Large.
+      Recommended: B. No option is applied.
+  - User decision (2026-10-28): C, the offset maps on a separate branch
+    after this branch merges. Open follow-up.
 - Outside the decision work review round 2:
   `crates/mokly-catalogue/src/templates.rs` at line 71 reports a `{{...}}`
   failure after a character reference too early, also on `origin/main`.
@@ -5586,12 +5604,14 @@ check passes on this commit.
       preparation, Large; D, move the shared boundary into a new lower-level
       crate, Large. Recommended: B. No option is applied.
   - User decision (2026-10-26): B. Done in `3c90b1e1`.
-- [ ] Fix-round commits that do not build. Severity Medium, effort Medium,
+- [x] Fix-round commits that do not build. Severity Medium, effort Medium,
       category process. The affected commits are `b9dad262`, `e877ca04`,
       `a5e7461b`, `62e1e3f7`, and `fd3fccba`. Options: A, record the commit map
       and squash the branch when it merges, Small; B, add a check that builds
       and tests every commit of a branch, Medium. Recommended: A. No option
       is applied.
+  - User decision (2026-10-28): A. This list of commits stays here, and the
+    coordinator squash-merges the branch.
 - [x] The wrapper filter repeats the catalogue allow list. Severity Low,
       effort Small, category code structure. `ignore_checks.rs` writes the
       allowed wrapper attributes again beside the catalogue rule. Options:
