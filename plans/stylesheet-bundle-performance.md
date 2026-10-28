@@ -150,6 +150,19 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
    Tailwind keeps class candidates in one context, which the PostCSS contract
    forbids across rebuilds. Reason: with decision 1, an unchanged attempt
    starts no PostCSS child at all.
+6. PostCSS critical section, raised during step A on 2026-10-28 and decided
+   under the user's rule to apply the recommended option: B. Decision 2
+   moved the read inventory out of the cache lock, but the second lock that
+   stores the processed record still waited behind queued round trips. The
+   startup preparations measured 0.73 s and 1.15 s cold, and 0.67 s and
+   0.83 s warm. A per-context request lock now keeps one sidecar request at
+   a time, the shared cache lock covers only map operations and the
+   dependency inventory, and the cache keeps a running byte charge, so an
+   insert no longer recounts all records, which took about 4 ms. Rejected:
+   A, keep decision 2 alone, because the second preparation misses 0.8 s.
+   Rejected: C, one in-flight cell for each input, because a per-context
+   lock gives the same single request with less state. Reason: B removes
+   both waits, and the probe measured 0.59 s and 0.57 s.
 
 ## Design
 
@@ -166,11 +179,13 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
   existing names, module names, resources, sources, dependency directories,
   and cache inserts. The first failed root in root order gives the error,
   as today.
-- Under decision 2, the PostCSS adapter caches the raw sidecar result before
-  it releases its cache lock. The read inventory runs outside the lock, and a
-  second short lock stores the processed record. Requests of one context
-  still reach the sidecar one at a time, and equal inputs still make one
-  `processCss` call.
+- Under decisions 2 and 6, a per-context request lock keeps one sidecar
+  request of a context at a time. Under that lock, the adapter checks the
+  shared cache again, so equal inputs still make one `processCss` call, and
+  stores the raw result before the next request starts. The shared cache
+  lock covers only lookups, inserts, and the dependency inventory, and the
+  read inventory runs outside both locks. The cache keeps a running byte
+  charge.
 - Bundling has no warnings. The `Bundle` type carries none, and the dependency
   usage records are ordered sets. The output check compares the generation:
   routes, CSS bytes, keys, sources, and warnings.
@@ -246,7 +261,24 @@ Write each failing test first.
 
 Evidence: `.context/perf5-parallel-stylesheets/repository-suite-a2.log`.
 
-## Milestone 3: Output check and measurement, step A
+## Milestone 3: PostCSS critical section, step A
+
+Decision 6 extends decision 2. Write each failing test first.
+
+- [x] Add a per-context request lock to `crates/mokly-render/src/postcss.rs`.
+      The round trip leaves the shared cache lock, and a check under the
+      request lock keeps one call for equal inputs.
+- [x] Keep a running byte charge in `crates/mokly-render/src/postcss_cache.rs`,
+      so an insert or a purge charges one record and never recounts the cache.
+- [x] Tests in `crates/mokly-render`: a cached result returns while another
+      input of the same context waits for the sidecar, and the running charge
+      equals a full recount after inserts, replacements, purges, and clears.
+- [x] Update `crates/mokly-render/README.md` for the request lock and the
+      running charge.
+
+Evidence: `.context/perf/probe-a2.jsonl` and `.context/perf/probe-a3.jsonl`.
+
+## Milestone 4: Output check and measurement, step A
 
 - [ ] Run the mockup check: `npm run build`, then build `examples/basic` with
       `--strict` into `.context/perf5-parallel-stylesheets/after-a`. Build it
@@ -260,7 +292,7 @@ Evidence: `.context/perf5-parallel-stylesheets/repository-suite-a2.log`.
       one startup `graph.prepare` is under 0.8 s. Add one line for each
       catalogue below.
 
-## Milestone 4: Verification, commit, review, and pull request, step A
+## Milestone 5: Verification, commit, review, and pull request, step A
 
 - [ ] Run the targeted tests: `cargo test -p mokly-graph`,
       `cargo test -p mokly-render`, `cargo test -p mokly-cli`,
@@ -275,7 +307,7 @@ Evidence: `.context/perf5-parallel-stylesheets/repository-suite-a2.log`.
 - [ ] Open the step A pull request with the before and after table. Put its
       link in the status paragraph.
 
-## Milestone 5: Documentation and protocol, step B
+## Milestone 6: Documentation and protocol, step B
 
 Step B starts after the step A pull request merges. Its pull request opens
 after the orchestrator reports that perf 4 merged. perf 0 also changes
@@ -297,7 +329,7 @@ after the orchestrator reports that perf 4 merged. perf 0 also changes
       evidence, and the miss reasons. Update `crates/mokly-cli/README.md`
       when it lists timing fields.
 
-## Milestone 6: Miss reason on `css.bundle`, step B
+## Milestone 7: Miss reason on `css.bundle`, step B
 
 Write each failing test first.
 
@@ -313,7 +345,7 @@ Write each failing test first.
   - [ ] `crates/mokly-cli`: the timing layer copies `cache` to the
         `css.bundle` end record and logs no path.
 
-## Milestone 7: Gate fix, step B
+## Milestone 8: Gate fix, step B
 
 Write each failing test first.
 
@@ -340,7 +372,7 @@ Write each failing test first.
         directory makes the Tailwind root bundle again, and its CSS contains
         the new class.
 
-## Milestone 8: Measurement, step B
+## Milestone 9: Measurement, step B
 
 - [ ] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Add an edit to one stylesheet. Check the acceptance:
@@ -348,7 +380,7 @@ Write each failing test first.
       edit have no `css.bundle` span, and the stylesheet edit bundles only
       the roots that import it. Add one line for each catalogue below.
 
-## Milestone 9: Verification, commit, review, and pull request, step B
+## Milestone 10: Verification, commit, review, and pull request, step B
 
 - [ ] Run the targeted tests: `cargo test -p mokly-render`,
       `cargo test -p mokly-cli`, `npm test -- tests/markdown_links.test.ts`,
