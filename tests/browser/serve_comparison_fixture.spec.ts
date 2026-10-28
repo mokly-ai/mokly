@@ -1,7 +1,6 @@
 import { expect } from "@playwright/test";
 
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
-import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { expectBadgeAffected } from "./branch_point_affected.js";
 import { expectComparisonFixture } from "./comparison_fixture_membership.js";
@@ -17,10 +16,7 @@ test("shared Serve comparison fixture publishes a private pinned base and CSS ev
   expect(index.base).toBe("fixture-base");
   expect(index.changesStatus).toBe("ready");
   expect(index.live?.generation).toBeTruthy();
-  const review = (await (
-    await request.get(new URL(index.comparisonUrl!, changes.url).href)
-  ).json()) as ReviewResultV8;
-  expect(review.baseCommit).toBe(changes.baseCommit);
+  expect(index.baseCommit).toBe(changes.baseCommit);
   expect(changes.headCommit).not.toBe(changes.baseCommit);
   const detail = readEntryDetail(
     await (
@@ -34,13 +30,11 @@ test("shared Serve comparison fixture publishes a private pinned base and CSS ev
     status: "matched",
     owner: { kind: "entry" },
   });
-  const entry = review.entries.find(
+  const entry = index.screens.find(
     (item) => item.path === changes.paths.changed,
   )!;
-  expect(entry.included).toBe(true);
-  expect(entry.views[0]!.rules).toEqual(
-    detail.views[0]!.resourceEvidence!.rules,
-  );
+  expect(entry.changes).toMatchObject({ status: "ready", included: true });
+  expect(detail.views[0]!.state).toBe("changed");
   await page.goto(`/view/${changes.paths.changed}/?viewport=desktop`);
   await expect(page.locator('[data-changes-status="ready"]')).toBeVisible();
   await expect(
@@ -69,7 +63,7 @@ test("shared Serve comparison fixture retains moved counterparts and removed mem
       index.removedEntries.some((record) => record.entry.path === before),
     ).toBe(false);
   }
-  const generation = new URL(".", new URL(index.comparisonUrl!, changes.url));
+  const generation = new URL(index.comparisonUrl!, changes.url);
   for (const entryPath of [
     paths.removedScreen,
     paths.removedPage,

@@ -35,9 +35,9 @@ Content-Length: <bytes>
 The body is one gzip-compressed POSIX tar archive, USTAR with PAX extended
 headers when needed. It contains only regular root-relative files, with no
 enclosing directory, in fixed order: `mokly-upload.json`,
-`.mokly-export-artifact`, then the non-null `comparisonPath` review file.
+`.mokly-export-artifact`, then the catalogue index `mokly-viewer/index.json`.
 
-The two or three files are byte-identical to the finalized output. No other
+The three files are byte-identical to the finalized output. No other
 entry is permitted. Success is `200` with `Content-Type: application/json`,
 optionally with media-type parameters, and this response shape. These example
 URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
@@ -50,6 +50,7 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
     "expiresAt": "2026-09-26T12:15:00.000Z"
   },
   "missing": ["<sha256>", "<sha256>"],
+  "blobEncodings": ["gzip"],
   "blobUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/blobs/{sha256}",
   "completeUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/complete"
 }
@@ -69,11 +70,19 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
 - `blobUrl` and `completeUrl` obey the request-boundary URL rule above.
   `blob:`, `data:`, `file:` and every other scheme are invalid even if URL
   parsing exposes the endpoint's origin.
-- Unknown fields are ignored. A missing or invalid field, another 2xx status,
-  a body over 16 MiB, invalid JSON, or a non-JSON content type is
+- `blobEncodings` is optional. The CLI uses gzip for that Plan round only when
+  this value is an array that contains the exact string `gzip`. It ignores
+  every other item, and any other value, including `null`, counts as absent.
+- The receiver lists `gzip` only when it decodes gzip Blobs for the whole
+  upload, until the upload expires.
+- Unknown fields are ignored. A missing or invalid required field, another 2xx
+  status, a body over 16 MiB, invalid JSON, or a non-JSON content type is
   `upload-failed`.
+- Decision in force: the field is optional and the exchange stays v1 because
+  earlier CLIs ignore unknown Plan fields. Rejected: a v2 Plan, because a v1
+  CLI refuses every v2 Plan.
 
-At Plan time the receiver verifies and stores the manifest and optional review
+At Plan time the receiver verifies and stores the manifest and the index
 after matching their marker digests and sizes. It never lists those digests in
 `missing`. If a publication already exists for this `headSha` and `configPath`,
 it answers `missing: []`; Complete then resolves the keep-first result below.
@@ -85,7 +94,9 @@ it answers `missing: []`; Complete then resolves the keep-first result below.
 means absent), and `document` or raw `body`. Complete cases add `outcome`
 (`published`, `already-published`, `replan`, `retry`, or an error category) and
 normalized `viewerUrl` or null; invalid Plan cases are `upload-failed`. It
-covers every field, content-type, status, URL and placeholder boundary here.
+covers every field, content-type, status, URL, placeholder, and Blob encoding
+boundary here. A valid Plan case can carry `blobEncoding`, the Blob encoding
+the client chooses for that Plan: `gzip` or the default `identity`.
 
 ### Blobs
 
@@ -96,15 +107,28 @@ concurrency limit:
 PUT <blobUrl with {sha256} replaced>
 Authorization: Bearer TOKEN
 Content-Type: application/octet-stream
-Content-Length: <size from the marker>
+Content-Length: <body length>
+Content-Encoding: gzip
 ```
 
-The body is the exact file bytes for that digest. Marker entries sharing a
-digest require one PUT. Any 2xx means stored; receivers return 204 with no
-body. `400` means the bytes did not match the declared digest or size. `404`
-means the digest is outside this Plan or the upload id is unknown. `410` means
-the upload expired and consumes the command's single re-plan. The first failed
-Blob cancels in-flight requests and starts no new ones.
+`Content-Encoding: gzip` is present only for an encoded body. `Content-Length`
+is the length of the request body.
+
+When the round's Plan lists gzip and one gzip member of the file is smaller
+than the file, the body is that member and has `Content-Encoding: gzip`.
+Otherwise the body is the exact file bytes without `Content-Encoding`.
+The marker digest and size always describe the decoded file bytes. Marker
+entries sharing a digest require one PUT. Every attempt of one Blob sends the
+same headers and body. Any 2xx means stored; receivers return 204 with no body.
+`400` means invalid gzip data or decoded bytes that do not match the declared
+digest or size. `404` means the digest is outside this Plan or the upload id is
+unknown. `410` means the upload expired and consumes the command's single
+re-plan. The first failed Blob cancels in-flight requests and starts no new
+ones.
+
+Decision in force: the CLI compares the gzip size with the file instead of
+keeping a list of compressed media types. This needs no list and never sends
+a body larger than its file.
 
 ### Complete
 
@@ -155,9 +179,9 @@ Blob and Complete attempts and waits may not reach or pass `upload.expiresAt`.
 Do not start an attempt at or after expiry, and do not begin a wait that would
 end at or after it. Local expiry consumes the same one re-plan as 409 and 410.
 Receivers choose an expiry long enough for a complete upload; Mokly Cloud
-allows sixty minutes. Command cancellation stops attempts and waits immediately
-with the cancellation output below. Exhausted retries use the transport-failure
-output below.
+allows sixty minutes. Command cancellation stops attempts and waits
+immediately with the cancellation output. Exhausted retries use the
+transport-failure output.
 
 ## Accounting And Output
 
@@ -174,48 +198,37 @@ Rich progress is per Plan round. Hash each Plan-archive file and combine those
 digests with that round's `missing` set. `<total>` is the number of marker
 entries whose digest is in that combined set. `<n>` begins at the number whose
 digest belongs to any Plan-archive file, then advances by every marker
-entry sharing a digest when that digest's PUT completes. `<size>` is the sum
-of byte sizes once per distinct combined digest, including all Plan-archive
-files; the marker's own byte length participates even though it is not an
-entry. A re-plan restarts at that round's initial `<n>`, `<total>` and `<size>`.
-A round with empty `missing` shows no progress label. In one round, its final
-`<n>` equals the summary's `<uploaded>`.
+entry sharing a digest when that digest's PUT completes. `<size>` counts file
+bytes once per distinct combined digest, including the raw bytes of files in
+the Plan archive; it does not count the compressed archive or gzip Blob body.
+The marker's own byte length participates even though it is not an entry. A
+re-plan restarts at that round's initial `<n>`, `<total>` and `<size>`. A round
+with empty `missing` shows no progress label. In one round, its final `<n>`
+equals the summary's `<uploaded>`. The
+[terminal output contract](./mokly-terminal-output.md) owns the progress label.
 
-The progress label uses binary units, whole bytes below 1 KiB and one decimal
-place from KiB upward. Its exact singular and plural forms are:
-
-```text
-Uploading 0 of 1 file · <size>
-Uploading 0 of 2 files · <size>
-```
+Decision in force: the progress `<size>` counts decoded file bytes because the
+Plan archive already travels compressed and counts its files' raw bytes, and
+the label exists before any Blob compresses. The summary line counts marker
+entries, so the encoding does not affect it.
 
 A `201` completion prints exactly one counted summary, followed by the viewer
-URL on its own line when accepted:
-
-```text
-Published Mokly catalogue. 1 file uploaded, <unchanged> unchanged.
-Published Mokly catalogue. 2 files uploaded, <unchanged> unchanged.
-```
-
-Zero and every value other than one use `files`. `unchanged` is not followed
-by a noun and does not pluralize. A `200` completion replaces the counted line
-with `Mokly catalogue already published for this commit.` and may print the
-kept publication's viewer URL. Rich mode uses the same wording after its
-success glyph and before its duration.
+URL on its own line when accepted. A `200` completion replaces the counted
+line with the already-published line and may print the kept publication's
+viewer URL. The [terminal compatibility contract](./mokly-terminal-errors.md)
+owns the exact lines.
 
 This document owns cancellation classification and precedence for
 `mokly publish`. A failure is a cancellation only when the command's
 cancellation aborted it, in a request or in the Git runner, or when the core
-explicitly marked the error as a cancellation where it detected the
-cancellation. The only signal-based exception is the
+detected the cancellation itself. The only signal-based exception is the
 [pre-installation window](./mokly-export-recovery.md#pre-installation-window)
 owned by the static build recovery contract. Outside that window, never infer
 cancellation from a cause chain, a combined error's members, error text or an
-already-aborted command signal.
-Never put the mark on an error that combines cancellation with a rollback,
-backup or reservation-cleanup failure.
+already-aborted command signal. An error that combines cancellation with a
+rollback, backup or reservation-cleanup failure is not a cancellation.
 
-`mokly publish` uses the cancellation output below only for a cancellation. It
+`mokly publish` uses the cancellation output only for a cancellation. It
 prints every other error unchanged with that error's own category, whether or
 not the command was also cancelled. This includes a build recovery error
 that names the backup or reservation path required for recovery. Every failed
@@ -223,25 +236,10 @@ publish exits with status 1. The
 [static build recovery contract](./mokly-export-recovery.md#cancellation-and-recovery-precedence)
 owns output transaction outcomes and the `mokly build` output.
 
-A cancellation keeps category `upload-failed`. Plain mode prints exactly:
-
-```text
-[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
-```
-
-Rich mode uses headline `Publication was cancelled.`, no detail line, and hint
-`Run mokly publish again when you are ready.` It never shows a connection hint
-for cancellation.
-
-An exhausted retry or transport failure uses this exact plain line:
-
-```text
-[mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.
-```
-
-Rich mode uses headline `The catalogue upload did not complete.`, no detail
-line, and the distinct hint `Check the endpoint and connection, then retry.`
-Raw response bodies, headers, URLs, credentials and transport exception text
+A cancellation keeps category `upload-failed`. The
+[terminal compatibility contract](./mokly-terminal-errors.md#plain-compatibility)
+gives the exact plain and rich output of a cancellation and of an exhausted
+retry or transport failure. Raw response bodies, headers, URLs, credentials and transport exception text
 never enter either mode.
 
 ## Rejections, Limits And Receiver Validation

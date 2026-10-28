@@ -1,7 +1,5 @@
 # Component Stylesheets
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Two Kinds Of Component CSS
 
 A component's CSS reaches a document in two ways. Styles that a
@@ -56,14 +54,13 @@ input cannot be declared, except for the configured CSS overlap below.
 
 Preserve authored order and group paths by resolved real file. If one
 component lists the same validated file twice, keep its first position, link
-it once, and issue the [duplicate warning](#warning-messages). Different
-components may declare the same file. Validate the input shape when the
-registry accepts the definition, including untyped inputs; check existence,
+it once, and issue the [duplicate warning](#warning-messages). This follows
+the [graceful-handling rule](./README.md#graceful-handling). Different
+components may declare the same file. Mokly validates the input shape when
+it accepts the definition, including untyped inputs. It checks existence,
 real-path identity, and path eligibility after the configuration resolves.
 A missing or invalid file fails `build` and Serve's rebuild.
-Declarations stay in the private registry. Their CSS and asset inputs enter
-the stylesheet source inventory; they do not enter entry metadata. This
-follows the [graceful-handling rule](./README.md#graceful-handling).
+Declarations do not enter entry metadata or the read model.
 
 ## Configured Placement Marker
 
@@ -116,9 +113,9 @@ render contributes no link; the union of registered or saved
 components is never linked. This order is stable in Serve, `build`,
 on-demand renders, and both sides of a comparison.
 
-The core assembles the head, so it places the component block itself: at the
-marker's position among the configured links, or after the shared links and
-before the scheme-specific links. Each declared CSS file is a delivery root under the
+Mokly places the component block itself: at the marker's position among the
+configured links, or after the shared links and before the scheme-specific
+links. Each declared CSS file is a delivery root under the
 [imported stylesheet contract](./mokly-imported-styles.md). Its href is a
 relative URL from the document route to `styles/<repository-relative CSS
 path>` inside `static/mokly-generated/`, with the same per-segment URL
@@ -147,8 +144,8 @@ changes a view only through rule evidence.
 ## Delivery
 
 Serve watches each declared file like a configured stylesheet: editing it
-invalidates its stylesheet node and refreshes the documents and evidence of
-views that link it, under the [watch contract](./mokly-watch.md). Every
+refreshes the documents and evidence of the views that link it, under the
+[watch contract](./mokly-watch.md). Every
 validated declaration is a watch target before Serve reports readiness, even
 if no view renders its component, and a successful configuration reload
 refreshes that set from the new declarations. Changing the declaration or the

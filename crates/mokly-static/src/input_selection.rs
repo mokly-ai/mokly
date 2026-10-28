@@ -53,6 +53,8 @@ impl Selection {
     }
 }
 
+/// Fails on the first path that only one of the two captures holds, so an
+/// added or a removed root member or unreadable marker is an input change.
 pub(crate) fn verify(before: &BTreeSet<PathBuf>, after: &BTreeSet<PathBuf>) -> Result<()> {
     if let Some(path) = before.symmetric_difference(after).next() {
         return Err(Error::InputsChanged { path: path.clone() });

@@ -11,6 +11,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 const resultVariables = [
+  "PROFILE_RESULT",
   "REPOSITORY_RESULT",
   "VIEWER_RESULT",
   "BROWSER_RESULT",

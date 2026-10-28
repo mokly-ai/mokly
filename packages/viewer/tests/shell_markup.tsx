@@ -17,7 +17,7 @@ import { ShellStoreProvider } from "../src/shell/store.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellContents } from "../src/standalone/shell.js";
 
-import { detailPairs, indexFixture } from "./catalogue_v7_fixture.js";
+import { detailPairs, indexFixture } from "./catalogue_v8_fixture.js";
 
 /** The origin the markup's shell routes resolve against. */
 const SHELL_ORIGIN = "https://catalogue.test";

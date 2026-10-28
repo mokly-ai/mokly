@@ -1,6 +1,6 @@
 {
   "name": "@mokly/native-linux-arm64-gnu",
-  "version": "0.15.0",
+  "version": "0.16.1",
   "description": "Mokly native CLI for linux-arm64-gnu.",
   "license": "MIT",
   "os": [

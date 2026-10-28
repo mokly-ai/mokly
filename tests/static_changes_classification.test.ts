@@ -108,7 +108,7 @@ test(
         );
       const historical = await json<EntryDetailV2>(
         moved.output,
-        `${path.posix.dirname(moved.index.comparisonUrl!)}/entries/card/compact.json`,
+        `${moved.index.comparisonUrl!}entries/card/compact.json`,
       );
       assert.equal(historical.entry.snapshotId, removed.snapshotId);
       assert.ok(

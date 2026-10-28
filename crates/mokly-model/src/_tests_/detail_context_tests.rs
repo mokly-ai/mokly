@@ -5,6 +5,7 @@ use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
 use crate::read_contract::ContractViolation;
 use crate::readers;
 use crate::readers::ReadError;
+use crate::review::ReviewEntryAddress;
 use crate::usage::CatalogueUsage;
 
 use super::validate;
@@ -12,7 +13,7 @@ use super::validate;
 #[test]
 fn control_order_names_every_editable_prop_once() {
     let index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     let fixtures: serde_json::Value = serde_json::from_str(include_str!(
@@ -42,7 +43,7 @@ fn control_order_names_every_editable_prop_once() {
 #[test]
 fn identity_deployment_revision_kind_and_view_order_are_fenced() {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     for entry in &mut index.screens {
@@ -71,15 +72,23 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
                 viewport: view.viewport,
                 color_scheme: view.color_scheme,
                 usage: CatalogueUsage::Pending,
+                state: None,
+                ignored_ids: None,
                 resource_evidence: None,
             })
             .collect(),
         workspace: None,
         reasons: Some(vec![]),
+        before: Some(ReviewEntryAddress {
+            path: screen.entry.path.clone(),
+            title: screen.entry.title.clone(),
+            props: None,
+            supplied_slots: None,
+        }),
         resource_evidence: None,
     };
     validate(&detail, &index).unwrap();
-    for mutation in 0..6 {
+    for mutation in 0..7 {
         let mut candidate = detail.clone();
         match mutation {
             0 => candidate.identity.id = "0".repeat(64),
@@ -89,6 +98,7 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
             4 => {
                 candidate.views.pop();
             }
+            5 => candidate.before = None,
             _ => candidate.views.reverse(),
         }
         assert!(validate(&candidate, &index).is_err(), "mutation {mutation}");

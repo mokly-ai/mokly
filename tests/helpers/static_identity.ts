@@ -28,7 +28,7 @@ export async function checkIdentity(
   deploymentId: string,
 ) {
   const inventory = typeof root === "string" ? await files(root) : root;
-  const prefix = comparisonUrl.slice(0, -"review.json".length);
+  const prefix = comparisonUrl;
   const generation = prefix.split("/").at(-2)!;
   const comparison: Array<[string, string]> = [];
   const deployment: Array<[string, string]> = [];
@@ -64,9 +64,9 @@ export async function checkIdentity(
   assert.ok(comparison.length > 3);
   assert.equal(identity(comparison), generation);
   assert.equal(identity(deployment), deploymentId);
-  const changed = comparison.map(([name, hash]): [string, string] => [
+  const changed = comparison.map(([name, hash], position): [string, string] => [
     name,
-    name === "review.json" ? "0".repeat(64) : hash,
+    position === 0 ? "0".repeat(64) : hash,
   ]);
   assert.notEqual(identity(changed), generation);
 }

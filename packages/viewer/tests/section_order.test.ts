@@ -11,7 +11,7 @@ import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import { adoptCatalogueTree } from "../src/viewer/catalogue_tree.js";
 
-import { rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawIndexFixture } from "./catalogue_v8_fixture.js";
 
 const entry = (path: string, kind: string, title: string): ManifestEntry =>
   ({ path, kind, title }) as ManifestEntry;

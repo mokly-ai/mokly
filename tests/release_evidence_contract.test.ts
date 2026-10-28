@@ -43,7 +43,7 @@ test("release evidence constants match the CI job and artifact namespace", async
     (step) => step.name === "Download suite evidence",
   );
   assert.equal(download?.with?.pattern, "verification-*");
-  const profile = workflow.jobs.repository?.steps.find(
+  const profile = workflow.jobs.profile?.steps.find(
     (step) => step.name === "Select Node verification profile",
   );
   assert.match(

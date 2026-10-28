@@ -15,7 +15,7 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
     content: { kind: "page", url: SNAPSHOT },
     generation:
       "https://catalogue.test/mokly-viewer/diffs/generations/preview/",
-    url: "https://catalogue.test/mokly-viewer/diffs/generations/preview/review.json",
+    url: "https://catalogue.test/mokly-viewer/diffs/generations/preview/entries/removed.json",
   };
   let html = "";
   assert.doesNotThrow(() => {

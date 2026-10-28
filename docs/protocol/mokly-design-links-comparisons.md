@@ -1,10 +1,8 @@
 # Design Mockup Scheme, Comparison, And Tag Links
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This page is part of the [design mockup links
-contract](./mokly-design-links.md). That page owns the scope, the authoring
-rules, the canonical destinations, and the verification of every design link.
+contract](./mokly-design-links.md). That page owns the scope, the link
+behavior, and the canonical destinations of every design link.
 This page lists the destinations of the scheme, comparison, stylesheet evidence,
 and tag states.
 
@@ -51,9 +49,8 @@ loading wait, its unavailable state with Retry, or the note naming the viewport
 that still opens, without comparison modes and with no live product destination;
 links inside a previous version do nothing. Unsupported dark-comparison modes
 stay non-link depictions. Ignored-only and empty Changes keep a Current preview
-without comparison modes; factual evidence lives in Details. Their existing
-routes and All escape stay available. An interactive mode needs its own contract
-and owning screen first.
+without comparison modes; factual evidence lives in Details. Their routes and
+All escape stay available.
 
 Excluded styles shows All with one changed Welcome: one changed sheet matches
 and another is excluded. The title and row show Changed; comparison controls
@@ -94,7 +91,7 @@ contract](./mokly-component-design.md#component-pages): Styles outside a changed
 component links Action, from its row and from Details, to
 `design/components/states/shared-impact/style-changed`, whose Affected screens
 open Welcome, `design/components/states/shared-impact/affected-screen`, and the
-existing Details inspection screen; their unlinked variant rows stay
+Details inspection screen; their unlinked variant rows stay
 depictions. Welcome shows the same story under All: its Action row and its
 Details link open `design/components/states/shared-impact/style-changed`, and
 its other rows are depictions.
@@ -104,7 +101,7 @@ Tag interactions are restricted to the canonical Welcome states:
 | Action                               | Destination                                                                                                                                 |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Open picker with no query            | `design/browse/views/screen/tag-picker`                                                                                                     |
-| Open picker with forms selected      | Existing `design/browse/states/tag-filter`                                                                                                  |
+| Open picker with forms selected      | `design/browse/states/tag-filter`                                                                                                           |
 | Open picker with onboarding selected | `design/browse/views/screen/tag-onboarding-picker`                                                                                          |
 | Close picker                         | Matching closed state: `design/browse/views/screen`, `design/browse/views/screen/tag-forms`, or `design/browse/views/screen/tag-onboarding` |
 | Select an inactive forms chip        | `design/browse/views/screen/tag-forms`                                                                                                      |
@@ -114,9 +111,9 @@ Tag interactions are restricted to the canonical Welcome states:
 The query, chips, filtered rows, and picker visibility must agree. Selection
 closes the picker; opening it must not invent a query. Use the same mapping for
 inspector chips in the supported Welcome states. Other subjects, dark states,
-and comparison scenarios keep non-link tag depictions until matching states are
-designed. Search typing stays a depicted input, not a form that submits or a
-link that pretends to implement search.
+and comparison scenarios keep non-link tag depictions. Search typing stays a
+depicted input, not a form that submits or a link that pretends to implement
+search.
 
 ## Related Docs
 

@@ -53,7 +53,7 @@ test("Changes and screen browsing stay lazy until a diff is selected", async ({
     "aria-pressed",
     "true",
   );
-  expect(requests.some((url) => url.endsWith("/review.json"))).toBe(true);
+  expect(requests.some((url) => url.includes("/snapshots/"))).toBe(true);
   for (const name of ["Side by side", "Difference"] as const)
     await showMode(page, name);
   // Static Refresh reads the same immutable generation again.

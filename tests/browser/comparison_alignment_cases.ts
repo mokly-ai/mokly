@@ -42,7 +42,9 @@ export function registerComparisonAlignment(test = baseTest): void {
         (response) =>
           response.request().method() === "GET" &&
           response.ok() &&
-          /\/diffs\/generations\/[^/]+\/review\.json$/u.test(response.url()),
+          /\/diffs\/generations\/[^/]+\/snapshots\/.+\.html$/u.test(
+            response.url(),
+          ),
       ),
       openComparison(page, changed, "desktop", "Overlay"),
     ]);

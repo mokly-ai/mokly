@@ -6,7 +6,7 @@ use ts_rs::TS;
 use crate::axes::{ColorScheme, EntryKind, Viewport};
 use crate::evidence::ViewEvidence;
 use crate::public_metadata::CatalogueIdentity;
-use crate::review::EntryChangeReason;
+use crate::review::{EntryChangeReason, ReviewEntryAddress, ReviewState};
 use crate::usage::CatalogueUsage;
 use crate::wire_props::ComponentWireProps;
 
@@ -34,6 +34,14 @@ pub struct DetailView {
     pub color_scheme: ColorScheme,
     /// Usage readiness, never absent.
     pub usage: CatalogueUsage,
+    /// Review state of the view, present exactly with `resource_evidence`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub state: Option<ReviewState>,
+    /// Paired ignore ids, sorted and unique, present exactly with `resource_evidence`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub ignored_ids: Option<Vec<String>>,
     /// Present exactly when comparison evidence is ready.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -149,6 +157,10 @@ pub struct EntryDetailV2 {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub reasons: Option<Vec<EntryChangeReason>>,
+    /// Base side address of a ready current screen or component that has one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub before: Option<ReviewEntryAddress>,
     /// Empty for pages, documents, and use cases.
     pub views: Vec<DetailView>,
     /// Every editable key in declaration order; present only on screens and components.

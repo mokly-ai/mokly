@@ -52,6 +52,9 @@ pub(crate) struct PairViews {
     pub(crate) usage: Vec<UsageView>,
 }
 
+/// Reads both sides of each view through the render generation and its cache,
+/// never a snapshot, so Serve's background classification and a complete
+/// comparison record the same state and evidence for one view.
 pub(crate) fn collect(
     pair: &EntryPair,
     before: Arc<dyn RenderGeneration>,

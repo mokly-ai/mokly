@@ -79,6 +79,11 @@ pub fn composed(
     Ok(())
 }
 
+/// Reparse the annotated document as a browser would, then restore its regions.
+/// When the parse does not confirm a predicted plaintext or raw-text start, the retry
+/// escapes all text and annotates the source again with plaintext prediction off. The
+/// parser then stays out of plaintext mode, so end tags, region markers, and repair
+/// identities stay available for restoration.
 fn reparse(
     nodes: Vec<Node>,
     entry: &ModelEntry,

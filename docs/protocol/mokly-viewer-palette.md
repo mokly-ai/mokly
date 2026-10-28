@@ -8,11 +8,8 @@ the mockup token names.
 
 ### Cloud Alignment
 
-Dark interface neutrals follow the Folio family used by Mokly Cloud's app,
-as defined in
-[`ts/tokens/src/tokens.ts` at `1b8c523`](https://github.com/mokly-ai/mokly-cloud/blob/1b8c523c7816cbd2e26d88438dbb29d106bdf12b/ts/tokens/src/tokens.ts).
-The cloud app selects that family through `paletteUiTheme(scheme, "folio")`;
-the base green and retained Paper families are not the product reference.
+Dark interface neutrals follow the Folio family of Mokly Cloud's app. The
+Cloud's base green and Paper families are not the product reference.
 
 | Viewer dark role                            | Cloud dark role   |
 | ------------------------------------------- | ----------------- |
@@ -31,8 +28,7 @@ roles. Mockups and runtime adopt these values locally; no cloud package or
 network request is needed to render the viewer.
 
 The Mokly logo is identity, so `--chrome-brand` reuses Mokly Cloud's own
-accent in each appearance (`accent` in the same `tokens.ts`) rather than a
-viewer role: the mark matches the Cloud's published light and dark logos, and
+accent in each appearance rather than a viewer role: the mark matches the Cloud's published light and dark logos, and
 its rules take `--chrome-surface` as the Cloud's rules take its surface.
 
 ### Swatches
@@ -137,21 +133,16 @@ Disabled controls are outside the contrast minimums, as WCAG allows. They use
 rather than a dimmed copy of the enabled colours, so a disabled control reads
 the same way in both appearances.
 
-## Light Corrections
+## Role Use
 
-Adopting these roles changed three Light values that did not meet the criteria.
-The mockups record the corrected appearance.
-
-1. `--chrome-muted` moved from `#7d8480` to `#676e6a`. It carries breadcrumbs,
-   frame captions, navigation heads, counts and field hints as normal text, and
-   reached only 3.83:1 on `--chrome-surface`.
-2. Control boundaries moved from `--chrome-border-strong` `#c8ccc4` (1.63:1) and
-   the prop field's own `#cbd2cc` input border (1.53:1) to the new
-   `--chrome-control-edge` `#868e88`. This covers the preview and appearance
-   controls, the navigation and inspector resize grips, the mobile sheet grabber
-   and native fields. `--chrome-border-strong` keeps the device and pane frames.
-3. The invalid-field border moved from `#b55646` to `--mbk-danger-ink` `#964334`,
-   matching the message it accompanies.
+- `--chrome-muted` carries breadcrumbs, frame captions, navigation heads,
+  counts and field hints as normal text.
+- `--chrome-control-edge` draws the boundaries of the preview and appearance
+  controls, the navigation and inspector resize grips, the mobile sheet
+  grabber and native fields, including the prop field's input border.
+  `--chrome-border-strong` keeps the device and pane frames.
+- The invalid-field border uses `--mbk-danger-ink`, matching the message it
+  accompanies.
 
 ## Preview Tokens
 
@@ -169,8 +160,7 @@ surfaces, ink and status indicators.
 | `--mbk-screen-link`        | `#4f7864`     | `#7fae95`                           |
 | `--mbk-screen-link-strong` | `#2f5945`     | `#a4c9b3`                           |
 
-These values are the authored fragment's own colors, not the viewer interface,
-so they keep their existing Light values and are outside the corrections above.
+These values are the authored fragment's own colors, not the viewer interface.
 Each device screen also sets its own CSS `color-scheme`, so native controls and
 scrollbars inside a preview follow the preview rather than the interface. Fixed
 phone hardware and the browser traffic lights keep their intended colors in both
@@ -193,8 +183,7 @@ identical in both appearances.
 
 The component explorer draws a depicted component on its own canvas, inside the
 catalogue chrome. Those canvas colours describe the depicted content rather than
-the interface, so `design-component-view.css` scopes its own roles to
-`.ce-design` and they stay Light in both appearances, exactly as the preview
+the interface, so they stay Light in both appearances, exactly as the preview
 tokens above do. A stylesheet that needs one of these reads the token rather
 than repeating its value.
 

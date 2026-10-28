@@ -1,6 +1,6 @@
 {
   "name": "@mokly/viewer",
-  "version": "0.6.0",
+  "version": "0.16.1",
   "description": "Embeddable Mokly catalogue viewer, frame adapters, and the client-rendered Browse shell.",
   "license": "MIT",
   "type": "module",

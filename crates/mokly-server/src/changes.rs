@@ -176,7 +176,7 @@ pub(crate) fn project(
         let historical = comparison_metadata::base(accepted, current)?;
         next.index.removed_entries =
             compared(projection_removed::records(&accepted.result, historical))?;
-        next.index.comparison_url = Some(routes::comparison_review(&accepted.id));
+        next.index.comparison_url = Some(routes::comparison_generation(&accepted.id));
     }
     changes_detail::apply(&mut next)?;
     let mut schemas = UsageSchemas::new(&next.index.components);

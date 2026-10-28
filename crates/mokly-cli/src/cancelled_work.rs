@@ -21,6 +21,9 @@ use crate::cancellation::Cancellation;
 use crate::cancelled_stream::CancellableStream;
 
 /// Source operations stop at their next boundary after interruption.
+/// Every method forwards to the inner tree, because the trait defaults would drop exact
+/// prefetch sets, turn public reads and streams into plain reads, and hash by reading
+/// whole files.
 pub struct CancellableTree {
     /// Underlying working or historical source view.
     pub inner: Arc<dyn SourceTree>,

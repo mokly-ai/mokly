@@ -14,15 +14,10 @@ Both modes run the same live registry command:
 npm audit --json --audit-level=low --package-lock-only --include=prod --include=dev --include=optional --include=peer --prefix .
 ```
 
-The explicit `--prefix .` and cleaned `npm_config_*` keys make npm audit
-the working-directory tree, even when a parent `npm run` exported another
-project prefix. Set the command's working directory to the tree under audit.
-Before spawning npm, remove inherited `npm_config_local_prefix`,
-`npm_config_prefix`, `npm_config_workspace`, `npm_config_workspaces`, and
-`npm_config_global` keys, regardless of their case. Set `INIT_CWD` to that
-directory. Preserve registry, user configuration, and authentication settings.
-This applies to both head and temporary audits invoked through `npm run`.
-The relative prefix also keeps paths with spaces outside Windows shell arguments.
+npm audits the tree in the command's working directory, even when a parent
+`npm run` exported another project prefix or workspace selection. This applies
+to the head audit and to the temporary baseline audit. Registry, user
+configuration, and authentication settings still apply.
 
 The root lockfile supplies the dependency tree. Installed packages do not
 supply audit input. All four categories stay explicit even when local npm
@@ -32,16 +27,10 @@ path, inclusive UTC expiry, and maximum 31-day window.
 
 ## Comparison Commit And Tree
 
-Baseline mode uses `GitWorkspace.requireBase()` from
-`scripts/verification/ratchets/git.mjs`. The comparison commit is
-`git merge-base HEAD origin/main`, with the same uncommitted-merge rules as
-the [repository ratchets](./verification-ratchets.md).
-
-Use `MERGE_HEAD` only when it equals `origin/main`. If `MERGE_HEAD` is an
-ancestor of a newer `origin/main`, fail and ask for a refreshed merge. For
-other uncommitted merges, retain the normal merge-base rule. Outside such a
-merge, a moved `origin/main` does not replace the branch point with its tip.
-CI must fetch `origin/main` and enough history to resolve this commit.
+Baseline mode uses the
+[comparison commit of the repository ratchets](./verification-ratchets.md#comparison-commit),
+including its uncommitted-merge rules. CI must fetch `origin/main` and enough
+history to resolve this commit.
 
 After an inheritable head issue, read these three files from the comparison
 commit and compare each with its working-tree file byte for byte:
@@ -67,10 +56,10 @@ new advisories on `main`.
 ## Order And Structured Issues
 
 Run the head audit first. Evaluate it strictly with the current lockfile and
-exception file. Capture the clock once and use that value for both trees.
+exception file. Evaluate both trees at one shared clock value.
 
-The evaluator returns `ok`, `issues: AuditIssue[]`, and accepted-risk
-`notices`. Each issue has a `kind` and an actionable `message`:
+A strict evaluation yields its outcome, structured issues, and accepted-risk
+notices. Each issue has a `kind` and an actionable `message`:
 
 | Kind        | Meaning and additional fields                                                                                                                                                                                                                                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -84,10 +73,12 @@ Classify each error at its source. A file-level exception-array error is
 `input` for both its global message and each affected record. If an invalid
 lockfile prevents a reviewed path check, that derived failure is `input`.
 
-The strict evaluator's `ok` is true only when `issues` is empty. Report
-validation and exception coverage keep their existing rules. Informational
-advisories do not become findings. Package-name-only effect entries do not
-create separate findings when their referenced advisory objects are covered.
+A strict evaluation passes only when it has no issue. Report validation and
+exception coverage follow
+[Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+Informational advisories do not become findings. Package-name-only effect
+entries do not create separate findings when their referenced advisory objects
+are covered.
 
 If the head has any `report` or `input` issue, fail without resolving the
 baseline or running its audit. Print every head issue as an error, including
@@ -102,8 +93,7 @@ hash alone does not prove inheritance for uncommitted dependency changes.
 When any input differs, run the baseline audit second. This includes a dirty
 working tree whose comparison commit equals `HEAD`. An advisory published
 between the two calls can appear only in the second report. It cannot create
-a false new head finding. Tests must cover identical inputs and a changed
-working-tree lockfile at the same comparison commit that creates a new finding.
+a false new head finding.
 
 ## Inheritance
 
@@ -134,12 +124,14 @@ and report with `inherited: true`. Any unresolved or new issue has
 Print one comparison-commit line when baseline mode resolves the commit.
 Print each inherited issue as a notice that names the commit and tells the
 maintainer to fix the issue on `main` through the dependency update pull
-request. Print each new issue as an error with its current message. Keep
-accepted-risk notices with the existing review details.
+request. Print each new issue as an error with its current message. Print
+accepted-risk notices with their review details, as
+[Dependency Security](./dependency-security.md#reviewed-workspace-exceptions)
+defines.
 
 When a comparison passes, finish with a pass line that names the comparison
-commit and inherited issue count. When no comparison is needed, keep the
-existing clean-audit or accepted-risk success output. A failed run exits
+commit and inherited issue count. When no comparison is needed, print the
+strict audit's clean-audit or accepted-risk success output. A failed run exits
 with status 1.
 
 When `--report <file>` is present, write a JSON summary on every completed
@@ -173,36 +165,29 @@ comparison tree or fetch the required history and retry. A baseline registry
 or report failure asks the caller to restore registry access or check npm's
 output and retry. These failures never become inherited notices.
 
-Unit tests inject commands, byte reads, comparison resolution, temporary-directory
-creation and disposal, report writing, the clock, and logging. They make no
-registry calls. Live smoke tests use fixture-owned Git histories outside the
-repository and keep evidence under `.context/`.
-
 ## Xtask And CI Selection
 
 `cargo xtask check [--dependency-audit <baseline|strict>]` defaults to
 `baseline`. The flag is valid for the complete gate and `--suite repository`.
 A complete gate on Testboxes passes the same mode to its remote repository
 command under the [Testbox execution contract](./remote-verification-testbox.md#remote-commands).
-An explicit flag with another suite returns a typed error before any subprocess
-starts. The repository suite calls `npm run dependencies:check -- --baseline`
-or `npm run dependencies:check` for the selected mode.
+An explicit flag with another suite fails before any subprocess starts. The
+repository suite calls `npm run dependencies:check -- --baseline` or
+`npm run dependencies:check` for the selected mode.
 
 The CI repository job passes `--dependency-audit "$DEPENDENCY_AUDIT"`:
 
 - Select `strict` for a same-repository pull request whose head ref starts
   with `dependency-audit/` or whose labels include `dependency-audit`.
-- Select `strict` for a same-repository Release Please pull request under
-  the existing `release-please--` head-ref or `autorelease:` label detection.
+- Select `strict` for a same-repository Release Please pull request: its head
+  ref starts with `release-please--` or its labels include an `autorelease:`
+  label.
 - Select `baseline` for all other pull requests, every push, and every manual
   `workflow_dispatch`. A fork cannot select strict mode through a matching
   branch name or label.
 
-Adding the `dependency-audit` label does not start CI. The label takes effect
-at the next `opened`, `synchronize`, or `reopened` pull request event. After
-adding it, a maintainer pushes a commit or closes and reopens the pull request.
-The bot pull request selects strict mode from its head ref before the label
-is added.
+The [update pull request contract](./dependency-audit-update-pr.md#pull-request-identity-and-body)
+defines when the `dependency-audit` label takes effect.
 
 Read-only release preparation runs the strict npm dependency audit before
 it selects reusable evidence or the complete fallback.

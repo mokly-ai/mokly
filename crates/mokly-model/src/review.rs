@@ -52,7 +52,7 @@ pub enum ReviewKind {
 }
 
 /// One side's original address and inputs.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReviewEntryAddress {
     /// Original side path and case.

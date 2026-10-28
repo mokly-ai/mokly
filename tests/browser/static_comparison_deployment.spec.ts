@@ -14,9 +14,7 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   page,
 }) => {
   const [before, after] = fixture.indexes;
-  expect(before!.comparisonUrl).toMatch(
-    /\/generations\/[a-f0-9]{64}\/review\.json$/,
-  );
+  expect(before!.comparisonUrl).toMatch(/\/generations\/[a-f0-9]{64}\/$/);
   expect(after!.comparisonUrl).toBe(before!.comparisonUrl);
   expect(after!.deploymentId).not.toBe(before!.deploymentId);
   const requests = staticRequests(page);
@@ -48,10 +46,11 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
     2,
   );
-  expect(
-    requests.urls.filter(
-      (url) => url === new URL(before!.comparisonUrl!, fixture.url).href,
-    ),
-  ).toHaveLength(2);
+  // Each tab reads the same generation's pane document once.
+  const document = new URL(
+    `snapshots/before/mokly-generated/${comparisonPaths.changed}/index.desktop.html`,
+    new URL(before!.comparisonUrl!, fixture.url),
+  ).href;
+  expect(requests.urls.filter((url) => url === document)).toHaveLength(2);
   requests.assert();
 });

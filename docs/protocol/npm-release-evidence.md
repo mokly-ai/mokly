@@ -1,7 +1,5 @@
 # Npm Release Verification Evidence
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Verification Modes
 
 The npm release workflow has two verification modes. A release push and a manual
@@ -49,8 +47,8 @@ trusted same-repository profile adds Node 24 and produces all ten reports.
 
 ## Identity And Completeness Proof
 
-The release checkout supplies the tagged commit with `git rev-parse HEAD` and
-the tagged tree with `git rev-parse HEAD^{tree}`. The downloaded artifact names
+The release checkout supplies the tagged commit and its tree. The downloaded
+artifact names
 must match the CI verification namespace, be unexpired, and yield exactly ten
 reports across `node-22.15.0` and `node-24`. All reports must name one full
 commit SHA. The ordinary five-report profile is complete ordinary CI evidence,
@@ -63,9 +61,9 @@ while a squash merge produces a different release commit with the same tree. A
 status name, PR head SHA, or successful workflow conclusion alone never proves
 release identity.
 
-After identity is established, `validateCiReports` revalidates every runtime,
-suite, shard, assignment, observed result, exit outcome, and complete inventory
-defined by the [CI verification contract](./ci-verification.md). In addition,
+After identity is established, the aggregate validation revalidates every
+runtime, suite, shard, assignment, observed result, exit outcome, and complete
+inventory defined by the [CI verification contract](./ci-verification.md). In addition,
 the viewer report's complete inventory must equal the Node test inventory
 discovered on the tag checkout, and every browser report's spec inventory must
 equal the tag checkout's `tests/browser/**/*.spec.ts` inventory. CI names the
@@ -98,7 +96,7 @@ required environment are usage errors and also exit non-zero.
 Artifact zip requests include the workflow token only on the GitHub API request.
 The client follows GitHub's redirect to blob storage without forwarding the
 `Authorization` header. Archives extract into
-`.context/release-evidence/reports/<artifact>/` with `unzip -o -q`.
+`.context/release-evidence/reports/<artifact>/`.
 
 ## Release Record
 

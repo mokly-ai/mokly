@@ -79,6 +79,9 @@ impl Services {
     }
 }
 
+/// Build the head runtime over one 256 MiB render cache and the command's cancellable
+/// workers. The base side builds its runtime from the same pool, cache, and workers, so
+/// both sides share one sidecar pool, one render cache, and the command's cancellation.
 fn runtime(
     tree: Arc<dyn SourceTree>,
     pool: Arc<dyn SidecarPool>,

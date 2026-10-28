@@ -22,7 +22,7 @@ catalogue page's format table to the old code was deleted on 2026-10-14 with
 the other protocol-content tests. On 2026-10-12 the branch was rebased onto the
 `AGENTS.md` that names the shared skills, and the rebuild procedures moved
 from the removed `docs/dev` directory to
-[the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
+[the protocol page](https://github.com/mokly-ai/mokly/blob/b8defe26801a695fd154095b6209501eca2e983e/docs/protocol/rust-rebuild-procedures.md). Later that day
 the user withdrew the committed generated tree: both comparison sides render
 from sources, the static output is a plain output, and the Milestone 1 contracts were
 revised to match (Decisions 11 to 13). The protocol index then moved eight
@@ -6085,7 +6085,7 @@ does not ask the user before the merge.
       too; B, make `ResolvedConfig::package_roots()` return the list without
       duplicates for both sides. Recommended: B.
 
-- [ ] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
+- [x] Resolve user item 185 (docs): 157 tracked Markdown files, 129 of them
       protocol pages, still start with
       `Status: In progress under the Rust rebuild plan`, but the
       documentation policy removes that line when the behaviour is
@@ -6094,6 +6094,15 @@ does not ask the user before the merge.
       the line where the behaviour is implemented; B, also add a check that
       fails on a Status line whose behaviour the plan marks complete (a new
       gate, which needs the user's approval). Recommended: A.
+  - User decision 185 (2026-10-26): A, as finding 6 of the documentation
+    skill audit. The sweep removed the line from 151 pages and kept it on 7
+    protocol pages whose behaviour is not implemented: `ci-test-timing.md`
+    (the wider clock lint), `dependency-security.md` (item 191),
+    `mokly-imported-styles-modules.md` (item 111), `mokly-terminal-errors.md`
+    (item 152), `mokly-on-demand.md` (React startup), and
+    `mokly-catalogue-delivery.md` and `mokly-documents.md` (`relatedDocs`
+    references that no producer writes). The status-line rule moved from the
+    deleted documentation policy into `AGENTS.md`.
 
 - [ ] Resolve user item 186 (docs): short summaries still say that
       `--strict` makes warnings fail, but `base-dependencies` no longer
@@ -6104,7 +6113,8 @@ does not ask the user before the merge.
       `docs/guides/cli/publish.md:33` and `:79`,
       `docs/guides/cli/serve.md:66`, `docs/guides/authoring/screens.md:216`,
       `docs/protocol/mokly-upload.md:58`,
-      `docs/architecture/build-pipeline.md:114`, and
+      `docs/architecture/build-pipeline.md:114` (page merged into
+      `docs/architecture/rust-core.md` on 2026-10-26 without this summary), and
       `examples/basic/specs/design/library/README.md:192`. The second delta
       review found more: `docs/guides/cli/options-and-exit-status.md:51`,
       `docs/protocol/README.md:19`, `docs/protocol/mokly-export.md:37`,
@@ -6124,7 +6134,7 @@ does not ask the user before the merge.
       limit for local gates in the delegate rules to 3 hours; B, find the
       slowest suite and reduce its cost. Recommended: B.
 
-- [ ] Resolve user item 189 (product, the wider fix of 187): a comparison
+- [x] Resolve user item 189 (product, the wider fix of 187): a comparison
       `review.json` grows with every rule record of every added or changed
       view, and each record repeats the full stylesheet path. A static host
       with a per-file limit, such as Cloudflare Pages with 25 MiB, then
@@ -6134,6 +6144,14 @@ does not ask the user before the merge.
       reference (a new review format version; Large); C, split
       `review.json` into files per entry (a new format version; Large).
       Recommended: B.
+  - The 2026-10-26 discussion added two options. D keeps a small
+    `review.json` summary for receivers only. E removes `review.json`: the
+    index and the entry details carry its data, and the Plan request sends
+    the index. Mokly Cloud reads `review.json` on its server but still
+    parses review v6 only, so it must change in either case.
+  - User decision 189 (2026-10-26): E. The
+    [remove the review file plan](./remove-review-json.md) carries out the
+    work, including the Mokly Cloud change.
 
 - [x] Resolve user item 190 (PR #200 strict audit): three `undici`
       advisories and a stale `braces` exception failed the strict
@@ -6178,6 +6196,99 @@ does not ask the user before the merge.
 
 - [x] Resolve user item 195 (merge): PR #202, the fix of user item 159.
   - User decision 195 (2026-10-25): A. PR #202 merged as `6d9705aa`.
+
+- [ ] Resolve user item 196 (Medium, test; open):
+      `crates/mokly-cli/src/_tests_/serve_trace_tests.rs` and
+      `crates/mokly-graph/tests/routing_work_tests.rs` capture spans with
+      scoped subscribers, as the sidecar trace capture did before the fix of
+      user item 193. A span can then be lost while parallel tests register
+      and drop their subscribers. Options (estimate): A install the same
+      once-per-process interest guard in both captures (Small); B leave
+      them until one of them flakes. Recommended: A, in a separate branch.
+
+- [ ] Resolve user item 197 (Low, process; open): the shared-version
+      check in `scripts/release/versions.mjs` still accepts CLI 0.15.0 with
+      viewer 0.6.0, the pair before the lockstep migration. No release can
+      return to that pair after 0.16.0. Options (estimate): A remove the
+      exception, so that the check requires one shared version (Small); B
+      keep it. Recommended: A. Removal needs the user's approval, because
+      the check is release functionality.
+
+- [x] Resolve user item 200 (release): release run 40254485539 failed at
+      `npm publish` with a 404 for `@mokly/native-linux-x64-gnu`. The five
+      `@mokly/native-{target}` packages do not exist on npm, and trusted
+      publishing needs an existing package. Nothing was published.
+  - User decision 200 (2026-10-26): B. A one-off read-only workflow,
+    `.github/workflows/native-bootstrap.yml`, runs the bootstrap command for
+    the five targets on the hosted runners and uploads each registration
+    archive with its source reports. Branch
+    `rebuild/native-bootstrap-workflow` (`83dfb875`); this record merges
+    with its pull request. Local `linux-x64-gnu` proof:
+    `.context/native-bootstrap-proof/`.
+
+- [x] Maintainer steps of user decision 200, after its pull request merges:
+      dispatch the native bootstrap workflow for a reviewed commit, publish
+      the five registration archives, configure the five trusted publishers
+      and verify the two existing ones, then rerun the failed publish job of
+      release run 40254485539.
+  - Done on 2026-10-26. Bootstrap run 40307321788 built the five archives
+    from `c84be6c4`. They were published as `0.0.0` under `bootstrap`, and
+    each new package also shows npm's `0.0.0-stage` staged-publishing
+    placeholder. The five trusted publishers name `mokly-ai/mokly`,
+    `release.yml`, and environment `npm`, and the CLI and viewer publishers
+    read back the same. Each native package requires 2FA and disallows
+    tokens. The rerun published two native packages, then stopped at the
+    registry verifier: user item 205.
+
+- [x] Resolve user item 201 (Low, process): the native bootstrap workflow
+      accepts any well-formed 40-character commit SHA, also one that `main`
+      does not contain. Options (estimate): A keep the format check,
+      because the maintainer compares `sourceCommit` in each report with the
+      reviewed commit; B add a containment check, a new rejection.
+      Recommended: A.
+  - User decision 201 (2026-10-26): A. The workflow keeps its format check
+    only, and the code does not change.
+
+- [x] Resolve user item 202 (test): the nightly Design Attribution Matrix
+      failed on `main` (schedule run 40295914111 on `c84be6c4`) with
+      compile error E0061. `crates/mokly-cli/tests/design_support/native.rs`
+      passed seven arguments to `changes_runtime::service`, which takes
+      eight since #199. The repository suite linted the workspace without
+      the `design-matrix` feature, so no gate compiled the target.
+  - User decision 202 (2026-10-26): B. The design support passes
+    `common.base_install_scripts_override()` (`439f2601`), and the
+    repository suite also runs
+    `cargo clippy -p mokly-cli --features design-matrix --all-targets -- -D warnings`
+    (`21876714`). Branch `rebuild/design-matrix-compile`. The full matrix
+    passed on the branch in run 40312840294.
+
+- [x] Resolve user item 205 (release): the rerun of the 0.16.0 publish job
+      published `@mokly/native-linux-x64-gnu@0.16.0` and
+      `@mokly/native-linux-arm64-gnu@0.16.0`, then stopped. The registry
+      verifier installed the arm64 package on the x64 publish runner, and
+      npm rejected it with `EBADPLATFORM`, because npm applies `--os` and
+      `--cpu` only to optional dependencies. Every retry of 0.16.0 runs the
+      scripts of the `v0.16.0` tag.
+  - User decision 205 (2026-10-26): A. The verifier installs a native
+    package as an optional dependency with its os, cpu, and libc
+    selectors, in branch `rebuild/native-verify-platform` (`1fd02a4a`).
+    0.16.1 replaces 0.16.0, which stays incomplete on npm. The rejected
+    option B finished 0.16.0 from its retained archives through a
+    temporary workflow setting.
+
+- [x] Release steps of user decision 205, after its pull request merges:
+      merge the 0.16.1 release pull request when its checks pass, then
+      verify all seven packages at 0.16.1 on npm.
+  - Done on 2026-10-26. PR #207 merged as `66e1ba6a`, and release PR #208
+    merged as `713f9b38`. Release run 40364686121 published all seven
+    packages at 0.16.1 under `latest`, with the tags `v0.16.1` and
+    `viewer-v0.16.1`.
+
+- [x] Resolve user item 206 (plan): the plan still showed the 0.16.1
+      release steps as open, and user items 196 and 197 were not in the
+      plan.
+  - User decision 206 (2026-10-26): A. This plan-only change ticks the
+    release steps and records items 196 and 197.
 
 - [ ] Follow-up (Low, not a user item): `CapturedPool` in
       `crates/mokly-render/tests/integration/support.rs` unwraps its `calls`
@@ -6250,6 +6361,19 @@ does not ask the user before the merge.
   section reader reads an `@font-face` descriptor with a `{}` block as a
   rule. Separate branch.
 
+- [ ] Follow-up (Low, cost, not a user item): move the Linux CI jobs that
+      compile Rust back to 2 vCPUs. On 2026-10-26 the user raised them from
+      2 to 8 vCPUs for a limited time, until the Rust build cache of #215 and
+      the other CI speed work land. The Windows native job stays on 8 vCPUs.
+      On 2026-10-27 the user chose 8 over 16 vCPUs for it, because with the
+      Rust build cache 16 vCPUs gave no speed-up. On 2026-10-27 the user also
+      asked that the remote gate's Testboxes match the CI suite jobs and stay
+      aligned, so that a remote gate takes the time and cost of CI. The
+      Testbox job therefore moves back with the Linux jobs. Measure the cached
+      job times on 2 vCPUs first. Update `docs/protocol/ci-workflow.md`,
+      `docs/protocol/remote-verification-testbox.md`, and the runner size test
+      in the same change.
+
 - Outside the W2 review scope: `packages/viewer/src/shell/workspace_evidence.tsx:143`:
   "Page details or saved examples changed." shows on screens. Separate
   branch.
@@ -6258,3 +6382,76 @@ does not ask the user before the merge.
 - Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
   the Loading and recovery designs show the preview in the stage, but the
   product shows "Loading preview…". Separate branch.
+- Outside the 200 B scope: `tests/npm_pin.test.ts:48` matches only an exact
+  `npm ci` command, so it skips `npm ci --ignore-scripts`. Separate branch.
+- Outside the 200 B scope: `docs/protocol/npm-bootstrap.md:145`: the older
+  sections name a test file and describe how the code works, against the
+  documentation rules. Separate branch.
+
+## Rebuild procedures
+
+These procedures moved here on 2026-10-26 from
+`docs/protocol/rust-rebuild-procedures.md`, which the documentation
+alignment removed because a procedure of a completed plan is not a
+protocol requirement.
+
+### Reference Capture
+
+Run once before the teardown, from the `ts-backend-final` tag, with the old
+CLI built from that tag. Save everything under `.context/rust-rebuild/reference/`,
+which Git ignores. The references are guidance, not an oracle: the Rust core
+may differ where the spec says so.
+
+Scenarios, one directory each:
+
+| Directory          | Repository state                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `example`          | the example catalogue at the tag, built, served, and exported                                                                             |
+| `large/<scenario>` | the large fixture's four benchmark scenarios                                                                                              |
+| `moved-screen`     | the example with one screen file moved and its `movedFrom` hint absent                                                                    |
+| `removed-screen`   | the example with one screen deleted                                                                                                       |
+| `markdown-edit`    | the example with one document's body changed                                                                                              |
+| `ignore-edit`      | the example with a change inside a paired Review-ignore region only                                                                       |
+| `stylesheet-edit`  | the example with one changed rule that matches rendered elements and one changed rule that matches none, in a stylesheet that screens use |
+| `renderer-change`  | the example with a renderer edit that changes head styles for every screen                                                                |
+
+For each scenario keep the review artifact, the catalogue read model, the
+export inventory, and the terminal output of build, check, serve startup, and
+export; the previous manifest and generated tree are not kept, because the
+Rust core writes neither. Then run
+the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
+rebuild branch, over the saved outputs. The JSON table contains `availability`
+fields for captured inputs, entries by kind and path, listed changes with
+states and reasons, affected consumers, kept rules and excluded stylesheets
+per view, `exportedResources` paths and sides, and resource closures per view.
+
+### Gap Sweep
+
+Each Rust subsystem replacement runs one bounded sweep before its milestone
+closes. The sweep is a reading exercise against the previous protocol and the
+old test names, not a port.
+
+1. List the previous protocol pages and the test files that owned the
+   subsystem, read at the commit the plan names.
+2. List every assertion of each old test, including its helpers and its host
+   branches, and every section of each old protocol page. Mark each one as
+   proved or not proved, and check that the title of each port states what
+   the port proves.
+3. For each rule or test case, decide one of three outcomes with one line of
+   reason: adopt, adopt with a change, or drop.
+4. Write the adopted and changed rules into the new spec page in the same
+   change. Dropped rules need no record beyond the sweep file.
+5. Produce the behaviour table from the Rust core for every captured scenario
+   and compare it with the reference table. Put each difference into one bin:
+   an improvement the spec already states, a spec gap to close before the
+   milestone closes, or a regression to fix.
+6. Save the sweep and the comparison under
+   `.context/rust-rebuild/sweeps/<milestone>.md` and name that file in one
+   line under the milestone in the plan.
+
+Each sweep override lists the old checks that its port does not prove.
+If a delegate drops a duplicate row, the delegate moves those checks into
+the kept port.
+
+Accepted differences are listed in the breaking-change release note. A
+regression blocks the milestone.

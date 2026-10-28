@@ -5,7 +5,7 @@ import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 
-import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
+import { catalogueFixture, indexFixture } from "./catalogue_v8_fixture.js";
 
 const screen = (path: string) =>
   ({

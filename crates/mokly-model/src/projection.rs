@@ -1,4 +1,9 @@
 //! Allowlisted current catalogue projection for Serve and static output.
+//! Entry, metadata, content, and visual fields are copied by name, so a new private field
+//! of `ModelEntry`, `EntryMetadata`, `EntryContent`, or `VisualEntry` cannot reach public
+//! JSON. Use-case steps, prop schemas, and controls are cloned whole, because the public
+//! records reuse the model types `UseCaseStep`, `PropSchema`, and `ComponentControl`.
+//! Every field of those three types is public.
 
 use std::collections::BTreeMap;
 
@@ -63,6 +68,7 @@ pub fn index(
         deployment_id: state.deployment_id.clone(),
         revision: state.revision,
         base: state.base.clone(),
+        base_commit: None,
         live: state
             .live_generation
             .as_ref()
@@ -170,6 +176,8 @@ pub fn pending_details(
                         viewport,
                         color_scheme: key.color_scheme,
                         usage: CatalogueUsage::Pending,
+                        state: None,
+                        ignored_ids: None,
                         resource_evidence: None,
                     })
                 })
@@ -190,6 +198,7 @@ pub fn pending_details(
                     },
                     views,
                     reasons: None,
+                    before: None,
                     resource_evidence: None,
                     workspace: None,
                     control_order: match &entry.content {

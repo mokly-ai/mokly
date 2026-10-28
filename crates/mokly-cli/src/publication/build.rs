@@ -47,6 +47,9 @@ pub trait Directories: Send + Sync {
     /// Create and return the exact private root outside the repository.
     fn create(&self, repository_root: &Path) -> Result<PathBuf>;
     /// Remove the stored private root as a unit without following symbolic links.
+    /// Callers pass the path that `create` returned, never one rebuilt from output or
+    /// environment data, so cleanup cannot remove another directory. Removing the whole
+    /// root also removes the reservation beside the site.
     fn remove(&self, directory: &Path) -> Result<()>;
 }
 

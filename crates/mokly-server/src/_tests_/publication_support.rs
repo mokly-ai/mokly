@@ -20,7 +20,7 @@ use crate::snapshot::Snapshot;
 
 pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+        "../../../../docs/protocol/fixtures/catalogue-v8.json"
     ))
     .unwrap();
     index.revision = 1;
@@ -53,10 +53,13 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 viewport: view.viewport,
                 color_scheme: view.color_scheme,
                 usage: CatalogueUsage::Pending,
+                state: None,
+                ignored_ids: None,
                 resource_evidence: None,
             }],
             resource_evidence: None,
             reasons: None,
+            before: None,
             workspace: None,
         };
         routes.push(RenderRoute {

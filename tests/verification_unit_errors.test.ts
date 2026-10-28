@@ -46,9 +46,12 @@ for (const [args, message] of [
   [["../outside.test.ts"], /^Test file argument is outside the repository:/u],
   [
     ["tests/browser/passing.spec.ts"],
-    /browser verification is not available for tests\/browser\/passing\.spec\.ts/u,
+    /run it with npm run test:browser -- tests\/browser\/passing\.spec\.ts/u,
   ],
-  [["--shard", "1/4"], /does not accept --shard/u],
+  [
+    ["--shard", "1/4"],
+    /does not accept --shard.*cargo xtask check --suite browser --shard/u,
+  ],
   [
     ["helper.test.ts"],
     /^Test file argument is outside the viewer inventory: helper\.test\.ts\n$/u,

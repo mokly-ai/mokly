@@ -31,6 +31,10 @@ pub trait InputTree: SourceTree {
         module_digests: &BTreeMap<String, Option<String>>,
     ) -> Result<()>;
     /// Verify every explicitly read source and its resolved identity.
+    ///
+    /// The final recheck compares root membership, unreadable markers,
+    /// resolved identities, and live streaming digests with the captured
+    /// values. It reads no file body for parsing or delivery.
     fn verify(&self) -> Result<()>;
 }
 

@@ -5,7 +5,6 @@ import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data
 
 import {
   entry,
-  loaded,
   record,
   renderEvidence,
   view,
@@ -15,16 +14,14 @@ const SHARED = "static/shared.css";
 const TOKENS = "static/tokens.css";
 
 test("the inspector lists changed files, applying styles, then exclusions", () => {
-  const home = entry(
-    "screen",
-    "home",
-    "Home",
-    [{ kind: "dependency", path: SHARED }, { kind: "material" }],
-    [
-      view("mobile", "changed", [record(SHARED, ".auth")]),
-      view("desktop", "unchanged", [record(TOKENS, "", "excluded")]),
-    ],
-  );
+  const reasons = [
+    { kind: "dependency", path: SHARED },
+    { kind: "material" },
+  ] as const;
+  const home = entry("screen", "home", reasons, [
+    view("mobile", "changed", [record(SHARED, ".auth")]),
+    view("desktop", "unchanged", [record(TOKENS, "", "excluded")]),
+  ]);
   const markup = renderEvidence(
     {
       base: "main",
@@ -34,6 +31,8 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       comparisons: true,
       entry: { path: "home", kind: "screen", route: "home/index.html" },
       inputChanges: [],
+      // The routed detail's direct reasons reach Details with the record.
+      reasons,
       relatedComponents: [],
       usedBy: [],
       affected: [],
@@ -42,7 +41,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       views: [],
     } as unknown as WorkspaceData,
     undefined,
-    loaded(home),
+    home,
   );
 
   assert.equal(

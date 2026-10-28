@@ -5,7 +5,7 @@ import type {
   SnapshotPresentation,
   SnapshotPresentationLoader,
 } from "../src/previews/presentation.js";
-import type { ReviewResult, ReviewView } from "../src/review/types.js";
+import type { ComparedEntry, ReviewView } from "../src/review/types.js";
 import { createComparisonDocuments } from "../src/shell/comparison_documents.js";
 import type { LoadedComparison } from "../src/shell/comparison_request.js";
 import {
@@ -34,31 +34,17 @@ function view(
   };
 }
 
-function comparison(
-  views: readonly ReviewView[],
-  generation = GENERATION,
-): LoadedComparison {
-  const address = { path: "home", title: "Home", props: {} };
-  const result: ReviewResult = {
-    schemaVersion: 8,
-    baseCommit: "a".repeat(40),
-    entries: [
-      {
-        kind: "screen",
-        path: "home",
-        title: "Home",
-        before: address,
-        after: address,
-        state: "changed",
-        included: true,
-        reasons: [{ kind: "material" }],
-        views: [...views],
-      },
-    ],
-    affected: [],
-    diagnostics: [],
+function comparison(generation = GENERATION): LoadedComparison {
+  return { url: generation };
+}
+
+function compared(views: readonly ReviewView[]): ComparedEntry {
+  return {
+    path: "home",
+    basePath: "home",
+    reasons: [{ kind: "material" }],
+    views,
   };
-  return { result, url: `${generation}review.json` };
 }
 
 function presentation(
@@ -87,17 +73,13 @@ function fakeLoader(fail?: (address: string) => boolean) {
 }
 
 test("selected views resolve both sides beneath the comparison generation", () => {
-  const loaded = comparison([
+  const loaded = comparison();
+  const entry = compared([
     view("mobile", "light"),
     view("desktop", "light"),
     view("desktop", "dark", ["before"]),
   ]);
-  const both = selectedComparisonViews(
-    loaded,
-    presentation(),
-    "screen",
-    "home",
-  );
+  const both = selectedComparisonViews(loaded, presentation(), entry);
   assert.deepEqual(selectedComparisonDocuments(both), [
     `${GENERATION}snapshots/before/mokly-generated/home/index.mobile.html`,
     `${GENERATION}snapshots/after/mokly-generated/home/index.mobile.html`,
@@ -107,8 +89,7 @@ test("selected views resolve both sides beneath the comparison generation", () =
   const dark = selectedComparisonViews(
     loaded,
     presentation({ colorScheme: "dark", viewport: "desktop" }),
-    "screen",
-    "home",
+    entry,
   );
   assert.equal(dark?.[0]?.mode, "side");
   assert.deepEqual(selectedComparisonDocuments(dark), [
@@ -117,23 +98,28 @@ test("selected views resolve both sides beneath the comparison generation", () =
   const fallback = selectedComparisonViews(
     loaded,
     presentation({ colorScheme: "dark", viewport: "mobile" }),
-    "screen",
-    "home",
+    entry,
   );
   assert.equal(fallback?.[0]?.view.colorScheme, "light");
   assert.equal(
-    selectedComparisonViews(loaded, presentation(), "screen", "other"),
+    selectedComparisonViews(loaded, presentation(), undefined),
     undefined,
   );
+  const moved = selectedComparisonViews(
+    loaded,
+    presentation({ viewport: "mobile" }),
+    { ...entry, basePath: "Earlier/Home" },
+  );
+  assert.deepEqual(selectedComparisonDocuments(moved), [
+    `${GENERATION}snapshots/before/mokly-generated/Earlier/Home/index.mobile.html`,
+    `${GENERATION}snapshots/after/mokly-generated/home/index.mobile.html`,
+  ]);
 });
 
 test("ready waits for every selected document and reuses accepted ones", async () => {
   const { loader, loads } = fakeLoader();
   const documents = createComparisonDocuments(() => loader);
-  const loaded = comparison([
-    view("mobile", "light"),
-    view("desktop", "light"),
-  ]);
+  const loaded = comparison();
   const desktop = [
     `${GENERATION}snapshots/before/d`,
     `${GENERATION}snapshots/after/d`,
@@ -161,8 +147,8 @@ test("another loaded comparison discards the accepted presentations", async () =
     return loader;
   });
   const addresses = [`${GENERATION}snapshots/after/d`];
-  const first = comparison([view("desktop", "light")]);
-  const refreshed = comparison([view("desktop", "light")]);
+  const first = comparison();
+  const refreshed = comparison();
   await documents.present(first, addresses, new AbortController().signal);
   assert.deepEqual(documents.state(refreshed, addresses), {
     status: "loading",
@@ -180,7 +166,7 @@ test("a failed document shows the comparison failure and is reported", async () 
     () => loader,
     (error) => reported.push(error),
   );
-  const loaded = comparison([view("desktop", "light")]);
+  const loaded = comparison();
   const addresses = [
     `${GENERATION}snapshots/before/d`,
     `${GENERATION}snapshots/after/d`,
@@ -205,7 +191,7 @@ test("cancelled work records neither presentations nor failures", async () => {
     }),
     (error) => reported.push(error),
   );
-  const loaded = comparison([view("desktop", "light")]);
+  const loaded = comparison();
   const addresses = [`${GENERATION}snapshots/after/d`];
   const controller = new AbortController();
   const work = documents.present(loaded, addresses, controller.signal);
@@ -220,7 +206,7 @@ test("an unusable generation fails with the loader's copy", async () => {
   const documents = createComparisonDocuments(() => {
     throw new Error("The comparison is unavailable.");
   });
-  const loaded = comparison([view("desktop", "light")]);
+  const loaded = comparison();
   await documents.present(loaded, ["x"], new AbortController().signal);
   assert.deepEqual(documents.state(loaded, ["x"]), {
     status: "failed",

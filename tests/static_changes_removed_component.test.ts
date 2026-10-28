@@ -50,7 +50,7 @@ test(
           });
         const detail = await json<EntryDetailV2>(
           built.output,
-          `${path.posix.dirname(built.index.comparisonUrl!)}/entries/${entry.path}.json`,
+          `${built.index.comparisonUrl!}entries/${entry.path}.json`,
         );
         assert.equal(detail.workspace?.comparisonEligible, true);
         assert.deepEqual(detail.reasons, [{ kind: "removed" }]);

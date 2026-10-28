@@ -19,12 +19,10 @@ for (const refresh of [false, true]) {
     allowBrowserError,
   }) => {
     const action = refresh ? "Refresh comparison" : "Overlay";
-    const root = "/mokly-viewer/diffs/review.json";
+    const root = "/mokly-viewer/diffs/selection";
     const intended = `${root}${refresh ? "?refresh=1" : ""}`;
-    const current = "/mokly-viewer/diffs/generations/current/review.json";
-    const stale = refresh
-      ? root
-      : "/mokly-viewer/diffs/generations/stale/review.json";
+    const current = "/mokly-viewer/diffs/generations/current/";
+    const stale = refresh ? root : "/mokly-viewer/diffs/generations/stale/";
     const arrivedStale = gate();
     const arrivedIntended = gate();
     const releaseStale = gate();
@@ -43,10 +41,9 @@ for (const refresh of [false, true]) {
         response.writeHead(302, { location: current });
         response.end();
       } else if (request.url === current) {
-        response.writeHead(refresh ? 503 : 200, {
-          "content-type": "application/json",
-        });
-        response.end('{"entries":[]}');
+        // A retained generation root answers 204 with no body.
+        response.writeHead(refresh ? 503 : 204);
+        response.end();
       } else {
         response.writeHead(200, { "content-type": "text/html" });
         response.end(`<button id="trigger">${action}</button>`);
@@ -66,8 +63,9 @@ for (const refresh of [false, true]) {
       );
       await page.goto(`${origin}/`);
       await page.locator("#trigger").evaluate((button, endpoint) => {
+        // Read the body as the shell does, so the request can finish.
         button.addEventListener("click", () => {
-          void fetch(endpoint);
+          void fetch(endpoint).then((response) => response.arrayBuffer());
         });
       }, intended);
       const background = page.evaluate(async (endpoint) => {

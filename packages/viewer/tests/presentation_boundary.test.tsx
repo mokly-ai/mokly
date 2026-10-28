@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { rawIndexFixture } from "./catalogue_v8_fixture.js";
 import { embeddedMarkup, withDarkViews } from "./presentation_v7_helpers.js";
 
 test("the embedded viewer preserves pending entry and saved-variant comparison eligibility", () => {

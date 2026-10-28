@@ -120,7 +120,7 @@ mapping and rejects a path that escapes the repository.
 ## Versions And Releases
 
 Guides write package versions as literals, never placeholders. Every semantic
-version literal in `docs/guides/` equals the `packages/mokly/package.json` version.
+version literal in `docs/guides/` equals the `@mokly/mokly` package version.
 `start/install.md` uses it both in the pinned install command and in the
 sentence naming the documented version. `ci/github-action.md` uses it as the
 example Action `version`.
@@ -134,18 +134,16 @@ The version-bearing prose or fenced block is here.
 <!-- x-release-please-end -->
 ```
 
-Markers sit outside a fenced block rather than inside it. The `@mokly/mokly` package's
-Release Please configuration lists both Markdown files as `generic`
-`extra-files`, so a release PR updates the literals with `packages/mokly/package.json`. Root
-tests reject a missing marker, a stale literal, or any other version literal
-that differs from the package version.
+Markers sit outside a fenced block rather than inside it. Each release PR
+updates the marked literals to the new package version under the
+[release management contract](./npm-release-management.md).
 
 ## Package Publication
 
-The `@mokly/mokly` package `files` allowlist contains both `docs/guides` and
-`docs/protocol`. A packed package contains the complete guide tree, all protocol
-documents, `CHANGELOG.md`, and the existing runtime surface. Tests, plans,
-examples, site sources, and repository-only tooling remain excluded.
+A packed `@mokly/mokly` package contains the complete guide tree, all
+protocol documents, and `CHANGELOG.md` beside the runtime files that the
+[package contract](./mokly-package.md#packages) lists. The package excludes
+tests, plans, examples, site sources, and repository-only tooling.
 
 The cloud site reads documentation only from an installed package. It does not
 copy an unpublished working tree or mix guides, references, or changelog text
@@ -153,9 +151,9 @@ from different package versions.
 
 ## Writing And Verification Rules
 
-- Document shipped commands, flags, fields, exports, and behavior only after
-  verification against the current implementation. Guide examples must run
-  in the installed version; do not present future target behavior as shipped.
+- Guides document only shipped commands, flags, fields, exports, and
+  behavior. Guide examples run in the installed version. A guide never
+  presents future target behavior as shipped.
 - Use present tense for current behavior and conditional language for a
   target. Do not use "coming soon", invent customers or figures, or list
   unrelated absent features in place of actionable guidance.
@@ -165,13 +163,23 @@ from different package versions.
 - Write reader-facing outcomes and actions. Keep internal schema, pipeline,
   environment, and implementation vocabulary out of headline copy unless it is
   itself the documented public interface.
-- Root tests validate structure, links, versions, copy, the CLI surface,
-  configuration fields, public authoring exports, and the upload/CI contract.
-- Root tests compare guide content with code and data structurally: parsed
-  options, exports, fields, fences, tables, links and version literals. They
-  never match prose sentences or source text with regular expressions.
+
+Guide reference content matches the shipped interface:
+
+- Each command has a CLI reference page. Its option table lists exactly the
+  options that the command's help prints, except `--help` and `--version`,
+  with the same value and short forms.
+- The CLI options page lists every option of every command, with the same
+  value and short forms and the commands that accept it.
+- A `mokly` command line in a guide passes only options that its command
+  accepts.
+- A configuration field table lists every field of the `config.schema.json`
+  object that it documents, except `$schema`, and no other field.
+- Every name that a guide imports from `@mokly/mokly`, or lists in a table of
+  exported types, is exported at that package path.
 
 ## Related Docs
 
 - [Package and authoring contract](./mokly-package.md)
 - [CI and npm release contract](./npm-release.md)
+- [Release management contract](./npm-release-management.md)

@@ -20,7 +20,7 @@ import {
   catalogueFixture,
   detailFixture,
   indexFixture,
-} from "./catalogue_v7_fixture.js";
+} from "./catalogue_v8_fixture.js";
 
 const OTHER = "e".repeat(64);
 const RETIRED =
@@ -272,7 +272,7 @@ test("a refresh from another deployment or format does not install", async () =>
     { kind: "deployment" },
   );
   assert.equal(moved.calls.details.length, 0);
-  const version = new MoklyVersionError("catalogue", 8, 7);
+  const version = new MoklyVersionError("catalogue", 9, 8);
   const newer = scripted([version], () => new Error("unused"));
   assert.deepEqual(
     await loadRefresh(

@@ -10,6 +10,9 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{InternalError, Result, invalid};
 
+/// Digest the files that the first matching watch rule marks for rebuild or reload.
+/// Watch globs keep `*` in one path segment and turn off backslash escaping on every
+/// platform, because globset's default for it differs between Unix and Windows.
 pub(crate) fn inputs(
     config: &ResolvedConfig,
     tree: &dyn SourceTree,

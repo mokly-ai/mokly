@@ -135,18 +135,8 @@ inventory is a valid marker shape but cannot be a valid upload: `index.html`,
   integer size or path byte length (413), and `"invalid"` for every other
   rejection (400/422).
 
-Cases cover a valid complete inventory, an empty inventory, unsorted entries,
-ignored unknown fields, Unicode paths, an accepted U+200D, and a path of
-exactly 1,024 UTF-8 bytes. Rejections cover a missing version, schema 1, string
-`"3"` and other versions; missing entry fields; uppercase or short hex;
-negative, fractional, nonnumeric and over-limit sizes; duplicate, case and
-exact/case-folded prefix collisions; marker ownership; invalid Unicode; DEL,
-U+0085 and other category Cc characters; a multibyte path over 1,024 bytes;
-and every other path grammar rule.
-They test marker shape, not gzip/tar parsing, raw JSON decoding, archive
-completeness, digest verification, authorization or all upload limits. The
-verification gate checks these installed fixtures with an independent reader,
-then verifies an actual published inventory against the extracted bytes.
+The cases test marker shape only, not gzip/tar parsing, raw JSON decoding,
+archive completeness, digest verification, authorization or all upload limits.
 
 `build` implements the refusal contract: it names the output folder in every
 refusal, lists unexpected files when known, adds no adoption or upgrade path,

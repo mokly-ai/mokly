@@ -93,7 +93,7 @@ test("the Serve fixture accepts a third base commit and restores the original ba
   const historical = (index: typeof before) =>
     new URL(
       `snapshots/before/mokly-generated/${changes.paths.removedScreen}/index.desktop.html`,
-      new URL(".", new URL(index.comparisonUrl!, changes.url)),
+      new URL(index.comparisonUrl!, changes.url),
     ).href;
   const original = await (await request.get(historical(before))).text();
   expect(original).toContain("<h1>Historical screen</h1>");
@@ -143,13 +143,7 @@ test("the Serve fixture accepts a third base commit and restores the original ba
   );
   await git(changes.root, "update-ref", "HEAD", joinedHead, changes.headCommit);
   const selected = await changes.moveBase(third);
-  expect(
-    (
-      await (
-        await request.get(new URL(selected.comparisonUrl!, changes.url).href)
-      ).json()
-    ).baseCommit,
-  ).toBe(third);
+  expect(selected.baseCommit).toBe(third);
   expect(await (await request.get(historical(selected))).text()).toContain(
     "<h1>Third historical screen</h1>",
   );

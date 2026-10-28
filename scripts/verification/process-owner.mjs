@@ -17,6 +17,12 @@ const VERIFICATION_OWNER_ID_ENV = "MOKLY_VERIFICATION_OWNER_ID";
 const VERIFICATION_PROCESS_REGISTRY_ENV = "MOKLY_VERIFICATION_PROCESS_REGISTRY";
 const VERIFICATION_RESOURCE_ROOT_ENV = "MOKLY_VERIFICATION_RESOURCE_ROOT";
 
+/**
+ * Create a verification owner. A wrapper nested under another owner inherits
+ * its registry from the environment and registers a child owner there, so a
+ * cancellation acts only on its own subtree; a top-level owner makes a new
+ * registry under `.context/`.
+ */
 export async function createVerificationProcessOwner(options = {}) {
   const environment = options.env ?? process.env;
   const inherited = await inheritedOwner(environment);
