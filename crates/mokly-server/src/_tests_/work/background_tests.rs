@@ -42,7 +42,7 @@ async fn foreground_precedes_waiting_background_and_jobs_remain_bounded() {
                             released = gate.1.wait(released).unwrap();
                         }
                     }
-                    Ok(())
+                    Ok(Vec::new())
                 }
             })),
         DocumentsMock::generated
@@ -91,7 +91,7 @@ async fn queued_background_renders_admit_in_request_order() {
                 let order = order.clone();
                 move |_, route| {
                     order.lock().unwrap().push(route.to_owned());
-                    Ok(())
+                    Ok(Vec::new())
                 }
             })),
         DocumentsMock::generated

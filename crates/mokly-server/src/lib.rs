@@ -7,6 +7,7 @@ pub mod application;
 mod application_evidence;
 pub mod assets;
 pub mod backend;
+mod backend_preview;
 pub mod background;
 mod background_batch;
 pub mod changes;
@@ -64,6 +65,7 @@ mod replacement_tests;
 pub mod asset_streams;
 
 mod generated_routes;
+mod work_background;
 mod work_delivery;
 
 #[cfg(test)]

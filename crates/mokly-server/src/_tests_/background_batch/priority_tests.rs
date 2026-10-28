@@ -10,7 +10,8 @@ use crate::background::Background;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 
-use super::support::{Renders, pass, route};
+use super::script::pass;
+use super::support::{Renders, route};
 
 #[tokio::test]
 async fn a_batch_keeps_its_bound_and_yields_to_a_foreground_request() {

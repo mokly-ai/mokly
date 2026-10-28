@@ -70,16 +70,18 @@ count and the [sidecar pool size](./mokly-sidecar.md#lifecycle), and at least
 one. The worker count is the machine's core count, up to eight. The next view
 starts as soon as any view of the batch ends, and views start in catalogue
 order: when several views wait for one free worker, the first in catalogue
-order starts. A failed render reports its diagnostic once, in catalogue
-order, after every earlier view of the pass has ended. The pass publishes the
+order starts. Each view's build warnings and a failed render's diagnostic
+report once, in catalogue order, after every earlier view of the pass has
+ended; a failed view's warnings come directly before its diagnostic. The
+pass publishes the
 usage of its views together after its last view ends: a completion that
 changes the index or a detail publishes one revision under the
 [Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Background
 work is bounded, yields to foreground renders, and cannot publish after its
 state is superseded by a watched change; a superseded result is discarded. A
 stop or a replacement starts no further view of the superseded pass and
-discards its unreported failures; a view that already renders finishes under
-its deadlines. `--no-watch` runs this work once.
+discards its unreported warnings and failures; a view that already renders
+finishes under its deadlines. `--no-watch` runs this work once.
 
 Decision: the batch is a sliding window. Fixed batches, which wait for their
 slowest view before the next batch starts, were rejected, because one slow
@@ -87,7 +89,9 @@ view leaves the other workers idle. Decision: the batch is bounded by the
 smaller of the worker count and the sidecar pool size. The worker count alone
 was rejected, because with fewer sidecars its extra renders wait in the
 sidecar queue beside foreground calls. Keeping one worker free for foreground
-requests was rejected, because it slows every pass.
+requests was rejected, because it slows every pass. Decision: warnings and
+failures report in catalogue order. Reporting each view when its render ends
+was rejected, because the order of the lines would change between runs.
 
 Sidecar admission preserves foreground priority for each whole HTTP render.
 Queued base calls wait until those requests finish their sidecar work. Active

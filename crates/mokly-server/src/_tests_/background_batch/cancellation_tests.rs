@@ -1,18 +1,25 @@
-//! A replacement or a stop ends a batch: queued routes never start and nothing stale publishes.
+//! A replacement or a stop ends a batch: no later route starts, renders that wait for
+//! admission are dropped, and nothing stale publishes.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::task::{Context, Waker};
 
+use tokio::task::JoinHandle;
 use unimock::Unimock;
 
+use crate::assets::File;
+use crate::backend::Documents;
 use crate::background::Background;
+use crate::error::Result;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 
-use super::support::{Renders, pass, route};
+use super::script::{pass, reports};
+use super::support::{Renders, route};
 
 #[tokio::test]
-async fn a_replacement_during_a_batch_cancels_its_queued_renders() {
+async fn a_replacement_during_a_batch_starts_no_later_route() {
     let (mut renders, documents) = Renders::new(&[&route(0), &route(1)], &[]);
     let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
     let origin = publication_support::snapshot(4, documents);
@@ -34,7 +41,7 @@ async fn a_replacement_during_a_batch_cancels_its_queued_renders() {
 }
 
 #[tokio::test]
-async fn a_stop_during_a_batch_publishes_nothing() {
+async fn a_stop_during_a_batch_starts_no_later_route_and_publishes_nothing() {
     let (mut renders, documents) = Renders::new(&[&route(0), &route(1)], &[]);
     let origin = publication_support::snapshot(4, documents);
     let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
@@ -50,4 +57,90 @@ async fn a_stop_during_a_batch_publishes_nothing() {
     work.stop().await;
     assert_eq!(renders.started().len(), 2);
     assert!(script.published.lock().unwrap().is_empty());
+}
+
+/// Hold the only worker with a foreground request that waits for its gate.
+async fn held(
+    work: &Arc<Workers>,
+    documents: &Arc<dyn Documents>,
+    renders: &mut Renders,
+) -> JoinHandle<Result<Option<File>>> {
+    let foreground = tokio::spawn({
+        let work = work.clone();
+        let documents = documents.clone();
+        async move { work.generated(documents, "foreground".into()).await }
+    });
+    assert_eq!(renders.next_start().await, "foreground");
+    foreground
+}
+
+#[tokio::test]
+async fn a_replacement_drops_renders_that_wait_for_admission() {
+    let (mut renders, documents) = Renders::new(&["foreground"], &[]);
+    let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
+    let origin = publication_support::snapshot(4, documents.clone());
+    let replacement = publication_support::snapshot(1, replaced);
+    let work = Arc::new(Workers::new(1, Arc::new(Unimock::new(()))));
+    let foreground = held(&work, &documents, &mut renders).await;
+    let (script, pass, stopping) = pass(origin, 3, work.clone(), Arc::new(Unimock::new(())), true);
+    let mut running = pass.run(stopping);
+    let mut context = Context::from_waker(Waker::noop());
+    for _ in 0..8 {
+        assert!(running.as_mut().poll(&mut context).is_pending());
+    }
+    script.replace(replacement);
+    assert!(running.as_mut().poll(&mut context).is_pending());
+    renders.release("foreground");
+    assert!(foreground.await.unwrap().unwrap().is_none());
+    running.await;
+    work.stop().await;
+    assert_eq!(renders.started(), ["foreground"]);
+    assert_eq!(replacement_renders.next_start().await, route(0));
+    assert_eq!(*script.published.lock().unwrap(), [vec![route(0)]]);
+}
+
+#[tokio::test]
+async fn a_stop_drops_renders_that_wait_for_admission() {
+    let (mut renders, documents) = Renders::new(&["foreground"], &[]);
+    let origin = publication_support::snapshot(4, documents.clone());
+    let work = Arc::new(Workers::new(1, Arc::new(Unimock::new(()))));
+    let foreground = held(&work, &documents, &mut renders).await;
+    let (script, pass, stopping) = pass(origin, 3, work.clone(), Arc::new(Unimock::new(())), false);
+    let mut running = pass.run(stopping);
+    let mut context = Context::from_waker(Waker::noop());
+    for _ in 0..8 {
+        assert!(running.as_mut().poll(&mut context).is_pending());
+    }
+    script.stop.send_replace(true);
+    running.await;
+    renders.release("foreground");
+    assert!(foreground.await.unwrap().unwrap().is_none());
+    work.background(documents, route(9)).await.unwrap();
+    work.stop().await;
+    assert_eq!(renders.started(), ["foreground".to_owned(), route(9)]);
+    assert!(script.published.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn a_replacement_discards_a_failure_that_waits_for_an_earlier_render() {
+    let (mut renders, documents) = Renders::new(&[&route(0)], &[&route(1)]);
+    let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
+    let origin = publication_support::snapshot(4, documents);
+    let replacement = publication_support::snapshot(1, replaced);
+    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
+    let (diagnostics, reported) = reports();
+    let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, true);
+    let task = tokio::spawn(async move { pass.run(stopping).await });
+    let mut seen = BTreeSet::new();
+    while !seen.contains(&route(2)) {
+        seen.insert(renders.next_start().await);
+    }
+    assert_eq!(seen, BTreeSet::from([route(0), route(1), route(2)]));
+    script.replace(replacement);
+    assert_eq!(replacement_renders.next_start().await, route(0));
+    renders.release(&route(0));
+    task.await.unwrap();
+    work.stop().await;
+    assert!(reported.lock().unwrap().is_empty());
+    assert_eq!(*script.published.lock().unwrap(), [vec![route(0)]]);
 }

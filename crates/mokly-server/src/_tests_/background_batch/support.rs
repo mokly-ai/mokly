@@ -1,20 +1,17 @@
-//! Gated blocking renders and a scripted publication for batch scheduling tests.
+//! Gated blocking renders that record their starts, warnings, and reports.
 
 use std::collections::BTreeSet;
 use std::io;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 
-use tokio::sync::{broadcast, mpsc, watch};
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_graph::error::GraphError;
+use tokio::sync::mpsc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{Documents, DocumentsMock};
-use crate::background::UsagePass;
-use crate::diagnostics::{Diagnostics, DiagnosticsMock};
 use crate::error::{InternalError, ServerError};
-use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
-use crate::snapshot::Snapshot;
-use crate::work::Work;
 
 type Gate = Arc<(Mutex<bool>, Condvar)>;
 
@@ -30,11 +27,21 @@ pub(super) fn failure(route: &str) -> ServerError {
     })
 }
 
+/// A build warning whose message names its route.
+pub(super) fn warning(route: &str) -> Warning {
+    Warning {
+        code: "marker-in-raw-text",
+        subject: WarningSubject::Route(route.into()),
+        message: format!("warning of {route}"),
+    }
+}
+
 /// Blocking renders that record their start order and hold gated routes. The blocking
 /// pool can drop its document handle after the worker permit returns, so the mock skips
 /// drop verification and the tests assert the recorded starts instead.
 pub(super) struct Renders {
     started: Arc<Mutex<Vec<String>>>,
+    events: Arc<Mutex<Vec<String>>>,
     signals: mpsc::UnboundedReceiver<String>,
     gates: Vec<(String, Gate)>,
     active: Arc<AtomicUsize>,
@@ -45,7 +52,18 @@ impl Renders {
     /// Gate the named routes and fail the failing ones. Generated reads render too, so a
     /// test can hold a worker with a foreground request.
     pub(super) fn new(gated: &[&str], failing: &[&str]) -> (Self, Arc<dyn Documents>) {
+        Self::warned(gated, failing, &[])
+    }
+
+    /// As [`Renders::new`], and the warned routes return a warning. A warned failing
+    /// route fails with a render error that keeps its warning.
+    pub(super) fn warned(
+        gated: &[&str],
+        failing: &[&str],
+        warned: &[&str],
+    ) -> (Self, Arc<dyn Documents>) {
         let started = Arc::new(Mutex::new(Vec::new()));
+        let events = Arc::new(Mutex::new(Vec::new()));
         let (signal, signals) = mpsc::unbounded_channel();
         let gates: Vec<(String, Gate)> = gated
             .iter()
@@ -57,6 +75,7 @@ impl Renders {
             })
             .collect();
         let failing: BTreeSet<String> = failing.iter().map(|route| (*route).to_owned()).collect();
+        let warned: BTreeSet<String> = warned.iter().map(|route| (*route).to_owned()).collect();
         let active = Arc::new(AtomicUsize::new(0));
         let peak = Arc::new(AtomicUsize::new(0));
         let render = {
@@ -81,10 +100,20 @@ impl Renders {
             let render = render.clone();
             move |_: &Unimock, route: &str| {
                 render(route);
-                if failing.contains(route) {
-                    Err(failure(route))
-                } else {
-                    Ok(())
+                let warnings: Vec<_> = warned
+                    .contains(route)
+                    .then(|| warning(route))
+                    .into_iter()
+                    .collect();
+                match (failing.contains(route), warnings.is_empty()) {
+                    (true, true) => Err(failure(route)),
+                    (true, false) => Err(ServerError::Render {
+                        source: GraphError::Attempt {
+                            failures: Vec::new(),
+                            warnings,
+                        },
+                    }),
+                    (false, _) => Ok(warnings),
                 }
             }
         });
@@ -100,11 +129,25 @@ impl Renders {
                 DocumentsMock::generated
                     .each_call(matching!(_))
                     .answers_arc(generated),
+                DocumentsMock::report
+                    .each_call(matching!(_, _))
+                    .answers_arc(Arc::new({
+                        let events = events.clone();
+                        move |_, warnings: &[Warning], failed| {
+                            for warning in warnings {
+                                events
+                                    .lock()
+                                    .unwrap()
+                                    .push(format!("{}, failed {failed}", warning.message));
+                            }
+                        }
+                    })),
             ))
             .no_verify_in_drop(),
         );
         let renders = Self {
             started,
+            events,
             signals,
             gates,
             active,
@@ -140,6 +183,11 @@ impl Renders {
     pub(super) fn active(&self) -> usize {
         self.active.load(Ordering::SeqCst)
     }
+
+    /// The record of reported warnings, shared with recording diagnostics.
+    pub(super) fn events(&self) -> Arc<Mutex<Vec<String>>> {
+        self.events.clone()
+    }
 }
 
 impl Drop for Renders {
@@ -148,107 +196,4 @@ impl Drop for Renders {
             self.release(&route);
         }
     }
-}
-
-/// A publication whose current snapshot the test replaces, and the passes' completions.
-pub(super) struct Script {
-    _mock: Unimock,
-    pub(super) current: Arc<Mutex<Arc<Snapshot>>>,
-    pub(super) updates: broadcast::Sender<PublicationEvent>,
-    pub(super) published: Arc<Mutex<Vec<Vec<String>>>>,
-    pub(super) stop: Arc<watch::Sender<bool>>,
-}
-
-impl Script {
-    /// Replace the current snapshot and announce the new revision.
-    pub(super) fn replace(&self, next: Arc<Snapshot>) {
-        *self.current.lock().unwrap() = next;
-        assert!(
-            self.updates
-                .send(PublicationEvent {
-                    revision: 2,
-                    deployment_id: "process".into(),
-                })
-                .is_ok()
-        );
-    }
-}
-
-/// A pass over `origin` with the given batch. With `publishes`, its first completion
-/// stops Serve; without it, a completion fails the test. The script comes first, so
-/// its original mock drops after the pass's clone.
-pub(super) fn pass(
-    origin: Arc<Snapshot>,
-    batch: usize,
-    work: Arc<dyn Work>,
-    diagnostics: Arc<dyn Diagnostics>,
-    publishes: bool,
-) -> (Script, UsagePass, watch::Receiver<bool>) {
-    let current = Arc::new(Mutex::new(origin));
-    let (updates, receiver) = broadcast::channel(64);
-    let (stop, stopping) = watch::channel(false);
-    let stop = Arc::new(stop);
-    let published = Arc::new(Mutex::new(Vec::new()));
-    let reads = (
-        PublicationsMock::current
-            .each_call(matching!())
-            .answers_arc(Arc::new({
-                let current = current.clone();
-                move |_| current.lock().unwrap().clone()
-            })),
-        PublicationsMock::subscribe
-            .next_call(matching!())
-            .returns(Subscription {
-                current: PublicationEvent {
-                    revision: 1,
-                    deployment_id: "process".into(),
-                },
-                updates: receiver,
-            }),
-    );
-    let mock = if publishes {
-        Unimock::new((
-            reads,
-            PublicationsMock::completed_many
-                .each_call(matching!(_, _))
-                .answers_arc(Arc::new({
-                    let published = published.clone();
-                    let stop = stop.clone();
-                    move |_, _, routes| {
-                        published.lock().unwrap().push(routes.to_vec());
-                        stop.send_replace(true);
-                        Ok(())
-                    }
-                })),
-        ))
-    } else {
-        Unimock::new(reads)
-    };
-    let pass = UsagePass {
-        batch,
-        changes: None,
-        publications: Arc::new(mock.clone()),
-        work,
-        diagnostics,
-    };
-    let script = Script {
-        _mock: mock,
-        current,
-        updates,
-        published,
-        stop,
-    };
-    (script, pass, stopping)
-}
-
-/// Diagnostics that record each reported failure's text.
-pub(super) fn reports() -> (Arc<dyn Diagnostics>, Arc<Mutex<Vec<String>>>) {
-    let reports = Arc::new(Mutex::new(Vec::new()));
-    let diagnostics = Unimock::new(DiagnosticsMock::failed.each_call(matching!(_)).answers_arc(
-        Arc::new({
-            let reports = reports.clone();
-            move |_, error| reports.lock().unwrap().push(error.to_string())
-        }),
-    ));
-    (Arc::new(diagnostics), reports)
 }

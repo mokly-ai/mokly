@@ -3,12 +3,14 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use mokly_catalogue::diagnostic::Warning;
 use tokio::sync::{broadcast, watch};
 
+use crate::backend::Documents;
 use crate::background_batch::Window;
 use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
-use crate::error::{InternalError, ServerError};
+use crate::error::{InternalError, Result, ServerError};
 use crate::publication::{PublicationEvent, Publications};
 use crate::snapshot::Snapshot;
 use crate::work::Work;
@@ -103,7 +105,7 @@ impl UsagePass {
                 },
                 (position, result) = window.next() => {
                     if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
-                    for error in window.settle(position, result) { self.diagnostics.failed(&error); }
+                    for outcome in window.settle(position, result) { self.report(origin.documents.as_ref(), outcome); }
                 }
             }
         }
@@ -131,6 +133,18 @@ impl UsagePass {
                 .failed(&ServerError::Internal(InternalError::Task { source })),
         }
         true
+    }
+    /// Report one view as a serial pass did: its warnings, then its failure diagnostic.
+    fn report(&self, documents: &dyn Documents, outcome: Result<Vec<Warning>>) {
+        match outcome {
+            Ok(warnings) => documents.report(&warnings, false),
+            Err(error) => {
+                if let ServerError::Render { source } = &error {
+                    documents.report(&source.warnings(), true);
+                }
+                self.diagnostics.failed(&error);
+            }
+        }
     }
 }
 

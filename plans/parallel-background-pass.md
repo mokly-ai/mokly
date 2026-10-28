@@ -60,10 +60,13 @@ pass discards a failure that ends after one.
    rule to apply the recommended option without a stop: A, a fair one-permit
    turn in `Workers::background`, so queued background renders wait for a
    worker one at a time, in request order. Rejected: B, weaken decision 3 to a
-   best-effort order. Reason: 500 stress runs of the first window design
-   showed 1 start out of catalogue order. A worker freed on a blocking thread
-   between two polls of one sweep let a later render take it. The window's
-   poll order alone cannot prevent that, and the turn needs about ten lines.
+   best-effort order. Reason: 300 stress runs of the first window design
+   failed twice. One run started a later route first: a worker freed on a
+   blocking thread between two polls of one sweep let a later render take
+   it. The other run was a drop-order problem in the test harness, fixed in
+   the tests. The window's poll order alone cannot prevent the first
+   failure, and the turn needs about ten lines. After the turn, 500 runs
+   passed.
 6. Acceptance targets, decided on 2026-10-28 during milestone 3 under the same
    rule: A, keep the bounded window as built and report the targets as
    missed. On this machine the example pass takes 4.9 to 5.3 s against the
@@ -89,6 +92,30 @@ pass discards a failure that ends after one.
    Follow-up: coalesce concurrent compositions of one document key; cache
    hits drop from 106 to 99 or 100 on the example and from 408 to 377 to 380
    on the React fixture. Area: the graph session render.
+
+7. Background warnings, review finding 1, decided on 2026-10-28 under the
+   user's rule: B, report each view's build warnings in catalogue order
+   through the window, with a failed view's warnings directly before its
+   diagnostic. A background render now returns its warnings, and a failure
+   keeps them; the pass reports them through `Documents::report`. Rejected:
+   A, document the completion order, because warning lines would change
+   order between runs, which decision 4 rejected for failures. Rejected: C
+   and D, one sorted block at the end of the pass, because a warning would
+   wait for the whole pass. Rejected: E, order sidecar console lines too,
+   because it changes the sidecar protocol on both sides. The two backend
+   warning tests on `origin/main` keep their foreground branches; their
+   background branches now assert the returned warnings and the report.
+8. Failure report tests, review finding 2: D, a model test of the window's
+   release rule over every end order, and a pass test that sees the reports
+   while the pass still runs. Rejected: A or B alone, because each misses one
+   rejected option of decision 4. The shared rule of options C and E is
+   raised to the user as a decision.
+9. Cancellation tests, review finding 3: A, tests that stop or replace a pass
+   while its renders wait for admission, and clearer names for the two older
+   tests. Rejected: C, a second cancellation flag in `Work::background`,
+   because the dropped window already stops queued renders.
+10. Decision 5 evidence, review finding 4: A, correct decision 5 to the
+    recorded 300 runs with one out-of-order start and one harness fault.
 
 ## Corrections to the item text
 
@@ -323,3 +350,26 @@ request TODO comes before the review TODO here.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 1 on `ba885017`: four findings, all confirmed by the validity
+    check, none `Auto-fix: yes`. The options check changed the
+    recommendation of finding 2 to D. Decisions 7 to 10 apply the
+    recommendations under the user's rule. The options check also found that
+    no test covered a failure that waits for an earlier render when a
+    replacement arrives; a test now covers it.
+  - Follow-up: make one mutation proof for each rejected option of a
+    decision a rule of the shared `plans` skill. Effort Small. Covers
+    findings 2 and 3. Previous examples: `plans/rust-rebuild.md` lines 1563
+    and 4799. Raised to the user as a decision.
+  - `docs/guides/cli/serve.md`: the guide says that Serve prints a
+    generation's warnings once when its output finishes, and before
+    `Catalogue ready`, but views rendered after readiness print their
+    warnings when they are reported. Separate branch.
+  - `scripts/verification/rust-audit-tool.mjs`: the repository suite installs
+    cargo-audit 0.22.2 with `--locked`, which pins the yanked tokio 1.54.0.
+    Separate branch.
+
+  Evidence: `.context/parallel-background-pass/review-1.md`,
+  `validity-1.md`, `options-1.md`, and `mutation-checks.txt`.
+
+- [ ] Rerun the complete gate after the review fixes, and update the pull
+      request body with the review outcome.
