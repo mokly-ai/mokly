@@ -265,14 +265,14 @@ waits for the user.
 
 This milestone applies decision 179 A.
 
-- [ ] Add the regression tests first in
+- [x] Add the regression tests first in
       `crates/mokly-compare/src/_tests_/locations_tests.rs`: on Windows, a
       verbatim cache path below a plain repository path and a verbatim UNC
       path below a plain UNC path are inside; on every platform, a plain path
       below another is inside, and a sibling is not.
-- [ ] Add `plain` and `inside_repository` to `locations.rs` and use them in
+- [x] Add `plain` and `inside_repository` to `locations.rs` and use them in
       `SystemLocations::repository`.
-- [ ] Run `cargo test -p mokly-compare locations`, Clippy, and
+- [x] Run `cargo test -p mokly-compare locations`, Clippy, and
       `cargo clippy --target x86_64-pc-windows-msvc -p mokly-compare --all-targets -- -D warnings`.
       The hosted Windows job runs the Windows tests.
 
