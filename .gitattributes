@@ -2,3 +2,7 @@
 
 # Rendered HTML snapshots keep the template's whitespace-only text nodes.
 crates/mokly-graph/tests/snapshots/*.snap whitespace=-blank-at-eol
+
+# Parser fixtures keep their exact bytes, including CRLF line ends.
+crates/mokly-html/tests/fixtures/differential/** -text
+crates/mokly-html/tests/fixtures/html5lib/** -text

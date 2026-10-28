@@ -24,8 +24,16 @@ mod folder_input;
 mod folders;
 mod front_matter;
 mod globs;
+pub mod html_driver;
+mod html_driver_events;
+pub mod html_input;
+mod html_recording_sink;
+mod html_token_types;
 pub mod html_tokens;
 mod identity;
+#[cfg(test)]
+#[path = "_tests_/ignore_parsing_tests.rs"]
+mod ignore_parsing_tests;
 pub mod input;
 mod links;
 mod locations;
@@ -58,5 +66,8 @@ pub mod yaml_limits;
 mod yaml_positions;
 mod yaml_value;
 
+#[cfg(test)]
+#[path = "_tests_/html_token_span_tests.rs"]
+mod html_token_span_tests;
 mod working_tree_identity;
 mod working_tree_stream;

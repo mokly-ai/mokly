@@ -1,0 +1,26 @@
+---
+source: crates/mokly-html/src/_tests_/pipeline_differential_tests.rs
+expression: position_table(&nodes)
+---
+html -
+  head -
+  body -
+    save 4:11
+      main 14:1
+        h1 15:3
+        p 16:3
+        p 17:3
+        p 18:3
+        ui-button 19:3
+        ui-button 26:3
+        mokly-ignore-scope 27:3
+          ui-card 28:5
+            strong 29:7
+            span 30:7
+            ui-button 31:7
+        mokly-ignore 38:3
+          time 39:6
+        a 41:3
+        div 42:3
+        button 43:3
+        img 44:3

@@ -1,243 +1,76 @@
-//! Authored HTML token boundary with separate diagnostic metadata.
+//! HTML token boundary: tokens in the tree builder's text modes, with diagnostic metadata.
 
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-use html5gum::{DefaultEmitter, Span, Spanned, StartTag, Token, Tokenizer};
-use mokly_model::material;
-
+use crate::html_driver::drive;
+use crate::html_input::{DeliveredHtml, HtmlInput};
+use crate::html_recording_sink::RecordingSink;
+pub use crate::html_token_types::{
+    Doctype, EndTag, Error, ErrorToken, Span, Spanned, StartTag, Token,
+};
 use crate::template_types::ignore_attribute_allowed;
 
-/// One token and the diagnostics that must survive attribute normalization.
+/// One token and the diagnostics retained at the token boundary.
 pub struct ParsedToken {
     /// The token visible to template, link, and source-location consumers.
-    pub token: Token<usize>,
+    pub token: Token,
     /// Discarded ignore-wrapper attribute names, without their unevaluated values.
     pub ignored_attributes: Vec<String>,
     /// Whether the original tag supplied reserved navigation metadata.
     pub reserved_navigation: bool,
-    /// Opaque original wrapper identity for source matching, without discarded values.
-    pub source_signature: Option<String>,
 }
 
-/// Parse authored HTML while retaining token errors and original byte spans.
-pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
-    let tokens = expand_markup_contexts(
-        source,
-        collapse_raw_elements(source, tokenize(source, true)),
-    );
-    tokens.into_iter().map(normalize)
+/// Parse HTML while retaining token errors and original byte spans.
+///
+/// The HTML tree builder chooses each text mode, as it does for the tree. Authored input drops
+/// unknown ignore-wrapper attributes and reports their names. Delivered input keeps every
+/// attribute.
+pub fn parse<'a>(input: impl Into<HtmlInput<'a>>) -> impl Iterator<Item = ParsedToken> {
+    let input = input.into();
+    let authored = matches!(input, HtmlInput::Authored(_));
+    drive(input.text(), input.shape(), RecordingSink::new(authored)).into_iter()
 }
 
-fn tokenize(source: &str, switch_states: bool) -> Vec<Token<usize>> {
-    let mut emitter = DefaultEmitter::<usize>::new_with_span();
-    emitter.naively_switch_states(switch_states);
-    Tokenizer::new_with_emitter(source, emitter)
-        .flatten()
-        .collect()
-}
-
-fn collapse_raw_elements(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
-    let mut output = Vec::new();
-    let mut index = 0;
-    while index < tokens.len() {
-        let Token::StartTag(start) = &tokens[index] else {
-            output.push(tokens[index].clone());
-            index += 1;
-            continue;
-        };
-        if start.name.as_ref() != b"noframes" {
-            output.push(tokens[index].clone());
-            index += 1;
-            continue;
-        }
-        output.push(tokens[index].clone());
-        let mut end_index = index + 1;
-        while end_index < tokens.len() {
-            if let Token::EndTag(end) = &tokens[end_index]
-                && end.name.as_ref() == b"noframes"
+/// Parse one attribute list through the same HTML token boundary.
+pub fn parse_attributes(source: &str) -> Option<BTreeMap<String, String>> {
+    let synthetic = format!("<i {source}></i>");
+    let mut tags = 0;
+    let mut attributes = None;
+    for parsed in parse(DeliveredHtml::fragment(&synthetic)) {
+        match parsed.token {
+            Token::StartTag(tag)
+                if tags == 0 && tag.name.as_slice() == b"i" && !tag.self_closing =>
             {
-                break;
+                tags += 1;
+                attributes = Some(
+                    tag.attributes
+                        .into_iter()
+                        .map(|(name, value)| {
+                            (
+                                String::from_utf8_lossy(&name).into_owned(),
+                                String::from_utf8_lossy(&value.value).into_owned(),
+                            )
+                        })
+                        .collect(),
+                );
             }
-            end_index += 1;
-        }
-        if end_index < tokens.len() {
-            let end = match &tokens[end_index] {
-                Token::EndTag(end) => end.span,
-                _ => unreachable!(),
-            };
-            if let Some(text) = source.get(start.span.end..end.start) {
-                output.push(Token::String(Spanned {
-                    value: text.as_bytes().to_vec().into(),
-                    span: Span {
-                        start: start.span.end,
-                        end: end.start,
-                    },
-                }));
-            }
-            output.push(tokens[end_index].clone());
-            index = end_index + 1;
-        } else {
-            index += 1;
+            Token::EndTag(tag) if tags == 1 && tag.name.as_slice() == b"i" => tags += 1,
+            Token::Error(_) => return None,
+            _ => return None,
         }
     }
-    output
+    attributes.filter(|_| tags == 2)
 }
 
-fn expand_markup_contexts(source: &str, tokens: Vec<Token<usize>>) -> Vec<Token<usize>> {
-    let mut output = Vec::new();
-    let mut foreign_stack = Vec::new();
-    let mut raw_context: Option<(Vec<u8>, bool)> = None;
-    for token in tokens {
-        match &token {
-            Token::StartTag(tag) => {
-                let name = tag.name.as_ref();
-                let in_foreign = foreign_stack.last().is_some_and(ContextFrame::is_foreign);
-                let integration = in_foreign && is_integration_point(name);
-                if !tag.self_closing {
-                    if integration {
-                        foreign_stack.push(ContextFrame::Integration(name.to_owned()));
-                    } else if in_foreign || matches!(name, b"svg" | b"math") {
-                        foreign_stack.push(ContextFrame::Foreign(name.to_owned()));
-                    } else if foreign_stack.last().is_some_and(ContextFrame::is_html) {
-                        foreign_stack.push(ContextFrame::Html(name.to_owned()));
-                    }
-                }
-                let markup_context = (name == b"noscript" && !in_foreign)
-                    || (in_foreign && !integration && matches!(name, b"style" | b"title"));
-                let raw_context_tag = in_foreign
-                    && !integration
-                    && matches!(
-                        name,
-                        b"textarea"
-                            | b"xmp"
-                            | b"iframe"
-                            | b"noembed"
-                            | b"noframes"
-                            | b"plaintext"
-                            | b"script"
-                    );
-                if name == b"noframes" && !in_foreign {
-                    raw_context = Some((name.to_owned(), false));
-                } else if markup_context {
-                    raw_context = Some((name.to_owned(), true));
-                } else if raw_context_tag {
-                    raw_context = Some((name.to_owned(), false));
-                }
-                output.push(token);
-            }
-            Token::String(text) if raw_context.is_some() => {
-                let (_, markup) = raw_context.as_ref().unwrap();
-                if *markup {
-                    let value = source
-                        .get(text.span.start..text.span.end)
-                        .map(Cow::Borrowed)
-                        .unwrap_or_else(|| {
-                            Cow::Owned(String::from_utf8_lossy(&text.value).into_owned())
-                        });
-                    output.extend(
-                        expand_markup_contexts(value.as_ref(), tokenize(value.as_ref(), true))
-                            .into_iter()
-                            .map(|token| shift_token(token, text.span.start)),
-                    );
-                } else {
-                    output.push(token);
-                }
-            }
-            Token::EndTag(tag) => {
-                if raw_context
-                    .as_ref()
-                    .is_some_and(|(name, _)| name.as_slice() == tag.name.as_ref())
-                {
-                    raw_context = None;
-                }
-                if let Some(index) = foreign_stack
-                    .iter()
-                    .rposition(|frame| frame.name() == tag.name.as_ref())
-                {
-                    foreign_stack.truncate(index);
-                }
-                output.push(token);
-            }
-            _ => output.push(token),
-        }
-    }
-    output
-}
-
-enum ContextFrame {
-    Foreign(Vec<u8>),
-    Integration(Vec<u8>),
-    Html(Vec<u8>),
-}
-
-impl ContextFrame {
-    fn name(&self) -> &[u8] {
-        match self {
-            Self::Foreign(name) | Self::Integration(name) | Self::Html(name) => name,
-        }
-    }
-
-    fn is_foreign(&self) -> bool {
-        matches!(self, Self::Foreign(_))
-    }
-
-    fn is_html(&self) -> bool {
-        matches!(self, Self::Integration(_) | Self::Html(_))
-    }
-}
-
-fn is_integration_point(name: &[u8]) -> bool {
-    matches!(
-        name,
-        b"foreignobject" | b"mi" | b"mo" | b"mn" | b"ms" | b"mtext"
-    )
-}
-
-fn shift_token(mut token: Token<usize>, offset: usize) -> Token<usize> {
-    let offset = offset as isize;
-    match &mut token {
-        Token::StartTag(StartTag {
-            span, attributes, ..
-        }) => {
-            *span = shift_span(*span, offset);
-            for value in attributes.values_mut() {
-                value.span = shift_span(value.span, offset);
-            }
-        }
-        Token::EndTag(tag) => tag.span = shift_span(tag.span, offset),
-        Token::String(text) | Token::Comment(text) => text.span = shift_span(text.span, offset),
-        Token::Doctype(doctype) => doctype.span = shift_span(doctype.span, offset),
-        Token::Error(error) => error.span = shift_span(error.span, offset),
-    }
-    token
-}
-
-fn shift_span(span: Span<usize>, offset: isize) -> Span<usize> {
-    Span {
-        start: span.start.saturating_add_signed(offset),
-        end: span.end.saturating_add_signed(offset),
-    }
-}
-
-fn normalize(mut token: Token<usize>) -> ParsedToken {
+/// Record reserved navigation evidence, and drop unknown wrapper attributes from authored tags.
+pub(crate) fn normalize(mut token: Token, authored: bool) -> ParsedToken {
     let reserved_navigation = matches!(
         &token,
         Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
     );
     let mut ignored_attributes = Vec::new();
-    let mut source_signature = None;
-    if let Token::StartTag(tag) = &mut token {
+    if authored && let Token::StartTag(tag) = &mut token {
         let element = String::from_utf8_lossy(&tag.name);
-        source_signature = ignore_source_signature(
-            &element,
-            tag.attributes.iter().map(|(name, value)| {
-                (
-                    String::from_utf8_lossy(name).into_owned(),
-                    String::from_utf8_lossy(&value.value).into_owned(),
-                )
-            }),
-        );
         tag.attributes.retain(|name, _| {
             let name = String::from_utf8_lossy(name);
             if ignore_attribute_allowed(&element, &name) {
@@ -252,22 +85,7 @@ fn normalize(mut token: Token<usize>) -> ParsedToken {
         token,
         ignored_attributes,
         reserved_navigation,
-        source_signature,
     }
-}
-
-/// Match original wrappers across parser boundaries without exposing discarded attribute values.
-pub fn ignore_source_signature(
-    element: &str,
-    attributes: impl IntoIterator<Item = (String, String)>,
-) -> Option<String> {
-    if !matches!(element, "mokly-ignore" | "mokly-ignore-scope") {
-        return None;
-    }
-    let attributes: BTreeMap<_, _> = attributes.into_iter().collect();
-    Some(material::digest(
-        format!("{element}:{attributes:?}").as_bytes(),
-    ))
 }
 
 /// Format one ignore-wrapper attribute warning with reserved metadata wording.
@@ -287,7 +105,3 @@ pub(crate) fn ignore_warning_message(attribute: &str, tag: &[u8]) -> String {
 pub fn reserved_navigation_attribute(name: &[u8]) -> bool {
     name == b"data-mokly-link" || name.starts_with(b"data-mokly-link-control")
 }
-
-#[cfg(test)]
-#[path = "_tests_/ignore_parsing_tests.rs"]
-mod ignore_parsing_tests;
