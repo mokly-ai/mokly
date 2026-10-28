@@ -6346,7 +6346,7 @@ does not ask the user before the merge.
   `@-moz-document` block outside a style rule as a style block, but
   lightningcss parses it as an `@media` block. Separate branch.
 
-- [ ] Decide finding 1 of the review of `3066e47a` on `rebuild/port-111c`
+- [x] Decide finding 1 of the review of `3066e47a` on `rebuild/port-111c`
       (report: `.context/port-111c/review/review-5.md`). Finding 2 (Low: the
       plan record said that the README keeps the `;` reason) is fixed with
       option A in the same commit as this record.
@@ -6355,6 +6355,12 @@ does not ask the user before the merge.
     `{}` block, as postcss does, but the bundler keeps the text up to `;`.
     Severity Low, effort Small. Recommended: A, name the descriptor case in
     both docs.
+  - User decision (2026-10-28): A, without option D, done in the commit
+    that adds this line. The protocol page names the descriptor-block case
+    beside the rule, with its reason. The crate README, which names the
+    `@font-face` boundary, points its parity sentence at it. The same commit
+    removes the Status line of `docs/protocol/mokly-imported-styles-modules.md`,
+    which user decision 185 kept for item 111 only.
 - Outside the `rebuild/port-111c` review scope:
   `crates/mokly-css/src/token_sections.rs:59`: the `Statement` doc says that
   a statement reads as lightningcss reads the block that holds it, but the
