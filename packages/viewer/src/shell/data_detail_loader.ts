@@ -29,7 +29,7 @@ export class DetailLoader {
   #deploymentLoading: AbortController | undefined;
   #wanted: readonly DetailRequest[] = [];
   #failed: ReadonlySet<string> = new Set();
-  #initialized = false;
+  #previousKeys: readonly string[] | undefined;
 
   constructor(source: ShellDataSource | undefined, host: DetailLoaderHost) {
     this.#source = source;
@@ -44,7 +44,10 @@ export class DetailLoader {
     this.#wanted = requests;
     const source = this.#source;
     if (!source || this.#host.replaced()) return;
-    this.#deploymentLoading?.abort();
+    const keys = requests.map(detailKey);
+    const pageChanged =
+      this.#previousKeys !== undefined && !sameKeys(this.#previousKeys, keys);
+    this.#previousKeys = keys;
     const wanted = new Set(requests.map(detailKey));
     for (const [key, controller] of this.#loading)
       if (!wanted.has(key)) {
@@ -60,11 +63,13 @@ export class DetailLoader {
       );
     });
     const deploymentRequest =
-      this.#initialized && loads.length
+      pageChanged && loads.length
         ? startDeploymentCheck(source, loads)
         : undefined;
-    this.#initialized = true;
-    this.#deploymentLoading = deploymentRequest?.controller;
+    if (deploymentRequest) {
+      this.#deploymentLoading?.abort();
+      this.#deploymentLoading = deploymentRequest.controller;
+    }
     if (deploymentRequest)
       void deploymentRequest.promise.then((deployment) => {
         if (
@@ -109,4 +114,11 @@ export class DetailLoader {
     for (const controller of this.#loading.values()) controller.abort();
     this.#loading.clear();
   }
+}
+
+function sameKeys(left: readonly string[], right: readonly string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((key, index) => key === right[index])
+  );
 }
