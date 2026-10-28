@@ -92,7 +92,9 @@ mod lookup_roots;
 
 mod rename_rules;
 mod rule_walk;
+mod token_grammar;
 mod token_sections;
+mod token_statement;
 mod token_tree;
 
 #[cfg(test)]

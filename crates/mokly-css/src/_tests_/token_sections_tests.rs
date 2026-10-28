@@ -5,6 +5,9 @@ use crate::modules::{scope, scoped_name};
 use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::Tokens;
 
+#[path = "token_differential_tests.rs"]
+mod token_differential_tests;
+
 /// The statements at the first block level of `source`, read with `grammar`.
 fn statements(source: &str, grammar: Grammar) -> Vec<Statement> {
     let tokens = Tokens::new(source);
@@ -21,6 +24,36 @@ fn block_grammar(source: &str, grammar: Grammar) -> Grammar {
     let tokens = Tokens::new(source);
     let section = token_sections::next(&tokens, &mut tokens.root(), grammar).unwrap();
     section.block.unwrap().grammar
+}
+
+/// In every grammar, a statement starts where cssparser starts it: after the
+/// whitespace and comments before it. Its prelude starts there too.
+#[test]
+fn statements_start_after_leading_whitespace_and_comments_in_every_grammar() {
+    let cases = [
+        (Grammar::Stylesheet, " /* c */ .b{}", ".b{}"),
+        (Grammar::Stylesheet, ".a{} /* c */ .b{}", ".b{}"),
+        (Grammar::Rules, " /* c */ .b{}", ".b{}"),
+        (Grammar::Lenient, " /* c */ from{}", "from{}"),
+        (Grammar::Style, " /* c */ .b{}", ".b{}"),
+        (Grammar::Style, " /* c */ color:red", "color:red"),
+        (Grammar::Declarations, " /* c */ src:url(x)", "src:url(x)"),
+    ];
+    for (grammar, source, statement) in cases {
+        let tokens = Tokens::new(source);
+        let mut range = tokens.root();
+        let mut last = None;
+        while let Some(section) = token_sections::next(&tokens, &mut range, grammar) {
+            last = Some(section);
+        }
+        let section = last.unwrap();
+        let start = source.len() - statement.len();
+        assert_eq!(section.start, start, "{grammar:?} {source}");
+        assert_eq!(
+            tokens.nodes[section.prelude.start].start, start,
+            "{grammar:?} {source}"
+        );
+    }
 }
 
 /// In a style or declarations block, only a statement without a block that
@@ -69,6 +102,7 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
         at_rule("media"),
         at_rule("value"),
     ];
+    assert_eq!(statements(source, Grammar::Stylesheet), rules);
     assert_eq!(statements(source, Grammar::Rules), rules);
     assert_eq!(statements(source, Grammar::Lenient), rules);
 }
@@ -76,12 +110,13 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
 /// A block's grammar depends on its statement and on the grammar around it.
 /// In a rule list, a conditional, layer, scope, or starting-style block is a
 /// rule list, a rule or `@-moz-document` block is a style block, and a
-/// keyframes or `@document` block is a lenient rule list. In a style block, a
-/// rule, conditional, layer, scope, starting-style, or `@-moz-document` block
-/// is a style block. In a lenient rule list, a keyframes, conditional, layer,
-/// `@document`, scope, or starting-style block is a lenient rule list. Every
-/// other block is a declarations block, also the block of a rule that starts
-/// with an HTML comment token.
+/// keyframes or `@document` block is a lenient rule list. The stylesheet
+/// skips an HTML comment token before a statement, so the statement after it
+/// opens its usual block. In a nested rule list, the token starts a rule. In a
+/// style block, a rule, conditional, layer, scope, starting-style, or
+/// `@-moz-document` block is a style block. In a lenient rule list, a
+/// keyframes, conditional, layer, `@document`, scope, or starting-style block
+/// is a lenient rule list. Every other block is a declarations block.
 #[test]
 fn blocks_open_the_grammar_that_lightningcss_parses() {
     let cases = [
@@ -96,8 +131,21 @@ fn blocks_open_the_grammar_that_lightningcss_parses() {
         (Grammar::Rules, "@document x{}", Grammar::Lenient),
         (Grammar::Rules, "@font-face{}", Grammar::Declarations),
         (Grammar::Rules, "@foo{}", Grammar::Declarations),
-        (Grammar::Rules, "-->.a{}", Grammar::Declarations),
-        (Grammar::Rules, "<!--@foo{}", Grammar::Declarations),
+        (Grammar::Rules, "-->.a{}", Grammar::Style),
+        (Grammar::Rules, "<!--@foo{}", Grammar::Style),
+        (Grammar::Stylesheet, ".a{}", Grammar::Style),
+        (Grammar::Stylesheet, "@MEDIA all{}", Grammar::Rules),
+        (
+            Grammar::Stylesheet,
+            "@-moz-document url-prefix(){}",
+            Grammar::Style,
+        ),
+        (Grammar::Stylesheet, "@keyframes k{}", Grammar::Lenient),
+        (Grammar::Stylesheet, "@document x{}", Grammar::Lenient),
+        (Grammar::Stylesheet, "@font-face{}", Grammar::Declarations),
+        (Grammar::Stylesheet, "@foo{}", Grammar::Declarations),
+        (Grammar::Stylesheet, "-->.a{}", Grammar::Style),
+        (Grammar::Stylesheet, "<!--@foo{}", Grammar::Declarations),
         (Grammar::Style, "&:hover{}", Grammar::Style),
         (Grammar::Style, "@supports (x:y){}", Grammar::Style),
         (

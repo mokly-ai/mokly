@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::{Discoverer, Discovery};
+use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::working_tree::WorkingTree;
 use tempfile::TempDir;
 
@@ -30,7 +31,7 @@ fn config_file_alias_under_a_repository_alias_keeps_both_source_names() {
 }
 
 #[test]
-fn a_package_root_spelled_through_a_link_keeps_its_acceptance_and_normalizes() {
+fn a_package_root_spelled_through_a_link_names_its_normalized_root() {
     let directory = TempDir::new().unwrap();
     support::write(
         directory.path(),
@@ -42,6 +43,16 @@ fn a_package_root_spelled_through_a_link_keeps_its_acceptance_and_normalizes() {
     fs::create_dir_all(directory.path().join("deep/dir")).unwrap();
     fs::create_dir_all(directory.path().join("tools/ui")).unwrap();
     symlink("../deep/dir", directory.path().join("tools/link")).unwrap();
+    let Err(CatalogueError::Config(issue)) =
+        support::load(directory.path(), Some("tools/mokly.config.json"))
+    else {
+        panic!("a root that only the link target fills must fail to load")
+    };
+    assert_eq!(
+        issue.message,
+        "moduleResolution.packageRoots[0]: link/../ui must contain package.json"
+    );
+    support::write(directory.path(), "tools/ui/package.json", "{}");
     let config = support::load(directory.path(), Some("tools/mokly.config.json")).unwrap();
     assert_eq!(config.package_roots(), ["tools/ui"]);
 }
