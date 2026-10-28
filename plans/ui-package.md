@@ -454,12 +454,43 @@ seven packages.
       page, `docs/protocol/mokly-ui-package.md`, with every sentence and
       decision 1, and the design components contract names the registration's
       own stylesheet, which imports the package stylesheet.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      The remote gate passed 7 of 7 suites on `1a53e123`. Evidence:
+      `.context/ui-package/gate/run-2.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
-      re-review once, and report the rest.
+      re-review once, and report the rest. Review 1 found six findings, and
+      `e0f2d044` fixes 1, 3, and 5. The re-review found three, and
+      `a159b790` fixes 2 and 3. Reports: `.context/ui-package/review/`.
+      Open findings, with the options checks merged in:
+  - Review 1, 2. Host CSS resets restyle the package components. Severity
+    Medium, effort Large. Recommended: D, remove the `mokly.components`
+    layer everywhere. The review recommended C, unlayer the bundled copy.
+  - Review 2, 1. UI package contract omits its stylesheet paths. Severity
+    Medium, effort Small. Recommended: B, keep `@mokly/ui/styles.css` as
+    the only stylesheet subpath and state it in the contract. The review
+    recommended A, state the `.css` subpaths and `styles.css`.
+  - Review 1, 4. Stylesheet guards skip the package rules. Severity Low,
+    effort Small. Recommended: C, the guards read the built stylesheets.
+    The review recommended B, one test helper for the shipped stylesheets.
+  - Review 1, 6. Two identical down chevrons in one module. Severity Low,
+    effort Small. Recommended: C, the viewport select draws
+    `ChevronDownIcon`, and `caret` goes. The review recommended A.
+  - Open, found by the second options check after the re-review:
+    `docs/protocol/mokly-ui-package.md` does not say that the package rules
+    read the viewer stylesheet's colour tokens and `.mbk-seg` rules, and
+    `docs/protocol/mokly-design-components.md` names one package stylesheet
+    where the appearance selector's sheet imports two.
+  - Follow-up: import `@mokly/ui` by package name in the design library
+    once the built repository packages plan lands, decision 9 option D.
+    Effort Large. Covers review 1 finding 1. Previous examples: the Rust
+    design fixtures and the packed consumer smoke both copy
+    `packages/ui/src`.
+- [x] Merge `origin/main` at `02eec937` in `c8f6faf6` and at `843ac8bf` in
+      `2e2281f6`. Both remerge diffs are empty. Evidence:
+      `.context/ui-package/merge-main-3/` and `merge-main-4/`.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
