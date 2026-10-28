@@ -102,10 +102,11 @@ export const SHELL_REVIEW_CSS = `
 .mb-panes[data-compare-mode="overlay"] .mb-pane--after { opacity: .5; }
 .mb-panes[data-compare-mode="difference"] .mb-pane--after { mix-blend-mode: difference; }
 @media ${NARROW_SHELL} {
-  /* The compact mode buttons of @mokly/ui/comparison-toolbar override the
-     shell's segmented control, and a rule in the package's cascade layer
-     cannot beat that unlayered rule, so this one stays unlayered here. */
-  .mbk-diff-toolbar .mbk-seg button { flex: 1; padding: 6px; white-space: nowrap; font-size: 11px; }
+  /* The compact modes of @mokly/ui/comparison-toolbar, as buttons, links, or
+     inert text, override the shell's segmented control, and a rule in the
+     package's cascade layer cannot beat that unlayered rule, so this one
+     stays unlayered here. */
+  .mbk-diff-toolbar .mbk-seg :is(button, a, span) { flex: 1; padding: 6px; white-space: nowrap; font-size: 11px; }
   .mbk-diff-stage { padding: 16px; }
   .mb-panes[data-compare-mode="side"],
   .mbk-diff-mobile .mb-panes { grid-template-columns: minmax(0, 1fr); }

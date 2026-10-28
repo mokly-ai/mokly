@@ -54,6 +54,16 @@ export function Toolbar() {
 `changed` shows the change mark, and `changedId` names its wording, which the
 select's `aria-describedby` points at while the control is marked.
 
+`ComparisonToolbar` renders its modes as toggle buttons that report through
+`onMode`. A host that runs no script, such as a static mockup, passes
+`modeHref` to draw each mode that has an address as a link, and
+`interactive={false}` to draw the other modes as inert text and Refresh as a
+picture of itself. The link or the text of the shown mode is marked as the
+current page. Scroll together stays a native switch in every band. The mode
+group reads the host's segmented control rules (`.mbk-seg`), which the
+`@mokly/viewer` stylesheet declares for the shell; the package stylesheet
+gives a link and inert text the line box and centring of a button.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -83,7 +93,8 @@ an unlayered shell or host rule wins over them; a test holds the rule.
   shell
 - [`src/comparison-toolbar/comparison-toolbar.tsx`](./src/comparison-toolbar/comparison-toolbar.tsx)
   — `ComparisonToolbar` and its `ComparisonMode`: the mode group, the Scroll
-  together switch, and Refresh
+  together switch, and Refresh, as buttons or as the links and inert text of
+  a static band
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
