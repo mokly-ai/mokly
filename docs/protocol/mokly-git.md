@@ -1,7 +1,5 @@
 # Git Command Runtime
 
-Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
-
 Mokly runs Git with an explicit checkout directory and argument vector. It
 starts no shell. Standard output and standard error have independent capture
 bounds of at most 64 MiB each. Standard error has a 1 MiB bound by default,

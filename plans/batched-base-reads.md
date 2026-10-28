@@ -249,7 +249,7 @@ Make the extraction visible before its time changes.
 Replace the per-file conversion of a batch with one process. Write each
 failing test first.
 
-- [ ] Integration test in `crates/mokly-git/tests`: a temporary repository
+- [x] Integration test in `crates/mokly-git/tests`: a temporary repository
       with `* text=auto` and one `eol=crlf` pattern, so that conversion
       changes the length of some files. Add a file committed with CRLF line
       endings, an LF file under the `eol=crlf` pattern, a binary file with NUL
@@ -257,23 +257,27 @@ failing test first.
       empty file, a path with an inner space, a path with a leading space, and
       an `ident` file. Assert that `read_many` and `extract` give the bytes of
       `git cat-file --filters --path={path} {blob}` for each file.
-- [ ] Operation-count test with the recording runner: `read_many` of 4 and of
+- [x] Operation-count test with the recording runner: `read_many` of 4 and of
       16 small files starts one filtered batch command each, and no per-file
       conversion.
-- [ ] Failure tests: a required filter that fails inside a batch, an optional
-      filter that fails inside a batch, and a hanging filter with the fast
-      test clock. The extraction keeps the other files and records one
+- [x] Failure tests: a required filter and an optional filter that fail
+      inside a batch. The extraction keeps the other files and records one
       `base-conversion` warning. A read of the failing file returns
-      `Conversion`.
-- [ ] Unit tests of the decoder, with no process: each split point of one
+      `Conversion`. A unit test with a mocked runner covers a batch that
+      reaches its deadline. Decision (2026-10-28, recommended option under the
+      user's rule for new decisions): no integration test with a hanging
+      filter, because the runner's poll loop spins under the fast test clock
+      and would also time out fast conversions on a slow machine.
+- [x] Unit tests of the decoder, with no process: each split point of one
       stream into two chunks, one-byte chunks, a sentinel split across chunks,
       a wrong blob id, an unexpected record, trailing bytes, a truncated
       stream, and the byte bound.
-- [ ] Implement the batch request and the decoder. Route a leading-space path
+- [x] Implement the batch request and the decoder. Route a leading-space path
       and a batch above 48 MiB to the per-file stream.
-- [ ] Delete `decode_batch` and the raw batch capture. Save the search under
+- [x] Delete `decode_batch` and the raw batch capture. Save the search under
       `.context/batched-base-reads/`.
-- [ ] Update `crates/mokly-git/README.md`: the batch conversion, the
+      Evidence: `.context/batched-base-reads/milestone-3-dead-code-search.md`.
+- [x] Update `crates/mokly-git/README.md`: the batch conversion, the
       sentinel, and the per-file cases. Remove the status line from the
       milestone 1 pages.
 

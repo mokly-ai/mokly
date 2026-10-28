@@ -53,14 +53,22 @@ also when the caller exports a different `GIT_ATTR_SOURCE`. Relative smudge
 commands and relative file reads keep their normal repository context. The
 real index and working files stay intact.
 
-Effective attributes and `core.autocrlf` identify paths that need conversion.
-Only paths with no attributes and disabled automatic line endings use bounded
-raw `--batch -Z` capture. Their checkout bytes equal their raw bytes. The
-decoder validates object identity, proved length, binary payload, and NUL
-framing. All other paths use `--filters` streams. Large raw files also stream
-into owned flat temporary files outside the repository. Their byte bound stops
-the process before more data is written. A deadline and process-tree
-cancellation supervise every conversion. Failed optional filters return typed
+A batch of two or more files within 48 MiB converts in one
+`cat-file --batch --filters -Z` process. Each input line names a blob and its
+path, and a sentinel name follows each file. Git prints the raw blob size in
+each header, not the converted size, so the decoder ends each converted file
+at the sentinel's `missing` record. The sentinel is random for each batch, so
+no file content can predict it. The decoder streams each file into an owned
+temporary file outside the repository. It validates the blob id, the NUL
+framing, and the batch byte bound. A path that starts with a space or a tab
+converts alone, because Git strips that whitespace from a batch line. A
+single file also converts alone with `--filters`. A larger batch holds one
+large file, which streams alone: effective attributes and `core.autocrlf`
+select raw `cat-file blob` for a path without conversion and `--filters` for
+the others. The byte bound stops the process before more data is written. A
+failed, timed-out, or oversized batch returns a typed `Conversion` error, and
+extraction converts the files of that batch again one at a time. A deadline
+and process-tree cancellation supervise every conversion. Failed optional filters return typed
 `Conversion` errors instead of raw fallback bytes. Conversion includes line
 endings, encodings, filters, and LFS downloads.
 
@@ -139,6 +147,11 @@ extraction cleanup after cancellation during a streamed copy.
   bases, changed paths, trees, blobs, and archives.
 - [`src/disk.rs`](./src/disk.rs) defines `Disk` and `Archive`, the filesystem
   boundary for checkout identity, working reads, and extraction.
+- [`src/checkout.rs`](./src/checkout.rs) defines `Checkout`, the converted
+  files of one batch. [`src/checkout_batch.rs`](./src/checkout_batch.rs) builds
+  the filtered batch request, and
+  [`src/checkout_output.rs`](./src/checkout_output.rs) defines `BatchSink`,
+  the decoder that splits its output at the sentinel records.
 - [`src/tree.rs`](./src/tree.rs) and [`src/changes.rs`](./src/changes.rs)
   define the tree `Entry` and `Limits` records and the changed-path `Change`
   records.

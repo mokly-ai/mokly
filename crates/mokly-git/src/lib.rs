@@ -24,6 +24,7 @@ pub mod access;
 mod lookup;
 
 mod checkout;
+mod checkout_batch;
 mod checkout_bounds;
 mod checkout_index;
 mod checkout_output;

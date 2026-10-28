@@ -2,25 +2,17 @@
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::PathBuf;
-use std::time::Duration;
 
-use crate::checkout_output::{conversion, decode_batch};
-use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
+use crate::checkout_batch::{
+    Active, BATCH_BYTES, FILTER_TIMEOUT, batchable, conversion_args, convert, request,
+};
+use crate::checkout_output::conversion;
 use crate::error::{Error, IoResult, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{Entry, Limits};
-
-const FILTER_TIMEOUT: Duration = Duration::from_secs(120);
-
-struct Active;
-impl Cancellation for Active {
-    fn is_cancelled(&self) -> bool {
-        false
-    }
-}
 
 impl GitRepository {
     /// Reads one batch after checkout conversion. The batch is written to its
@@ -119,9 +111,10 @@ fn validate_entries(entries: &[Entry], limits: Limits) -> Result<()> {
 }
 
 /// Converted files of one batch in a private temporary directory, removed on
-/// drop. Unfiltered blobs of a batch up to 48 MiB come from one `cat-file`
-/// batch read. Filtered blobs, and every blob of a larger batch, stream straight
-/// to disk, so a large file never has to fit in memory.
+/// drop. A batch of two or more files within 48 MiB converts in one filtered
+/// `cat-file --batch` process. A single file, a path that starts with
+/// whitespace, and every file of a larger batch stream alone straight to disk,
+/// so a large file never has to fit in memory.
 pub(crate) struct Checkout {
     _root: tempfile::TempDir,
     files: BTreeMap<RepoPath, PathBuf>,
@@ -139,52 +132,35 @@ impl Checkout {
             .tempdir()
             .git()?;
         let mut files = BTreeMap::new();
-        let converted = repository.converted_paths(commit, entries)?;
+        let mut remaining = limit;
         let batch_bytes = entries
             .iter()
             .fold(0usize, |total, entry| total.saturating_add(entry.size));
-        let raw: Vec<_> = entries
-            .iter()
-            .filter(|entry| !converted.contains(&entry.path) && batch_bytes <= 48 * 1024 * 1024)
-            .cloned()
-            .collect();
-        let mut remaining = limit;
-        if !raw.is_empty() {
-            let input = raw
-                .iter()
-                .map(|entry| format!("{}\0", entry.object))
-                .collect::<String>()
-                .into_bytes();
-            let request = request(
-                repository,
-                commit,
-                vec!["--batch".into(), "-Z".into()],
-                input,
-            );
-            let output = repository.runner.run_cancellable_with_environment_timeout(
-                &request,
-                &Active,
-                &[("LC_ALL", "C".into())],
-                FILTER_TIMEOUT,
-            )?;
-            let bytes = decode_batch(&output.stdout, &raw, remaining)?;
-            for (index, (entry, bytes)) in raw.iter().zip(bytes).enumerate() {
-                let path = root.path().join(format!("raw-{index}"));
-                fs::File::create(&path).git()?.write_all(bytes).git()?;
-                remaining -= bytes.len();
-                files.insert(entry.path.clone(), path);
+        let converted = if batch_bytes <= BATCH_BYTES {
+            let batch: Vec<_> = entries.iter().filter(|entry| batchable(entry)).collect();
+            if batch.len() > 1 {
+                let batch: Vec<_> = batch.into_iter().cloned().collect();
+                let (paths, written) = convert(repository, commit, &batch, root.path(), remaining)?;
+                remaining -= written;
+                files.extend(batch.into_iter().map(|entry| entry.path).zip(paths));
             }
-        }
+            None
+        } else {
+            Some(repository.converted_paths(commit, entries)?)
+        };
         for (index, entry) in entries.iter().enumerate() {
             if files.contains_key(&entry.path) {
                 continue;
             }
-            let path = root.path().join(format!("converted-{index}"));
+            let path = root.path().join(format!("single-{index}"));
             let mut output = fs::File::create(&path).git()?;
+            let converted = converted
+                .as_ref()
+                .is_none_or(|converted| converted.contains(&entry.path));
             let request = request(
                 repository,
                 commit,
-                conversion_args(entry, converted.contains(&entry.path)),
+                conversion_args(entry, converted),
                 Vec::new(),
             );
             repository
@@ -222,40 +198,5 @@ impl Checkout {
             return Err(Error::ByteLimit { limit });
         }
         Ok(bytes)
-    }
-}
-
-fn request(
-    repository: &GitRepository,
-    commit: &ObjectId,
-    args: Vec<String>,
-    stdin: Vec<u8>,
-) -> Request {
-    Request {
-        directory: repository.directory.clone(),
-        args: [
-            "--no-optional-locks".to_owned(),
-            format!("--attr-source={commit}"),
-            "cat-file".into(),
-        ]
-        .into_iter()
-        .chain(args)
-        .map(Into::into)
-        .collect(),
-        stdin,
-        output_limit: DEFAULT_OUTPUT_LIMIT,
-        stderr_limit: DEFAULT_STDERR_LIMIT,
-    }
-}
-
-fn conversion_args(entry: &Entry, converted: bool) -> Vec<String> {
-    if converted {
-        vec![
-            "--filters".into(),
-            format!("--path={}", entry.path),
-            entry.object.to_string(),
-        ]
-    } else {
-        vec!["blob".into(), entry.object.to_string()]
     }
 }
