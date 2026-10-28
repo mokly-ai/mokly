@@ -1,8 +1,7 @@
 # Per-Entry Render Keys
 
-Status: Active. On branch
-`conductor/perf-4-per-entry-render-keys-and-cross-side-fragment-reuse`, no
-pull request yet. The plan closes when its PR merges.
+Status: Active. [PR #227](https://github.com/mokly-ai/mokly/pull/227) is open.
+The plan closes when its PR merges.
 
 One JavaScript edit re-renders every JavaScript document, and an unchanged
 base renders every base document through the sidecars again. Both come from
@@ -495,7 +494,7 @@ Let equal head and base inputs share render cache entries under decision 1.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the pull request with the before and after table when every other
+- [x] Open the pull request with the before and after table when every other
       milestone TODO is ticked. Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
