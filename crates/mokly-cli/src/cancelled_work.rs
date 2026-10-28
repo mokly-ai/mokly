@@ -173,7 +173,7 @@ impl RenderWorkers for CancellableWorkers {
         &self,
         roots: &[StylesheetRoot],
         worker: &dyn StylesheetWorker,
-    ) -> Vec<Result<Bundle>> {
+    ) -> Result<Vec<Bundle>> {
         self.inner.stylesheets(
             roots,
             &StylesheetJobs {

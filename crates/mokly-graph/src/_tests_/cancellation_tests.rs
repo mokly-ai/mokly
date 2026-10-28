@@ -14,7 +14,6 @@ use mokly_source_interface::tree::SourceTreeMock;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::cache::RenderCacheMock;
 use crate::error::GraphError;
 use crate::graph::Graph;
 use crate::key::NodeKey;
@@ -151,9 +150,6 @@ fn preparation_stops_before_the_next_stylesheet_root() {
         RenderWorkersMock::cancelled
             .next_call(matching!())
             .returns(true),
-        RenderCacheMock::insert
-            .next_call(matching!(_, _))
-            .returns(()),
     )));
     let mut config = config();
     config.input = serde_json::from_value(

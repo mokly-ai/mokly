@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use mokly_css::types::{Bundle, StylesheetRoot};
 
-use crate::error::{Result, invalid};
+use crate::error::{GraphError, Result, invalid};
 use crate::workers::{
     DocumentWorker, RenderWorkers, StylesheetWorker, ThreadWorkers, ValidatedView,
 };
@@ -40,7 +40,7 @@ fn bundle(root: &StylesheetRoot) -> Bundle {
     }
 }
 
-/// The first root waits until the last root has started, which needs two workers.
+/// The first root waits until another root has started, which needs two workers.
 struct Overlapping {
     started: Sender<()>,
     wait: Mutex<Receiver<()>>,
@@ -58,36 +58,30 @@ impl StylesheetWorker for Overlapping {
             self.order.lock().unwrap().push(root.path.clone());
             self.started.send(()).unwrap();
         }
-        if root.path == "c.css" {
-            return Err(invalid(&root.path, "fixture failure"));
-        }
         Ok(bundle(root))
     }
 }
 
-fn overlapping() -> Overlapping {
+#[test]
+fn stylesheet_jobs_overlap_on_the_pool_and_keep_root_order() {
     let (started, wait) = mpsc::channel();
-    Overlapping {
+    let jobs = Overlapping {
         started,
         wait: Mutex::new(wait),
         timed_out: AtomicBool::new(false),
         order: Mutex::new(Vec::new()),
-    }
-}
-
-#[test]
-fn stylesheet_jobs_overlap_on_the_pool_and_keep_root_order_and_failures() {
-    let workers = ThreadWorkers::new(2).unwrap();
-    let jobs = overlapping();
+    };
     let roots = [root("a.css"), root("b.css"), root("c.css")];
-    let results = workers.stylesheets(&roots, &jobs);
+    let routes: Vec<_> = ThreadWorkers::new(2)
+        .unwrap()
+        .stylesheets(&roots, &jobs)
+        .unwrap()
+        .into_iter()
+        .map(|bundle| bundle.route)
+        .collect();
     assert!(!jobs.timed_out.load(Ordering::SeqCst));
-    let order = jobs.order.lock().unwrap();
-    assert_ne!(order.first().map(String::as_str), Some("a.css"));
-    assert_eq!(results.len(), 3);
-    assert_eq!(results[0].as_ref().unwrap().route, "styles/a.css");
-    assert_eq!(results[1].as_ref().unwrap().route, "styles/b.css");
-    assert!(results[2].is_err());
+    assert_ne!(jobs.order.lock().unwrap()[0], "a.css");
+    assert_eq!(routes, ["styles/a.css", "styles/b.css", "styles/c.css"]);
 }
 
 struct Serial;
@@ -98,24 +92,33 @@ impl RenderWorkers for Serial {
     }
 }
 
+/// Records each started root and fails `b.css`.
 struct Recording(Mutex<Vec<String>>);
 
 impl StylesheetWorker for Recording {
     fn stylesheet(&self, root: &StylesheetRoot) -> Result<Bundle> {
         self.0.lock().unwrap().push(root.path.clone());
+        if root.path == "b.css" {
+            return Err(invalid(&root.path, "fixture failure"));
+        }
         Ok(bundle(root))
     }
 }
 
 #[test]
-fn the_default_scheduler_bundles_each_root_once_in_root_order() {
-    let jobs = Recording(Mutex::new(Vec::new()));
-    let roots = [root("a.css"), root("b.css"), root("c.css")];
-    let routes: Vec<_> = Serial
-        .stylesheets(&roots, &jobs)
-        .into_iter()
-        .map(|bundle| bundle.unwrap().route)
-        .collect();
-    assert_eq!(routes, ["styles/a.css", "styles/b.css", "styles/c.css"]);
-    assert_eq!(*jobs.0.lock().unwrap(), ["a.css", "b.css", "c.css"]);
+fn both_schedulers_return_the_first_failure_and_start_no_later_root() {
+    let roots = [root("a.css"), root("b.css"), root("c.css"), root("d.css")];
+    let serial = Recording(Mutex::new(Vec::new()));
+    let pooled = Recording(Mutex::new(Vec::new()));
+    let schedulers: [(&dyn RenderWorkers, &Recording); 2] = [
+        (&Serial, &serial),
+        (&ThreadWorkers::new(1).unwrap(), &pooled),
+    ];
+    for (scheduler, jobs) in schedulers {
+        let Err(GraphError::Invalid { route, .. }) = scheduler.stylesheets(&roots, jobs) else {
+            panic!("expected the failure of b.css")
+        };
+        assert_eq!(route, "b.css");
+        assert_eq!(*jobs.0.lock().unwrap(), ["a.css", "b.css"]);
+    }
 }

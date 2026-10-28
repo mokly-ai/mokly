@@ -68,13 +68,10 @@ fn stylesheet_roots_reach_the_inner_workers_and_stop_after_the_first_interrupt()
                 }),
         )),
     };
-    let results = scheduler.stylesheets(&[root("a.css"), root("b.css"), root("c.css")], &job);
-    assert_eq!(results[0].as_ref().unwrap().route, "styles/a.css");
-    for result in &results[1..] {
-        assert!(matches!(
-            result,
-            Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled
-        ));
-    }
+    let result = scheduler.stylesheets(&[root("a.css"), root("b.css"), root("c.css")], &job);
+    assert!(matches!(
+        result,
+        Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled
+    ));
     assert_eq!(job.completed.load(Ordering::Relaxed), 1);
 }

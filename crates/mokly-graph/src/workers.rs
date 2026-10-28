@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::fmt;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_catalogue::diagnostic::Warning;
 use mokly_css::types::{Bundle, StylesheetRoot};
@@ -108,12 +109,13 @@ pub trait RenderWorkers: Send + Sync {
     fn document(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Arc<Artifact>> {
         worker.artifact(route)
     }
-    /// Bundle every root, retaining root order and every failure.
+    /// Bundle every root in root order, or return the first failure in root order.
+    /// No root starts after an earlier root failed.
     fn stylesheets(
         &self,
         roots: &[StylesheetRoot],
         worker: &dyn StylesheetWorker,
-    ) -> Vec<Result<Bundle>> {
+    ) -> Result<Vec<Bundle>> {
         roots.iter().map(|root| worker.stylesheet(root)).collect()
     }
     /// Run all jobs, retaining authored route order and every failure.
@@ -170,14 +172,27 @@ impl RenderWorkers for ThreadWorkers {
         &self,
         roots: &[StylesheetRoot],
         worker: &dyn StylesheetWorker,
-    ) -> Vec<Result<Bundle>> {
+    ) -> Result<Vec<Bundle>> {
         let parent = tracing::Span::current();
-        self.pool.install(|| {
+        let failed = AtomicUsize::new(usize::MAX);
+        let results: Vec<_> = self.pool.install(|| {
             roots
                 .par_iter()
-                .map(|root| parent.in_scope(|| worker.stylesheet(root)))
+                .enumerate()
+                .map(|(index, root)| {
+                    if index > failed.load(Ordering::Relaxed) {
+                        return None;
+                    }
+                    let result = parent.in_scope(|| worker.stylesheet(root));
+                    if result.is_err() {
+                        failed.fetch_min(index, Ordering::Relaxed);
+                    }
+                    Some(result)
+                })
                 .collect()
-        })
+        });
+        // A skipped root always follows a failed one, so that failure returns first.
+        results.into_iter().flatten().collect()
     }
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>> {
         let parent = tracing::Span::current();

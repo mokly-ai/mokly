@@ -26,8 +26,8 @@ Cached bundles supply the same set. Old cache-validation reads and filename
 suffixes cannot add or hide dependency usage. Preparation bundles the
 stylesheet roots on the render workers, then registers the bundles in root
 order. The generation and its first error therefore do not depend on worker
-timing. Each root job checks worker cancellation, and preparation checks it
-before each entry. A prepared generation exposes the same worker cancellation
+timing. No root starts after an earlier root failed. Each root job checks
+worker cancellation, and preparation checks it before each entry. A prepared generation exposes the same worker cancellation
 through `check_cancelled` for callers that process views in a loop.
 
 Preparation renders no document. Each plan carries a route and the document
@@ -178,7 +178,8 @@ retention disabled.
   `Artifact`, the byte-bounded LRU render cache.
 - [`src/workers.rs`](./src/workers.rs) defines `RenderWorkers` and
   `ThreadWorkers`, the injected worker pool. Its `stylesheets` method runs one
-  `StylesheetWorker` job for each stylesheet root and keeps the root order.
+  `StylesheetWorker` job for each stylesheet root, keeps the root order, and
+  returns the first failure in root order.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
