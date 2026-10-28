@@ -31,6 +31,29 @@ Setup evidence from an earlier release does not prove that a package's
 publisher, team access, or tag protections remain configured. Read back the
 current GitHub and npm settings before each release.
 
+## UI Package Registration
+
+Register `@mokly/ui` once, before the first coordinated release that
+publishes it. There is no workflow: a JavaScript package packs on any host.
+From a clean checkout of the reviewed commit, after `npm ci --ignore-scripts`,
+a maintainer runs the bootstrap command for the package:
+
+```sh
+node scripts/release/bootstrap.mjs {sha} .context/ui-bootstrap @mokly/ui
+```
+
+The command applies the source and checkout rules of the native registration
+below, packs the package in its isolated checkout with the package's own
+`prepack` build, and writes the archive and `pack-report.json`. It packs only
+the registration version `0.16.1`; it refuses a commit whose package version
+differs. The registration meets the native requirements 2 to 4 below, with
+these differences: the report names `@mokly/ui` and version `0.16.1`, its
+inventory holds only `LICENSE`, `README.md`, `CHANGELOG.md`, `package.json`,
+and files under `dist/`, and there is no `tls-dependencies.txt`, because the
+package has no native dependency. The release then publishes the package
+between the native packages and the viewer under the
+[publication order](./npm-release.md#release-build-matrix-and-publication-order).
+
 ## Native Package Registration
 
 Register each `@mokly/native-{target}` package once, before the first

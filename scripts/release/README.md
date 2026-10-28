@@ -14,8 +14,9 @@ defines version selection and publication requirements.
 - `build-native.mjs` builds, or takes, one target's binary and packs its
   native package archive with a report.
 - `bootstrap.mjs` packs one registration archive from a reviewed commit:
-  `@mokly/viewer` by default, or a named `@mokly/native-{target}` package on a
-  host of that target.
+  `@mokly/viewer` by default, `@mokly/ui`, or a named `@mokly/native-{target}`
+  package on a host of that target. Each JavaScript package is pinned to its
+  registration version.
 
 ## Preparation and publication
 

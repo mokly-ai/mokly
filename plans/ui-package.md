@@ -83,12 +83,7 @@ precedence change is acceptable.
 
 Open decisions found during milestone 2, asked on 2026-10-27:
 
-- Decision 7: `@mokly/ui` has no npm registration and no trusted publisher,
-  so the first release would stop at its publish step. A register it by
-  hand at `0.0.0` with its trusted publisher and update `npm-bootstrap.md`.
-  B extend the bootstrap scripts to pack a reviewed `@mokly/ui` `0.0.0`
-  archive like the native packages and update the doc. Recommended B. The
-  registration itself needs a maintainer with npm access and is post-merge.
+- Decision 7 is answered: see milestone 5.
 - Decision 8: the elapsed-time lint of `ci-test-timing.md` is active for
   `tests/` and now `packages/ui/tests/`, but not for `packages/viewer/tests/`,
   which the contract names; the gap predates this plan. A add
@@ -380,7 +375,34 @@ rule); 4 the knob edge and the Refresh colour follow the shipped control
       artboards, in both viewports and both schemes. Save screenshots under
       `.context/ui-package/mockups/`.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 5: UI package registration
+
+Decision 7 (2026-10-28, the user): option B. The bootstrap script packs a
+reviewed `@mokly/ui` registration archive like the native packages, and the
+user registers the package with their npm account and MFA from this branch,
+before the pull request merges, so the first release after the merge can
+publish it. Rejected: A, a hand-packed archive, because it leaves no reviewed
+report. Reason: the registration then has the same evidence as the other
+seven packages.
+
+- [x] `scripts/release/bootstrap_archive.mjs` packs `@mokly/ui` from its
+      isolated checkout, pinned to the registration version `0.16.1`, and
+      `bootstrap.mjs` names it. `tests/release_bootstrap_ui.test.ts` covers
+      the pack, the source proof, the missing native report, a later
+      version, and a dirty tree; the fixture gains `packages/ui`.
+- [x] `docs/protocol/npm-bootstrap.md` gains the UI Package Registration
+      section, and `scripts/release/README.md` names the package.
+- [ ] Pack the registration archive from the reviewed commit of this branch
+      on the maintainer's machine and review `pack-report.json` against the
+      contract.
+- [ ] Publish the reviewed archive with the `bootstrap` dist-tag and public
+      access, then compare the registry entry with the report.
+- [ ] Configure the package's trusted publisher and access settings like the
+      other packages, and read them back.
+- [ ] Record the registration version under Registered Packages of
+      `docs/protocol/npm-bootstrap.md`.
+
+## Milestone 6: Verification, commit, review, and pull request
 
 - [ ] Remove the status lines that milestone 1 added, because the behaviour
       is implemented.
@@ -395,8 +417,6 @@ rule); 4 the knob edge and the Refresh colour follow the shipped control
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Register `@mokly/ui` on npm with its trusted publisher before the first
-      release that carries it, under decision 7.
 - [ ] Give the unused-export and public-export ratchets a baseline for
       `packages/ui` once a release tag carries the package.
 - [ ] After the first release that carries `@mokly/ui`, install
