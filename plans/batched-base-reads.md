@@ -254,6 +254,13 @@ The user answered each decision on 2026-10-27 with the recommended option.
     cache format; a fingerprint for each preparation, because a plugin that
     changes a file once would pass in later Serve preparations.
 
+The orchestrator answered the review 2 findings for the user on 2026-10-28.
+Finding 1: the smallest option that keeps the real OS error as the source,
+option A: `EntryWriter` keeps the store failure in its own slot, and the
+single-file loop returns it before the stream error. It replaces the applied
+option B, the shared stream helper, which kept the error too but added a
+trait. Finding 2: D, decision 8. Finding 3: E, decision 9.
+
 ## Milestone 1: Documentation and protocol for batch conversion
 
 State the batch conversion requirements before the code changes.

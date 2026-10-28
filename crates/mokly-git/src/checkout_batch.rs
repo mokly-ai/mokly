@@ -3,7 +3,7 @@
 use std::hash::{BuildHasher, RandomState};
 use std::time::Duration;
 
-use crate::checkout_files::{BatchFiles, EntryWriter, Failing, Indexed};
+use crate::checkout_files::{BatchFiles, EntryWriter, Indexed};
 use crate::checkout_output::{BatchSink, HEADER_BYTES, conversion};
 use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
 use crate::error::{Error, Result};
@@ -101,7 +101,19 @@ pub(crate) fn convert_entries(
             conversion_args(entry, converted),
             Vec::new(),
         );
-        let streamed = stream(repository, &request, &mut output, remaining);
+        let streamed = repository
+            .runner
+            .stream_cancellable_with_environment_timeout(
+                &request,
+                &Active,
+                &[("LC_ALL", "C".into())],
+                FILTER_TIMEOUT,
+                &mut output,
+                remaining,
+            );
+        if let Some(error) = output.failure() {
+            return Err(error);
+        }
         if matches!(streamed, Err(Error::CheckoutTimeout)) {
             repository
                 .timed_out
@@ -158,37 +170,21 @@ fn convert(
             .saturating_add(16),
     );
     let mut sink = BatchSink::new(entries, files, &sentinel, limit);
-    stream(
-        repository,
-        &request,
-        &mut sink,
-        limit.saturating_add(framing),
-    )?;
-    sink.finish()
-}
-
-/// Streams one conversion command into `output`. A typed failure of the
-/// output wins over the stream error that it caused.
-fn stream(
-    repository: &GitRepository,
-    request: &Request,
-    output: &mut dyn Failing,
-    limit: usize,
-) -> Result<()> {
     let streamed = repository
         .runner
         .stream_cancellable_with_environment_timeout(
-            request,
+            &request,
             &Active,
             &[("LC_ALL", "C".into())],
             FILTER_TIMEOUT,
-            output,
-            limit,
+            &mut sink,
+            limit.saturating_add(framing),
         );
-    if let Some(error) = output.failure() {
+    if let Some(error) = sink.failure() {
         return Err(error);
     }
-    streamed
+    streamed?;
+    sink.finish()
 }
 
 pub(crate) fn request(
