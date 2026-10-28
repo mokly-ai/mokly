@@ -160,6 +160,9 @@ export async function bundleWith(
       target: "node22",
       jsx: "automatic",
       jsxDev: true,
+      // Renaming a colliding top-level name would let another module change
+      // a function's `name` and its stack frames, outside its render key.
+      keepNames: true,
       metafile: true,
       logLevel: "silent",
       ...(resolution.mode === "native"

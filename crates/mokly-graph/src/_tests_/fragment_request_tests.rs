@@ -11,10 +11,15 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::cache::{Artifact, RenderCache, RenderCacheMock};
+use crate::cache::{Artifact, MemoryCache, RenderCache, RenderCacheMock};
 use crate::fragments::MemoFragments;
 use crate::key::NodeKey;
+use crate::render_inputs::RenderKeys;
 use crate::requests::{MemoryRequests, Requests};
+
+fn whole(fallback: &str) -> Arc<RenderKeys> {
+    Arc::new(RenderKeys::whole(NodeKey(fallback.into())))
+}
 
 fn request() -> FragmentRequest {
     FragmentRequest {
@@ -67,7 +72,7 @@ fn successful_and_failed_fragment_renders_release_request_metadata() {
             )))
         };
         let memo = MemoFragments {
-            generation: "generation".into(),
+            keys: whole("generation"),
             renderer,
             cache,
             flights: flights.clone(),
@@ -87,7 +92,7 @@ fn successful_and_failed_fragment_renders_release_request_metadata() {
 #[test]
 fn a_cached_fragment_releases_its_registration_without_a_provider_call() {
     let memo = MemoFragments::new(
-        "generation".into(),
+        whole("generation"),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(
             RenderCacheMock::get
@@ -110,12 +115,12 @@ fn a_cached_fragment_releases_its_registration_without_a_provider_call() {
 #[test]
 fn fragment_adapters_keep_independent_request_registries() {
     let first = MemoFragments::new(
-        "same".into(),
+        whole("same"),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
     );
     let second = MemoFragments::new(
-        "same".into(),
+        whole("same"),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
     );
@@ -124,4 +129,41 @@ fn fragment_adapters_keep_independent_request_registries() {
     let right = second.flights.acquire(&key);
     let _guard = left.lock().unwrap();
     assert!(right.try_lock().is_ok());
+}
+
+#[test]
+fn adapters_with_equal_render_input_keys_share_one_cached_fragment() {
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(1024 * 1024));
+    let head = MemoFragments::new(
+        whole("equal inputs"),
+        Arc::new(Unimock::new(
+            FragmentRendererMock::render
+                .next_call(matching!(_))
+                .returns(Ok(Fragment {
+                    html: "<p>head</p>".into(),
+                    ..Default::default()
+                })),
+        )),
+        cache.clone(),
+    );
+    let base = MemoFragments::new(
+        whole("equal inputs"),
+        Arc::new(Unimock::new(())),
+        cache.clone(),
+    );
+    assert_eq!(head.render(&request()).unwrap().html, "<p>head</p>");
+    assert_eq!(base.render(&request()).unwrap().html, "<p>head</p>");
+    let other = MemoFragments::new(
+        whole("other inputs"),
+        Arc::new(Unimock::new(
+            FragmentRendererMock::render
+                .next_call(matching!(_))
+                .returns(Ok(Fragment {
+                    html: "<p>other</p>".into(),
+                    ..Default::default()
+                })),
+        )),
+        cache,
+    );
+    assert_eq!(other.render(&request()).unwrap().html, "<p>other</p>");
 }

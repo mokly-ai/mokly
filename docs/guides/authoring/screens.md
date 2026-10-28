@@ -123,6 +123,25 @@ its text. Use `data-mokly-scroll="account-activity"` when a product id does
 not fit. Use the same unique lowercase kebab-case value in both versions.
 Use `data-mokly-scroll="off"` to keep a region independent.
 
+## Keep a render self-contained
+
+Mokly keeps each rendered view until one of its inputs changes. The inputs of
+a screen or component are the modules that its entry module imports, directly
+or through other modules, your renderer, the class names of their CSS Modules,
+the paths and titles of the definitions they import, and the `package.json`
+and `tsconfig.json` files beside them. An edit renders again only the views
+whose inputs changed.
+
+Let a render depend only on those imports, its props, its slots, and its
+render context:
+
+- Import a setup module, such as one that installs a date mock, from each
+  entry module that needs it. A setup module that only another entry module
+  imports does not reach the cached views of this one.
+- Keep files, environment variables, the clock, and random values out of a
+  render. A view that reads them keeps its first result until one of its
+  inputs changes.
+
 ## Write an HTML screen
 
 Save a `.screen.html` file inside a configured root. Start with YAML front

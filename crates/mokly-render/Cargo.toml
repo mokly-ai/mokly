@@ -25,6 +25,8 @@ globset = "0.4.20"
 mock = []
 
 [dev-dependencies]
+mokly-compare = { workspace = true, features = ["mock"] }
+mokly-git = { workspace = true, features = ["mock"] }
 mokly-css = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }
 mokly-graph = { workspace = true, features = ["mock"] }

@@ -28,6 +28,14 @@ fn ancestors_are_nearest_first_and_end_at_the_repository() {
 }
 
 #[test]
+fn package_roots_keep_ancestor_order_and_add_only_new_configured_roots() {
+    assert_eq!(
+        ancestor_roots::package_roots("app", ["".to_owned(), "tools".to_owned()]),
+        ["app", "", "tools"]
+    );
+}
+
+#[test]
 fn installed_tier_requires_only_directories_that_the_head_used() {
     for directory in ["app/node_modules", "packages/ui/node_modules"] {
         for (used, present, expected) in [
