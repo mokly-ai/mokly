@@ -262,7 +262,7 @@ impl Graph {
             generation_inputs.push(plan.key.0.as_bytes());
         }
         for resource in resources.values() {
-            generation_inputs.push(resource.key.0.as_bytes());
+            generation_inputs.push(resource.document_key.0.as_bytes());
         }
         if let Some(bundle) = self.inputs.fragment_generation.as_deref() {
             generation_inputs.push(bundle.as_bytes());
