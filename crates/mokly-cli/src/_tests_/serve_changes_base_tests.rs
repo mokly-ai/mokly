@@ -3,7 +3,10 @@
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::diagnostic::WarningSubject;
-use mokly_compare::base_render::{BaseProvider, BaseProviderMock, BaseRequest, HistoricalSources};
+use mokly_compare::base_render::{
+    BasePreparationError, BaseProvider, BaseProviderMock, BaseRequest, HistoricalSources,
+    PreparedBase,
+};
 use mokly_compare::error::Error;
 use mokly_git::identity::ObjectId;
 use mokly_graph::error::GraphError;
@@ -31,7 +34,10 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
         let inner = Unimock::new(
             BaseProviderMock::prepare
                 .next_call(matching!(_))
-                .returns(Ok(graph)),
+                .returns(Ok(PreparedBase {
+                    generation: graph,
+                    scripts_off: false,
+                })),
         );
         let progress = Unimock::new(
             ChangeProgressMock::status
@@ -61,7 +67,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
         if active {
             assert!(result.is_ok());
         } else {
-            assert!(matches!(result, Err(Error::Cancelled)));
+            assert!(matches!(result, Err(error) if matches!(*error.source, Error::Cancelled)));
         }
     }
 }
@@ -74,12 +80,15 @@ fn failed_graph_preparation_retains_only_its_dependency_warning() {
     let inner = Unimock::new(
         BaseProviderMock::prepare
             .next_call(matching!(_))
-            .returns(Err(Error::Graph {
-                source: GraphError::Attempt {
-                    failures: vec![],
-                    warnings: vec![dependency.clone(), warning("Historical composition.")],
+            .returns(Err(BasePreparationError::new(
+                false,
+                Error::Graph {
+                    source: GraphError::Attempt {
+                        failures: vec![],
+                        warnings: vec![dependency.clone(), warning("Historical composition.")],
+                    },
                 },
-            })),
+            ))),
     );
     let warnings = Arc::new(Mutex::new(Vec::new()));
     let provider: &dyn BaseProvider = &AttemptBase {
@@ -100,6 +109,6 @@ fn failed_graph_preparation_retains_only_its_dependency_warning() {
             sources: Arc::new(Unimock::new(())),
         },
     });
-    assert!(matches!(result, Err(Error::Graph { .. })));
+    assert!(matches!(result, Err(error) if matches!(*error.source, Error::Graph { .. })));
     assert_eq!(*warnings.lock().unwrap(), [dependency]);
 }

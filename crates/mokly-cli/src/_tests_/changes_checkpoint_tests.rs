@@ -57,6 +57,7 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
                         interrupt.interrupt();
                         Err(Error::Base {
                             commit: "a".repeat(40),
+                            scripts_off: false,
                             source: Box::new(Error::Catalogue {
                                 source: CatalogueError::Invalid {
                                     issues: Vec::new(),
@@ -107,6 +108,7 @@ fn a_base_input_rejection_survives_a_later_clean_verification() {
                 .next_call(matching!(_, _, _, _))
                 .returns(Err(Error::Base {
                     commit: "a".repeat(40),
+                    scripts_off: false,
                     source: Box::new(Error::Graph {
                         source: GraphError::InputsChanged { path: path.into() },
                     }),

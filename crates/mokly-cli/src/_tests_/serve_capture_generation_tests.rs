@@ -143,10 +143,10 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             },
         })
         .unwrap();
-    assert!(generation.check_cancelled().is_ok());
+    assert!(generation.generation.check_cancelled().is_ok());
     run.cancel();
     assert!(matches!(
-        generation.check_cancelled(),
+        generation.generation.check_cancelled(),
         Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled
     ));
     assert!(!command.requested());
