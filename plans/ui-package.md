@@ -84,12 +84,7 @@ precedence change is acceptable.
 Open decisions found during milestone 2, asked on 2026-10-27:
 
 - Decision 7 is answered: see milestone 5.
-- Decision 8: the elapsed-time lint of `ci-test-timing.md` is active for
-  `tests/` and now `packages/ui/tests/`, but not for `packages/viewer/tests/`,
-  which the contract names; the gap predates this plan. A add
-  `packages/viewer/tests/**` to the lint, zero findings today. B narrow the
-  contract to the covered paths. Recommended A. It widens a lint, so it
-  waits for the user.
+- Decision 8 is answered: see milestone 4.
 
 Evidence goes under `.context/ui-package/`.
 
@@ -329,30 +324,33 @@ text and Refresh as a picture, with the product output unchanged, and the
 shell's unlayered narrow rule covers the three forms. Evidence is under
 `.context/ui-package/mockups/`.
 
-Open decision 9, asked on 2026-10-28: how the mockups import the package.
+Decision 9 (2026-10-28, the user): option A for now. The mockups import the
+package sources by repository path, `packages/ui/src/{name}/{name}.tsx` and
+`.css`, and the design components contract says "by its repository path".
 The `stylesheets` field of a registration accepts only paths inside
-`examples/basic`, so the protocol's "dependency path" cannot work. A
-package-name import resolves to `dist`, which Git ignores, so the base side
-of every later Changes comparison fails to bundle and Changes goes
-unavailable. A import the package sources by repository path,
-`packages/ui/src/{name}/{name}.tsx` and `.css`, and change the protocol
-sentence to say so; the patch does this. B keep package-name imports and
-accept that Changes is unavailable for the design entries on later bases.
-C add a source export condition to `@mokly/ui` and enable it in the example
-configuration; the release manifest check and its contract change too.
-D extend the core so a registration accepts a package specifier and a base
-side can build a repository package. Recommended A.
+`examples/basic`, and a package-name import resolves to `dist`, which Git
+ignores, so the base side of every later Changes comparison would fail to
+bundle and Changes would go unavailable. Rejected: B, package-name imports
+with Changes unavailable on later bases. Rejected for now: C, a source export
+condition, because the CSS would still need the relative import and the
+release manifest check would need an exception. D, the core fix for built
+repository packages, is its own plan in the Conductor workspace "Built
+repository packages in Changes", which the user picks up. Reason: A is the
+smallest change that keeps each comparison side on its own files.
 
-Open findings of the adoption, each a difference from the approved
-artboards, asked on 2026-10-28: 1 the shipped selector draws a right
-chevron where the artboards drew a down chevron (A accept in the mockups,
-B change the product in a separate change); 2 below 900px the shipped
-selector is always compact, so the `compact` flag has no effect in mobile
-documents (A accept, B a mockup override that restores the full face, C a
-`compact` prop on the package component); 3 link and inert-text modes are
-1px shorter than before, like the shipped buttons (A accept, B drop the
-rule); 4 the knob edge and the Refresh colour follow the shipped control
-(A accept).
+Findings of the adoption, each answered on 2026-10-28 by the user with the
+recommendation: 1 the shipped selector draws a right chevron where the
+artboards drew a down chevron, option B, change the shipped glyph to a down
+chevron in this branch, because the artboards are the spec and a select
+shows a down chevron; 2 below 900px the shipped selector is always compact,
+option A, accept, because the sample then shows the shipped behaviour of a
+narrow bar; 3 link and inert-text modes are 1px shorter, option A, accept;
+4 the knob edge and the Refresh colour follow the shipped control, option A,
+accept.
+
+Decision 8 (2026-10-28, the user): option A, `packages/viewer/tests/**`
+joins the elapsed-time lint, with zero findings today. Rejected: B, narrow
+the contract. Reason: the contract already states the rule.
 
 - [ ] `chrome/appearance-selector`: `appearance-selector.view.tsx` renders
       `@mokly/ui/appearance-selector`. Delete the hand-written markup and
@@ -363,6 +361,14 @@ rule); 4 the knob edge and the Refresh colour follow the shipped control
       search.
 - [ ] `controls/comparison-toolbar`: the same for its view file and its
       stylesheet.
+- [ ] Finding 1, option B: the package appearance selector draws a down
+      chevron, as the artboards do, with its tests and the viewer's
+      string-rendered expectations updated.
+- [ ] Decision 8, option A: `packages/viewer/tests/**` joins the elapsed-time
+      lint in `eslint.config.js` and its test.
+- [ ] Decision 9, option A: the "by its dependency path" sentences of
+      `docs/protocol/mokly-design-components.md`, the design library README,
+      and `AGENTS.md` say "by its repository path".
 - [ ] `tests/design_boundaries.test.ts` and `tests/helpers/design_styles.ts`:
       the audited boundaries of the adopted components read the package CSS.
 - [ ] The design browser specs keep passing. Replace an assertion that only
