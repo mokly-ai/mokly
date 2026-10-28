@@ -1,8 +1,9 @@
 //! A replacement or a stop ends a batch: no later route starts, renders that wait for
-//! admission are dropped, and nothing stale publishes.
+//! admission are dropped, held reports are discarded on every path, and nothing stale
+//! publishes.
 
 use std::collections::BTreeSet;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::task::{Context, Waker};
 
 use tokio::task::JoinHandle;
@@ -15,7 +16,7 @@ use crate::error::Result;
 use crate::publication_support;
 use crate::work::{Work, Workers};
 
-use super::script::{pass, reports};
+use super::script::{Script, pass, reports};
 use super::support::{Renders, route};
 
 #[tokio::test]
@@ -121,26 +122,72 @@ async fn a_stop_drops_renders_that_wait_for_admission() {
     assert!(script.published.lock().unwrap().is_empty());
 }
 
-#[tokio::test]
-async fn a_replacement_discards_a_failure_that_waits_for_an_earlier_render() {
-    let (mut renders, documents) = Renders::new(&[&route(0)], &[&route(1)]);
-    let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
-    let origin = publication_support::snapshot(4, documents);
-    let replacement = publication_support::snapshot(1, replaced);
-    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
+/// A pass whose route 1 failure waits while routes 0 and 2 run behind their gates. No
+/// render can end until the test releases a gate, so the test picks the path that ends
+/// the pass. A third worker stays free for a replacement's render.
+struct HeldFailure {
+    renders: Renders,
+    script: Script,
+    task: JoinHandle<()>,
+    work: Arc<Workers>,
+    reported: Arc<Mutex<Vec<String>>>,
+}
+
+async fn held_failure(publishes: bool) -> HeldFailure {
+    let (mut renders, documents) = Renders::new(&[&route(0), &route(2)], &[&route(1)]);
+    let origin = publication_support::snapshot(3, documents);
+    let work = Arc::new(Workers::new(3, Arc::new(Unimock::new(()))));
     let (diagnostics, reported) = reports();
-    let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, true);
+    let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, publishes);
     let task = tokio::spawn(async move { pass.run(stopping).await });
-    let mut seen = BTreeSet::new();
-    while !seen.contains(&route(2)) {
-        seen.insert(renders.next_start().await);
-    }
+    let seen = renders.wait_for(&[route(0), route(1), route(2)]).await;
     assert_eq!(seen, BTreeSet::from([route(0), route(1), route(2)]));
-    script.replace(replacement);
+    HeldFailure {
+        renders,
+        script,
+        task,
+        work,
+        reported,
+    }
+}
+
+#[tokio::test]
+async fn an_announced_replacement_discards_a_held_failure() {
+    let held = held_failure(true).await;
+    let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
+    held.script
+        .replace(publication_support::snapshot(1, replaced));
     assert_eq!(replacement_renders.next_start().await, route(0));
-    renders.release(&route(0));
-    task.await.unwrap();
-    work.stop().await;
-    assert!(reported.lock().unwrap().is_empty());
-    assert_eq!(*script.published.lock().unwrap(), [vec![route(0)]]);
+    held.renders.release(&route(0));
+    held.renders.release(&route(2));
+    held.task.await.unwrap();
+    held.work.stop().await;
+    assert!(held.reported.lock().unwrap().is_empty());
+    assert_eq!(*held.script.published.lock().unwrap(), [vec![route(0)]]);
+}
+
+#[tokio::test]
+async fn a_replacement_seen_when_a_render_ends_discards_a_held_failure() {
+    let held = held_failure(true).await;
+    let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
+    held.script.swap(publication_support::snapshot(1, replaced));
+    held.renders.release(&route(0));
+    assert_eq!(replacement_renders.next_start().await, route(0));
+    held.renders.release(&route(2));
+    held.task.await.unwrap();
+    held.work.stop().await;
+    assert!(held.reported.lock().unwrap().is_empty());
+    assert_eq!(*held.script.published.lock().unwrap(), [vec![route(0)]]);
+}
+
+#[tokio::test]
+async fn a_stop_discards_a_held_failure() {
+    let held = held_failure(false).await;
+    held.script.stop.send_replace(true);
+    held.task.await.unwrap();
+    held.renders.release(&route(0));
+    held.renders.release(&route(2));
+    held.work.stop().await;
+    assert!(held.reported.lock().unwrap().is_empty());
+    assert!(held.script.published.lock().unwrap().is_empty());
 }

@@ -161,6 +161,16 @@ impl Renders {
         self.signals.recv().await.unwrap()
     }
 
+    /// Wait until every given route has reached the renderer, in any order, and return
+    /// every route seen. Blocking threads can signal their starts out of order.
+    pub(super) async fn wait_for(&mut self, routes: &[String]) -> BTreeSet<String> {
+        let mut seen = BTreeSet::new();
+        while !routes.iter().all(|route| seen.contains(route)) {
+            seen.insert(self.next_start().await);
+        }
+        seen
+    }
+
     /// Let one gated route finish.
     pub(super) fn release(&self, route: &str) {
         if let Some((_, gate)) = self.gates.iter().find(|(name, _)| name == route) {

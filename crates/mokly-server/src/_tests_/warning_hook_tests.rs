@@ -100,7 +100,7 @@ fn build_warning_hook_delivers_cached_demand_and_background_records_without_chan
 }
 
 #[test]
-fn build_warning_hook_flushes_retained_records_before_each_render_failure_returns() {
+fn build_warning_hook_delivers_retained_records_of_each_render_failure() {
     for background in [false, true] {
         let mock = Unimock::new((
             RenderGenerationMock::plans

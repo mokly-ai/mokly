@@ -27,10 +27,9 @@ async fn failed_renders_report_once_in_catalogue_order() {
     let (diagnostics, reported) = reports();
     let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, true);
     let task = tokio::spawn(async move { pass.run(stopping).await });
-    let mut seen = BTreeSet::new();
-    while !seen.contains(&route(3)) {
-        seen.insert(renders.next_start().await);
-    }
+    let seen = renders
+        .wait_for(&[route(0), route(1), route(2), route(3)])
+        .await;
     assert_eq!(
         seen,
         BTreeSet::from([route(0), route(1), route(2), route(3)])
@@ -129,10 +128,8 @@ async fn warnings_and_failures_report_once_per_view_in_catalogue_order() {
     let diagnostics = recording(events.clone(), "failed ");
     let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, true);
     let task = tokio::spawn(async move { pass.run(stopping).await });
-    let mut seen = BTreeSet::new();
-    while !seen.contains(&route(2)) {
-        seen.insert(renders.next_start().await);
-    }
+    let seen = renders.wait_for(&[route(0), route(1), route(2)]).await;
+    assert_eq!(seen, BTreeSet::from([route(0), route(1), route(2)]));
     assert!(events.lock().unwrap().is_empty());
     renders.release(&route(0));
     task.await.unwrap();

@@ -33,6 +33,12 @@ impl Script {
                 .is_ok()
         );
     }
+
+    /// Replace the current snapshot without an update event, so only the end of a
+    /// render can reveal the replacement to the pass.
+    pub(super) fn swap(&self, next: Arc<Snapshot>) {
+        *self.current.lock().unwrap() = next;
+    }
 }
 
 /// A pass over `origin` with the given batch. With `publishes`, its first completion

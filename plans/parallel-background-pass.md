@@ -84,6 +84,9 @@ pass discards a failure that ends after one.
    - Concurrent misses repeat about 6 document compositions and 11
      stylesheet bundles per example pass, about 0.2 s of work in total.
 
+   On 2026-10-28 the orchestrator accepted the measured result for this item.
+   The sidecar pre-start is a follow-up for a later item.
+
    Follow-up: start the sidecars and replay the generation before the pass,
    or let a request take the first sidecar that becomes ready. Expected gain
    about 0.8 s per pass. Area: the sidecar pool and Serve startup.
@@ -116,6 +119,15 @@ pass discards a failure that ends after one.
    because the dropped window already stops queued renders.
 10. Decision 5 evidence, review finding 4: A, correct decision 5 to the
     recorded 300 runs with one out-of-order start and one harness fault.
+11. Discard tests, review 2 finding 1, answered by the orchestrator on
+    2026-10-28: A, one deterministic test for each path that ends a pass
+    while a failure is held: an announced replacement, a replacement that a
+    render's end reveals, and a stop. Rejected: B, a token that `settle`
+    needs while the pass is current, because the tests already pin every
+    path with no product change.
+12. Warning hook rustdoc, review 2 finding 2, auto-fix: A, the
+    `RenderWarnings::report` rustdoc and one test name state that the usage
+    pass delivers a background render's warnings after it returns.
 
 ## Corrections to the item text
 
@@ -346,7 +358,7 @@ request TODO comes before the review TODO here.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Open the pull request with the before and after table. Put its link in
       the status paragraph.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -356,10 +368,18 @@ request TODO comes before the review TODO here.
     recommendations under the user's rule. The options check also found that
     no test covered a failure that waits for an earlier render when a
     replacement arrives; a test now covers it.
-  - Follow-up: make one mutation proof for each rejected option of a
-    decision a rule of the shared `plans` skill. Effort Small. Covers
-    findings 2 and 3. Previous examples: `plans/rust-rebuild.md` lines 1563
-    and 4799. Raised to the user as a decision.
+  - Review 2 on `a260d9f7`: two Low findings, both confirmed by the
+    validity check after one retry, which a rate-limit error had stopped.
+    The orchestrator chose A for both: decisions 11 and 12. Each discard
+    test fails on every one of five runs of its mutation. A stress run of
+    the new tests then failed once in 500: a test stopped waiting when a
+    later route started, but route 0's blocking thread can report its start
+    later. The batch tests now wait for every expected start, and 1,000
+    runs passed.
+  - The shared `plans` skill in `futex-ai/skills`: a rule that a plan proves
+    each rejected option of a decision with one mutation and its failing
+    test, which review 1 findings 2 and 3 and review 2 finding 1 proposed.
+    Separate branch.
   - `docs/guides/cli/serve.md`: the guide says that Serve prints a
     generation's warnings once when its output finishes, and before
     `Catalogue ready`, but views rendered after readiness print their
@@ -369,7 +389,8 @@ request TODO comes before the review TODO here.
     Separate branch.
 
   Evidence: `.context/parallel-background-pass/review-1.md`,
-  `validity-1.md`, `options-1.md`, and `mutation-checks.txt`.
+  `validity-1.md`, `options-1.md`, `review-2.md`, `validity-2.md`, and
+  `mutation-checks.txt`.
 
 - [ ] Rerun the complete gate after the review fixes, and update the pull
       request body with the review outcome.
