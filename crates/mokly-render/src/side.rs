@@ -61,19 +61,19 @@ pub(crate) fn inputs(
         package_roots: Vec::new(),
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
     };
-    resolution.package_roots = ancestor_roots::directories(&configuration_directory)
-        .into_iter()
-        .chain(config.package_roots())
-        .map(|root| {
-            if root.is_empty() {
-                config.repo_root.clone()
-            } else {
-                config.repo_root.join(root)
-            }
-            .to_string_lossy()
-            .into_owned()
-        })
-        .collect();
+    resolution.package_roots =
+        ancestor_roots::package_roots(&configuration_directory, config.package_roots())
+            .into_iter()
+            .map(|root| {
+                if root.is_empty() {
+                    config.repo_root.clone()
+                } else {
+                    config.repo_root.join(root)
+                }
+                .to_string_lossy()
+                .into_owned()
+            })
+            .collect();
     let (source_root, repository_roots, module_resolution, identity) = match base {
         Some(base) => (
             base.sources.directory.clone(),
@@ -178,3 +178,7 @@ impl SideInputs {
         Ok(self.source_root.join(path))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/side_roots_tests.rs"]
+mod side_roots_tests;

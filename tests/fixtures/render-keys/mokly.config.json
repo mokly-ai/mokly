@@ -1,0 +1,5 @@
+{
+  "roots": [{ "dir": "specs" }],
+  "colorSchemes": ["light"],
+  "renderer": "renderer.tsx"
+}

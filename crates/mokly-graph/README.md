@@ -55,7 +55,9 @@ keeps it. `public_files` lists authored files reached by completed renders.
 Serve rechecks their live eligibility at read time. Temporary closure
 membership stays separate from the catalogue's reached public files.
 
-Markdown document keys exclude the JavaScript generation fingerprint.
+A JavaScript document key includes the render input keys of the definitions
+that it renders, so an edit moves only the keys whose module closures it
+reaches. Markdown document keys include no render input key.
 Document keys include component paths and element names. Logical links depend
 on their destination routes, including use-case first steps. An unresolved
 link substitution inside a component depends on the routing inventory,
@@ -187,6 +189,9 @@ retention disabled.
   returns the first failure in root order.
 - [`src/fragments.rs`](./src/fragments.rs) defines `MemoFragments`, which
   memoizes JavaScript fragments in the same bounded cache.
+- [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
+  `RenderKeys`, the render input key of each entry module over its module
+  closure, resolution files, bindings, and bundle environment.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
