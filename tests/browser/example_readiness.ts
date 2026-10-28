@@ -1,4 +1,4 @@
-import type { CatalogueReadModel, EntryDetailV2 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
 
 /** Wait for the initial usage batch through publication events, without sleeps. */
 export async function exampleReady(
@@ -21,7 +21,7 @@ export async function exampleReady(
           await request(`${url}/mokly-viewer/entries/${entry.path}.json`, {
             signal,
           })
-        ).json()) as EntryDetailV2;
+        ).json()) as EntryDetailV3;
         if (detail.views.some((view) => view.usage.status === "unavailable"))
           throw new Error(`Example render unavailable: ${entry.path}`);
         if (

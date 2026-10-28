@@ -200,7 +200,7 @@ fn historical_variants_require_a_nonempty_parent_title() {
 }
 
 fn screen_detail() -> Value {
-    json!({"schemaVersion":2,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
+    json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
         "deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
         "views":[{"viewport":"mobile","colorScheme":"light","usage":{"status":"ready","instances":[],"slots":[],"ranges":[]},
             "state":"unchanged","ignoredIds":[],"resourceEvidence":{"rules":[],"resources":[]}}],

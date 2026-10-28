@@ -143,10 +143,11 @@ outside the repository and uploads.
 The Browse shell is a browser application. Serve and `build` deliver one
 identical stub page per shell route, the catalogue index, and one entry detail
 per entry. Serve adds the live descriptor and the update event stream. The
-shell renders itself from the index and the current entry's detail, and it
-fetches the next detail on navigation. It reloads only the frames whose
-document key changed. No process renders shell HTML, so a catalogue without
-JavaScript starts no sidecar. The
+shell renders itself from the index and the route's details. A current
+component variant also reads its parent's detail. The shell fetches those
+details on navigation and reloads only the frames whose document key changed.
+No process renders shell HTML, so a catalogue without JavaScript starts no
+sidecar. The
 [shell delivery contract](../protocol/mokly-shell-delivery.md) owns the
 routes, the shapes, and the fences.
 

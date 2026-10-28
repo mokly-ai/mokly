@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::projection::{self, ViewKey};
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 use mokly_model::review::{
     EntryChangeReason, ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewResultV8, ReviewState,
 };
@@ -159,7 +159,7 @@ fn record(state: ReviewState, before: Option<&str>, after: bool) -> ReviewEntry 
     }
 }
 
-fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV2> {
+fn viewed_details() -> std::collections::BTreeMap<String, EntryDetailV3> {
     let catalogue = model(vec![entry("sample", EntryKind::Screen, None)]);
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let keys = [ViewKey {

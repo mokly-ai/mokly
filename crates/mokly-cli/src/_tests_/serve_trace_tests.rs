@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
 use mokly_cli::redaction::Redactor;
+use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_sidecar::workers::ClockMock;
 use serde_json::Value;
 use tracing::{Dispatch, Subscriber};
@@ -17,11 +18,21 @@ use crate::terminal::TerminalMock;
 use super::Timings;
 
 pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
+    capture_cache(Arc::new(empty_cache()), run)
+}
+
+/// Capture records with a scripted render cache behind the timing layer.
+pub(super) fn capture_cache(cache: Arc<dyn RenderCache>, run: impl FnOnce()) -> Vec<Value> {
     let clock = Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64));
-    collect_lines(run, &clock, Arc::new(Redactor::default()), || {})
+    collect_lines(run, &clock, Arc::new(Redactor::default()), cache, || {})
         .iter()
         .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
         .collect()
+}
+
+/// An empty cache whose statistics stay zero, for records that are not about the cache.
+fn empty_cache() -> MemoryCache {
+    MemoryCache::new(0)
 }
 
 pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
@@ -30,7 +41,13 @@ pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
 
 pub(super) fn capture_redacted(run: impl FnOnce(), redactor: Redactor) -> Vec<String> {
     let clock = Unimock::new(());
-    collect_lines(run, &clock, Arc::new(redactor), || {})
+    collect_lines(
+        run,
+        &clock,
+        Arc::new(redactor),
+        Arc::new(empty_cache()),
+        || {},
+    )
 }
 
 /// The inner layer acknowledges destruction after the outer timing layer drops its clones.
@@ -48,6 +65,7 @@ fn collect_lines(
     run: impl FnOnce(),
     clock: &Unimock,
     redactor: Arc<Redactor>,
+    cache: Arc<dyn RenderCache>,
     after_scope: impl FnOnce(),
 ) -> Vec<String> {
     let records = Arc::new(Mutex::new(Vec::new()));
@@ -63,6 +81,7 @@ fn collect_lines(
         clock: Arc::new(clock.clone()),
         next: AtomicU64::new(1),
         redactor,
+        cache,
     };
     let (released, finished) = mpsc::sync_channel(1);
     tracing::subscriber::with_default(
@@ -93,6 +112,7 @@ fn timing_mock_verification_waits_for_a_foreign_dispatch_release() {
         },
         &clock,
         Arc::new(Redactor::default()),
+        Arc::new(empty_cache()),
         || {
             release.send(()).unwrap();
             worker.join().unwrap();
@@ -129,7 +149,7 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
         comparison.record("status", "ok");
         output.record("status", "ok");
     });
-    assert_eq!(records.len(), 7);
+    assert_eq!(records.len(), 9);
     let output = &records[0];
     let comparison = &records[1];
     assert_eq!(comparison["parentId"], output["id"]);
@@ -144,8 +164,13 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     assert_eq!(counts["changed"], 3);
     assert_eq!(counts["ignoredOnly"], 2);
     assert!(counts.get("documents").is_none());
-    assert_eq!(records[5]["status"], "ok");
-    for record in [&records[1], &records[5]] {
+    assert_eq!(records[5]["stage"], "render.cache");
+    assert_eq!(records[5]["parentId"], comparison["id"]);
+    assert_eq!(records[6]["status"], "ok");
+    assert_eq!(records[7]["stage"], "render.cache");
+    assert_eq!(records[7]["parentId"], output["id"]);
+    assert_eq!(records[8]["id"], output["id"]);
+    for record in [&records[1], &records[5], &records[6], &records[7]] {
         for field in ["views", "unchanged", "changed", "ignoredOnly"] {
             assert!(record.get(field).is_none());
         }
@@ -170,12 +195,19 @@ fn unsuccessful_review_spans_remain_error_and_emit_no_complete_counts() {
         let span = tracing::info_span!("review.resource-graph", status = "error");
         let _scope = span.enter();
     });
-    assert_eq!(records.len(), 6);
+    assert_eq!(records.len(), 7);
     for record in records.iter().filter(|record| record["event"] == "end") {
         assert_eq!(record["status"], "error");
         assert!(record.get("tier").is_none());
     }
-    assert!(records.iter().all(|record| record["event"] != "counts"));
+    let counts: Vec<_> = records
+        .iter()
+        .filter(|record| record["event"] == "counts")
+        .collect();
+    assert_eq!(counts.len(), 1);
+    assert_eq!(counts[0]["stage"], "render.cache");
+    assert_eq!(counts[0]["phase"], "review.compare-views");
+    assert!(counts[0].get("views").is_none());
 }
 
 #[test]

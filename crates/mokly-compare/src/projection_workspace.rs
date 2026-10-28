@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::EntryDetailV2;
+use mokly_model::public_detail::EntryDetailV3;
 
 use crate::comparison_types::ComparisonResult;
 use crate::error::Result;
@@ -13,10 +13,11 @@ use crate::{projection_affected, projection_inputs};
 /// Join current usage with retained comparison evidence without changing document bytes.
 /// The caller supplies settled view usage and current Used by lists.
 /// This updates comparison-owned fields and retains those Used by rows.
-/// An absent workspace stays absent until the caller proves its usage inputs.
+/// An absent workspace stays absent. An absent list stays absent until the
+/// caller proves its usage inputs.
 /// Metadata, counterparts, removals, and consumer links are indexed once for the batch.
 pub fn apply(
-    details: &mut BTreeMap<String, EntryDetailV2>,
+    details: &mut BTreeMap<String, EntryDetailV3>,
     result: &ComparisonResult,
 ) -> Result<()> {
     let context = Context::new(result);
@@ -33,14 +34,16 @@ pub fn apply(
         };
         workspace.comparison_eligible = context.can_compare(path, detail.entry.kind)
             && (context.eligible(classification) || affected.consumers.contains(path));
-        for usage in &mut workspace.used_by {
-            usage.comparison_eligible = context
-                .classifications
-                .get(usage.entry_path.as_str())
-                .is_some_and(|entry| {
-                    context.can_compare(&entry.path, entry.kind)
-                        && (context.eligible(entry) || affected.consumers.contains(&entry.path))
-                });
+        if let Some(used_by) = workspace.used_by.as_mut() {
+            for usage in used_by {
+                usage.comparison_eligible = context
+                    .classifications
+                    .get(usage.entry_path.as_str())
+                    .is_some_and(|entry| {
+                        context.can_compare(&entry.path, entry.kind)
+                            && (context.eligible(entry) || affected.consumers.contains(&entry.path))
+                    });
+            }
         }
         let parent = context
             .metadata
@@ -48,7 +51,9 @@ pub fn apply(
             .and_then(|metadata| metadata.variant_of.as_deref())
             .unwrap_or(path);
         workspace.related_components = affected.related.get(path).cloned().unwrap_or_default();
-        workspace.affected = affected.links.get(parent).cloned().unwrap_or_default();
+        if workspace.affected.is_some() {
+            workspace.affected = Some(affected.links.get(parent).cloned().unwrap_or_default());
+        }
         workspace.input_changes.clear();
         projection_inputs::append(
             path,

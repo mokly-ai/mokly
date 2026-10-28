@@ -56,6 +56,7 @@ pub(super) fn setup(
         &options.common,
         Arc::new(RenderDiagnostics(context.phases.clone())),
         context.cancellation.clone(),
+        context.cache.clone(),
     ) {
         Ok(services) => services,
         Err(source) => {

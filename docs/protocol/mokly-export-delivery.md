@@ -117,15 +117,17 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
-index, and fetches the routed entry's detail under the
-[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). The detail carries
-the workspace lists, so no route reads another page. Static mode with a
+index, and fetches the route's details under the
+[fetch rules](./mokly-shell-delivery.md#fetch-and-fences). A current component
+variant reads its Used by and Affected lists from its parent's detail. The
+shell fetches no other shell page for evidence. Static mode with a
 missing, malformed, or other-version index or detail fails closed instead of
 requesting a development endpoint. A static build never falls back to a live
 endpoint for any request.
 
 In-shell navigation commits the destination from the index at once and fetches
-its detail. A detail with another `deploymentId` means another deployment
+its details, including the parent's detail for a current component variant.
+A detail with another `deploymentId` means another deployment
 replaced the files, so the shell performs a full page load of the requested
 URL rather than mixing deployments. An open tab keeps its loaded deployment
 for the page's lifetime; reload the page to adopt a newer one. In-shell

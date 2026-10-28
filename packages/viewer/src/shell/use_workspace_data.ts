@@ -1,4 +1,4 @@
-/** The routed workspace, built from the index and the routed entry's detail. */
+/** The routed workspace, built from the index and the route's held details. */
 
 import { useMemo, useRef } from "react";
 
@@ -10,8 +10,8 @@ import { workspaceData, type WorkspaceData } from "./workspace_data.js";
 import { mergeWorkspaceEvidence } from "./workspace_evidence_merge.js";
 
 /**
- * The workspace values and the delivery of the routed entry's detail, which
- * alone carries the usage lists and the declared order of the Props fields.
+ * The workspace values and the delivery of the route's details. A current
+ * component variant reads its usage lists from the parent's held detail.
  */
 export interface WorkspaceDataState {
   data: WorkspaceData;
