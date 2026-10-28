@@ -129,8 +129,8 @@ component rendered with the same props on many screens renders once.
 The render input key belongs to one entry module. It covers the modules that
 the entry module imports, directly or through other modules, the renderer or
 Storybook preview modules, their class maps, the paths and titles of the
-definitions that they export, their resolution files, and the bundle settings
-and dependency installation. It contains no source root. The
+definitions that they export or declare, their resolution files, and the
+bundle settings and dependency installation. It contains no source root. The
 [watch contract](../protocol/mokly-watch.md#invalidation-through-the-render-graph)
 lists the inputs and the render inputs that are unsupported. Both sides of
 Changes share the render cache, so an unchanged base view reuses the head's
