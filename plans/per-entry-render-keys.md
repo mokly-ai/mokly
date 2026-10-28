@@ -74,8 +74,10 @@ answer stays open and blocks the work that depends on it.
    stale render. Reason: a dependency upgrade moves only its importers' keys.
 4. Decision 4 (2026-10-27): A, the bundle keeps authored function and class
    names through esbuild `keepNames`. Rejected: B, a guide note only, because
-   the stale-render gap would stay. Reason: it closes the gap and also fixes
-   unstable story titles.
+   the stale-render gap would stay. Reason: it closes the gap. The decisions
+   message also named unstable story titles. A test on 2026-10-28 disproved
+   that claim, because Storybook gives a composed story a default title
+   before the component-name fallback runs.
 5. Decision 5 (2026-10-27): A, the live generation keeps the bundle
    fingerprint. Rejected: B, drop it. Reason: the shell and the Changes
    identity keep their current behaviour.
@@ -108,10 +110,11 @@ it with its reason.
   colliding top-level names across modules. A test on 2026-10-27 bundled two
   modules that both declare `function Button`. Without `keepNames`, the
   second became `Button2` in `Function.name` and in stack traces. With
-  `keepNames`, both kept `Button`. A story title falls back to its
-  component's function name, and Emotion's development labels for the `css`
-  prop read stack traces, so an unrelated module can change these renders.
-  Decision 4 uses this.
+  `keepNames`, both kept `Button`. A render that reads a function's name,
+  such as a renderer that prints a component's name, or Emotion's
+  development labels for the `css` prop, which read stack traces, can
+  therefore change after an edit to an unrelated module. Decision 4 uses
+  this.
 - The cache can hold a document with the closure warnings of the side that
   read it last. A base-only `base-conversion` warning can then reach the
   head. Milestone 5 fixes this before sides share JavaScript keys.
@@ -274,13 +277,14 @@ each page until its behaviour is implemented.
 Keep authored function and class names in the bundle under decision 4, so
 that no module outside a closure can change a render through renaming.
 
-- [ ] Add a failing sidecar test first: two entry modules declare the same
+- [x] Add a failing sidecar test first: two entry modules declare the same
       top-level function. A render that prints its `name` and its stack
-      frame name shows the authored name for both, and a stories file
-      without a title keeps its component's authored name as its title.
-- [ ] Bundle with `keepNames` in `packages/mokly/src/sidecar/bundle.ts`.
+      frame name shows the authored name for both. The test is in
+      `tests/sidecar_authored_names.test.ts`.
+- [x] Bundle with `keepNames` in `packages/mokly/src/sidecar/bundle.ts`.
       perf 1 changes the same file, so keep the change to the options.
-- [ ] Remove the status line of `docs/protocol/mokly-sidecar-modules.md`.
+- [x] Remove the status line of `docs/protocol/mokly-sidecar-modules.md`.
+- [x] Run every sidecar Node test: 61 files pass.
 
 ## Milestone 3: Render input keys
 
