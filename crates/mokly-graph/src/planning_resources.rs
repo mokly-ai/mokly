@@ -72,6 +72,11 @@ impl Resources {
                         digest(&bytes),
                         resource_edges::urls(&path, &bytes).unwrap_or_default(),
                     )
+                } else if planning_document(&path) {
+                    if !resource_digests::exists(tree, &config.repo_root, &path) {
+                        continue;
+                    }
+                    (PLANNING_DOCUMENT_FACT.to_owned(), Vec::new())
                 } else {
                     let Some(hash) = resource_digests::confined(tree, &config.repo_root, &path)
                     else {
@@ -125,6 +130,12 @@ fn target(source: &str, url: &str) -> Option<String> {
     if target.starts_with(&namespace::generated("")) {
         return None;
     }
-    let path = target.strip_prefix("static/")?;
-    (!path.starts_with("plans/") || !path.ends_with(".md")).then(|| path.to_owned())
+    target.strip_prefix("static/").map(String::from)
+}
+
+/// A linked planning document renders as plain text, so only its existence is a key input.
+const PLANNING_DOCUMENT_FACT: &str = "planning-document";
+
+fn planning_document(path: &str) -> bool {
+    path.starts_with("plans/") && path.ends_with(".md")
 }

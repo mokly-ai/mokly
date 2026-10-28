@@ -264,19 +264,35 @@ fn unrelated_routing_and_target_titles_do_not_invalidate_a_literal_link() {
     );
 }
 
+fn planning_link_fixture() -> TempDir {
+    let root = fixture();
+    let link = "# Library\n\n[Plan](../plans/rust-rebuild.md)\n";
+    write(root.path(), "specs/library.md", link);
+    write(root.path(), "plans/rust-rebuild.md", "first\n");
+    root
+}
+
 #[test]
 fn planning_document_links_do_not_invalidate_document_keys() {
-    let root = fixture();
-    write(
-        root.path(),
-        "specs/library.md",
-        "# Library\n\n[Plan](../plans/rust-rebuild.md)\n",
-    );
-    write(root.path(), "plans/rust-rebuild.md", "first\n");
+    let root = planning_link_fixture();
     let cache = cache();
     let first = prepare(root.path(), &cache);
     let first_key = first.plans()["library/index.html"].key.clone();
     write(root.path(), "plans/rust-rebuild.md", "second\n");
     let second = prepare(root.path(), &cache);
     assert_eq!(first_key, second.plans()["library/index.html"].key);
+}
+
+#[test]
+fn removing_a_linked_planning_document_invalidates_the_document_key() {
+    let root = planning_link_fixture();
+    let cache = cache();
+    let first = prepare(root.path(), &cache);
+    first.render("library/index.html").unwrap();
+    fs::remove_file(root.path().join("plans/rust-rebuild.md")).unwrap();
+    let second = prepare(root.path(), &cache);
+    let route = "library/index.html";
+    assert_ne!(first.plans()[route].key, second.plans()[route].key);
+    let error = second.render(route).unwrap_err().to_string();
+    assert!(error.contains("does not exist"), "{error}");
 }

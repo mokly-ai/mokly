@@ -48,9 +48,10 @@ resource digests to its key. Usage completion alone keeps the published key.
 A resource edit changes its consuming document keys and reuses JavaScript
 fragments. Missing and denied lexical resource paths stay observable for
 repair. Weak subscribers attach those paths before the background pass
-completes. Markdown links to `plans/*.md` files render as plain text and do not
-enter document keys. Key scans read template bodies and saved slots as authored
-HTML, so unknown ignore-wrapper attributes do not enter document keys.
+completes. Markdown links to `plans/*.md` files render as plain text. Only the
+existence of such a file enters document keys, not its content. Key scans read
+template bodies and saved slots as authored HTML, so unknown ignore-wrapper
+attributes do not enter document keys.
 `generation_key` hashes the configuration, the document plans, the delivered
 stylesheet and asset identities, and the fragment generation for the live
 descriptor. A private stylesheet input that changes no delivered byte keeps it.
