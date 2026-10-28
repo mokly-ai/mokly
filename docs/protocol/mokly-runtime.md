@@ -68,9 +68,9 @@ deleting it is safe. No cache is in the repository.
 the port, and publishes its first state with `revision` `1`. The listening
 URL is reported only after validation passes. Before readiness, Serve
 renders no document. Documents render on first request under the
-[on-demand contract](./mokly-on-demand.md); the other views, the usage of
-every entry detail, and Changes follow in background work. Serve publishes changed
-state as a new revision under the
+[on-demand contract](./mokly-on-demand.md); the other views render in bounded
+background batches that fill the usage of every entry detail, and Changes
+follows. Serve publishes changed state as a new revision under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve). Serve
 watches the sources by default under the [watch contract](./mokly-watch.md);
 `--no-watch` serves one snapshot and computes the background evidence once.

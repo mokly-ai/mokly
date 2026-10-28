@@ -55,6 +55,8 @@ serialized queue handles watch events and the rich-mode `r` shortcut under the
 candidate replaces the public state and backend with the next revision. A
 failed candidate keeps the last good state. After `Catalogue ready`, Serve
 completes current usage and classifies Changes against one pinned merge base.
+The usage pass renders as many views at once as the smaller of the worker
+count and the sidecar pool bound.
 Both source roots share the configured sidecar pool bound. A shared admission
 gate lets foreground requests finish their sidecar calls before more base
 requests start. The base preparation bundles its stylesheet roots on the
