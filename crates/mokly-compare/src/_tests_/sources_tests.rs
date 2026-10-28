@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use mokly_git::extracted::ExtractedFiles;
 use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::repository::RepositoryMock;
 use mokly_git::tree::{Entry, Limits, Mode};
@@ -92,11 +93,14 @@ fn an_attached_extraction_serves_reads_and_digests_after_one_tree_listing() {
         RepositoryMock::list
             .next_call(matching!((_, None, _)))
             .returns(Ok(vec![first.clone(), second.clone()])),
+        RepositoryMock::fingerprint_extracted
+            .next_call(matching!((root, entries) if *root == std::path::Path::new("/base") && entries.len() == 2))
+            .answers(&|_, root, _| Ok(ExtractedFiles::unproved(root.to_owned()))),
         RepositoryMock::read_extracted
-            .next_call(matching!((_, entries, _, root) if *root == std::path::Path::new("/base") && entries.len() == 1 && entries[0].path.as_str() == "specs/A.html"))
+            .next_call(matching!((_, entries, _, files) if files.root() == std::path::Path::new("/base") && entries.len() == 1 && entries[0].path.as_str() == "specs/A.html"))
             .returns(Ok(vec![b"a".to_vec()])),
         RepositoryMock::digest_extracted
-            .next_call(matching!((_, entry, root) if *root == std::path::Path::new("/base") && entry.path.as_str() == "styles/b.css"))
+            .next_call(matching!((_, entry, files) if files.root() == std::path::Path::new("/base") && entry.path.as_str() == "styles/b.css"))
             .returns(Ok("b".repeat(64))),
     ));
     let reader = GitSources::new(Arc::new(repository), commit, Limits::default());

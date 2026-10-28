@@ -242,6 +242,17 @@ The user answered each decision on 2026-10-27 with the recommended option.
    rule. It replaces the milestone 3 decision against a hanging-filter test:
    the event-driven clock never times out a fast conversion. Rejected: B, a
    runner wrapper that only fakes the deadline.
+10. Gate failure of 2026-10-28 on design B: two Node tests,
+    `tests/static_postcss_base_evidence.test.ts`, showed that a base PostCSS
+    plugin can change a file in the extraction, and the core then compared
+    the witness with the changed bytes. A base read now uses an extraction
+    file only while the file matches its first fingerprint in the process,
+    taken before base code of the process runs; a changed file reads through
+    Git. Applied under the user's rule as the recommended option. Rejected:
+    digests through Git only, because core reads could still use changed
+    bytes; a content manifest in the cache entry, because it changes the
+    cache format; a fingerprint for each preparation, because a plugin that
+    changes a file once would pass in later Serve preparations.
 
 ## Milestone 1: Documentation and protocol for batch conversion
 

@@ -16,6 +16,7 @@ use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::error::Result;
+use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_compare::locations::{OnceReporter, plain_line};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
@@ -67,6 +68,7 @@ pub(super) fn service(
         sources: Arc::new(GitSourceFactory {
             limits: Limits::default(),
             batch_bytes: 48 * 1024 * 1024,
+            snapshots: Arc::new(ProcessSnapshots::default()),
         }),
         provider: Arc::new(StaticBase {
             inputs,

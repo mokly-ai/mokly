@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use mokly_git::control::Token;
 use mokly_git::disk::SystemDisk;
 use mokly_git::error::Error;
+use mokly_git::extracted::ExtractedFiles;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::{GitRepositories, Repositories, Repository};
 use mokly_git::tree::{Entry, Limits};
@@ -22,6 +23,7 @@ use support::Fixture;
 
 struct Extracted {
     fixture: Fixture,
+    files: ExtractedFiles,
     base: ObjectId,
     recorded: Arc<Recorded>,
     repository: Arc<dyn Repository>,
@@ -58,9 +60,11 @@ fn extracted() -> Extracted {
     repository
         .extract(&base, &target, Limits::default())
         .unwrap();
+    let files = repository.fingerprint_extracted(&target, &entries).unwrap();
     recorded.requests.lock().unwrap().clear();
     Extracted {
         fixture,
+        files,
         base,
         recorded,
         repository,
@@ -113,14 +117,14 @@ fn extracted_reads_and_digests_equal_git_and_start_no_conversion() {
                 base,
                 &extracted.entries,
                 Limits::default(),
-                &extracted.target
+                &extracted.files
             )
             .unwrap(),
         expected
     );
     assert_eq!(
         repository
-            .digest_extracted(base, extracted.entry("a.txt"), &extracted.target)
+            .digest_extracted(base, extracted.entry("a.txt"), &extracted.files)
             .unwrap(),
         digest
     );
@@ -146,7 +150,7 @@ fn a_file_that_the_extraction_lacks_converts_alone_through_git() {
                 base,
                 &extracted.entries,
                 Limits::default(),
-                &extracted.target
+                &extracted.files
             )
             .unwrap(),
         expected
@@ -154,7 +158,7 @@ fn a_file_that_the_extraction_lacks_converts_alone_through_git() {
     assert_eq!(extracted.conversions(), ["dir/b.txt"]);
     assert_eq!(
         repository
-            .digest_extracted(base, extracted.entry("dir/b.txt"), &extracted.target)
+            .digest_extracted(base, extracted.entry("dir/b.txt"), &extracted.files)
             .unwrap(),
         digest
     );
@@ -180,7 +184,7 @@ fn a_link_in_the_extraction_never_supplies_bytes() {
                 base,
                 std::slice::from_ref(&entry),
                 Limits::default(),
-                &extracted.target
+                &extracted.files
             )
             .unwrap(),
         expected
@@ -193,6 +197,11 @@ fn an_extracted_file_above_the_file_bound_is_an_unavailable_conversion() {
     let extracted = extracted();
     let entry = extracted.entry("z.txt").clone();
     fs::write(extracted.target.join("z.txt"), b"0123456789").unwrap();
+    let files = extracted
+        .repository
+        .fingerprint_extracted(&extracted.target, std::slice::from_ref(&entry))
+        .unwrap();
+    extracted.conversions();
     let limits = Limits {
         blob: 8,
         ..Limits::default()
@@ -202,9 +211,45 @@ fn an_extracted_file_above_the_file_bound_is_an_unavailable_conversion() {
             &extracted.base,
             std::slice::from_ref(&entry),
             limits,
-            &extracted.target
+            &files
         ),
         Err(Error::Conversion { path, source }) if path == "z.txt" && matches!(*source, Error::ByteLimit { limit: 8 })
     ));
     assert!(extracted.conversions().is_empty());
+}
+
+#[test]
+fn a_file_changed_after_its_fingerprint_reads_and_hashes_through_git() {
+    let extracted = extracted();
+    let (repository, base) = (&extracted.repository, &extracted.base);
+    let entry = extracted.entry("dir/b.txt").clone();
+    let expected = repository
+        .read_many(base, std::slice::from_ref(&entry), Limits::default())
+        .unwrap();
+    let digest = repository.digest(base, &entry).unwrap();
+    extracted.conversions();
+    fs::write(
+        extracted.target.join("dir/b.txt"),
+        b"changed by base code\n",
+    )
+    .unwrap();
+    assert_eq!(
+        repository
+            .read_extracted(
+                base,
+                std::slice::from_ref(&entry),
+                Limits::default(),
+                &extracted.files
+            )
+            .unwrap(),
+        expected
+    );
+    assert_eq!(extracted.conversions(), ["dir/b.txt"]);
+    assert_eq!(
+        repository
+            .digest_extracted(base, &entry, &extracted.files)
+            .unwrap(),
+        digest
+    );
+    assert_eq!(extracted.conversions(), ["dir/b.txt"]);
 }

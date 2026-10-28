@@ -38,7 +38,10 @@ a byte-bounded file LRU, and a miss reads only its requested path. Links and
 submodules supply no regular source bytes. HTML reads need no extraction or
 package manager. `Sources::attach` gives `GitSources` a leased extraction of
 the same commit: it lists the whole tree once, and later reads and digests use
-the extracted files, with Git for each file that the extraction lacks.
+the extracted files, with Git for each file that the extraction lacks or that
+changed since its first fingerprint in the process. `GitSources::sharing` and
+`GitSourceFactory` share one `dyn Snapshots`, `ProcessSnapshots` in the CLI,
+which keeps the first fingerprints of each extraction for the process.
 Conversion failures become `SourceError::Unavailable` and
 `base-conversion` warnings. The resource memo keeps unavailable bytes distinct
 from missing paths. The

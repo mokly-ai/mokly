@@ -68,6 +68,9 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
             sidecars: Arc::new(Unimock::new(())),
             progress: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),
+            extraction_snapshots: Arc::new(
+                mokly_compare::extraction_snapshots::ProcessSnapshots::default(),
+            ),
             refreshes: Arc::new(Unimock::new(
                 GitRefreshMock::refreshing
                     .next_call(matching!("origin/main"))

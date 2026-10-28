@@ -1,16 +1,16 @@
 //! Validated checkout access through bounded Git commands and immutable blobs.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use crate::access::WorkingFile;
 use crate::changes::Change;
-use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, Runner};
 use crate::disk::Disk;
 use crate::error::{Error, Result};
+use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
 use crate::tree::{self, Entry, Limits, text};
 
@@ -41,18 +41,26 @@ pub trait Repository: Send + Sync {
         entries: &[Entry],
         limits: Limits,
     ) -> Result<Vec<Vec<u8>>>;
-    /// Read regular commit files from an extraction of the commit under `root`,
-    /// and through Git for each file that the extraction does not hold.
+    /// Fingerprint the regular files of an extraction of the commit under
+    /// `root`, before base code can change them.
+    fn fingerprint_extracted(&self, root: &Path, entries: &[Entry]) -> Result<ExtractedFiles>;
+    /// Read regular commit files from a fingerprinted extraction, and through
+    /// Git for each file that it lacks or that changed since its fingerprint.
     fn read_extracted(
         &self,
         commit: &ObjectId,
         entries: &[Entry],
         limits: Limits,
-        root: &Path,
+        extracted: &ExtractedFiles,
     ) -> Result<Vec<Vec<u8>>>;
-    /// Hash a commit file from an extraction of the commit under `root`, or
-    /// through Git when the extraction does not hold it.
-    fn digest_extracted(&self, commit: &ObjectId, entry: &Entry, root: &Path) -> Result<String>;
+    /// Hash a commit file from a fingerprinted extraction, or through Git when
+    /// the extraction cannot prove its bytes.
+    fn digest_extracted(
+        &self,
+        commit: &ObjectId,
+        entry: &Entry,
+        extracted: &ExtractedFiles,
+    ) -> Result<String>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
@@ -124,26 +132,6 @@ impl Repositories for GitRepositories {
             return Err(Error::RootMismatch { configured, actual });
         }
         Ok(Arc::new(repository))
-    }
-}
-
-impl GitRepository {
-    pub(crate) fn command(&self, args: &[&str], stdin: Vec<u8>, limit: usize) -> Result<Vec<u8>> {
-        let mut arguments = vec![
-            OsString::from("--no-optional-locks"),
-            OsString::from("--literal-pathspecs"),
-        ];
-        arguments.extend(args.iter().map(OsString::from));
-        Ok(self
-            .runner
-            .run(&Request {
-                directory: self.directory.clone(),
-                args: arguments,
-                stdin,
-                output_limit: limit,
-                stderr_limit: DEFAULT_STDERR_LIMIT,
-            })?
-            .stdout)
     }
 }
 
@@ -226,18 +214,27 @@ impl Repository for GitRepository {
         self.checkout_read(commit, entries, limits)
     }
 
+    fn fingerprint_extracted(&self, root: &Path, entries: &[Entry]) -> Result<ExtractedFiles> {
+        self.extracted_fingerprints(root, entries)
+    }
+
     fn read_extracted(
         &self,
         commit: &ObjectId,
         entries: &[Entry],
         limits: Limits,
-        root: &Path,
+        extracted: &ExtractedFiles,
     ) -> Result<Vec<Vec<u8>>> {
-        self.extracted_read(commit, entries, limits, root)
+        self.extracted_read(commit, entries, limits, extracted)
     }
 
-    fn digest_extracted(&self, commit: &ObjectId, entry: &Entry, root: &Path) -> Result<String> {
-        self.extracted_digest(commit, entry, root)
+    fn digest_extracted(
+        &self,
+        commit: &ObjectId,
+        entry: &Entry,
+        extracted: &ExtractedFiles,
+    ) -> Result<String> {
+        self.extracted_digest(commit, entry, extracted)
     }
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {

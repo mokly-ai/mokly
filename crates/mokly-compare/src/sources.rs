@@ -1,16 +1,19 @@
 //! Commit-pinned tree metadata and batched blob reads for a source-tree adapter.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
 use mokly_git::error;
+use mokly_git::extracted::ExtractedFiles;
 use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::repository::Repository;
 use mokly_git::tree::{Entry, Limits};
 
 use crate::cache_types::Lease;
 use crate::error::{Error, GitResult, Result};
+use crate::extraction_snapshots::{ProcessSnapshots, Snapshots};
+use crate::source_index::SourceIndex;
 
 /// Immutable metadata for every Git mode, including directories and links.
 #[derive(Clone, Debug, Default)]
@@ -53,30 +56,41 @@ pub trait Sources: Send + Sync {
 
 /// Base reader. Compose a new reader and cancellation graph for each generation.
 pub struct GitSources {
-    repository: Arc<dyn Repository>,
-    commit: ObjectId,
+    pub(crate) repository: Arc<dyn Repository>,
+    pub(crate) commit: ObjectId,
     limits: Limits,
     state: Mutex<SourceIndex>,
-    extraction: Mutex<Option<Arc<Lease>>>,
+    pub(crate) snapshots: Arc<dyn Snapshots>,
+    pub(crate) extraction: Mutex<Option<(Arc<Lease>, Arc<ExtractedFiles>)>>,
 }
 
 impl GitSources {
     /// Compose a reader without starting IO or extracting source files.
     pub fn new(repository: Arc<dyn Repository>, commit: ObjectId, limits: Limits) -> Self {
+        Self::sharing(
+            repository,
+            commit,
+            limits,
+            Arc::new(ProcessSnapshots::default()),
+        )
+    }
+
+    /// Compose a reader that shares extraction fingerprints with the other
+    /// readers of the process.
+    pub fn sharing(
+        repository: Arc<dyn Repository>,
+        commit: ObjectId,
+        limits: Limits,
+        snapshots: Arc<dyn Snapshots>,
+    ) -> Self {
         Self {
             repository,
             commit,
             limits,
             state: Mutex::new(SourceIndex::default()),
+            snapshots,
             extraction: Mutex::new(None),
         }
-    }
-
-    fn extraction(&self) -> Option<Arc<Lease>> {
-        self.extraction
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone()
     }
 }
 
@@ -165,10 +179,9 @@ impl Sources for GitSources {
             }
         }
         match self.extraction() {
-            Some(lease) => {
-                self.repository
-                    .read_extracted(&self.commit, &entries, limits, &lease.directory)
-            }
+            Some(files) => self
+                .repository
+                .read_extracted(&self.commit, &entries, limits, &files),
             None => self.repository.read_many(&self.commit, &entries, limits),
         }
         .at_path(paths.first().map_or(".", RepoPath::as_str))
@@ -236,29 +249,18 @@ impl Sources for GitSources {
             },
         })?;
         match self.extraction() {
-            Some(lease) => self
+            Some(files) => self
                 .repository
-                .digest_extracted(&self.commit, entry, &lease.directory),
+                .digest_extracted(&self.commit, entry, &files),
             None => self.repository.digest(&self.commit, entry),
         }
         .at_path(path.as_str())
     }
 
-    /// Lists the whole tree once, as the extraction did, so a later projection
-    /// needs no Git lookup.
+    /// Lists the whole tree once and reads each extraction file that still
+    /// matches its first fingerprint in the process.
     fn attach(&self, extraction: Arc<Lease>) -> Result<()> {
-        if self.extraction().is_some() {
-            return Ok(());
-        }
-        self.expand(None)?;
-        let mut attached = self
-            .extraction
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if attached.is_none() {
-            *attached = Some(extraction);
-        }
-        Ok(())
+        self.attach_extraction(extraction)
     }
 }
 
@@ -271,18 +273,3 @@ impl fmt::Debug for dyn Sources + '_ {
 #[cfg(test)]
 #[path = "_tests_/sources_tests.rs"]
 mod sources_tests;
-
-#[derive(Default)]
-struct SourceIndex {
-    index: Arc<TreeIndex>,
-    known: BTreeSet<RepoPath>,
-    roots: Vec<Option<RepoPath>>,
-}
-
-impl SourceIndex {
-    fn covered(&self, path: &RepoPath) -> bool {
-        self.roots
-            .iter()
-            .any(|root| root.as_ref().is_none_or(|root| path.under(root)))
-    }
-}

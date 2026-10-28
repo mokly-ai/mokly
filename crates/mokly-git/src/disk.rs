@@ -6,9 +6,8 @@ use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
-use sha2::{Digest, Sha256};
-
 use crate::error::{Error, InternalError, IoResult, Result};
+use crate::fingerprint::{self, Fingerprint};
 use crate::identity::RepoPath;
 
 /// An owned fresh extraction, removed on failure until `finish` succeeds.
@@ -27,8 +26,25 @@ pub trait Disk: Send + Sync {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf>;
     /// Read a confined regular working file; a vanished candidate returns none.
     fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
-    /// Hash a confined regular file with SHA-256 without retaining it; a vanished file returns none.
-    fn digest(&self, root: &Path, path: &RepoPath) -> Result<Option<String>>;
+    /// Fingerprint a confined regular file; a vanished file returns none.
+    fn fingerprint(&self, root: &Path, path: &RepoPath) -> Result<Option<Fingerprint>>;
+    /// Read a confined regular file that still matches `expected`; a changed
+    /// or vanished file returns none.
+    fn read_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        limit: usize,
+        expected: &Fingerprint,
+    ) -> Result<Option<Vec<u8>>>;
+    /// Hash a confined regular file that still matches `expected` with SHA-256,
+    /// without retaining it; a changed or vanished file returns none.
+    fn digest_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        expected: &Fingerprint,
+    ) -> Result<Option<String>>;
     /// Start incremental extraction in a fresh directory.
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>>;
 }
@@ -65,26 +81,33 @@ impl Disk for SystemDisk {
         Ok(Some(bytes))
     }
 
-    fn digest(&self, root: &Path, path: &RepoPath) -> Result<Option<String>> {
-        let Some((file, _)) = confined(root, path)? else {
-            return Ok(None);
-        };
-        let mut input = fs::File::open(file).git()?;
-        let mut hash = Sha256::new();
-        let mut chunk = vec![0; 64 * 1024];
-        loop {
-            let count = input.read(&mut chunk).git()?;
-            if count == 0 {
-                break;
-            }
-            hash.update(&chunk[..count]);
+    fn fingerprint(&self, root: &Path, path: &RepoPath) -> Result<Option<Fingerprint>> {
+        Ok(confined(root, path)?.map(|(_, metadata)| Fingerprint::of(&metadata)))
+    }
+
+    fn read_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        limit: usize,
+        expected: &Fingerprint,
+    ) -> Result<Option<Vec<u8>>> {
+        match confined(root, path)? {
+            Some((file, _)) => fingerprint::read_pinned(&file, limit, expected),
+            None => Ok(None),
         }
-        Ok(Some(
-            hash.finalize()
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect(),
-        ))
+    }
+
+    fn digest_pinned(
+        &self,
+        root: &Path,
+        path: &RepoPath,
+        expected: &Fingerprint,
+    ) -> Result<Option<String>> {
+        match confined(root, path)? {
+            Some((file, _)) => fingerprint::digest_pinned(&file, expected),
+            None => Ok(None),
+        }
     }
 
     fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>> {
