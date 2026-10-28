@@ -5573,7 +5573,7 @@ check passes on this commit.
   - User decision (2026-10-26): B, applied in `bb95b90b`. The preload shares
     one frozen ledger object under the key `mokly.postcss.ledger`.
 
-- [ ] Resolve 117 C port review 5 finding 1 (test): no test fails when the
+- [x] Resolve 117 C port review 5 finding 1 (test): no test fails when the
       worker's shared generation reset breaks. The host keys each worker by
       context, so the reset never changes the generation in the product.
       Severity Low, test, effort Small for B. Options: A, a test in which a
@@ -5584,6 +5584,11 @@ check passes on this commit.
       Removing the reset deletes functionality on main, and mutation tests
       in the gate add a gate, so both are blocked. Recommended: B. No option
       is applied.
+  - User decision (2026-10-28): B, with the coordinator reviewer's
+    correction, applied in `3f40207a`. The ledger-level reset test already
+    existed, so the new test installs a fake shared ledger and checks that
+    each ledger function reaches it. A table holds one case per function,
+    and the test fails when a function has no case.
 
 - [ ] Resolve user item 136 (viewer-103c decision 1): a pure move's Details
       deny its comparison. For an entry that Changes lists only as a move,
