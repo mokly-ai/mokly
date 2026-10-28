@@ -35,13 +35,14 @@ const ledgerKey = Symbol.for("mokly.postcss.ledger");
 type Observer = (loaded: Iterable<string>) => PostcssEvidence;
 
 /** The operations that the CommonJS preload shares with the ESM worker. */
-interface Ledger {
+export interface Ledger {
   readEvidence: Observer;
   resetGeneration: (generation: string) => void;
   initializeGeneration: (generation: string) => void;
 }
 
-const ledgerMembers: readonly (keyof Ledger)[] = [
+/** Every ledger function, for the shape check and the dispatch test. */
+export const ledgerMembers: readonly (keyof Ledger)[] = [
   "readEvidence",
   "resetGeneration",
   "initializeGeneration",
