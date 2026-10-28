@@ -110,6 +110,10 @@ does not receive the token. The
 and the [source worker environment](./mokly-sidecar-modules.md#source-root-workers)
 give the rule for each process.
 
+[Git commands](./mokly-git.md#child-environment) and the browser opener of
+`serve --open` and the `o` key still receive inherited `MOKLY_` variables,
+because they run the user's own tools.
+
 Mokly cannot stop code that runs as the same user from reading the environment
 of Mokly, or of the shell and launcher that started it. Such code can read it
 through `/proc/{pid}/environ`, `ps -E`, or the Windows process environment
