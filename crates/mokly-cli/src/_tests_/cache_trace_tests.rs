@@ -22,6 +22,8 @@ fn stats(hits: usize, misses: usize, evictions: usize, bytes: usize, entries: us
 type Reads = Arc<Mutex<VecDeque<CacheStats>>>;
 
 /// Answer each statistics read in order. The queue is empty once every read happened.
+/// Tests keep the original mock and give the timing layer a clone, because the tracing
+/// dispatcher can release the layer on another thread, and unimock verifies the original.
 fn scripted(reads: Vec<CacheStats>) -> (Unimock, Reads) {
     let queue = Arc::new(Mutex::new(VecDeque::from(reads)));
     let answers = queue.clone();
@@ -64,7 +66,7 @@ fn each_phase_reports_the_differences_and_the_end_totals_before_its_end() {
         reads.push(stats(9 + 2 * index, 5, 3 + index, 300 + index, 4));
     }
     let (cache, queue) = scripted(reads);
-    let records = capture_cache(Arc::new(cache), || {
+    let records = capture_cache(Arc::new(cache.clone()), || {
         tracing::info_span!("serve.background", status = "ok").in_scope(|| {});
         tracing::info_span!("changes.classify", status = "error").in_scope(|| {});
         tracing::info_span!("review.capture-side", side = "base").in_scope(|| {});
@@ -97,7 +99,8 @@ fn each_phase_reports_the_differences_and_the_end_totals_before_its_end() {
 
 #[test]
 fn other_stages_read_no_cache_statistics_and_emit_no_cache_records() {
-    let records = capture_cache(Arc::new(Unimock::new(())), || {
+    let cache = Unimock::new(());
+    let records = capture_cache(Arc::new(cache.clone()), || {
         tracing::info_span!("serve.ready", status = "error").in_scope(|| {
             tracing::info_span!("review.base-tree").in_scope(|| {});
             tracing::info_span!("render.document", cache_hit = true).in_scope(|| {});
@@ -111,7 +114,7 @@ fn other_stages_read_no_cache_statistics_and_emit_no_cache_records() {
 #[test]
 fn a_failed_phase_still_reports_its_cache_counts() {
     let (cache, queue) = scripted(vec![stats(0, 0, 0, 0, 0), stats(1, 7, 6, 256, 2)]);
-    let records = capture_cache(Arc::new(cache), || {
+    let records = capture_cache(Arc::new(cache.clone()), || {
         let span = tracing::info_span!(
             "review.compare-views",
             status = "error",
@@ -137,7 +140,7 @@ fn nested_phases_report_their_own_interval_and_the_parent_includes_it() {
         stats(10, 4, 1, 90, 3),
         stats(12, 9, 2, 120, 4),
     ]);
-    let records = capture_cache(Arc::new(cache), || {
+    let records = capture_cache(Arc::new(cache.clone()), || {
         tracing::info_span!("output.write").in_scope(|| {
             tracing::info_span!("review.capture-side", side = "head").in_scope(|| {});
         });
@@ -164,7 +167,7 @@ fn nested_phases_report_their_own_interval_and_the_parent_includes_it() {
 #[test]
 fn background_counts_keep_their_document_hits_beside_the_cache_record() {
     let (cache, queue) = scripted(vec![stats(0, 0, 0, 0, 0), stats(3, 1, 0, 40, 2)]);
-    let records = capture_cache(Arc::new(cache), || {
+    let records = capture_cache(Arc::new(cache.clone()), || {
         tracing::info_span!("serve.background", status = "ok").in_scope(|| {
             tracing::info_span!("render.document", cache_hit = true).in_scope(|| {});
         });
