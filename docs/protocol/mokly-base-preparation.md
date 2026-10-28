@@ -1,7 +1,5 @@
 # Base Source And Dependency Preparation
 
-Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
-
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns
 rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and

@@ -1,7 +1,7 @@
-//! NativeBase sends historical bundle work to the injected head pool.
+//! NativeBase sends historical bundle work to the injected head pool and reads the leased extraction.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_cli::cancellation::BuildCancellation;
@@ -9,6 +9,7 @@ use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_compare::error::Error;
+use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
@@ -21,9 +22,11 @@ use unimock::{MockFn, Unimock, matching};
 use crate::base_dependencies::BaseDependenciesMock;
 use crate::changes_base::NativeBase;
 
-#[test]
-fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
-    let tree = Arc::new(Unimock::new((
+type Events = Arc<Mutex<Vec<&'static str>>>;
+
+/// A base tree with one configuration and one module entry; each configuration read is logged.
+fn tree(events: Events) -> Unimock {
+    Unimock::new((
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers(&|_, path| {
@@ -44,7 +47,10 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
             }),
         SourceTreeMock::read
             .each_call(matching!((path) if *path == Path::new("/repo/mokly.config.json")))
-            .answers(&|_, _| Ok(b"{}".to_vec())),
+            .answers_arc(Arc::new(move |_, _| {
+                events.lock().unwrap().push("read configuration");
+                Ok(b"{}".to_vec())
+            })),
         SourceTreeMock::prefetch
             .next_call(matching!(_))
             .returns(Ok(())),
@@ -56,7 +62,47 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
                     kind: FileKind::File,
                 }])
             }),
-    )));
+    ))
+}
+
+/// Base sources that log each attached extraction directory.
+fn sources(events: Events, attaches: usize) -> Unimock {
+    Unimock::new(
+        SourcesMock::attach
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, lease| {
+                assert_eq!(lease.directory, Path::new("/base"));
+                events.lock().unwrap().push("attach");
+                Ok(())
+            }))
+            .n_times(attaches),
+    )
+}
+
+fn lease() -> Arc<Lease> {
+    Arc::new(Lease {
+        directory: "/base".into(),
+        guard: Box::new(Unimock::new(())),
+    })
+}
+
+fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
+    Arc::new(BaseSide {
+        sources,
+        dependencies: Resolved {
+            tier: Tier::Working,
+            node_modules: "/deps/node_modules".into(),
+            module_resolution: ModuleResolution::default(),
+            warning: None,
+            lease: None,
+            repository_roots: Vec::new(),
+        },
+        identity: "commit".into(),
+    })
+}
+
+/// Runs a base preparation whose bundle fails with a protocol handshake error.
+fn prepare(input: Config, dependencies: Unimock, tree: Unimock, sources: Unimock) -> Error {
     let head = Arc::new(Runtime::new(
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(PoolMock::request.next_call(matching!((call) if matches!(call,
@@ -71,44 +117,101 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
     let base = NativeBase {
         runtime: head,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
-        dependencies: Arc::new(Unimock::new(
-            BaseDependenciesMock::prepare
-                .next_call(matching!((_, _, directories, unmapped) if *directories == [String::from("node_modules")] && unmapped.is_empty()))
-                .returns(Ok(Arc::new(BaseSide {
-                    sources: Arc::new(Lease {
-                        directory: "/base".into(),
-                        guard: Box::new(Unimock::new(())),
-                    }),
-                    dependencies: Resolved {
-                        tier: Tier::Working,
-                        node_modules: "/deps/node_modules".into(),
-                        module_resolution: ModuleResolution::default(),
-                        warning: None,
-                        lease: None,
-                        repository_roots: Vec::new(),
-                    },
-                    identity: "commit".into(),
-                }))),
-        )),
+        dependencies: Arc::new(dependencies),
     };
     let config = ResolvedConfig {
-        input: Config::default(),
+        input,
         file: "/repo/mokly.config.json".into(),
         repo_root: "/repo".into(),
         roots: Vec::new(),
         authored_inputs: Vec::new(),
     };
-    let result = base.prepare(&BaseRequest {
+    base.prepare(&BaseRequest {
         head: &Unimock::new(()),
         working_config: &config,
         repository: Arc::new(Unimock::new(())),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
         install_scripts: false,
         sources: HistoricalSources {
-            tree,
-            sources: Arc::new(Unimock::new(())),
+            tree: Arc::new(tree),
+            sources: Arc::new(sources),
             failures: Arc::new(Unimock::new(())),
         },
-    });
-    assert!(matches!(result, Err(Error::Catalogue { .. })));
+    })
+    .err()
+    .unwrap()
+}
+
+#[test]
+fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
+    let events = Events::default();
+    let dependencies = Unimock::new(
+        BaseDependenciesMock::prepare
+            .next_call(matching!((_, _, directories, unmapped, early) if *directories == [String::from("node_modules")] && unmapped.is_empty() && early.is_none()))
+            .returns(Ok(side(lease()))),
+    );
+    let error = prepare(
+        Config::default(),
+        dependencies,
+        tree(events.clone()),
+        sources(events.clone(), 1),
+    );
+    assert!(matches!(error, Error::Catalogue { .. }));
+    assert_eq!(events.lock().unwrap().last(), Some(&"attach"));
+}
+
+#[test]
+fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configuration_loads() {
+    let events = Events::default();
+    let early = lease();
+    let dependencies = Unimock::new((
+        BaseDependenciesMock::existing_sources
+            .next_call(matching!(_))
+            .returns(Ok(Some(early.clone()))),
+        BaseDependenciesMock::prepare
+            .next_call(matching!((_, _, _, _, early) if early.as_ref().is_some_and(|lease| lease.directory == Path::new("/base"))))
+            .answers_arc(Arc::new(move |_, _, _, _, _, early| Ok(side(early.unwrap())))),
+    ));
+    let error = prepare(
+        Config {
+            renderer: Some("renderer.tsx".into()),
+            ..Config::default()
+        },
+        dependencies,
+        tree(events.clone()),
+        sources(events.clone(), 2),
+    );
+    assert!(matches!(error, Error::Catalogue { .. }));
+    let events = events.lock().unwrap();
+    assert_eq!(events.first(), Some(&"attach"));
+    assert!(events.contains(&"read configuration"));
+    assert_eq!(events.last(), Some(&"attach"));
+}
+
+#[test]
+fn a_failed_early_lookup_keeps_the_base_reads_on_git() {
+    let events = Events::default();
+    let dependencies = Unimock::new((
+        BaseDependenciesMock::existing_sources
+            .next_call(matching!(_))
+            .returns(Err(Error::UnsafeCache {
+                path: "/cache".into(),
+            })),
+        BaseDependenciesMock::prepare
+            .next_call(matching!((_, _, _, _, early) if early.is_none()))
+            .returns(Ok(side(lease()))),
+    ));
+    let error = prepare(
+        Config {
+            postcss: Some("postcss.config.mjs".into()),
+            ..Config::default()
+        },
+        dependencies,
+        tree(events.clone()),
+        sources(events.clone(), 1),
+    );
+    assert!(matches!(error, Error::Catalogue { .. }));
+    let events = events.lock().unwrap();
+    assert_eq!(events.first(), Some(&"read configuration"));
+    assert_eq!(events.last(), Some(&"attach"));
 }

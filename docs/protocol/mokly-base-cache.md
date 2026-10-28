@@ -1,7 +1,5 @@
 # Base Preparation Cache
 
-Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
-
 The [base preparation contract](./mokly-base-preparation.md) defines source
 conversion and dependency selection. This page defines their retained storage.
 

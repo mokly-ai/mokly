@@ -1,7 +1,5 @@
 # Startup Diagnostics And Scale Fixtures
 
-Status: In progress under the [Batched Base Reads plan](../../plans/batched-base-reads.md).
-
 ## Opt-In Timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the

@@ -11,7 +11,7 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
 use mokly_compare::base_render::{BaseProvider, BaseRequest};
-use mokly_compare::cache_types::Reporter;
+use mokly_compare::cache_types::{Lease, Reporter};
 use mokly_compare::error::{Error, Result};
 use mokly_graph::types::RenderGeneration;
 use mokly_model::public_metadata::ChangesStatus;
@@ -63,17 +63,22 @@ pub(super) struct PreparingDependencies {
     pub(super) progress: Arc<dyn ChangeProgress>,
 }
 impl BaseDependencies for PreparingDependencies {
+    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
+        self.inner.existing_sources(request)
+    }
+
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used: &[String],
         unmapped: &[String],
+        sources: Option<Arc<Lease>>,
     ) -> Result<Arc<BaseSide>> {
         if !matches!(self.progress.status(ChangesStatus::Preparing), Ok(true)) {
             return Err(Error::Cancelled);
         }
-        self.inner.prepare(request, config, used, unmapped)
+        self.inner.prepare(request, config, used, unmapped, sources)
     }
 }
 
