@@ -1,7 +1,12 @@
 # Parallel Background Pass
 
-Status: Active. [PR #225](https://github.com/mokly-ai/mokly/pull/225) is open.
-The plan closes when its PR merges.
+Status: Completed. [PR #225](https://github.com/mokly-ai/mokly/pull/225)
+merged on 2026-10-28. No review finding stays open. The measured targets of
+decision 6 stand as accepted, and its three follow-ups go to later items: the
+sidecar pre-start, stylesheet bundle coalescing in the perf 5 area, and
+document composition coalescing in the graph. The review record lists four
+problems outside the scope for separate branches, among them a flaky Windows
+test. PR #230 fixed the `pulldown-cmark` advisory.
 
 After Serve listens, its background pass renders every view. The pass fills
 the render cache and the usage of every entry detail, and Changes starts
@@ -391,6 +396,13 @@ request TODO comes before the review TODO here.
     0.13.5. Since the advisory database update of 2026-10-28, the Rust
     dependency audit fails on `origin/main` and on every branch. Separate
     branch.
+  - `crates/mokly-render/tests/integration/watch_lifetimes_tests.rs`: the test
+    `changed_class_maps_reuse_compiled_code_and_failed_candidates_release_once`
+    failed once on Windows, in CI run 40674917367. Its 30-second wait in
+    `process_counts.rs:68` saw no `PostcssStop` after the test dropped the
+    original generation. The next full CI run and the CI of `origin/main`
+    passed it. Suspected source: the asynchronous PostCSS context release
+    with real Node processes on a busy runner. Separate branch.
 
   Evidence: `.context/parallel-background-pass/review-1.md`,
   `validity-1.md`, `options-1.md`, `review-2.md`, `validity-2.md`, and
