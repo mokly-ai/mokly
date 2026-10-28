@@ -33,11 +33,8 @@ repository root is empty. `ResolvedConfig::renderer`,
 `ResolvedConfig::postcss`, and `ResolvedConfig::package_roots` give that form
 for their fields. The file policy, the static output boundary, the sidecar
 settings, and base dependency selection read package roots in this form, so a
-working tree and a Git tree name the same package root.
-`ResolvedConfig::package_root_aliases` keeps each
-authored spelling with `..`. The file policy and the output boundary project
-it, so a symbolic link before `..` cannot remove the protection of the
-directory that the spelling reaches.
+working tree and a Git tree name the same package root. A symbolic link
+before `..` does not change that root, and the manifest check reads only it.
 
 `WorkingTree` is the working-tree `SourceTree` adapter. It uses the shared
 `dunce` path spelling, so output confinement and input rechecks use matching
@@ -173,8 +170,7 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
   shape and the `ResolvedConfig` that later stages read.
 - [`src/config_paths.rs`](./src/config_paths.rs) confines local inputs and
   gives `ResolvedConfig::repository_path`, the one resolver of
-  config-relative paths, with `renderer`, `postcss`, `package_roots`, and
-  `package_root_aliases`.
+  config-relative paths, with `renderer`, `postcss`, and `package_roots`.
 - [`src/discovery.rs`](./src/discovery.rs) defines `Discovery` and
   `Discoverer`, which walk the roots once and return the source `Inventory`.
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and

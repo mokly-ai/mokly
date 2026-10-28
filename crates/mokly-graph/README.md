@@ -110,7 +110,6 @@ Production callers supply fresh base generations.
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 Package directories come from the normalized `ResolvedConfig::package_roots`.
-The physical directory that a `..` spelling reaches also stays private.
 Repository aliases and case aliases do not make their files public.
 Watch-input fingerprints use repository-relative POSIX names on every
 platform. The working-tree adapter implements `mokly_source_interface::tree::SourceTree`. Historical rendering

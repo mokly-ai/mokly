@@ -1,6 +1,6 @@
 //! Physical confinement for configuration filesystem fields.
 
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
@@ -46,21 +46,6 @@ impl ResolvedConfig {
             .collect()
     }
 
-    /// Authored package-root spellings that contain `..`, joined to the
-    /// configuration directory. A symbolic link before `..` can lead such a
-    /// spelling to another physical directory. Consumers only project these
-    /// paths, so that directory stays protected as before normalization.
-    pub fn package_root_aliases(&self) -> Vec<PathBuf> {
-        self.authored_package_roots()
-            .filter(|root| {
-                Path::new(root)
-                    .components()
-                    .any(|part| part == Component::ParentDir)
-            })
-            .map(|root| self.spelling(root))
-            .collect()
-    }
-
     fn authored_package_roots(&self) -> impl Iterator<Item = &String> {
         self.input
             .module_resolution
@@ -68,14 +53,10 @@ impl ResolvedConfig {
             .flat_map(|module| module.package_roots.iter().flatten())
     }
 
-    fn spelling(&self, value: &str) -> PathBuf {
-        self.file.parent().unwrap_or(&self.repo_root).join(value)
-    }
-
     /// The source-tree path that a config-relative value names. Loading
     /// projects this path for every check.
     pub(crate) fn local_path(&self, value: &str) -> PathBuf {
-        normalize(&self.spelling(value))
+        normalize(&self.file.parent().unwrap_or(&self.repo_root).join(value))
     }
 }
 
@@ -234,18 +215,13 @@ fn confined(
     Ok(vec![path, node.identity])
 }
 
-/// The normalized root needs `package.json`. The authored spelling's target
-/// also counts, so a root spelled through a symbolic link before `..` keeps
-/// the acceptance that the unnormalized check gave it.
+/// The normalized root needs `package.json`. A symbolic link before `..` in
+/// the authored spelling does not change which directory that is.
 fn has_manifest(tree: &dyn SourceTree, config: &ResolvedConfig, value: &str) -> bool {
-    [config.local_path(value), config.spelling(value)]
-        .iter()
-        .any(|directory| {
-            matches!(
-                tree.project(&directory.join("package.json")),
-                Ok(Some(node)) if node.kind == FileKind::File
-            )
-        })
+    matches!(
+        tree.project(&config.local_path(value).join("package.json")),
+        Ok(Some(node)) if node.kind == FileKind::File
+    )
 }
 
 #[cfg(test)]

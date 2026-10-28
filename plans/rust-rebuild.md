@@ -5939,7 +5939,7 @@ does not ask the user before the merge.
       renderer, the PostCSS module, and the configured stylesheets in the
       render crate, Large, which also fixes 169 and 170. Recommended: B.
 
-- [ ] Resolve user item 168 (W8 finding 2): the manifest rule
+- [x] Resolve user item 168 (W8 finding 2): the manifest rule
       (`crates/mokly-catalogue/src/config_paths.rs:210`, `has_manifest`) now
       accepts two rare roots that the base rejected: a link before `..`
       where only the normalized root holds `package.json`, and a file before
@@ -5952,6 +5952,10 @@ does not ask the user before the merge.
       differs from its normalized root, a new rejection, see 171; D, resolve
       each root once into one record that the manifest rule, the file
       policy, and the output boundary read, Large. Recommended: A.
+  - User decision 168 (2026-10-28): E, close it with 171 B. Under one
+    lexical rule both roots are valid, and the output boundary no longer
+    projects `file.txt/../ui/package.json`. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
 - [ ] Resolve user item 169 (W8 finding 3): a configured stylesheet spelled
       `sub/../first.css` fails a component build with "listed authoring
@@ -5966,7 +5970,7 @@ does not ask the user before the merge.
       before the sidecar call, Small; B, the method of 167 B, Large.
       Recommended: B.
 
-- [ ] Resolve user item 171 (W8 decision 5): in a spelling such as
+- [x] Resolve user item 171 (W8 decision 5): in a spelling such as
       `link/../ui`, where `link` is a symbolic link, one package root has two
       meanings: the normalized root and the physical target. `80a8a195`
       keeps the base behaviour through
@@ -5977,6 +5981,10 @@ does not ask the user before the merge.
       fails with the existing "must contain package.json" message, which
       also closes 168; C, reject such a spelling with a new message.
       Recommended: B.
+  - User decision 171 (2026-10-28): B. The user approved the removal of the
+    aliases. A package root names only its normalized root, under the path
+    rule of the configuration contract. Fixed under the
+    [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md).
 
 - [ ] Resolve user item 172 (W8 decision 6): a Rust test that compares
       joined paths as `/` strings fails only on Windows. Severity Low,

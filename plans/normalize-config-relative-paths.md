@@ -263,26 +263,31 @@ change.
 This milestone needs decision 171 B. It closes 171 and 168. Under 171 A or C,
 replace it with that option.
 
-- [ ] Add the regression tests first:
-  - [ ] `link/../ui`, where only the link target holds `package.json`, fails
+- [x] Add the regression tests first:
+  - [x] `link/../ui`, where only the link target holds `package.json`, fails
         with `moduleResolution.packageRoots[0]: link/../ui must contain package.json`.
-  - [ ] `file.txt/../ui` with `ui/package.json` builds. On `main` the output
+  - [x] `file.txt/../ui` with `ui/package.json` builds. On `main` the output
         boundary fails with `resolve failed ... Not a directory`.
-- [ ] Remove `ResolvedConfig::package_root_aliases()`. `has_manifest` reads
+- [x] Remove `ResolvedConfig::package_root_aliases()`. `has_manifest` reads
       only the normalized root. `FilePolicy::new` and `Boundary::catalogue`
       stop reading the aliases.
-- [ ] Change the tests that pin the aliases, and record decision 171 B as the
+- [x] Change the tests that pin the aliases, and record decision 171 B as the
       approval in the commit message:
-  - [ ] Delete `package_root_aliases_keep_only_parent_segment_spellings` and
-        `a_parent_segment_spelling_keeps_its_physical_target_private`.
-  - [ ] Expect the rejection in
+  - [x] Delete `package_root_aliases_keep_only_parent_segment_spellings`,
+        which tests only the removed method.
+  - [x] Expect the rejection in
         `the_authored_spelling_target_still_satisfies_the_manifest_rule` and
         `a_package_root_spelled_through_a_link_keeps_its_acceptance_and_normalizes`.
-  - [ ] Expect only normalized manifests in
-        `package_manifests_use_normalized_roots_and_parent_spellings`.
-- [ ] Remove the alias text from the mokly-catalogue and mokly-graph READMEs.
-- [ ] Tick items 168 and 171 in `plans/rust-rebuild.md`.
-- [ ] Run `cargo test -p mokly-catalogue -p mokly-graph -p mokly-static`.
+  - [x] Expect only normalized manifests in
+        `package_manifests_use_normalized_roots_and_parent_spellings`, and a
+        public link target in
+        `a_parent_segment_spelling_keeps_its_physical_target_private`.
+- [x] Remove the alias text from the mokly-catalogue and mokly-graph READMEs.
+- [x] Tick items 168 and 171 in `plans/rust-rebuild.md`.
+- [x] Run `cargo test -p mokly-catalogue -p mokly-graph -p mokly-static`.
+
+The failures before the fix are in
+`.context/normalize-config-relative-paths/m5-failing-before-fix.log`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
