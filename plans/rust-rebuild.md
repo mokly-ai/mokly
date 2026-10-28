@@ -6236,6 +6236,9 @@ does not ask the user before the merge.
       B, use `dunce::canonicalize` there and forbid `std::fs::canonicalize`
       in product code with a Clippy `disallowed-methods` rule (a new lint,
       which needs the user's approval). Recommended: B.
+  - User decision 166 (2026-10-28): the product part of B now. Both calls
+    use `dunce::canonicalize` under the [Windows Paths And Base-Tree Links plan](./windows-paths-and-links.md). The Clippy rule waits for
+    the user, so the item stays open.
 
 - [x] Resolve user item 167 (W8 finding 1): a nested configuration with
       `"renderer": "../renderer.tsx"` gets no renderer stylesheet, because
@@ -6316,19 +6319,23 @@ does not ask the user before the merge.
     [Normalize Config-Relative Paths plan](./normalize-config-relative-paths.md)
     follow it. It needs no code change.
 
-- [ ] Resolve user item 173 (W8 decision 7):
+- [x] Resolve user item 173 (W8 decision 7):
       `crates/mokly-compare/tests/large_sources_tests.rs:17` runs `git`
       without the isolated `support::git`, so a global setting such as
       `commit.gpgsign = true` can fail it locally. Severity Low, effort
       Small. Options: A, use `support::git`, Small; B, A, and add a check
       that rejects `Command::new("git")` in Rust tests outside the support
       modules (a new gate, which needs the user's approval). Recommended: A.
+  - User decision 173 (2026-10-28): A. `support::git` gained an
+    input-piping variant. Fixed under the [Windows Paths And Base-Tree Links plan](./windows-paths-and-links.md).
 
-- [ ] Resolve user item 174 (W8, outside its scope):
+- [x] Resolve user item 174 (W8, outside its scope):
       `crates/mokly-compare/src/git_tree.rs:214` reports a symbolic-link
       entry as `Symlink`, so a package root that is a link, or goes through
       one, loads in the working tree but fails in the base tree. Severity
       Low, effort not recorded. Options: to be written in the follow-up.
+  - User decision 174 (2026-10-28): C. The base tree keeps the failure,
+    and the loader message names the link. Fixed under the [Windows Paths And Base-Tree Links plan](./windows-paths-and-links.md).
 
 - [x] Resolve user item 175 (W1 example smoke): the documented mockup check
       (`npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`)
@@ -6372,7 +6379,7 @@ does not ask the user before the merge.
       contains the token (a new rejection, which needs the user's approval).
       Recommended: A.
 
-- [ ] Resolve user item 179 (delta review 4):
+- [x] Resolve user item 179 (delta review 4):
       `crates/mokly-compare/src/locations.rs:40`: `dunce` keeps the verbatim
       `\\?\` form for a path over 260 characters or with a reserved name, so
       the "cache inside the repository" check can compare a verbatim path
@@ -6380,6 +6387,8 @@ does not ask the user before the merge.
       repository through such a path. Severity Low, product bug, effort not
       recorded. Options (estimate): A, normalize both paths the same way
       before the comparison; B, document the limit. Recommended: A.
+  - User decision 179 (2026-10-28): A. The check compares both paths in
+    one form. Fixed under the [Windows Paths And Base-Tree Links plan](./windows-paths-and-links.md).
 
 - [ ] Resolve user item 180 (delta review 5, older than the delta):
       `crates/mokly-sidecar/src/process_factory.rs:82`: the sidecar inherits
