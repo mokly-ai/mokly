@@ -1,5 +1,7 @@
 //! Port the former link-control placement matrix to the shared HTML adapter.
 
+use mokly_catalogue::html_input::DeliveredHtml;
+
 use crate::controls::adapt;
 use crate::{parse, serialize};
 
@@ -33,9 +35,9 @@ const STRUCTURAL: &[&str] = &[
 ];
 
 fn document(body: &str) -> Vec<crate::tree::Node> {
-    parse::document(&format!(
+    parse::html(DeliveredHtml::document(&format!(
         "<!doctype html><html><head></head><body>{body}</body></html>"
-    ))
+    )))
 }
 
 #[test]

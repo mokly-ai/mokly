@@ -5464,15 +5464,200 @@ check passes on this commit.
     Work: W6 on `rebuild/html-pipeline`. It must not delay the final pull
     request.
   - Moved here from Milestone 14 on 2026-10-22. User decision 147 B keeps
-    98 B post-merge.
+    98 B post-merge. The source identity work landed in `dc4d8127`. The
+    one-tokenizer boundary decision remains open. No default has been applied.
+  - The user's decision B on the one-tokenizer item (2026-10-26) completed
+    that part in `3c90b1e1`: the catalogue checks and the tree read the tokens
+    of one driver, and the tree builder chooses every text mode. Still open
+    under 98 B: serialization still predicts the plaintext point and keeps the
+    escaped-text retry, instead of option B's escaped first pass that finds
+    the HTML `plaintext` element by its repair id.
+  - User decision (2026-10-28): B. The serializer part stays an open
+    follow-up, and item 98 stays unticked.
 
-- [ ] Split the public HTML parser into an authored parse and a
+- [x] Split the public HTML parser into an authored parse and a
       delivered-document parse that every caller chooses, in phase 2 of the
       HTML pipeline. User decision 115 C, after option A merged as `033e5059`.
+      The entry points are complete in `6219b4a4`. Item 115's remaining work
+      is the shared catalogue boundary, which remains open under the
+      one-tokenizer decision.
+  - Completed on 2026-10-26: typed parse inputs under the user's decision B
+    on the graph key scan item in `940486d5`, and the shared boundary under
+    the user's decision B on the one-tokenizer item in `3c90b1e1`.
 
-- [ ] Make the HTML token boundary the only html5gum user, with Mokly-owned
+- [x] Make the HTML token boundary the only html5gum user, with Mokly-owned
       token types, in phase 2 of the HTML pipeline. User decision 116 C, after
-      option A merged as `033e5059`.
+      option A merged as `033e5059`. The catalogue token types are complete in
+      `dc4d8127`. Item 116's remaining work is the tree adapter, which remains
+      a second html5gum user while the one-tokenizer boundary decision is open.
+  - Completed on 2026-10-26 under the user's decision B on the one-tokenizer
+    item, in `3c90b1e1`: the tree adapter moved into the catalogue boundary,
+    and `mokly-html` no longer depends on html5gum.
+
+- [x] HTML pipeline phase 2 review 1, finding 1: the differential harness
+      reads repository HTML from disk, compares only bytes, and does not assert
+      source positions. Severity Medium, effort Medium, category test.
+      Options: A, use tracked fixtures, compare trees with positions removed,
+      assert position tables, and add each phase 2 review case, Small; B, also
+      run an html5lib tree-construction corpus, Medium. Recommended: B.
+      Apply no option.
+  - User decision (2026-10-28): B. Done in `8bec2ca0`: 55 tracked fixtures
+    with position snapshots, and the html5lib tree-construction corpus. New
+    test data: the corpus from html5lib-tests commit `9329e64`, under its MIT
+    license, in `crates/mokly-html/tests/fixtures/html5lib`. It is test data
+    only and stays out of the product build. No new dependency.
+- [x] HTML pipeline phase 2 review 1, finding 2: graph key scans use delivered
+      parsing for authored bodies. Severity Low, effort Medium, category
+      performance. Options: A, use the authored parse without positions,
+      Medium; B, give every parse purpose its own input type, Large.
+      Recommended: A. Apply no option.
+  - User decision (2026-10-26): B. Done in `940486d5` with key tests for
+    wrapper references, wrapper links, and saved slots.
+- [x] E2b finding 1: a Markdown link under `plans/` changed one document's
+      two scheme keys and the deployment identity when its text changed.
+      Severity Low, effort Medium, category performance. User decision 1
+      (2026-10-26): A, exclude planning Markdown from document identity.
+      Fixed in `735c7d2e` with a regression test and the document contract.
+- [x] Decision work review of 2026-10-26, finding 2: a removed linked plan
+      file keeps the document key. Since `735c7d2e`, linked `plans/*.md`
+      files stay out of document identity, but the Markdown renderer still
+      fails a missing link target. After the file is removed, a warm Serve
+      cache returns the earlier render, while a fresh build fails with "link
+      target ... does not exist". Severity Medium, effort Small, category
+      product bug. Options: A, key each linked `plans/*.md` target only by
+      whether it exists, and say in the documents protocol that removal fails
+      the document, Small; B, check once per generation, outside the render
+      cache, that each plain-text link target exists, Medium; C, split the
+      key inputs of every plain-text link target into content and existence
+      inputs, which also removes the `plans/` special case, Medium.
+      Recommended: A. C best protects the codebase. No option is applied.
+  - User decision (2026-10-28): A. Done in `e236ea78`. Option C stays a
+    possible later change, below.
+- [ ] Possible later change (decision work review finding 2, option C): key
+      every plain-text link target only by whether it exists, which also
+      removes the `plans/` special case. Preparation must then decide which
+      targets are resources, and a missed target would stop an edited asset
+      from changing its document key. Not decided.
+- Decision work review of 2026-10-26:
+  `.context/html-pipeline-2-decisions/review-2000d402.md`. Findings 1, 3, 5,
+  6, and 7 are fixed in `558e580b`, `f38cb325`, and `00fbc79e`. Finding 4 is
+  resolved by `115c2fdb` and the wrapper filter record below.
+- Outside the decision work review: `crates/mokly-catalogue/src/templates.rs`
+  at line 217 reports a `{{...}}` failure in an attribute value at the
+  attribute name start, also on `origin/main`. Separate branch.
+- Decision work review round 2:
+  `.context/html-pipeline-2-decisions/review-round2-f87efa6b.md`. Findings 1
+  and 2 are fixed in `e24a8270` and `05caa536`.
+- [x] Decision work review round 2, finding 3: four commits on
+      `rebuild/html-pipeline-2` name HTML tags in their messages: `75ec1ad4`,
+      `3c90b1e1`, `558e580b`, and `f38cb325`. Release Please parses changelog
+      text as HTML. Severity Low, effort Small, category repository rule.
+      Options: A, write the squash message and the pull request description
+      without HTML tags, Small; B, reword the commits and force-push, which
+      rewrites pushed history, Small; C, add a check that rejects tag-like
+      text in commit messages and pull request descriptions, Medium.
+      Recommended: A. No option is applied.
+  - User decision (2026-10-28): A. The pull request description has no HTML
+    tags, and the coordinator uses it as the squash commit body.
+- [ ] Source offset maps for diagnostics (wider fix of round 1 finding 1 and
+      round 2 finding 1). Give each text token and attribute value a map
+      from value offsets to source offsets, so that every `{{...}}` failure
+      points at its own characters. Severity Low, effort Large, category
+      product bug. It also covers the attribute value and character
+      reference locations of the outside-scope lines around it. Options: A,
+      keep the targeted span fixes, Small; B, the offset maps, Large.
+      Recommended: B. No option is applied.
+  - User decision (2026-10-28): C, the offset maps on a separate branch
+    after this branch merges. Open follow-up.
+- Outside the decision work review round 2:
+  `crates/mokly-catalogue/src/templates.rs` at line 71 reports a `{{...}}`
+  failure after a character reference too early, also on `origin/main`.
+  Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-catalogue/src/html_tokens.rs` at lines 93-96 says that
+  reserved metadata on a wrapper "is rejected", but a saved slot with a
+  literal value builds, also on `origin/main`. Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-html/src/elements.rs` at lines 30-47 evaluates a reserved
+  name on a saved-slot `mokly-ignore` but not on a `mokly-ignore-scope`,
+  also on `origin/main`. Separate branch.
+- Outside the decision work review round 2:
+  `crates/mokly-html/src/source_checks.rs` at lines 21-36 fails any
+  duplicate attribute in callback output as a duplicate navigation
+  attribute, also on `origin/main`. Separate branch.
+- Implementation review of 2026-10-28:
+  `.context/html-pipeline-2-decisions/review-db37e3d9.md`. Finding 1 is fixed
+  in `371d8d43`. Finding 2 is fixed by the tick on the decision work review
+  finding 2 item above.
+- Outside the implementation review of 2026-10-28: `.prettierignore` at
+  line 10 has the comment "Protocol fixtures keep their canonical bytes."
+  with no pattern below it, also on `origin/main`. Separate branch.
+- Outside the implementation review of 2026-10-28:
+  `crates/mokly-html/src/source_checks.rs` at line 18 reports reserved
+  navigation metadata in an authored template body as "in consumer output",
+  also on `origin/main`. Separate branch.
+- Re-review of the implementation review of 2026-10-28:
+  `.context/html-pipeline-2-decisions/rereview-8af28b75.md`. Finding 1 is
+  fixed in `8ffb63dd`.
+- [ ] Re-review finding 2: the plan does not say why the tick of the
+      implementation review finding 2 needed no user answer. Severity Low,
+      effort Small, category process. Options: A, add the reason to the
+      review line: the `plans` skill says to tick TODOs as you complete
+      them, and the work was done under user decision A in `e236ea78`,
+      Small; B, remove the tick and keep the item open until the user
+      answers, Small; C, add a rule to the shared `implementation-review`
+      skill that a missed tick is not a process finding when the plan
+      already records the decision and the commit, Small (estimate).
+      Recommended: A. C best protects the codebase. No option is applied.
+- Outside the re-review of the implementation review of 2026-10-28:
+  `docs/protocol/mokly-html-screens.md` at line 71 says "One parser and one
+  renderer serve both.", which describes the implementation, not a result,
+  also on `origin/main`. Separate branch.
+- Outside phase 2 review 1, resolved by the one-tokenizer decision B
+  (2026-10-26) in `3c90b1e1`: the token pass in `html_token_conversion.rs`
+  kept its own integration point list without SVG `desc` or encoded MathML
+  `annotation-xml`. The file is gone, and the token checks now read the tree
+  builder's text modes.
+
+- [x] One tokenizer run for the checks and the tree, covering decisions 98 B
+      and 116 C. Severity Medium, effort Large. The checks still run their own
+      html5gum pass and guess text modes. The tree adapter is a second html5gum
+      user. The catalogue cannot depend on `mokly-html` without a cycle.
+      Options: A, keep the two runs and revise decisions 98 B and 116 C to
+      match the code, Small; B, move the html5gum-to-html5ever driver into the
+      token boundary, generic over html5ever's `TreeSink`, so checks use a
+      recording sink and `mokly-html` passes its `Arena`, with no new crate,
+      Large; C, define a tokenizer trait and token types in the catalogue,
+      implement the trait in `mokly-html`, and inject it into catalogue
+      preparation, Large; D, move the shared boundary into a new lower-level
+      crate, Large. Recommended: B. No option is applied.
+  - User decision (2026-10-26): B. Done in `3c90b1e1`.
+- [x] Fix-round commits that do not build. Severity Medium, effort Medium,
+      category process. The affected commits are `b9dad262`, `e877ca04`,
+      `a5e7461b`, `62e1e3f7`, and `fd3fccba`. Options: A, record the commit map
+      and squash the branch when it merges, Small; B, add a check that builds
+      and tests every commit of a branch, Medium. Recommended: A. No option
+      is applied.
+  - User decision (2026-10-28): A. This list of commits stays here, and the
+    coordinator squash-merges the branch.
+- [x] The wrapper filter repeats the catalogue allow list. Severity Low,
+      effort Small, category code structure. `ignore_checks.rs` writes the
+      allowed wrapper attributes again beside the catalogue rule. Options:
+      A, call the catalogue rule and reserved-navigation check from
+      `filter_attributes`, and correct its module doc, Small; B, keep both
+      lists, Small. Recommended: A. No option is applied.
+  - User decision (2026-10-26): A. Composition uses the catalogue rule since
+    `d0627104` and keeps the reserved navigation names since `115c2fdb`, as
+    the authored parse does. This keeps the `origin/main` behaviour: a
+    saved-slot `mokly-ignore` with `data-mokly-link='{{missing}}'` fails with
+    `html-props`. `a5e7461b` had removed that failure without a decision.
+- Outside phase 2 review 1, resolved by the one-tokenizer decision B
+  (2026-10-26) in `3c90b1e1`: the production `unreachable!()` and `unwrap()`
+  calls left with `html_token_conversion.rs`.
+- Outside the 2026-10-26 decision work:
+  `crates/mokly-catalogue/src/templates.rs` at lines 163-172 fails standard
+  hyphenated SVG and MathML names, such as `annotation-xml`, as unknown
+  elements. Separate branch.
 
 - [x] Record PostCSS module paths through an asynchronous resolve hook and a
       message port, so that loader-supplied modules get a witness and a late
@@ -5833,7 +6018,7 @@ does not ask the user before the merge.
   - Saved slots skip the forbidden and unknown element checks, because a
     new build error needs the user's yes (item 128 is open).
 
-- [ ] Resolve user item 129 (F21 review finding 5): the empty-slot
+- [x] Resolve user item 129 (F21 review finding 5): the empty-slot
       regression test no longer tests its fix. After `22657ea0`, both
       wrappers in the plaintext-repair test have positions, so the test
       passes with the old code. Severity Low, test, effort Small. Options:
@@ -5841,6 +6026,12 @@ does not ask the user before the merge.
       positioned wrapper, and assert that the other has no position, Small;
       B, the source-identity redesign of the HTML pipeline, user decision
       98 B, Large. Recommended: A until phase 2 of 98 B lands.
+  - The source-identity redesign replaced the old located parser helper. No
+    option of item 129 was applied. The empty-slot regression decision remains
+    open.
+  - User decision 129 (2026-10-26): D, rewrite the test so that the repair
+    moves positions past an empty slot. Done in `75ec1ad4`. The test fails
+    when the repair skips empty slots and when it copies no positions.
 
 - [ ] Resolve user item 130 (F21 review finding 7): intermediate delegate
       commits that do not build. `mokly-catalogue` does not compile from

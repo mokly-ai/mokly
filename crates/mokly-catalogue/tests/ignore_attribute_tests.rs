@@ -197,3 +197,22 @@ fn saved_variant_slots_keep_element_failures_deferred() {
         support::prepare(root.path(), Some("mokly.config.json")).unwrap();
     }
 }
+
+#[test]
+fn wrapper_warnings_follow_the_html_parser_text_modes() {
+    let wrapper = "<mokly-ignore-scope enabled='true' typo='x'>A</mokly-ignore-scope>";
+    for (context, warnings) in [
+        ("<svg><desc><style>{}</style></desc></svg>", 0),
+        ("<svg><textarea>{}</textarea></svg>", 1),
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        support::write(root.path(), "mokly.config.json", "{}");
+        support::write(
+            root.path(),
+            "specs/home.screen.html",
+            &format!("---\ntitle: Home\n---\n{}", context.replace("{}", wrapper)),
+        );
+        let prepared = support::prepare(root.path(), Some("mokly.config.json")).unwrap();
+        assert_eq!(prepared.warnings.len(), warnings, "{context}");
+    }
+}

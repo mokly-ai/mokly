@@ -3,8 +3,9 @@
 use std::cell::RefCell;
 
 use html5ever::{QualName, local_name, ns};
+use mokly_model::catalogue::SourceLocation;
 
-use crate::source_locations::WrapperLocations;
+use crate::pipeline::locator::Locator;
 use crate::tree::Node;
 
 #[derive(Clone)]
@@ -23,14 +24,24 @@ pub(crate) struct Entry {
 
 pub(crate) struct Arena {
     pub(crate) entries: RefCell<Vec<Entry>>,
-    pub(crate) locations: RefCell<WrapperLocations>,
+    active_source: RefCell<Option<ActiveSource>>,
+    authored: bool,
+    locator: Option<Locator>,
+}
+
+struct ActiveSource {
+    name: String,
+    source: SourceLocation,
+    candidates: Vec<Handle>,
 }
 
 impl Default for Arena {
     fn default() -> Self {
         Self {
             entries: RefCell::new(vec![Entry::new(None)]),
-            locations: RefCell::default(),
+            active_source: RefCell::default(),
+            authored: false,
+            locator: None,
         }
     }
 }
@@ -57,10 +68,65 @@ impl Handle {
 }
 
 impl Arena {
-    pub(crate) fn with_locations(locations: WrapperLocations) -> Self {
+    pub(crate) fn new(authored: bool) -> Self {
         Self {
-            locations: RefCell::new(locations),
+            authored,
             ..Self::default()
+        }
+    }
+
+    /// An authored arena that gives each start tag's element its source position.
+    pub(crate) fn located(locator: Locator) -> Self {
+        Self {
+            authored: true,
+            locator: Some(locator),
+            ..Self::default()
+        }
+    }
+
+    /// Start recording the elements that one start tag creates.
+    pub(crate) fn start_tag(&self, name: &[u8], offset: usize) {
+        if let Some(locator) = &self.locator {
+            self.set_active_source(
+                String::from_utf8_lossy(name).into_owned(),
+                locator.locate(offset),
+            );
+        }
+    }
+
+    pub(crate) fn filters_authored_attributes(&self) -> bool {
+        self.authored
+    }
+
+    fn set_active_source(&self, name: String, source: SourceLocation) {
+        *self.active_source.borrow_mut() = Some(ActiveSource {
+            name,
+            source,
+            candidates: Vec::new(),
+        });
+    }
+
+    pub(crate) fn finish_active_source(&self) {
+        let Some(active) = self.active_source.borrow_mut().take() else {
+            return;
+        };
+        let Some(handle) = active.candidates.last() else {
+            return;
+        };
+        if let Some(Node::Element(element)) = &mut self.entries.borrow_mut()[handle.index].node {
+            element.origin = Some(format!(
+                "{}:{}:{}",
+                active.source.path, active.source.line, active.source.column
+            ));
+            element.source = Some(active.source);
+        }
+    }
+
+    pub(crate) fn record_active_candidate(&self, handle: &Handle) {
+        if let Some(active) = &mut *self.active_source.borrow_mut()
+            && active.name.eq_ignore_ascii_case(handle.name.local.as_ref())
+        {
+            active.candidates.push(handle.clone());
         }
     }
 

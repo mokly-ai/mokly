@@ -95,12 +95,18 @@ unknown element checks. Unknown ignore-wrapper attributes warn once per shared
 body and attribute, and their values are ignored. They do not validate
 logical links or select component slots. Every consumer of authored-HTML
 tokens must call `html_tokens::parse`, which removes these attributes before
-validation, link checks, or source-location collection. Direct construction of
-an `html5gum::Tokenizer` is outside the catalogue boundary. The token boundary
-retains the attribute names for warnings and preserves reserved-navigation
-evidence and duplicate-attribute errors. Token checks follow markup contexts
-inside `noscript` and foreign `style` or `title` elements. Opaque wrapper
-signatures retain source identity without exposing discarded values.
+validation or link checks. The authored tree parse removes them too. The token
+boundary retains the attribute names for warnings and preserves
+reserved-navigation evidence and duplicate-attribute errors. Token checks read
+each body in the text modes that the HTML tree builder chooses, with scripting
+disabled, so the checks and the tree agree on which text is markup.
+Typed HTML inputs name each parse purpose. Templates and saved slots create
+`AuthoredHtml`, so a caller that holds one of them gets the authored parse.
+All other HTML is `DeliveredHtml`. The HTML token boundary returns Mokly-owned
+token and span types, and it is the only html5gum user: other code must not
+construct an `html5gum::Tokenizer`. `html_driver::drive` runs html5gum under
+the html5ever tree builder for any `DriverSink`: the token checks pass a sink
+that records tokens, and `mokly-html` passes its tree arena.
 Composition owns literal attribute coercion, rendered document safety, assets,
 and anchors. `SourcePolicy` classifies root matches, reserved basenames, and
 inventoried inputs in that precedence order, including physical aliases.
@@ -181,8 +187,14 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
   working-tree `SourceTree` adapter.
 - [`src/protection.rs`](./src/protection.rs) defines `SourcePolicy`, which
   classifies private sources and their physical aliases.
+- [`src/html_input.rs`](./src/html_input.rs) defines `AuthoredHtml` and
+  `DeliveredHtml`, the typed parse inputs. `Template::html`,
+  `Template::located_html`, and `SavedSlot::html` create authored inputs.
 - [`src/html_tokens.rs`](./src/html_tokens.rs) provides `parse`, the one token
-  boundary for authored HTML.
+  boundary for authored and delivered HTML.
+- [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
+  `DriverSink`, which run html5gum under the html5ever tree builder for the
+  checks and for the tree.
 - [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides `for_entry`,
   which reports each unsafe integer in the complete props of one entry.
 - [`src/diagnostic.rs`](./src/diagnostic.rs) and

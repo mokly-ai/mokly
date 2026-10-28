@@ -1,0 +1,74 @@
+---
+title: Team members
+description: The people in a workspace and their pending invitations.
+tags: [team]
+address: example.test/team
+rationale: Pending invitations stay in the member list, so the owner sees every seat in use in one place.
+relatedDocs: [examples/basic/specs/example/team/member-roles.md]
+useCasePaths: [example/team/invite-teammate]
+props:
+  workspace: { name: Fernhill Studio, plan: Team plan }
+  inviteEmail: sam@fernhill.example
+  invited: false
+variants:
+  - slug: invited
+    title: Team members, invitation sent
+    description: The member list right after an invitation is sent.
+    useCasePaths: [example/team/invite-teammate]
+    props: { invited: true }
+---
+
+<div class="app" lang="en">
+  <workspace-nav workspace="$workspace" current="Team"></workspace-nav>
+  <main class="app-main">
+    <header class="app-head">
+      <h1>Team</h1>
+      <p>Everyone in {{workspace.name}} can open and edit shared projects.</p>
+    </header>
+    <p class="notice" role="status" mokly-if="$invited">
+      Invitation sent to {{inviteEmail}}.
+    </p>
+    <workspace-panel heading="Members" count="3">
+      <ul class="member-list">
+        <li>
+          <workspace-member
+            mokly-instance="owner"
+            name="Maya Chen"
+            email="maya@fernhill.example"
+            initials="MC"
+            role="Owner"
+          ></workspace-member>
+        </li>
+        <li>
+          <workspace-member
+            mokly-instance="admin"
+            name="Jonas Berg"
+            email="jonas@fernhill.example"
+            initials="JB"
+            role="Admin"
+          ></workspace-member>
+        </li>
+        <li>
+          <workspace-member
+            mokly-instance="member"
+            name="Priya Nair"
+            email="priya@fernhill.example"
+            initials="PN"
+            role="Member"
+          ></workspace-member>
+        </li>
+        <li mokly-if="$invited">
+          <workspace-member
+            mokly-instance="invitee"
+            name="Sam Okafor"
+            email="$inviteEmail"
+            initials="SO"
+            role="Member"
+            pending
+          ></workspace-member>
+        </li>
+      </ul>
+      <a class="button" slot="actions" href="mock:./invite">Invite teammate</a>
+    </workspace-panel>
+  </main>
+</div>
