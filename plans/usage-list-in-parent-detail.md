@@ -1,6 +1,6 @@
 # Keep A Component's Usage Lists In Its Parent Detail
 
-Status: Active. On branch `conductor/dedup-3-usage-list-in-parent-detail`, no pull request yet. The plan closes when its PR merges.
+Status: Active. [PR #223](https://github.com/mokly-ai/mokly/pull/223) is open. The plan closes when its PR merges.
 
 Each screen and component has an entry detail: a JSON file that the Browse
 shell fetches for the routed entry. A component's detail carries
@@ -361,7 +361,7 @@ version.
       Evidence is in `.context/usage-list-in-parent-detail/milestone-5-*.log`.
 - [x] Commit with Conventional Commits and push the branch. Commit
       `0d954296` is pushed to the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -386,7 +386,7 @@ version.
   - `docs/protocol/mokly-viewer.md` and the viewer's concepts README place
     Used by in Details, but the component pages contract places it in Usage.
     Separate branch.
-- [ ] Open the pull request when every other milestone TODO is ticked.
+- [x] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
