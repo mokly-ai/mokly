@@ -252,13 +252,13 @@ This milestone applies decision 173 A. It changes tests only.
 This milestone applies the product part of decision 166. The Clippy rule
 waits for the user.
 
-- [ ] Add a Windows test first in the `mokly-git` integration tests:
+- [x] Add a Windows test first in the `mokly-git` integration tests:
       `SystemDisk::canonicalize` returns a temporary directory without the
       `\\?\` prefix.
-- [ ] Add `dunce` to `crates/mokly-git/Cargo.toml` with `cargo add`, and
+- [x] Add `dunce` to `crates/mokly-git/Cargo.toml` with `cargo add`, and
       switch `SystemDisk::canonicalize` and `SystemTable::canonicalize` to
       `dunce::canonicalize`.
-- [ ] Run `cargo test -p mokly-git -p mokly-sidecar`, Clippy, and
+- [x] Run `cargo test -p mokly-git -p mokly-sidecar`, Clippy, and
       `cargo clippy --target x86_64-pc-windows-msvc -p mokly-git -p mokly-sidecar --all-targets -- -D warnings`.
 
 ## Milestone 4: One path form in the cache location check

@@ -2174,6 +2174,7 @@ dependencies = [
 name = "mokly-git"
 version = "0.14.0"
 dependencies = [
+ "dunce",
  "mokly-platform",
  "sha2",
  "tempfile",
