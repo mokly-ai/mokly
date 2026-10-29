@@ -1,7 +1,5 @@
 # Catalogue Upload v3
 
-Status: In progress under the [token redaction fixes plan](../../plans/token-redaction-fixes.md).
-
 ## Boundary
 
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`

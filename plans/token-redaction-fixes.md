@@ -139,6 +139,13 @@ Rejected: A, 406 links to this branch, and B, 406 copies these words, because
 neither branch can link to a page that is not on `main` yet. Reason: only the
 branch that merges second sees both pages on `main`.
 
+Retry instruction (2026-10-28), after follow-up decision 1: restart the same
+brief on `gpt-6.1-sol` every 30 minutes, at most four more times, with no
+other model. Result: tries 4 and 5, at 22:33 and 23:03 UTC, failed with the
+same 429. Try 6 started at 23:33 UTC and ran. As Codex session `fc013a21`, it
+finished Milestones 2 to 4 on 2026-10-29. Rejected: another model, for the
+reason of follow-up decision 1.
+
 ## Shared rule with item 151
 
 The coordinator set one rule for this plan and for item 151 of workspace 406.
@@ -241,6 +248,28 @@ code. The new rule removes these variables, so the tests rename them:
 - Clap parsing, the help text, environment precedence, and the error codes do
   not change.
 
+### Orchestrator's design calls (2026-10-29)
+
+The orchestrator made these calls when it reviewed Milestones 2 to 4. They
+are its own calls, not decisions of the coordinator.
+
+- Sidecar environment: the removal predicate runs in unit tests with both host
+  rules. Reason: CI runs the tests on Windows, where `Command` treats names
+  without case.
+- Sidecar environment: the three npm launcher names are removed
+  unconditionally, as before. The predicate also matches them without case on
+  Windows. Reason: the removal of `main` stays, and Windows treats names
+  without case.
+- Real-process test: the parent asserts that the child reports `1 passed`.
+  Reason: a test filter that matches no test then cannot pass.
+- Viewer host: the host cases run through `Completion::parse`, the real viewer
+  path, not through a direct `contains_url` test. Reason: the tests then cover
+  the path that prints the URL.
+- Token exposure wording, from pass 2a: the exception sentence says "still
+  receive inherited `MOKLY_` variables" and names the `o` key. Reason: Git
+  commands do not keep the whole environment, and the `o` key starts the same
+  browser opener as `--open`.
+
 ## Milestone 1: Documentation and protocol
 
 Write the dated decisions and the design into this plan. Write the
@@ -279,78 +308,96 @@ Blocked on 2026-10-28: three Codex sessions on `gpt-6.1-sol` failed with
 `429 Too Many Requests`. The brief
 `.context/token-redaction-fixes/briefs/rust-1.md` is ready to run again.
 
-- [ ] Add tests that fail first in
+On 2026-10-29 the sixth try, Codex session `fc013a21`, ran and finished
+Milestones 2 to 4.
+
+- [x] Add tests that fail first in
       `crates/mokly-publish/src/_tests_/redaction_tests.rs`. Cover literal and
       malformed `%` values, and both readings from one start.
-- [ ] Add mixed-case and percent-encoded host cases that fail first in
+- [x] Add mixed-case and percent-encoded host cases that fail first in
       `crates/mokly-publish/src/_tests_/completion_tests.rs`. Keep the path,
       query, fragment, and percent-encoding cases.
-- [ ] Add a malformed `%` value case that fails first in
+- [x] Add a malformed `%` value case that fails first in
       `crates/mokly-cli/src/_tests_/redaction_tests.rs`, for `--token` and
       `MOKLY_TOKEN`.
-- [ ] Implement the matcher of the design in
+- [x] Implement the matcher of the design in
       `crates/mokly-publish/src/redaction.rs`.
-- [ ] Add the host check to `SecretMatcher::contains_url`.
-- [ ] Run `cargo test -p mokly-publish` and
+- [x] Add the host check to `SecretMatcher::contains_url`.
+- [x] Run `cargo test -p mokly-publish` and
       `cargo test -p mokly-cli redaction`.
+
+Evidence: `.context/token-redaction-fixes/m2-tests-before.log` and
+`m2-tests-after.log`.
 
 ## Milestone 3: Sidecar environment (180)
 
 Sidecars and their PostCSS children get no inherited `MOKLY_` variable. They
 keep every other variable and see Mokly's own names.
 
-- [ ] Add a unit test that fails first for the pure environment function. Use
+- [x] Add a unit test that fails first for the pure environment function. Use
       captured `Command::get_envs()` values. Cover the Windows case rule.
-- [ ] Add a real-process test in `crates/mokly-sidecar/tests/`. It starts the
+- [x] Add a real-process test in `crates/mokly-sidecar/tests/`. It starts the
       test binary again with `MOKLY_TOKEN`, `MOKLY_ENDPOINT`, a spoofed
       `MOKLY_POSTCSS_PHASES`, and a plain variable.
-  - [ ] Prove that a renderer, a component, and a PostCSS plugin do not
+  - [x] Prove that a renderer, a component, and a PostCSS plugin do not
         receive the `MOKLY_` values.
-  - [ ] Prove that they keep the plain variable and see
+  - [x] Prove that they keep the plain variable and see
         `MOKLY_POSTCSS_PHASES=1`.
-- [ ] Implement the pure function and use it in the sidecar process factory.
-- [ ] Rename the three test variables of the design in the Node tests.
+- [x] Implement the pure function and use it in the sidecar process factory.
+- [x] Rename the three test variables of the design in the Node tests.
   - Workspace 353 renames the same variables in its Rust ports, so this
     branch does not edit those ports.
-- [ ] Run `npm run build`, then `cargo test -p mokly-sidecar` and the three
+- [x] Run `npm run build`, then `cargo test -p mokly-sidecar` and the three
       Node tests.
+
+Evidence: `.context/token-redaction-fixes/m3-tests-before.log`,
+`m3-node-before-rename.log`, `m3-tests-after.log`, and
+`m3-changes-tests.log`.
 
 ## Milestone 4: Secret type (181)
 
 One redacting secret type holds every token value, before and after the
 grammar check.
 
-- [ ] Add tests that fail first for `Debug` of `Cli`, `Publish`, `Secret`,
+- [x] Add tests that fail first for `Debug` of `Cli`, `Publish`, `Secret`,
       `Token`, `Settings`, and `SecretMatcher`. No output holds the token.
-- [ ] Add `Secret` to `mokly_publish::redaction`. Use it in `Token`,
+- [x] Add `Secret` to `mokly_publish::redaction`. Use it in `Token`,
       `SecretMatcher`, `Publish.token`, and `Environment.token`.
-- [ ] Make the CLI grammar check call `Token::new`.
-- [ ] Keep clap parsing, the help text, environment precedence, the error
+- [x] Make the CLI grammar check call `Token::new`.
+- [x] Keep clap parsing, the help text, environment precedence, the error
       codes, and the malformed-token terminal redaction tests.
-- [ ] Run `cargo test -p mokly-publish` and `cargo test -p mokly-cli`.
+- [x] Run `cargo test -p mokly-publish` and `cargo test -p mokly-cli`.
+
+Evidence: `.context/token-redaction-fixes/m4-tests-before.log`,
+`m4-tests-after.log`, `repository-check.log`, and
+`orchestrator-crate-tests.log`.
 
 ## Milestone 5: READMEs, guide, and status lines
 
 The READMEs and the guide describe the implemented behaviour. The protocol
 pages lose their status lines.
 
-- [ ] Update the behaviour paragraphs and `### Key Code` of the
+- [x] Update the behaviour paragraphs and `### Key Code` of the
       `crates/mokly-publish`, `crates/mokly-sidecar`, and `crates/mokly-cli`
       READMEs.
-- [ ] Update `docs/guides/ci/project-tokens.md` in user words, under
+- [x] Update `docs/guides/ci/project-tokens.md` in user words, under
       follow-up decision 4:
-  - [ ] The processes that render the catalogue do not receive the token.
-  - [ ] When `main` has no copy of the user advice yet, write it here. Code
+  - [x] The processes that render the catalogue do not receive the token.
+  - [x] When `main` has no copy of the user advice yet, write it here. Code
         that runs as the same user can still read the environment of Mokly
         and of the shell that started it. Prefer `MOKLY_TOKEN`, because every
         user can see a command line.
-  - [ ] When `main` has the "Keep the token safe" section of workspace 406 in
+  - [x] When `main` has the "Keep the token safe" section of workspace 406 in
         `docs/guides/cli/publish.md`, link to that section instead.
-- [ ] Remove the status lines that Milestone 1 adds to
+    - Not needed: `main` had no such section on 2026-10-29.
+- [x] Remove the status lines that Milestone 1 adds to
       `docs/protocol/mokly-upload.md`, `mokly-upload-exchange.md`,
       `mokly-sidecar.md`, and `mokly-sidecar-modules.md`.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+
+Evidence: `.context/token-redaction-fixes/docs-3/`, with the Markdown and
+guide check logs.
 
 ## Milestone 6: Verification, commit, review, and handoff
 
@@ -377,7 +424,7 @@ the branch to the coordinator.
       output, PostCSS output, or `Debug` value holds the test token.
 - [ ] Run `cargo xtask check --suite repository`.
 - [ ] Run the complete gate `cargo xtask check` once on the final commit.
-- [ ] Tick user items 177, 178, 180, and 181 in `plans/rust-rebuild.md` with
+- [x] Tick user items 177, 178, 180, and 181 in `plans/rust-rebuild.md` with
       the smallest edit.
 - [ ] Run the deletion audit of the `git-commit` skill. Commit and push this
       branch.

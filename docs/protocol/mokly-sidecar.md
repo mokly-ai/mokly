@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: In progress under the [token redaction fixes plan](../../plans/token-redaction-fixes.md).
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and

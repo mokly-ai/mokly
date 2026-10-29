@@ -6354,15 +6354,18 @@ does not ask the user before the merge.
       B, a shared test helper that proves the job killed the child, used by
       every job-close test. Recommended: A.
 
-- [ ] Resolve user item 177 (delta review 2):
+- [x] Resolve user item 177 (delta review 2):
       `crates/mokly-publish/src/redaction.rs:85`: `SecretMatcher` reads every
       `%` as an escape, so it does not redact the literal form of a secret
       that contains `%`. The old redactor did. A valid token cannot contain
       `%`. Severity Low, security, effort not recorded. Options (estimate):
       A, also match a literal `%` byte; B, keep it and document that a token
       cannot contain `%`. Recommended: A.
+  - User decision 177 (2026-10-28): A. The matcher also matches a literal
+    `%`, so a malformed `--token` or `MOKLY_TOKEN` value is redacted. Fixed
+    under the [Token Redaction Fixes plan](./token-redaction-fixes.md).
 
-- [ ] Resolve user item 178 (delta review 3):
+- [x] Resolve user item 178 (delta review 3):
       `crates/mokly-publish/src/completion.rs:69`: the check reads the parsed
       URL, and URL parsing lowercases the host, so a token in the viewer URL
       host prints in lower case. The old check had the same gap, and no test
@@ -6371,6 +6374,9 @@ does not ask the user before the merge.
       regard to letter case, with a test; B, reject a viewer URL whose host
       contains the token (a new rejection, which needs the user's approval).
       Recommended: A.
+  - User decision 178 (2026-10-28): A. The viewer URL check also matches the
+    parsed host without regard to ASCII case. Fixed under the
+    [Token Redaction Fixes plan](./token-redaction-fixes.md).
 
 - [ ] Resolve user item 179 (delta review 4):
       `crates/mokly-compare/src/locations.rs:40`: `dunce` keeps the verbatim
@@ -6381,7 +6387,7 @@ does not ask the user before the merge.
       recorded. Options (estimate): A, normalize both paths the same way
       before the comparison; B, document the limit. Recommended: A.
 
-- [ ] Resolve user item 180 (delta review 5, older than the delta):
+- [x] Resolve user item 180 (delta review 5, older than the delta):
       `crates/mokly-sidecar/src/process_factory.rs:82`: the sidecar inherits
       `MOKLY_TOKEN`, so PostCSS, renderer, and component code from the
       repository and from the base commit can read it. `main` ran that code
@@ -6391,13 +6397,19 @@ does not ask the user before the merge.
       environment, as 145 B gives base installs. Recommended: A, because an
       allowlist can break consumer PostCSS settings that read other
       variables.
+  - User decision 180 (2026-10-28): A, widened. Sidecars and their PostCSS
+    children start without any inherited `MOKLY_` variable. Fixed under the
+    [Token Redaction Fixes plan](./token-redaction-fixes.md).
 
-- [ ] Resolve user item 181 (delta review 6, older than the delta):
+- [x] Resolve user item 181 (delta review 6, older than the delta):
       `crates/mokly-cli/src/grammar.rs:116`: `Publish` derives `Debug` and
       holds the raw `--token` value. No code formats it now. Severity Low,
       security, effort not recorded. Options (estimate): A, a redacting
       `Debug` for `Publish`; B, one secret type with a redacting `Debug` for
       every token field. Recommended: B.
+  - User decision 181 (2026-10-28): B. One redacting `Secret` type holds the
+    raw and the validated token values. Fixed under the
+    [Token Redaction Fixes plan](./token-redaction-fixes.md).
 
 - [x] Resolve user item 182 (delta review 7, older than the delta):
       `crates/mokly-render/src/side.rs:62` keeps duplicate package roots, but

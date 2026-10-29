@@ -134,7 +134,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
   the exit status.
 - [`src/grammar.rs`](./src/grammar.rs) defines `Cli`, `Verb`, and `Common`,
   the clap grammar, and [`src/options.rs`](./src/options.rs) normalizes
-  options and environment fallbacks.
+  options and environment fallbacks. `Publish.token` and `Environment.token`
+  hold a `mokly_publish::redaction::Secret`, so `Debug` output never shows a
+  token.
 - [`src/render_runtime.rs`](./src/render_runtime.rs) creates the render cache
   and composes the shared JavaScript and HTML rendering services of one
   command.
@@ -152,7 +154,9 @@ reserves an 8 MiB main-thread stack through its linker settings in
   `StaticOutput` adapter and the publish orchestration.
 - [`src/output.rs`](./src/output.rs), [`src/codes.rs`](./src/codes.rs), and
   [`src/redaction.rs`](./src/redaction.rs) select the reporter, fix the error
-  categories and recovery copy, and redact tokens and terminal controls.
+  categories and recovery copy, and redact tokens and terminal controls. The
+  redactor collects the `--token` and `MOKLY_TOKEN` values before validation,
+  so it also redacts a malformed value.
 - [`src/changes_static.rs`](./src/changes_static.rs) checks input evidence
   before base document callbacks.
 

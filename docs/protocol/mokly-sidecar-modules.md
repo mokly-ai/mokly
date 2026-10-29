@@ -1,7 +1,5 @@
 # Sidecar Module Sources
 
-Status: In progress under the [token redaction fixes plan](../../plans/token-redaction-fixes.md).
-
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
