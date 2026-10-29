@@ -396,7 +396,10 @@ This keeps every requirement and leaves room for the shared UI rules.
 - [x] Check formatting, links, and file lengths on the branch and the
       automatic merge. Save evidence under
       `.context/deployment-id-detail-ids/merge-3ea78c0b-ci-cap-`.
-- [ ] Commit, push, and wait for PR #224's checks. The supervisor owns review.
+- [x] Commit and push the documentation fix. The supervisor owns review.
+
+After the push, wait for PR #224's checks under the user's merge task.
+Evidence: `.context/deployment-id-detail-ids/merge-3ea78c0b-report.md`.
 
 ## Post-merge follow-up (non-blocking)
 
