@@ -1,10 +1,9 @@
 # Stylesheet Bundle Performance
 
 Status: Active. Step A merged in
-[PR #228](https://github.com/mokly-ai/mokly/pull/228) on 2026-10-28. Step B is
-on branch `conductor/perf-5-step-b-stylesheet-cache-reuse`, no pull request
-yet. Its pull request opens after perf 4 (#227) merges and `origin/main` is
-merged once more. The plan closes when the step B pull request merges.
+[PR #228](https://github.com/mokly-ai/mokly/pull/228) on 2026-10-28. Step B
+[PR #242](https://github.com/mokly-ai/mokly/pull/242) is open. The plan closes
+when the step B pull request merges.
 
 Graph preparation bundles the stylesheet roots on one thread, one root after
 another. On `examples/basic`, one preparation bundles 35 roots in 1.3 to
@@ -607,13 +606,13 @@ Evidence: `.context/perf5-step-b/step-b-measurements.md`.
 
 ## Milestone 11: Verification, commit, review, and pull request, step B
 
-- [ ] Run the targeted tests: `cargo test -p mokly-render`,
+- [x] Run the targeted tests: `cargo test -p mokly-render`,
       `cargo test -p mokly-cli`, `npm test -- tests/markdown_links.test.ts`,
       and `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
-      `cargo xtask check`.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
+      `cargo xtask check`. The complete gate passed at `b16ff358`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
@@ -624,10 +623,15 @@ Evidence: `.context/perf5-step-b/step-b-measurements.md`.
     findings, all confirmed. Finding 6, keys counted by length and not by
     capacity, is `Auto-fix: yes`, B: one byte-charge helper for every
     owner. Findings 2, 3, 4, 5, and 7 follow decisions 14 to 18.
+  - The fixes for findings 2 to 7 are `fe940301` to `140c678c`.
+  - Round 3 at `140c678c`: one new Low finding, confirmed. Finding 8, the
+    attempt's lookup tables kept evicted context evidence alive, fixed in
+    `03c93abd`. A supervisor review then found that a panicking module
+    lookup left its waiters blocked, fixed in `242e39a0`.
   - Outside the scope, from round 2:
     `crates/mokly-graph/src/workers.rs`: the request order of parallel
     PostCSS roots can change cumulative evidence. Separate branch.
-- [ ] Open the step B pull request with the before and after table. Put its
+- [x] Open the step B pull request with the before and after table. Put its
       link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
