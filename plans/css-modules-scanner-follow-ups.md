@@ -1,7 +1,10 @@
 # CSS Modules Scanner Follow-Ups
 
 Status: Active. On branch `conductor/rust-rebuild-112-css-modules-follow-ups`,
-no pull request yet. The plan closes when its PR merges.
+no pull request yet. The plan has two pull requests. The first ships the parts
+that need no approval. The second ships items 112 and 113 and the
+`@-moz-document` part of item 1 after Cal answers. The plan closes when the
+second pull request merges.
 
 This plan resolves user items 112 and 113 of the
 [Rust rebuild plan](./rust-rebuild.md#open-user-items-deferred-by-the-user-on-2026-10-21).
@@ -30,21 +33,12 @@ The probes on `main` at `c9d402cd` confirm every record. Their summary is
 `.context/css-modules-scanner-follow-ups/probe-summary.md`. One result is
 stronger than the 112 record. `:global @keyframes spin{…}` ships a global
 `@keyframes spin` and a renamed `animation` reference. So the animation never
-runs, and no diagnostic shows. The code of options 1 B, 1 D, 4 B, 112 B, and
-113 B was tried in a throwaway worktree. Each one scopes all 53 tracked
-stylesheets exactly as `main` does.
+runs, and no diagnostic shows.
 
 A change that makes a stylesheet fail that builds today is a new rejection.
 The always-on rules reserve each new rejection for Cal. Cal must also approve
-each option that removes functionality from `main`.
-
-- New rejections: 1 B, 1 C, 1 D, 4 B, 112 B, 112 C, 112 D, 112 E, 113 B, and
-  113 C.
-- Removes functionality: 1 E.
-- Neither: 1 A, 2 A, 2 B, 3 A, 3 B, 4 A, 4 C, 112 A, and 113 A. Of these, 1 A,
-  112 A, and 113 A change a requirement.
-- Decided C deletes three fixture list files and replaces them, as its record
-  below says.
+each option that removes functionality from `main`. The three parts that wait
+for Cal each add a new rejection. The decided parts add none.
 
 Not covered:
 
@@ -63,11 +57,14 @@ Contract owners:
 
 ### Decided
 
+The coordinator workspace "rust rebuild - outstanding items" answered on
+2026-10-29, after an independent Opus 5.5 reviewer checked the items at
+`c9d402cd` and tried several options in a scratch copy.
+
 - Finding 1 of the final review of `rebuild/port-111c` at `b152d0dc`: C, on
-  2026-10-28, through the coordinator workspace "rust rebuild - outstanding
-  items". Move the differential to an integration test that reads the tracked
-  stylesheets at test time, behind a test-support feature. The coordinator's
-  reviewer kept the recorded recommendation and added two conditions:
+  2026-10-28, confirmed on 2026-10-29. Move the differential to an
+  integration test that reads the tracked stylesheets at test time, behind a
+  test-support feature. The coordinator's reviewer added two conditions:
   - The test runs in the gate's `cargo test --workspace`, which
     `xtask/src/check/commands.rs` defines. The gate skips a target with a
     `required-features` entry, so the test has none.
@@ -86,6 +83,48 @@ Contract owners:
     `crates/mokly-css/src/_tests_/`. The new test reads every stylesheet that
     they list and two more, so no case is lost. The commit message records
     decision C as the approval.
+- Item 1, `@-moz-document` blocks read as style blocks: F, a new option, on
+  2026-10-29.
+  - Apply the `@nest` entry of D: in a style block, `nested` reads an `@nest`
+    block as a style block, as `lightningcss` parses it.
+  - Apply the table test of D against the bundler, with `@-moz-document`
+    outside a style rule as the one named exception.
+  - Apply the documentation of A: the protocol page and the crate README name
+    the `@-moz-document` exception beside the parity rule.
+  - F adds no rejection. The reviewer's trial left all 53 tracked stylesheets
+    unchanged. The `@nest` entry changes only the diagnostics of stylesheets
+    that fail today.
+  - The `@-moz-document` change of D waits for Cal. If Cal approves it, the
+    exception goes. If Cal declines it, the exception stays, and the item 2
+    comment names it.
+  - Rejected: A alone, which keeps the `@nest` difference; B and C, which
+    miss `@nest`; E, which removes functionality from `main`.
+- Item 2, the `Statement` doc: B, on 2026-10-29. State Cal's one rule and the
+  caveat for dropped text. Rejected: A, which names one exception and still
+  claims too much.
+  - The example of the first draft was wrong. `lightningcss` drops
+    `@font-face{a{b}c:d;}` and prints `@font-face { }`, so that is dropped text.
+  - A kept example is `@font-face{c:d{x}e;}`. The bundler keeps `c: d{x}e;`
+    through its custom-descriptor fallback, `src/rules/font_face.rs:480-484`
+    in `lightningcss`. The reader reads a rule `c:d` with a block, then the
+    text `e`.
+  - My call (2026-10-29): the comment also names the `@-moz-document`
+    exception while it stays in the code, so that the comment matches the
+    code. A later change removes that sentence if Cal approves the
+    `@-moz-document` change.
+- Item 3, the differential's non-empty assertion: B, on 2026-10-29. Count the
+  stylesheets that the comparison really reads, after the test skips deleted
+  paths. Rejected: A, which counts the Git list before that skip.
+- Item 4, the rule-list `;` boundary: C, on 2026-10-29. Keep the boundary and
+  the decision in force. Record in the protocol page that alignment would also
+  reject stylesheets that build today. Rejected: A, which keeps the shorter
+  reason, and B, which is a new rejection.
+
+### Waiting for Cal
+
+On 2026-10-29 the coordinator said that items 112 and 113 and the
+`@-moz-document` change of item 1 wait for Cal. The reviewer confirms 112 E,
+graded Medium, and 113 B. The second pull request applies the answers.
 
 ### Options check
 
@@ -96,7 +135,7 @@ the verification of its claims are in
 recommendations of items 1, 2, 3, 112, and 4. It also corrected three
 statements of the first draft about 112 B and 113 B.
 
-### Open review items
+### Open decisions
 
 The terms that several items use:
 
@@ -111,151 +150,21 @@ The terms that several items use:
 - **Style block:** a block that holds declarations and nested rules, such as
   the block of a style rule. The section reader calls it `Grammar::Style`.
 
-#### 1. `@-moz-document` blocks read as style blocks
-
-- **Severity:** Low. **Effort:** Medium.
-- **Category:** Product bug.
-- **Location:** `crates/mokly-css/src/token_grammar.rs:68`.
-- **Background:** The section reader gives each block a grammar from the
-  statement that opens it. The grammar decides which statements are
-  declarations, rules, or text. The protocol page requires that the scoper reads
-  each statement that the bundler keeps with the same start and kind.
-- **Problem:** `lightningcss` parses an `@-moz-document url-prefix()` block
-  outside a style rule as it parses `@media`, as a rule list. The section reader
-  reads it as a style block. So in
-  `@-moz-document url-prefix(){@-khtml-keyframes :local(k);}` the scoper keeps
-  `:local(k)`, but in `@media all{@-khtml-keyframes :local(k);}` it scopes `k`.
-  Both build. The reader also reads an `@nest` block in a style rule as a
-  declarations block, but `lightningcss` parses it as a style block.
-- **Impact if no action:** A statement that the bundler keeps scopes
-  differently in two blocks that the bundler reads the same way. Only unusual
-  stylesheets reach it, and no tracked stylesheet uses `@-moz-document`.
-- **Options:**
-  - **A.** Keep the reading, and name the `@-moz-document` exception beside the
-    parity rule in the protocol page and the crate README. It changes a
-    requirement. Effort: Small.
-  - **B.** Read an `@-moz-document` block as the reader reads an `@media`
-    block. That is a rule list in a rule list, and a style block in a style
-    block.
-    - This is a new rejection.
-      `@-moz-document url-prefix(){@-khtml-keyframes :local();}` then fails with
-      the catalogued empty-wrapper message, as it does in `@media`.
-    - Effort: Small.
-  - **C.** B, and a test that asks `lightningcss`, for each name in
-    `rule_list`, whether the block accepts a declaration. The test runs in the
-    stylesheet and in a style rule. This is a new rejection, as B is. Effort:
-    Small.
-  - **D.** B, and read an `@nest` block in a style rule as a style block. Add
-    a test that does not take its names from `rule_list`.
-    - The names are the at-rules that `lightningcss` 1.0.0-alpha.72 parses,
-      `@nest`, and one unknown name.
-    - The test runs at the top level, in a rule list, in a style rule, and in
-      a keyframes block.
-    - It requires the style grammar where `lightningcss` parses declarations
-      and rules, and the rule-list grammar where it parses rules only.
-    - It requires a lenient or declarations grammar where `lightningcss` keeps
-      or drops the text.
-    - The `@nest` entry changes only diagnostics of stylesheets that fail
-      today. This is a new rejection, as B is.
-    - Effort: Medium, because the test needs a new test file.
-  - **E.** Read an unknown keyframes at-rule without a block as text in every
-    block, as `lightningcss` keeps it.
-    - Then `@media all{@-khtml-keyframes :local(k);}` loses its export `k`.
-      So E removes functionality from `main`.
-    - E does not fix the `@-moz-document` grammar, which 113 B needs.
-    - Effort: Small.
-- **Wider fix:** D. Its test does not take its names from the table that it
-  checks, so it also catches a missing or a misplaced entry.
-- **Previous examples:** User item 111, the HTML comment tokens before a
-  stylesheet statement, which `c9d402cd` fixed. Finding 1 of the review of
-  `3066e47a` on `rebuild/port-111c`, the descriptor-block parity claim. The
-  `@nest` entry, which the options check found.
-- **Recommendation:** D. It corrects both entries, and its test checks the
-  whole grammar table against `lightningcss`. The first pass recommended C.
-- **Auto-fix:** no, because B and C are new rejections, and A changes a
-  requirement.
-
-Every option keeps the declarations reading of an `@-moz-document` block in a
-keyframes or `@document` block. The code gives it because the bundler drops or
-keeps that text.
-
-#### 2. The `Statement` doc claims parity in descriptor blocks
-
-- **Severity:** Low. **Effort:** Small.
-- **Category:** Docs or spec.
-- **Location:** `crates/mokly-css/src/token_sections.rs:59`.
-- **Terms:**
-  - **Descriptor block:** the block of a declaration-only at-rule, such as
-    `@font-face` or `@property`.
-- **Background:** The doc comment of the `Statement` enum says that a
-  statement reads as `lightningcss` reads the block that holds it. The protocol
-  page and the crate README give one rule instead. Outside a descriptor block,
-  each statement that `lightningcss` keeps reads with the same start and kind.
-- **Problem:** The doc comment does not name the descriptor-block exception.
-  The reader reads `@font-face{a{b}c:d;}` as a rule `a` with a block, but the
-  bundler keeps the descriptor text up to `;`. The comment also claims parity
-  for text that the bundler drops or rejects.
-- **Impact if no action:** A reader of the code trusts a parity claim that is
-  false in descriptor blocks and at the rule-list `;` boundary.
-- **Options:**
-  - **A.** Name the descriptor-block exception in the doc comment, and link
-    `Grammar::Declarations`. Effort: Small.
-  - **B.** Put the one rule of the protocol page in the doc comment.
-    - Outside a descriptor block, each statement that `lightningcss` keeps
-      reads with the kind that `lightningcss` gives it.
-    - Link `Grammar::Declarations` for the descriptor case.
-    - Say that text which `lightningcss` drops or rejects can read as other
-      statements, for example at the rule-list `;`.
-    - Effort: Small.
-- **Wider fix:** None, because the `documentation` skill already keeps docs
-  aligned with the code.
-- **Previous examples:** Finding 1 of the review of `3066e47a` on
-  `rebuild/port-111c`, which corrected the same claim in the protocol page and
-  the README.
-- **Recommendation:** B. On 2026-10-26 the user replaced such lists of
-  exceptions with one rule, and A still claims too much. The first pass
-  recommended A.
-- **Auto-fix:** yes, apply A. Milestone 2 applies the option that the
-  coordinator confirms.
-
-#### 3. The differential's non-empty assertion cannot fail
-
-- **Severity:** Low. **Effort:** Small.
-- **Category:** Test.
-- **Location:** `crates/mokly-css/src/_tests_/token_differential_tests.rs:200`.
-- **Background:** The differential test compares the old and the new section
-  reader on the repository stylesheets and on five generated stylesheets. It
-  asserts that its list of sources is not empty.
-- **Problem:** The list always holds the five generated stylesheets, so the
-  assertion passes also when the repository list is empty.
-- **Impact if no action:** A broken listing of the repository stylesheets
-  passes without a failure.
-- **Options:**
-  - **A.** Assert that the list that Git gives under decided C is not empty.
-    Effort: Small.
-  - **B.** Assert that the test reads at least one stylesheet after it skips
-    the deleted paths. Then a list of only deleted paths fails too. Effort:
-    Small.
-- **Wider fix:** None, because decided C already replaces the fixture list.
-- **Previous examples:** None found.
-- **Recommendation:** B. It counts where the comparison runs, at no extra cost.
-  The first pass recommended A.
-- **Auto-fix:** no, because a finding about a test waits for the user. Decided
-  C already includes the assertion.
-
-### Open decisions
-
 #### 112. Removed scope wrappers can change a statement
 
-- **Severity:** Low. **Effort:** Small.
+- **Severity:** Low. **Effort:** Medium.
 - **Terms:**
   - **Scope wrapper:** `:global` or `:local`, bare or with parentheses, in a
     selector. The renamer removes it after it renames the names inside.
 - **Background:** The renamer removes each scope wrapper. The token check
-  leaves wrappers out of its comparison, and it does not compare what each
-  statement is. The protocol page requires that a result that changes more than
-  a local name fails with the catalogued token-check message.
-- **Problem:** A removed wrapper can change what a statement is.
+  leaves wrappers out of its comparison. Its fingerprint depends on the kind
+  only in part: a colon prints as `:` in a renamed prelude and as `Colon`
+  elsewhere, in `module_integrity.rs:81-91` and `:122-143`. So
+  `.p{:global color:red}` already fails on `main`. The protocol page requires
+  that a result that changes more than a local name fails with the catalogued
+  token-check message.
+- **Problem:** The gap is a kind change with equal tokens: a rule that becomes
+  an at-rule, or a dropped statement.
   - `:global@media all{}` scopes to `@media all{}`, and
     `:global(@media all){.a{}}` becomes a media rule.
   - `.p{:local}` scopes to `.p{}`, and `.p{:local;}` scopes to `.p{;}`.
@@ -285,7 +194,8 @@ keeps that text.
     `:global()` form. Effort: Small.
   - **D.** B, but a statement with no prelude token and no block gets no kind
     entry, because cssparser reads no statement there. Then `.p{:local;}` fails
-    too. This is a new rejection, as B is. Effort: Small.
+    too. This is a new rejection, as B is. The reviewer's trial of D changed
+    31 lines in `module_integrity.rs`. Effort: Medium.
   - **E.** D, and a kind difference at a statement that starts with a scope
     wrapper fails with a catalogued wrapper message.
     - The message names the wrapper, and it tells the author to put a
@@ -294,7 +204,7 @@ keeps that text.
       a kind. So the message is true where it shows.
     - E adds one row to the error catalogue and one sentence to the protocol
       page. This is a new rejection, as B is.
-    - Effort: Small.
+    - Effort: Medium.
 - **Recommendation:** E. It fails every form that B fails and the `;` form
   that B misses, and its message tells the author the fix. The first pass
   recommended B. If the catalogue must not change, D is the smallest
@@ -334,9 +244,10 @@ stylesheets.
     - This is a new rejection for four probed stylesheets.
     - Two stylesheets that fail today get the `@value` message in place of a
       syntax error.
-    - With item 1 B or D, `@value` then fails at every rule level. Under item
-      1 A, `@-moz-document url-prefix(){@keyframes k{--x:{@value y: red;}}}`
-      still builds, because its keyframes block reads as declarations.
+    - With the `@-moz-document` change of item 1, `@value` then fails at every
+      rule level. Without it,
+      `@-moz-document url-prefix(){@keyframes k{--x:{@value y: red;}}}` still
+      builds, because its keyframes block reads as declarations.
     - Effort: Small.
   - **C.** B, and one shared walk in `token_sections` for the three scanners,
     so that no scanner chooses its own blocks.
@@ -354,103 +265,83 @@ Every option keeps a custom property value in a style block as a value, which
 the protocol page and the bundler require. Every option keeps the module check
 before the renamer, so `@value` shows before any later failure.
 
-#### 4. The rule-list `;` boundary
+#### 1. The `@-moz-document` change of item 1
 
-- **Source:** the follow-up line from finding 2 of the `rebuild/port-111c`
-  review. It has no user item number.
 - **Severity:** Low. **Effort:** Small.
-- **Background:** In a rule list, the section reader ends a statement at `;`
-  or at its `{}` block. cssparser ends a qualified rule in a rule list only at
-  its `{}` block. The protocol page states this boundary with a decision in
-  force. Aligning it was not chosen, because no realistic stylesheet reaches it
-  and diagnostics would change. The user kept a follow-up line open for it.
-- **Problem:** The probe confirms the difference. Alignment also changes more
-  than diagnostics. `@document x{.c{}.a;.b{composes:c}}` builds today and would
-  fail. Before 113 B, alignment would also let
-  `@keyframes k{--x:1;to{@value y: red;}}` build, which fails today.
-- **Impact if no action:** The scanners keep one documented difference from
-  cssparser. No tracked stylesheet reaches it.
+- **Background:** Decided F aligns the `@nest` entry and checks the grammar
+  table against the bundler. It lists `@-moz-document` outside a style rule as
+  the one named exception, and the docs name it.
+- **Problem:** `lightningcss` parses an `@-moz-document url-prefix()` block
+  outside a style rule as it parses `@media`, as a rule list. The section
+  reader reads it as a style block. So in
+  `@-moz-document url-prefix(){@-khtml-keyframes :local(k);}` the scoper keeps
+  `:local(k)`, but in `@media all{@-khtml-keyframes :local(k);}` it scopes `k`.
+  Both build.
+- **Impact if no action:** A statement that the bundler keeps scopes
+  differently in two blocks that the bundler reads the same way. The
+  documented exception stays. No tracked stylesheet uses `@-moz-document`.
 - **Options:**
-  - **A.** Keep the boundary and the decision in force, and close the
-    follow-up line. Effort: Small.
-  - **B.** In a rule list, end a statement at `;` only when it starts with an
-    at-keyword, as cssparser does. Do it after 113 B.
+  - **A.** Decline: keep the reading and the documented exception. The item 2
+    comment keeps its `@-moz-document` sentence. Effort: Small.
+  - **D.** Approve: read an `@-moz-document` block as the reader reads an
+    `@media` block, and remove the exception from the test and the docs.
     - This is a new rejection.
-    - It changes the decision in force and the diagnostics of stylesheets that
-      fail today.
+      `@-moz-document url-prefix(){@-khtml-keyframes :local();}` then fails
+      with the catalogued empty-wrapper message, as it does in `@media`.
+    - With 113 B, it also closes the last `@value` gap of item 113.
     - Effort: Small.
-  - **C.** A, and complete the reason of the decision in force in the protocol
-    page. Alignment would also make stylesheets fail that build today, such as
-    a composition after a `;` in an `@document` block. Effort: Small.
-- **Recommendation:** C. It keeps the behaviour of A and closes the follow-up,
-  and the page then gives the full reason. The first pass recommended A.
-- **Auto-fix:** no, because condition 5 holds: the user kept this follow-up
-  open for a later choice.
-
-Every option keeps the descriptor-block reading, which the protocol page keeps
-by decision. Every option keeps the `;` end of an at-rule in a rule list, as
-cssparser reads it.
+- **Recommendation:** D. It removes the last named exception, and the table
+  test then holds without one.
+- **Auto-fix:** no, because condition 3 holds: D is a new rejection.
 
 ## Design
 
-### Statement kinds in the token check (112 E)
+### The `Statement` doc comment (item 2 B)
 
-- `module_integrity::fingerprint` also returns the statement kinds in
-  authored order. Each kind entry holds the `Statement` that the section reader
-  returns and the statement start.
-- A `composes` declaration has no kind entry, as it has no token entries. The
-  renamer removes it with its `;`.
-- Under D and E, a section with no significant prelude token and no block has
-  no kind entry. cssparser skips a lone `;` in a block, so the bundler reads no
-  statement there.
-- `check` compares the token entries first, as today. Only when they agree, it
-  compares the kind lists up to the longer length, as `Statement` values.
-- A kind difference points at the start of the authored statement, or at the
-  end of the stylesheet when scoping only adds statements there.
-- Under E, when that authored statement starts with a scope wrapper, the
-  failure uses the wrapper message. Otherwise it uses the token-check message.
-- My call (2026-10-28): two passes, not kind entries in the token list. A kind
-  entry before the prelude tokens moved the pinned position `1:17` of
-  `token_guard_rejects_non_name_changes_with_the_exact_diagnostic` to `1:14`.
-  A kind entry after them moved the `a b` to `a b b` case of
-  `token_check_failures_point_at_the_first_changed_token` from `1:4` to `1:1`.
-  With two passes, every existing test passes unchanged.
-- Draft wording under E, my call (2026-10-29), to confirm under the
-  `product-ui` copy rules in Milestone 1:
-  - A bare form gets a new row:
-    `CSS Modules {wrapper} has no selector after it in {stylesheet}:{line}:{column}; add a selector after it or remove it`,
-    where `{wrapper}` is `:global` or `:local`.
-  - A function form, such as `:global(@media all)`, uses the existing
-    empty-wrapper row, because the wrapper holds no selector. The row's
-    condition then reads "a CSS Modules selector wrapper without a selector".
+The comment states one rule and its caveats:
 
-### The module check enters every block (113 B)
+- Outside a descriptor block, each statement that `lightningcss` keeps reads
+  with the start and the kind that `lightningcss` gives it.
+- The exception: an `@-moz-document` block outside a style rule reads as a
+  style block, but `lightningcss` parses it as a rule list.
+- In a descriptor block, a statement that is not a custom property ends at its
+  first `{}` block, as postcss reads it, and links `Grammar::Declarations`. The
+  example is `@font-face{c:d{x}e;}`.
+- Text that `lightningcss` drops or rejects can read as other statements, for
+  example a rule-list statement that a `;` ends.
 
-- Delete the custom-property condition in `module_checks::check`.
-- `Section::custom_property` then has no caller, so it goes as dead code.
-  `token_grammar::custom_property` stays, because `token_sections::next` and
-  the old reader call it.
-- The deep scanner test
-  `module_checks_find_a_deep_value_rule_after_custom_property_blocks` keeps its
-  purpose with the custom property inside a style rule. There its value holds
-  no statements: `a{--x:{@value y;}}b{color:red}` inside the deep `@media`
-  nesting. The test also asserts that `--x:{@value y;}` directly in the rule
-  list fails.
+### The grammar table follows `lightningcss` (item 1 F)
 
-### The grammar table follows `lightningcss` (item 1 D)
-
-- `token_grammar::rule_list` gains `-moz-document`, and `nested` drops its
-  special case. So an `@-moz-document` block is a rule list in a rule list and
-  a style block in a style block, as for `@media`.
-- In a lenient rule list, an `@-moz-document` block stays a declarations block.
-- In a style block, `nested` reads an `@nest` block as a style block.
-- The old reader's `legacy_nested` changes the same way. My call (2026-10-28):
-  the two readers share the grammar table, and the differential allows only
-  start differences.
-- A new unit test file, `src/_tests_/token_grammar_tests.rs`, checks the table
-  against `lightningcss`, as option D says. `lightningcss` is a pure library,
-  so a unit test may call it. My call (2026-10-29): a new file, because
-  `token_sections_tests.rs` already has 249 of its 300 lines.
+- In a style block, `token_grammar::nested` reads an `@nest` block as a style
+  block. The old reader's `legacy_nested` changes the same way. My call
+  (2026-10-28): the two readers share the grammar table, and the differential
+  allows only start differences.
+- A new unit test file, `src/_tests_/token_grammar_tests.rs`, checks `nested`
+  against `lightningcss`. `lightningcss` is a pure library, so a unit test may
+  call it. My call (2026-10-29): a new file, because `token_sections_tests.rs`
+  already has 249 of its 300 lines.
+  - Names: every block at-rule that `lightningcss` 1.0.0-alpha.72 parses, with
+    a valid prelude, and one unknown name. These are `media`, `supports`,
+    `container`, `layer`, `scope`, `starting-style`, `-moz-document`,
+    `font-face`, `font-feature-values`, `font-palette-values`,
+    `counter-style`, `viewport`, `-ms-viewport`, the five `keyframes` names,
+    `page`, `view-transition`, `property`, `position-try`, and `nest`.
+  - Contexts: the top level, inside `@media all{…}`, inside `.p{…}`, and
+    inside `@keyframes k{…}`. They read as `Grammar::Stylesheet`,
+    `Grammar::Rules`, `Grammar::Style`, and `Grammar::Lenient`.
+  - Two probes for each name and context: a body `color:red` and a body
+    `.a{color:red}`. The declaration counts as parsed when the stylesheet parses
+    and prints `color: red;`. The rule counts as parsed when it parses and
+    prints `.a {`. Kept text prints as written, such as `color:red`.
+  - Expected grammar: `Grammar::Style` when both parse, and `Grammar::Rules`
+    when only the rule parses. Any other result keeps, drops, or rejects the
+    text, and allows `Grammar::Lenient` or `Grammar::Declarations`.
+  - The one named exception is `-moz-document` in the top-level and rule-list
+    contexts. The test asserts that it still differs, so the exception list
+    cannot go stale.
+- Research on `main`: `.context/css-modules-scanner-follow-ups/research/lightningcss-blocks.log`.
+  Before F, the test fails only for `@nest` in a style rule and for the named
+  exception.
 
 ### The differential reads every tracked stylesheet (decided C)
 
@@ -479,22 +370,76 @@ cssparser reads it.
     Testbox copies a branch over a `main` checkout.
   - It reads the rest and compares each stylesheet. A failure names the
     stylesheet.
-  - It asserts that it read at least one stylesheet (item 3 B).
+  - It asserts that it compared at least one stylesheet (item 3 B).
   - My call (2026-10-28): Git gives the same list in a checkout, a worktree,
     and a Testbox. Integration tests may read files and run processes.
 - The five generated stylesheets and the HTML comment prefix test stay unit
   tests in `_tests_/token_differential_tests.rs`, because they read no files.
 
+### Statement kinds in the token check (112 E, waits for Cal)
+
+- `module_integrity::fingerprint` also returns the statement kinds in
+  authored order. Each kind entry holds the `Statement` that the section reader
+  returns and the statement start.
+- A `composes` declaration has no kind entry, as it has no token entries. The
+  renamer removes it with its `;`.
+- Under D and E, a section with no significant prelude token and no block has
+  no kind entry. cssparser skips a lone `;` in a block, so the bundler reads no
+  statement there.
+- `check` compares the token entries first, as today. Only when they agree, it
+  compares the kind lists up to the longer length, as `Statement` values.
+- A kind difference points at the start of the authored statement, or at the
+  end of the stylesheet when scoping only adds statements there.
+- Under E, when that authored statement starts with a scope wrapper, the
+  failure uses the wrapper message. Otherwise it uses the token-check message.
+- My call (2026-10-28): two passes, not kind entries in the token list. A kind
+  entry before the prelude tokens moved the pinned position `1:17` of
+  `token_guard_rejects_non_name_changes_with_the_exact_diagnostic` to `1:14`.
+  A kind entry after them moved the `a b` to `a b b` case of
+  `token_check_failures_point_at_the_first_changed_token` from `1:4` to `1:1`.
+  With two passes, every existing test passes unchanged.
+- Draft wording under E, my call (2026-10-29), to confirm under the
+  `product-ui` copy rules:
+  - A bare form gets a new row:
+    `CSS Modules {wrapper} has no selector after it in {stylesheet}:{line}:{column}; add a selector after it or remove it`,
+    where `{wrapper}` is `:global` or `:local`.
+  - A function form, such as `:global(@media all)`, uses the existing
+    empty-wrapper row, because the wrapper holds no selector. The row's
+    condition then reads "a CSS Modules selector wrapper without a selector".
+
+### The module check enters every block (113 B, waits for Cal)
+
+- Delete the custom-property condition in `module_checks::check`.
+- `Section::custom_property` then has no caller, so it goes as dead code.
+  `token_grammar::custom_property` stays, because `token_sections::next` and
+  the old reader call it.
+- The deep scanner test
+  `module_checks_find_a_deep_value_rule_after_custom_property_blocks` keeps its
+  purpose with the custom property inside a style rule. There its value holds
+  no statements: `a{--x:{@value y;}}b{color:red}` inside the deep `@media`
+  nesting. The test also asserts that `--x:{@value y;}` directly in the rule
+  list fails.
+
+### The `@-moz-document` change (item 1 D, waits for Cal)
+
+- `token_grammar::rule_list` gains `-moz-document`, and `nested` drops its
+  special case. So an `@-moz-document` block is a rule list in a rule list and
+  a style block in a style block, as for `@media`.
+- In a lenient rule list, an `@-moz-document` block stays a declarations block.
+- `legacy_nested` changes the same way, the table test loses its exception,
+  and the docs and the item 2 comment lose the exception sentence.
+
 ### Order of work and shared files
 
-- Milestone 2 comes first. Then the differential covers every tracked
-  stylesheet before Milestone 5 changes the grammar table.
-- Milestone 6 runs only under 4 B, and after Milestone 4. Otherwise alignment
-  widens the 113 skip.
-- Cal's model rule for this workspace:
+- Cal's rule, word for word: "impl all plan milestones, delegate docs / ui
+  impl to opus 5.5 max thinking, delegate non-ui to sol 6.1 max thinking,
+  check delegated work, request changes as needed".
   - Docs work goes to `--agent claude --model opus-5-5-1m --effort max`.
   - Other implementation goes to `--agent codex --model gpt-6.1-sol --effort max`.
-  - The managing session checks the delegated work.
+  - The delegates share this working tree, so they run one at a time. The
+    managing session checks each diff and runs the tests.
+- Milestone 2 comes before Milestone 3, so that the differential covers every
+  tracked stylesheet before Milestone 3 changes the grammar table.
 - Shared files with work in flight, checked on 2026-10-28:
   - Workspace 353, `calummoore/mokly-tests-rust-migration`, no PR: `Cargo.lock`
     and `plans/rust-rebuild.md`. It ports Node tests to Rust. This plan edits
@@ -521,51 +466,35 @@ cssparser reads it.
 
 ## Milestone 1: Documentation and protocol
 
-The protocol pages state the requirements that the chosen options add. Under
-the recommended options, only 112 E and 4 C change them. No code changes.
+First pull request. The protocol page and the crate README state the decided
+reason of item 4 and the `@-moz-document` exception of item 1 F. Both describe
+the current behaviour, so no page needs a Status line. No code changes.
 
-- [ ] Write the 112 text in `docs/protocol/mokly-imported-styles-modules.md`,
-      Names.
-  - Under 112 B, D, or E: a result that changes, drops, or adds a statement
-    changes more than a local name. Give a bare `:global` before an at-rule
-    keyword as the example.
-  - Under 112 B, D, or E: when every token agrees, the failure points at the
-    statement start.
-  - Under 112 E: such a failure at a scope wrapper uses the wrapper message.
-    Add its row to `docs/protocol/mokly-imported-styles-errors.md`.
-  - Under 112 C: a bare wrapper that no selector follows stays as authored.
-  - Under 112 A: state the exception.
-- [ ] Under 113 A, name the custom-property-like exception beside the `@value`
-      rule. Under 113 B, the page needs no change.
-- [ ] Under item 1 A, name the `@-moz-document` exception beside the parity
-      rule. Under B, C, or D, the page needs no change.
-- [ ] Write the item 4 text.
-  - Under 4 C: add the new reason to the decision in force on the `;`
-    boundary.
-  - Under 4 B: replace the `;` example and its decision with the aligned
-    boundary.
-  - Under 4 A: no change.
-- [ ] Add the Status line below the title of each changed page:
-      `Status: In progress under the [CSS Modules Scanner Follow-Ups](../../plans/css-modules-scanner-follow-ups.md) plan.`
-- [ ] Run `npm run format:check` and `npm test -- tests/markdown_links.test.ts`.
+- [ ] In `docs/protocol/mokly-imported-styles-modules.md`, add to the decision
+      in force on the `;` boundary that alignment would also make stylesheets
+      fail that build today (item 4 C).
+  - The example is a composition after a `;` in an `@document` block.
+- [ ] Name the `@-moz-document` exception beside the parity rule (item 1 F).
+  - In the protocol page and in the crate README, say that the scoper reads
+    an `@-moz-document` block outside a style rule as a style block, but the
+    bundler reads it as a rule list, as for `@media`.
+- [ ] Run `npm run format:check` and the Markdown link test.
 
 ## Milestone 2: The differential reads every tracked stylesheet
 
-Decided C and review items 2 and 3. The behaviour does not change.
+First pull request. Decided C and items 2 B and 3 B. The behaviour does not
+change.
 
 - [ ] Add the `test-support` feature and the self dev-dependency to
       `crates/mokly-css/Cargo.toml`.
 - [ ] Move both readers into `src/_tests_/token_differential.rs`. Declare it in
       `lib.rs` as the design says.
 - [ ] Add `tests/token_differential_tests.rs` as the design says, with the
-      item 3 assertion.
+      item 3 B assertion.
 - [ ] Keep the generated cases and the HTML comment prefix test as unit tests.
 - [ ] Delete the three fixture list files. Record decided C as the approval in
       the commit message.
-- [ ] Correct the `Statement` doc comment with the option that the coordinator
-      confirms for item 2.
-- [ ] Describe the integration test and the feature in the README section
-      Development.
+- [ ] Write the `Statement` doc comment as the design says (item 2 B).
 - [ ] Prove the test, and save both results under
       `.context/css-modules-scanner-follow-ups/`.
   - Break `legacy_nested` once in a scratch copy. The test must fail and name
@@ -574,12 +503,56 @@ Decided C and review items 2 and 3. The behaviour does not change.
 - [ ] Run `cargo test -p mokly-css`, Clippy, `cargo fmt --all -- --check`, and
       `cargo xtask rust-file-length-lint`.
 
-## Milestone 3: The token check compares statement kinds (112)
+## Milestone 3: The grammar table follows `lightningcss` (item 1 F)
 
-This milestone needs 112 B, D, or E. Under 112 A, it has no code, and
-Milestone 1 closes the item. Under 112 C, change the bare-wrapper edit in
-`rename_selectors.rs` instead.
+First pull request. The behaviour changes only for stylesheets that fail today.
 
+- [ ] Add `src/_tests_/token_grammar_tests.rs` first, and save its failure on
+      the unfixed code. It must fail only for `@nest` in a style rule.
+- [ ] Read an `@nest` block in a style block as a style block, in `nested` and
+      in `legacy_nested`.
+- [ ] Add a scoping test: `.p{@nest &{:local()}}` fails with the empty-wrapper
+      message, and `.p{@nest &{.a{color:red}}}` scopes `a`.
+- [ ] Correct the doc comments of `Grammar::Style` and `nested` for `@nest`.
+- [ ] Run `cargo test -p mokly-css` and Clippy.
+
+## Milestone 4: Verification, commit, review, and the first pull request
+
+- [ ] Describe the integration test and the `test-support` feature in the
+      README section Development.
+- [ ] Rerun the probes on the build. Save the results under
+      `.context/css-modules-scanner-follow-ups/`.
+- [ ] Update `plans/rust-rebuild.md` with the smallest edit.
+  - Tick the `;` follow-up line and finding 1 of the final review. Give each
+    its decision, its date, and a link to this plan.
+  - Under the open problem line and the two lines outside the
+    `rebuild/port-111c` review scope, add one line with the outcome and a link
+    to this plan.
+  - Under items 112 and 113, add one line that says they wait for Cal, with a
+    link to this plan.
+- [ ] Merge `origin/main`. Run the targeted tests and the complete gate
+      `cargo xtask check --executor local`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings, then
+      apply the review-fix rule: fix the `Auto-fix: yes` findings, re-review
+      once, and report the rest.
+- [ ] Give the coordinator the title and the description of the first pull
+      request. The coordinator opens it.
+
+## Milestone 5: Statement kinds in the token check (112)
+
+Second pull request. This milestone waits for Cal. Under 112 A, it has no
+code: state the exception in the protocol page. Under 112 C, change the
+bare-wrapper edit in `rename_selectors.rs` instead.
+
+- [ ] Write the protocol text in `docs/protocol/mokly-imported-styles-modules.md`,
+      Names.
+  - A result that changes, drops, or adds a statement changes more than a
+    local name. The example is a bare `:global` before an at-rule keyword.
+  - When every token agrees, the failure points at the statement start.
+  - Under E, a failure at a scope wrapper uses the wrapper message. Add its
+    row to `docs/protocol/mokly-imported-styles-errors.md`.
 - [ ] Add the regression tests first, and save their failure on the unfixed
       code.
   - The eleven probed stylesheets fail at the statement start.
@@ -592,10 +565,10 @@ Milestone 1 closes the item. Under 112 C, change the bare-wrapper edit in
       is.
 - [ ] Run `cargo test -p mokly-css` and Clippy.
 
-## Milestone 4: The module check enters every block (113)
+## Milestone 6: The module check enters every block (113)
 
-This milestone needs 113 B or C. Under 113 A, it has no code, and Milestone 1
-closes the item.
+Second pull request. This milestone waits for Cal. Under 113 A, it has no
+code: name the exception beside the `@value` rule in the protocol page.
 
 - [ ] Add the regression tests first, and save their failure on the unfixed
       code.
@@ -610,10 +583,10 @@ closes the item.
       `token_sections`.
 - [ ] Run `cargo test -p mokly-css` and Clippy.
 
-## Milestone 5: The grammar table follows `lightningcss` (item 1)
+## Milestone 7: The `@-moz-document` change (item 1 D)
 
-This milestone needs item 1 B, C, or D. Under A, it has no code, and
-Milestone 1 closes the item.
+Second pull request. This milestone waits for Cal. If Cal declines, it has no
+code, and the documented exception stays.
 
 - [ ] Add the regression tests first, and save their failure on the unfixed
       code.
@@ -624,49 +597,25 @@ Milestone 1 closes the item.
     with the `@value` message.
 - [ ] Change `rule_list` and `nested`, and `legacy_nested` in the differential
       module.
-- [ ] Change the two `@-moz-document` rows of
-      `blocks_open_the_grammar_that_lightningcss_parses`.
+- [ ] Remove the named exception from the table test, and change the two
+      `@-moz-document` rows of `blocks_open_the_grammar_that_lightningcss_parses`.
 - [ ] Correct the doc comments of `Grammar::Rules`, `Grammar::Style`, `nested`,
-      and the wrapper table's `DOCUMENT` level.
-- [ ] Under C, add the grammar test of option C to `token_sections_tests.rs`.
-- [ ] Under D, add the `@nest` entry and `src/_tests_/token_grammar_tests.rs`.
+      `Statement`, and the wrapper table's `DOCUMENT` level.
+- [ ] Remove the exception from the protocol page and the crate README.
 - [ ] Run `cargo test -p mokly-css` and Clippy.
 
-## Milestone 6: The rule-list `;` boundary (item 4)
+## Milestone 8: Verification, commit, review, and the second pull request
 
-This milestone runs only under 4 B, after Milestone 4. Under 4 A or C, it
-holds one TODO that records the decision, and Milestone 7 ticks the follow-up
-line.
-
-- [ ] Add the regression tests first, and save their failure on the unfixed
-      code.
-  - `@document x{.c{}.a;.b{composes:c}}` fails with the composition message.
-  - `@keyframes k{--x:1;to{@value y: red;}}` still fails with the `@value`
-    message.
-- [ ] In `token_sections::next`, end a rule-list statement at `;` only when it
-      starts with an at-keyword.
-- [ ] Change the rule-list rows of
-      `statements_are_classified_as_lightningcss_reads_a_block`.
-- [ ] Change the README example of the `;` boundary.
-- [ ] Run `cargo test -p mokly-css` and Clippy.
-
-## Milestone 7: Verification, commit, review, and pull request
-
-- [ ] Remove the Status lines of Milestone 1 when their requirements are
-      implemented.
 - [ ] Rerun every probe on the fixed build. Save the results under
       `.context/css-modules-scanner-follow-ups/`.
-- [ ] Update `plans/rust-rebuild.md` with the smallest edit.
-  - Tick items 112 and 113, the `;` follow-up line, and finding 1 of the final
-    review.
-  - Give each its decision, its date, and a link to this plan.
-  - Under the open problem line and the two lines outside the
-    `rebuild/port-111c` review scope, add one line that names this plan.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] In `plans/rust-rebuild.md`, tick items 112 and 113 with their decisions,
+      their dates, and a link to this plan. Use the smallest edit.
+- [ ] Merge `origin/main`. Run the targeted tests and the complete gate named
+      in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings, then
       apply the review-fix rule: fix the `Auto-fix: yes` findings, re-review
       once, and report the rest.
-- [ ] Open the pull request when every other milestone TODO is ticked. Put its
-      link in the status paragraph.
+- [ ] Open the pull request when every other milestone TODO is ticked, or give
+      its text to the coordinator. Put its link in the status paragraph.
