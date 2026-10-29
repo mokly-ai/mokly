@@ -26,7 +26,7 @@ pub(crate) enum Grammar {
     Rules,
     /// A style block: the block of a style rule or an `@-moz-document` rule
     /// in a rule list or a style block, and the block of a conditional,
-    /// layer, scope, or starting-style rule in a style block. A custom
+    /// layer, scope, starting-style, or `@nest` rule in a style block. A custom
     /// property runs through its `{}` blocks to the next `;`, and a statement
     /// without a block that starts with an identifier and a colon is a
     /// declaration. Every other statement is a rule or an at-rule, except the

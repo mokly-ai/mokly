@@ -114,6 +114,7 @@ fn legacy_next(
 fn legacy_nested(grammar: Grammar, statement: &Statement, html_comment: bool) -> Grammar {
     match (grammar, statement) {
         (Grammar::Rules, Statement::AtRule(name)) if legacy_rule_list(name) => Grammar::Rules,
+        (Grammar::Style, Statement::AtRule(name)) if name == "nest" => Grammar::Style,
         (Grammar::Rules | Grammar::Style, Statement::AtRule(name))
             if legacy_rule_list(name) || name == "-moz-document" =>
         {
