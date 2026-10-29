@@ -5,9 +5,13 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
-import { acceptanceForFixture } from "./acceptance_build.js";
+import {
+  acceptanceForFixture,
+  type AcceptanceBuild,
+} from "./acceptance_build.js";
 import { browse } from "./browse.js";
 import { browserMeasurement } from "./browser_measurement.js";
+import { buildLivenessMessage, outputLiveness } from "./build_liveness.js";
 import { changes } from "./changes.js";
 import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
@@ -44,6 +48,10 @@ export async function benchmark(
     sidecarTimeoutMs?: number;
     buildChanges?: boolean;
     buildDeadlineMs?: number;
+    acceptanceForFixture?: (
+      fixture: PreparedFixture,
+    ) => Promise<AcceptanceBuild>;
+    buildLivenessTimer?: Parameters<typeof outputLiveness>[2];
     browser?: Browser;
   } = {},
 ) {
@@ -81,16 +89,28 @@ export async function benchmark(
   let active: Scenario | undefined;
   const completedEdits: WatchMeasurement[] = [];
   try {
+    const accept = options.acceptanceForFixture ?? acceptanceForFixture;
     const acceptanceBuild = selected.some(
-      (scenario) => scenario === "serve" || scenario === "startup",
+      (scenario) =>
+        scenario === "build" || scenario === "serve" || scenario === "startup",
     )
-      ? await acceptanceForFixture(fixture)
+      ? await accept(fixture)
       : undefined;
     for (const scenario of selected) {
       active = scenario;
       process.stderr.write(`Benchmark ${scenario}: starting\n`);
       if (scenario === "build") {
         const beginning = performance.now();
+        let expired = false;
+        const state: { running?: ReturnType<typeof start> } = {};
+        const liveness = outputLiveness(
+          options.buildDeadlineMs ?? 300_000,
+          () => {
+            expired = true;
+            if (state.running) void stop(state.running).catch(() => {});
+          },
+          options.buildLivenessTimer,
+        );
         const running = start(
           [
             cli,
@@ -105,28 +125,45 @@ export async function benchmark(
           fixture.root,
           memoryStopKiB,
           options.sidecarTimeoutMs,
+          liveness.line,
         );
-        let expired = false;
-        const timer = setTimeout(() => {
-          expired = true;
-          void stop(running).catch(() => {});
-        }, options.buildDeadlineMs ?? 300_000);
+        state.running = running;
+        let failure: unknown;
         try {
-          await running.done;
-          if (expired || running.child.signalCode !== null)
+          try {
+            await running.done;
+          } catch (error) {
+            if (!expired) throw error;
+          }
+          if (expired)
+            throw new Error(
+              await buildLivenessMessage(
+                fixture.root,
+                options.buildDeadlineMs ?? 300_000,
+              ),
+            );
+          if (running.child.signalCode !== null)
             throw new Error("Build exceeded the harness liveness deadline");
           const memory = await running.finishMemory();
           results.push({
             scenario,
             status: "measured",
+            ...(acceptanceBuild ? { acceptanceBuild } : {}),
             elapsedMs: performance.now() - beginning,
             ...memory,
             inputProfile: inputProfile(running.timings, memory.observations),
           });
+        } catch (error) {
+          failure = error;
         } finally {
-          clearTimeout(timer);
-          await finishRun(fixture.root, "build", running);
+          liveness.finish();
+          try {
+            await finishRun(fixture.root, "build", running);
+          } catch (error) {
+            if (!expired && failure === undefined) failure = error;
+          }
         }
+        if (failure !== undefined) throw failure;
         continue;
       }
       const browser =

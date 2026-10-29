@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 
+import { completeLineObserver } from "./build_liveness.js";
 import { lifetime, stopChild } from "./lifetime.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { monitorChild } from "./memory_lifecycle.js";
@@ -11,6 +12,7 @@ export function start(
   cwd: string,
   memoryStopKiB = DEFAULT_MEMORY_STOP_KIB,
   sidecarTimeoutMs?: number,
+  onOutputLine?: () => void,
 ) {
   const child = spawn(process.execPath, args, {
     cwd,
@@ -25,6 +27,8 @@ export function start(
     },
   });
   const timings = timingCollector();
+  const stdoutLines = completeLineObserver(() => onOutputLine?.());
+  const stderrLines = completeLineObserver(() => onOutputLine?.());
   child.stderr.on("data", (chunk) => timings.accept(chunk));
   let stdout = "",
     stderr = "",
@@ -47,9 +51,11 @@ export function start(
   );
   child.stdout.on("data", (chunk) => {
     stdout = (stdout + String(chunk)).slice(-512 * 1024);
+    stdoutLines(chunk);
   });
   child.stderr.on("data", (chunk) => {
     stderr = (stderr + String(chunk)).slice(-512 * 1024);
+    stderrLines(chunk);
   });
   const output = () => stdout + "\n" + stderr;
   const done = new Promise<void>((resolve, reject) => {
