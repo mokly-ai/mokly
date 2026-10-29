@@ -13,6 +13,7 @@ use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_compare::ancestor_roots;
 use mokly_graph::cache::RenderCache;
+use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
@@ -53,6 +54,7 @@ pub struct Runtime {
     /// Ancestor dependency directories used by the working generation.
     pub dependency_usage: Arc<dyn DependencyUsage>,
     pub(crate) resources: Arc<dyn ResourceInputs>,
+    pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
@@ -102,6 +104,7 @@ impl Runtime {
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             resources: Arc::new(MemoryResourceInputs::default()),
+            closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
             styles: Arc::new(Mutex::new(StylesheetCache::default())),
             describing: Arc::new(Mutex::new(())),

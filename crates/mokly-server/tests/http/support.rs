@@ -6,9 +6,10 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
-use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
+use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_css::compiler::Compiler;
 use mokly_css::resolver::SourceResolver;
@@ -28,7 +29,7 @@ use mokly_server::backend::GraphDocuments;
 use mokly_server::clock::MonotonicClock;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::public_read::ConfinedReader;
-use mokly_server::publication::SharedPublication;
+use mokly_server::publication::{Publications, SharedPublication};
 use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::{Projector, Snapshot, SnapshotFactory, SnapshotInput};
@@ -41,8 +42,12 @@ use tokio::sync::watch;
 pub struct Harness {
     pub root: TempDir,
     pub generation: Arc<dyn RenderGeneration>,
+    graph: Arc<dyn RenderGraph>,
+    config: ResolvedConfig,
+    prepared: PreparedCatalogue,
     pub snapshot: Arc<Snapshot>,
     pub publications: Arc<SharedPublication>,
+    public: Arc<ConfinedReader>,
     pub url: String,
     pub client: reqwest::Client,
     stop: watch::Sender<bool>,
@@ -93,7 +98,7 @@ impl Harness {
         .prepare(&config, None)
         .unwrap();
         let captured: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(tree.clone()));
-        let graph: &dyn RenderGraph = &Graph {
+        let graph: Arc<dyn RenderGraph> = Arc::new(Graph {
             inputs: Default::default(),
             tree: captured.clone(),
             composer: Arc::new(HtmlComposer {
@@ -112,8 +117,10 @@ impl Harness {
             cache: Arc::new(MemoryCache::new(16 * 1024 * 1024)),
             workers: Arc::new(ThreadWorkers::new(2).unwrap()),
             version: "fixture".into(),
-        };
-        let generation = graph.prepare(config.clone(), prepared, None).unwrap();
+        });
+        let generation = graph
+            .prepare(config.clone(), prepared.clone(), None)
+            .unwrap();
         let mut assets = BTreeMap::new();
         for (path, content_type) in [
             ("client/shell.js", "text/javascript; charset=utf-8"),
@@ -138,12 +145,13 @@ impl Harness {
             None,
         )
         .unwrap();
+        let public = Arc::new(ConfinedReader {
+            repo_root: config.repo_root.clone(),
+            policy: Arc::new(policy),
+        });
         let docs = Arc::new(GraphDocuments::new(
             generation.clone(),
-            Arc::new(ConfinedReader {
-                repo_root: config.repo_root,
-                policy: Arc::new(policy),
-            }),
+            public.clone(),
             Arc::new(TracingWarnings),
             Arc::new(TemporaryAssets),
         ));
@@ -184,13 +192,54 @@ impl Harness {
         Self {
             root,
             generation,
+            graph,
+            config,
+            prepared,
             snapshot,
             publications,
+            public,
             url,
             client: reqwest::Client::new(),
             stop,
             handle,
         }
+    }
+    pub fn replacement(&self) -> Arc<Snapshot> {
+        self.project_replacement(self.prepare_replacement())
+    }
+    pub fn prepare_replacement(&self) -> Arc<dyn RenderGeneration> {
+        self.graph
+            .prepare(self.config.clone(), self.prepared.clone(), None)
+            .unwrap()
+    }
+    pub fn project_replacement(
+        &self,
+        replacement_generation: Arc<dyn RenderGeneration>,
+    ) -> Arc<Snapshot> {
+        let previous = self.publications.current();
+        let documents = Arc::new(GraphDocuments::new(
+            replacement_generation.clone(),
+            self.public.clone(),
+            Arc::new(TracingWarnings),
+            Arc::new(TemporaryAssets),
+        ));
+        let projector = Projector {
+            deployment_id: "a".repeat(64),
+            render_token: "b".repeat(64),
+        };
+        projector
+            .replace(
+                replacement_generation,
+                SnapshotInput {
+                    documents,
+                    revision: previous.index.revision + 1,
+                    config_path: "mokly.config.json".into(),
+                    base: None,
+                    assets: previous.generation.assets.clone(),
+                },
+                &previous,
+            )
+            .unwrap()
     }
     pub async fn close(self) {
         self.close_result().await.unwrap();
