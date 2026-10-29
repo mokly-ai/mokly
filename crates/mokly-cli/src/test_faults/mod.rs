@@ -153,6 +153,12 @@ impl SourceTree for InjectedTree {
     fn digest_unretained(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.inner.digest_unretained(path)
     }
+    fn digest_unretained_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<String>> {
+        self.inner.digest_unretained_batch(paths)
+    }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.inner.digest(path)
     }

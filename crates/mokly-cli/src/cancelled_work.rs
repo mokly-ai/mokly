@@ -98,6 +98,21 @@ impl SourceTree for CancellableTree {
         self.check(path)?;
         self.inner.digest_unretained(path)
     }
+    fn digest_unretained_batch(
+        &self,
+        paths: &[PathBuf],
+    ) -> Vec<mokly_source_interface::error::Result<String>> {
+        if paths.iter().any(|path| self.check(path).is_err()) {
+            return paths
+                .iter()
+                .map(|path| {
+                    self.check(path)
+                        .and_then(|()| self.inner.digest_unretained(path))
+                })
+                .collect();
+        }
+        self.inner.digest_unretained_batch(paths)
+    }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;
         self.inner.digest(path)

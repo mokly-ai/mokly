@@ -77,6 +77,9 @@ fn an_html_only_build_stops_queued_views_after_the_first_interrupt() {
     assert!(
         matches!(tree.open_stream(path), Err(SourceError::Cancelled { path: captured }) if captured == path)
     );
+    for result in tree.digest_unretained_batch(&[path.into(), "/repo/asset.png".into()]) {
+        assert!(matches!(result, Err(SourceError::Cancelled { .. })));
+    }
     assert!(
         cancellation.interrupt(),
         "the second signal requests an immediate exit"

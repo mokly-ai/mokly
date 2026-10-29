@@ -53,9 +53,21 @@ fn compiler(files: &[(&str, &str)], assets: bool) -> Compiler {
         Unimock::new((
             project,
             read,
-            SourceTreeMock::digest_unretained
+            SourceTreeMock::digest_unretained_batch
                 .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, path| Ok(hashes[path].clone()))),
+                .answers_arc(Arc::new(move |_, paths| {
+                    paths
+                        .iter()
+                        .map(|path| match hashes.get(path) {
+                            Some(hash) => Ok(hash.clone()),
+                            None => Err(mokly_source_interface::error::SourceError::Io {
+                                operation: "digest fixture",
+                                path: path.into(),
+                                source: std::io::ErrorKind::NotFound.into(),
+                            }),
+                        })
+                        .collect()
+                })),
         ))
     } else {
         Unimock::new((project, read))
@@ -120,7 +132,7 @@ fn invalid_css_assets_and_late_imports_fail_with_authored_paths() {
                 ("images/a.svg", "<svg/>"),
                 ("css/late.css", ".y{}"),
             ],
-            false,
+            source.contains("../missing.png"),
         );
         let error = compiler.bundle(&root()).unwrap_err().to_string();
         assert!(error.contains("css/base.css"), "{error}");
@@ -167,4 +179,52 @@ fn renderer_owned_imports_are_removed_before_postcss_is_called() {
     let mut root = root();
     root.excluded.insert("css/renderer.css".into());
     assert!(!compiler.bundle(&root).unwrap().css.contains("@import"));
+}
+
+#[test]
+fn assets_request_one_digest_batch_per_stylesheet() {
+    let files = BTreeMap::from([
+        (
+            Path::new("/repo/css/base.css").to_owned(),
+            b".a { background:url('../images/a.svg') } .b { background:url('../images/b.svg') }"
+                .to_vec(),
+        ),
+        (Path::new("/repo/images/a.svg").to_owned(), b"a".to_vec()),
+        (Path::new("/repo/images/b.svg").to_owned(), b"b".to_vec()),
+    ]);
+    let project = SourceTreeMock::project
+        .each_call(matching!(_))
+        .answers_arc(Arc::new({
+            let files = files.clone();
+            move |_, path| {
+                Ok((files.contains_key(path)
+                    || files.keys().any(|candidate| candidate.starts_with(path)))
+                .then(|| Node {
+                    identity: path.into(),
+                    lexical_kind: FileKind::File,
+                    kind: FileKind::File,
+                }))
+            }
+        }));
+    let read = SourceTreeMock::read
+        .next_call(matching!((path) if *path == Path::new("/repo/css/base.css")))
+        .returns(Ok(files[Path::new("/repo/css/base.css")].clone()));
+    let batch = SourceTreeMock::digest_unretained_batch
+        .next_call(matching!((paths) if paths == &[
+            Path::new("/repo/images/a.svg").to_owned(),
+            Path::new("/repo/images/b.svg").to_owned(),
+        ]))
+        .returns(vec![Ok(digest(b"a")), Ok(digest(b"b"))]);
+    let tree = Arc::new(Unimock::new((project, read, batch)));
+    let compiler = Compiler {
+        tree: tree.clone(),
+        repo_root: "/repo".into(),
+        resolver: Arc::new(SourceResolver {
+            settings: Default::default(),
+            tree,
+            repo_root: "/repo".into(),
+        }),
+        processor: Arc::new(IdentityProcessor),
+    };
+    compiler.bundle(&root()).unwrap();
 }

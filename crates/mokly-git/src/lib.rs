@@ -25,13 +25,16 @@ pub mod access;
 
 mod lookup;
 mod repository_command;
+mod repository_ops;
 
 mod checkout;
 mod checkout_batch;
 mod checkout_bounds;
+mod checkout_digest;
 mod checkout_files;
 mod checkout_index;
 mod checkout_output;
+mod checkout_stream;
 mod conversion_paths;
 mod extraction;
 mod fetch;

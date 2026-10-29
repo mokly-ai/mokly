@@ -1,5 +1,6 @@
 //! Stable Git object and repository-relative path identities.
 
+use std::borrow::Borrow;
 use std::fmt;
 
 use crate::error::{Error, Result};
@@ -67,5 +68,11 @@ impl RepoPath {
 impl fmt::Display for RepoPath {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(&self.0)
+    }
+}
+
+impl Borrow<str> for RepoPath {
+    fn borrow(&self) -> &str {
+        self.as_str()
     }
 }

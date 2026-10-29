@@ -1,5 +1,6 @@
 //! Filtered conversion requests: one Git process for each batch of files.
 
+use std::collections::BTreeSet;
 use std::hash::{BuildHasher, RandomState};
 use std::time::Duration;
 
@@ -7,7 +8,7 @@ use crate::checkout_files::{BatchFiles, EntryWriter, Indexed};
 use crate::checkout_output::{BatchSink, HEADER_BYTES, conversion};
 use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
 use crate::error::{Error, Result};
-use crate::identity::ObjectId;
+use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::Entry;
 
@@ -42,6 +43,38 @@ pub(crate) fn convert_entries(
     files: &mut dyn BatchFiles,
     limit: usize,
 ) -> Result<usize> {
+    convert_all(repository, commit, entries, files, limit, true, None)
+}
+
+/// Digest callers retry every failed batch file under its own blob bound.
+pub(crate) fn convert_digest_entries(
+    repository: &GitRepository,
+    commit: &ObjectId,
+    entries: &[Entry],
+    files: &mut dyn BatchFiles,
+    limit: usize,
+    converted: &BTreeSet<RepoPath>,
+) -> Result<usize> {
+    convert_all(
+        repository,
+        commit,
+        entries,
+        files,
+        limit,
+        false,
+        Some(converted),
+    )
+}
+
+fn convert_all(
+    repository: &GitRepository,
+    commit: &ObjectId,
+    entries: &[Entry],
+    files: &mut dyn BatchFiles,
+    limit: usize,
+    retry_timeout: bool,
+    known_conversion: Option<&BTreeSet<RepoPath>>,
+) -> Result<usize> {
     if let Some(entry) = timed_out(repository, commit, entries) {
         return Err(Error::Conversion {
             path: entry.path.to_string(),
@@ -74,6 +107,9 @@ pub(crate) fn convert_entries(
                     }
                 }
                 Err(Error::CheckoutTimeout) => {
+                    if !retry_timeout {
+                        return Err(Error::CheckoutTimeout);
+                    }
                     tracing::debug!(
                         files = batch.len(),
                         "a conversion batch reached its deadline"
@@ -84,7 +120,10 @@ pub(crate) fn convert_entries(
         }
         None
     } else {
-        Some(repository.converted_paths(commit, entries)?)
+        Some(match known_conversion {
+            Some(converted) => converted.clone(),
+            None => repository.converted_paths(commit, entries)?,
+        })
     };
     for (index, entry) in entries.iter().enumerate() {
         if done[index] {
@@ -129,7 +168,7 @@ pub(crate) fn convert_entries(
 
 /// The first entry whose own conversion already reached its deadline in this
 /// repository session. It fails at once, so no later call waits for it again.
-fn timed_out<'a>(
+pub(crate) fn timed_out<'a>(
     repository: &GitRepository,
     commit: &ObjectId,
     entries: &'a [Entry],

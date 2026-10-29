@@ -99,6 +99,13 @@ pub trait SourceTree: Send + Sync {
     fn digest_unretained(&self, path: &Path) -> Result<String> {
         self.digest(path)
     }
+    /// Hash opaque inputs while keeping one result for each requested path.
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        paths
+            .iter()
+            .map(|path| self.digest_unretained(path))
+            .collect()
+    }
     /// Read immutable bytes without copying a retained source on cache hits.
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
         Ok(self.read(path)?.into())
@@ -111,3 +118,7 @@ pub trait SourceTree: Send + Sync {
             .collect())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/tree_batch_tests.rs"]
+mod tree_batch_tests;

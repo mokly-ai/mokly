@@ -32,6 +32,13 @@ pub(crate) struct Preparation<'a> {
     pub(crate) result: Bundle,
 }
 
+pub(crate) struct AssetCandidate {
+    pub(crate) route: String,
+    pub(crate) target: String,
+    pub(crate) url: String,
+    pub(crate) importer: String,
+}
+
 impl StylesheetBundler for Compiler {
     #[tracing::instrument(name = "css.bundle", skip_all, err)]
     fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
@@ -148,6 +155,7 @@ impl Preparation<'_> {
         self.result.directories.extend(processed.directories);
         self.result.dependency_digests.extend(processed.inputs);
         let mut edits = Vec::new();
+        let mut assets = Vec::new();
         for reference in syntax::references(&processed.text) {
             if reference.image_set_string && !paths::external(&reference.value) {
                 return Err(CssError::Asset {
@@ -173,7 +181,10 @@ impl Preparation<'_> {
                     self.source(&target, path)?;
                 }
             } else {
-                let rewritten = self.asset(path, &reference.value)?;
+                let (rewritten, candidate) = self.asset_reference(path, &reference.value)?;
+                if let Some(candidate) = candidate {
+                    assets.push(candidate);
+                }
                 edits.push((
                     reference.start,
                     reference.end,
@@ -181,6 +192,7 @@ impl Preparation<'_> {
                 ));
             }
         }
+        self.digest_assets(assets)?;
         let transformed = syntax::replace(path, &processed.text, edits)?;
         let transformed = if path.ends_with(".module.css") {
             let (text, exports) = modules::scope(path, &transformed)?;

@@ -47,6 +47,9 @@ impl SourceTree for LeasedTree {
     fn digest_unretained(&self, path: &Path) -> Result<String> {
         self.tree.digest_unretained(path)
     }
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        self.tree.digest_unretained_batch(paths)
+    }
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.tree.read_public(path)
     }

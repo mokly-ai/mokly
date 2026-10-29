@@ -187,6 +187,9 @@ impl SourceTree for SideTree {
             .map_or(physical, |node| node.identity);
         tree.digest_unretained(&source)
     }
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        self.digest_assets(paths)
+    }
     fn digest(&self, path: &Path) -> Result<String> {
         let (tree, physical, _) = self.selected(path)?;
         let hash = tree.digest(&physical)?;

@@ -2,7 +2,9 @@
 
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, Node};
+use std::collections::BTreeSet;
 
+use crate::compiler::AssetCandidate;
 use crate::compiler::Preparation;
 use crate::error::{AssetFailure, CssError, Result};
 use crate::paths;
@@ -60,7 +62,11 @@ impl Preparation<'_> {
         }
     }
 
-    pub(crate) fn asset(&mut self, stylesheet: &str, url: &str) -> Result<String> {
+    pub(crate) fn asset_reference(
+        &mut self,
+        stylesheet: &str,
+        url: &str,
+    ) -> Result<(String, Option<AssetCandidate>)> {
         if url.starts_with('/') {
             return Err(CssError::Asset {
                 kind: AssetFailure::Absolute,
@@ -97,38 +103,12 @@ impl Preparation<'_> {
             });
         }
         let asset_route = format!("assets/{target}");
-        if !self.result.assets.contains_key(&asset_route) {
-            let node = self.confined_node(&target).ok_or_else(failure)?;
-            let digest = self
-                .compiler
-                .tree
-                .digest_unretained(&node.identity)
-                .ok()
-                .ok_or_else(failure)?;
-            let mut aliases = Vec::new();
-            if let Ok(identity) = node.identity.strip_prefix(&self.compiler.repo_root) {
-                let identity = identity.to_string_lossy().replace('\\', "/");
-                if identity != target {
-                    if !identity.split('/').any(|part| part == "node_modules") {
-                        self.result.repository_aliases.insert(target.clone());
-                        self.result.repository_aliases.insert(identity.clone());
-                    }
-                    self.result
-                        .imported_by
-                        .insert(identity.clone(), stylesheet.into());
-                    aliases.push(identity);
-                }
-            }
-            self.result.assets.insert(
-                asset_route.clone(),
-                OpaqueAsset {
-                    path: target.clone(),
-                    source: node.identity,
-                    digest,
-                    aliases,
-                },
-            );
-        }
+        let candidate = (!self.result.assets.contains_key(&asset_route)).then(|| AssetCandidate {
+            route: asset_route.clone(),
+            target: target.clone(),
+            url: url.into(),
+            importer: stylesheet.into(),
+        });
         if let Some(asset) = self.result.assets.get(&asset_route) {
             for alias in &asset.aliases {
                 self.result
@@ -140,6 +120,70 @@ impl Preparation<'_> {
             .imported_by
             .entry(target)
             .or_insert_with(|| stylesheet.into());
-        Ok(routes::relative(&self.result.route, &asset_route).replace("%40", "@") + suffix)
+        Ok((
+            routes::relative(&self.result.route, &asset_route).replace("%40", "@") + suffix,
+            candidate,
+        ))
+    }
+
+    pub(crate) fn digest_assets(&mut self, candidates: Vec<AssetCandidate>) -> Result<()> {
+        let mut seen = BTreeSet::new();
+        let unique: Vec<_> = candidates
+            .into_iter()
+            .filter(|candidate| seen.insert(candidate.route.clone()))
+            .collect();
+        if unique.is_empty() {
+            return Ok(());
+        }
+        let paths: Vec<_> = unique
+            .iter()
+            .map(|candidate| self.compiler.repo_root.join(&candidate.target))
+            .collect();
+        let digests = self.compiler.tree.digest_unretained_batch(&paths);
+        for (candidate, digest) in unique.into_iter().zip(digests) {
+            let failure = || CssError::Asset {
+                kind: AssetFailure::File,
+                message: format!(
+                    "CSS asset is not a regular file inside repoRoot in {}: {}; move it inside the repository or fix the relative path",
+                    candidate.importer, candidate.url
+                ),
+            };
+            let node = self.confined_node(&candidate.target).ok_or_else(failure)?;
+            let digest = if node.identity == self.compiler.repo_root.join(&candidate.target) {
+                digest
+            } else {
+                self.compiler.tree.digest_unretained(&node.identity)
+            };
+            let digest = match digest {
+                Ok(digest) => digest,
+                Err(_) => return Err(failure()),
+            };
+            let mut aliases = Vec::new();
+            if let Ok(identity) = node.identity.strip_prefix(&self.compiler.repo_root) {
+                let identity = identity.to_string_lossy().replace('\\', "/");
+                if identity != candidate.target {
+                    if !identity.split('/').any(|part| part == "node_modules") {
+                        self.result
+                            .repository_aliases
+                            .insert(candidate.target.clone());
+                        self.result.repository_aliases.insert(identity.clone());
+                    }
+                    self.result
+                        .imported_by
+                        .insert(identity.clone(), candidate.importer.clone());
+                    aliases.push(identity);
+                }
+            }
+            self.result.assets.insert(
+                candidate.route,
+                OpaqueAsset {
+                    path: candidate.target,
+                    source: node.identity,
+                    digest,
+                    aliases,
+                },
+            );
+        }
+        Ok(())
     }
 }

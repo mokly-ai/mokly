@@ -12,6 +12,31 @@ use crate::error::{Error, InternalError};
 use crate::fingerprint::{CapturedTree, InputTree};
 
 #[test]
+fn captured_opaque_batches_forward_and_keep_each_live_verification_hash() {
+    let paths = ["/repo/a.png".into(), "/repo/b.png".into()];
+    let source = Unimock::new((
+        SourceTreeMock::digest_unretained_batch
+            .next_call(matching!((paths) if paths.len() == 2))
+            .returns(vec![Ok("a-hash".into()), Ok("b-hash".into())]),
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("/repo/a.png")))
+            .returns(Ok("a-hash".into())),
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("/repo/b.png")))
+            .returns(Ok("changed-hash".into())),
+    ));
+    let capture = CapturedTree::new(Arc::new(source));
+    let hashes: Vec<_> = capture
+        .digest_unretained_batch(&paths)
+        .into_iter()
+        .map(Result::unwrap)
+        .collect();
+    assert_eq!(hashes, ["a-hash", "b-hash"]);
+    assert_eq!(capture.digest(&paths[0]).unwrap(), "a-hash");
+    assert!(matches!(capture.verify(), Err(Error::InputsChanged { path }) if path == paths[1]));
+}
+
+#[test]
 fn captured_digest_inputs_keep_no_byte_reads_and_verify_live_hashes() {
     let source = Unimock::new((
         SourceTreeMock::project

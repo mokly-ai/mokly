@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::{Resolved, Tier};
 
-use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
+use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::dependency_usage::DependencyUsageMock;
@@ -112,4 +112,56 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
     assert_ne!(logical, physical);
     assert_eq!(tree.digest(logical).unwrap(), "base hash");
     tree.prefetch(&[logical.into()]).unwrap();
+}
+
+#[test]
+fn opaque_digest_batches_group_by_selected_tree_and_keep_the_request_order() {
+    let sources = Unimock::new((
+        SourceTreeMock::digest_unretained_batch
+            .next_call(matching!((paths) if paths == &[
+                Path::new("/repo/a.svg").to_owned(), Path::new("/repo/c.svg").to_owned(),
+            ]))
+            .returns(vec![Ok("a".into()), Ok("c".into())]),
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers(&|_, path| {
+                Ok(Some(Node {
+                    identity: path.into(),
+                    kind: FileKind::File,
+                    lexical_kind: FileKind::File,
+                }))
+            })
+            .n_times(2),
+    ));
+    let dependencies = Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!((path) if *path == Path::new("/deps/node_modules/pkg/b.svg")))
+            .answers(&|_, _| Ok(None))
+            .n_times(2),
+        SourceTreeMock::digest_unretained_batch
+            .next_call(matching!((paths) if paths == &[
+                Path::new("/deps/node_modules/pkg/b.svg").to_owned(),
+            ]))
+            .returns(vec![Ok("b".into())]),
+    ));
+    let tree = SideTree {
+        _base: None,
+        sources: Arc::new(sources),
+        dependencies: Arc::new(dependencies),
+        usage: Arc::new(Unimock::new(())),
+        aliases: Default::default(),
+        root: "/repo".into(),
+        dependency_roots: vec!["/deps/node_modules".into()],
+        repository_roots: vec![],
+    };
+    let results: Vec<_> = tree
+        .digest_unretained_batch(&[
+            "/repo/a.svg".into(),
+            "/repo/node_modules/pkg/b.svg".into(),
+            "/repo/c.svg".into(),
+        ])
+        .into_iter()
+        .map(Result::unwrap)
+        .collect();
+    assert_eq!(results, ["a", "b", "c"]);
 }

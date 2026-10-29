@@ -56,6 +56,7 @@ mod runtime_serialization_tests;
 #[path = "_tests_/source_forwarding_tests.rs"]
 mod source_forwarding_tests;
 
+mod source_asset_io;
 #[cfg(test)]
 #[path = "_tests_/source_precedence_tests.rs"]
 mod source_precedence_tests;

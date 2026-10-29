@@ -13,6 +13,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::error::Error;
 use crate::source_cache::SourceCache;
+use crate::source_digest::SourceDigest;
 use crate::sources::{Sources, TreeIndex};
 
 /// Git files share the working tree's private absolute namespace without reading it.
@@ -24,7 +25,7 @@ pub struct GitTree {
     pub(crate) failure: Mutex<Option<Arc<Error>>>,
     pub(crate) unavailable: Mutex<BTreeMap<RepoPath, String>>,
     children: Mutex<DirectoryIndex>,
-    pub(crate) digests: Mutex<BTreeMap<RepoPath, String>>,
+    pub(crate) digests: Mutex<BTreeMap<RepoPath, SourceDigest>>,
 }
 
 /// Metadata only grows within a commit; rebuild child lists once per index expansion.
@@ -81,24 +82,7 @@ impl GitTree {
 
 impl SourceTree for GitTree {
     fn project(&self, path: &Path) -> Result<Option<Node>> {
-        let relative = self.relative(path)?;
-        let kind = if let Some(relative) = relative {
-            if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
-                return Err(self.failed("project", path, source));
-            }
-            let index = self.index(path)?;
-            let Some(entry) = index.entries.get(&relative) else {
-                return Ok(None);
-            };
-            kind(entry.mode)
-        } else {
-            FileKind::Directory
-        };
-        Ok(Some(Node {
-            identity: path.to_path_buf(),
-            lexical_kind: kind,
-            kind,
-        }))
+        self.project_node(path)
     }
 
     fn children(&self, path: &Path) -> Result<Vec<Child>> {
@@ -202,7 +186,14 @@ impl SourceTree for GitTree {
     }
 
     fn digest_unretained(&self, path: &Path) -> Result<String> {
-        self.digest_file(path)
+        Ok(self.digest_record(path)?.hash)
+    }
+
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<Result<String>> {
+        self.digest_files(paths)
+            .into_iter()
+            .map(|result| result.map(|record| record.hash))
+            .collect()
     }
 
     fn digest(&self, path: &Path) -> Result<String> {
@@ -214,7 +205,7 @@ impl SourceTree for GitTree {
     }
 }
 
-fn kind(mode: Mode) -> FileKind {
+pub(crate) fn kind(mode: Mode) -> FileKind {
     match mode {
         Mode::File | Mode::Executable => FileKind::File,
         Mode::Directory => FileKind::Directory,
@@ -223,7 +214,7 @@ fn kind(mode: Mode) -> FileKind {
     }
 }
 
-fn failure(operation: &'static str, path: &Path, kind: io::ErrorKind) -> SourceError {
+pub(crate) fn failure(operation: &'static str, path: &Path, kind: io::ErrorKind) -> SourceError {
     SourceError::Io {
         operation,
         path: path.into(),

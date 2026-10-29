@@ -108,6 +108,16 @@ impl SourceTree for CapturedTree {
             .or_insert_with(|| Observation::from(&hash));
         hash
     }
+    fn digest_unretained_batch(&self, paths: &[PathBuf]) -> Vec<error::Result<String>> {
+        let hashes = self.snapshot.digest_unretained_batch(paths);
+        let mut reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
+        for (path, hash) in paths.iter().zip(&hashes) {
+            reads
+                .entry(path.clone())
+                .or_insert_with(|| Observation::from(hash));
+        }
+        hashes
+    }
     fn digest(&self, path: &Path) -> error::Result<String> {
         let hash = self.snapshot.digest(path);
         self.reads

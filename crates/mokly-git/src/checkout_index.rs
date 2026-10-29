@@ -13,18 +13,9 @@ impl GitRepository {
         commit: &ObjectId,
         entries: &[Entry],
     ) -> Result<BTreeMap<RepoPath, Entry>> {
-        let mut attributes = BTreeSet::new();
-        attributes.insert(RepoPath::parse(".gitattributes")?);
-        for entry in entries {
-            let mut parent = entry.path.as_str();
-            while let Some((directory, _)) = parent.rsplit_once('/') {
-                attributes.insert(RepoPath::parse(&format!("{directory}/.gitattributes"))?);
-                parent = directory;
-            }
-        }
         let attrs = self.lookup_metadata(
             commit,
-            &attributes.into_iter().collect::<Vec<_>>(),
+            &attribute_paths(entries.iter().map(|entry| &entry.path))?,
             Limits::default(),
         )?;
         let mut indexed: BTreeMap<_, _> = attrs
@@ -56,4 +47,19 @@ impl GitRepository {
                 .collect::<Vec<_>>(),
         )
     }
+}
+
+/// Attribute ancestors shared by exact lookups and conversion preflight.
+pub(crate) fn attribute_paths<'a>(
+    paths: impl Iterator<Item = &'a RepoPath>,
+) -> Result<Vec<RepoPath>> {
+    let mut attributes = BTreeSet::from([RepoPath::parse(".gitattributes")?]);
+    for path in paths {
+        let mut parent = path.as_str();
+        while let Some((directory, _)) = parent.rsplit_once('/') {
+            attributes.insert(RepoPath::parse(&format!("{directory}/.gitattributes"))?);
+            parent = directory;
+        }
+    }
+    Ok(attributes.into_iter().collect())
 }

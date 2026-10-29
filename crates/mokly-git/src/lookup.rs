@@ -1,10 +1,12 @@
 //! Exact tree metadata batches and streamed immutable blob hashes.
 
+use std::collections::BTreeSet;
 use std::ffi::OsString;
 
 use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
+use crate::checkout_index::attribute_paths;
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::GitRepository;
 use crate::tree::{self, Entry, Limits};
@@ -16,9 +18,36 @@ impl GitRepository {
         paths: &[RepoPath],
         limits: Limits,
     ) -> Result<Vec<Entry>> {
-        let entries = self.lookup_metadata(commit, paths, limits)?;
-        if self.ensure_checkout_objects(commit, &entries)? {
-            return self.lookup_metadata(commit, paths, limits);
+        if paths.is_empty() {
+            return Ok(Vec::new());
+        }
+        let requested: BTreeSet<_> = paths.iter().cloned().collect();
+        let attributes = attribute_paths(paths.iter())?;
+        let query_limits = Limits {
+            files: limits.files.saturating_add(attributes.len()),
+            nodes: limits.nodes.saturating_add(attributes.len()),
+            ..limits
+        };
+        let mut all: BTreeSet<_> = attributes.into_iter().collect();
+        all.extend(requested.iter().cloned());
+        let all: Vec<_> = all.into_iter().collect();
+        let mut entries = self.lookup_metadata(commit, &all, query_limits)?;
+        if self.ensure_objects(&entries)? {
+            entries = self.lookup_metadata(commit, &all, query_limits)?;
+        }
+        let entries: Vec<_> = entries
+            .into_iter()
+            .filter(|entry| requested.contains(&entry.path))
+            .collect();
+        if entries.len() > limits.nodes {
+            return Err(Error::NodeCount {
+                limit: limits.nodes,
+            });
+        }
+        if entries.iter().filter(|entry| entry.mode.regular()).count() > limits.files {
+            return Err(Error::FileCount {
+                limit: limits.files,
+            });
         }
         Ok(entries)
     }
