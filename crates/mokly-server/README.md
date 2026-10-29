@@ -30,8 +30,9 @@ through sidecar shutdown and final release. The CLI reporter receives the
 first accept resource failure and the recovery once per backoff period.
 
 `Projector` implements `dyn SnapshotFactory`. It projects the initial revision
-from graph plans without rendering a document. Every JSON response has
-canonical bytes. `Publications` supplies one complete snapshot per read and
+from graph plans without rendering a document. It computes each detail's
+content id before publishing the index that lists those ids. Every JSON response
+has canonical bytes. `Publications` supplies one complete snapshot per read and
 update, including its matching document backend. `FixedPublication` retains
 revision 1. `SharedPublication` installs later revisions in one step and emits
 each update in order. A superseded revision admits no queued live render.

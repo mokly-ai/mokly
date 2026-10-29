@@ -17,10 +17,11 @@ rewrite rules.
 | -------------------------------------------------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------------- |
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
-| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v8                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v3                                        |
+| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v9                                     |
+| `/mokly-viewer/deployment.json`                                                              | absent    | file                                    | the deployment file v1                                     |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v4                                        |
 | `/mokly-viewer/diffs/generations/<generation>/`                                              | live      | absent                                  | the generation root: 204 while Serve retains it            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v3 of a removed entry's historical record |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v4 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
 | `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
@@ -54,12 +55,13 @@ render. The in-frame inspector script is the [frame adapter's](./mokly-frame-ada
 
 ## Catalogue Index
 
-The index is the read model v8 of the
+The index is the read model v9 of the
 [catalogue contract](./mokly-catalogue.md), which owns its fields and the tree
 rules: `schemaVersion: 8`, `identity`, `deploymentId`, one integer `revision`,
 the `base` ref when Changes is configured, `baseCommit` while Changes is
 ready, `changesStatus`, `comparisonUrl`, `tree`, every current entry record,
-and `removedEntries`. Each view of a screen
+and `removedEntries`. Each current and removed record carries the `detailId`
+of its detail. Each view of a screen
 or component carries `viewport`, `colorScheme`, `comparison`, and `documentKey`;
 a page record carries one `documentKey`, a document record one per colour
 scheme. `documentKey` is the document node's key in the
@@ -77,15 +79,17 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
+The [generated entry detail v4 type](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).
 Other kinds omit it. Current and removed entries follow the same ordering rule.
 
-A current entry's detail carries `deploymentId` and `revision` and no
-`generation`; a removed entry's detail carries `generation` and `snapshotId`
-and neither of the other two, so a generation's files never change.
+A current entry's detail carries `detailId` and `revision` and no
+`deploymentId` or `generation`; a removed entry's detail carries `detailId`
+and `snapshotId` and no `revision`, `deploymentId`, or `generation`, so a
+generation's files never change. The detail id is the content id from the
+[catalogue serialization contract](./mokly-catalogue-serialization.md#detail-identity).
 `RuleEvidence` and `ResourceEvidence` are the per-view records of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4),
 present only while Changes is `ready` under
@@ -148,38 +152,9 @@ retries on the next publication message. Static builds have no descriptor.
 
 ## Fetch And Fences
 
-At start the shell fetches the index, then the routed entry's detail. A current
-component variant also needs its parent's detail. A use case also needs the
-detail of each step screen whose views its frames show. The navigation renders
-when the index arrives. The stage, Props, and Usage wait for all route details.
-On navigation inside the shell it commits the route from the index at once and
-fetches the destination's details. Every current detail, including the parent's,
-must have `identity`, `deploymentId`, and `revision` equal to the installed index.
-On a revision mismatch the shell refetches the index once. If the details still
-disagree, the entry shows its unavailable state with retry. A route shows that
-state only after each of its details has arrived, failed, or been replaced.
-Until then its stage keeps loading. An embedded host still receives the
-`onError` of each failure at once. A failed parent detail makes the variant
-page unavailable with `Try again`. Separate delivery for Usage was rejected
-because it adds delivery state without reducing the first load's data. A
-different `deploymentId` means another deployment replaced the files: the
-standalone shell performs a full page load of the requested URL, and an
-embedded React host receives one `onError` and keeps its state. From then on
-the shell loads no index or detail, closes the event stream, and reports no
-later failure. A route that still
-waits for a detail has the replaced delivery status: in both hosts its stage
-keeps the loading state, never the unavailable state, until the new data
-arrives with the full page load or the `index` that the host supplies. A route
-whose details all arrived keeps them. It accepts a removed entry's
-detail only when `identity` equals the index, `generation`
-equals the generation that the index's `comparisonUrl` names, and
-`snapshotId` equals the index's removed record for that path.
-
-Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
-URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
-and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
-Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
-The shell keeps the index and details for the page's lifetime.
+The [shell fetch and fence rules](./mokly-shell-fences.md) give how the shell
+fetches the index, the details, and the deployment file, when it accepts a
+detail, and how it answers each failed or mismatched response.
 
 ## Updates In Serve
 
@@ -189,7 +164,10 @@ on-demand renders. Serve may combine completions into one publication.
 An index or detail GET starts no render or Git command. A failed candidate
 leaves the last published state in place.
 Each publication replaces the index and the details in one step and raises
-`revision` by one. The event stream writes one message per publication whose
+`revision` by one. The index of each publication lists the `detailId` of each
+of its details. A detail whose content does not change keeps its `detailId`
+and its bytes, apart from `revision`. The event stream writes one message per
+publication whose
 `id` is the new revision and whose `data` is the server's `deploymentId`, and
 one message with the current values on every new connection.
 
@@ -214,10 +192,13 @@ arrived, failed, or been replaced.
 
 ## Identity
 
-`build` computes `deploymentId` as the hash of every installed output file under the
-[static export browser contract](./mokly-export-browser.md), with index and
-detail `deploymentId` fields set to 64 zeros. Generation files carry no deployment id,
-so one comparison gives the same bytes in every build. Serve keeps one id per process.
+`build` computes `deploymentId` as the hash of every identity-participating output file under the
+[static export browser contract](./mokly-export-browser.md). It sets only the
+index's `deploymentId` to 64 zeros for this hash; current detail ids are
+content ids and the deployment file is excluded. Generation files carry no
+deployment id, so one comparison gives the same bytes in every build. Serve
+keeps one id per process. `build` writes the canonical
+`mokly-viewer/deployment.json` object with `schemaVersion: 1` and that id.
 A new id means another build or process.
 `revision` orders the states of one Serve process from `1`; a build writes `0`.
 
@@ -227,14 +208,3 @@ A new id means another build or process.
 entry path and optional snapshot id to an object, URL, or promise of either. Hosts use their own
 React. `@mokly/viewer/browser` mounts the standalone shell in the stub's mount element.
 The [embeddable viewer contract](./mokly-viewer.md) owns the props.
-
-## Fail-Closed Rules
-
-| Condition                                                                                                                                                                                                                                                             | Shell behaviour                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                               | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
-| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                   | a full page load in the standalone shell; one `onError` and a loading stage in an embedded host                         |
-| a detail or a publication refresh that fails after another `deploymentId` answered                                                                                                                                                                                    | the replaced status: the stage keeps its loading state, and the failure is not reported                                 |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                           | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
-| a current route detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry after every route detail arrived, failed, or was replaced                      |
-| a current component variant's parent detail that fails or is rejected under those rules                                                                                                                                                                               | the same unavailable state for the variant page, with `Try again`, after both details settle                            |

@@ -33,6 +33,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
         {
           kind: "use-case",
           path: "tour",
+          detailId: catalogue.screens[0]!.detailId,
 
           title: "Tour",
           tags: [],
@@ -62,6 +63,12 @@ async function highlight(
   cross: boolean,
   index: number,
 ) {
+  const frames = page.locator("iframe[data-mokly-frame-state]");
+  for (let i = 0; i < (await frames.count()); i++)
+    await expect(frames.nth(i)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
   await page.evaluate(
     (instance) =>
       window.viewerHarness.get("one").ref.current.highlightInstance(instance),

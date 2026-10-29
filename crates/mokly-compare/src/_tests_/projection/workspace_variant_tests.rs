@@ -49,7 +49,7 @@ fn a_removed_component_variant_keeps_its_parent_affected_list() {
     with_lookup(&mut result);
     let mut details = details(&result.before.catalogue().model);
     projection_removed::workspaces(&mut details);
-    details.get_mut("button/default").unwrap().generation = Some("f".repeat(64));
+    details.get_mut("button/default").unwrap().detail_id = "f".repeat(64);
     projection_workspace::apply(&mut details, &result).unwrap();
     let parent_affected = details["button"]
         .workspace

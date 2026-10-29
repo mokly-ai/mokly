@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { CatalogueNode } from "../src/catalogue/types.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
-import { catalogueFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import {
   publishedCatalogue,
   publishedDocument,

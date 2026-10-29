@@ -68,6 +68,43 @@ test("a live selection follows the redirect to its generation root", async () =>
   ]);
 });
 
+test("a static comparison checks deployment once before opening", async () => {
+  let checks = 0;
+  const environment: ComparisonEnvironment = {
+    baseUrl: origin,
+    delivery: () => ({ kind: "pinned", comparisonUrl: advertised }),
+    deploymentCheck: async () => {
+      checks += 1;
+      return true;
+    },
+    fetch: async () => {
+      throw new Error("Pinned comparisons do not fetch the root");
+    },
+  };
+  await requestComparison(environment, { id: "home" }, false, signal);
+  assert.equal(checks, 1);
+});
+
+test("a changed deployment stops a comparison before it fetches", async () => {
+  let checks = 0;
+  const environment: ComparisonEnvironment = {
+    baseUrl: origin,
+    delivery: () => ({ kind: "pinned", comparisonUrl: advertised }),
+    deploymentCheck: async () => {
+      checks += 1;
+      return false;
+    },
+    fetch: async () => {
+      throw new Error("Unexpected comparison request");
+    },
+  };
+  await assert.rejects(
+    requestComparison(environment, { id: "home" }, false, signal),
+    /another deployment answered/,
+  );
+  assert.equal(checks, 1);
+});
+
 test("a live selection that does not reach a generation root fails", async () => {
   for (const url of [
     `${origin}/mokly-viewer/diffs/selection?path=home`,

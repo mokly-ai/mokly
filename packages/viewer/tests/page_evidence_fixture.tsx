@@ -10,7 +10,7 @@ import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import type {
   CataloguePage,
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
   ViewEvidence,
 } from "../src/catalogue/types.js";
 import type { EntryChangeReason } from "../src/review/types.js";
@@ -22,7 +22,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 export const BASE = "origin/main";
 
@@ -104,7 +104,7 @@ export function publishedIndex(
 export function publishedDetails(
   evidence?: ViewEvidence,
   reasons?: EntryChangeReason[],
-): (readonly [DetailRequest, EntryDetailV3])[] {
+): (readonly [DetailRequest, EntryDetailV4])[] {
   const fixtures = rawDetailFixtures();
   const guide = fixtures.current["guide"];
   assert.ok(guide);

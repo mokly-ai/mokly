@@ -14,7 +14,7 @@ import {
   heldDetails,
   rawDetailFixtures,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 
 const { catalogue, model, source, sourceVariant } = componentWorkspaceFixture();

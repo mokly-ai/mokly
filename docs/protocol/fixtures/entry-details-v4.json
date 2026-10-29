@@ -9,7 +9,8 @@
         "suppliedSlots": [],
         "title": "Action"
       },
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "controlOrder": ["label"],
+      "detailId": "7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260",
       "entry": {
         "kind": "component",
         "path": "components/action"
@@ -19,7 +20,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -74,8 +75,7 @@
         "inputChanges": [],
         "relatedComponents": [],
         "usedBy": []
-      },
-      "controlOrder": ["label"]
+      }
     },
     "components/action/default": {
       "before": {
@@ -86,7 +86,8 @@
         "suppliedSlots": [],
         "title": "Default"
       },
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "controlOrder": ["label"],
+      "detailId": "43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f",
       "entry": {
         "kind": "component",
         "path": "components/action/default"
@@ -96,7 +97,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -167,11 +168,10 @@
         "comparisonEligible": false,
         "inputChanges": [],
         "relatedComponents": []
-      },
-      "controlOrder": ["label"]
+      }
     },
     "guide": {
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "detailId": "00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813",
       "entry": {
         "kind": "page",
         "path": "guide"
@@ -194,11 +194,11 @@
         ]
       },
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": []
     },
     "product": {
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "detailId": "390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e",
       "entry": {
         "kind": "document",
         "path": "product"
@@ -213,7 +213,7 @@
         }
       ],
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": []
     },
     "product/browse/details": {
@@ -222,7 +222,8 @@
         "props": {},
         "title": "Details"
       },
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "controlOrder": [],
+      "detailId": "848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80",
       "entry": {
         "kind": "screen",
         "path": "product/browse/details"
@@ -233,7 +234,7 @@
       },
       "reasons": [],
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -283,8 +284,7 @@
         "inputChanges": [],
         "relatedComponents": [],
         "usedBy": []
-      },
-      "controlOrder": []
+      }
     },
     "product/browse/home": {
       "before": {
@@ -292,7 +292,8 @@
         "props": {},
         "title": "Home"
       },
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "controlOrder": [],
+      "detailId": "025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89",
       "entry": {
         "kind": "screen",
         "path": "product/browse/home"
@@ -307,7 +308,7 @@
         }
       ],
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -348,8 +349,7 @@
         "inputChanges": [],
         "relatedComponents": [],
         "usedBy": []
-      },
-      "controlOrder": []
+      }
     },
     "product/browse/home/empty": {
       "before": {
@@ -357,7 +357,8 @@
         "props": {},
         "title": "Empty"
       },
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "controlOrder": [],
+      "detailId": "62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16",
       "entry": {
         "kind": "screen",
         "path": "product/browse/home/empty"
@@ -367,7 +368,7 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -408,11 +409,10 @@
         "inputChanges": [],
         "relatedComponents": [],
         "usedBy": []
-      },
-      "controlOrder": []
+      }
     },
     "tour": {
-      "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+      "detailId": "bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e",
       "entry": {
         "kind": "use-case",
         "path": "tour"
@@ -422,18 +422,19 @@
         "title": "Mokly"
       },
       "revision": 0,
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": []
     }
   },
   "removed": {
     "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e": {
+      "controlOrder": [],
+      "detailId": "b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b",
       "entry": {
         "kind": "screen",
         "path": "product/browse/home/retired",
         "snapshotId": "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e"
       },
-      "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "identity": {
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
@@ -443,7 +444,7 @@
           "kind": "removed"
         }
       ],
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": [
         {
           "colorScheme": "light",
@@ -484,16 +485,15 @@
         "inputChanges": [],
         "relatedComponents": [],
         "usedBy": []
-      },
-      "controlOrder": []
+      }
     },
     "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c": {
+      "detailId": "4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1",
       "entry": {
         "kind": "page",
         "path": "product/removed-page",
         "snapshotId": "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c"
       },
-      "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "identity": {
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
@@ -507,7 +507,7 @@
         "resources": [],
         "rules": []
       },
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "views": []
     }
   }

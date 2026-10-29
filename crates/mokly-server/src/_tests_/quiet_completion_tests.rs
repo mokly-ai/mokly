@@ -2,6 +2,10 @@
 
 use std::sync::Arc;
 
+use axum::body::to_bytes;
+use mokly_model::canonical;
+use mokly_model::namespace::viewer;
+use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
 use tokio::sync::broadcast::error::TryRecvError;
@@ -93,6 +97,81 @@ fn changed_usage_publishes_once_and_expires_the_previous_lease() {
         events.updates.try_recv(),
         Err(TryRecvError::Empty)
     ));
+}
+
+#[tokio::test]
+async fn usage_completion_reuses_unchanged_detail_bytes_and_ids() {
+    let documents = Unimock::new(
+        DocumentsMock::usage
+            .next_call(matching!("screen-0/index.mobile.html"))
+            .answers(&|_, _| Some(ready())),
+    );
+    let origin = snapshot(2, Arc::new(documents));
+    let shared = SharedPublication::new(origin.clone());
+    shared
+        .completed(&origin, "screen-0/index.mobile.html")
+        .unwrap();
+    let next = shared.current();
+    let changed = &next.details["screen-0"];
+    assert_eq!(
+        changed.detail_id,
+        canonical::detail_id(changed.as_ref()).unwrap()
+    );
+    assert_eq!(
+        next.index
+            .screens
+            .iter()
+            .find(|entry| entry.entry.path == "screen-0")
+            .unwrap()
+            .entry
+            .detail_id,
+        changed.detail_id
+    );
+    let served_index = to_bytes(
+        next.files[&viewer("index.json")]
+            .response(next.index.revision)
+            .into_body(),
+        usize::MAX,
+    )
+    .await
+    .unwrap();
+    let served_index = readers::index(std::str::from_utf8(&served_index).unwrap()).unwrap();
+    assert_eq!(
+        served_index
+            .screens
+            .iter()
+            .find(|entry| entry.entry.path == "screen-0")
+            .unwrap()
+            .entry
+            .detail_id,
+        changed.detail_id
+    );
+    assert_ne!(changed.detail_id, origin.details["screen-0"].detail_id);
+    assert_eq!(
+        next.details["screen-1"].detail_id,
+        origin.details["screen-1"].detail_id
+    );
+    assert!(Arc::ptr_eq(
+        &next.details["screen-1"],
+        &origin.details["screen-1"]
+    ));
+    let old_bytes = to_bytes(
+        origin.files[&viewer("entries/screen-1.json")]
+            .response(origin.index.revision)
+            .into_body(),
+        usize::MAX,
+    )
+    .await
+    .unwrap();
+    let next_bytes = to_bytes(
+        next.files[&viewer("entries/screen-1.json")]
+            .response(origin.index.revision)
+            .into_body(),
+        usize::MAX,
+    )
+    .await
+    .unwrap();
+    assert_eq!(old_bytes, next_bytes);
 }
 
 #[test]

@@ -6,7 +6,7 @@ import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { routeDetailRequests } from "../src/shell/data_requests.js";
 import { routeFromUrl } from "../src/shell/routes.js";
@@ -18,7 +18,7 @@ import {
   detailFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -115,7 +115,7 @@ test("the embedded viewer requests a variant parent and shows its usage", async 
     new URL("/view/components/action/default/", "https://catalogue.example"),
   );
   const requests = routeDetailRequests(index, route);
-  const details: (readonly [DetailRequest, EntryDetailV3])[] = [];
+  const details: (readonly [DetailRequest, EntryDetailV4])[] = [];
   for (const request of requests)
     details.push([
       request,

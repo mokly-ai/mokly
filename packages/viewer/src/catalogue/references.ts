@@ -1,4 +1,4 @@
-/** Relationship rules of the catalogue index v8, checked after every field. */
+/** Relationship rules of the catalogue index v9, checked after every field. */
 
 import { canonicalJson, invalidData } from "../components/data.js";
 import { firstPathCaseCollision } from "../navigation/logical.js";

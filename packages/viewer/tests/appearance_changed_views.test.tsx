@@ -5,7 +5,7 @@ import {
   detailPairs,
   indexFixture,
   rawDetailFixtures,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import { withDarkViews } from "./presentation_v7_helpers.js";
 import { standaloneMarkup } from "./shell_markup.js";
 

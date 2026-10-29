@@ -113,6 +113,7 @@ What the shell reads: the catalogue index and entry detail, their routes, identi
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
 - [Public Catalogue Read Model](./mokly-catalogue.md)
 - [Shell Delivery And Read Model Routes](./mokly-shell-delivery.md)
+- [Shell Fetch And Fences](./mokly-shell-fences.md)
 - [Variant Navigation And Changes](./mokly-variant-navigation.md)
 
 ## Serve, Watch, And The CLI
@@ -157,6 +158,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence In The Shell](./mokly-css-evidence-shell.md)
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
+- [Embeddable Viewer API](./mokly-viewer-api.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Inspector Handshake And Wire Protocol](./mokly-inspector-wire.md)
 - [Logical Link Composition](./mokly-logical-links.md)

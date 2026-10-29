@@ -5,9 +5,10 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use thiserror::Error;
 
+use crate::deployment::DeploymentFileV1;
 use crate::detail_validation;
 use crate::namespace;
-use crate::public_detail::{EntryDetailV3, LiveDescriptorV3};
+use crate::public_detail::{EntryDetailV4, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::read_contract::ContractViolation;
 use crate::review::ReviewResultV8;
@@ -55,14 +56,26 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
     Ok(index)
 }
 
+/// Decode the static deployment file after its version gate.
+pub fn deployment(text: &str) -> Result<DeploymentFileV1, ReadError> {
+    let deployment: DeploymentFileV1 = decode(text, "deployment file", versions::DEPLOYMENT_FILE)?;
+    if !public_validation::hash(&deployment.deployment_id) {
+        return Err(ReadError::Contract {
+            boundary: "deployment file",
+            message: ContractViolation::Identity,
+        });
+    }
+    Ok(deployment)
+}
+
 /// Decode an entry detail after its version gate.
-pub fn detail(text: &str) -> Result<EntryDetailV3, ReadError> {
-    let detail: EntryDetailV3 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
+pub fn detail(text: &str) -> Result<EntryDetailV4, ReadError> {
+    let detail: EntryDetailV4 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
     detail_validation::validate(&detail)?;
     Ok(detail)
 }
 
-/// Decode a live descriptor after its v3 gate.
+/// Decode a live descriptor after its version gate.
 pub fn live(text: &str) -> Result<LiveDescriptorV3, ReadError> {
     let live: LiveDescriptorV3 = decode(text, "live descriptor", versions::LIVE_DESCRIPTOR)?;
     if live.render.url != format!("/{}", namespace::viewer("components/render"))

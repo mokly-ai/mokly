@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
@@ -22,7 +22,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const SCREEN = "product/browse/home/empty";
 const SHARED = "Changed components that this screen uses affect its preview.";
@@ -32,7 +32,7 @@ const ACTION = { path: "components/action", title: "Action" } as const;
 /** The routed screen's Details after one edit of its index record and detail. */
 function details(edit: {
   changes?: CatalogueReadModel["screens"][number]["changes"];
-  detail?: (detail: EntryDetailV3) => void;
+  detail?: (detail: EntryDetailV4) => void;
 }): string {
   const index = rawIndexFixture();
   const record = index.screens.find(({ path }) => path === SCREEN)!;
@@ -63,12 +63,12 @@ function details(edit: {
 }
 
 /** The detail of a screen that uses changed Action. */
-function usesAction(detail: EntryDetailV3) {
+function usesAction(detail: EntryDetailV4) {
   detail.workspace!.relatedComponents = [ACTION];
 }
 
 /** A view rule that changed Action owns, which the screen keeps. */
-function keepsActionRule(detail: EntryDetailV3) {
+function keepsActionRule(detail: EntryDetailV4) {
   detail.views[0]!.resourceEvidence = {
     rules: [
       {

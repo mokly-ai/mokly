@@ -12,15 +12,15 @@ import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 /** The detail fixtures: current entries by path, removed ones by snapshot id. */
 export interface DetailFixtures {
-  current: Record<string, EntryDetailV3>;
-  removed: Record<string, EntryDetailV3>;
+  current: Record<string, EntryDetailV4>;
+  removed: Record<string, EntryDetailV4>;
 }
 
 function fixtureJson(name: string): unknown {
@@ -35,7 +35,7 @@ function fixtureJson(name: string): unknown {
 /** A fresh, mutable copy of the index fixture before validation. */
 export function rawIndexFixture(): CatalogueReadModel {
   return structuredClone(
-    fixtureJson("catalogue-v8.json"),
+    fixtureJson("catalogue-v9.json"),
   ) as CatalogueReadModel;
 }
 
@@ -51,12 +51,12 @@ export function indexFixture(
 /** A fresh, mutable copy of every detail fixture. */
 export function rawDetailFixtures(): DetailFixtures {
   return structuredClone(
-    fixtureJson("entry-details-v3.json"),
+    fixtureJson("entry-details-v4.json"),
   ) as DetailFixtures;
 }
 
 /** One validated detail fixture: a current path, or a removed snapshot id. */
-export function detailFixture(request: DetailRequest): EntryDetailV3 {
+export function detailFixture(request: DetailRequest): EntryDetailV4 {
   const fixtures = rawDetailFixtures();
   const detail =
     request.snapshotId === undefined
@@ -74,8 +74,8 @@ export function detailFixture(request: DetailRequest): EntryDetailV3 {
 export function detailPairs(
   paths?: readonly string[],
   fixtures: DetailFixtures = rawDetailFixtures(),
-): (readonly [DetailRequest, EntryDetailV3])[] {
-  const pairs: (readonly [DetailRequest, EntryDetailV3])[] = [];
+): (readonly [DetailRequest, EntryDetailV4])[] {
+  const pairs: (readonly [DetailRequest, EntryDetailV4])[] = [];
   for (const [path, detail] of Object.entries(fixtures.current))
     if (!paths || paths.includes(path))
       pairs.push([{ path }, readEntryDetail(detail)]);
@@ -91,7 +91,7 @@ export function detailPairs(
 /** Validated detail fixtures keyed as the shell holds them. */
 export function heldDetails(
   paths?: readonly string[],
-): ReadonlyMap<string, EntryDetailV3> {
+): ReadonlyMap<string, EntryDetailV4> {
   return new Map(
     detailPairs(paths).map(([request, detail]) => [detailKey(request), detail]),
   );
@@ -100,7 +100,7 @@ export function heldDetails(
 /** The working shell model of an index and its held details. */
 export function shellModelFixture(
   index: CatalogueReadModel = indexFixture(),
-  details: ReadonlyMap<string, EntryDetailV3> = heldDetails(),
+  details: ReadonlyMap<string, EntryDetailV4> = heldDetails(),
 ): ShellCatalogueReadModel {
   return shellCatalogueModel(index, details);
 }
@@ -108,7 +108,7 @@ export function shellModelFixture(
 /** The shell's display catalogue of an index and its held details. */
 export function catalogueFixture(
   index: CatalogueReadModel = indexFixture(),
-  details: ReadonlyMap<string, EntryDetailV3> = heldDetails(),
+  details: ReadonlyMap<string, EntryDetailV4> = heldDetails(),
 ): Catalogue {
   return viewerCatalogue(shellModelFixture(index, details));
 }

@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -244,6 +245,22 @@ impl Harness {
     pub async fn close(self) {
         self.close_result().await.unwrap();
     }
+
+    pub async fn wait_revision(&self, revision: u64) -> Arc<Snapshot> {
+        tokio::time::timeout(Duration::from_secs(15), async {
+            let mut updates = self.publications.subscribe().updates;
+            loop {
+                let current = self.publications.current();
+                if current.index.revision >= revision {
+                    return current;
+                }
+                updates.recv().await.unwrap();
+            }
+        })
+        .await
+        .unwrap()
+    }
+
     pub async fn close_result(self) -> mokly_server::error::Result<()> {
         self.stop.send_replace(true);
         self.handle.await.unwrap()

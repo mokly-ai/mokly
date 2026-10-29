@@ -22,6 +22,7 @@
           "label": "Label"
         }
       },
+      "detailId": "7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260",
       "details": {
         "description": "The primary action.",
         "relatedDocs": [],
@@ -86,6 +87,7 @@
           "label": "Label"
         }
       },
+      "detailId": "43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f",
       "details": {
         "description": "The primary action.",
         "relatedDocs": [],
@@ -145,6 +147,7 @@
         "status": "ready"
       },
       "colorSchemes": ["light"],
+      "detailId": "390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -173,6 +176,7 @@
         "kind": "unmodified",
         "status": "ready"
       },
+      "detailId": "00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813",
       "details": {
         "description": "The printable guide.",
         "relatedDocs": [],
@@ -193,6 +197,7 @@
           "kind": "removed",
           "status": "ready"
         },
+        "detailId": "4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1",
         "details": {
           "description": "A page that no longer exists.",
           "relatedDocs": [],
@@ -219,6 +224,7 @@
         },
         "colorSchemes": ["light"],
         "controls": {},
+        "detailId": "b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b",
         "details": {
           "description": "A screen that no longer exists.",
           "relatedDocs": [],
@@ -267,7 +273,7 @@
     }
   ],
   "revision": 0,
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "screens": [
     {
       "changes": {
@@ -277,6 +283,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80",
       "details": {
         "description": "Details for one item.",
         "relatedDocs": [],
@@ -324,6 +331,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89",
       "details": {
         "description": "The landing screen.",
         "relatedDocs": [],
@@ -370,6 +378,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16",
       "details": {
         "description": "The landing screen with no items.",
         "relatedDocs": [],
@@ -477,6 +486,7 @@
         "kind": "unmodified",
         "status": "ready"
       },
+      "detailId": "bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e",
       "details": {
         "description": "A walk through the product.",
         "relatedDocs": [],

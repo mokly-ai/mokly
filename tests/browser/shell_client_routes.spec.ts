@@ -218,7 +218,7 @@ test("a detail of another deployment loads the requested URL again", async ({
   const loads = loadsOf(page);
   const replaced = rewritten((body) => ({
     ...body,
-    deploymentId: "f".repeat(64),
+    detailId: "f".repeat(64),
   }));
   let reads = 0;
   await page.route(`**/mokly-viewer/entries/${DETAILS}.json`, (held) =>

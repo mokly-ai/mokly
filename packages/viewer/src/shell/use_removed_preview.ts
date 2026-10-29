@@ -14,6 +14,7 @@ import {
   requestPreview,
   type LoadedPreview,
 } from "../previews/request.js";
+import { DeploymentChangedError } from "../viewer/sources.js";
 
 import {
   snapshotPresentationEnvironment,
@@ -189,8 +190,12 @@ export function useRemovedPreview({
         },
       });
     };
-    void load().catch(() => {
+    void load().catch((error: unknown) => {
       if (!owns()) return;
+      if (error instanceof DeploymentChangedError) {
+        setOwned({ key, selection, value: { status: "loading" } });
+        return;
+      }
       loaded.current = undefined;
       retryRequested.current = false;
       setOwned({ key, selection, value: { status: "failed" } });

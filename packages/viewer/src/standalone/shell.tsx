@@ -16,6 +16,7 @@ import { useShellStore, type ShellStore } from "../shell/store_context.js";
 import type { ShellInitialState } from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain } from "../shell/views.js";
+import { deploymentCheck } from "../viewer/sources.js";
 
 import { useStandaloneAppearance } from "./appearance_bridge.js";
 import {
@@ -118,7 +119,9 @@ function ReadyShell({
   preferences: ShellInitialState;
   win: ShellWindow;
 }) {
-  const [source] = useState(() => standaloneDataSource(win));
+  const [source] = useState(() =>
+    standaloneDataSource(win, index.live === undefined),
+  );
   const comparison = useMemo<ComparisonEnvironment>(
     () => ({
       baseUrl: win.location.origin,
@@ -127,6 +130,16 @@ function ReadyShell({
           ? { kind: "live" }
           : { kind: "pinned", comparisonUrl: index.comparisonUrl },
       fetch: (input, init) => win.fetch(input, init),
+      ...(index.live === undefined
+        ? {
+            deploymentCheck: deploymentCheck(
+              new URL("/", win.location.href),
+              index.deploymentId,
+              win.fetch,
+              () => win.location.reload(),
+            ),
+          }
+        : {}),
       scrollTogether: storedScrollTogether(() => win.localStorage),
     }),
     [index, win],
