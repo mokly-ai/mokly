@@ -1,11 +1,11 @@
 //! Independent protocol version numbers; package versions are separate.
 
 /// Public catalogue index version.
-pub const CATALOGUE_INDEX: u32 = 8;
+pub const CATALOGUE_INDEX: u32 = 9;
 /// Static deployment file version.
 pub const DEPLOYMENT_FILE: u32 = 1;
 /// Per-entry detail version.
-pub const ENTRY_DETAIL: u32 = 3;
+pub const ENTRY_DETAIL: u32 = 4;
 /// In-memory material and resource review version; never written.
 pub const REVIEW_RESULT: u32 = 8;
 /// Catalogue change snapshot version.

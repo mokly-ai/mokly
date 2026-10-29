@@ -99,8 +99,8 @@ description?: string,
  */
 $schema?: string, };
 
-export type CatalogueIndexVersion = 8;
+export type CatalogueIndexVersion = 9;
 export type DeploymentFileVersion = 1;
-export type EntryDetailVersion = 3;
+export type EntryDetailVersion = 4;
 export type ChangeSnapshotVersion = 4;
 export type LiveDescriptorVersion = 3;

@@ -1,4 +1,4 @@
-//! Catalogue index v8, its navigation tree, and historical records.
+//! Catalogue index v9, its navigation tree, and historical records.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -116,12 +116,12 @@ pub struct RemovedEntry {
     pub preview: Option<RemovedPreview>,
 }
 
-/// Complete public catalogue index v8.
+/// Complete public catalogue index v9.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogueReadModel {
-    /// Must equal 8; readers gate it before decoding.
-    #[ts(type = "8")]
+    /// Must equal 9; readers gate it before decoding.
+    #[ts(type = "9")]
     pub schema_version: u32,
     /// Origin-scoped catalogue identity.
     pub identity: CatalogueIdentity,

@@ -1,6 +1,6 @@
 /** Serializable, source-derived state shared by every delivery's inspector. */
 
-import type { EntryDetailV3, InputChange } from "../catalogue/types.js";
+import type { EntryDetailV4, InputChange } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import type {
@@ -22,7 +22,7 @@ export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
-  controlOrder?: EntryDetailV3["controlOrder"];
+  controlOrder?: EntryDetailV4["controlOrder"];
   /** False when the detail that carries this entry's Usage lists is absent. */
   usageComplete?: boolean;
   /** Selected views are waiting for the routed entry's detail. */

@@ -7,7 +7,7 @@ import { renderToString } from "react-dom/server";
 import { MoklyViewer } from "../src/viewer/component.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-import { detailFixture, rawIndexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, rawIndexFixture } from "./catalogue_v9_fixture.js";
 
 /**
  * The protocol catalogue with Details neither moved nor changed, so Browse

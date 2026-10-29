@@ -15,7 +15,7 @@ expression: "canonical::to_string(&decoded).unwrap()"
   "pages": [],
   "removedEntries": [],
   "revision": 0,
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "screens": [
     {
       "changes": {

@@ -11,7 +11,7 @@ use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::error::{InternalError, Result};
 use crate::material::digest;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV3};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::*;
@@ -161,7 +161,7 @@ pub fn pending_details(
     model: &CatalogueModel,
     index: &CatalogueReadModel,
     keys: &[ViewKey],
-) -> BTreeMap<String, EntryDetailV3> {
+) -> BTreeMap<String, EntryDetailV4> {
     let by_path = key_index(keys);
     model
         .entries
@@ -185,7 +185,7 @@ pub fn pending_details(
             views.sort_by_key(|view| (view.viewport, view.color_scheme));
             (
                 entry.metadata.path.clone(),
-                EntryDetailV3 {
+                EntryDetailV4 {
                     schema_version: versions::ENTRY_DETAIL,
                     identity: index.identity.clone(),
                     detail_id: String::new(),
@@ -214,7 +214,7 @@ pub fn pending_details(
 }
 
 /// Copy each current detail's content id into its shared index record.
-pub fn set_detail_ids(index: &mut CatalogueReadModel, details: &BTreeMap<String, EntryDetailV3>) {
+pub fn set_detail_ids(index: &mut CatalogueReadModel, details: &BTreeMap<String, EntryDetailV4>) {
     for entry in index
         .screens
         .iter_mut()

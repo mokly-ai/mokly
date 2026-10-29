@@ -8,7 +8,7 @@ use mokly_model::catalogue::{CatalogueModel, EntryContent, ModelEntry};
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::validation::digest;
 use mokly_model::projection::{self, Publication};
-use mokly_model::public_detail::{DetailEntry, EntryDetailV3};
+use mokly_model::public_detail::{DetailEntry, EntryDetailV4};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
@@ -75,9 +75,9 @@ fn page_index(paths: &[&str]) -> CatalogueReadModel {
     .unwrap()
 }
 
-fn page_detail(index: &CatalogueReadModel, path: &str) -> EntryDetailV3 {
-    EntryDetailV3 {
-        schema_version: 3,
+fn page_detail(index: &CatalogueReadModel, path: &str) -> EntryDetailV4 {
+    EntryDetailV4 {
+        schema_version: 4,
         identity: index.identity.clone(),
         detail_id: String::new(),
         revision: Some(0),

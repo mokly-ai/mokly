@@ -57,19 +57,22 @@ fn type_generation_and_versions_are_stable() {
             versions::CHANGE_SNAPSHOT,
             versions::LIVE_DESCRIPTOR
         ],
-        [8, 1, 3, 8, 4, 3]
+        [9, 1, 4, 8, 4, 3]
     );
 }
 
 #[test]
 fn detail_id_ignores_its_own_id_and_current_revision() {
     let base = serde_json::json!({
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "detailId": "0".repeat(64),
         "revision": 0,
         "entry": {"path": "home"},
     });
     let first = super::detail_id(&base).unwrap();
+    let mut old_version = base.clone();
+    old_version["schemaVersion"] = serde_json::json!(3);
+    assert_ne!(first, super::detail_id(&old_version).unwrap());
     let mut changed_id = base.clone();
     changed_id["detailId"] = serde_json::json!("f".repeat(64));
     changed_id["revision"] = serde_json::json!(7);

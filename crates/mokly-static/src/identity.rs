@@ -7,7 +7,7 @@ use mokly_model::namespace::viewer;
 use mokly_model::output::artifact::File;
 use mokly_model::output::validation::digest;
 use mokly_model::projection;
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
 use serde::Serialize;
 
@@ -20,7 +20,7 @@ pub(crate) fn json<T: Serialize>(value: &T) -> Result<Vec<u8>> {
     }
 }
 
-pub(crate) fn detail_id(detail: &EntryDetailV3) -> Result<String> {
+pub(crate) fn detail_id(detail: &EntryDetailV4) -> Result<String> {
     match canonical::detail_id(detail) {
         Ok(id) => Ok(id),
         Err(source) => Err(InternalError::Model { source }.into()),
@@ -30,7 +30,7 @@ pub(crate) fn detail_id(detail: &EntryDetailV3) -> Result<String> {
 /// Stamp one deterministic identity before ownership or publication metadata is added.
 pub fn finalize(
     index: &mut CatalogueReadModel,
-    details: &mut BTreeMap<String, EntryDetailV3>,
+    details: &mut BTreeMap<String, EntryDetailV4>,
     other: &[File],
 ) -> Result<Vec<File>> {
     for detail in details.values_mut() {
@@ -51,7 +51,7 @@ pub fn finalize(
 
 fn records(
     index: &CatalogueReadModel,
-    details: &BTreeMap<String, EntryDetailV3>,
+    details: &BTreeMap<String, EntryDetailV4>,
 ) -> Result<Vec<File>> {
     let mut result = vec![File {
         path: viewer("index.json"),

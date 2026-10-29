@@ -39,15 +39,15 @@ fn all_versioned_boundaries_reject_versions_before_payloads() {
             ));
         }
         for text in [
-            r#"{}"#,
-            r#"{"schemaVersion":"8"}"#,
-            r#"{"schemaVersion":8.0}"#,
+            "{}".to_owned(),
+            format!(r#"{{"schemaVersion":"{expected}"}}"#),
+            format!(r#"{{"schemaVersion":{expected}.0}}"#),
         ] {
             let error = match reader {
-                Reader::Index => index(text).map(|_| ()),
-                Reader::Deployment => deployment(text).map(|_| ()),
-                Reader::Detail => detail(text).map(|_| ()),
-                Reader::Live => live(text).map(|_| ()),
+                Reader::Index => index(&text).map(|_| ()),
+                Reader::Deployment => deployment(&text).map(|_| ()),
+                Reader::Detail => detail(&text).map(|_| ()),
+                Reader::Live => live(&text).map(|_| ()),
             };
             assert!(matches!(error, Err(ReadError::Version { .. })));
         }
@@ -74,7 +74,7 @@ fn version_errors_print_the_number_without_rust_debug_wrapping() {
     let error = index(r#"{"schemaVersion":6}"#).unwrap_err().to_string();
     assert_eq!(
         error,
-        "[mokly-model/version] catalogue index requires schemaVersion 8; received 6"
+        "[mokly-model/version] catalogue index requires schemaVersion 9; received 6"
     );
     let missing = index("{}").unwrap_err().to_string();
     assert!(missing.ends_with("received missing or not an integer"));

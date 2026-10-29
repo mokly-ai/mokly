@@ -22,6 +22,7 @@
           "label": "Label"
         }
       },
+      "detailId": "7734ac0ce36ca60d7ffd3b0820ba044a546c10f65979fd652c4157099dedf260",
       "details": {
         "description": "The primary action.",
         "relatedDocs": [],
@@ -68,8 +69,7 @@
           "documentKey": "56c49b354eaa8c38f16656fcb3e8a2aa38eba456722b460929659a6671dccebb",
           "viewport": "desktop"
         }
-      ],
-      "detailId": "9046f1bc9466659c748ef682abe8c666f2eae43b92eb19207e2ca3663a5a7b10"
+      ]
     },
     {
       "changes": {
@@ -87,6 +87,7 @@
           "label": "Label"
         }
       },
+      "detailId": "43e1353dcbaeac03aad91b7d1eb8a4facd08a000de69daaac0dc3db48b328d1f",
       "details": {
         "description": "The primary action.",
         "relatedDocs": [],
@@ -134,8 +135,7 @@
           "documentKey": "e73b4f60e64f0bd2a7497b37e0b923b9901971edd04a35291e95ac8385ad37ee",
           "viewport": "desktop"
         }
-      ],
-      "detailId": "383e5aefac67e5a68c6900e6f868832abd10083d773e3bb17aa3ce1ed4a57b20"
+      ]
     }
   ],
   "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -147,6 +147,7 @@
         "status": "ready"
       },
       "colorSchemes": ["light"],
+      "detailId": "390557b3c3f753e76160ffadf3d3d949c4ccfb46c006f49ad6cf815dd8ac3d8e",
       "details": {
         "description": "",
         "relatedDocs": [],
@@ -161,8 +162,7 @@
       "kind": "document",
       "path": "product",
       "tags": [],
-      "title": "Product overview",
-      "detailId": "98a8e098a53d1ad14c1a696f19c4a82925eeefce5dc028675b38c4d560cb1dbb"
+      "title": "Product overview"
     }
   ],
   "identity": {
@@ -176,6 +176,7 @@
         "kind": "unmodified",
         "status": "ready"
       },
+      "detailId": "00fef472a9d52e7aa179250e193da4dc3c57f111674e115b255b72c4f4d98813",
       "details": {
         "description": "The printable guide.",
         "relatedDocs": [],
@@ -185,8 +186,7 @@
       "kind": "page",
       "path": "guide",
       "tags": [],
-      "title": "Guide",
-      "detailId": "c4644fb2a4fc7d41b343f502f9c56708fb1871f95f2b0541e6beb9315fb2b389"
+      "title": "Guide"
     }
   ],
   "removedEntries": [
@@ -197,6 +197,7 @@
           "kind": "removed",
           "status": "ready"
         },
+        "detailId": "4d7bc3baa9947c17ac869bb10373a42336faf6bd958672c0036d26bdf3fbb8e1",
         "details": {
           "description": "A page that no longer exists.",
           "relatedDocs": [],
@@ -206,8 +207,7 @@
         "kind": "page",
         "path": "product/removed-page",
         "tags": [],
-        "title": "Removed page",
-        "detailId": "0018c5c4836c02220734c81aeba54fb05b3af18b55d108d1596a83f8c7920a84"
+        "title": "Removed page"
       },
       "folderTitles": ["Product overview"],
       "preview": {
@@ -224,6 +224,7 @@
         },
         "colorSchemes": ["light"],
         "controls": {},
+        "detailId": "b36bda4dd39fce08a3de60b901f03bf55e09f1ffa4546ab23ae5593f7bb2d66b",
         "details": {
           "description": "A screen that no longer exists.",
           "relatedDocs": [],
@@ -261,8 +262,7 @@
             "documentKey": "24d1cc2f8c4b25c34fc13c808bd1e089c9c26a41bbd4f69787f639fbdfb321a9",
             "viewport": "desktop"
           }
-        ],
-        "detailId": "d9936fe1ed0ed26ee40505fac40d7055232c9824c3bf9d3fc4e1839546f44f1d"
+        ]
       },
       "folderTitles": ["Product overview", "Browse"],
       "parentTitle": "Home",
@@ -273,7 +273,7 @@
     }
   ],
   "revision": 0,
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "screens": [
     {
       "changes": {
@@ -283,6 +283,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "848d707dc51622e8109be29f49ed1f11c626bb26af2fa7ad28f4553f4dfe1b80",
       "details": {
         "description": "Details for one item.",
         "relatedDocs": [],
@@ -320,8 +321,7 @@
           "documentKey": "33480e291c1486f186a51ab1537fbff8530115dd65a25c8f60af95e1fc8e6cc0",
           "viewport": "desktop"
         }
-      ],
-      "detailId": "5936bb68e8f3693d75c20ec13d88af64e1b9d5b036e8a6412a433a7f6ad9fe13"
+      ]
     },
     {
       "changes": {
@@ -331,6 +331,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "025a6db2b528177b571fd3fb05c82ff10266c17c344698d94d98d8c30db4aa89",
       "details": {
         "description": "The landing screen.",
         "relatedDocs": [],
@@ -367,8 +368,7 @@
           "documentKey": "e32173dccf953496455ba2edbff9a2dee0912f5da1f10f345055ca6b1d2c6c83",
           "viewport": "desktop"
         }
-      ],
-      "detailId": "4ddbe51c08c8b57d8ed3ef1da688ad84f44e144ee1e6f3e091630470e422d86c"
+      ]
     },
     {
       "changes": {
@@ -378,6 +378,7 @@
       },
       "colorSchemes": ["light"],
       "controls": {},
+      "detailId": "62fff4ef22718521e0e073d16e386c00f4fa48cecefff6099c2001c91887ab16",
       "details": {
         "description": "The landing screen with no items.",
         "relatedDocs": [],
@@ -415,8 +416,7 @@
           "documentKey": "5556e2ea7cc8e8730ab2be57b2bd9711bd8d761051e3613b18ff643b7377acc0",
           "viewport": "desktop"
         }
-      ],
-      "detailId": "faf2e204400cb9db56ae96bdc850d0ecba698174cb429d11bff58599bbcd686b"
+      ]
     }
   ],
   "tree": [
@@ -486,6 +486,7 @@
         "kind": "unmodified",
         "status": "ready"
       },
+      "detailId": "bb9b8726a183f554e445d6d209b992dd1436dc3dc793c62541ce3749eda4be8e",
       "details": {
         "description": "A walk through the product.",
         "relatedDocs": [],
@@ -503,8 +504,7 @@
         }
       ],
       "tags": [],
-      "title": "Tour",
-      "detailId": "ba2b7f9a219f3e7701002f0401047a2ac9605b8693edbdd173055c93c8013f9f"
+      "title": "Tour"
     }
   ]
 }

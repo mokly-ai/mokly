@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use crate::readers;
 
 fn detail() -> Value {
-    json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
+    json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
         "detailId":"c".repeat(64),"revision":0,
         "entry":{"path":"sample","kind":"component"},"views":[]})
 }

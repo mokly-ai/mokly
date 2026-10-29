@@ -4,7 +4,7 @@ import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
   DeploymentFileV1,
-  EntryDetailV3,
+  EntryDetailV4,
   LiveDescriptorV3,
 } from "../src/catalogue/types.js";
 import type {
@@ -58,7 +58,7 @@ function pending<T, Input>(
 /** A data source whose every request waits for the test to answer it. */
 export class FakeDataSource implements ShellDataSource {
   readonly indexes: Pending<CatalogueReadModel, undefined>[] = [];
-  readonly details: Pending<EntryDetailV3, DetailRequest>[] = [];
+  readonly details: Pending<EntryDetailV4, DetailRequest>[] = [];
   readonly deployments: Pending<DeploymentFileV1, undefined>[] = [];
   readonly loadDeployment?: NonNullable<ShellDataSource["loadDeployment"]>;
   deploymentChanges = 0;
@@ -80,7 +80,7 @@ export class FakeDataSource implements ShellDataSource {
     request: DetailRequest,
     _index: CatalogueReadModel,
     signal: AbortSignal,
-  ): Promise<EntryDetailV3> {
+  ): Promise<EntryDetailV4> {
     return pending(this.details, request, signal);
   }
 

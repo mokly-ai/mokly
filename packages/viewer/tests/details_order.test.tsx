@@ -14,7 +14,7 @@ import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
-import { shellModelFixture } from "./catalogue_v8_fixture.js";
+import { shellModelFixture } from "./catalogue_v9_fixture.js";
 
 /** The moved fixture screen, whose detail examined and excluded a stylesheet. */
 const MOVED = "product/browse/details";

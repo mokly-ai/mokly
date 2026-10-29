@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::projection;
-use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV3};
+use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV4};
 use mokly_model::public_index::CatalogueNode;
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
@@ -22,7 +22,7 @@ use crate::snapshot::Snapshot;
 
 pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
-        "../../../../docs/protocol/fixtures/catalogue-v8.json"
+        "../../../../docs/protocol/fixtures/catalogue-v9.json"
     ))
     .unwrap();
     index.revision = 1;
@@ -41,8 +41,8 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         screen.visual.views[1].comparison = ComparisonSelection::Unavailable;
         let view = &screen.visual.views[0];
         let desktop = &screen.visual.views[1];
-        let detail = EntryDetailV3 {
-            schema_version: 3,
+        let detail = EntryDetailV4 {
+            schema_version: 4,
             control_order: Some(screen.visual.controls.keys().cloned().collect()),
             identity: index.identity.clone(),
             detail_id: "d".repeat(64),

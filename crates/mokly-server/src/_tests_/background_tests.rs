@@ -23,7 +23,7 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
         changes: None,
         document_keys: Default::default(),
         index: readers::index(include_str!(
-            "../../../../docs/protocol/fixtures/catalogue-v8.json"
+            "../../../../docs/protocol/fixtures/catalogue-v9.json"
         ))
         .unwrap(),
         generation: Arc::new(Generation {

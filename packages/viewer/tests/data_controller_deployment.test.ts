@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush } from "./data_fakes.js";
 

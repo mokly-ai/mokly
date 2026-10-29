@@ -1,4 +1,4 @@
-/** Public read model v8, entry detail v3, deployment file v1 and live descriptor v3 shapes. */
+/** Public read model v9, entry detail v4, deployment file v1 and live descriptor v3 shapes. */
 
 import type { CatalogueComponent } from "../generated/catalogue/CatalogueComponent.js";
 import type { CatalogueScreen } from "../generated/catalogue/CatalogueScreen.js";
@@ -24,7 +24,7 @@ export type { DetailEntry } from "../generated/catalogue/DetailEntry.js";
 export type { DetailView } from "../generated/catalogue/DetailView.js";
 export type { DeploymentFileV1 } from "../generated/catalogue/DeploymentFileV1.js";
 export type { DocumentKey } from "../generated/catalogue/DocumentKey.js";
-export type { EntryDetailV3 } from "../generated/catalogue/EntryDetailV3.js";
+export type { EntryDetailV4 } from "../generated/catalogue/EntryDetailV4.js";
 export type { EntryKind } from "../generated/catalogue/EntryKind.js";
 export type { EvidenceOwner } from "../generated/catalogue/EvidenceOwner.js";
 export type { InputChange } from "../generated/catalogue/InputChange.js";

@@ -7,7 +7,7 @@ import {
 } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import {
   loadRefresh,
@@ -20,7 +20,7 @@ import {
   catalogueFixture,
   detailFixture,
   indexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const OTHER = "e".repeat(64);
 const signal = new AbortController().signal;
@@ -46,13 +46,13 @@ function route(path: string) {
   );
 }
 
-function revised(path: string, revision: number): EntryDetailV3 {
+function revised(path: string, revision: number): EntryDetailV4 {
   return { ...detailFixture({ path }), revision };
 }
 
 function scripted(
   indexes: readonly CatalogueReadModel[],
-  detail: (request: DetailRequest) => EntryDetailV3,
+  detail: (request: DetailRequest) => EntryDetailV4,
 ) {
   const calls: DetailRequest[] = [];
   const source: ShellDataSource = {

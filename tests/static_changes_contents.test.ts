@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV3 } from "../packages/viewer/src/generated/catalogue/EntryDetailV3.js";
+import type { EntryDetailV4 } from "../packages/viewer/src/generated/catalogue/EntryDetailV4.js";
 
 import { build, fixture, json } from "./helpers/static_changes.js";
 import { files } from "./helpers/static_faults.js";
@@ -20,7 +20,7 @@ test(
       const ready = await build(root);
       assert.ok(ready.index.comparisonUrl);
       const prefix = ready.index.comparisonUrl.slice(0, -1);
-      assert.equal(ready.index.schemaVersion, 8);
+      assert.equal(ready.index.schemaVersion, 9);
       assert.deepEqual(
         [
           ...ready.index.screens,
@@ -71,7 +71,7 @@ test(
         output.get(`${prefix}/snapshots/after/logo.svg`)!.toString(),
         /After asset/u,
       );
-      const detail = await json<EntryDetailV3>(
+      const detail = await json<EntryDetailV4>(
         ready.output,
         "mokly-viewer/entries/home.json",
       );
@@ -95,7 +95,7 @@ test(
       );
       for (const removed of ready.index.removedEntries) {
         assert.ok(output.has(`view/${removed.entry.path}/index.html`));
-        const historical = await json<EntryDetailV3>(
+        const historical = await json<EntryDetailV4>(
           ready.output,
           `${prefix}/entries/${removed.entry.path}.json`,
         );

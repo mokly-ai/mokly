@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { readDeploymentFile } from "../src/catalogue/deployment_reader.js";
-import type { EntryDetailV3 } from "../src/catalogue/types.js";
+import type { EntryDetailV4 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { viewerComparisonEnvironment } from "../src/viewer/environment.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
@@ -21,7 +21,7 @@ import {
   indexFixture,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const ORIGIN = "https://catalogue.test";
 
@@ -155,7 +155,7 @@ test("an object index needs its base address and a URL index refuses one", async
     signal,
   );
   assert.equal(loaded.root.href, `${ORIGIN}/`);
-  assert.equal(loaded.index.schemaVersion, 8);
+  assert.equal(loaded.index.schemaVersion, 9);
   await assert.rejects(
     loadIndexSource(rawIndexFixture(), undefined, signal),
     DeliveryFetchError,
@@ -206,7 +206,7 @@ test("a detail URL resolves on the artifact origin only", async () => {
   );
   await assert.rejects(
     loadDetailResult(
-      { ...body!, schemaVersion: 2 } as unknown as EntryDetailV3,
+      { ...body!, schemaVersion: 2 } as unknown as EntryDetailV4,
       root,
       signal,
     ),

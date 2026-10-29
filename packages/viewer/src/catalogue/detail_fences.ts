@@ -7,7 +7,7 @@ import { validateComponentViewRecord } from "../components/view_validation.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "./types.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
@@ -39,8 +39,8 @@ export function workspaceDetailRequest(
 
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
-  | { kind: "accepted"; detail: EntryDetailV3 }
-  | { kind: "revision"; detail: EntryDetailV3 }
+  | { kind: "accepted"; detail: EntryDetailV4 }
+  | { kind: "revision"; detail: EntryDetailV4 }
   | { kind: "deployment" }
   | { kind: "rejected" };
 
@@ -59,7 +59,7 @@ export function detailKey(request: DetailRequest): string {
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
-  detail: EntryDetailV3,
+  detail: EntryDetailV4,
 ): DetailFence {
   if (request.snapshotId === undefined) {
     if (detail.revision !== index.revision) return { kind: "revision", detail };
@@ -106,7 +106,7 @@ export function currentEntry(
 function matches(
   index: CatalogueReadModel,
   entry: CatalogueRecord,
-  detail: EntryDetailV3,
+  detail: EntryDetailV4,
   historical: boolean,
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)

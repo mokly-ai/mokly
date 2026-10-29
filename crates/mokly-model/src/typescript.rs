@@ -6,7 +6,7 @@ use ts_rs::{Config, TS};
 
 use crate::catalogue::CatalogueModel;
 use crate::deployment::DeploymentFileV1;
-use crate::public_detail::{EntryDetailV3, LiveDescriptorV3};
+use crate::public_detail::{EntryDetailV4, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::snapshot::{CatalogueChangeSnapshotV4, RemovedPagePreview};
 use crate::type_modules::TypeModules;
@@ -49,7 +49,7 @@ pub fn catalogue_modules() -> BTreeMap<String, String> {
     modules.add::<CatalogueModel>();
     modules.add::<CatalogueReadModel>();
     modules.add::<DeploymentFileV1>();
-    modules.add::<EntryDetailV3>();
+    modules.add::<EntryDetailV4>();
     modules.add::<LiveDescriptorV3>();
     modules.add::<CatalogueChangeSnapshotV4>();
     modules.add::<RemovedPagePreview>();

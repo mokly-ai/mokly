@@ -3,9 +3,9 @@ import { test } from "node:test";
 
 import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type { EntryDetailV3 } from "../src/catalogue/types.js";
+import type { EntryDetailV4 } from "../src/catalogue/types.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 const OTHER = "d".repeat(64);
 const RETIRED =
@@ -15,8 +15,8 @@ const REMOVED_PAGE =
 
 function current(
   path: string,
-  edit?: (detail: EntryDetailV3) => void,
-): EntryDetailV3 {
+  edit?: (detail: EntryDetailV4) => void,
+): EntryDetailV4 {
   const detail = rawDetailFixtures().current[path]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -24,8 +24,8 @@ function current(
 
 function removed(
   snapshotId: string,
-  edit?: (detail: EntryDetailV3) => void,
-): EntryDetailV3 {
+  edit?: (detail: EntryDetailV4) => void,
+): EntryDetailV4 {
   const detail = rawDetailFixtures().removed[snapshotId]!;
   edit?.(detail);
   return readEntryDetail(detail);

@@ -11,7 +11,7 @@ import {
   rawDetailFixtures,
   rawIndexFixture,
   shellModelFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 test("a removed component variant keeps its own workspace lists", () => {
   const snapshotId = "f".repeat(64);

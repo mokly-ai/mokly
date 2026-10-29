@@ -1,13 +1,13 @@
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 
 /** Keep a test-owned index edit coherent with the fixture's separate details. */
 export function browserDetails(
   index: CatalogueReadModel,
-  held: Record<string, EntryDetailV3>,
-): Record<string, EntryDetailV3> {
+  held: Record<string, EntryDetailV4>,
+): Record<string, EntryDetailV4> {
   const details = { ...held };
   const entries = [
     ...index.screens,
@@ -20,7 +20,7 @@ export function browserDetails(
     let detail = details[entry.path];
     if (!detail && entry.kind === "use-case")
       detail = {
-        schemaVersion: 3,
+        schemaVersion: 4,
         identity: index.identity,
         detailId: entry.detailId,
         entry: { kind: "use-case", path: entry.path },

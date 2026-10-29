@@ -12,7 +12,7 @@ import path from "node:path";
 
 import type { Page, Request } from "@playwright/test";
 
-import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/viewer";
 
 import { serveCatalogue } from "./catalogue_fixture.js";
 
@@ -121,7 +121,7 @@ async function settledRevision(
   if (!until(index) || ["preparing", "pending"].includes(index.changesStatus))
     return undefined;
   for (const entry of [...index.screens, ...index.components]) {
-    const detail = await read<EntryDetailV3>(`entries/${entry.path}.json`);
+    const detail = await read<EntryDetailV4>(`entries/${entry.path}.json`);
     if (
       detail.revision !== index.revision ||
       detail.views.some((view) => view.usage.status === "pending")

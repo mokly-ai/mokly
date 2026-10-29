@@ -11,7 +11,7 @@ import {
   detailPairs,
   rawDetailFixtures,
   rawIndexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
@@ -218,7 +218,7 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
 });
 
 test("an index of another version shows the version headline without an action", () => {
-  const index = { ...fixture, schemaVersion: 9 } as unknown as typeof fixture;
+  const index = { ...fixture, schemaVersion: 10 } as unknown as typeof fixture;
   const html = embeddedMarkup({ index });
   assert.match(
     html,

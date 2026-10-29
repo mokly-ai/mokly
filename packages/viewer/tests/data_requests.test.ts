@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV3,
+  EntryDetailV4,
 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
@@ -20,7 +20,7 @@ import {
   catalogueFixture,
   detailFixture,
   indexFixture,
-} from "./catalogue_v8_fixture.js";
+} from "./catalogue_v9_fixture.js";
 
 const OTHER = "e".repeat(64);
 const RETIRED =
@@ -36,7 +36,7 @@ function route(path: string): ShellRoute {
 /** A source that answers from scripts and records every request. */
 function scripted(
   indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV3 | Error,
+  detail: (request: DetailRequest) => EntryDetailV4 | Error,
 ) {
   const calls = { indexes: 0, details: [] as DetailRequest[] };
   const source: ShellDataSource = {
@@ -57,7 +57,7 @@ function scripted(
   return { source, calls };
 }
 
-function revised(path: string, revision: number): EntryDetailV3 {
+function revised(path: string, revision: number): EntryDetailV4 {
   return { ...detailFixture({ path }), revision };
 }
 
@@ -187,7 +187,7 @@ test("a rejected, failed or newer-format detail does not install", async () => {
     await loadFencedDetail(failed.source, indexFixture(), request, signal),
     { kind: "failed" },
   );
-  const version = new MoklyVersionError("detail", 3, 2);
+  const version = new MoklyVersionError("detail", 5, 4);
   const newer = scripted([indexFixture()], () => version);
   assert.deepEqual(
     await loadFencedDetail(newer.source, indexFixture(), request, signal),
@@ -278,7 +278,7 @@ test("a refresh from another deployment or format does not install", async () =>
     { kind: "deployment" },
   );
   assert.equal(moved.calls.details.length, 0);
-  const version = new MoklyVersionError("catalogue", 9, 8);
+  const version = new MoklyVersionError("catalogue", 10, 9);
   const newer = scripted([version], () => new Error("unused"));
   assert.deepEqual(
     await loadRefresh(

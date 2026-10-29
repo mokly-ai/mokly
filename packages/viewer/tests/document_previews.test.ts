@@ -4,7 +4,7 @@ import test from "node:test";
 import { readPreviewDescriptor } from "../src/previews/descriptor.js";
 import { previewEndpoint, requestPreview } from "../src/previews/request.js";
 
-import { indexFixture, rawDetailFixtures } from "./catalogue_v8_fixture.js";
+import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
 test("removed document descriptors and requests retain historical schemes", async () => {
   const data = readPreviewDescriptor(

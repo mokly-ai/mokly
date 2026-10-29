@@ -1,4 +1,4 @@
-//! Entry detail v3 and live descriptor v3 public contracts.
+//! Entry detail v4 and live descriptor v3 public contracts.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -137,9 +137,9 @@ pub struct RelatedComponent {
 /// One public entry detail, current or historical.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct EntryDetailV3 {
-    /// Must equal 3; readers gate it first.
-    #[ts(type = "3")]
+pub struct EntryDetailV4 {
+    /// Must equal 4; readers gate it first.
+    #[ts(type = "4")]
     pub schema_version: u32,
     /// Catalogue identity equal to the installed index.
     pub identity: CatalogueIdentity,

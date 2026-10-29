@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use mokly_model::namespace::viewer;
 use mokly_model::projection_usage;
-use mokly_model::public_detail::EntryDetailV3;
+use mokly_model::public_detail::EntryDetailV4;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::routes;
 use mokly_model::usage::CatalogueUsage;
@@ -18,7 +18,7 @@ use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
 
 pub(crate) fn reuse_usage(
-    details: &mut BTreeMap<String, EntryDetailV3>,
+    details: &mut BTreeMap<String, EntryDetailV4>,
     index: &CatalogueReadModel,
     keys: &BTreeMap<String, String>,
     previous: Option<&Snapshot>,
@@ -68,12 +68,12 @@ pub(crate) fn reuse_usage(
 }
 
 pub(crate) fn encode_details(
-    mut details: BTreeMap<String, EntryDetailV3>,
+    mut details: BTreeMap<String, EntryDetailV4>,
     index: &mut CatalogueReadModel,
     previous: Option<&Snapshot>,
     files: &mut BTreeMap<String, RevisionFile>,
     encoder: &dyn DetailEncoder,
-) -> Result<BTreeMap<String, Arc<EntryDetailV3>>> {
+) -> Result<BTreeMap<String, Arc<EntryDetailV4>>> {
     let mut result = BTreeMap::new();
     for (path, detail) in details.iter_mut() {
         if let Some(previous) = previous

@@ -10,7 +10,7 @@ import {
 } from "../src/shell/data_requests.js";
 import type { ShellRoute } from "../src/shell/routes.js";
 
-import { detailFixture, indexFixture } from "./catalogue_v8_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush } from "./data_fakes.js";
 
@@ -106,7 +106,7 @@ test("a newer detail installs with the refetched index of its revision", async (
 test("a detail of a newer format reports a version error", async () => {
   const fixture = controllerFixture(indexFixture());
   fixture.navigate("/view/guide/");
-  const error = new MoklyVersionError("detail", 3, 2);
+  const error = new MoklyVersionError("detail", 5, 4);
   fixture.source.detail("guide").reject(error);
   await flush();
   assert.deepEqual(fixture.versionErrors, [error]);

@@ -7,7 +7,7 @@ use crate::read_contract::ContractViolation;
 use crate::readers::{ReadError, detail, index};
 
 pub(super) fn empty_index() -> Value {
-    json!({"schemaVersion":8,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
+    json!({"schemaVersion":9,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
         "changesStatus":"disabled","comparisonUrl":null,"tree":[],"screens":[],"pages":[],"documents":[],"useCases":[],"components":[],"removedEntries":[]})
 }
 
@@ -86,7 +86,7 @@ fn index_rejects_private_fields_bad_props_and_invalid_tree_relationships() {
 
 #[test]
 fn current_and_removed_detail_fences_are_exclusive() {
-    let current = json!({"schemaVersion":3,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
+    let current = json!({"schemaVersion":4,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},"detailId":"c".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},"views":[]});
     assert!(detail(&current.to_string()).is_ok());
     let mut current_with_generation = current.clone();
     current_with_generation["generation"] = json!("c".repeat(64));

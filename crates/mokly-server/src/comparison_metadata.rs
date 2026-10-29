@@ -53,7 +53,7 @@ pub(crate) fn detail_ids(
 fn detail_map(
     accepted: &Accepted,
     current: &Snapshot,
-) -> Result<BTreeMap<String, mokly_model::public_detail::EntryDetailV3>> {
+) -> Result<BTreeMap<String, mokly_model::public_detail::EntryDetailV4>> {
     let result = &accepted.result;
     let historical = base(accepted, current)?;
     let mut details = compared(projection_removed::details(result, &historical))?;
