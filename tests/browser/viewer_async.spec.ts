@@ -54,11 +54,18 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   ]);
   const cancelled = await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
+    let attempted!: () => void;
+    const attempt = new Promise<void>((resolve) => {
+      attempted = resolve;
+    });
     host.props.frameAdapter = {
-      mount: () => new Promise<MountedFrame>(() => {}),
+      mount: () => {
+        attempted();
+        return new Promise<MountedFrame>(() => {});
+      },
     };
     host.render();
-    await new Promise(requestAnimationFrame);
+    await attempt;
     const pending = host.ref.current.startPick().then(
       () => false,
       () => true,
