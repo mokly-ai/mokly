@@ -112,6 +112,19 @@ impl ContextEvidence {
     }
 }
 
+/// A final record can release a long base chain after store eviction.
+impl Drop for ContextEvidence {
+    fn drop(&mut self) {
+        let mut next = self.base.take();
+        while let Some(entry) = next {
+            let Some(mut entry) = Arc::into_inner(entry) else {
+                break;
+            };
+            next = entry.base.take();
+        }
+    }
+}
+
 impl Record {
     /// Stamp a new bundle. `context` returns the entry for the bundle's module evidence and its
     /// digest.
@@ -245,3 +258,7 @@ fn stamp_delta_evidence(
     }
     stamp_evidence(tree, root, &full_paths, stamp)
 }
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_chain_drop_tests.rs"]
+mod stylesheet_chain_drop_tests;

@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
 
 use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
@@ -20,10 +20,10 @@ pub(crate) struct CachedStylesheets {
     settings: String,
     shared: Arc<Mutex<StylesheetCache>>,
     local: Mutex<StylesheetCache>,
-    /// The context entries of this attempt's new records, by evidence digest.
-    contexts: Mutex<BTreeMap<String, Arc<ContextEvidence>>>,
+    /// Non-owning indexes let the bounded stores control context payload lifetimes.
+    contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
     /// The stored context entries whose stamp this attempt checked, with the result.
-    checked: Mutex<Vec<(Arc<ContextEvidence>, bool)>>,
+    checked: Mutex<Vec<(Weak<ContextEvidence>, bool)>>,
     /// The evidence digests of the context entries that this attempt replayed.
     replayed: Mutex<BTreeSet<String>>,
 }
@@ -75,13 +75,15 @@ impl CachedStylesheets {
     /// Check the stamp of a stored context entry once for each attempt.
     fn current(&self, context: &Arc<ContextEvidence>) -> bool {
         let mut checked = lock(&self.checked);
+        checked.retain(|(entry, _)| entry.strong_count() != 0);
         let mut current = true;
         for entry in ContextEvidence::chain_arcs(context) {
-            let own_current = match checked.iter().find(|(held, _)| Arc::ptr_eq(held, &entry)) {
+            let weak = Arc::downgrade(&entry);
+            let own_current = match checked.iter().find(|(held, _)| Weak::ptr_eq(held, &weak)) {
                 Some((_, current)) => *current,
                 None => {
                     let current = entry.stamp.current(self.tree.as_ref()) == entry.stamp;
-                    checked.push((entry, current));
+                    checked.push((weak, current));
                     current
                 }
             };
@@ -94,8 +96,9 @@ impl CachedStylesheets {
     /// whose stamp holds, or a new entry.
     fn context(&self, digest: String, evidence: ReadEvidence) -> Arc<ContextEvidence> {
         let mut contexts = lock(&self.contexts);
-        if let Some(entry) = contexts.get(&digest) {
-            return entry.clone();
+        contexts.retain(|_, entry| entry.strong_count() != 0);
+        if let Some(entry) = contexts.get(&digest).and_then(Weak::upgrade) {
+            return entry;
         }
         let stored = {
             let shared = lock(&self.shared);
@@ -106,9 +109,9 @@ impl CachedStylesheets {
         } else {
             let mut base = contexts
                 .values()
+                .filter_map(Weak::upgrade)
                 .filter(|entry| entry.is_subset_of(&evidence))
-                .max_by_key(|entry| entry.full_size())
-                .cloned();
+                .max_by_key(|entry| entry.full_size());
             let mut size = base.as_ref().map_or(0, |entry| entry.full_size());
             for entry in stored.1 {
                 let candidate_size = entry.full_size();
@@ -125,7 +128,7 @@ impl CachedStylesheets {
                 base,
             ))
         };
-        contexts.insert(digest, entry.clone());
+        contexts.insert(digest, Arc::downgrade(&entry));
         entry
     }
 
@@ -227,3 +230,7 @@ mod stylesheet_chain_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_context_reuse_tests.rs"]
 mod stylesheet_context_reuse_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_retention_tests.rs"]
+mod stylesheet_retention_tests;
