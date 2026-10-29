@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
-use notify::{PathOp, RecommendedWatcher, Watcher};
+use notify::{PathOp, RecommendedWatcher, UpdatePathsError, Watcher};
 
 use crate::error::{Error, Result};
 
@@ -40,16 +40,27 @@ pub struct NotifyFactory {
     pub tree: Arc<dyn SourceTree>,
 }
 struct NotifyWatch {
-    watcher: RecommendedWatcher,
+    watcher: Box<dyn PathUpdates>,
     attached: BTreeSet<PathBuf>,
     tree: Arc<dyn SourceTree>,
+}
+
+#[cfg_attr(test, unimock::unimock(api = PathUpdatesMock))]
+trait PathUpdates: Send {
+    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), UpdatePathsError>;
+}
+
+impl PathUpdates for RecommendedWatcher {
+    fn apply(&mut self, operations: Vec<PathOp>) -> std::result::Result<(), UpdatePathsError> {
+        self.update_paths(operations)
+    }
 }
 
 impl WatchFactory for NotifyFactory {
     fn create(&self, events: Arc<dyn NativeEvents>) -> Result<Box<dyn DirectoryWatch>> {
         match notify::recommended_watcher(move |event| events.send(event)) {
             Ok(watcher) => Ok(Box::new(NotifyWatch {
-                watcher,
+                watcher: Box::new(watcher),
                 attached: BTreeSet::new(),
                 tree: self.tree.clone(),
             })),
@@ -81,20 +92,13 @@ impl DirectoryWatch for NotifyWatch {
         let mut error = None;
         while !operations.is_empty() {
             let batch = operations.iter().map(Operation::path_op).collect();
-            match self.watcher.update_paths(batch) {
+            match self.watcher.apply(batch) {
                 Ok(()) => {
                     for operation in operations.drain(..) {
                         self.applied(operation, &mut attached);
                     }
                 }
                 Err(update) => {
-                    let failed = update.origin.is_some();
-                    let applied = operations
-                        .len()
-                        .saturating_sub(update.remaining.len() + usize::from(failed));
-                    for operation in operations.drain(..applied) {
-                        self.applied(operation, &mut attached);
-                    }
                     let Some(origin) = update.origin else {
                         error.get_or_insert(Error::Observer {
                             source: update.source,
@@ -102,6 +106,10 @@ impl DirectoryWatch for NotifyWatch {
                         operations.clear();
                         continue;
                     };
+                    let applied = operations.len().saturating_sub(update.remaining.len() + 1);
+                    for operation in operations.drain(..applied) {
+                        self.applied(operation, &mut attached);
+                    }
                     self.failed(Operation::from_path_op(origin), update.source, &mut error);
                     operations = update
                         .remaining
@@ -118,7 +126,6 @@ impl DirectoryWatch for NotifyWatch {
     }
 }
 
-#[derive(Clone)]
 enum Operation {
     Add(PathBuf),
     Remove(PathBuf),
@@ -180,3 +187,7 @@ fn vanished(error: &notify::Error, tree: &dyn SourceTree, path: &Path) -> bool {
 #[cfg(test)]
 #[path = "_tests_/backend_tests.rs"]
 mod backend_tests;
+
+#[cfg(test)]
+#[path = "_tests_/backend_update_tests.rs"]
+mod backend_update_tests;

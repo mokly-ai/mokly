@@ -49,8 +49,30 @@ fn pathless_and_flagged_events_rescan_and_warn_once() {
     receiver.send(Ok(Event::new(EventKind::Other).set_flag(Flag::Rescan)));
     receiver.send(Ok(Event::new(EventKind::Any)));
     receiver.send(Ok(Event::new(EventKind::Other)
-        .add_path("/".into())
+        .add_path("/repo/specs".into())
         .set_flag(Flag::Rescan)));
+    let events = inbox.take();
+    assert_eq!(events.len(), 2);
+    let event = events[0].as_ref().unwrap();
+    assert_eq!(event.path.to_str(), Some("/repo"));
+    assert_eq!(event.kind, Kind::Directory);
+    assert!(matches!(events[1], Err(Error::Rescan)));
+}
+
+#[test]
+fn rescan_outside_all_registrations_queues_the_repository_root_and_one_warning() {
+    let inbox = Arc::new(Inbox::default());
+    let receiver = Receiver {
+        repository: "/repo".into(),
+        inbox: inbox.clone(),
+        warned: AtomicBool::new(false),
+    };
+    for _ in 0..2 {
+        receiver.send(Ok(Event::new(EventKind::Other)
+            .add_path("/".into())
+            .set_flag(Flag::Rescan)));
+    }
+
     let events = inbox.take();
     assert_eq!(events.len(), 2);
     let event = events[0].as_ref().unwrap();

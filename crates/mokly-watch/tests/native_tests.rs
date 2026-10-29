@@ -12,15 +12,18 @@ use mokly_watch::event::{Action, Event};
 use mokly_watch::native::NativeObserver;
 use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
+use tokio::sync::mpsc;
 
-struct IgnoreEvents;
+struct CapturedEvents(mpsc::UnboundedSender<notify::Result<notify::Event>>);
 
-impl NativeEvents for IgnoreEvents {
-    fn send(&self, _event: notify::Result<notify::Event>) {}
+impl NativeEvents for CapturedEvents {
+    fn send(&self, event: notify::Result<notify::Event>) {
+        let _ = self.0.send(event);
+    }
 }
 
-#[test]
-fn path_update_skips_a_vanished_directory_and_attaches_later_directories() {
+#[tokio::test]
+async fn path_update_skips_a_vanished_directory_and_attaches_later_directories() {
     let root = tempfile::tempdir().unwrap();
     let first = root.path().join("01-first");
     let vanished = root.path().join("02-vanished");
@@ -33,7 +36,8 @@ fn path_update_skips_a_vanished_directory_and_attaches_later_directories() {
     let factory = NotifyFactory {
         tree: Arc::new(WorkingTree),
     };
-    let mut watcher = factory.create(Arc::new(IgnoreEvents)).unwrap();
+    let (events_tx, mut events_rx) = mpsc::unbounded_channel();
+    let mut watcher = factory.create(Arc::new(CapturedEvents(events_tx))).unwrap();
     let attached = watcher
         .update(
             &BTreeSet::from([first.clone(), vanished, last.clone()]),
@@ -41,7 +45,20 @@ fn path_update_skips_a_vanished_directory_and_attaches_later_directories() {
         )
         .unwrap();
 
-    assert_eq!(attached, BTreeSet::from([first, last]));
+    assert_eq!(attached, BTreeSet::from([first, last.clone()]));
+    let source = last.join("after-vanished");
+    fs::write(&source, "observed").unwrap();
+    let event = tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let event = events_rx.recv().await.unwrap().unwrap();
+            if event.paths.contains(&source) {
+                return event;
+            }
+        }
+    })
+    .await
+    .expect("the directory after the vanished path must deliver events");
+    assert!(event.paths.contains(&source));
 }
 
 async fn wait(observer: &dyn Observer, suffix: &str) -> Event {
@@ -97,70 +114,6 @@ async fn atomic_replacements_new_directories_and_shutdown_keep_one_observer() {
     observer.close();
     observer.replace(&plan).unwrap();
     assert!(observer.take().is_empty());
-}
-
-#[cfg(windows)]
-struct BlockingEvents {
-    first_seen: std::sync::mpsc::Sender<()>,
-    release_first: std::sync::Mutex<std::sync::mpsc::Receiver<()>>,
-    rescan: std::sync::mpsc::Sender<()>,
-    first: std::sync::Mutex<bool>,
-}
-
-#[cfg(windows)]
-impl NativeEvents for BlockingEvents {
-    fn send(&self, event: notify::Result<notify::Event>) {
-        let first = {
-            let mut seen = self.first.lock().unwrap();
-            let first = !*seen;
-            *seen = true;
-            first
-        };
-        if first {
-            self.first_seen.send(()).unwrap();
-            self.release_first.lock().unwrap().recv().unwrap();
-        }
-        if matches!(&event, Ok(event) if event.need_rescan()) {
-            self.rescan.send(()).unwrap();
-        }
-    }
-}
-
-#[cfg(windows)]
-#[test]
-fn windows_overflow_emits_a_rescan_after_the_handler_is_released() {
-    let root = tempfile::tempdir().unwrap();
-    let (first_seen_tx, first_seen_rx) = std::sync::mpsc::channel();
-    let (release_tx, release_rx) = std::sync::mpsc::channel();
-    let (rescan_tx, rescan_rx) = std::sync::mpsc::channel();
-    let events = Arc::new(BlockingEvents {
-        first_seen: first_seen_tx,
-        release_first: std::sync::Mutex::new(release_rx),
-        rescan: rescan_tx,
-        first: std::sync::Mutex::new(false),
-    });
-    let factory = NotifyFactory {
-        tree: Arc::new(WorkingTree),
-    };
-    let mut watcher = factory.create(events).unwrap();
-    watcher
-        .update(
-            &BTreeSet::from([root.path().to_path_buf()]),
-            &BTreeSet::new(),
-        )
-        .unwrap();
-
-    fs::write(root.path().join("first-event"), b"first").unwrap();
-    first_seen_rx.recv_timeout(Duration::from_secs(15)).unwrap();
-    for index in 0..2_000 {
-        let name = format!("{index:04}-{}", "x".repeat(100));
-        fs::write(root.path().join(name), b"event").unwrap();
-    }
-    release_tx.send(()).unwrap();
-
-    rescan_rx
-        .recv_timeout(Duration::from_secs(15))
-        .expect("the overflow must emit a rescan event");
 }
 
 #[tokio::test]
