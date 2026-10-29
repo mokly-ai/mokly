@@ -223,6 +223,42 @@ fn finding_3_changed_base_module_misses_every_record_and_checks_each_entry() {
     assert_eq!(Calls::count(&calls.module_digests), 2);
 }
 
+#[test]
+fn finding_5_changed_root_reuses_stored_context_in_a_new_record() {
+    let roots = roots(2);
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let first = attempt(bundler(Arc::default()), tree(&Arc::default(), &[]), &shared);
+    first.bundle(&roots[0]).unwrap();
+    first.bundle(&roots[1]).unwrap();
+    let old = shared
+        .lock()
+        .unwrap()
+        .record(&key(&roots[0]))
+        .unwrap()
+        .context
+        .clone()
+        .unwrap();
+
+    let calls = Arc::new(Calls::default());
+    let second = attempt(
+        bundler(Arc::default()),
+        tree(&calls, &["root-00.css"]),
+        &shared,
+    );
+    second.bundle(&roots[0]).unwrap();
+    let new = shared
+        .lock()
+        .unwrap()
+        .record(&key(&roots[0]))
+        .unwrap()
+        .context
+        .clone()
+        .unwrap();
+
+    assert!(Arc::ptr_eq(&old, &new));
+    assert_eq!(Calls::count(&calls.module_digests), MODULES);
+}
+
 /// The tree calls of a second attempt that hits `count` roots.
 fn hit_calls(count: usize) -> Arc<Calls> {
     let shared = Arc::new(Mutex::new(StylesheetCache::default()));
