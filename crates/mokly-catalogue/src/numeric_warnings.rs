@@ -13,8 +13,12 @@ use crate::diagnostic::{Warning, WarningSubject, json_quoted};
 use crate::render_sources::StoryControlHint;
 use crate::schema_warnings;
 
-enum Field {
+enum Field<'a> {
     Prop,
+    Invocation {
+        component: &'a str,
+        instance: &'a str,
+    },
     Schema,
     Control,
 }
@@ -31,7 +35,7 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
             warnings.extend(
                 schema_warnings::schema_paths(&visual.prop_schema)
                     .into_iter()
-                    .map(|path| warning(Field::Schema, &path, entry, None)),
+                    .map(|path| warning(Field::Schema, &path, entry)),
             );
         }
     }
@@ -42,7 +46,7 @@ pub(crate) fn collect(entries: &[ModelEntry]) -> Vec<Warning> {
 fn for_entry(props: &Props, entry: &ModelEntry) -> Vec<Warning> {
     unsafe_integer_paths(props)
         .into_iter()
-        .map(|path| warning(Field::Prop, &path, entry, None))
+        .map(|path| warning(Field::Prop, &path, entry))
         .collect()
 }
 
@@ -57,22 +61,19 @@ pub fn for_invocation(
         .into_iter()
         .map(|path| {
             warning(
-                Field::Prop,
+                Field::Invocation {
+                    component: component_path,
+                    instance: instance_id,
+                },
                 &path,
                 entry,
-                Some((component_path, instance_id)),
             )
         })
         .collect()
 }
 
-fn warning(
-    field: Field,
-    path: &str,
-    entry: &ModelEntry,
-    invocation: Option<(&str, &str)>,
-) -> Warning {
-    let message = format_message(field, path, invocation);
+fn warning(field: Field<'_>, path: &str, entry: &ModelEntry) -> Warning {
+    let message = format_message(field, path);
     let subject = if matches!(entry.content, EntryContent::Component { .. }) {
         WarningSubject::Component(entry.metadata.path.clone())
     } else {
@@ -85,24 +86,30 @@ fn warning(
     }
 }
 
-fn format_message(field: Field, path: &str, invocation: Option<(&str, &str)>) -> String {
-    if let Some((component_path, instance_id)) = invocation {
-        return format!(
+fn format_message(field: Field<'_>, path: &str) -> String {
+    match field {
+        Field::Prop => format!(
+            "prop {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+            json_quoted(path)
+        ),
+        Field::Invocation {
+            component,
+            instance,
+        } => format!(
             "component {} instance {} prop {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
-            json_quoted(component_path),
-            json_quoted(instance_id),
+            json_quoted(component),
+            json_quoted(instance),
             json_quoted(path),
-        );
+        ),
+        Field::Schema => format!(
+            "schema keyword {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+            json_quoted(path)
+        ),
+        Field::Control => format!(
+            "control {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+            json_quoted(path)
+        ),
     }
-    let kind = match field {
-        Field::Prop => "prop",
-        Field::Schema => "schema keyword",
-        Field::Control => "control",
-    };
-    format!(
-        "{kind} {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
-        json_quoted(path)
-    )
 }
 
 /// Authored control metadata is checked once, before schema defaults are added.
@@ -136,7 +143,7 @@ pub(crate) fn for_controls(
     }
     paths
         .into_iter()
-        .map(|path| warning(Field::Control, &path, entry, None))
+        .map(|path| warning(Field::Control, &path, entry))
         .collect()
 }
 
@@ -165,7 +172,7 @@ pub(crate) fn for_story_hints(
     }
     paths
         .into_iter()
-        .map(|path| warning(Field::Control, &path, entry, None))
+        .map(|path| warning(Field::Control, &path, entry))
         .collect()
 }
 
