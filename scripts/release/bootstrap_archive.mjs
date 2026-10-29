@@ -9,6 +9,16 @@ import { runCommand } from "./command.mjs";
 import { packNative } from "./native.mjs";
 import { nativeTarget } from "./targets.mjs";
 
+/**
+ * The JavaScript packages a registration can pack, each pinned to the one
+ * version its registration published, so the command cannot pack a later
+ * version as a second registration. The native packages pack `0.0.0`.
+ */
+const JAVASCRIPT_REGISTRATIONS = {
+  "@mokly/viewer": { relative: "packages/viewer", version: "0.1.0" },
+  "@mokly/ui": { relative: "packages/ui", version: "0.16.1" },
+};
+
 /** Build registration evidence from reviewed committed bytes, never local dist. */
 export async function createBootstrapArchive(
   {
@@ -28,9 +38,11 @@ export async function createBootstrapArchive(
   repositoryRoot = await fs.realpath(repositoryRoot);
   destination = path.resolve(destination);
   await verifySource(repositoryRoot, expectedCommit);
+  const registration = JAVASCRIPT_REGISTRATIONS[packageName];
   const { relative, version, sourceVersion, filename } = await bootstrapTarget(
     repositoryRoot,
     packageName,
+    registration,
   );
   await verifyPackage(repositoryRoot, relative, packageName, sourceVersion);
   await requireMissingDestination(destination);
@@ -66,20 +78,19 @@ export async function createBootstrapArchive(
       },
     );
     await inspectRuntimeLicenses(checkout);
-    const packed =
-      packageName === "@mokly/viewer"
-        ? await createPackageArchive(
-            path.join(checkout, relative),
-            path.join(temporaryRoot, "artifact"),
-            packageName,
-          )
-        : await buildNative(
-            checkout,
-            packageName,
-            path.join(temporaryRoot, "artifact"),
-            undefined,
-            { registration: true },
-          );
+    const packed = registration
+      ? await createPackageArchive(
+          path.join(checkout, relative),
+          path.join(temporaryRoot, "artifact"),
+          packageName,
+        )
+      : await buildNative(
+          checkout,
+          packageName,
+          path.join(temporaryRoot, "artifact"),
+          undefined,
+          { registration: true },
+        );
     assert.equal(
       packed.report.version,
       version,
@@ -111,7 +122,7 @@ export async function createBootstrapArchive(
       `${JSON.stringify(report, null, 2)}\n`,
       { flag: "wx" },
     );
-    if (packageName !== "@mokly/viewer") {
+    if (!registration) {
       await fs.copyFile(
         path.join(path.dirname(packed.archivePath), "tls-dependencies.txt"),
         path.join(destination, "tls-dependencies.txt"),
@@ -149,8 +160,8 @@ async function verifySource(repositoryRoot, expectedCommit) {
   return await git("rev-parse", "HEAD^{tree}");
 }
 
-async function bootstrapTarget(repositoryRoot, packageName) {
-  if (packageName !== "@mokly/viewer") {
+async function bootstrapTarget(repositoryRoot, packageName, registration) {
+  if (!registration) {
     const target = nativeTarget(packageName);
     assert.equal(
       process.platform,
@@ -175,11 +186,12 @@ async function bootstrapTarget(repositoryRoot, packageName) {
       filename: `mokly-native-${target.target}-0.0.0.tgz`,
     };
   }
+  const { relative, version } = registration;
   return {
-    relative: "packages/viewer",
-    version: "0.1.0",
-    sourceVersion: "0.1.0",
-    filename: "mokly-viewer-0.1.0.tgz",
+    relative,
+    version,
+    sourceVersion: version,
+    filename: `${packageName.slice(1).replace("/", "-")}-${version}.tgz`,
   };
 }
 

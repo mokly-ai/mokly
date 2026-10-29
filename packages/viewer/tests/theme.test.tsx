@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { test } from "node:test";
-
-import { embeddedStyles } from "../scripts/styles.mjs";
-import { SHELL_CSS } from "../src/shell/css.js";
-import { VIEWER_CSS } from "../src/viewer/styles.js";
 
 import { embeddedMarkup } from "./presentation_v7_helpers.js";
 
-/** Exactly what a host receives, scoped away from its own document. */
-const EMBEDDED_CSS: string = embeddedStyles(SHELL_CSS, VIEWER_CSS);
+/** The built stylesheets that a delivery and an embedded host receive. */
+const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
+  fs.readFile(new URL("../dist/shell.css", import.meta.url), "utf8"),
+  fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
+]);
 const ACCENT_OVERRIDES = new Map([
   ["--mokly-accent", "--_mokly-private-accent-default"],
   ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
@@ -75,8 +75,10 @@ test("the dark palette is selected by the root, never by the host document", () 
 test("both appearances define exactly the same shell roles", () => {
   const roles = (source: string): string[] =>
     [...source.matchAll(/(--[a-z0-9-]+):/g)].map((match) => match[1]!).sort();
-  const light = /:root \{([^}]*)\}/.exec(SHELL_CSS);
-  const dark = /:root\[data-mokly-theme="dark"\] \{([^}]*)\}/.exec(SHELL_CSS);
+  const light = /:root \{([^}]*)\}/.exec(STANDALONE_CSS);
+  const dark = /:root\[data-mokly-theme="dark"\] \{([^}]*)\}/.exec(
+    STANDALONE_CSS,
+  );
   assert.ok(light?.[1] && dark?.[1], "the shell defines both appearances");
   const themed = roles(dark[1]);
   assert.ok(themed.length > 20, `only ${themed.length} dark roles`);
@@ -94,7 +96,7 @@ test("only the three public accent overrides survive from a host", () => {
   assert.deepEqual(
     [
       ...new Set(
-        [...SHELL_CSS.matchAll(/(--mokly-[a-z0-9-]+):/g)].map(
+        [...STANDALONE_CSS.matchAll(/(--mokly-[a-z0-9-]+):/g)].map(
           (match) => match[1]!,
         ),
       ),
@@ -128,7 +130,7 @@ test("only the three public accent overrides survive from a host", () => {
 });
 
 test("every frame carries its own preview color-scheme", () => {
-  const css = SHELL_CSS.replace(/\s+/g, " ");
+  const css = STANDALONE_CSS.replace(/\s+/g, " ");
   // A frame declares the scheme of what it shows, so a native control or
   // scrollbar inside a preview follows the preview and not the interface.
   assert.match(
@@ -143,11 +145,12 @@ test("every frame carries its own preview color-scheme", () => {
   );
   // It comes from the stylesheet, not an assignment after the element exists,
   // so it is in force before the frame loads and survives a source swap.
-  assert.doesNotMatch(SHELL_CSS, /style="[^"]*color-scheme/u);
+  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
+    assert.doesNotMatch(styles, /style="[^"]*color-scheme/u);
 });
 
 test("a comparison canvas takes an opaque base from its preview scheme", () => {
-  const css = SHELL_CSS.replace(/\s+/g, " ");
+  const css = STANDALONE_CSS.replace(/\s+/g, " ");
   assert.ok(
     css.includes(
       ".mb-pane-doc { background-color: var(--mbk-screen-bg); " +
@@ -174,6 +177,6 @@ test("a comparison canvas takes an opaque base from its preview scheme", () => {
 test("forced colours are left to the system in both appearances", () => {
   // A reader who forces their own colours must keep them, so no rule opts an
   // element out of the substitution in either appearance.
-  assert.doesNotMatch(SHELL_CSS, /forced-color-adjust:\s*none/u);
-  assert.doesNotMatch(VIEWER_CSS, /forced-color-adjust:\s*none/u);
+  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
+    assert.doesNotMatch(styles, /forced-color-adjust:\s*none/u);
 });

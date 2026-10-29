@@ -37,7 +37,7 @@
   padding: 4px 12px;
   white-space: nowrap;
 }
-.ce-design .mbk-seg button.active {
+.ce-design .mbk-seg button[aria-pressed="true"] {
   background: white;
   box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);

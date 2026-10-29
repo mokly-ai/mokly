@@ -8,6 +8,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { WorkspaceIcon, type WorkspaceIconName } from "@mokly/ui/icons";
+
 import type { Catalogue } from "./catalogue.js";
 import { CONTROLS_COPY } from "./component_controls_copy.js";
 import { EntryDetailsBody } from "./details.js";
@@ -18,7 +20,6 @@ import {
 import { useOptionalShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
-import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
 import { selectedVariant } from "./workspace_selection.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 

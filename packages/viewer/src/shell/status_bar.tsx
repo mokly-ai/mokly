@@ -2,7 +2,7 @@
 // fragment: a clock to the left of the notch, and cellular, Wi-Fi, and battery
 // glyphs to its right. These glyphs keep their own viewBoxes and fill their
 // shapes because the row is sized in device pixels, unlike the stroked 24-unit
-// navigation icons in `icons.tsx`.
+// navigation icons of `@mokly/ui/icons`.
 
 /** Ascending cellular signal bars. */
 function CellularGlyph() {

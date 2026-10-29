@@ -31,6 +31,10 @@
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
+  /* The @mokly/ui components read the shell's names for three roles. */
+  --mbk-accent-deep: var(--mbk-sage-deep);
+  --mokly-accent: var(--mbk-sage);
+  --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mbk-accent-soft: rgba(79, 120, 100, 0.1);
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;
@@ -83,6 +87,10 @@
   --mbk-sage: #86b79b;
   --mbk-sage-deep: #b6d8c4;
   --mbk-accent-contrast: #0e1a14;
+  /* The @mokly/ui components read the shell's names for three roles. */
+  --mbk-accent-deep: var(--mbk-sage-deep);
+  --mokly-accent: var(--mbk-sage);
+  --_mokly-private-on-accent-deep: var(--mbk-accent-contrast);
   --mbk-accent-soft: rgba(134, 183, 155, 0.16);
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
@@ -181,7 +189,7 @@ body {
 
 /* The compact appearance selector shares the narrow bar with the menu, brand
    and search, so the bar tightens its gaps rather than squeezing the query. */
-.mbk-topbar:has(.mbk-appearance[data-compact]) {
+.mbk-topbar:has(.mbk-appearance-frame[data-compact]) {
   gap: 10px;
   padding: 0 12px;
 }
@@ -243,10 +251,16 @@ body {
   font-size: 12px;
   font-weight: 600;
   padding: 4px 12px;
+  text-decoration: none;
   white-space: nowrap;
 }
 
-.mbk-seg > :is(span, a).active {
+.mbk-seg > a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.mbk-seg > :is(span, a)[aria-current="page"] {
   background: var(--chrome-surface);
   box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);

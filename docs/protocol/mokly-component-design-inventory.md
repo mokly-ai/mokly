@@ -81,6 +81,6 @@ selected mode stays a pressed button. Every other eligible depiction, including
 the tall Checklist, keeps all four modes as buttons. No mode control links into
 the Checklist, because it depicts another component; readers reach it beside
 Overlay and Difference in its owning Stacked comparisons gallery.
-The shared selection control preserves native anchor semantics when an authored
+The comparison mode control preserves native anchor semantics when an authored
 transition exists. Browse and Changes artboards keep their non-link spans for
 unsupported controls.

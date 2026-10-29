@@ -6,7 +6,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { CollapseIcon, CopyIcon, ExpandIcon } from "./icons.js";
+import { CollapseIcon, CopyIcon, ExpandIcon } from "@mokly/ui/icons";
+
 import { PhoneStatusBar } from "./status_bar.js";
 import { useOptionalShellStore } from "./store_context.js";
 

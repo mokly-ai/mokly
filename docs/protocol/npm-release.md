@@ -7,11 +7,13 @@ every release.
 ## Package Set
 
 A CLI release publishes its package and five native packages from one reviewed
-commit. It publishes the viewer with the CLI, using one shared version:
+commit. It publishes the UI package and the viewer with the CLI, using one
+shared version:
 
 | Package                  | Content                                                                                                            |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | `@mokly/native-<target>` | one `mokly` binary per target: `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, `win32-x64-msvc`  |
+| `@mokly/ui`              | the shared UI package: the presentational shell components and their stylesheets                                   |
 | `@mokly/viewer`          | the Browse shell: shell assets, the index and detail readers, adapters, React mounting, and the browser entry      |
 | `@mokly/mokly`           | the Node shim behind the `mokly` bin, the sidecar entry, the authoring API, the guides, and the protocol documents |
 
@@ -32,6 +34,8 @@ Each platform package carries `os`, `cpu`, and on Linux `libc` fields, so npm
 installs exactly one, and its version equals the CLI version in every release.
 The viewer is an MIT ESM package with no Node-only entry; the
 [shell delivery contract](./mokly-shell-delivery.md) owns its runtime boundary.
+It lists `@mokly/ui` as an exact dependency at the shared version. The UI
+package is an MIT ESM package with React and React DOM as its only peers.
 The CLI package ships the documentation that the
 [guide contract](./mokly-guides.md#package-publication) lists, at the exact
 package version, including the public JSON receiver fixtures. Packing compares
@@ -43,7 +47,8 @@ metadata. Release pull requests update these together. `publishConfig` targets
 the public npm registry with public access.
 
 Runtime dependencies are intentional and minimal: the exact `@mokly/viewer`
-dependency, the five exact optional platform packages, the sidecar's bundler,
+dependency and its exact `@mokly/ui` dependency, the five exact optional
+platform packages, the sidecar's bundler,
 CSS processor, and JavaScript and HTML parsers, and the type library behind the
 authoring API's prop types. The binary's own work needs none. CSS parsing,
 exclusive directory rename, Git access, and archive encoding are in the Rust
@@ -94,7 +99,7 @@ three times the job's typical duration, including setup and builds.
 
 Read-only preparation downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
-for its target, prepares the viewer and then packs the CLI from the release checkout,
+for its target, prepares the UI package and the viewer and then packs the CLI from the release checkout,
 validates every packed manifest and inventory plus the runtime license closure,
 and smoke-tests clean consumers from those exact archives: the CLI with its
 host platform package runs `mokly --version`, `mokly build` of a minimal
@@ -103,8 +108,9 @@ viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
 API. The smokes install the archives, not the source tree or a workspace link,
 and read protocol documents from the installed package.
 
-The viewer publishes with the CLI at the same version. Both tags identify the
-same release commit. The first run saves the checked seven-package set for 90
+The UI package and the viewer publish with the CLI at the same version. Both
+tags identify the same release commit. The first run saves the checked
+eight-package set for 90
 days before publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never
 rebuilds a partially published version.
@@ -112,7 +118,7 @@ rebuilds a partially published version.
 The release-check workflow runs on a manual dispatch and on pushes to
 `rebuild/ci-release-check`. Every job of a run uses the commit that started
 the run. It builds all five target archives, checks
-native TLS dependencies, packs all seven packages, rechecks the archives, and
+native TLS dependencies, packs all eight packages, rechecks the archives, and
 smoke-tests clean consumers. It has contents-read permission only and cannot
 publish, use the npm environment, request OIDC, or read secrets.
 
@@ -123,11 +129,12 @@ its source report. It has the same read-only limits as the release-check
 workflow. The [bootstrap contract](./npm-bootstrap.md#native-package-registration)
 defines its procedure.
 
-Publication order is the platform packages, then the viewer, then the CLI. Each
-publication completes its registry verification before the next starts, so an
-installable CLI always resolves published platform packages and a published
-viewer. Before each publication the workflow queries npm: a recognized
-missing-version response (`E404` or `ETARGET`) permits the publish; an existing
+Publication order is the platform packages, then the UI package, then the
+viewer, then the CLI. Each publication completes its registry verification
+before the next starts, so an installable CLI always resolves published
+platform packages, a published UI package, and a published viewer. Before
+each publication the workflow queries npm: a recognized missing-version
+response (`E404` or `ETARGET`) permits the publish; an existing
 version must match the checked report byte for byte, or the workflow fails; any
 other lookup failure stops the workflow. A package that exists on the registry
 with the checked bytes is verified and skipped, so a retry continues where the

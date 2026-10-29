@@ -67,7 +67,9 @@ const EXEMPT_SURFACES = new Map([
 
 /**
  * Every rule the audit collects, so a failure names the rule that appeared or
- * vanished instead of only reporting that the total moved.
+ * vanished instead of only reporting that the total moved. A component that
+ * `@mokly/ui` provides is audited in the package stylesheet that its library
+ * sheet imports.
  */
 const AUDITED_BOUNDARIES = [
   "design-component-controls.css .ce-action--quiet",
@@ -77,14 +79,10 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-components.css .ce-variants a[aria-current]",
-  "design-library/chrome/appearance-selector.css .mbk-appearance:focus-within",
-  "design-library/chrome/appearance-selector.css .mbk-appearance:hover",
   "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",
-  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:checked) .mbk-cmp-sync-track",
-  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:focus-visible) .mbk-cmp-sync-track",
   "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
   "design-library/controls/view-controls.css .ce-icon-control:focus-within",
   "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
@@ -92,6 +90,10 @@ const AUDITED_BOUNDARIES = [
   "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
   "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
   "design-stage.css .mbk-chip:is(a):focus-visible",
+  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
+  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
+  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
+  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
@@ -259,4 +261,21 @@ test("no design stylesheet outside a palette source names a colour", async () =>
     }
   }
   assert.deepEqual(failures, []);
+});
+
+test("the design palette declares every token that a @mokly/ui stylesheet reads", async () => {
+  // The root block declares each token, and design_appearance.test.ts holds
+  // the dark block to the same roles.
+  const declared = (await designPalette()).light;
+  const files = new Set<string>();
+  const missing: string[] = [];
+  for (const rule of await designStyleRules()) {
+    if (!rule.file.startsWith("packages/ui/src/")) continue;
+    files.add(rule.file);
+    for (const [, token] of rule.body.matchAll(/var\((--[\w-]+)/gu))
+      if (!declared.has(token!))
+        missing.push(`${rule.file} ${rule.selector}: ${token}`);
+  }
+  assert.ok(files.size > 0, "no @mokly/ui stylesheet was read");
+  assert.deepEqual(missing, []);
 });
