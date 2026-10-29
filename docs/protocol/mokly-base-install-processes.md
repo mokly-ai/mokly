@@ -64,7 +64,7 @@ before the stop. Windows uses the manager's owned job. Decision: signal every
 descendant. Rejected: scripts off for Yarn Classic on Unix, because Classic
 projects would lose the opt-in.
 
-Two limits remain. On macOS, a stop does not signal a descendant whose parent
-exited before the stop. After a normal finish, Mokly signals only the manager's
-process group, so a process in a new session that a finished script left behind
-is outside that signal.
+Two limits remain. On macOS, a stop does not signal a descendant outside the
+manager's process group whose parent exited before the stop. After a normal
+finish, Mokly signals only the manager's process group, so a process in a new
+session that a finished script left behind is outside that signal.
