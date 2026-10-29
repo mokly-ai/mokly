@@ -79,7 +79,21 @@ shell layout rule wins over them without specificity games. Rejected: B,
 unlayered rules at a fixed position in the concatenation as today, because
 file order would then decide ties between package, shell, and host rules.
 Reason: host theming becomes predictable, and the viewer is pre-1.0, so the
-precedence change is acceptable.
+precedence change is acceptable. Superseded on 2026-10-28 by decision 11.
+
+Decision 11 (2026-10-28, the user): review 1 finding 2, option D. The
+package rules are unlayered in every context and come before the shell's
+own rules. Rejected: decision 6's layer, because an unlayered host reset or a
+host layer declared later beats every layered package rule and breaks the
+comparison band. Rejected: C, unlayer only the bundled copy, because the
+mockups and direct users would keep a different cascade. Reason: one cascade
+serves hosts, direct users, and the mockups.
+
+Decision 12 (2026-10-28, the user): review 2 finding 1, option B.
+`@mokly/ui/styles.css` is the only stylesheet subpath. Rejected: A and C,
+state or enforce one `.css` subpath per component, because a component
+stylesheet leaves out the components that it renders and no code imports
+one. Reason: removal costs least before a coordinated release carries them.
 
 Open decisions found during milestone 2, asked on 2026-10-27:
 
@@ -492,6 +506,13 @@ seven packages.
 - [x] Merge `origin/main` at `02eec937` in `c8f6faf6` and at `843ac8bf` in
       `2e2281f6`. Both remerge diffs are empty. Evidence:
       `.context/ui-package/merge-main-3/` and `merge-main-4/`.
+- [x] Fix the open review findings, at the user's request on 2026-10-28,
+      with the recommended options, in `b9ba5dad`: review 1 finding 2 option
+      D (decision 11), review 2 finding 1 option B (decision 12), review 1
+      finding 4 option C, review 1 finding 6 option C, and the two doc gaps
+      of the second options check. Merge `origin/main` at `c9d402cd` in
+      `93fb6b7b` first, with an empty remerge diff. Evidence:
+      `.context/ui-package/review/fix-3/`.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
