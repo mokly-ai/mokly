@@ -148,7 +148,7 @@ fn finding_6_a_key_capacity_counts_toward_the_store_bound() {
 
     assert!(store.record(&lookup).is_none());
     assert_eq!(store.miss(&lookup), Miss::Evicted);
-    assert!(store.retained() <= limit - 1);
+    assert!(store.retained() < limit);
 }
 
 #[test]
