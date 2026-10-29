@@ -40,4 +40,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run tests
-        run: npm test
+        run: GITHUB_SHA=c9d402cdfa5f0c8301be67e8d46868854164a9f6 npm test
