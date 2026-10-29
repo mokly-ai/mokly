@@ -182,7 +182,11 @@ fn finding_3_store_charges_a_context_chain_once_per_entry() {
         modules,
         Some(base.clone()),
     ));
-    let second = stored(bundle("b.css", "module-a.js"), Some(&delta));
+    let mut second_bundle = bundle("b.css", "module-a.js");
+    second_bundle
+        .read_evidence
+        .insert("module-b.js".into(), ReadBaseline::Late("1".repeat(64)));
+    let second = stored(second_bundle, Some(&delta));
     let limit =
         key_bytes("a") + key_bytes("b") + first.bytes + second.bytes + base.bytes + delta.bytes;
     let mut store = StylesheetCache::new(limit);
@@ -193,6 +197,12 @@ fn finding_3_store_charges_a_context_chain_once_per_entry() {
     assert!(store.record("a").is_some());
     assert!(store.record("b").is_some());
     assert!(store.retained() <= limit);
+    store.reject("a".into());
+    assert!(store.context(&base.digest).is_some());
+    assert!(store.context(&delta.digest).is_some());
+    store.reject("b".into());
+    assert!(store.context(&base.digest).is_none());
+    assert!(store.context(&delta.digest).is_none());
 }
 
 #[test]

@@ -46,7 +46,7 @@ impl ContextEvidence {
         full_evidence: ReadEvidence,
         base: Option<Arc<ContextEvidence>>,
     ) -> Self {
-        let evidence = delta_evidence(base.as_ref(), &full_evidence);
+        let evidence = delta_evidence(base.as_ref(), full_evidence);
         let mut stamp = InputStamp::default();
         let consistent = stamp_delta_evidence(tree, root, base.as_ref(), &evidence, &mut stamp);
         let bytes = size_of::<Self>()
@@ -63,62 +63,52 @@ impl ContextEvidence {
         }
     }
 
-    pub(crate) fn full_evidence(&self) -> ReadEvidence {
-        let mut full = self
-            .base
-            .as_ref()
-            .map_or_else(ReadEvidence::default, |base| base.full_evidence());
-        full.extend(self.evidence.clone());
-        full
+    /// Visit this entry and each base without recursive calls.
+    pub(crate) fn entries(&self) -> impl Iterator<Item = &Self> {
+        std::iter::successors(Some(self), |entry| entry.base.as_deref())
     }
 
+    /// The number of versions in the complete evidence.
     pub(crate) fn full_size(&self) -> usize {
-        self.base.as_ref().map_or(0, |base| base.full_size())
-            + self
-                .evidence
-                .inputs
-                .values()
-                .map(BTreeSet::len)
-                .sum::<usize>()
+        self.entries()
+            .flat_map(|entry| entry.evidence.inputs.values())
+            .map(BTreeSet::len)
+            .sum()
     }
 
+    /// Whether every version of this chain occurs in the supplied full evidence.
     pub(crate) fn is_subset_of(&self, full: &ReadEvidence) -> bool {
-        self.full_evidence().inputs.iter().all(|(path, versions)| {
-            full.inputs
-                .get(path)
-                .is_some_and(|available| versions.is_subset(available))
+        self.entries().all(|entry| {
+            entry.evidence.inputs.iter().all(|(path, versions)| {
+                full.inputs
+                    .get(path)
+                    .is_some_and(|available| versions.is_subset(available))
+            })
         })
     }
 
+    /// Whether the full evidence of this chain agrees.
     pub(crate) fn chain_consistent(&self) -> bool {
-        self.consistent
-            && self
-                .base
-                .as_ref()
-                .is_none_or(|base| base.chain_consistent())
+        self.entries().all(|entry| entry.consistent)
     }
 
-    pub(crate) fn for_each_chain(&self, callback: &mut impl FnMut(&ContextEvidence)) {
-        if let Some(base) = &self.base {
-            base.for_each_chain(callback);
-        }
-        callback(self);
-    }
-
+    /// Retained entries in base-first order for validation, delivery, and charging.
     pub(crate) fn chain_arcs(context: &Arc<ContextEvidence>) -> Vec<Arc<ContextEvidence>> {
-        let mut entries = context
-            .base
-            .as_ref()
-            .map_or_else(Vec::new, Self::chain_arcs);
-        entries.push(context.clone());
+        let mut entries = Vec::new();
+        let mut next = Some(context);
+        while let Some(entry) = next {
+            entries.push(entry.clone());
+            next = entry.base.as_ref();
+        }
+        entries.reverse();
         entries
     }
 
+    /// Restore exactly the module evidence represented by this chain.
     pub(crate) fn append_full_evidence(&self, target: &mut ReadEvidence) {
-        if let Some(base) = &self.base {
-            base.append_full_evidence(target);
+        for entry in self.entries() {
+            target.extend(entry.evidence.clone());
         }
-        target.extend(self.evidence.clone());
     }
 }
 
@@ -219,21 +209,20 @@ fn stamp_evidence(
     consistent
 }
 
-fn delta_evidence(base: Option<&Arc<ContextEvidence>>, full: &ReadEvidence) -> ReadEvidence {
-    let Some(base) = base else {
-        return full.clone();
-    };
-    let base = base.full_evidence();
-    let mut delta = full.clone();
-    for (path, versions) in base.inputs {
-        if let Some(added) = delta.inputs.get_mut(&path) {
-            added.retain(|version| !versions.contains(version));
-            if added.is_empty() {
-                delta.inputs.remove(&path);
+fn delta_evidence(base: Option<&Arc<ContextEvidence>>, mut full: ReadEvidence) -> ReadEvidence {
+    if let Some(base) = base {
+        for entry in base.entries() {
+            for (path, versions) in &entry.evidence.inputs {
+                if let Some(added) = full.inputs.get_mut(path) {
+                    added.retain(|version| !versions.contains(version));
+                    if added.is_empty() {
+                        full.inputs.remove(path);
+                    }
+                }
             }
         }
     }
-    delta
+    full
 }
 
 fn stamp_delta_evidence(
@@ -243,17 +232,16 @@ fn stamp_delta_evidence(
     delta: &ReadEvidence,
     stamp: &mut InputStamp,
 ) -> bool {
-    let base = base.map(|base| base.full_evidence());
-    let mut consistent = true;
-    for (path, added) in &delta.inputs {
-        let mut versions = base
-            .as_ref()
-            .and_then(|base| base.inputs.get(path).cloned())
-            .unwrap_or_default();
-        versions.extend(added.iter().cloned());
-        let mut evidence = ReadEvidence::default();
-        evidence.inputs.insert(path.clone(), versions);
-        consistent &= stamp_evidence(tree, root, &evidence, stamp);
+    let Some(base) = base else {
+        return stamp_evidence(tree, root, delta, stamp);
+    };
+    let mut full_paths = delta.clone();
+    for (path, versions) in &mut full_paths.inputs {
+        for entry in base.entries() {
+            if let Some(earlier) = entry.evidence.inputs.get(path) {
+                versions.extend(earlier.iter().cloned());
+            }
+        }
     }
-    consistent
+    stamp_evidence(tree, root, &full_paths, stamp)
 }

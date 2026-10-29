@@ -75,27 +75,18 @@ impl CachedStylesheets {
     /// Check the stamp of a stored context entry once for each attempt.
     fn current(&self, context: &Arc<ContextEvidence>) -> bool {
         let mut checked = lock(&self.checked);
-        self.current_with(&mut checked, context)
-    }
-
-    fn current_with(
-        &self,
-        checked: &mut Vec<(Arc<ContextEvidence>, bool)>,
-        context: &Arc<ContextEvidence>,
-    ) -> bool {
-        if let Some((_, current)) = checked
-            .iter()
-            .find(|(entry, _)| Arc::ptr_eq(entry, context))
-        {
-            return *current;
+        let mut current = true;
+        for entry in ContextEvidence::chain_arcs(context) {
+            let own_current = match checked.iter().find(|(held, _)| Arc::ptr_eq(held, &entry)) {
+                Some((_, current)) => *current,
+                None => {
+                    let current = entry.stamp.current(self.tree.as_ref()) == entry.stamp;
+                    checked.push((entry, current));
+                    current
+                }
+            };
+            current &= own_current;
         }
-        let base_current = context
-            .base
-            .as_ref()
-            .is_none_or(|base| self.current_with(checked, base));
-        let own_current = context.stamp.current(self.tree.as_ref()) == context.stamp;
-        let current = base_current && own_current;
-        checked.push((context.clone(), current));
         current
     }
 
@@ -118,12 +109,13 @@ impl CachedStylesheets {
                 .filter(|entry| entry.is_subset_of(&evidence))
                 .max_by_key(|entry| entry.full_size())
                 .cloned();
-            if base.is_none() {
-                base = stored
-                    .1
-                    .into_iter()
-                    .filter(|entry| self.current(entry) && entry.is_subset_of(&evidence))
-                    .max_by_key(|entry| entry.full_size());
+            let mut size = base.as_ref().map_or(0, |entry| entry.full_size());
+            for entry in stored.1 {
+                let candidate_size = entry.full_size();
+                if candidate_size > size && entry.is_subset_of(&evidence) && self.current(&entry) {
+                    size = candidate_size;
+                    base = Some(entry);
+                }
             }
             Arc::new(ContextEvidence::with_base(
                 self.tree.as_ref(),
@@ -148,10 +140,10 @@ impl CachedStylesheets {
         if let Some(context) = &record.context {
             for entry in ContextEvidence::chain_arcs(context) {
                 let mut replayed = lock(&self.replayed);
-                if !replayed.insert(entry.digest.clone()) {
-                    continue;
+                if !replayed.contains(&entry.digest) {
+                    self.observe(&entry.evidence)?;
+                    replayed.insert(entry.digest.clone());
                 }
-                self.observe(&entry.evidence)?;
             }
         }
         Ok(record.complete())
@@ -223,3 +215,11 @@ mod stylesheet_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_support.rs"]
 mod stylesheet_support;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_chain_support.rs"]
+mod stylesheet_chain_support;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_chain_tests.rs"]
+mod stylesheet_chain_tests;

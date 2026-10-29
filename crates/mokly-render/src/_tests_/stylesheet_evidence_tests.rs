@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
 use mokly_model::material::digest;
+use mokly_source_interface::error::SourceError;
 use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
 use mokly_source_interface::stream::{OpenedSource, SourceStream};
 use mokly_source_interface::tree::SourceTreeMock;
@@ -199,4 +200,26 @@ fn ranged_cache_results_keep_their_late_whole_file_stamp_and_original_ranges() {
             observed.read_evidence
         );
     }
+}
+
+#[test]
+fn finding_3_failed_context_observation_remains_failed_on_a_local_hit() {
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let compiler = CachedStylesheets::new(
+        Arc::new(Unimock::new(
+            StylesheetBundlerMock::bundle
+                .next_call(matching!(_))
+                .returns(Ok(bundle())),
+        )),
+        Arc::new(Unimock::new(
+            SourceTreeMock::observe_inputs
+                .each_call(matching!(_, _))
+                .answers(&|_, path, _| Err(SourceError::Changed { path: path.into() })),
+        )),
+        "/repo".into(),
+        "same".into(),
+        shared,
+    );
+    assert!(compiler.bundle(&root()).is_err());
+    assert!(compiler.bundle(&root()).is_err());
 }

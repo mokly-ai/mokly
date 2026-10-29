@@ -180,11 +180,8 @@ impl StylesheetCache {
         self.contexts.retain(|context| {
             records.values().any(|record| {
                 record.context.as_ref().is_some_and(|used| {
-                    let mut found = false;
-                    used.for_each_chain(&mut |entry| {
-                        found |= std::ptr::eq(entry, context.as_ref());
-                    });
-                    found
+                    used.entries()
+                        .any(|entry| std::ptr::eq(entry, context.as_ref()))
                 })
             })
         });
