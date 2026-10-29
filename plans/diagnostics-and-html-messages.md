@@ -285,9 +285,9 @@ before its fix.
 - [x] Review of `36ad15e8`: type the invocation as a `Field` variant in
       `numeric_warnings`, so that no formatter argument is ignored. Done in
       `7eb5d776`.
-- [ ] Review of `7eb5d776`: keep the shared message tail of
+- [x] Review of `7eb5d776`: keep the shared message tail of
       `props-unsafe-integer` in one place, so that a wording change needs
-      one edit.
+      one edit. Done in `0125140a`.
 - Done in `36ad15e8`. Red and green runs:
   `.context/diagnostics-and-html-messages/m2-red.log` and `m2-green.log`.
 
@@ -384,16 +384,19 @@ The decided offset maps and finding 3 A in `mokly-catalogue`.
 
 The README parts for items 1 and 128 move to Milestone 4.
 
-- [ ] `crates/mokly-catalogue/README.md`: source offset maps, and the warning
-      formatter and the JSON quoting helper under Key Code.
-- [ ] `crates/mokly-html/README.md`: page callback warnings, invocation
-      warnings, and duplicate attribute text.
-- [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
-      row also names saved variant slots, which warn today.
+- [x] `crates/mokly-catalogue/README.md`: the warning formatter and the
+      JSON quoting helper under Key Code. Done in `50adf49a`.
+- [ ] `crates/mokly-catalogue/README.md`: the source offset maps.
+- [x] `crates/mokly-html/README.md`: page callback warnings, invocation
+      warnings, and duplicate attribute text. Done in `50adf49a`.
+- [x] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
+      row also names saved variant slots, which warn today. Done in
+      `50adf49a`.
 - [x] Delete the comment without a pattern from `.prettierignore` (finding 5
       A). Done in `2b77ae17`.
-- [ ] Remove the status line from each protocol page whose behaviour is now
-      implemented.
+- [x] Remove the status lines of the build warnings, entry props, and
+      component controls pages. Done in `50adf49a`.
+- [ ] Remove the status line of the HTML screens page after Milestone 5.
 
 ## Milestone 7: Verification, bookkeeping, commit, review, and pull request
 
