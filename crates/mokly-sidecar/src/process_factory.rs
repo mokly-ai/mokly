@@ -15,7 +15,7 @@ use crate::postcss_phase::PhaseState;
 use crate::process_clock::Wait;
 use crate::process_completion::{ProcessCompletion, complete};
 use crate::process_control::ProcessControl;
-use crate::process_environment::apply as apply_environment;
+use crate::process_environment;
 use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
@@ -90,7 +90,7 @@ impl WorkerFactory for NodeFactory {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        apply_environment(
+        process_environment::apply(
             &mut command,
             std::env::vars_os().map(|(name, _)| name),
             &repository,

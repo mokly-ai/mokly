@@ -1,12 +1,12 @@
 //! Pure option normalization and environment fallbacks.
 
 use mokly_catalogue::config_types::{ResolvedConfig, ReviewConfig};
+use mokly_publish::redaction::Secret;
+use mokly_publish::settings::Token;
 use url::Url;
 
 use crate::errors::Failure;
 use crate::grammar::{Cli, Publish, Verb};
-use mokly_publish::redaction::Secret;
-use mokly_publish::settings::Token;
 
 /// Environment values read once at the binary composition root.
 #[derive(Default)]

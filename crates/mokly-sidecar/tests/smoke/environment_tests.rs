@@ -19,7 +19,7 @@ const CHILD_MARKER: &str = "MOKLY_ENVIRONMENT_PROBE";
 #[test]
 fn inherited_mokly_environment_is_hidden_from_sidecar_children() {
     let executable = env::current_exe().unwrap();
-    let status = Command::new(executable)
+    let output = Command::new(executable)
         .arg("--exact")
         .arg("smoke::environment_tests::child_checks_environment")
         .arg("--nocapture")
@@ -28,9 +28,19 @@ fn inherited_mokly_environment_is_hidden_from_sidecar_children() {
         .env("MOKLY_POSTCSS_PHASES", "0")
         .env("FIXTURE_ENVIRONMENT_VALUE", "kept")
         .env(CHILD_MARKER, "1")
-        .status()
+        .output()
         .unwrap();
-    assert!(status.success(), "child process failed: {status}");
+    assert!(
+        output.status.success(),
+        "child process failed: {}\nstderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("1 passed"),
+        "child test did not run exactly one test:\n{stdout}"
+    );
 }
 
 #[test]
