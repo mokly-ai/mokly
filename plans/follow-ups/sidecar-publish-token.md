@@ -3,37 +3,22 @@
 - **Severity:** Low. **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `crates/mokly-sidecar/src/process_factory.rs`.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 180 (delta review 5, older than the delta):
-`crates/mokly-sidecar/src/process_factory.rs:82`: the sidecar inherits
-`MOKLY_TOKEN`, so PostCSS, renderer, and component code from the
-repository and from the base commit can read it. `main` ran that code
-with the same environment. Related to user item 151. Severity Low,
-security, effort not recorded. Options (estimate): A, remove
-`MOKLY_TOKEN` from the sidecar environment; B, an allowlisted sidecar
-environment, as 145 B gives base installs. Recommended: A, because an
-allowlist can break consumer PostCSS settings that read other
-variables.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** security.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** The JavaScript sidecar inherits Mokly's environment. Consumer renderer and PostCSS code can inspect that environment.
+- **Problem:** The child receives `MOKLY_TOKEN`, even though rendering does not need the publication secret.
+- **Impact if no action:** Consumer code from the working or base source can disclose the token.
 - **Root question:** How should Mokly remove the publish token from the sidecar environment?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Medium.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** B.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** A. The Task section records this recommendation.
+  - **A.** Remove `MOKLY_TOKEN` from the sidecar environment. Effort: Small.
+  - **B.** Start sidecars from an explicit allowed environment list. Effort: Medium.
+- **Left out:** Clearing all environment variables can break legitimate consumer PostCSS settings.
+- **Wider fix:** B. An allowed list protects every inherited secret class.
+- **Previous examples:** User item 151 found the related parent-process exposure for install scripts.
+- **Recommendation:** A. It removes the known unused secret. B best protects all inherited secrets.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6384).

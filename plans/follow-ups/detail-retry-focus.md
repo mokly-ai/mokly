@@ -3,32 +3,22 @@
 - **Severity:** Low. **Effort:** Medium.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `packages/viewer/src/shell/component_controls_copy.ts` and `packages/viewer/src/shell/workspace_usage.tsx`.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 160 (W2 finding 1): Props and Usage Try again leave
-focus on the page. Severity Low, product bug, effort Medium
-(estimate). Options: A, document that a detail retry keeps the
-browser's focus, effort not recorded; B, move focus to the loading
-status, then to the panel heading, Medium (estimate). Recommended: B.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** product bug.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** The Props and Usage panels show a Try again action after a detail load fails.
+- **Problem:** Activating Try again leaves focus on the page instead of the new loading state or restored panel.
+- **Impact if no action:** Keyboard and screen-reader users lose their place during recovery.
 - **Root question:** How should Mokly move focus after a detail retry?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Medium.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** B.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** B. The Task section records this recommendation.
+  - **A.** Document that retry keeps browser focus. Effort: Small.
+  - **B.** Move focus to the loading status and then to the restored panel heading. Effort: Medium.
+- **Left out:** Moving focus only after success leaves the loading transition unannounced.
+- **Wider fix:** B. One recovery focus sequence covers every detail panel.
+- **Previous examples:** W2 finding 1 recorded the Props and Usage cases.
+- **Recommendation:** B. It gives recovery a predictable focus destination.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6183).

@@ -6,14 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 154 (135 B review finding 47): opt-in tests are
-missing. Severity Low. Recommended: B, an end-to-end test for each
-package manager. The 135 B review record holds the other options.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** test.
 - **Background:** Mokly can opt in to dependency lifecycle scripts for npm, pnpm, Yarn Classic, and Yarn Berry.

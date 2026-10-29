@@ -6,16 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Possible later change (decision work review finding 2, option C): key
-every plain-text link target only by whether it exists, which also
-removes the `plans/` special case. Preparation must then decide which
-targets are resources, and a missed target would stop an edited asset
-from changing its document key. Not decided.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** performance.
 - **Background:** Markdown document keys include linked local inputs. Planning links currently use a special existence-only rule.

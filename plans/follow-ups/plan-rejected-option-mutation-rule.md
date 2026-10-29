@@ -6,12 +6,6 @@
 - **Location:** The shared `plans` skill.
 - **Reason:** The review or plan deferred this work until after PR #225.
 
-## Task
-
-A review proposed a rule that each rejected decision option must have one mutation and one failing test. This is a new shared process gate and needs a user decision.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** process.
 - **Background:** Plan reviews check decision options. They do not require a mutation test for every rejected option.

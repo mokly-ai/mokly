@@ -6,15 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 155 (135 B review finding 51): the scripts mode is
-stored in several places. Severity Low. Recommended: B, keep the mode
-on the install command. The 135 B review record holds the other
-options.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** code structure.
 - **Background:** The base dependency path stores the lifecycle-scripts mode in several values.

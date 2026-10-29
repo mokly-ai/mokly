@@ -3,38 +3,22 @@
 - **Severity:** Low. **Effort:** Medium.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** The three warning producers and their protocol tables.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 87 (CLI defaults hub finding 5): define the new
-warning messages. `html-ignore-attribute`, `props-control-bounds`,
-and `props-unsafe-integer` have no defined message. Invocation
-warnings name the rendered entry and only the prop path, for example
-entry "home": prop "/count" when `home` has no `count` prop, and they
-merge with the entry's own warning. Prop names appear as "/count" and
-as "count". Severity Low, effort Medium for B. Options: A, define the
-current messages in the three contracts and add the code to the HTML
-Diagnostics table, Small (estimate); B, also make invocation warnings
-name the component path and the instance id and use one prop-name
-form, then define the messages, Medium. Recommended: B.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** docs or spec.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** Three warning codes lack defined messages. Invocation warnings also use two prop-path forms and omit the component instance.
+- **Problem:** Messages can change independently, and an invocation warning can identify only the rendered entry.
+- **Impact if no action:** Users can receive inconsistent paths and insufficient context for the same prop problem.
 - **Root question:** How should Mokly define the missing warning messages?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Medium.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** B.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** B. The Task section records this recommendation.
+  - **A.** Define the current three messages and add the missing diagnostic code to the table. Effort: Small.
+  - **B.** Also name component path and instance id. Use one prop-path form before defining every message. Effort: Medium.
+- **Left out:** Generating messages from tests makes tests, not the protocol, own user-facing behavior.
+- **Wider fix:** B. One invocation context and path format prevent message drift.
+- **Previous examples:** CLI defaults hub finding 5 records the current message and path differences.
+- **Recommendation:** B. It defines consistent messages with enough recovery context.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5851).

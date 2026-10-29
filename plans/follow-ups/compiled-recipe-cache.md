@@ -6,15 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Add a byte-bounded cache of unused compiled recipes, revalidated before
-reuse, under F8 decision 59 option C. Revalidate compiler and resolution
-inputs, and agree the byte budget before implementation. The current
-recipe lifetime stays in force under option A until this work lands.
-
-## Decision
-
 - **Source:** Design.
 - **Category:** performance.
 - **Background:** Compiled recipes are reusable JavaScript build plans. Mokly currently drops a recipe when its active use ends.

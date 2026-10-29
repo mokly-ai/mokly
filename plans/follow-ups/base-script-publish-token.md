@@ -3,37 +3,23 @@
 - **Severity:** Medium. **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `crates/mokly-compare/src/process.rs` and base install process ownership.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 151 (135 B review finding 43): a script can read the
-publish token. A script reads `MOKLY_TOKEN` from Mokly's own
-`/proc/{pid}/environ`. Severity Medium, security, effort Small.
-Options: A, document it and advise `--no-base-install-scripts`,
-effort not recorded; B, keep scripts off when a token is present, with
-a warning, Small; C, a separate process space, effort not recorded.
-Recommended: B.
-
-- Security: the hub recommends a decision before the first npm release.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** security.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** Base dependency scripts run as child processes. A script can read the parent environment through `/proc/{pid}/environ`.
+- **Problem:** The parent environment contains `MOKLY_TOKEN`. An opted-in dependency script can read the publication secret.
+- **Impact if no action:** Consumer dependency code can disclose the token during a build or publication.
 - **Root question:** How should Mokly keep the publish token from base install scripts?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Small.
-  - **C.** Use option C from the Task section. Effort: Large.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** C.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** B. The Task section records this recommendation.
+  - **A.** Document the risk and advise `--no-base-install-scripts`. Effort: Small.
+  - **B.** Keep scripts disabled when a publication token is present. Emit a warning. Effort: Small.
+  - **C.** Run dependency scripts in a separate process space that cannot inspect the parent environment. Effort: Large.
+- **Left out:** Passing the token to the sidecar or manager child makes the exposure worse.
+- **Wider fix:** C. Process isolation removes this class for all parent secrets.
+- **Previous examples:** User item 151 found the same parent-environment class as the sidecar token item.
+- **Recommendation:** B. It blocks the known secret path with a small change. C best protects all parent secrets.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6118).

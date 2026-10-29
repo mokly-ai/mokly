@@ -3,48 +3,23 @@
 - **Severity:** Low. **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `crates/mokly-css/src/rename_selectors.rs` and the module integrity fingerprint.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 112 (M14 nesting report item 27, round 7
-differential): removing a bare `:global` or `:local` at
-`crates/mokly-css/src/rename_selectors.rs:99` can change a statement.
-Before an at-keyword, it turns a rule into an at-rule, for example
-`:global@media all{}` into `@media all{}`. Alone in a statement
-without a block, it empties the statement, so `.p{:local}` builds as
-`.p{}`. The token check misses both where its two readings agree.
-Severity Low. Options: A, keep the behaviour, Small; B, add the kind
-of each statement to the token check's fingerprint, so that any edit
-that changes a statement fails with the catalogued message, Small;
-C, keep a bare wrapper that no selector follows, so that lightningcss
-reports the syntax error, Small, but not for the `:global()` form.
-Recommended: B, because one guard catches every edit that changes a
-statement. B and C reject stylesheets that build today, so keep the
-behaviour until the user decides.
-
-- `crates/mokly-css/src/rename_selectors.rs:181`: removing a `:global()`
-  wrapper before an at-keyword, as in `:global(@media all){.a{}}`, also
-  turns a rule into an at-rule. Found by the M14 nesting round 7 review.
-  User item 112 covers it.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** product bug.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** The CSS Modules renamer removes bare `:global` and `:local` wrappers. The token check compares scanner fingerprints.
+- **Problem:** Removing a wrapper can turn a rule into an at-rule or empty a statement. The current fingerprint misses both changes.
+- **Impact if no action:** Mokly can accept CSS whose statement meaning changed during rewriting.
 - **Root question:** How should Mokly detect statement changes from bare CSS Module wrappers?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Small.
-  - **C.** Use option C from the Task section. Effort: Small.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** B.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** B. The Task section records this recommendation.
+  - **A.** Keep the current behavior. Effort: Small.
+  - **B.** Add each statement kind to the fingerprint and reject any rewrite that changes it. Effort: Small.
+  - **C.** Keep a bare wrapper when no selector follows so the CSS parser reports it. This does not cover every wrapper form. Effort: Small.
+- **Left out:** A special case for only `:global()` still leaves the bare form unprotected.
+- **Wider fix:** B. Statement kind protects every rewrite that changes grammar.
+- **Previous examples:** User item 112 includes at-rule and empty-statement examples.
+- **Recommendation:** B. One fingerprint rule covers the full class.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5962).

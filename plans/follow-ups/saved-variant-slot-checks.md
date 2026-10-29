@@ -3,37 +3,22 @@
 - **Severity:** Low. **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `crates/mokly-catalogue/src/validate_templates.rs` and `docs/protocol/mokly-html-components.md`.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 128 (F21 decision): saved variant slot element
-checks. The F21 record gives no severity or effort. Options: A, keep
-the checks and state the rule in `mokly-html-components.md`; B, keep
-only the required `html-ignore-attribute` and `html-foster-parented`
-warnings. Recommended: A. The rebuild branch records this item as the
-line "Item 128" after the F21 record. Keep one line when both reach
-the plan.
-
-- Saved slots skip the forbidden and unknown element checks, because a
-  new build error needs the user's yes (item 128 is open).
-
-## Decision
 
 - **Source:** Review.
 - **Category:** docs or spec.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** Saved component variants can supply slot elements. Catalogue checks currently validate those elements like other authored slot content.
+- **Problem:** The protocol does not state whether every current element check applies to saved variant slots.
+- **Impact if no action:** A future refactor can remove checks or warnings without a clear requirement.
 - **Root question:** How should Mokly define saved variant slot element checks?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Small.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** A.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** A. The Task section records this recommendation.
+  - **A.** Keep the current checks and state the rule in the HTML components contract. Effort: Small.
+  - **B.** Keep only `html-ignore-attribute` and `html-foster-parented` warnings for saved variant slots. Effort: Small.
+- **Left out:** Skipping all checks would allow invalid saved slot markup without required warnings.
+- **Wider fix:** A. One authored-slot rule prevents format-specific validation drift.
+- **Previous examples:** F21 recorded this as user item 128.
+- **Recommendation:** A. It documents and preserves the existing behavior.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6018).

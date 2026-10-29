@@ -6,25 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 64 (engine R20-1, from M14 review 6 finding 8):
-decide on streamed Git blob copies and batched digests. Each opaque
-asset digest starts its own Git process, and delivery buffers a
-copy. 64 assets cause 128 opaque Git commands, and a 16.78 MB file
-needs two payload copies during delivery. Every bound holds.
-Severity Low, effort Large. Options: A, remove per-asset process
-startup and the extra full-blob buffer, and preserve all existing
-bounds, Large; B, retain the measured adapter, Small (estimate).
-Recommended: A. No option is applied.
-
-Measure digest commands and buffered delivery under the M14 comparison
-workloads before implementation. Keep the 64 MiB Git bound. The measurement
-was a separate checklist line in the completed plan, but it is a prerequisite
-of this decision.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** performance.
 - **Background:** Comparison hashes opaque Git assets and copies them into delivery. Each asset currently starts separate commands and uses buffered copies.
@@ -36,7 +17,7 @@ of this decision.
   - **B.** Retain the measured adapter. Effort: Small.
 - **Left out:** Removing the bounds can reduce code but breaks the comparison memory contract.
 - **Wider fix:** A.
-- **Previous examples:** Batched base reads removed per-file Git process startup for converted sources.
+- **Previous examples:** Batched base reads removed per-file Git process startup. The original measurement is `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
 - **Recommendation:** A. It removes both measured costs while preserving the existing limits.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 

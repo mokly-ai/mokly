@@ -6,12 +6,6 @@
 - **Location:** The repository Rust checks.
 - **Reason:** The review or plan deferred this work until after PR #223.
 
-## Task
-
-A review proposed an xtask check that every Rust file starts with a module doc. This adds a stricter gate and needs user approval.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** process.
 - **Background:** Rust module docs explain each file's role. The repository has no check that every Rust file starts with one.

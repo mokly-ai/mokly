@@ -6,16 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 174 (W8, outside its scope):
-`crates/mokly-compare/src/git_tree.rs:214` reports a symbolic-link
-entry as `Symlink`, so a package root that is a link, or goes through
-one, loads in the working tree but fails in the base tree. Severity
-Low, effort not recorded. Options: to be written in the follow-up.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** product bug.
 - **Background:** Changes loads package roots from the working tree and the Git base tree. A package root can use a symbolic link.

@@ -6,12 +6,6 @@
 - **Location:** `.github/workflows/blacksmith-testbox.yml`.
 - **Reason:** The review found this problem outside the change that it reviewed.
 
-## Task
-
-The 30-minute job timeout stopped a healthy Node file-delivery run before it downloaded the report.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** process.
 - **Background:** Remote verification gives each Testbox job 30 minutes. One healthy file-delivery job reached that limit before report download.
@@ -24,7 +18,7 @@ The 30-minute job timeout stopped a healthy Node file-delivery run before it dow
   - **C.** Measure the suite and reduce or redistribute its work under the 30-minute guard. Effort: Medium.
 - **Left out:** Removing the timeout loses the remote cost and liveness bound.
 - **Wider fix:** C.
-- **Previous examples:** CI timing calibration moved tests to balance the other Testbox jobs.
+- **Previous examples:** CI timing calibration balanced other Testbox jobs. Evidence is in `.context/ci-release-fixes/testbox-timeout-annotations.json`.
 - **Recommendation:** C. It preserves the guard and makes the suite fit it.
 - **Action:** ask the user, because condition 6 holds. This performance or process change needs the user to choose its cost.
 

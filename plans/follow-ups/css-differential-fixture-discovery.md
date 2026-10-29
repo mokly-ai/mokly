@@ -6,29 +6,10 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Decide finding 1 of the final review of `rebuild/port-111c` at
-`b152d0dc` (report: `.context/port-111c/review/review-7.md`). The
-validity check confirmed it. The options check added options E to G
-and changed the recommendation from A to C.
-
-- Finding 1: the differential fixture list misses two repository
-  stylesheets that #227 added, and a moved or deleted listed file breaks
-  the `mokly-css` test build. Severity Low, effort Medium. Recommended: C,
-  read the tracked stylesheets at test time in an integration test behind
-  a test-support feature.
-- Open problem found by the options check:
-  `crates/mokly-css/src/_tests_/token_differential_tests.rs:200`: the
-  assertion that the sources are not empty cannot fail, because the five
-  generated stylesheets are always present.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** test.
 - **Background:** The CSS differential test compares Mokly's scanner with repository stylesheets and generated stylesheets.
-- **Problem:** Its static repository list missed two stylesheets. A rename or deletion can also stop the unit test from compiling.
+- **Problem:** Its static repository list missed two stylesheets. A rename can stop the build. The generated sources also make its nonempty assertion unable to fail.
 - **Impact if no action:** Repository CSS can leave the differential corpus silently. A moved file can break the test build.
 - **Root question:** How should Mokly discover CSS differential fixtures from tracked stylesheets?
 - **Options:**
@@ -37,7 +18,7 @@ and changed the recommendation from A to C.
   - **C.** Read tracked styles in an integration test behind a test-support feature. Keep generated cases in the unit test. Effort: Medium.
 - **Left out:** Dropping repository styles removes the differential coverage that found the scanner defects.
 - **Wider fix:** C.
-- **Previous examples:** PR #227 added two stylesheets that the static list missed.
+- **Previous examples:** Final review `b152d0dc` found the missing PR #227 stylesheets and the ineffective nonempty assertion.
 - **Recommendation:** C. It follows tracked files and keeps unit tests independent of the repository filesystem.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 

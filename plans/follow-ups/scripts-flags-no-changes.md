@@ -6,14 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 157 (135 B review finding 53): the scripts flags
-are ignored with `--no-changes`. Severity Low. Recommended: A,
-document it. The 135 B review record holds the other options.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** docs or spec.
 - **Background:** Base install script flags affect comparison preparation. `--no-changes` disables that preparation.

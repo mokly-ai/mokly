@@ -3,36 +3,22 @@
 - **Severity:** Low. **Effort:** Medium.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** `tests/browser/branch_point_affected.ts` and `packages/viewer/tests/affected_comparison.test.ts`.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 144 (103 C review finding 2): Affected link tests
-do not check their axes. `tests/browser/branch_point_affected.ts`
-lines 126 to 193 take the expected viewport from the link itself, and
-`packages/viewer/tests/affected_comparison.test.ts` lines 134 to 168
-do not read the Affected link URLs. Severity Low, test, effort
-Medium. Options: A, add the expected viewport and scheme to the
-fixture, and assert the query and the Details text, Small
-(estimate); B, a shared helper with independent destination, axis,
-comparison, and Details expectations, Medium. Recommended: B.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** test.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** Affected links select an entry, viewport, color scheme, comparison, and Details text. Two test suites cover these links.
+- **Problem:** One test derives its expected viewport from the link under test. The other test does not inspect link URLs.
+- **Impact if no action:** A link can use the wrong axis while both tests pass.
 - **Root question:** How should Mokly test every axis of Affected links?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Medium.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** B.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** B. The Task section records this recommendation.
+  - **A.** Add independent viewport and scheme values to the fixture. Assert each URL and its Details text. Effort: Small.
+  - **B.** Add one shared helper with independent destination, axis, comparison, and Details expectations. Effort: Medium.
+- **Left out:** Reading expected values from the generated link repeats the current defect.
+- **Wider fix:** B. One helper prevents both suites from deriving expectations from output.
+- **Previous examples:** The completed plan records the two affected test ranges.
+- **Recommendation:** B. Shared independent expectations protect every link axis.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6099).

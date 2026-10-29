@@ -6,12 +6,6 @@
 - **Location:** `crates/mokly-cli` publication output.
 - **Reason:** The review or plan deferred this work until after PR #222.
 
-## Task
-
-`publish` keeps the render cache alive through upload because its output owns the cache. Measure the cost and decide whether to release it earlier.
-
-## Decision
-
 - **Source:** Design.
 - **Category:** performance.
 - **Background:** Publication builds output and then uploads it. The publication output owns the render cache through both phases.

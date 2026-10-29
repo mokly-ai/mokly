@@ -3,49 +3,22 @@
 - **Severity:** Low. **Effort:** Small.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
-- **Location:** See the affected paths in the task below.
+- **Location:** The strict-mode summaries listed in this item and `crates/mokly-cli/src/grammar.rs`.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
-
-## Task
-
-Resolve user item 186 (docs): short summaries still say that
-`--strict` makes warnings fail, but `base-dependencies` no longer
-counts (183 C). The exception is stated once, in
-`mokly-build-warnings.md` Strict Mode. The summaries:
-`README.md:155` and `:161`, `docs/guides/start/build.md:52`,
-`docs/guides/cli/check.md:16`, `docs/guides/cli/build.md:26`,
-`docs/guides/cli/publish.md:33` and `:79`,
-`docs/guides/cli/serve.md:66`, `docs/guides/authoring/screens.md:216`,
-`docs/protocol/mokly-upload.md:58`,
-`docs/architecture/build-pipeline.md:114` (page merged into
-`docs/architecture/rust-core.md` on 2026-10-26 without this summary), and
-`examples/basic/specs/design/library/README.md:192`. The second delta
-review found more: `docs/guides/cli/options-and-exit-status.md:51`,
-`docs/protocol/README.md:19`, `docs/protocol/mokly-export.md:37`,
-`:129`, and `:235`, `docs/protocol/mokly-runtime.md:91`,
-`docs/protocol/mokly-package.md:88`,
-`docs/protocol/mokly-terminal-help.md:90`, and the CLI help in
-`crates/mokly-cli/src/grammar.rs:97` and `:123` (the `publish` help
-says "Fail on every build warning before uploading."). Severity Low,
-docs, effort not recorded. Options (estimate): A, name the exception
-or link to Strict Mode in each summary that states the rule; B, keep
-one home for the exception. Recommended: A.
-
-## Decision
 
 - **Source:** Review.
 - **Category:** docs or spec.
-- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
-- **Problem:** The completed plan left this item open.
-- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Background:** Strict mode fails on every build warning except `base-dependencies`. One protocol page owns that exception.
+- **Problem:** Many short summaries still say that every warning fails. The CLI publish help makes the same claim.
+- **Impact if no action:** Users can expect exit failure when only a base dependency warning exists.
 - **Root question:** How should Mokly align strict-mode warning summaries?
 - **Options:**
-  - **A.** Use option A from the Task section. Effort: Small.
-  - **B.** Use option B from the Task section. Effort: Small.
-- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
-- **Wider fix:** None. The existing repository rules already cover this class.
-- **Previous examples:** The completed plan record linked below.
-- **Recommendation:** A. The Task section records this recommendation.
+  - **A.** Name the exception or link to the strict-mode rule in each summary that states the policy. Effort: Small.
+  - **B.** Remove universal policy claims from summaries and keep one linked home. Effort: Small.
+- **Left out:** Changing strict behavior would be a separate product decision.
+- **Wider fix:** None. The documentation skill already requires one source and aligned summaries.
+- **Previous examples:** User item 186 lists the affected guides, protocols, README, mockup README, and CLI help.
+- **Recommendation:** A. It keeps useful summaries and makes each one accurate.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6438).

@@ -6,14 +6,6 @@
 - **Location:** See the affected paths in the task below.
 - **Reason:** PR #199 merged before this work. The completed plan is now being removed.
 
-## Task
-
-Resolve user item 156 (135 B review finding 52): the hint has no
-final period. Severity Low. Recommended: A. The 135 B review record
-holds the options.
-
-## Decision
-
 - **Source:** Review.
 - **Category:** UX wording.
 - **Background:** The base-install recovery hint is a complete sentence in terminal output.
@@ -25,7 +17,7 @@ holds the options.
   - **B.** Keep the current text. Effort: Small.
 - **Left out:** There is no third text location or behavior to change.
 - **Wider fix:** None. The existing repository rules already cover this class.
-- **Previous examples:** None found.
+- **Previous examples:** User item 156 came from review finding 52 of the 135 B change.
 - **Recommendation:** A. It fixes the copy defect without changing meaning.
 - **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
