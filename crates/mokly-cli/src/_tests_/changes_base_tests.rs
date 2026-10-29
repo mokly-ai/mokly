@@ -88,6 +88,7 @@ fn lease() -> Arc<Lease> {
 
 fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
     Arc::new(BaseSide {
+        working_root: "/repo".into(),
         sources,
         dependencies: Resolved {
             tier: Tier::Working,
@@ -97,6 +98,7 @@ fn side(sources: Arc<Lease>) -> Arc<BaseSide> {
             lease: None,
             repository_roots: Vec::new(),
         },
+        cache_namespace: None,
         identity: "commit".into(),
     })
 }

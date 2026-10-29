@@ -1,64 +1,9 @@
+//! Render environment resolution, runtime packages, and CSS class maps.
+
 use std::collections::BTreeMap;
 
-use mokly_sidecar::compiled::CompiledGeneration;
-use mokly_sidecar::methods::{Bundle, ModuleResolution};
-use mokly_sidecar::results;
-
-use super::{ClassMaps, derive, package, resolution};
-
-fn params(source_root: &str) -> Bundle {
-    Bundle {
-        evaluation: Some(format!("evaluation of {source_root}")),
-        entry_files: vec![format!("{source_root}-entries")],
-        renderer: Some("renderer.tsx".into()),
-        stories_files: Vec::new(),
-        module_resolution: ModuleResolution {
-            dependency_root: Some("/work/repo".into()),
-            package_roots: vec!["/work/repo".into()],
-            ..ModuleResolution::default()
-        },
-        source_root: source_root.into(),
-        configuration_directory: "examples/basic".into(),
-        repository_roots: vec!["/work/repo".into()],
-    }
-}
-
-fn result(dependency_root: &str, react: &str) -> results::Bundle {
-    results::Bundle {
-        unmapped_dependency_directories: None,
-        epoch: 0,
-        compiled: Some(CompiledGeneration {
-            unmapped_dependency_directories: None,
-            identity: "identity".into(),
-            code: String::new(),
-            runtime_key: String::new(),
-            dependency_roots: vec![dependency_root.into()],
-            css_modules: Vec::new(),
-            sources: BTreeMap::new(),
-            peers: BTreeMap::from([("react".to_owned(), Some(react.to_owned()))]),
-            inputs: BTreeMap::new(),
-            metadata_inputs: BTreeMap::from([("package.json".to_owned(), Some("root".to_owned()))]),
-            input_directories: BTreeMap::new(),
-            metadata_directories: BTreeMap::new(),
-        }),
-        generation: "generation".into(),
-        modules: Vec::new(),
-        warnings: Vec::new(),
-    }
-}
-
-fn maps(local: &str) -> ClassMaps {
-    BTreeMap::from([
-        (
-            "a.module.css".to_owned(),
-            BTreeMap::from([(local.to_owned(), format!("scoped-{local}"))]),
-        ),
-        (
-            "b.module.css".to_owned(),
-            BTreeMap::from([("card".to_owned(), "scoped-card".to_owned())]),
-        ),
-    ])
-}
+use super::render_environment_support::{derive, maps, params, result};
+use super::{package, resolution};
 
 #[test]
 fn equal_settings_under_two_source_roots_share_one_environment() {

@@ -54,6 +54,13 @@ pub(super) fn moved(
         .collect()
 }
 
+#[test]
+fn equal_catalogues_in_two_checkout_folders_share_render_input_keys() {
+    let first = consumer();
+    let second = consumer();
+    assert_eq!(keys(&first), keys(&second));
+}
+
 /// A labelled fixture edit and the entries whose documents it must move.
 type Step = (&'static str, Box<dyn Fn(&Consumer)>, Vec<&'static str>);
 
