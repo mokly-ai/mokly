@@ -23,4 +23,22 @@ document keys from folder-independent data: module digests by
 repository path, class maps, and bindings, Medium; C, make the bundle
 identity itself folder-independent, Large. Recommended: B.
 
+## Decision
+
+- **Source:** Review.
+- **Category:** product bug.
+- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
+- **Problem:** The completed plan left this item open.
+- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Root question:** How should Mokly make JavaScript document keys location-independent?
+- **Options:**
+  - **A.** Use option A from the Task section. Effort: Small.
+  - **B.** Use option B from the Task section. Effort: Medium.
+  - **C.** Use option C from the Task section. Effort: Large.
+- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
+- **Wider fix:** C.
+- **Previous examples:** The completed plan record linked below.
+- **Recommendation:** B. The Task section records this recommendation.
+- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
+
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6063).

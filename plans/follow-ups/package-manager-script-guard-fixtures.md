@@ -22,4 +22,21 @@ test requires to be absent, Medium. Recommended: B.
   `tests/static_base_managers.test.ts` and
   `tests/helpers/base_manager_fixture.ts` look in the wrong place.
 
+## Decision
+
+- **Source:** Review.
+- **Category:** test.
+- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
+- **Problem:** The completed plan left this item open.
+- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Root question:** How should Mokly add fixtures for package-manager script guards?
+- **Options:**
+  - **A.** Use option A from the Task section. Effort: Small.
+  - **B.** Use option B from the Task section. Effort: Medium.
+- **Left out:** The completed plan found no third distinct implementation beyond the recorded direct and wider approaches.
+- **Wider fix:** B.
+- **Previous examples:** The completed plan record linked below.
+- **Recommendation:** B. The Task section records this recommendation.
+- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
+
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5996).

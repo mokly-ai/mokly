@@ -28,5 +28,25 @@ unchanged shown views no comparison row.
   already covers the screen state. The Moved artboard,
   `review/outcomes/moved.tsx`, shows changed content, so it does not
   cover an Unmodified affected view.
+- The shared design component still labels the list “Affected screens.”
+  The viewer lists both screens and components. User item 104 owns this
+  copy and state mismatch.
+
+## Decision
+
+- **Source:** Review.
+- **Category:** mockup.
+- **Background:** Component designs specify the Usage list and comparison states before product work.
+- **Problem:** The designs omit affected component variants and Unmodified affected views. The shared list also names only screens.
+- **Impact if no action:** Product work has no reviewed design for three affected-component states.
+- **Root question:** How should Mokly add the missing affected-component artboards?
+- **Options:**
+  - **A.** Use option A from the Task section. Effort: Small.
+  - **B.** Use option B from the Task section. Effort: Large.
+- **Left out:** Implementing the states before their mockups breaks the repository design-first rule.
+- **Wider fix:** B.
+- **Previous examples:** The affected-screen artboard already covers the screen-only state.
+- **Recommendation:** B. The Task section records this recommendation.
+- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
 
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L5918).

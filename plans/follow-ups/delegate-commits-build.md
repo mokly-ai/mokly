@@ -18,4 +18,21 @@ Small; B, rewrite the branch so that every commit builds, effort not
 recorded; C, add a per-commit build step to delegate briefs, effort
 not recorded. Recommended: A. C best protects later branches.
 
+## Decision
+
+- **Source:** Review.
+- **Category:** process.
+- **Background:** The Task section preserves the completed plan's context, evidence, and recorded options.
+- **Problem:** The completed plan left this item open.
+- **Impact if no action:** The recorded defect, risk, or process gap remains until the user selects an option.
+- **Root question:** How should Mokly keep delegated commits buildable?
+- **Options:**
+  - **A.** Use option A from the Task section. Effort: Small.
+  - **C.** Use option C from the Task section. Effort: Medium.
+- **Left out:** Option B rewrites already merged history. It cannot protect later delegated work.
+- **Wider fix:** C.
+- **Previous examples:** The completed plan record linked below.
+- **Recommendation:** A. The Task section records this recommendation.
+- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
+
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6043).

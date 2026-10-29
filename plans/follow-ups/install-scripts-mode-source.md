@@ -13,4 +13,21 @@ stored in several places. Severity Low. Recommended: B, keep the mode
 on the install command. The 135 B review record holds the other
 options.
 
+## Decision
+
+- **Source:** Review.
+- **Category:** code structure.
+- **Background:** The base dependency path stores the lifecycle-scripts mode in several values.
+- **Problem:** Repeated state can disagree as the install request moves between layers.
+- **Impact if no action:** A later change can apply the wrong mode in one path.
+- **Root question:** How should Mokly store the install-scripts mode in one place?
+- **Options:**
+  - **A.** Keep the repeated mode fields. Effort: Small.
+  - **B.** Store the mode on the install command and derive each use from it. Effort: Medium.
+- **Left out:** A new shared global would hide request-specific state and is worse than option B.
+- **Wider fix:** B.
+- **Previous examples:** The 135 B review found this repeated state.
+- **Recommendation:** B. One request-owned value removes disagreement.
+- **Action:** ask the user, because condition 5 holds. The user deferred this item for a later decision.
+
 The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6145).

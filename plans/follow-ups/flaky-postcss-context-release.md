@@ -8,4 +8,4 @@
 
 The changed-class-maps test timed out once on Windows while it waited for `PostcssStop`. Later full runs passed. The suspected source is asynchronous Node context release on a busy runner.
 
-The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L394).
+The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/parallel-background-pass.md?plain=1#L399).

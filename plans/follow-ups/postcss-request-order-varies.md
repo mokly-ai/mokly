@@ -28,6 +28,7 @@
   plugin, and a diagnostic can change its text between runs. The output
   checks of `examples/basic` found no difference, because only one of its
   stylesheets uses Tailwind.
+- **Root question:** How should Mokly make PostCSS output and diagnostics predictable across parallel runs?
 - **Options:**
   - **A.** State in the PostCSS contract that the request order within a
     context is not fixed, and that a plugin must not keep state across
@@ -37,6 +38,7 @@
     turn in root order, and the read inventories still overlap. It gives
     back part of the parallel gain. Decision 11 of the plan rejected a fixed
     request order for the generation key for that reason. Effort: Medium.
+- **Left out:** A separate PostCSS process for each stylesheet loses shared plugin and module evidence.
 - **Wider fix:** B. A fixed order removes the class, but it costs the gain.
 - **Previous examples:** Decision 11 of the stylesheet bundle performance
   plan made the generation key independent of the request order.
