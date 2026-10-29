@@ -102,6 +102,10 @@ changes them.
 - User decision 155 (2026-10-28): B. `Command` stores the scripts mode, and
   the install environment reads it. Option A, which removes the redundant
   configuration write `apply_base_install_scripts`, is not selected.
+- Coordinator decision (2026-10-28), option C, on the token text that
+  workspace 407 also writes: whichever of the two branches merges second
+  leaves one home for the same-user limit, the token exposure section of
+  `docs/protocol/mokly-upload.md`, and one copy of the user advice.
 - User decision 156 (2026-10-28): A. The hint ends with a period.
 - User decision 157 (2026-10-28): A. The build and publish guides say that
   the scripts flags have no effect with `--no-changes`. Option B, a new
@@ -179,6 +183,16 @@ this part waits. Its uncommitted work is in the local worktree branch
       detached child, as Yarn Classic does, for the time limit and for
       cancellation.
 - [ ] Check that the macOS and Windows code compiles.
+- [ ] On Linux, a stop while the manager runs also signals a descendant
+      whose parent exited before the stop. The stopped patch makes the
+      manager a child subreaper. Record that mechanism in code comments.
+- [ ] Update `crates/mokly-platform/README.md` for the descendant walk.
+- [ ] Remove the status lines of `docs/protocol/mokly-runtime.md` and
+      `docs/protocol/mokly-base-install-processes.md`.
+- Design call (2026-10-28): the two limits that option C leaves stay
+  documented limits: a new-session process that a finished script leaves,
+  and on macOS an orphan outside the manager's process group. No answered
+  decision asks for more, and both need a new tracking design.
 
 ## Milestone 3: One scripts mode and the pnpm purge setting
 
@@ -245,20 +259,51 @@ scope. Do not start it before the answer.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
-- [ ] Run the targeted Rust tests of `mokly-platform`, `mokly-compare`, and
+- [x] Run the targeted Rust tests of `mokly-platform`, `mokly-compare`, and
       `mokly-cli`. Add no Node test in the files that workspace 353 owns.
-- [ ] Merge `origin/main` with the `git-merge` skill, then run the complete
+- [x] Merge `origin/main` with the `git-merge` skill, then run the complete
       gate `cargo xtask check` once on the final commit.
+  - The complete gate passed on `844cac56`, then passed on `d272a994` after the merge of
+    three new `origin/main` commits. Logs:
+    `.context/base-install-scripts-managers/verify/`.
 - [ ] Tick user items 150, 151, 152, 155, 156, 157, and 158 in
       `plans/rust-rebuild.md` with the smallest edit. Do not tick 153, 154,
       or 180.
   - Items 151, 152, 155, 156, 157, and 158 are ticked. Item 150 waits for
     Milestone 2.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Reports: `.context/base-install-scripts-managers/review/`. The validity
+    checks confirmed every finding. Fixed: 3 (`065776d4`), 4 (`b4ae4373`),
+    and re-review finding 1, the macOS limit sentence (`9c4dce18`).
+  - 1. Rich output cuts off the scripts hint. Severity Medium, effort
+       Medium. Recommended: D, a never-cut recovery line in the shared rich
+       renderer.
+  - 2. No test pins the scripts-off flag on success. Severity Low, effort
+       Medium. Recommended: E, tests for every place that copies the flag.
+  - 5. `NativeBase::prepare` uses `map_err`. Severity Low, effort Medium.
+       Recommended: C, one wrap at the trait boundary. Auto-fix is blocked by
+       the Codex usage limit.
+  - 6. `BasePreparationError` has no message prefix. Severity Low, effort
+       Small. Recommended: A. Auto-fix is blocked by the Codex usage limit.
+  - 7. Changed code uses inline paths and a hand-written fake. Severity
+       Low, effort Small. Recommended: B. Auto-fix is blocked by the Codex
+       usage limit.
+  - Re-review 2. The plan lacked the item 150 follow-up TODOs. Severity
+    Low, effort Small. Option A is applied to Milestone 2 under the rule
+    for discovered TODOs. Option B, a status-line rule in `AGENTS.md`,
+    waits for the user.
+  - Outside the scope: `crates/mokly-cli/src/changes_output.rs` prints the
+    rich Changes unavailable diagnostics without the width bound of the
+    terminal output contract.
+- [ ] Before the merge, apply the coordinator's token-text decision: if this
+      branch merges after workspace 407, replace the same-user limit
+      sentence of `docs/protocol/mokly-base-install-processes.md#environment`
+      with a link to `docs/protocol/mokly-upload.md#token-exposure`, and keep
+      one copy of the user advice. If 407 merges second, 407 makes the edit.
 - [ ] The coordinator opens the pull request when every other milestone TODO
       is ticked. Put its link in the status paragraph.
 
