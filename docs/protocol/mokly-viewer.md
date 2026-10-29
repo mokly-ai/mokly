@@ -214,11 +214,11 @@ Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
 ownership follow the [shell design](./mokly-shell-design.md) and
 [brand contract](./mokly-shell-brand.md). Scoped styles exclude the host page
 and slot content; do not inject host CSS into frames. The rules of the shared
-UI package sit in the `mokly.components` cascade layer, which the stylesheet
-declares before any unlayered rule, so an unlayered shell layout rule or host
-rule wins over a component rule whatever its specificity. Decision: a layer,
-not a fixed position in the concatenation, because file order would otherwise
-decide ties between package, shell, and host rules. The host must give
+UI package are unlayered and come before the shell's own rules, so a host rule
+competes with them as it does with a shell rule. Decision: unlayered rules, not
+a cascade layer, because a host reset or a host layer declared later would
+otherwise restyle the package components, and one cascade then serves hosts,
+direct users of the package, and the design mockups. The host must give
 the viewer's containing element a definite height. The viewer fills that height,
 clips its outer shell and owns scrolling within the stage and other bounded
 shell regions; the embedding document must not be the stage scroll container.

@@ -57,7 +57,6 @@ const WORKSPACE_ICONS: readonly WorkspaceIconName[] = [
   "scheme",
   "viewport",
   "close",
-  "caret",
 ];
 
 /** The one svg a render draws. */

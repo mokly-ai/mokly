@@ -103,9 +103,8 @@ export const SHELL_REVIEW_CSS = `
 .mb-panes[data-compare-mode="difference"] .mb-pane--after { mix-blend-mode: difference; }
 @media ${NARROW_SHELL} {
   /* The compact modes of @mokly/ui/comparison-toolbar, as buttons, links, or
-     inert text, override the shell's segmented control, and a rule in the
-     package's cascade layer cannot beat that unlayered rule, so this one
-     stays unlayered here. */
+     inert text. The package leaves the padding and type of its modes to the
+     host's segmented control, so the shell narrows its own control here. */
   .mbk-diff-toolbar .mbk-seg :is(button, a, span) { flex: 1; padding: 6px; white-space: nowrap; font-size: 11px; }
   .mbk-diff-stage { padding: 16px; }
   .mb-panes[data-compare-mode="side"],

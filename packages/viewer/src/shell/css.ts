@@ -48,6 +48,3 @@ export function shellCss(componentCss: string): string {
 export function standaloneShellCss(componentCss: string): string {
   return shellCss(componentCss) + STANDALONE_STUB_THEME_CSS;
 }
-
-/** The shell's own shared rules, without the `@mokly/ui` component rules. */
-export const SHELL_CSS = shellCss("");

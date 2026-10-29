@@ -14,8 +14,9 @@ The components live in the repository's mockup catalogue under
 package source, and consumer fixtures stay out of package runtime code. An
 inventory component that the [shared UI package](./mokly-ui-package.md)
 provides renders that package component through its `defineComponent`
-registration. Its public stylesheet imports the package stylesheet. The
-component keeps no copy of that markup or CSS. Decision: the mockup renders
+registration. Its public stylesheet imports the package stylesheets of the
+component and of each package component that it renders. The component keeps
+no copy of that markup or CSS. Decision: the mockup renders
 the package component, not its own copy kept aligned by tests, because two
 implementations drift and one serves the product and its mockups. The
 Example Action and Toolbar components, the miniature subject screens and the
@@ -51,7 +52,8 @@ slug `S`:
 - Public stylesheet: `design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML. When
   the shared UI package provides the component, that sheet imports the package
-  stylesheet by its repository path and adds only mockup rules. Decision: the
+  stylesheets of the component and of each package component that it renders,
+  each by its repository path. It adds only mockup rules. Decision: the
   repository path, not the package name, because a comparison's base side
   renders from Git, which holds the package sources and not their build
   output; the core fix for built repository packages is a separate plan.

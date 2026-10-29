@@ -56,7 +56,7 @@ test("the UI package archive requires its stylesheet and metadata, and dist only
   assert.throws(() => validatePackageReport(report, "@mokly/viewer"));
 });
 
-test("the UI manifest accepts one subpath per component and its stylesheet", async () => {
+test("the UI manifest accepts one subpath per component", async () => {
   const manifest = await sourceManifest();
   validatePackageManifest(manifest, "@mokly/ui");
   validatePackageManifest(
@@ -68,10 +68,31 @@ test("the UI manifest accepts one subpath per component and its stylesheet", asy
           types: "./dist/top-bar/top-bar.d.ts",
           import: "./dist/top-bar/top-bar.js",
         },
-        "./top-bar.css": "./dist/top-bar/top-bar.css",
       },
     },
     "@mokly/ui",
+  );
+});
+
+test("the UI manifest rejects a component stylesheet subpath", async () => {
+  const manifest = await sourceManifest();
+  assert.throws(
+    () =>
+      validatePackageManifest(
+        {
+          ...manifest,
+          exports: {
+            ...manifest.exports,
+            "./top-bar": {
+              types: "./dist/top-bar/top-bar.d.ts",
+              import: "./dist/top-bar/top-bar.js",
+            },
+            "./top-bar.css": "./dist/top-bar/top-bar.css",
+          },
+        },
+        "@mokly/ui",
+      ),
+    /@mokly\/ui exports \.\/top-bar\.css, not a component/,
   );
 });
 

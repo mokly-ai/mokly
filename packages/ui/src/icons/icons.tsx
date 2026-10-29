@@ -233,8 +233,7 @@ export type WorkspaceIconName =
   | "highlight"
   | "scheme"
   | "viewport"
-  | "close"
-  | "caret";
+  | "close";
 
 /** One consistent stroke icon of the shared workspace controls. */
 export function WorkspaceIcon({
@@ -279,10 +278,8 @@ export function WorkspaceIcon({
           <path d="M12 15v5m-2 0h8" />
           <rect x="2" y="9" width="7" height="12" rx="1" />
         </>
-      ) : name === "close" ? (
-        <path d="m6 6 12 12M6 18 18 6" />
       ) : (
-        <path d="m6 9 6 6 6-6" />
+        <path d="m6 6 12 12M6 18 18 6" />
       )}
     </IconSvg>
   );

@@ -188,10 +188,11 @@ their design mockups. `appearance.tsx` is the viewer's wrapper that reads
 the identifier and workspace contexts and renders
 `@mokly/ui/appearance-selector`; `view_marks.ts` still owns the ids and the
 wording of the change marks, which the shell passes in. The package CSS files
-sit in the `mokly.components` cascade layer, which `css_tokens.ts` declares
-first, so an unlayered shell layout rule wins over them. A shell rule that
-must override a component rule therefore stays unlayered here, such as the
-compact comparison mode buttons in `css_review.ts`.
+hold unlayered rules, which `css.ts` places after the tokens and the palette
+and before the shell's own rules, so a shell rule wins over a component rule
+of the same specificity. The package leaves the padding and type of the
+comparison modes to the shell's segmented control, so the rule of the compact
+modes stays in `css_review.ts`.
 
 `css.ts` concatenates the shared stylesheet. Split string modules preserve
 its exact bytes. The standalone stylesheet adds one rule to it: a root without

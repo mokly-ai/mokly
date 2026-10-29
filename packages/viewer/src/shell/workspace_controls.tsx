@@ -1,6 +1,6 @@
 /** Grouped, compact viewport, theme and inspection controls. */
 import { ChangeMark } from "@mokly/ui/change-mark";
-import { WorkspaceIcon } from "@mokly/ui/icons";
+import { ChevronDownIcon, WorkspaceIcon } from "@mokly/ui/icons";
 
 import type { ColorScheme } from "../data/axes.js";
 
@@ -39,7 +39,7 @@ export function WorkspaceControls({
     <div className="mbk-view-tools" role="group" aria-label="View options">
       <label className="mbk-icon-select" title="Viewport">
         <WorkspaceIcon name="viewport" />
-        <WorkspaceIcon name="caret" />
+        <ChevronDownIcon size={18} />
         <select
           aria-describedby={marks.viewport ? viewportChangedId : undefined}
           aria-label="Viewport"

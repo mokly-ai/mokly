@@ -59,24 +59,14 @@ async function sourceFiles(): Promise<string[]> {
     );
 }
 
-/**
- * The text after the stylesheet's one top-level `@layer mokly.components`
- * block, or null when the stylesheet does not start with that block.
- */
-function afterLayerBlock(css: string): string | null {
-  const rules = css.replace(/\/\*[^]*?\*\//gu, "").trim();
-  const opening = "@layer mokly.components {";
-  if (!rules.startsWith(opening)) return null;
-  let depth = 0;
-  for (let index = opening.length - 1; index < rules.length; index += 1) {
-    if (rules[index] === "{") depth += 1;
-    if (rules[index] === "}") depth -= 1;
-    if (depth === 0) return rules.slice(index + 1).trim();
-  }
-  return null;
+/** Whether a stylesheet declares a cascade layer outside its comments. */
+function declaresLayer(css: string): boolean {
+  return /@layer\b/u.test(css.replace(/\/\*[^]*?\*\//gu, ""));
 }
 
-test("every component stylesheet keeps its rules in the mokly.components layer", async () => {
+// A host reset outside every layer, or in a layer that the host declares
+// later, would beat each layered rule whatever its specificity.
+test("no component stylesheet declares a cascade layer", async () => {
   const stylesheets = componentStylesheets(await sourceFiles());
   assert.ok(
     stylesheets.length >= 3,
@@ -87,11 +77,9 @@ test("every component stylesheet keeps its rules in the mokly.components layer",
       new URL(`../src/${file}`, import.meta.url),
       "utf8",
     );
-    assert.equal(afterLayerBlock(css), "", file);
+    assert.equal(declaresLayer(css), false, file);
   }
-  assert.equal(afterLayerBlock(".mbk-x { color: red }"), null);
-  assert.equal(
-    afterLayerBlock("@layer mokly.components { .a { color: red } }\n.b {}"),
-    ".b {}",
-  );
+  assert.equal(declaresLayer("@layer mokly.components { .a {} }"), true);
+  assert.equal(declaresLayer(".a {}\n@layer reset, mokly;"), true);
+  assert.equal(declaresLayer("/* no @layer */\n.mbk-x { color: red }"), false);
 });

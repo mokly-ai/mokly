@@ -25,7 +25,18 @@ resolver, and one implementation then serves the product and its
 
 ## Stylesheets
 
+`@mokly/ui/styles.css` is the package's only stylesheet subpath. It holds the
+rules of every component. Decision: one stylesheet subpath, not one per
+component, because a component stylesheet omits the rules of package
+components it renders. No consumer imports a component stylesheet subpath.
+
 The viewer bundles the package CSS into its own `shell.css` and `styles.css`,
 so these stay the only stylesheets that a delivery or a host loads. The
 [theming rules](./mokly-viewer.md#theming-and-ownership) of the viewer contract
 give the cascade precedence of the package CSS.
+
+The package rules read the colour tokens and the segmented-control
+`.mbk-seg` rules that the viewer stylesheet declares. A page that renders
+package components without the viewer stylesheet declares those tokens and
+rules itself. The design catalogue's `examples/basic/design.css` supplies
+them.

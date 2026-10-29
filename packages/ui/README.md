@@ -12,7 +12,7 @@ shared version.
 
 - The markup, the styles, and the local interaction of each component: props
   in, callbacks out.
-- One CSS file beside each component, in the `mokly.components` cascade
+- One CSS file beside each component, with its rules outside every cascade
   layer, and `styles.css` with every component's rules.
 - Nothing else. A component reads no store, no context, no catalogue read
   model type, no network, no history, and no frame. React and React DOM are
@@ -21,7 +21,8 @@ shared version.
 ## What This Package Does
 
 Each component is a subpath export, such as `@mokly/ui/appearance-selector`,
-with its CSS at the matching `.css` subpath. The package has no root entry.
+and `@mokly/ui/styles.css` is the only stylesheet subpath. The package has no
+root entry.
 `styles.css` holds the rules of every component; a component's own stylesheet
 leaves out the components it renders, such as the change mark of the
 appearance selector. The rules read the shell's colour tokens, such as
@@ -84,11 +85,12 @@ therefore also changes their design mockups, so run the mockup check of
 [`AGENTS.md`](../../AGENTS.md) after it.
 
 A component lives in `src/<name>/`: `<name>.tsx`, and `<name>.css` when it has
-styles. Its subpaths in the `exports` map are `./<name>`, with `types` and
-`import` targets in `dist/<name>/`, and `./<name>.css`. The build copies
+styles. Its subpath in the `exports` map is `./<name>`, with `types` and
+`import` targets in `dist/<name>/`. The build copies
 `<name>.css` beside the JavaScript and adds it to `styles.css` in component
-name order. Each stylesheet wraps its rules in `@layer mokly.components`, so
-an unlayered shell or host rule wins over them; a test holds the rule.
+name order. Each stylesheet keeps its rules outside every cascade layer, so
+neither an element reset nor a host layer overrides a component rule, and a
+host rule competes with them by specificity and order; a test holds the rule.
 
 ### Key Code
 

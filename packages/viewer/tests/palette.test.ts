@@ -4,9 +4,13 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { SHELL_CSS, shellCss } from "../src/shell/css.js";
-
 import { PALETTE_PAIRS } from "./palette_pairs.js";
+
+/** The built stylesheets that a delivery and an embedded host receive. */
+const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
+  fs.readFile(new URL("../dist/shell.css", import.meta.url), "utf8"),
+  fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
+]);
 
 const SOURCE = new URL("../src/", import.meta.url).pathname;
 
@@ -68,7 +72,7 @@ test("the shell stylesheets were actually scanned", async () => {
 });
 
 function palette(selector: RegExp): Map<string, string> {
-  const blocks = [...SHELL_CSS.matchAll(selector)].flatMap((match) =>
+  const blocks = [...STANDALONE_CSS.matchAll(selector)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
   );
   assert.ok(blocks.length > 0, `${selector} is not in the shell stylesheet`);
@@ -232,19 +236,20 @@ test("a public override foreground only sits on the accent it pairs with", () =>
     "var(--mokly-accent-soft)",
   ]);
   const failures: string[] = [];
-  for (const [, selector, body] of shellCss(PACKAGE_CSS).matchAll(
-    /([^{}]+)\{([^}]*)\}/g,
-  )) {
-    const color = /(?:^|;|\{)\s*color:\s*([^;]+)/.exec(body ?? "")?.[1]?.trim();
-    const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
-    const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
-      .exec(body ?? "")?.[1]
-      ?.trim();
-    if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
-    if (accentBackgrounds.has(background)) continue;
-    failures.push(
-      `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
-    );
-  }
+  for (const css of [STANDALONE_CSS, EMBEDDED_CSS])
+    for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+      const color = /(?:^|;|\{)\s*color:\s*([^;]+)/
+        .exec(body ?? "")?.[1]
+        ?.trim();
+      const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
+      const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
+        .exec(body ?? "")?.[1]
+        ?.trim();
+      if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
+      if (accentBackgrounds.has(background)) continue;
+      failures.push(
+        `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
+      );
+    }
   assert.deepEqual(failures, []);
 });

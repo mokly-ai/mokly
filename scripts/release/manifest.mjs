@@ -18,8 +18,8 @@ const VIEWER_EXPORTS = {
   "./styles.css": "./dist/styles.css",
 };
 
-/** A component subpath of the UI package, or the subpath of its stylesheet. */
-const UI_SUBPATH = /^\.\/([a-z0-9]+(?:-[a-z0-9]+)*)(\.css)?$/u;
+/** A component subpath of the UI package. */
+const UI_SUBPATH = /^\.\/([a-z0-9]+(?:-[a-z0-9]+)*)$/u;
 
 /** Validate the public contract in either source or packed package metadata. */
 export function validatePackageManifest(metadata, name) {
@@ -36,8 +36,8 @@ export function validatePackageManifest(metadata, name) {
 }
 
 /**
- * The UI package has no root entry: one subpath per component, the
- * component's stylesheet beside it, and `styles.css` with every rule.
+ * The UI package has no root entry: one subpath per component and
+ * `styles.css` as its only stylesheet subpath, with every component's rules.
  */
 function validateUiManifest(metadata) {
   validateBrowserPackage(metadata, "@mokly/ui", "packages/ui");
@@ -46,12 +46,12 @@ function validateUiManifest(metadata) {
   assert.equal(metadata.exports?.["./styles.css"], "./dist/styles.css");
   for (const [subpath, target] of Object.entries(metadata.exports)) {
     if (subpath === "./styles.css") continue;
-    const [, component, css] = UI_SUBPATH.exec(subpath) ?? [];
+    const [, component] = UI_SUBPATH.exec(subpath) ?? [];
     assert.ok(component, `@mokly/ui exports ${subpath}, not a component`);
     const file = `./dist/${component}/${component}`;
     assert.deepEqual(
       target,
-      css ? `${file}.css` : { types: `${file}.d.ts`, import: `${file}.js` },
+      { types: `${file}.d.ts`, import: `${file}.js` },
       subpath,
     );
   }
