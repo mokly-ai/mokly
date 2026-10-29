@@ -219,3 +219,7 @@ fn visit(
 #[cfg(test)]
 #[path = "_tests_/owned_styles_tests.rs"]
 mod owned_styles_tests;
+
+#[cfg(test)]
+#[path = "_tests_/owned_proof/mod.rs"]
+mod owned_proof_tests;
