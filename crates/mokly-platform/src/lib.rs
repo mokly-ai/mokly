@@ -11,5 +11,9 @@ pub mod rename;
 mod unix;
 #[cfg(all(unix, any(target_os = "macos", test)))]
 mod unix_group_members;
+#[cfg(unix)]
+mod unix_process_table;
+#[cfg(unix)]
+mod unix_process_tree;
 #[cfg(windows)]
 mod windows;
