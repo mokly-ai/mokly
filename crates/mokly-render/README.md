@@ -46,7 +46,9 @@ inventories therefore never wait for each other, and the stylesheet roots of
 one preparation overlap that work. A failed input keeps its diagnostic for the
 rest of its context. A timeout or a crash after its retry also fails every
 request of the context that already waits for its turn. The cache keeps a running byte charge, so
-an insert charges one record instead of recounting the cache.
+an insert charges one record instead of recounting the cache. A context
+projects and hashes each of its modules once, and its later results reuse
+those late digests.
 Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
@@ -97,6 +99,14 @@ File-object stamps invalidate same-byte replacements. Base identity checks
 retain the extracted-file identity beside the pinned Git content proof.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
+Each record keeps the read evidence of its own inputs. The module evidence of
+a PostCSS context is kept once. When a later result of the context carries
+more module evidence, its entry links to the earlier entry and keeps only the
+added versions. Each entry has its own stamp and is charged once. An attempt
+checks the stamp of each entry once and replays its observations once.
+When the shared store removes records under its bound, or keeps a record in
+its attempt because its evidence disagreed, it keeps the key and the reason.
+The `css.bundle` span of the next bundle for that key records the reason.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet text rebuilds from that generation's captured parsed inputs.
 Opaque asset records contain metadata only. Delivery verifies a source stream
@@ -215,6 +225,13 @@ view after the edit and counts real process starts and hello calls.
   isolates class maps across retained graphs.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
+- [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
+  `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
+  attempt-local store and the shared store, and times each real bundle as
+  `css.bundle` with its miss reason.
+- [`src/stylesheet_store.rs`](./src/stylesheet_store.rs) defines
+  `StylesheetCache`, the byte-bounded store of records, shared context
+  entries, and miss reasons.
 
 ### Related Docs
 

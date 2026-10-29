@@ -1,9 +1,9 @@
 # Stylesheet Bundle Performance
 
-Status: Active. The step A pull request,
-[PR #228](https://github.com/mokly-ai/mokly/pull/228), is open. Step B follows
-on the same branch after step A merges. The plan closes when the step B pull
-request merges.
+Status: Active. Step A merged in
+[PR #228](https://github.com/mokly-ai/mokly/pull/228) on 2026-10-28. Step B
+[PR #242](https://github.com/mokly-ai/mokly/pull/242) is open. The plan closes
+when the step B pull request merges.
 
 Graph preparation bundles the stylesheet roots on one thread, one root after
 another. On `examples/basic`, one preparation bundles 35 roots in 1.3 to
@@ -117,6 +117,13 @@ Evidence: `.context/perf5-parallel-stylesheets/baseline.md` and
 5. Parallel roots alone do not reach 0.8 s. The PostCSS lock serializes about
    34 ms for each root, about 1.2 s for one preparation. Decision 2 resolves
    it.
+6. perf 0 (#222) removed the second startup preparation. Step B's acceptance
+   therefore applies to rebuilds and to the bundles that one attempt makes
+   again: a rebuild after a JavaScript edit has no `css.bundle` span, the
+   background pass and Changes bundle no root again, and a stylesheet edit
+   bundles only the roots that import it. On `d4c6f6a8` such a rebuild still
+   bundled 2 roots in 1.26 s, and every run bundled 36 roots again during
+   Changes.
 
 ## Decisions
 
@@ -200,6 +207,53 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
     dependency digests that also grow. Rejected: C, a fixed request order,
     because it removes much of the gain.
 
+12. Observation replay of shared module evidence, decided on 2026-10-28
+    under the user's rule: A. An attempt replays the observations of a
+    context entry once, and the observations of a record's own inputs on
+    each delivery. The replay test on `origin/main` used an input without
+    the source prefix, which is module evidence now, so its assertion moves
+    to an input with the prefix and keeps its three replays. Rejected: B,
+    replay the whole evidence on each delivery, because each hit then
+    replays about 1,100 module versions, about 3 ms. Reason: both admission
+    ledgers keep sets of observations, so one replay for each attempt gives
+    them the same evidence.
+13. Miss reason of a record larger than the byte bound, decided on
+    2026-10-28 under the user's rule: A, `evicted`. Rejected: B,
+    `no-record`, because the bound is the cause, and decision 4 added
+    `evicted` to name that cause.
+14. Review finding 2, stale miss reasons count toward the record bound,
+    decided on 2026-10-29 under the user's rule: A. The store keeps each
+    miss reason under a digest of its key, so a reason costs about 100
+    bytes. Rejected: B, forget the reasons before records, because some
+    `evicted` reasons then become `no-record`. Rejected for now: C, a
+    separate bounded ledger, because A removes almost all of the crowding
+    with a smaller change.
+15. Review finding 3, module evidence that grows within a context makes
+    one entry for each distinct evidence, decided on 2026-10-29 under the
+    user's rule: C, the recommendation of the options check. A later
+    entry links to the largest earlier entry whose evidence it contains
+    and stores only the added versions. Rejected: A, narrow the docs to
+    one entry for each distinct evidence, because it weakens decision 1
+    and leaves the duplication. Rejected: B, measure first, because C
+    keeps decision 1 whatever the measurement shows. The first pass
+    recommended A.
+16. Review finding 4, no test reads the `cache` field of a real span,
+    decided on 2026-10-29 under the user's rule: A, a test subscriber
+    around real cache bundles, one bundle for each miss reason. Rejected
+    for now: B, one reason list shared by the render and CLI crates.
+17. Review finding 5, no test covers the reuse of a stored context entry
+    by a new bundle, decided on 2026-10-29 under the user's rule: A, a
+    unit test that edits one root in a later attempt and checks the
+    reused entry, with a changed-module case and a growth case.
+    Rejected: B, a real-sidecar test, because A checks the same branch
+    deterministically.
+18. Review finding 7, two parallel read inventories can repeat the work
+    for one module, decided on 2026-10-29 under the user's rule: B, one
+    in-flight cell for each module. Different modules still overlap, and
+    a failed lookup is asked again. Rejected: A, hold the memo lock
+    during the tree calls, because it removes the overlap of decision 2.
+    Rejected: C, a test only, because it detects the repeat but keeps it.
+
 ## Design
 
 ### Step A
@@ -231,12 +285,18 @@ The user answered decisions 1 to 5 on 2026-10-27 and approved the plan.
 - The cache layer opens the `css.bundle` span around the inner bundle and
   records `cache` with the miss reason. The shared store keeps the keys of
   records that it removed under the byte bound or kept attempt-local, with
-  their reason. The timing layer copies the `cache` field to the end record.
-- Under decision 1, a record keeps its own read evidence. The context's
-  module evidence goes into one shared entry with its stamp and consistency,
-  keyed by its digest. The store charges the entry once. An
-  attempt checks the entry's stamp once and replays it once. A hit returns
+  their reason, while those keys fit in the bound beside the records. The
+  timing layer copies the `cache` field to the start and end records.
+- Under decision 1, a record keeps its own read evidence: the entries with
+  the source prefix. The context's module evidence goes into one shared
+  entry with its stamp and consistency, found by its digest. The store
+  charges each distinct entry once. An attempt checks the entry's stamp once
+  and replays it once. A new bundle reuses a stored entry with equal
+  evidence only when that entry's stamp holds in the attempt. A hit returns
   the same bundle and the same evidence as today.
+- Under decision 8, the PostCSS adapter keeps each module's late digest for
+  the rest of its context. The tree calls run outside that memo's lock, so
+  the read inventories of two inputs still overlap.
 - The stamp keeps every input: sources, assets, plugin dependency digests,
   directory listings, and the module evidence. Tailwind reports each scanned
   directory with a glob. The dependency inventory digests every matching
@@ -439,90 +499,139 @@ in the same commits. Write each failing test first.
 
 ## Milestone 7: Documentation and protocol, step B
 
-Step B starts after the step A pull request merges. Its pull request opens
-after the orchestrator reports that perf 4 merged. perf 0 also changes
-`crates/mokly-cli/src/serve_trace.rs` and the timings contract, so merge
-`origin/main` first.
+Step B runs on branch `conductor/perf-5-step-b-stylesheet-cache-reuse`, made
+from `origin/main` at `d4c6f6a8` after step A merged. Its pull request opens
+after the orchestrator reports that perf 4 (#227) merged, with `origin/main`
+merged first.
 
-- [ ] Update `docs/protocol/mokly-timings.md`: define the `cache` field of
+- [x] Update `docs/protocol/mokly-timings.md`: define the `cache` field of
       the `css.bundle` end record and its values, under decisions 3 and 4.
-- [ ] Update the read evidence bound sentence of
+- [x] Update the read evidence bound sentence of
       `docs/protocol/mokly-sidecar-postcss.md` under decision 1.
-- [ ] Update the dependency retention section of
+- [x] Update the dependency retention section of
       `docs/protocol/mokly-imported-styles-postcss.md`: a cached stylesheet
       bundle is reused only while its sources, assets, plugin-reported files,
       reported directory listings, and PostCSS module evidence are unchanged.
       Record decision 1 next to the rule.
-- [ ] Confirm that the invalidation section of `docs/protocol/mokly-watch.md`
+- [x] Confirm that the invalidation section of `docs/protocol/mokly-watch.md`
       stays true.
-- [ ] Update `crates/mokly-render/README.md`: the bounds, the shared module
+- [x] Update `crates/mokly-render/README.md`: the bounds, the shared module
       evidence, and the miss reasons. Update `crates/mokly-cli/README.md`
       when it lists timing fields.
+  - The watch contract stays true. The CLI README lists no timing field, so
+    it does not change.
 
 ## Milestone 8: Miss reason on `css.bundle`, step B
 
 Write each failing test first.
 
-- [ ] Open the `css.bundle` span in
+- [x] Open the `css.bundle` span in
       `crates/mokly-render/src/stylesheet_cache.rs` around the inner bundle,
       with the `cache` field. Keep the keys of removed and attempt-local
       records with their reason in the shared store.
-- [ ] Copy the `cache` field to the end record in
+- [x] Copy the `cache` field to the `css.bundle` records in
       `crates/mokly-cli/src/serve_trace.rs`.
-- [ ] Tests:
-  - [ ] `crates/mokly-render`: each miss value under decision 4, with a
-        mocked tree and a mocked inner bundler.
-  - [ ] `crates/mokly-cli`: the timing layer copies `cache` to the
+- [x] Tests:
+  - [x] `crates/mokly-render`: each miss value under decision 4, with a
+        counting tree and a mocked inner bundler.
+  - [x] `crates/mokly-cli`: the timing layer copies `cache` to the
         `css.bundle` end record and logs no path.
+  - [x] `crates/mokly-cli/tests/serve_process_tests.rs`: the startup
+        `css.bundle` records of the real binary carry `no-record`.
 
 ## Milestone 9: Gate fix, step B
 
 Write each failing test first.
 
-- [ ] Apply decision 1 in `crates/mokly-render/src/stylesheet_cache.rs`,
-      `crates/mokly-render/src/input_stamp.rs`, and new modules beside them.
-      Keep each file under 300 lines.
-- [ ] Unit tests in `crates/mokly-render`:
-  - [ ] Thirty-nine records with 551 shared module paths fit in one 64 MiB
-        store.
-  - [ ] Hits on two roots and on eight roots of one context check the shared
+- [x] Apply decision 1 in `crates/mokly-render/src/stylesheet_cache.rs`
+      and the new `stylesheet_record.rs` and `stylesheet_store.rs` beside
+      it. `input_stamp.rs` needs no change. Keep each file under 300 lines.
+- [x] Apply decision 8: keep the module baselines of the PostCSS read
+      inventory once for each context, so each later result of that context
+      projects and hashes no module again. Test it with counted tree calls
+      for two and eight results.
+- [x] Apply decision 12: move the replay assertion of
+      `local_and_shared_cache_hits_replay_original_witnesses_without_a_second_transform`
+      to evidence with the source prefix. Keep its three replays.
+- [x] Unit tests in `crates/mokly-render`:
+  - [x] Thirty-nine records with 551 shared module paths fit in one 64 MiB
+        store. The test also shows that 39 copies of the module evidence
+        would not fit.
+  - [x] Hits on two roots and on eight roots of one context check the shared
         module stamp once for each attempt. Count the tree's digest and
         identity calls.
-  - [ ] A hit returns the same CSS and the same read evidence as the miss
+  - [x] A hit returns the same CSS and the same read evidence as the miss
         that made the record, and it replays the same observations.
-  - [ ] A changed module file makes every record of that context miss with
+  - [x] A changed module file makes every record of that context miss with
         `stamp-mismatch`.
-- [ ] Integration tests in `crates/mokly-render/tests/integration` with the
-      real sidecar:
-  - [ ] A second preparation with no change makes no `processCss` call and
+  - [x] The store charges a shared entry once, charges a separate entry with
+        equal evidence again, drops an entry that no record uses, and
+        forgets the miss reasons that do not fit.
+- [x] Integration tests in `crates/mokly-render/tests/integration` with the
+      real sidecar. The reuse fixture has 64 roots and a PostCSS
+      configuration that loads 1,000 installed modules, so 64 copies of the
+      module evidence exceed the bound. The tests count `processCss`
+      requests: each attempt has its own PostCSS context, so each inner
+      bundle of these roots sends one. Both reuse tests fail on `d4c6f6a8`.
+  - [x] A second preparation with no change makes no `processCss` call and
         no inner bundle.
-  - [ ] A preparation after a JavaScript edit makes no inner bundle.
-  - [ ] An edit to one stylesheet bundles only the roots that import it.
-  - [ ] A Tailwind fixture: a new file with a new class name in the scanned
+  - [x] A preparation after a JavaScript edit makes no inner bundle.
+  - [x] An edit to one stylesheet bundles only the roots that import it.
+  - [x] A Tailwind fixture: a new file with a new class name in the scanned
         directory makes the Tailwind root bundle again, and its CSS contains
         the new class.
 
+Evidence: `.context/perf5-step-b/baseline-integration.log`.
+
 ## Milestone 10: Measurement, step B
 
-- [ ] Measure with the shared method: cold and warm serve, the edit run, and
+- [x] Measure with the shared method: cold and warm serve, the edit run, and
       the React fixture. Add an edit to one stylesheet. Check the acceptance:
-      the second startup preparation and the rebuild after the JavaScript
-      edit have no `css.bundle` span, and the stylesheet edit bundles only
-      the roots that import it. Add one line for each catalogue below.
+      the rebuild after the JavaScript edit and the Changes classification
+      have no `css.bundle` span, and the stylesheet edit bundles only the
+      roots that import it. Add one line for each catalogue below.
+  - `examples/basic` against `3f44d8cc`: the rebuild after the JavaScript
+    edit made 0 `css.bundle` spans, against 2. Changes made 0 head-side
+    bundles, against 36 in every run. The stylesheet edit bundled its 4
+    importing roots, each with `stamp-mismatch`.
+  - `examples/basic` against `9ce75853`, after perf 4 merged: the rebuild
+    after the JavaScript edit made 0 spans, against 38, and its
+    `watch.action` took 2.54 s, against 4.04 s. The stylesheet edit made 4
+    spans, against 38. The output check found no byte difference.
+  - React fixture: no change. Its 12 roots fit in the bound on both sides.
+  - The base side still bundles its 39 roots in each classification,
+    because its runtime is new for each classification (perf 6).
+
+Evidence: `.context/perf5-step-b/step-b-measurements.md`.
 
 ## Milestone 11: Verification, commit, review, and pull request, step B
 
-- [ ] Run the targeted tests: `cargo test -p mokly-render`,
+- [x] Run the targeted tests: `cargo test -p mokly-render`,
       `cargo test -p mokly-cli`, `npm test -- tests/markdown_links.test.ts`,
       and `npm run format:check`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate
-      `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run `cargo xtask check --suite repository`, then the complete gate
+      `cargo xtask check`. The complete gate passed at `b16ff358`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the step B pull request with the before and after table. Put its
+  - Round 1 at `37b26750`: five Low findings, all confirmed. Finding 1,
+    the store could end above its bound after an eviction, fixed in
+    `aba621bb`.
+  - Round 2 at `d3e280f7`: findings 2 to 5 again, and two new Low
+    findings, all confirmed. Finding 6, keys counted by length and not by
+    capacity, is `Auto-fix: yes`, B: one byte-charge helper for every
+    owner. Findings 2, 3, 4, 5, and 7 follow decisions 14 to 18.
+  - The fixes for findings 2 to 7 are `fe940301` to `140c678c`.
+  - Round 3 at `140c678c`: one new Low finding, confirmed. Finding 8, the
+    attempt's lookup tables kept evicted context evidence alive, fixed in
+    `03c93abd`. A supervisor review then found that a panicking module
+    lookup left its waiters blocked, fixed in `242e39a0`.
+  - Outside the scope, from round 2:
+    `crates/mokly-graph/src/workers.rs`: the request order of parallel
+    PostCSS roots can change cumulative evidence. Separate branch.
+- [x] Open the step B pull request with the before and after table. Put its
       link in the status paragraph.
 
 ## Post-merge follow-up (non-blocking)
@@ -530,3 +639,9 @@ Write each failing test first.
 - [ ] Decision 9: give Serve's background base work its own render pool in a
       separate branch. It also covers the base comparison capture in
       `crates/mokly-graph/src/session_collection.rs`.
+- [ ] Follow-up found by the step B integration fixture: share the PostCSS
+      configuration's own source files across the records of a context. A
+      configuration that loads many files outside `node_modules` still gives
+      each record its own copy of their inputs, dependency digests, and
+      evidence, so such a catalogue can exceed the bound again. Effort
+      Medium. Separate branch.

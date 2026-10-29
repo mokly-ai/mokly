@@ -28,7 +28,7 @@ use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
-use crate::stylesheet_cache::StylesheetCache;
+use crate::stylesheet_store::StylesheetCache;
 use crate::{definitions, side};
 
 static CONTEXT_SEQUENCE: AtomicU64 = AtomicU64::new(0);
