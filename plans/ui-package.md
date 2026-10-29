@@ -1,6 +1,6 @@
 # Shared UI Package
 
-Status: Active. On branch `calummoore/viewer-library-design`, no pull request yet.
+Status: Active. [PR #243](https://github.com/mokly-ai/mokly/pull/243) is open.
 The plan closes when its PR merges.
 
 `@mokly/viewer` renders the Browse shell. Its `src/shell` directory holds
@@ -518,8 +518,10 @@ seven packages.
       `0a268cec`. Review 3 found two Low doc findings, and `84dc9b0b` fixes both
       with option A. Reports: `.context/ui-package/review/review-3.md` and
       `validity-3.md`.
-- [ ] Open the pull request when every other milestone TODO is ticked.
-      Put its link in the status paragraph.
+- [x] Open the pull request when every other milestone TODO is ticked.
+      Put its link in the status paragraph. Opened on 2026-10-29 at the
+      user's request as [PR #243](https://github.com/mokly-ai/mokly/pull/243),
+      with the trusted publisher TODO of milestone 5 still open.
 
 ## Post-merge follow-up (non-blocking)
 
