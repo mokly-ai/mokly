@@ -5,16 +5,15 @@ Status: Active. On branch `conductor/rust-rebuild-150-base-install-scripts-and-m
 Base dependency installs disable lifecycle scripts by default. The
 `review.baseInstallScripts` setting and `--base-install-scripts` turn them on.
 This plan resolves the open follow-ups of that opt-in from the Rust rebuild:
-user items 150, 151, 152, 155, 156, 157, and 158. Item 153 waits for Cal.
+user items 151, 152, 155, 156, 157, and 158. Item 150 moved to the
+[process tree stops plan](./base-install-process-tree-stops.md) on
+2026-10-29. Item 153 is not part of this plan. It stays open in
+`plans/rust-rebuild.md` until Cal answers.
 
-- Item 150: Yarn Classic 1.22.22 starts each dependency script in a new Unix
-  session, so the process-group signal of a stop misses it.
 - Item 151: a script runs as the same user as Mokly, so it can read
   `MOKLY_TOKEN` from the start environment of Mokly or of its launcher.
 - Item 152: the scripts hint misses base render failures, because only
   preparation failures carry the scripts-off marker.
-- Item 153: a base `.yarnrc.yml` can make Yarn Berry read TLS files outside
-  the repository. npm and pnpm read `.npmrc` TLS files in the same way.
 - Item 155: the scripts mode has several sources of truth, and the install
   environment guesses it from the arguments.
 - Item 156: the hint sentence has no final period.
@@ -40,8 +39,7 @@ Contract owners:
   that no orphan process survives.
 - The [build](../docs/guides/cli/build.md) and
   [publish](../docs/guides/cli/publish.md) command guides.
-- The [mokly-platform](../crates/mokly-platform/README.md),
-  [mokly-compare](../crates/mokly-compare/README.md), and
+- The [mokly-compare](../crates/mokly-compare/README.md) and
   [mokly-cli](../crates/mokly-cli/README.md) READMEs.
 
 Files that other work in flight also changes:
@@ -70,6 +68,7 @@ changes them.
   [runtime shutdown](../docs/protocol/mokly-runtime.md#shutdown) contract
   already says that no orphan process survives; B, keep scripts off for Yarn
   Classic on Unix, because it removes the opt-in for Classic projects.
+  Under decision 9 D, item 150 moved to the process tree stops plan.
 - User decision 151 (2026-10-28): A. Document the limit under one rule, which
   workspace 407 also states for sidecars:
   - Mokly passes no inherited `MOKLY_` variable to any child process. User
@@ -92,7 +91,8 @@ changes them.
 - User decision 152 (2026-10-28): C. `Error::Base` carries a typed scripts-off
   field, and one helper presents the hint in every path. Rejected: B, which
   moves the wrap into classification but keeps a separate wrapper variant.
-- User item 153 waits for Cal. The coordinator's independent reviewer
+- User item 153 is outside this plan and waits for Cal. The coordinator's
+  independent reviewer
   recommends option C for all four managers: a TLS file setting that names a
   path outside the repository sends the base to tier three with a warning,
   through `RepositoryPath::confine` in `crates/mokly-compare/src/manager.rs`,
@@ -117,6 +117,14 @@ changes them.
   Correction to the record: the 145 B allowlist removes `CI` and
   `GITHUB_ACTIONS` from the install environment, so pnpm 10 and 11 also abort
   under CI. The tests prove all three pnpm versions.
+- Coordinator decision 9 (2026-10-29): D, a new option. Split the work: this
+  plan keeps items 151, 152, 155, 156, 157, and 158 and closes with the first
+  pull request. Milestone 2, item 150, moves to a new plan and branch, and
+  Milestone 5, item 153, leaves this plan. Rejected: A, wait for Codex, and
+  C, merge with the code findings open.
+- Review answers (2026-10-29): finding 2 E, finding 5 C, finding 6 A, and
+  finding 7 B apply in this pull request. Finding 1 D comes in a later small
+  pull request, because `origin/main` also cuts the hint in rich mode.
 
 ## Evidence
 
@@ -161,38 +169,12 @@ before the code changes. Item 153 text waits for its decision.
   environment, executable, bound, and stop rules moved to the new base install
   processes page, which the protocol index lists.
 
-## Milestone 2: Process ownership for escaped scripts
+## Milestone 2: Moved
 
-Item 150. The Unix owner of a process tree finds and signals descendants in
-new sessions. Windows keeps its kill-on-close job.
-
-Stopped on 2026-10-28. The Codex delegate hit its usage limit, which resets
-on 2026-11-04, before it finished or committed. Under the coordinator's rule,
-this part waits. Its uncommitted work is in the local worktree branch
-`wt/base-install-150-process-tree` and in
-`.context/base-install-scripts-managers/stopped/item150-c1-partial.patch`.
-
-- [ ] Add failing tests first: a descendant in a new session survives a
-      group kill and a terminate-then-kill on the current code.
-- [ ] Enumerate the descendants through parent links on Linux and macOS,
-      stop them before the signal, and signal each one. Keep the identities
-      found by a first signal for the second signal.
-- [ ] Keep the cost of a stop of a reaped or childless tree to a few system
-      calls, because the Git runner kills its group after every command.
-- [ ] Add a `mokly-compare` integration test with a manager that starts a
-      detached child, as Yarn Classic does, for the time limit and for
-      cancellation.
-- [ ] Check that the macOS and Windows code compiles.
-- [ ] On Linux, a stop while the manager runs also signals a descendant
-      whose parent exited before the stop. The stopped patch makes the
-      manager a child subreaper. Record that mechanism in code comments.
-- [ ] Update `crates/mokly-platform/README.md` for the descendant walk.
-- [ ] Remove the status lines of `docs/protocol/mokly-runtime.md` and
-      `docs/protocol/mokly-base-install-processes.md`.
-- Design call (2026-10-28): the two limits that option C leaves stay
-  documented limits: a new-session process that a finished script leaves,
-  and on macOS an orphan outside the manager's process group. No answered
-  decision asks for more, and both need a new tracking design.
+Milestone 2, item 150, moved with its TODOs to the
+[process tree stops plan](./base-install-process-tree-stops.md) on
+2026-10-29. Its partial work is commit `a2426a66` on branch
+`wt/base-install-150-process-tree`.
 
 ## Milestone 3: One scripts mode and the pnpm purge setting
 
@@ -220,8 +202,12 @@ Items 155 and 158 in `mokly-compare`.
 
 Items 152 and 156 in `mokly-compare` and `mokly-cli`.
 
-- [ ] Add failing tests first: a base render failure in capture after a
+- [x] Add failing tests first: a base render failure in capture after a
       scripts-off tier-two install shows no hint on the current code.
+  - The tests that check a true flag after a successful preparation came
+    after the change, so none failed first:
+    `crates/mokly-cli/src/_tests_/changes_static_tests.rs` and
+    `crates/mokly-compare/src/_tests_/base_selection_tests.rs`.
 - [x] Replace `Error::BaseInstallScripts` with a typed scripts-off field on
       `Error::Base`. Classification sets it for preparation, capture, and
       every later failure that it attributes to the base.
@@ -233,20 +219,24 @@ Items 152 and 156 in `mokly-compare` and `mokly-cli`.
   the missing period. The capture-path test needs the new provider types, so
   it never ran on the unchanged code. Evidence:
   `.context/base-install-scripts-managers/item152-156/`.
-- Open change request to the delegate, blocked by the Codex usage limit:
-  replace the five `map_err` calls in `changes_base.rs`, prefix the
-  `BasePreparationError` message, restore the `CatalogueError` import in
-  `serve_changes_base.rs`, move the preparation types out of the 282-line
-  `base_render.rs`, and use the imported `Error` in its test.
+- The orchestrator's change request of 2026-10-28 to the delegate is
+  superseded by the review answers in the TODOs below.
+- [ ] Review finding 2, option E: cover every copy of the scripts-off flag
+      in tests: the `NativeBase` success arm, both `AttemptBase` arms, the
+      third `StaticBase` arm, and the four `Changes::classify` arms.
+- [ ] Review finding 5, option C: move the body of `NativeBase::prepare`
+      into a private function and wrap its result once. This removes the
+      four `map_err` calls.
+- [ ] Review finding 6, option A: prefix the `BasePreparationError` message
+      with `[mokly-compare/base]`.
+- [ ] Review finding 7, option B: restore the `CatalogueError` import, use
+      imported names in the tests, and replace the hand-written comparison
+      fake with `ComparisonMock`.
 
-## Milestone 5: Item 153 TLS file settings
+## Milestone 5: Removed
 
-This milestone waits for Cal's decision on item 153 and on the npm and pnpm
-scope. Do not start it before the answer.
-
-- [ ] Record Cal's decision on item 153 and its scope.
-- [ ] Implement the selected option with failing tests first, and update the
-      protocol docs.
+Milestone 5, item 153, left this plan on 2026-10-29. Item 153 stays open in
+`plans/rust-rebuild.md` until Cal answers.
 
 ## Milestone 6: Crate READMEs and doc alignment
 
@@ -266,11 +256,10 @@ scope. Do not start it before the answer.
   - The complete gate passed on `844cac56`, then passed on `d272a994` after the merge of
     three new `origin/main` commits. Logs:
     `.context/base-install-scripts-managers/verify/`.
-- [ ] Tick user items 150, 151, 152, 155, 156, 157, and 158 in
-      `plans/rust-rebuild.md` with the smallest edit. Do not tick 153, 154,
-      or 180.
-  - Items 151, 152, 155, 156, 157, and 158 are ticked. Item 150 waits for
-    Milestone 2.
+- [x] Tick user items 151, 152, 155, 156, 157, and 158 in
+      `plans/rust-rebuild.md` with the smallest edit. Do not tick 150, 153,
+      154, or 180.
+  - Done in `3afb0731`. Item 150 points to the process tree stops plan.
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -280,25 +269,25 @@ scope. Do not start it before the answer.
     checks confirmed every finding. Fixed: 3 (`065776d4`), 4 (`b4ae4373`),
     and re-review finding 1, the macOS limit sentence (`9c4dce18`).
   - 1. Rich output cuts off the scripts hint. Severity Medium, effort
-       Medium. Recommended: D, a never-cut recovery line in the shared rich
-       renderer.
+       Medium. Answer: D, in a later small pull request. See the follow-ups.
   - 2. No test pins the scripts-off flag on success. Severity Low, effort
-       Medium. Recommended: E, tests for every place that copies the flag.
+       Medium. Answer: E, in Milestone 4.
   - 5. `NativeBase::prepare` uses `map_err`. Severity Low, effort Medium.
-       Recommended: C, one wrap at the trait boundary. Auto-fix is blocked by
-       the Codex usage limit.
+       Answer: C, in Milestone 4. The plan first said five calls. The code
+       has four.
   - 6. `BasePreparationError` has no message prefix. Severity Low, effort
-       Small. Recommended: A. Auto-fix is blocked by the Codex usage limit.
+       Small. Answer: A, in Milestone 4.
   - 7. Changed code uses inline paths and a hand-written fake. Severity
-       Low, effort Small. Recommended: B. Auto-fix is blocked by the Codex
-       usage limit.
+       Low, effort Small. Answer: B, in Milestone 4.
   - Re-review 2. The plan lacked the item 150 follow-up TODOs. Severity
-    Low, effort Small. Option A is applied to Milestone 2 under the rule
-    for discovered TODOs. Option B, a status-line rule in `AGENTS.md`,
-    waits for the user.
+    Low, effort Small. Option A added the TODOs, which moved with Milestone 2
+    to the process tree stops plan. Option B, a status-line rule in
+    `AGENTS.md`, waits for the user.
   - Outside the scope: `crates/mokly-cli/src/changes_output.rs` prints the
     rich Changes unavailable diagnostics without the width bound of the
     terminal output contract.
+- [ ] Run the complete gate `cargo xtask check` once on the final commit of
+      this pull request, after the Milestone 4 review fixes.
 - [ ] Before the merge, apply the coordinator's token-text decision: if this
       branch merges after workspace 407, replace the same-user limit
       sentence of `docs/protocol/mokly-base-install-processes.md#environment`
@@ -309,5 +298,10 @@ scope. Do not start it before the answer.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Run a macOS process-tree smoke test for escaped manager sessions on a
-      hosted runner.
+- [ ] Review finding 1, option D, in a later small pull request: the rich
+      renderer never cuts its hint line, and the scripts hint becomes the
+      recovery action of these failures. Keep the plain output bytes the
+      same, and keep the period of decision 156.
+- [ ] Review finding 2, option D, the wider fix that is too large here:
+      record the scripts-off flag once, in a write-once field of
+      `BaseRequest`, so that no wrapper copies it.

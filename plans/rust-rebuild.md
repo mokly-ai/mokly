@@ -6114,6 +6114,8 @@ does not ask the user before the merge.
       warning, effort not recorded; C, the platform process owner stops
       every descendant, also in new sessions, Large. Recommended: C.
   - Security: the hub recommends a decision before the first npm release.
+  - User decision 150 (2026-10-28): C. In progress in the
+    [process tree stops plan](./base-install-process-tree-stops.md).
 
 - [x] Resolve user item 151 (135 B review finding 43): a script can read the
       publish token. A script reads `MOKLY_TOKEN` from Mokly's own
