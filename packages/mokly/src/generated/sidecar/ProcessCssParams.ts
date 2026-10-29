@@ -21,7 +21,7 @@ sourceRoot: string,
  */
 moduleResolution: ModuleResolution,
 /**
- * Consumer PostCSS module path.
+ * Consumer PostCSS module as a repository-relative path without `.` or `..` segments.
  */
 postcss: string,
 /**

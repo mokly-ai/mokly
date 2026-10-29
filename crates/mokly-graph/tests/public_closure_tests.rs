@@ -4,20 +4,26 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+use mokly_graph::cache::MemoryCache;
 use tempfile::TempDir;
 
+#[expect(
+    dead_code,
+    reason = "shared graph fixture support has helpers for other test binaries"
+)]
 mod support;
 
 const ROUTE: &str = "home/index.mobile.html";
-const PUBLIC_FILE: &str = "specs/assets/public.svg";
+const PUBLIC_FILE: &str = "assets/public.svg";
 
 fn fixture() -> TempDir {
     let root = TempDir::new().unwrap();
-    fs::create_dir_all(root.path().join("specs/assets")).unwrap();
+    fs::create_dir_all(root.path().join("specs")).unwrap();
+    fs::create_dir_all(root.path().join("assets")).unwrap();
     fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
     fs::write(
         root.path().join("specs/home.screen.html"),
-        "---\ntitle: Home\n---\n<img src=\"../../specs/assets/public.svg\">",
+        "---\ntitle: Home\n---\n<img src=\"../../assets/public.svg\">",
     )
     .unwrap();
     fs::write(
@@ -45,7 +51,6 @@ fn render_first(
 
 #[test]
 fn unchanged_documents_carry_public_files_without_rendering() {
-    let _prepare = support::prepare;
     let root = fixture();
     let (inputs, _first) = render_first(root.path());
     let replacement = support::prepare_with_inputs(root.path(), 0, 1, inputs)
@@ -65,7 +70,7 @@ fn changed_documents_do_not_carry_their_old_public_files() {
     assert!(carried.contains_public_file(PUBLIC_FILE));
     fs::write(
         root.path().join("specs/home.screen.html"),
-        "---\ntitle: Changed\n---\n<img src=\"../../specs/assets/public.svg\">",
+        "---\ntitle: Changed\n---\n<img src=\"../../assets/public.svg\">",
     )
     .unwrap();
     let replacement = support::prepare_with_inputs(root.path(), 0, 1, inputs)
@@ -83,14 +88,16 @@ fn denied_files_are_not_carried_into_a_replacement() {
         .0
         .unwrap();
     assert!(carried.contains_public_file(PUBLIC_FILE));
-    fs::remove_file(root.path().join(PUBLIC_FILE)).unwrap();
-    let denied_inputs = mokly_graph::delivery_inputs::DeliveryInputs {
-        closures: inputs.closures.clone(),
-        ..Default::default()
-    };
-    let replacement = support::prepare_with_inputs(root.path(), 0, 1, denied_inputs)
-        .0
-        .unwrap();
+    let replacement = support::prepare_with_cache_and_output(
+        root.path(),
+        Arc::new(MemoryCache::new(0)),
+        1,
+        inputs,
+        Some(&root.path().join("assets")),
+    )
+    .0
+    .unwrap();
+    assert_eq!(carried.plans()[ROUTE].key, replacement.plans()[ROUTE].key);
 
     assert!(!replacement.contains_public_file(PUBLIC_FILE));
 }

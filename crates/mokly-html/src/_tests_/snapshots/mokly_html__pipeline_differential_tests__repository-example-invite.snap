@@ -1,0 +1,37 @@
+---
+source: crates/mokly-html/src/_tests_/pipeline_differential_tests.rs
+expression: position_table(&nodes)
+---
+html -
+  head -
+  body -
+    div 13:1
+      workspace-nav 14:3
+      main 15:3
+        header 16:5
+          h1 17:7
+          p 18:7
+        div 23:5
+          workspace-panel 24:7
+            form 25:9
+              label 26:11
+                input 28:13
+              label 30:11
+                input 32:13
+              label 40:11
+                select 42:13
+                  option 43:15
+                  option 44:15
+            p 48:9
+              a 49:11
+            a 51:9
+            button 52:9
+          aside 61:7
+            h2 62:9
+            p 63:9
+              strong 63:12
+            p 64:9
+              strong 64:12
+            a 65:9
+          p 67:7
+            a 68:9

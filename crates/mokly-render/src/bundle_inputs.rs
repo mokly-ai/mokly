@@ -1,6 +1,5 @@
 //! Stable bundle settings exclude authored HTML membership.
 
-use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::{SourceFile, SourceKind};
 use mokly_model::material::digest;
@@ -23,12 +22,7 @@ pub(crate) fn params(config: &ResolvedConfig, files: &[SourceFile], side: &SideI
             .filter(|file| file.kind == SourceKind::Stories)
             .map(|file| file.path.clone())
             .collect(),
-        renderer: config.input.renderer.as_ref().map(|path| {
-            relative(
-                &config.file.parent().unwrap_or(&config.repo_root).join(path),
-                &config.repo_root,
-            )
-        }),
+        renderer: config.renderer(),
         module_resolution: side.module_resolution.clone(),
         source_root: side.source_root.to_string_lossy().into_owned(),
         configuration_directory: side.configuration_directory.clone(),
@@ -58,3 +52,7 @@ pub(crate) fn cache_key(
         Err(source) => Err(InternalError::Json { source }.into()),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/bundle_inputs_tests.rs"]
+mod bundle_inputs_tests;

@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_graph::cache::Artifact;
@@ -109,7 +110,7 @@ pub(super) fn generation(
                 content_type: "text/html".into(),
                 fragment: None,
                 document: Some(Composed {
-                    tree: parse::document(&html),
+                    tree: parse::html(DeliveredHtml::document(&html)),
                     usage: CatalogueUsage::Unavailable,
                     warnings: vec![],
                     resources: vec![],

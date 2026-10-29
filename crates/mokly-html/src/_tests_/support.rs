@@ -4,6 +4,9 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use html5ever::tendril::TendrilSink;
+use html5ever::tree_builder::TreeBuilderOpts;
+use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::definition_provider::{
     DefinitionProvider, DefinitionProviderMock, Definitions, ProvidedDefinition,
@@ -11,12 +14,117 @@ use mokly_catalogue::definition_provider::{
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::input::EntryInput;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
+use mokly_catalogue::template_types::{SavedSlot, Template};
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::SourceLocation;
 use mokly_source_interface::tree::SourceTreeMock;
 use mokly_source_interface::tree::{Child, FileKind, Node};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
+
+use crate::html_arena::Arena;
+use crate::tree::{self, Node as HtmlNode};
+use crate::{parse, serialize};
+
+fn terminal_text(nodes: &[HtmlNode]) -> bool {
+    tree::walk(nodes).any(|node| {
+        matches!(node, HtmlNode::Element(element) if element.is_html() && element.name == "plaintext")
+    })
+}
+
+/// Parse a test source as an authored template body, with source positions at `path`.
+pub(crate) fn authored(source: &str, path: &str, page: bool) -> Vec<HtmlNode> {
+    let template = Template {
+        source_path: path.into(),
+        source: source.into(),
+        body: source.into(),
+        body_offset: 0,
+        page,
+    };
+    parse::html(template.located_html())
+}
+
+/// A saved variant slot fragment with a placeholder front matter position.
+pub(crate) fn saved_slot(body: &str) -> SavedSlot {
+    SavedSlot {
+        body: body.into(),
+        source: SourceLocation {
+            path: "specs/panel.component.html".into(),
+            line: 1,
+            column: 1,
+            export: None,
+        },
+    }
+}
+
+pub(crate) fn legacy_authored_document(source: &str) -> Vec<HtmlNode> {
+    legacy_document_with_mode(source, true)
+}
+
+/// html5ever's own tokenizer and tree builder, as the reference for a delivered document.
+pub(crate) fn legacy_delivered_document(source: &str) -> Vec<HtmlNode> {
+    legacy_document_with_mode(source, false)
+}
+
+/// html5ever's own tokenizer and tree builder, as the reference for a fragment in `body`.
+pub(crate) fn legacy_delivered_fragment(source: &str) -> Vec<HtmlNode> {
+    let nodes = legacy_fragment_once(source);
+    if terminal_text(&nodes) {
+        legacy_fragment_once(&serialize::html(&nodes))
+    } else {
+        nodes
+    }
+}
+
+fn legacy_fragment_once(source: &str) -> Vec<HtmlNode> {
+    let options = ParseOpts {
+        tree_builder: TreeBuilderOpts {
+            scripting_enabled: false,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let body = QualName::new(None, ns!(html), local_name!("body"));
+    parse_fragment(Arena::new(false), options, body, Vec::new(), false)
+        .one(source)
+        .into_iter()
+        .flat_map(|mut node| match &mut node {
+            HtmlNode::Element(element) if element.name == "html" => {
+                std::mem::take(&mut element.children)
+            }
+            _ => vec![node],
+        })
+        .collect()
+}
+
+fn legacy_document_with_mode(source: &str, authored: bool) -> Vec<HtmlNode> {
+    let nodes = parse_document(
+        Arena::new(authored),
+        ParseOpts {
+            tree_builder: TreeBuilderOpts {
+                scripting_enabled: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .one(source);
+    if terminal_text(&nodes) {
+        parse_document(
+            Arena::new(authored),
+            ParseOpts {
+                tree_builder: TreeBuilderOpts {
+                    scripting_enabled: false,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )
+        .one(serialize::html(&nodes))
+    } else {
+        nodes
+    }
+}
 
 pub(super) fn prepared(body: &str) -> PreparedCatalogue {
     let files = BTreeMap::from([

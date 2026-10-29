@@ -70,10 +70,7 @@ only after its own policy accepts each file. A changed or removed document
 does not carry its previous closure. A full `build` computes the closure of
 every document. Identical input bytes give identical closures in every mode.
 
-Decision in force: carry the closure of unchanged documents after policy
-acceptance. Rendering every retained view again repeats work that the
-replacement keeps on purpose. Serving declared files without closure
-membership weakens confinement.
+Decision: a replacement carries the closure of each unchanged document after its own policy accepts each file. Rendering every retained view again was rejected, because it repeats work that the replacement keeps on purpose. Serving declared files without closure membership was rejected, because it weakens confinement.
 
 A renderer resource declaration is a closure starting point even without an
 HTML link. Every seed passes the same policy and existence checks as a
