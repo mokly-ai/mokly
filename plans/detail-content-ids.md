@@ -375,8 +375,11 @@ deployment file answered 400 ms late. Evidence:
       `tests/comparison_record_bytes.test.ts`.
 - [x] Decision 12, B: the viewer, its tests, and the shell delivery, viewer,
       and viewer README docs.
-- [ ] After #223 merges, merge `origin/main` under the `git-merge` skill. Keep
+- [x] After #223 merges, merge `origin/main` under the `git-merge` skill. Keep
       entry detail v3 and `EntryDetailV3` with both shapes, under decision 3.
+      Evidence: `.context/deployment-id-detail-ids/merge-aab537bd-report.md`,
+      `.context/deployment-id-detail-ids/merge-aab537bd-checks.log`, and
+      `.context/deployment-id-detail-ids/measurement.md`.
 - [x] Run the targeted tests and the complete gate, then commit and push.
       Remote CI wait is outside this stop boundary.
       Evidence: `.context/deployment-id-detail-ids/review/fix-2-checks.log`.
