@@ -83,44 +83,75 @@ of each item at `c9d402cd`. Each answer keeps the options of the report of
 - **Background:** Option C of F8 decision 59 is decided: keep unused
   recipes, and check every input again before reuse. Recipes measure 2.2 to
   3.3 MiB on the wire.
-- **Problem:** No byte budget is agreed. In a watched session, 7 of 10
-  bundles repeated an earlier compile, and each took 2.2 to 5.5 s.
+- **Problem:** No byte budget is agreed. In a watched session, 6 of 10
+  bundles could reuse an earlier compile, and each bundle took 2.2 to
+  5.5 s. Before a `bundle` call, `seed_compilation` restores only one
+  candidate with equal bundle settings, so a store of many recipes with
+  equal settings cannot restore the older ones.
 - **Impact if no action:** Milestone 8 cannot start.
 - **Options:**
   - **A.** 32 MiB per process, about ten recipes. Effort: Medium.
   - **B.** 64 MiB per process, the sidecar frame limit, so any recipe that
     the sidecar accepts fits. Effort: Medium.
   - **C.** 16 MiB per process, about five recipes. Effort: Medium.
-- **Conditions that every option keeps:** the store holds only released
-  recipes, and the sidecar's input check stays the only reuse gate, from F8
-  decision 59 C.
-- **Recommendation:** B. It matches the existing frame limit, so no valid
-  recipe is too large for the store. The report of 2026-10-28 recommended
-  A, and the coordinator's review changed it to B.
+  - **D.** Keep only the last released recipe of each bundle settings, in
+    practice one head and one base recipe. Before a `bundle` call, the seed
+    restores that recipe and the live candidate. Across settings, evict the
+    least recently used recipe above 64 MiB per process. The measured
+    session holds about 6.4 MiB. A revert across two or more edits
+    compiles again. Effort: Medium.
+  - **E.** As D, with 128 MiB, twice the frame limit, so the last recipe of
+    both sides always fits. Effort: Medium.
+- **Conditions that every option keeps:**
+  - Only released recipes enter the store, from F8 decision 59 C. Kept:
+    keeping generations live is perf 6.
+  - The sidecar's input check stays the only reuse gate, from this plan's
+    design. Kept: it also covers absent files and directory membership.
+  - The store charges serialized bytes, from this plan's design. Kept.
+- **Recommendation:** D. It keeps every measured reusable repeat and B's
+  64 MiB ceiling, but holds about 6.4 MiB. The report of 2026-10-28
+  recommended A, the coordinator's review B, and the options check of
+  2026-10-29 D.
 - **Auto-fix:** no, because condition 5 holds: the record says Cal agrees
   the budget.
 
 ### 61. Retention cap for verified asset copies
 
-- **Severity:** Low (estimate). **Effort:** Medium.
+- **Severity:** Low (estimate). **Effort:** Small.
 - **Terms:**
   - **Verified copy:** the temporary file in which Serve copies an opaque
     asset and checks its SHA-256 digest before it sends the response.
 - **Background:** Option D shares one verified copy among concurrent
   requests for one generation and route. The copy closes after the last
-  response, so a later request copies the asset again.
+  response, so a later request copies the asset again. Serve creates the
+  copy store for each generation, so a cap for each process needs one
+  shared store from `mokly-cli`.
 - **Problem:** Option A would keep each copy until its generation ends, up
-  to a cap. That keeps disk in use, so it needs a cap.
+  to a cap. That keeps disk, or memory on tmpfs, in use. A kept copy also
+  changes the delivery rule: a later request no longer reads the source, so
+  a changed source no longer fails it.
 - **Impact if no action:** A repeated request copies and checks the asset
   again, as today.
 - **Options:**
   - **A.** Keep copies until their generation ends, up to 256 MiB per Serve
-    process. Effort: Medium.
-  - **B.** As A, with 1 GiB per Serve process. Effort: Medium.
+    process. Effort: Large, because the shared store changes `mokly-cli`
+    and `mokly-server`.
+  - **B.** As A, with 1 GiB per Serve process. Effort: Large.
   - **C.** Keep option D only. Effort: Small.
-- **Conditions that every option keeps:** the copy is checked before the
-  first response, from `mokly-imported-styles-assets.md`.
-- **Recommendation:** A, from the report of 2026-10-28.
+  - **E.** Key each kept copy by its SHA-256 digest in one store for each
+    Serve process, and evict the least recently used copy above 256 MiB.
+    An unchanged asset then stays verified across watched edits. Copies of
+    old generations stay until eviction. Effort: Large.
+- **Conditions that every option keeps:**
+  - The first response waits for the full digest check, from
+    `mokly-imported-styles-assets.md`. Kept.
+  - Copies stay in the OS temporary folder, from the code. Kept: an
+    unnamed file disappears when Serve exits.
+- **Recommendation:** C. Option D already removes the measured eight
+  parallel copies, and no measurement shows that sequential repeats cost
+  enough for a budget. The report of 2026-10-28 recommended A, and the
+  options check of 2026-10-29 changed it to C. If Cal wants to keep copies,
+  E reuses more than A within the same cap.
 - **Auto-fix:** no, because condition 5 holds: the coordinator asked that
   each disk budget goes to Cal.
 
@@ -144,9 +175,10 @@ Release binary and eight CPUs, 2026-10-28, unless a line says otherwise.
 - Item 59. The pool drops a compiled recipe when the last lease of its
   generation releases. A live generation with equal settings already seeds a
   new bundle, and the sidecar's `reuse` check revalidates every input. In a
-  five-minute watched session of `examples/basic`, 7 of 10 bundles had
-  inputs equal to an earlier compile: 3 head bundles and 4 bundles of the
-  unchanged base.
+  five-minute watched session of `examples/basic`, 6 of 10 bundles had
+  inputs equal to an earlier compile: the 2 head bundles after the reverts
+  and 4 bundles of the unchanged base. The two edits appended different
+  comments, so the second edit could not reuse the first.
 - Item 61. Each request copies and verifies the whole asset into its own
   unnamed temporary file. Eight concurrent requests for one 60 MiB asset
   made eight files, 480 MiB in total, with eight SHA-256 checks.
@@ -244,6 +276,11 @@ design call of 2026-10-28.
 - Item 134: replace `paths_mut()` with `update_paths`. After a failed
   operation, record its error, skip it, and apply the rest again. Keep the
   rescan mapping.
+- Item 59, when Cal answers: when the last lease of a generation releases,
+  the pool moves its bundle settings, modules, and compiled recipe to the
+  store, charged by serialized size. The seed restores from the store, and
+  the sidecar's `reuse` check stays the only reuse gate. A hit makes the
+  recipe live again.
 - My call: each milestone group from Milestone 2 to Milestone 7 is its own
   pull request, so the coordinator can merge it alone.
 
@@ -348,16 +385,26 @@ Item 133. Pull request 6.
 
 ## Milestone 8: Store of unused compiled recipes
 
-Item 59. Waits for Cal's budget.
+Item 59. Waits for Cal's budget. The TODOs assume the recommended option D.
 
 - [ ] Add failing pool tests: a released recipe restores without esbuild
-      after an edit and a revert, a changed input compiles, and the budget
-      evicts the least recently used recipe.
-- [ ] Add the store to the pool and `seed_compilation`, and state it in
-      `mokly-sidecar-modules.md`.
+      after an edit and a revert, a changed input compiles, the seed picks
+      the stored recipe of the same settings deterministically, and the
+      budget evicts the least recently used recipe.
+- [ ] Add the store to the pool and `seed_compilation`. Clear it on
+      dispose and shutdown. State it in `mokly-sidecar-modules.md` and the
+      `mokly-sidecar` README.
+- [ ] Repeat the watched session probe and record the esbuild counts.
 
-## Milestone 9: Retention cap for verified copies
+## Milestone 9: Kept verified copies
 
-Item 61, option A. Waits for Cal.
+Item 61, option A, B, or E. Waits for Cal. Option C needs no milestone.
 
-- [ ] Keep each verified copy until its generation ends, up to the cap.
+- [ ] Add failing tests: a kept copy serves a later request without a new
+      copy, the cap evicts the least recently used copy, and the copies
+      close with their generation or on eviction.
+- [ ] Add one shared store from `mokly-cli` to `mokly-server`.
+- [ ] Change the delivery rule in `mokly-imported-styles-assets.md`: a kept
+      copy serves later requests without reading the source. Update the
+      `mokly-server` README.
+- [ ] Repeat the eight-request probe and a sequential-request probe.
