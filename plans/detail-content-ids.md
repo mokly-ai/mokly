@@ -143,16 +143,18 @@ Rejected designs: a file hash that the shell checks, because Serve writes
 
 Each reader accepts one version. The serialization contract requires a new
 number for a removal, a required addition, or a changed meaning. Release
-0.17.0, which the open PR #219 prepares, contains index v8 and detail v2.
-After it, this plan needs index v9, detail v3, and the new deployment file v1.
-Every other format keeps its number.
+0.17.0 shipped on 2026-10-29 from `main` at `5d00ca8a`. It holds index v8 and
+entry detail v3 in the shape of #223, with `deploymentId` and `generation`.
+This plan changes both formats, so it needs index v9, entry detail v4, and the
+new deployment file v1. Every other format keeps its number.
 
 Under decision 3, each format takes one new number between two releases. The
 first change that merges after a release raises the number of each format that
 it changes. A later change in the same release window keeps that number and
 adds its shape to it. It also keeps the raised type name, fixture names, reader
-gates, and format rows when it resolves its conflicts. If 0.17.0 has not
-shipped when this plan merges, the index keeps 8.
+gates, and format rows when it resolves its conflicts. If another change
+raises the index or the entry detail after 0.17.0 and merges first, this plan
+keeps that number and adds its shape.
 
 The id covers every field, so "dedup 3" and "dedup 4" need no change to the id
 rule. They edit the same projections, generation writer, and Node identity
@@ -400,6 +402,33 @@ This keeps every requirement and leaves room for the shared UI rules.
 
 After the push, wait for PR #224's checks under the user's merge task.
 Evidence: `.context/deployment-id-detail-ids/merge-3ea78c0b-report.md`.
+
+## Milestone 9: Format numbers after release 0.17.0
+
+Release 0.17.0 shipped on 2026-10-29 with index v8 and entry detail v3, before
+this plan merged. Under decision 3 B, this plan is the first change after that
+release that changes the two formats. So it raises the index to 9 and the
+entry detail to 4. The deployment file has not shipped, so it stays at 1.
+
+Design calls, 2026-10-29:
+
+- My call: the detail type becomes `EntryDetailV4`, and the fixtures become
+  `catalogue-v9.json` and `entry-details-v4.json`. Each earlier raise renamed
+  the versioned type and fixtures in the same way.
+- My call: the upgrade guide gives the content id step as an upgrade to the
+  release after 0.17.0, not as part of the 0.17.0 steps.
+
+- [ ] Merge `origin/main` at `5d00ca8a` under the `git-merge` skill.
+- [ ] Raise the index to 9 and the entry detail to 4 in the model, the
+      readers, the generated types, the fixtures and their detail ids, the
+      tests, and the snapshots.
+- [ ] Update the protocol docs, the upgrade guide, the READMEs, and the viewer
+      docs to index v9 and entry detail v4.
+- [ ] Turn the open items into follow-up items under `plans/follow-ups/`.
+- [ ] Run the complete gate, push, and wait for CI.
+- [ ] Give the pull request description the format numbers, each decision and
+      design call with its date, and a permalink to this plan.
+- [ ] Delete this plan in the last commit of the work.
 
 ## Post-merge follow-up (non-blocking)
 
