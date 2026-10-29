@@ -1,9 +1,9 @@
 # Batched Base Reads
 
-Status: Active. [PR #229](https://github.com/mokly-ai/mokly/pull/229) is open
-for design A. Design B continues on the stacked branch
-`conductor/perf-2b-base-reads-from-the-extraction`, with no pull request yet.
-The plan closes when its pull requests merge.
+Status: Completed. [PR #236](https://github.com/mokly-ai/mokly/pull/236)
+merged on 2026-10-28 with design B. Design A merged in
+[PR #229](https://github.com/mokly-ai/mokly/pull/229) on 2026-10-28. The warm
+acceptance of milestone 8 is missed under decision 11.
 
 Changes renders the base commit a second time and compares it with the
 working tree. Mokly never checks out the base. It reads each base file through
@@ -261,6 +261,14 @@ single-file loop returns it before the stream error. It replaces the applied
 option B, the shared stream helper, which kept the error too but added a
 trait. Finding 2: D, decision 8. Finding 3: E, decision 9.
 
+11. Measurement of 2026-10-28: the four warm base spans of milestone 8 take
+    3.8 s together, against the acceptance of 3 s. Applied under the user's
+    rule for decisions that come up during the work: close the plan with the
+    measured result. Reason: those spans start 7 Git processes, against 623
+    on main, so the base reads that this plan targets are gone. The rest is
+    graph preparation and CSS bundling work. Rejected: a new milestone to
+    reach 3 s, because that work is outside this plan's subject and Large.
+
 ## Milestone 1: Documentation and protocol for batch conversion
 
 State the batch conversion requirements before the code changes.
@@ -447,21 +455,40 @@ failing test first.
 
 ## Milestone 8: Verification, measurement, review, and pull request
 
-- [ ] Run the targeted tests, then `cargo xtask check --suite repository`,
+- [x] Run the targeted tests, then `cargo xtask check --suite repository`,
       then the complete gate `cargo xtask check`.
-- [ ] Smoke test: serve `examples/basic`, wait for Changes, and open the
+- [x] Smoke test: serve `examples/basic`, wait for Changes, and open the
       Changes list and one comparison in the browser. Save a screenshot under
       `.context/batched-base-reads/`.
-- [ ] Measure with the shared method: cold and warm `examples/basic`, the
+- [x] Measure with the shared method: cold and warm `examples/basic`, the
       edit run, and both small fixtures. Acceptance: the warm base
       `config.load`, `catalogue.discover`, `graph.prepare`, and base
       `css.bundle` spans take under 3 s together. Repeat the byte-for-byte
       build comparison of milestone 4.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- Notes: design B at `47a7a3fa` ran interleaved with main at `9ce75853`.
+  Warm `changes.classify` fell from 26.6 s to 13.5 s, and the four warm base
+  spans from 17.4 s to 3.8 s, which misses the acceptance, see decision 11.
+  The build comparison wrote identical output. The complete gate passed on
+  `eb0c1092`. After #225, browser shard 1 failed twice in the React variant
+  of `tests/browser/large_watch.spec.ts`. It passed in CI on #236, in local
+  runs, and in the gate on main at `aab537bd`. Evidence:
+  `.context/batched-base-reads/after-b.md`,
+  `.context/batched-base-reads/gate-failures.md`,
+  `.context/batched-base-reads/merge-justifications.md`, and the screenshots
+  under `.context/batched-base-reads/smoke/`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-- [ ] Open the pull request when every other milestone TODO is ticked, with
+  - The review ran after the merge on the squash commit `aab537bd`, in the
+    supervisor's own context under the user's rule of 2026-10-28. It found
+    one Low finding, which the validity check confirmed: an I/O error on one
+    extraction file failed the base read instead of reading the file through
+    Git. The follow-up pull request fixes it with option B. Report:
+    `.context/batched-base-reads/review-b-post-merge.md`.
+- [x] Open the pull request when every other milestone TODO is ticked, with
       the before and after table in its body. This is the second pull
       request, from the stacked branch. Put its link in the status paragraph.
+  - [PR #236](https://github.com/mokly-ai/mokly/pull/236) opened as a draft
+    and merged on 2026-10-28.
