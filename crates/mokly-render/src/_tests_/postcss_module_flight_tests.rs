@@ -1,5 +1,6 @@
 //! Module work is shared by concurrent callers while unrelated modules remain independent.
 
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc;
@@ -153,4 +154,75 @@ fn finding_7_another_module_finishes_while_one_module_is_in_flight() {
     );
     release.send(()).unwrap();
     assert_eq!(first.join().unwrap(), Some("late".into()));
+}
+
+#[test]
+fn finding_7_panicked_owner_releases_waiters_and_the_next_lookup_retries() {
+    let polling = Duration::from_secs(10);
+    let (started, owner_ready) = mpsc::channel();
+    let (release, released) = mpsc::channel();
+    let (returned, waiter_result) = mpsc::channel();
+    let released = Mutex::new(released);
+    let projects = Arc::new(AtomicUsize::new(0));
+    let digests = Arc::new(AtomicUsize::new(0));
+    let project_count = projects.clone();
+    let digest_count = digests.clone();
+    let tree = Arc::new(Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, path| {
+                if project_count.fetch_add(1, Ordering::SeqCst) == 0 {
+                    started.send(()).unwrap();
+                    released.lock().unwrap().recv_timeout(polling * 3).unwrap();
+                    panic!("module project owner panicked");
+                }
+                Ok(Some(node(path)))
+            })),
+        SourceTreeMock::digest
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                digest_count.fetch_add(1, Ordering::SeqCst);
+                Ok("late".into())
+            })),
+    )));
+    let memo = Arc::new(ModuleDigests::default());
+    let owner_memo = memo.clone();
+    let owner_tree = tree.clone();
+    let owner = thread::spawn(move || {
+        catch_unwind(AssertUnwindSafe(|| {
+            owner_memo.late(owner_tree.as_ref(), Path::new("/repo"), "module.js")
+        }))
+    });
+    owner_ready.recv_timeout(polling).unwrap();
+    let waiter_memo = memo.clone();
+    let waiter_tree = tree.clone();
+    let waiter = thread::spawn(move || {
+        returned
+            .send(waiter_memo.late(waiter_tree.as_ref(), Path::new("/repo"), "module.js"))
+            .unwrap();
+    });
+    let deadline = Instant::now() + polling;
+    loop {
+        let waiting = memo
+            .known()
+            .get("module.js")
+            .is_some_and(|cell| Arc::strong_count(cell) >= 3);
+        if waiting {
+            break;
+        }
+        assert!(Instant::now() < deadline, "the module waiter never arrived");
+        thread::yield_now();
+    }
+    release.send(()).unwrap();
+    assert!(owner.join().unwrap().is_err());
+    assert_eq!(waiter_result.recv_timeout(polling).unwrap(), None);
+    waiter.join().unwrap();
+    assert_eq!(projects.load(Ordering::SeqCst), 1);
+    assert_eq!(digests.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        memo.late(tree.as_ref(), Path::new("/repo"), "module.js"),
+        Some("late".into())
+    );
+    assert_eq!(projects.load(Ordering::SeqCst), 2);
+    assert_eq!(digests.load(Ordering::SeqCst), 1);
 }

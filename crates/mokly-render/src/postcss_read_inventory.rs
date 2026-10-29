@@ -29,6 +29,41 @@ enum ModuleState {
     Failed,
 }
 
+/// Releases a module's waiters even when its owner unwinds before publishing a result.
+struct ModuleOwner<'a> {
+    digests: &'a ModuleDigests,
+    name: &'a str,
+    cell: &'a Arc<ModuleCell>,
+}
+
+impl Drop for ModuleOwner<'_> {
+    fn drop(&mut self) {
+        let failed = {
+            let mut state = self
+                .cell
+                .state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if matches!(&*state, ModuleState::Ready(_)) {
+                false
+            } else {
+                *state = ModuleState::Failed;
+                true
+            }
+        };
+        if failed {
+            let mut known = self.digests.known();
+            if known
+                .get(self.name)
+                .is_some_and(|current| Arc::ptr_eq(current, self.cell))
+            {
+                known.remove(self.name);
+            }
+        }
+        self.cell.ready.notify_all();
+    }
+}
+
 impl ModuleDigests {
     fn late(&self, tree: &dyn SourceTree, root: &Path, name: &str) -> Option<String> {
         let (cell, owner) = {
@@ -60,6 +95,11 @@ impl ModuleDigests {
                 }
             }
         }
+        let _owner = ModuleOwner {
+            digests: self,
+            name,
+            cell: &cell,
+        };
         let digest = tree
             .project(&root.join(name))
             .ok()
@@ -72,16 +112,6 @@ impl ModuleDigests {
                 None => ModuleState::Failed,
             };
         }
-        if digest.is_none() {
-            let mut known = self.known();
-            if known
-                .get(name)
-                .is_some_and(|current| Arc::ptr_eq(current, &cell))
-            {
-                known.remove(name);
-            }
-        }
-        cell.ready.notify_all();
         digest
     }
 
