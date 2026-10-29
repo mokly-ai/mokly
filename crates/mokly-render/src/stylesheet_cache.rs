@@ -217,5 +217,9 @@ mod stylesheet_miss_tests;
 mod stylesheet_reuse_tests;
 
 #[cfg(test)]
+#[path = "_tests_/stylesheet_trace_tests.rs"]
+mod stylesheet_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/stylesheet_support.rs"]
 mod stylesheet_support;
