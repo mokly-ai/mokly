@@ -31,73 +31,58 @@ enum ModuleState {
 
 impl ModuleDigests {
     fn late(&self, tree: &dyn SourceTree, root: &Path, name: &str) -> Option<String> {
-        let cell = {
+        let (cell, owner) = {
             let mut known = self.known();
-            if let Some(cell) = known.get(name) {
-                (cell.clone(), false)
-            } else {
-                let cell = Arc::new(ModuleCell {
-                    state: Mutex::new(ModuleState::Running),
-                    ready: Condvar::new(),
-                });
-                known.insert(name.into(), cell.clone());
-                (cell, true)
+            match known.get(name) {
+                Some(cell) => (cell.clone(), false),
+                None => {
+                    let cell = Arc::new(ModuleCell {
+                        state: Mutex::new(ModuleState::Running),
+                        ready: Condvar::new(),
+                    });
+                    known.insert(name.into(), cell.clone());
+                    (cell, true)
+                }
             }
         };
-        if !cell.1 {
-            let mut state = cell
-                .0
-                .state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner());
+        if !owner {
+            let mut state = cell.state.lock().unwrap_or_else(|error| error.into_inner());
             loop {
                 match &*state {
                     ModuleState::Running => {
                         state = cell
-                            .0
                             .ready
                             .wait(state)
                             .unwrap_or_else(|error| error.into_inner());
                     }
                     ModuleState::Ready(digest) => return Some(digest.clone()),
-                    ModuleState::Failed => {
-                        drop(state);
-                        self.remove_failed(name, &cell.0);
-                        break;
-                    }
+                    ModuleState::Failed => return None,
                 }
             }
         }
-        let digest = match tree.project(&root.join(name)).ok() {
-            Some(Some(node)) => tree.digest(&node.identity).ok(),
-            Some(None) | None => None,
-        };
-        let mut state = cell
-            .0
-            .state
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if let Some(digest) = &digest {
-            *state = ModuleState::Ready(digest.clone());
-        } else {
-            *state = ModuleState::Failed;
-        }
-        cell.0.ready.notify_all();
-        drop(state);
-        if digest.is_none() {
-            self.remove_failed(name, &cell.0);
-        }
-        digest
-    }
-
-    fn remove_failed(&self, name: &str, cell: &Arc<ModuleCell>) {
-        let mut known = self.known();
-        if known
-            .get(name)
-            .is_some_and(|current| Arc::ptr_eq(current, cell))
+        let digest = tree
+            .project(&root.join(name))
+            .ok()
+            .flatten()
+            .and_then(|node| tree.digest(&node.identity).ok());
         {
-            known.remove(name);
+            let mut state = cell.state.lock().unwrap_or_else(|error| error.into_inner());
+            *state = match &digest {
+                Some(digest) => ModuleState::Ready(digest.clone()),
+                None => ModuleState::Failed,
+            };
         }
+        if digest.is_none() {
+            let mut known = self.known();
+            if known
+                .get(name)
+                .is_some_and(|current| Arc::ptr_eq(current, &cell))
+            {
+                known.remove(name);
+            }
+        }
+        cell.ready.notify_all();
+        digest
     }
 
     fn known(&self) -> MutexGuard<'_, BTreeMap<String, Arc<ModuleCell>>> {
@@ -205,3 +190,7 @@ mod postcss_read_inventory_tests;
 #[cfg(test)]
 #[path = "_tests_/postcss_module_digest_tests.rs"]
 mod postcss_module_digest_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_module_flight_tests.rs"]
+mod postcss_module_flight_tests;
