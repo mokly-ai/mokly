@@ -103,7 +103,7 @@ Each record keeps the read evidence of its own inputs. The module evidence of
 a PostCSS context is kept once. When a later result of the context carries
 more module evidence, its entry links to the earlier entry and keeps only the
 added versions. Each entry has its own stamp and is charged once. An attempt
-checks the stamp of that entry once and replays its observations once.
+checks the stamp of each entry once and replays its observations once.
 When the shared store removes records under its bound, or keeps a record in
 its attempt because its evidence disagreed, it keeps the key and the reason.
 The `css.bundle` span of the next bundle for that key records the reason.
