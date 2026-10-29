@@ -78,7 +78,9 @@ schemas. The [component controls contract](../../docs/protocol/mokly-component-c
 owns control bounds, steps, and the `props-control-bounds` warning. The
 [entry props contract](../../docs/protocol/mokly-entry-props.md) owns
 binary64 rounding and the `props-unsafe-integer` warning for props, schemas,
-and controls. Shared schema preparation also normalizes numbers received
+and controls. For a component invocation, `mokly-html` reports this warning
+during composition, and its message names the component path and the instance
+id. Shared schema preparation also normalizes numbers received
 through JSON, so JavaScript's decimal spelling keeps its binary64 identity in
 the core. Preparation captures explicit control order, schema property order,
 or first-seen inferred prop order before it creates canonical lookup maps.
@@ -200,11 +202,14 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [`src/html_driver.rs`](./src/html_driver.rs) provides `drive` and
   `DriverSink`, which run html5gum under the html5ever tree builder for the
   checks and for the tree.
-- [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides `for_entry`,
-  which reports each unsafe integer in the complete props of one entry.
+- [`src/numeric_warnings.rs`](./src/numeric_warnings.rs) provides
+  `for_invocation`, which reports each unsafe integer in the props of one
+  component invocation, with the component path and the instance id.
 - [`src/diagnostic.rs`](./src/diagnostic.rs) and
   [`src/error.rs`](./src/error.rs) define the `Code`, `Issue`, and `Warning`
-  records and `CatalogueError`.
+  records and `CatalogueError`. `diagnostic::json_quoted` is the one JSON
+  quoting helper for catalogue warning messages, with the escapes of the build
+  warnings contract.
 
 ### Related Docs
 

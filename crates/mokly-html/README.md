@@ -19,11 +19,13 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 `HtmlComposer` implements `dyn Composer` over a prepared catalogue and an
 injected `dyn FragmentRenderer`. Screen and component bodies use one render
 path and the [shared template grammar](../../docs/protocol/mokly-html-screens.md#screen-body).
-Literal integer component attributes use the same binary64 rounding and
-`props-unsafe-integer` warnings as saved props.
-Numeric `enum`, `const`, and `oneOf` coercion returns the same rounded values.
-Authenticated JavaScript component instances report the same warning for
-unsafe integer props, including nested React invocations.
+Literal integer component attributes use the same binary64 rounding as saved
+props. Numeric `enum`, `const`, and `oneOf` coercion returns the same rounded
+values. Each component element and each authenticated JavaScript component
+instance, including a nested React invocation, reports `props-unsafe-integer`
+for each unsafe integer in its props. The subject of this invocation warning is
+the rendered entry, and its message names the component path and the instance
+id.
 Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
@@ -91,10 +93,18 @@ use the delivered parser, but the browser does not receive the wrapper nodes.
 The shared driver gives authored elements their source locations before HTML
 table repair. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
-and attribute. Unknown attribute values are not evaluated. Strict builds fail
-on these warnings. Reserved navigation names are not unknown attributes:
-composition keeps them, as the authored parse does, and reserved navigation
-metadata and duplicate-navigation failures retain their existing checks.
+and attribute. For a page callback document, composition reports this warning
+for the attributes that it removes, once per page and attribute, with the
+page's `entry` subject. As in a body, the message names the first wrapper in
+document order that carries the attribute. Composition reports these warnings
+before the page and source checks run, so a later failure keeps them. Unknown
+attribute values are not evaluated. Strict builds fail on these warnings.
+Reserved navigation names are not unknown attributes: composition keeps them,
+as the authored parse does, and reserved navigation metadata keeps its
+existing check. In callback output, a duplicate navigation attribute, such
+as `href`, fails with `duplicate navigation attribute <name>`, and any other
+duplicate attribute fails with `duplicate attribute <name> in consumer output`.
+In a body, only a duplicate navigation attribute fails.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core

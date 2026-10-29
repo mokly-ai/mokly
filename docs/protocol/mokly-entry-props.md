@@ -1,7 +1,5 @@
 # Entry Props And Variants
 
-Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
-
 ## One Model
 
 Every screen and component is a render over props:

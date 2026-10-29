@@ -1,7 +1,5 @@
 # Component Controls
 
-Status: In progress under the [diagnostics and HTML messages plan](../../plans/diagnostics-and-html-messages.md).
-
 ## Scope And User Behaviour
 
 Saved variants work in every catalogue. Serve renders temporary edits of
