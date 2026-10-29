@@ -5,10 +5,12 @@ development browsing, and renders visual comparisons. The Rust core is a
 Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
 `mokly` shim, the render sidecar, and the authoring API, is under
 `packages/mokly`. The `@mokly/viewer` React viewer is under
-`packages/viewer`. The example catalogue is under `examples/basic`, the
-tooling tests and browser specs are under `tests/`, the viewer tests are
-under `packages/viewer/tests`, and the Rust verification task runner is under
-`xtask/`. The protocol docs under `docs/protocol` are the spec.
+`packages/viewer`. The `@mokly/ui` shared UI package, the shell's
+presentational components and their CSS, is under `packages/ui`. The example
+catalogue is under `examples/basic`, the tooling tests and browser specs are
+under `tests/`, the viewer tests are under `packages/viewer/tests`, the UI
+package tests are under `packages/ui/tests`, and the Rust verification task
+runner is under `xtask/`. The protocol docs under `docs/protocol` are the spec.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -55,10 +57,11 @@ the rule. Rules for one application, package, or feature live in the
 
 ## Commands
 
-- Build: `npm run build`. It builds the host native target, the shim, the
-  sidecar, and the viewer.
+- Build: `npm run build`. It builds the host native target, the UI package,
+  the viewer, and then the shim and the sidecar, in that order.
 - Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for the
-  Node test files under `tests/` and `packages/viewer/tests/`,
+  Node test files under `tests/`, `packages/viewer/tests/`, and
+  `packages/ui/tests/`,
   `cargo test -p <crate>` for one crate, and
   `npm run test:browser -- <spec> -g "<name>"` for browser specs. The npm
   commands build first. The
@@ -111,6 +114,10 @@ the rule. Rules for one application, package, or feature live in the
   removed-input warning, or a migration step in a guide.
 - No test asserts the words of a protocol page. Tests check the code against
   its own behaviour. Guide tests compare parsed guide tables with the code.
+- Files under `packages/ui` use kebab-case names, such as `top-bar.tsx`,
+  which exports `TopBar`. A lint checks the rule only for the JavaScript and
+  TypeScript files under `packages/ui/src` and `packages/ui/tests` and for the
+  directories that hold them. The other packages keep snake_case.
 
 ## Product
 
@@ -118,12 +125,19 @@ the rule. Rules for one application, package, or feature live in the
   `packages/viewer/src/shell`. Serve, the static build, and React hosts
   render this same tree in the browser. Check the shell's components before
   you create a component.
+- A presentational component and its CSS live in `@mokly/ui` under
+  `packages/ui/src`: props in, callbacks out, no store, no fetch, no history,
+  no frame. A component that needs the store stays in the viewer and composes
+  a package component. It never moves the store down.
 - The design mockups of these screens live in
   `examples/basic/specs/design`. Build them from the shared design
   components in `examples/basic/specs/design/library`. Each shared
-  component's own styles live in `examples/basic/design-library`. Shared,
-  layout, and global design styles stay in the mixed
-  `examples/basic/design*.css` files.
+  component's own styles live in `examples/basic/design-library`. For a
+  shared component that `@mokly/ui` provides, the view imports the package
+  component and the sheet imports the package stylesheets of the component
+  and of each package component that it renders, each by its repository path
+  under `packages/ui/src`. Shared, layout, and global design styles stay in
+  the mixed `examples/basic/design*.css` files.
 
 ## Review focus
 

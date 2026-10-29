@@ -71,9 +71,9 @@ make a later complete gate fail.
 The [developer test commands](./developer-test-commands.md) define the public
 Node test and browser entry points, selection, and the developer skip policy.
 Strict Node test discovery recursively includes `.test.ts` and `.test.tsx` files
-under `tests/` and `packages/viewer/tests/`: the tooling tests and the viewer
-tests. The strict runners and every `cargo xtask check` suite reject skips and
-todos. Node test files stay outside Playwright's `tests/browser/` directory.
+under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`: the tooling
+tests, the viewer tests, and the UI package tests. The strict runners and
+every `cargo xtask check` suite reject skips and todos. Node test files stay outside Playwright's `tests/browser/` directory.
 Playwright matches only `**/*.spec.ts` in its one `chromium` project.
 
 The strict runners skip the build, reject arguments other than the optional

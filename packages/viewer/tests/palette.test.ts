@@ -2,10 +2,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
-
-import { SHELL_CSS } from "../src/shell/css.js";
+import { fileURLToPath } from "node:url";
 
 import { PALETTE_PAIRS } from "./palette_pairs.js";
+
+/** The built stylesheets that a delivery and an embedded host receive. */
+const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
+  fs.readFile(new URL("../dist/shell.css", import.meta.url), "utf8"),
+  fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
+]);
 
 const SOURCE = new URL("../src/", import.meta.url).pathname;
 
@@ -17,6 +22,13 @@ const SOURCE = new URL("../src/", import.meta.url).pathname;
 const PALETTE_SOURCES = new Set(["css_tokens.ts", "css_theme.ts"]);
 
 const LITERAL = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g;
+
+/** The rules of the installed `@mokly/ui`, which every shell stylesheet carries. */
+const PACKAGE_STYLESHEET = "@mokly/ui/styles.css";
+const PACKAGE_CSS = await fs.readFile(
+  fileURLToPath(import.meta.resolve(PACKAGE_STYLESHEET)),
+  "utf8",
+);
 
 async function styleModules(): Promise<{ file: string; text: string }[]> {
   const entries = await fs.readdir(SOURCE, {
@@ -33,6 +45,7 @@ async function styleModules(): Promise<{ file: string; text: string }[]> {
       text: await fs.readFile(path.join(entry.parentPath, name), "utf8"),
     });
   }
+  modules.push({ file: PACKAGE_STYLESHEET, text: PACKAGE_CSS });
   return modules;
 }
 
@@ -51,7 +64,7 @@ test("no shell stylesheet names a colour outside a palette source", async () => 
 test("the shell stylesheets were actually scanned", async () => {
   const modules = await styleModules();
   assert.ok(modules.length > 15, `only ${modules.length} modules scanned`);
-  for (const source of PALETTE_SOURCES)
+  for (const source of [...PALETTE_SOURCES, PACKAGE_STYLESHEET])
     assert.ok(
       modules.some((module) => module.file === source),
       `${source} is missing`,
@@ -59,7 +72,7 @@ test("the shell stylesheets were actually scanned", async () => {
 });
 
 function palette(selector: RegExp): Map<string, string> {
-  const blocks = [...SHELL_CSS.matchAll(selector)].flatMap((match) =>
+  const blocks = [...STANDALONE_CSS.matchAll(selector)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
   );
   assert.ok(blocks.length > 0, `${selector} is not in the shell stylesheet`);
@@ -223,17 +236,20 @@ test("a public override foreground only sits on the accent it pairs with", () =>
     "var(--mokly-accent-soft)",
   ]);
   const failures: string[] = [];
-  for (const [, selector, body] of SHELL_CSS.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    const color = /(?:^|;|\{)\s*color:\s*([^;]+)/.exec(body ?? "")?.[1]?.trim();
-    const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
-    const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
-      .exec(body ?? "")?.[1]
-      ?.trim();
-    if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
-    if (accentBackgrounds.has(background)) continue;
-    failures.push(
-      `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
-    );
-  }
+  for (const css of [STANDALONE_CSS, EMBEDDED_CSS])
+    for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+      const color = /(?:^|;|\{)\s*color:\s*([^;]+)/
+        .exec(body ?? "")?.[1]
+        ?.trim();
+      const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
+      const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
+        .exec(body ?? "")?.[1]
+        ?.trim();
+      if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
+      if (accentBackgrounds.has(background)) continue;
+      failures.push(
+        `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
+      );
+    }
   assert.deepEqual(failures, []);
 });

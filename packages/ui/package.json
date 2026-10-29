@@ -1,0 +1,54 @@
+{
+  "name": "@mokly/ui",
+  "version": "0.17.0",
+  "description": "Presentational components and stylesheets of the Mokly Browse shell.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    "./appearance-selector": {
+      "types": "./dist/appearance-selector/appearance-selector.d.ts",
+      "import": "./dist/appearance-selector/appearance-selector.js"
+    },
+    "./change-mark": {
+      "types": "./dist/change-mark/change-mark.d.ts",
+      "import": "./dist/change-mark/change-mark.js"
+    },
+    "./comparison-toolbar": {
+      "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
+      "import": "./dist/comparison-toolbar/comparison-toolbar.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/icons.d.ts",
+      "import": "./dist/icons/icons.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/ui"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
+    "prepack": "npm run build"
+  }
+}

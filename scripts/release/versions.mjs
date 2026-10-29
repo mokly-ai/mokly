@@ -8,11 +8,12 @@ import { NATIVE_TARGETS } from "./targets.mjs";
 export async function verifyPackageVersions(root) {
   const json = async (file) =>
     JSON.parse(await fs.readFile(path.join(root, file), "utf8"));
-  const [workspace, lock, cli, viewer, versions] = await Promise.all([
+  const [workspace, lock, cli, viewer, ui, versions] = await Promise.all([
     json("package.json"),
     json("package-lock.json"),
     json("packages/mokly/package.json"),
     json("packages/viewer/package.json"),
+    json("packages/ui/package.json"),
     json(".release-please-manifest.json"),
   ]);
   assert.equal(workspace.private, true);
@@ -37,6 +38,15 @@ export async function verifyPackageVersions(root) {
       (cli.version === "0.15.0" && viewer.version === "0.6.0"),
     "viewer must use the shared version after the lockstep migration",
   );
+  for (const value of [
+    workspace.devDependencies["@mokly/ui"],
+    lock.packages[""].devDependencies["@mokly/ui"],
+    viewer.dependencies["@mokly/ui"],
+    lock.packages["packages/viewer"].dependencies["@mokly/ui"],
+    lock.packages["packages/ui"].version,
+    cli.version,
+  ])
+    assert.equal(value, ui.version, "UI package release versions must agree");
   for (const { name, directory } of NATIVE_TARGETS) {
     assert.equal(
       (await json(`${directory}/package.json`)).version,
@@ -65,5 +75,5 @@ export async function verifyPackageVersions(root) {
       link: true,
     });
   }
-  return { cli, viewer };
+  return { cli, viewer, ui };
 }

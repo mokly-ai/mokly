@@ -18,7 +18,9 @@ pub(super) fn workspace() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
-/// Isolate actual sources and make the optional defect injection local to one run.
+/// Isolate actual sources, including the `@mokly/ui` sources that the design
+/// library imports by repository path, and make the optional defect injection
+/// local to one run.
 pub(super) fn copy() -> TempDir {
     let directory = TempDir::new().unwrap();
     let workspace = workspace();
@@ -29,6 +31,7 @@ pub(super) fn copy() -> TempDir {
             "--",
             ".gitignore",
             "examples",
+            "packages/ui/src",
             "docs/protocol",
             "plans/rust-rebuild.md",
         ])

@@ -116,6 +116,12 @@ test("the viewer manifest enforces its public release boundaries", async () => {
       (value) => {
         value.dependencies = { other: "file:../other" };
       },
+      (value) => {
+        delete value.dependencies["@mokly/ui"];
+      },
+      (value) => {
+        value.dependencies["@mokly/ui"] = "^0.16.1";
+      },
     ];
     for (const mutate of invalid) {
       const changed = structuredClone(original);

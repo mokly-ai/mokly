@@ -79,7 +79,9 @@ export function registerComparisonDesign(
       );
       const controls = page.getByRole("group", { name: "Comparison mode" });
       await expect(controls).toBeVisible();
-      await expect(controls.locator(".active")).toHaveText("Current");
+      await expect(controls.locator('[aria-current="page"]')).toHaveText(
+        "Current",
+      );
       await expect(controls).toContainText("Side by side");
       await expect(controls).toContainText("Overlay");
       await expect(controls).toContainText("Difference");

@@ -152,9 +152,9 @@ node --import tsx --test tests/sidecar_methods.test.ts
 cargo test -p mokly-sidecar
 ```
 
-`npm run build` builds the host native binary, the viewer, and this package.
-The [release contract](../../docs/protocol/npm-release.md) defines the packed
-contents of the package.
+`npm run build` builds the host native binary, the UI package, the viewer, and
+this package. The [release contract](../../docs/protocol/npm-release.md) defines
+the packed contents of the package.
 
 ### Key Code
 

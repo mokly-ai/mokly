@@ -4,7 +4,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 Required tests check correctness without depending on machine speed. This
 contract applies to every Node test file that the viewer suite discovers under
-`tests/` and `packages/viewer/tests/`, and to the browser specs under
+`tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`, and to the
+browser specs under
 `tests/browser/`. Rust tests under `crates/` and `xtask/` follow the same
 assertion rule; the job timeout of the
 [CI workflow contract](./ci-workflow.md#job-execution) is their hang guard. It
@@ -55,7 +56,8 @@ budgets and their thresholds.
 ## ESLint Guard
 
 ESLint rejects two elapsed-time patterns in every JavaScript and TypeScript
-file under `tests/` and `packages/viewer/tests/`, including browser specs and
+file under `tests/`, `packages/viewer/tests/`, and `packages/ui/tests/`,
+including browser specs and
 `page.evaluate` callbacks:
 
 - A subtraction with a clock call on the left and a nonliteral operand on the

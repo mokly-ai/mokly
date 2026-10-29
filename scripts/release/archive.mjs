@@ -3,7 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { runCommand } from "./command.mjs";
-import { validateCliReport, validateNativeReport } from "./package_reports.mjs";
+import {
+  validateCliReport,
+  validateNativeReport,
+  validateUiReport,
+} from "./package_reports.mjs";
 
 const ROOT_FILES = new Set([
   "CHANGELOG.md",
@@ -50,6 +54,7 @@ export function validatePackageReport(report, name = "@mokly/viewer") {
   assert.match(report.integrity, /^sha512-/);
   assert.match(report.shasum, /^[a-f0-9]{40}$/);
   if (name === "@mokly/viewer") validateViewerReport(report);
+  else if (name === "@mokly/ui") validateUiReport(report);
   else if (name === "@mokly/mokly") validateCliReport(report);
   else validateNativeReport(report, name);
 }
