@@ -63,6 +63,9 @@ mod tree_traits;
 mod tree_transform;
 
 #[cfg(test)]
+#[path = "_tests_/callback_diagnostics_tests.rs"]
+mod callback_diagnostics_tests;
+#[cfg(test)]
 #[path = "_tests_/control_output_sweep_tests.rs"]
 mod control_output_sweep_tests;
 #[cfg(test)]

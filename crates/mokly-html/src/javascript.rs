@@ -5,7 +5,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;
 
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::html_input::DeliveredHtml;
+use mokly_catalogue::html_tokens::ignore_warning_message;
 use mokly_catalogue::numeric_warnings;
 use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
@@ -110,12 +112,22 @@ impl Engine<'_> {
         } else {
             DeliveredHtml::fragment(&result.html)
         };
+        let mut nodes = parse::html(html);
+        let removed = ignore_checks::filter_tree(&mut nodes);
         if page {
+            let mut seen = BTreeSet::new();
+            for (attribute, element) in removed {
+                if seen.insert(attribute.clone()) {
+                    self.warnings.push(Warning {
+                        code: "html-ignore-attribute",
+                        subject: WarningSubject::Entry(entry.metadata.path.clone()),
+                        message: ignore_warning_message(&attribute, element.as_bytes()),
+                    });
+                }
+            }
             source_checks::page(html)?;
         }
         source_checks::validate(html, true)?;
-        let mut nodes = parse::html(html);
-        ignore_checks::filter_tree(&mut nodes);
         let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
             && effective.metadata.path == self.request.entry.metadata.path;
         let mut nodes = markers::attach(
