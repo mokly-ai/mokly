@@ -282,8 +282,12 @@ before its fix.
       `is outside the JavaScript safe integer range and uses the nearest binary64 value`
       and `is outside its control bounds`.
 - [x] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
-- [ ] Review of `36ad15e8`: type the invocation as a `Field` variant in
-      `numeric_warnings`, so that no formatter argument is ignored.
+- [x] Review of `36ad15e8`: type the invocation as a `Field` variant in
+      `numeric_warnings`, so that no formatter argument is ignored. Done in
+      `7eb5d776`.
+- [ ] Review of `7eb5d776`: keep the shared message tail of
+      `props-unsafe-integer` in one place, so that a wording change needs
+      one edit.
 - Done in `36ad15e8`. Red and green runs:
   `.context/diagnostics-and-html-messages/m2-red.log` and `m2-green.log`.
 
@@ -291,22 +295,24 @@ before its fix.
 
 Item 138 C and finding 2 A in `mokly-html`.
 
-- [ ] Tests that fail on `main`:
-  - [ ] A composition test with a mocked page fragment: wrappers with
+- [x] Tests that fail on `main`:
+  - [x] A composition test with a mocked page fragment: wrappers with
         `typo`, `extra`, and `class` give three warnings with the `entry`
         subject and the authored message. A repeated attribute warns once.
-  - [ ] A CLI test with a `definePage` page: the warnings print, and
+  - [x] A CLI test with a `definePage` page: the warnings print, and
         `--strict` exits 1 and keeps the earlier output.
-  - [ ] A `source_checks` test: `<p class=a class=b>` in callback output
+  - [x] A `source_checks` test: `<p class=a class=b>` in callback output
         fails with `duplicate attribute class in consumer output`.
         Navigation names keep their text.
-- [ ] Return the removed names from the callback tree filter, and report
+- [x] Return the removed names from the callback tree filter, and report
       the warnings for page callback documents. Make
       `html_tokens::ignore_warning_message` public for this.
-- [ ] Word the duplicate attribute failure by name.
-- [ ] Do not change the sidecar wire, the render records, or the TypeScript
+- [x] Word the duplicate attribute failure by name.
+- [x] Do not change the sidecar wire, the render records, or the TypeScript
       sidecar.
-- [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- [x] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- Done in `c6b74667`. Red and green runs:
+  `.context/diagnostics-and-html-messages/m3-red.log` and `m3-green.log`.
 
 ## Milestone 4: Authored HTML checks
 
