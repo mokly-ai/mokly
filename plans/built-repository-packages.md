@@ -1,7 +1,10 @@
 # Built Repository Packages In Changes
 
 Status: Active. On branch `conductor/built-repository-packages-in-changes`,
-no pull request yet. The plan closes when its PR merges.
+no pull request yet. The plan lands in two pull requests. The first holds
+milestones 1 to 2.1, which decision 3 B needs. The second holds milestones 3
+to 11, which decisions 1, 2, and 4 unblock. The plan closes when the second
+pull request merges.
 
 A Changes comparison renders every entry twice. The head side renders from
 the working tree. The base side renders from the base commit's sources,
@@ -130,6 +133,13 @@ recommendation of decision 1 from D to G. Its report is
   the UI work still lands here when it can. The coordinator named the
   milestones by number. This plan names them by title, because later
   changes renumbered them.
+- Delivery in two pull requests (2026-10-29, the coordinator for the user):
+  the first pull request holds milestones 1 to 2.1, and the second holds
+  milestones 3 to 11. Reason: the user wants work merged as soon as it is
+  ready, and milestones 1 and 2 depend on no open decision. Rejected: one
+  pull request for the whole plan, because it would hold finished work until
+  decisions 1, 2, and 4 are answered and implemented. The second pull
+  request continues on this branch, or on a new branch from `main`.
 
 ### Design calls
 
@@ -453,13 +463,34 @@ that its normalized path names, under decision 3 B.
   `.context/built-repository-packages/m2/`, and the smoke test is in
   `.context/built-repository-packages/smoke/`.
 
+## Milestone 2.1: Verification, review, and the first pull request
+
+Prove milestones 1 and 2 for the first pull request. The coordinator opens
+and merges it.
+
+- [x] Merge `origin/main` under the `git-merge` skill. On 2026-10-29,
+      `main` was still at `c9d402cd`, which merge `30db9bfb` already holds.
+- [x] Commit with Conventional Commits and push the branch.
+- [ ] Review the diff of the first pull request against `origin/main` with
+      the `implementation-review` skill after the push. Report the findings,
+      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
+- [ ] Run the complete gate named in `AGENTS.md` on the final commit, and
+      push that commit.
+- [ ] Give the coordinator the pull request title and description. The
+      coordinator opens and merges the first pull request. Milestone 3
+      records its link and its merge date in the status paragraph.
+
 ## Milestone 3: Documentation for source targets and PostCSS reads
 
-Record the answers to decisions 1, 2, and 4. Then state the requirements and
-the decisions in force for decisions 1 and 2. Each touched protocol page
-gets the status line until the verification milestone. This milestone waits
-for decisions 1 and 2.
+Record the merge of the first pull request and the answers to decisions 1,
+2, and 4. Then state the requirements and the decisions in force for
+decisions 1 and 2. Each touched protocol page gets the status line until the
+verification milestone. This milestone waits for decisions 1 and 2.
 
+- [ ] Put the link and the merge date of the first pull request in the
+      status paragraph. If `main` holds that merge and this branch does not,
+      merge `origin/main` first, under the `git-merge` skill.
 - [ ] Record the user's answers to decisions 1, 2, and 4 under Answered
       decisions, each with its date, the rejected options, and the reason.
       Rewrite the milestones that another answer changes.
@@ -708,7 +739,7 @@ milestones, because the mockups render through them. It waits for decision
       Save the output and the screenshots under
       `.context/built-repository-packages/mockups/`.
 
-## Milestone 11: Verification, commit, review, and pull request
+## Milestone 11: Verification, review, and the second pull request
 
 - [ ] Remove the status lines that milestone 3 added, because the behaviour
       is implemented.
