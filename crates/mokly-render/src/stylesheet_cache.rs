@@ -75,13 +75,26 @@ impl CachedStylesheets {
     /// Check the stamp of a stored context entry once for each attempt.
     fn current(&self, context: &Arc<ContextEvidence>) -> bool {
         let mut checked = lock(&self.checked);
+        self.current_with(&mut checked, context)
+    }
+
+    fn current_with(
+        &self,
+        checked: &mut Vec<(Arc<ContextEvidence>, bool)>,
+        context: &Arc<ContextEvidence>,
+    ) -> bool {
         if let Some((_, current)) = checked
             .iter()
             .find(|(entry, _)| Arc::ptr_eq(entry, context))
         {
             return *current;
         }
-        let current = context.stamp.current(self.tree.as_ref()) == context.stamp;
+        let base_current = context
+            .base
+            .as_ref()
+            .is_none_or(|base| self.current_with(checked, base));
+        let own_current = context.stamp.current(self.tree.as_ref()) == context.stamp;
+        let current = base_current && own_current;
         checked.push((context.clone(), current));
         current
     }
@@ -93,15 +106,32 @@ impl CachedStylesheets {
         if let Some(entry) = contexts.get(&digest) {
             return entry.clone();
         }
-        let stored = lock(&self.shared).context(&digest);
-        let entry = match stored {
-            Some(entry) if self.current(&entry) => entry,
-            _ => Arc::new(ContextEvidence::new(
+        let stored = {
+            let shared = lock(&self.shared);
+            (shared.context(&digest), shared.contexts())
+        };
+        let entry = if let Some(entry) = stored.0.filter(|entry| self.current(entry)) {
+            entry
+        } else {
+            let mut base = contexts
+                .values()
+                .filter(|entry| entry.is_subset_of(&evidence))
+                .max_by_key(|entry| entry.full_size())
+                .cloned();
+            if base.is_none() {
+                base = stored
+                    .1
+                    .into_iter()
+                    .filter(|entry| self.current(entry) && entry.is_subset_of(&evidence))
+                    .max_by_key(|entry| entry.full_size());
+            }
+            Arc::new(ContextEvidence::with_base(
                 self.tree.as_ref(),
                 &self.root,
                 digest.clone(),
                 evidence,
-            )),
+                base,
+            ))
         };
         contexts.insert(digest, entry.clone());
         entry
@@ -116,10 +146,12 @@ impl CachedStylesheets {
     fn deliver(&self, record: &Record) -> Result<Bundle> {
         self.observe(record.evidence())?;
         if let Some(context) = &record.context {
-            let mut replayed = lock(&self.replayed);
-            if !replayed.contains(&context.digest) {
-                self.observe(&context.evidence)?;
-                replayed.insert(context.digest.clone());
+            for entry in ContextEvidence::chain_arcs(context) {
+                let mut replayed = lock(&self.replayed);
+                if !replayed.insert(entry.digest.clone()) {
+                    continue;
+                }
+                self.observe(&entry.evidence)?;
             }
         }
         Ok(record.complete())

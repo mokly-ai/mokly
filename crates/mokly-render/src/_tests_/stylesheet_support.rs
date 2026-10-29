@@ -196,7 +196,15 @@ pub(super) fn charges(tree: &Arc<dyn SourceTree>) -> (usize, usize) {
         tree.as_ref(),
         root,
         bundle(&self::root("root-00.css")),
-        |digest, evidence| Arc::new(ContextEvidence::new(tree.as_ref(), root, digest, evidence)),
+        |digest, evidence| {
+            Arc::new(ContextEvidence::with_base(
+                tree.as_ref(),
+                root,
+                digest,
+                evidence,
+                None,
+            ))
+        },
     );
     let context = record.context.as_ref().map_or(0, |context| context.bytes);
     (record.bytes, context)

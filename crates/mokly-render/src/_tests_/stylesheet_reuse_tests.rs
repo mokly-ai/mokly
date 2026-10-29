@@ -4,15 +4,52 @@ use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use mokly_css::types::StylesheetBundler;
-use unimock::Unimock;
+use mokly_css::types::{Bundle, StylesheetBundler, StylesheetBundlerMock, StylesheetRoot};
+use mokly_model::material::digest;
+use mokly_source_interface::read_evidence::ReadEvidence;
+use unimock::{MockFn, Unimock, matching};
 
 use super::stylesheet_support::{
     Calls, MODULES, assert_same, attempt, bundle, bundler, charges, fill, key, module, roots, tree,
 };
+use crate::source_paths::SOURCE_INPUT_PREFIX;
+use crate::stylesheet_record::ContextEvidence;
 use crate::stylesheet_store::{Miss, StylesheetCache};
 
 const BOUND: usize = 64 * 1024 * 1024;
+
+fn module_bundle(root: &StylesheetRoot, count: usize) -> Bundle {
+    let mut bundle = bundle(root);
+    bundle.read_evidence.inputs.retain(|path, _| {
+        path.starts_with(SOURCE_INPUT_PREFIX) || (0..count).any(|index| path == &module(index))
+    });
+    bundle
+}
+
+fn module_evidence(bundle: &Bundle) -> ReadEvidence {
+    let mut evidence = ReadEvidence::default();
+    for (path, versions) in &bundle.read_evidence.inputs {
+        if !path.starts_with(SOURCE_INPUT_PREFIX) {
+            evidence.inputs.insert(path.clone(), versions.clone());
+        }
+    }
+    evidence
+}
+
+fn full_context_bytes(
+    bundle: &Bundle,
+    tree: &Arc<dyn mokly_source_interface::tree::SourceTree>,
+) -> usize {
+    let evidence = module_evidence(bundle);
+    ContextEvidence::with_base(
+        tree.as_ref(),
+        Path::new("/repo"),
+        digest(format!("{:?}", evidence.inputs).as_bytes()),
+        evidence,
+        None,
+    )
+    .bytes
+}
 
 #[test]
 fn thirty_nine_records_with_shared_module_evidence_fit_in_one_store() {
@@ -30,6 +67,160 @@ fn thirty_nine_records_with_shared_module_evidence_fit_in_one_store() {
     for root in roots(39) {
         assert_same(&second.bundle(&root).unwrap(), &bundle(&root));
     }
+}
+
+#[test]
+fn finding_3_thirty_nine_growing_contexts_fit_without_full_copies() {
+    let roots = roots(39);
+    let tree = tree(&Arc::default(), &[]);
+    let (record, context) = charges(&tree);
+    assert!(39 * (record + context) > BOUND);
+    let responses = Arc::new(Mutex::new(
+        roots
+            .iter()
+            .enumerate()
+            .map(|(index, root)| module_bundle(root, MODULES - 39 + index + 1))
+            .collect::<Vec<_>>(),
+    ));
+    let answers = responses.clone();
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let first = attempt(
+        Arc::new(Unimock::new(
+            StylesheetBundlerMock::bundle
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+        )),
+        tree.clone(),
+        &shared,
+    );
+    for root in &roots {
+        first.bundle(root).unwrap();
+    }
+
+    let second = attempt(Arc::new(Unimock::new(())), tree, &shared);
+    for root in &roots {
+        assert!(second.bundle(root).is_ok());
+    }
+}
+
+#[test]
+fn finding_3_growing_context_evidence_charges_only_added_versions() {
+    let first_root = roots(2).remove(0);
+    let roots = roots(2);
+    let first_bundle = module_bundle(&first_root, 1);
+    let second_bundle = module_bundle(&roots[1], 2);
+    let tree = tree(&Arc::default(), &[]);
+    let full_second_bytes = full_context_bytes(&second_bundle, &tree);
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let responses = Arc::new(Mutex::new(vec![first_bundle, second_bundle]));
+    let answers = responses.clone();
+    let attempt = attempt(
+        Arc::new(Unimock::new(
+            StylesheetBundlerMock::bundle
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+        )),
+        tree,
+        &shared,
+    );
+
+    attempt.bundle(&first_root).unwrap();
+    attempt.bundle(&roots[1]).unwrap();
+
+    let second_digest = {
+        let evidence = module_evidence(&module_bundle(&roots[1], 2));
+        digest(format!("{:?}", evidence.inputs).as_bytes())
+    };
+    let second = shared.lock().unwrap().context(&second_digest).unwrap();
+    assert!(second.bytes < full_second_bytes);
+    let first_digest = {
+        let evidence = module_evidence(&module_bundle(&first_root, 1));
+        digest(format!("{:?}", evidence.inputs).as_bytes())
+    };
+    let first = shared.lock().unwrap().context(&first_digest).unwrap();
+    assert!(
+        second
+            .base
+            .as_ref()
+            .is_some_and(|base| Arc::ptr_eq(base, &first))
+    );
+}
+
+#[test]
+fn finding_3_a_chain_hit_returns_the_inner_bundle_and_full_evidence() {
+    let roots = roots(2);
+    let first_bundle = module_bundle(&roots[0], 1);
+    let second_bundle = module_bundle(&roots[1], 2);
+    let expected_first = first_bundle.clone();
+    let expected_second = second_bundle.clone();
+    let responses = Arc::new(Mutex::new(vec![first_bundle, second_bundle]));
+    let answers = responses.clone();
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let first = attempt(
+        Arc::new(Unimock::new(
+            StylesheetBundlerMock::bundle
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+        )),
+        tree(&Arc::default(), &[]),
+        &shared,
+    );
+    first.bundle(&roots[0]).unwrap();
+    first.bundle(&roots[1]).unwrap();
+
+    let calls = Arc::new(Calls::default());
+    let second = attempt(Arc::new(Unimock::new(())), tree(&calls, &[]), &shared);
+    assert_same(&second.bundle(&roots[0]).unwrap(), &expected_first);
+    assert_same(&second.bundle(&roots[1]).unwrap(), &expected_second);
+    let observed = calls.observed.lock().unwrap();
+    for index in 0..2 {
+        let path = Path::new("/repo").join(module(index));
+        assert_eq!(
+            observed
+                .iter()
+                .filter(|(observed, _)| *observed == path)
+                .count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn finding_3_changed_base_module_misses_every_record_and_checks_each_entry() {
+    let roots = roots(2);
+    let responses = Arc::new(Mutex::new(vec![
+        module_bundle(&roots[0], 1),
+        module_bundle(&roots[1], 2),
+    ]));
+    let answers = responses.clone();
+    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
+    let first = attempt(
+        Arc::new(Unimock::new(
+            StylesheetBundlerMock::bundle
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| Ok(answers.lock().unwrap().remove(0)))),
+        )),
+        tree(&Arc::default(), &[]),
+        &shared,
+    );
+    first.bundle(&roots[0]).unwrap();
+    first.bundle(&roots[1]).unwrap();
+
+    let calls = Arc::new(Calls::default());
+    let second = attempt(
+        Arc::new(Unimock::new(())),
+        tree(&calls, &["module-000.js"]),
+        &shared,
+    );
+    assert_eq!(
+        second.lookup(&key(&roots[0])).err(),
+        Some(Miss::StampMismatch)
+    );
+    assert_eq!(
+        second.lookup(&key(&roots[1])).err(),
+        Some(Miss::StampMismatch)
+    );
+    assert_eq!(Calls::count(&calls.module_digests), 2);
 }
 
 /// The tree calls of a second attempt that hits `count` roots.

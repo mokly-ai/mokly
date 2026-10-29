@@ -1,6 +1,7 @@
-//! A stylesheet record keeps the read evidence of its own inputs. The module evidence of its
-//! PostCSS context is one shared entry with its own stamp.
+//! A stylesheet record keeps the read evidence of its own inputs. Module evidence grows through
+//! a chain of shared context entries, and each entry stores only its added versions.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -14,10 +15,13 @@ use crate::input_stamp::InputStamp;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 use crate::stylesheet_weight;
 
-/// The module evidence of one PostCSS context, shared by the records of that context.
+/// The added module evidence of one PostCSS context.
 pub(crate) struct ContextEvidence {
-    /// Digest of the evidence. A bundle with equal module evidence may reuse the entry.
+    /// Digest of the full evidence. A bundle with equal module evidence may reuse the entry.
     pub(crate) digest: String,
+    /// The entry whose full evidence this entry extends.
+    pub(crate) base: Option<Arc<ContextEvidence>>,
+    /// Module paths and versions that the base entry does not contain.
     pub(crate) evidence: ReadEvidence,
     pub(crate) stamp: InputStamp,
     consistent: bool,
@@ -35,25 +39,86 @@ pub(crate) struct Record {
 }
 
 impl ContextEvidence {
-    pub(crate) fn new(
+    pub(crate) fn with_base(
         tree: &dyn SourceTree,
         root: &Path,
         digest: String,
-        evidence: ReadEvidence,
+        full_evidence: ReadEvidence,
+        base: Option<Arc<ContextEvidence>>,
     ) -> Self {
+        let evidence = delta_evidence(base.as_ref(), &full_evidence);
         let mut stamp = InputStamp::default();
-        let consistent = stamp_evidence(tree, root, &evidence, &mut stamp);
+        let consistent = stamp_delta_evidence(tree, root, base.as_ref(), &evidence, &mut stamp);
         let bytes = size_of::<Self>()
             + digest.capacity()
             + evidence.retained_bytes()
             + stamp.retained_bytes();
         Self {
             digest,
+            base,
             evidence,
             stamp,
             consistent,
             bytes,
         }
+    }
+
+    pub(crate) fn full_evidence(&self) -> ReadEvidence {
+        let mut full = self
+            .base
+            .as_ref()
+            .map_or_else(ReadEvidence::default, |base| base.full_evidence());
+        full.extend(self.evidence.clone());
+        full
+    }
+
+    pub(crate) fn full_size(&self) -> usize {
+        self.base.as_ref().map_or(0, |base| base.full_size())
+            + self
+                .evidence
+                .inputs
+                .values()
+                .map(BTreeSet::len)
+                .sum::<usize>()
+    }
+
+    pub(crate) fn is_subset_of(&self, full: &ReadEvidence) -> bool {
+        self.full_evidence().inputs.iter().all(|(path, versions)| {
+            full.inputs
+                .get(path)
+                .is_some_and(|available| versions.is_subset(available))
+        })
+    }
+
+    pub(crate) fn chain_consistent(&self) -> bool {
+        self.consistent
+            && self
+                .base
+                .as_ref()
+                .is_none_or(|base| base.chain_consistent())
+    }
+
+    pub(crate) fn for_each_chain(&self, callback: &mut impl FnMut(&ContextEvidence)) {
+        if let Some(base) = &self.base {
+            base.for_each_chain(callback);
+        }
+        callback(self);
+    }
+
+    pub(crate) fn chain_arcs(context: &Arc<ContextEvidence>) -> Vec<Arc<ContextEvidence>> {
+        let mut entries = context
+            .base
+            .as_ref()
+            .map_or_else(Vec::new, Self::chain_arcs);
+        entries.push(context.clone());
+        entries
+    }
+
+    pub(crate) fn append_full_evidence(&self, target: &mut ReadEvidence) {
+        if let Some(base) = &self.base {
+            base.append_full_evidence(target);
+        }
+        target.extend(self.evidence.clone());
     }
 }
 
@@ -96,7 +161,7 @@ impl Record {
             && self
                 .context
                 .as_ref()
-                .is_none_or(|context| context.consistent)
+                .is_none_or(|context| context.chain_consistent())
     }
 
     /// The read evidence of the record's own inputs.
@@ -108,7 +173,7 @@ impl Record {
     pub(crate) fn complete(&self) -> Bundle {
         let mut bundle = self.bundle.clone();
         if let Some(context) = &self.context {
-            bundle.read_evidence.extend(context.evidence.clone());
+            context.append_full_evidence(&mut bundle.read_evidence);
         }
         bundle
     }
@@ -150,6 +215,45 @@ fn stamp_evidence(
             consistent &= range_evidence::verify(tree, &absolute, versions, first);
             stamp.files.insert(absolute, Some(first.into()));
         }
+    }
+    consistent
+}
+
+fn delta_evidence(base: Option<&Arc<ContextEvidence>>, full: &ReadEvidence) -> ReadEvidence {
+    let Some(base) = base else {
+        return full.clone();
+    };
+    let base = base.full_evidence();
+    let mut delta = full.clone();
+    for (path, versions) in base.inputs {
+        if let Some(added) = delta.inputs.get_mut(&path) {
+            added.retain(|version| !versions.contains(version));
+            if added.is_empty() {
+                delta.inputs.remove(&path);
+            }
+        }
+    }
+    delta
+}
+
+fn stamp_delta_evidence(
+    tree: &dyn SourceTree,
+    root: &Path,
+    base: Option<&Arc<ContextEvidence>>,
+    delta: &ReadEvidence,
+    stamp: &mut InputStamp,
+) -> bool {
+    let base = base.map(|base| base.full_evidence());
+    let mut consistent = true;
+    for (path, added) in &delta.inputs {
+        let mut versions = base
+            .as_ref()
+            .and_then(|base| base.inputs.get(path).cloned())
+            .unwrap_or_default();
+        versions.extend(added.iter().cloned());
+        let mut evidence = ReadEvidence::default();
+        evidence.inputs.insert(path.clone(), versions);
+        consistent &= stamp_evidence(tree, root, &evidence, stamp);
     }
     consistent
 }

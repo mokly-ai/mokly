@@ -78,6 +78,10 @@ impl StylesheetCache {
             .cloned()
     }
 
+    pub(crate) fn contexts(&self) -> Vec<Arc<ContextEvidence>> {
+        self.contexts.clone()
+    }
+
     /// The reason that a lookup of `key` without a record reports.
     pub(crate) fn miss(&self, key: &str) -> Miss {
         self.misses
@@ -106,17 +110,15 @@ impl StylesheetCache {
         }) + record
             .context
             .as_ref()
-            .map_or(0, |context| Self::charge(Charge::Context(context)));
+            .map_or(0, |context| self.context_chain_charge(context, false));
         if alone > self.limit {
             self.misses.insert(miss_key, Miss::Evicted);
         } else {
             if self.retained() + self.record_charge(&key, &record) > self.limit {
                 self.evict();
             }
-            if let Some(context) = &record.context
-                && !self.holds(context)
-            {
-                self.contexts.push(context.clone());
+            if let Some(context) = &record.context {
+                self.retain_chain(context);
             }
             self.records.insert(key, record);
         }
@@ -130,8 +132,7 @@ impl StylesheetCache {
             + record
                 .context
                 .as_ref()
-                .filter(|context| !self.holds(context))
-                .map_or(0, |context| Self::charge(Charge::Context(context)))
+                .map_or(0, |context| self.context_chain_charge(context, true))
     }
 
     fn charge(owner: Charge<'_>) -> usize {
@@ -144,6 +145,22 @@ impl StylesheetCache {
 
     fn holds(&self, context: &Arc<ContextEvidence>) -> bool {
         self.contexts.iter().any(|held| Arc::ptr_eq(held, context))
+    }
+
+    fn context_chain_charge(&self, context: &Arc<ContextEvidence>, skip_held: bool) -> usize {
+        ContextEvidence::chain_arcs(context)
+            .into_iter()
+            .filter(|entry| !skip_held || !self.holds(entry))
+            .map(|entry| Self::charge(Charge::Context(entry.as_ref())))
+            .sum()
+    }
+
+    fn retain_chain(&mut self, context: &Arc<ContextEvidence>) {
+        for entry in ContextEvidence::chain_arcs(context) {
+            if !self.holds(&entry) {
+                self.contexts.push(entry);
+            }
+        }
     }
 
     /// Remove every record and context entry, and remember the removed keys.
@@ -162,10 +179,13 @@ impl StylesheetCache {
         let records = &self.records;
         self.contexts.retain(|context| {
             records.values().any(|record| {
-                record
-                    .context
-                    .as_ref()
-                    .is_some_and(|used| Arc::ptr_eq(used, context))
+                record.context.as_ref().is_some_and(|used| {
+                    let mut found = false;
+                    used.for_each_chain(&mut |entry| {
+                        found |= std::ptr::eq(entry, context.as_ref());
+                    });
+                    found
+                })
             })
         });
     }

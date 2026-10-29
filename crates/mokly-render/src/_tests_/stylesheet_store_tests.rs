@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_css::types::Bundle;
+use mokly_model::material::digest;
 use mokly_source_interface::read_evidence::{ReadBaseline, ReadEvidence};
 use unimock::Unimock;
 
@@ -50,7 +51,9 @@ fn stored(bundle: Bundle, context: Option<&Arc<ContextEvidence>>) -> Arc<Record>
         bundle,
         |digest, evidence| match context {
             Some(context) => context.clone(),
-            None => Arc::new(ContextEvidence::new(&tree, root, digest, evidence)),
+            None => Arc::new(ContextEvidence::with_base(
+                &tree, root, digest, evidence, None,
+            )),
         },
     ))
 }
@@ -160,6 +163,36 @@ fn finding_2_a_long_miss_key_charges_its_digest_and_keeps_full_lookup() {
 
     assert_eq!(store.miss(&key), Miss::Evicted);
     assert_eq!(store.retained(), reason);
+}
+
+#[test]
+fn finding_3_store_charges_a_context_chain_once_per_entry() {
+    let first = record("a.css", "module-a.js", None);
+    let base = context(&first);
+    let tree = Unimock::new(());
+    let root = Path::new("/repo");
+    let mut modules = ReadEvidence::default();
+    modules.insert("module-a.js".into(), ReadBaseline::Late("0".repeat(64)));
+    modules.insert("module-b.js".into(), ReadBaseline::Late("1".repeat(64)));
+    let full_digest = digest(format!("{:?}", modules.inputs).as_bytes());
+    let delta = Arc::new(ContextEvidence::with_base(
+        &tree,
+        root,
+        full_digest,
+        modules,
+        Some(base.clone()),
+    ));
+    let second = stored(bundle("b.css", "module-a.js"), Some(&delta));
+    let limit =
+        key_bytes("a") + key_bytes("b") + first.bytes + second.bytes + base.bytes + delta.bytes;
+    let mut store = StylesheetCache::new(limit);
+
+    store.insert("a".into(), first);
+    store.insert("b".into(), second);
+
+    assert!(store.record("a").is_some());
+    assert!(store.record("b").is_some());
+    assert!(store.retained() <= limit);
 }
 
 #[test]
