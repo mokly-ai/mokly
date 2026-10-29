@@ -2,9 +2,6 @@
 
 import type { ReactNode } from "react";
 
-import { entryRoute, viewHref } from "../navigation/routes.js";
-
-import type { ShellContext } from "./context.js";
 import {
   ChevronIcon,
   ComponentVariantIcon,
@@ -13,7 +10,12 @@ import {
   PageIcon,
   ScreenIcon,
   VariantIcon,
-} from "./icons.js";
+  WorkspaceIcon,
+} from "@mokly/ui/icons";
+
+import { entryRoute, viewHref } from "../navigation/routes.js";
+
+import type { ShellContext } from "./context.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import {
   NAV_CHANGED_TEXT,
@@ -31,7 +33,6 @@ import {
 import { navRowPresentation } from "./nav_moves.js";
 import type { NavLeafNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
-import { WorkspaceIcon } from "./workspace_icons.js";
 
 function LeafGlyph(props: {
   entryKind: NavLeafNode["entryKind"];

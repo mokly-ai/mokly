@@ -1,12 +1,13 @@
 # Packed Consumer Smoke
 
-`npm run package:smoke` builds first, then packs `@mokly/viewer`,
+`npm run package:smoke` builds first, then packs `@mokly/ui`, `@mokly/viewer`,
 `@mokly/mokly`, and the host's native package with `npm pack`, so the real
-`prepack` builds run. It installs the three archives into a scratch consumer
-outside the repository. The consumer holds a copy of `examples/`, with the
-`docs/` and `plans/` pages that the example's documents link to, in the
-repository layout. It also holds the example's own dependencies at the versions
-that the workspace installed.
+`prepack` builds run. It installs the four archives into a scratch consumer
+outside the repository. The consumer holds a copy of `examples/` and
+`packages/ui/src/`, with the `docs/` and `plans/` pages that the example's
+documents link to, in the repository layout. It needs the UI package sources
+because the design mockups import them by repository path. It also holds the
+example's own dependencies at the versions that the workspace installed.
 
 The smoke proves three things:
 
@@ -21,7 +22,7 @@ The smoke proves three things:
   and shell route files. A plain file server serves the site, Chrome opens the
   same entries, and the site requests no live endpoint.
 - With the installed Mokly packages removed from the copy,
-  `npm exec --package` with the three archives and an empty npm cache runs the
+  `npm exec --package` with the four archives and an empty npm cache runs the
   same strict build in the configuration's directory. Every load of React and
   React DOM from that cache fails, and the renderer's and the PostCSS
   configuration's imports exist only in the copy. The build therefore proves

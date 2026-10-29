@@ -18,7 +18,7 @@
     "node": ">=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0"
   },
   "scripts": {
-    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
+    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/ui && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dependencies:check:rust": "node scripts/verification/audit-rust.mjs",
@@ -29,7 +29,7 @@
     "test": "npm run -s build && node scripts/verification/run-viewer.mjs",
     "test:prepared": "node scripts/verification/run-viewer.mjs --strict",
     "test:viewer:prepared": "node scripts/verification/run-viewer.mjs --strict",
-    "typecheck": "tsc --project packages/mokly/tsconfig.json --noEmit && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
+    "typecheck": "tsc --project packages/mokly/tsconfig.json --noEmit && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/ui && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
     "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit",
     "dev": "node packages/mokly/bin/mokly.mjs serve --config examples/basic/mokly.config.json",
     "fixture:large": "node --import tsx scripts/large/cli.ts generate",
@@ -45,10 +45,14 @@
     "@eslint/js": "^10.0.1",
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@happy-dom/global-registrator": "^21.0.4",
+    "@mokly/ui": "0.16.1",
     "@mokly/viewer": "0.16.1",
     "@playwright/test": "^1.61.1",
     "@storybook/react": "^10.6.2",
     "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
@@ -60,6 +64,7 @@
     "eslint": "^10.12.0",
     "eslint-plugin-import-x": "^4.17.1",
     "globals": "^17.13.0",
+    "happy-dom": "^21.0.4",
     "lightningcss": "^1.33.0",
     "lucide-react-native": "^0.577.0",
     "marked": "^18.1.0",
@@ -97,6 +102,7 @@
     }
   },
   "workspaces": [
+    "packages/ui",
     "packages/viewer",
     "packages/mokly"
   ],

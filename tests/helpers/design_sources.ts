@@ -13,7 +13,7 @@ const LIBRARY_ROOTS: readonly (readonly string[])[] = [
   ["mbk-nav-head"],
   ["mbk-screen-head"],
   ["mbk-appearance"],
-  ["mbk-cmp-toolbar"],
+  ["mbk-diff-toolbar"],
   ["ce-view-controls"],
   ["mbk-tag-picker"],
   ["mbk-chip", "tag"],

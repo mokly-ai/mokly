@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
+import { BrandIcon, IconSvg, SearchIcon } from "@mokly/ui/icons";
+
 import type { StandaloneAppearanceState } from "../standalone/appearance_bridge.js";
 
 import { AppearanceSelect } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
-import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
