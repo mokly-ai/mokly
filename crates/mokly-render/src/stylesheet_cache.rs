@@ -223,3 +223,7 @@ mod stylesheet_chain_support;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_chain_tests.rs"]
 mod stylesheet_chain_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_context_reuse_tests.rs"]
+mod stylesheet_context_reuse_tests;

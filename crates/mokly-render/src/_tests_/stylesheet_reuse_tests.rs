@@ -99,39 +99,3 @@ fn a_changed_module_file_makes_every_record_of_its_context_miss_with_stamp_misma
     }
     assert_eq!(Calls::count(&calls.module_digests), MODULES);
 }
-
-#[test]
-fn finding_5_changed_root_reuses_stored_context_in_a_new_record() {
-    let roots = roots(2);
-    let shared = Arc::new(Mutex::new(StylesheetCache::default()));
-    let first = attempt(bundler(Arc::default()), tree(&Arc::default(), &[]), &shared);
-    first.bundle(&roots[0]).unwrap();
-    first.bundle(&roots[1]).unwrap();
-    let old = shared
-        .lock()
-        .unwrap()
-        .record(&key(&roots[0]))
-        .unwrap()
-        .context
-        .clone()
-        .unwrap();
-
-    let calls = Arc::new(Calls::default());
-    let second = attempt(
-        bundler(Arc::default()),
-        tree(&calls, &["root-00.css"]),
-        &shared,
-    );
-    second.bundle(&roots[0]).unwrap();
-    let new = shared
-        .lock()
-        .unwrap()
-        .record(&key(&roots[0]))
-        .unwrap()
-        .context
-        .clone()
-        .unwrap();
-
-    assert!(Arc::ptr_eq(&old, &new));
-    assert_eq!(Calls::count(&calls.module_digests), MODULES);
-}
