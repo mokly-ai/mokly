@@ -64,8 +64,16 @@ identity and required anchors are checked through the catalogue, and the
 whole catalogue is never rendered to discover one document's closure. In
 on-demand mode the closure of a document joins the generation when the
 document renders, and the generation's closure only grows until the next
-generation replaces it. A full `build` computes the closure of every
-document. Identical input bytes give identical closures in every mode.
+generation replaces it. When a source replacement keeps a document key
+unchanged, the replacement carries that document's previous closure files
+only after its own policy accepts each file. A changed or removed document
+does not carry its previous closure. A full `build` computes the closure of
+every document. Identical input bytes give identical closures in every mode.
+
+Decision in force: carry the closure of unchanged documents after policy
+acceptance. Rendering every retained view again repeats work that the
+replacement keeps on purpose. Serving declared files without closure
+membership weakens confinement.
 
 A renderer resource declaration is a closure starting point even without an
 HTML link. Every seed passes the same policy and existence checks as a

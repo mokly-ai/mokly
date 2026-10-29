@@ -52,8 +52,10 @@ completes. `generation_key` hashes the configuration, the document plans, the
 delivered stylesheet and asset identities, and the fragment generation for the
 live descriptor. A private stylesheet input that changes no delivered byte
 keeps it. `public_files` lists authored files reached by completed renders.
-Serve rechecks their live eligibility at read time. Temporary closure
-membership stays separate from the catalogue's reached public files.
+A source replacement carries the recorded closure files of an unchanged
+document key after the new generation's policy accepts each path. Serve
+rechecks their live eligibility at read time. Temporary closure membership
+stays separate from the catalogue's reached public files.
 
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it
@@ -193,6 +195,9 @@ retention disabled.
 - [`src/render_inputs.rs`](./src/render_inputs.rs) defines `RenderInputs` and
   `RenderKeys`, the render input key of each entry module over its module
   closure, resolution files, bindings, and bundle environment.
+- [`src/public_inputs.rs`](./src/public_inputs.rs) defines `ClosureInputs`,
+  the leased closure-file records shared by equal document keys across
+  generations.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
