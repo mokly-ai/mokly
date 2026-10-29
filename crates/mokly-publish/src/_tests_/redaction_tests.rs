@@ -1,11 +1,16 @@
 //! Secret matcher diagnostics never expose the matched value.
 
-use super::SecretMatcher;
+use super::{Secret, SecretMatcher};
 
 #[test]
 fn debug_does_not_expose_secret() {
+    let secret = Secret::new("secret/a==");
+    assert_eq!(format!("{secret:?}"), "Secret([redacted])");
     let matcher = SecretMatcher::new("secret/a==");
-    assert_eq!(format!("{matcher:?}"), "SecretMatcher([redacted])");
+    assert_eq!(
+        format!("{matcher:?}"),
+        "SecretMatcher { secret: Secret([redacted]) }"
+    );
 }
 
 #[test]

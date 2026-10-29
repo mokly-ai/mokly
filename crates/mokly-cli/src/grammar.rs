@@ -1,6 +1,7 @@
 //! Complete end-state command grammar.
 
 use clap::{ArgAction, Args, Parser, Subcommand};
+use mokly_publish::redaction::Secret;
 
 use crate::version::VERSION;
 
@@ -112,8 +113,8 @@ pub struct Publish {
     #[arg(long, value_parser = nonempty)]
     pub endpoint: Option<String>,
     /// Bearer credential; overrides MOKLY_TOKEN.
-    #[arg(long, value_parser = nonempty)]
-    pub token: Option<String>,
+    #[arg(long, value_parser = secret)]
+    pub token: Option<Secret>,
     /// Repository identity as host/owner/name.
     #[arg(long, value_parser = nonempty)]
     pub repository: Option<String>,
@@ -190,6 +191,14 @@ fn nonempty(value: &str) -> std::result::Result<String, String> {
         Err("value must not be empty".into())
     } else {
         Ok(value.into())
+    }
+}
+
+fn secret(value: &str) -> std::result::Result<Secret, String> {
+    if value.is_empty() {
+        Err("value must not be empty".into())
+    } else {
+        Ok(Secret::new(value))
     }
 }
 

@@ -15,6 +15,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::exchange::Client;
 use crate::http::{Body, Response};
+use crate::redaction::Secret;
 use crate::runtime::{self, ClockMock, ReporterMock};
 use crate::settings::Settings;
 use crate::snapshot::Prepared;
@@ -91,7 +92,7 @@ pub(super) fn file(path: &str, bytes: &[u8]) -> File {
 pub(super) fn settings(concurrency: u8) -> Settings {
     Settings::new(
         "https://api.example.com/plan?x=1",
-        "secret/a==".to_owned(),
+        Secret::new("secret/a=="),
         concurrency,
     )
     .unwrap()

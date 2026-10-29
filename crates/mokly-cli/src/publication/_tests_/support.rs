@@ -9,6 +9,7 @@ use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
 use mokly_model::output::validation::INDEX;
+use mokly_publish::redaction::Secret;
 use mokly_publish::settings::Settings;
 use serde_json::json;
 
@@ -67,7 +68,7 @@ pub(super) fn file(path: &str, bytes: &[u8]) -> File {
 pub(super) fn settings(concurrency: u8) -> Settings {
     Settings::new(
         "https://api.example.com/plan?x=1",
-        "secret/a==".to_owned(),
+        Secret::new("secret/a=="),
         concurrency,
     )
     .unwrap()

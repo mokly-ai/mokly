@@ -4,16 +4,37 @@ use std::fmt;
 
 use url::Url;
 
-/// Matches a secret in literal text and percent-encoded bytes.
-#[derive(Clone)]
-pub struct SecretMatcher {
-    secret: String,
+/// Credential value retained in memory without exposing it in diagnostics.
+#[derive(Clone, Default, Eq, PartialEq)]
+pub struct Secret(String);
+
+impl Secret {
+    /// Store a credential value exactly as supplied, before validation.
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    /// Expose the value only to validation, matching, and the HTTP header.
+    pub fn expose(&self) -> &str {
+        &self.0
+    }
+
+    /// Return true when the supplied credential has no characters.
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
-impl fmt::Debug for SecretMatcher {
+impl fmt::Debug for Secret {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str("SecretMatcher([redacted])")
+        formatter.write_str("Secret([redacted])")
     }
+}
+
+/// Matches a secret in literal text and percent-encoded bytes.
+#[derive(Clone, Debug)]
+pub struct SecretMatcher {
+    secret: Secret,
 }
 
 #[cfg(test)]
@@ -24,13 +45,13 @@ impl SecretMatcher {
     /// Create a matcher for one secret value.
     pub fn new(secret: impl Into<String>) -> Self {
         Self {
-            secret: secret.into(),
+            secret: Secret::new(secret),
         }
     }
 
     /// Return the literal secret length for redaction ordering.
     pub fn len(&self) -> usize {
-        self.secret.len()
+        self.secret.expose().len()
     }
 
     /// Return true when the matcher has no secret bytes.
@@ -81,12 +102,13 @@ impl SecretMatcher {
         self.find_with_mode(text, MatchMode::Exact)
     }
 
+    /// Find a match and return only UTF-8 character-boundary offsets.
     fn find_with_mode(&self, text: &str, mode: MatchMode) -> Option<(usize, usize)> {
         if self.secret.is_empty() {
             return None;
         }
         let input = text.as_bytes();
-        let secret = self.secret.as_bytes();
+        let secret = self.secret.expose().as_bytes();
         let mut current = Vec::new();
         let mut next = Vec::new();
         for start in 0..input.len() {
