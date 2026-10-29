@@ -263,25 +263,29 @@ below its title until its behaviour is implemented.
 Item 87 B in `mokly-catalogue` and `mokly-html`. Write each failing test
 before its fix.
 
-- [ ] Tests that fail on `main`:
-  - [ ] Catalogue unit tests: the invocation message, JSON quoting of a key
+- [x] Tests that fail on `main`:
+  - [x] Catalogue unit tests: the invocation message, JSON quoting of a key
         with U+0001 and U+0085, and the pointer form of
         `props-control-bounds`.
-  - [ ] `mokly-html` composition tests: two HTML invocations give two lines
+  - [x] `mokly-html` composition tests: two HTML invocations give two lines
         that name the component and the instance, and an invocation stays
         separate from the entry's own warning. A mocked fragment renderer
         gives a JavaScript instance draft the same message form.
-  - [ ] A CLI test with an HTML catalogue checks the exact lines.
-- [ ] Share one JSON quoting helper, and use it in every catalogue warning
+  - [x] A CLI test with an HTML catalogue checks the exact lines.
+- [x] Share one JSON quoting helper, and use it in every catalogue warning
       message that quotes a name.
-- [ ] Add the invocation formatter to `numeric_warnings`, and call it from
+- [x] Add the invocation formatter to `numeric_warnings`, and call it from
       `components.rs` and `javascript.rs`. Split `numeric_warnings.rs`
       (249 lines) so that it stays under 300 lines.
-- [ ] Name the prop as a JSON pointer in `control_warnings`.
-- [ ] Keep the substrings
+- [x] Name the prop as a JSON pointer in `control_warnings`.
+- [x] Keep the substrings
       `is outside the JavaScript safe integer range and uses the nearest binary64 value`
       and `is outside its control bounds`.
-- [ ] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- [x] Run the crate tests, `cargo clippy`, and `cargo fmt --all -- --check`.
+- [ ] Review of `36ad15e8`: type the invocation as a `Field` variant in
+      `numeric_warnings`, so that no formatter argument is ignored.
+- Done in `36ad15e8`. Red and green runs:
+  `.context/diagnostics-and-html-messages/m2-red.log` and `m2-green.log`.
 
 ## Milestone 3: Callback HTML diagnostics
 
@@ -380,8 +384,8 @@ The README parts for items 1 and 128 move to Milestone 4.
       warnings, and duplicate attribute text.
 - [ ] `docs/protocol/mokly-build-warnings.md`: the `html-ignore-attribute`
       row also names saved variant slots, which warn today.
-- [ ] Delete the comment without a pattern from `.prettierignore` (finding 5
-      A).
+- [x] Delete the comment without a pattern from `.prettierignore` (finding 5
+      A). Done in `2b77ae17`.
 - [ ] Remove the status line from each protocol page whose behaviour is now
       implemented.
 
