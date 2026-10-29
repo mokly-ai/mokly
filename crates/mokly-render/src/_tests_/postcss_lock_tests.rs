@@ -71,6 +71,7 @@ fn overlap(first: &'static str, second: &'static str) -> (usize, bool, Vec<Strin
     let calls = Arc::new(AtomicUsize::new(0));
     let (blocked, wait) = mpsc::channel();
     let (release, released) = mpsc::channel();
+    let release_first = release.clone();
     let gate = Arc::new(Gate {
         blocked,
         released: Mutex::new(released),
@@ -87,11 +88,27 @@ fn overlap(first: &'static str, second: &'static str) -> (usize, bool, Vec<Strin
             .text
     });
     wait.recv_timeout(DEADLINE).unwrap();
-    let beside = processor
-        .process(second, ".a {}", &BTreeSet::new())
-        .unwrap()
-        .text;
-    let texts = vec![waiting.join().unwrap(), beside];
+    let foreground = processor.clone();
+    let beside = thread::spawn(move || {
+        foreground
+            .process(second, ".a {}", &BTreeSet::new())
+            .unwrap()
+            .text
+    });
+    if first == second {
+        release_first.send(()).unwrap();
+    } else {
+        let deadline = Instant::now() + DEADLINE;
+        while calls.load(Ordering::SeqCst) < 2 {
+            assert!(
+                Instant::now() < deadline,
+                "the second sidecar request did not start"
+            );
+            thread::yield_now();
+        }
+        release_first.send(()).unwrap();
+    }
+    let texts = vec![waiting.join().unwrap(), beside.join().unwrap()];
     (
         calls.load(Ordering::SeqCst),
         gate.timed_out.load(Ordering::SeqCst),

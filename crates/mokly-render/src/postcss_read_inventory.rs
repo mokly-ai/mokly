@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 use mokly_catalogue::config::{normalize, relative};
 use mokly_sidecar::postcss_evidence::{Evidence, Read};
@@ -14,24 +14,93 @@ use crate::side::SideInputs;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 
 /// The late digests of one context's modules. The attempt's tree keeps each answer, so a
-/// context projects and hashes each module once. The tree calls run outside the lock.
+/// context projects and hashes each module once. The tree calls run outside the map lock.
 #[derive(Default)]
-pub(crate) struct ModuleDigests(Mutex<BTreeMap<String, Option<String>>>);
+pub(crate) struct ModuleDigests(Mutex<BTreeMap<String, Arc<ModuleCell>>>);
+
+struct ModuleCell {
+    state: Mutex<ModuleState>,
+    ready: Condvar,
+}
+
+enum ModuleState {
+    Running,
+    Ready(String),
+    Failed,
+}
 
 impl ModuleDigests {
     fn late(&self, tree: &dyn SourceTree, root: &Path, name: &str) -> Option<String> {
-        if let Some(digest) = self.known().get(name) {
-            return digest.clone();
-        }
-        let digest = match tree.project(&root.join(name)).ok()? {
-            Some(node) => Some(tree.digest(&node.identity).ok()?),
-            None => None,
+        let cell = {
+            let mut known = self.known();
+            if let Some(cell) = known.get(name) {
+                (cell.clone(), false)
+            } else {
+                let cell = Arc::new(ModuleCell {
+                    state: Mutex::new(ModuleState::Running),
+                    ready: Condvar::new(),
+                });
+                known.insert(name.into(), cell.clone());
+                (cell, true)
+            }
         };
-        self.known().insert(name.into(), digest.clone());
+        if !cell.1 {
+            let mut state = cell
+                .0
+                .state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            loop {
+                match &*state {
+                    ModuleState::Running => {
+                        state = cell
+                            .0
+                            .ready
+                            .wait(state)
+                            .unwrap_or_else(|error| error.into_inner());
+                    }
+                    ModuleState::Ready(digest) => return Some(digest.clone()),
+                    ModuleState::Failed => {
+                        drop(state);
+                        self.remove_failed(name, &cell.0);
+                        break;
+                    }
+                }
+            }
+        }
+        let digest = match tree.project(&root.join(name)).ok() {
+            Some(Some(node)) => tree.digest(&node.identity).ok(),
+            Some(None) | None => None,
+        };
+        let mut state = cell
+            .0
+            .state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if let Some(digest) = &digest {
+            *state = ModuleState::Ready(digest.clone());
+        } else {
+            *state = ModuleState::Failed;
+        }
+        cell.0.ready.notify_all();
+        drop(state);
+        if digest.is_none() {
+            self.remove_failed(name, &cell.0);
+        }
         digest
     }
 
-    fn known(&self) -> MutexGuard<'_, BTreeMap<String, Option<String>>> {
+    fn remove_failed(&self, name: &str, cell: &Arc<ModuleCell>) {
+        let mut known = self.known();
+        if known
+            .get(name)
+            .is_some_and(|current| Arc::ptr_eq(current, cell))
+        {
+            known.remove(name);
+        }
+    }
+
+    fn known(&self) -> MutexGuard<'_, BTreeMap<String, Arc<ModuleCell>>> {
         self.0.lock().unwrap_or_else(|error| error.into_inner())
     }
 }

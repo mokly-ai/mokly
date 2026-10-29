@@ -2,8 +2,11 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 
 use mokly_sidecar::methods::ModuleResolution;
 use mokly_sidecar::postcss_evidence::Evidence;
@@ -125,4 +128,63 @@ fn a_module_that_the_tree_could_not_read_is_asked_again() {
     assert!(first.inputs.is_empty());
     let second = collect(&tree, root, &side(), &inventory, &evidence(1), &memo);
     assert_eq!(second.inputs.len(), 1);
+}
+
+#[test]
+fn finding_7_parallel_missing_module_work_uses_one_project_and_digest() {
+    let polling = Duration::from_secs(10);
+    let (first_started, first_ready) = mpsc::channel();
+    let (duplicate, duplicate_seen) = mpsc::channel();
+    let (release_tx, released) = mpsc::channel();
+    let first = Arc::new(AtomicUsize::new(0));
+    let projects = Arc::new(AtomicUsize::new(0));
+    let digests = Arc::new(AtomicUsize::new(0));
+    let first_project = first.clone();
+    let project_count = projects.clone();
+    let digest_count = digests.clone();
+    let release_wait = Arc::new(Mutex::new(released));
+    let tree = Arc::new(Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, path| {
+                project_count.fetch_add(1, Ordering::SeqCst);
+                if first_project.fetch_add(1, Ordering::SeqCst) == 0 {
+                    first_started.send(()).unwrap();
+                    release_wait
+                        .lock()
+                        .unwrap()
+                        .recv_timeout(polling + polling)
+                        .unwrap();
+                } else {
+                    duplicate.send(()).unwrap();
+                }
+                Ok(Some(node(path)))
+            })),
+        SourceTreeMock::digest
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _| {
+                digest_count.fetch_add(1, Ordering::SeqCst);
+                Ok("late".into())
+            })),
+    )));
+    let memo = Arc::new(ModuleDigests::default());
+    let first_memo = memo.clone();
+    let first_tree = tree.clone();
+    let first_thread = thread::spawn(move || {
+        first_memo.late(first_tree.as_ref(), Path::new("/repo"), "module.js")
+    });
+    first_ready.recv_timeout(polling).unwrap();
+    let second_memo = memo.clone();
+    let second_tree = tree.clone();
+    let second_thread = thread::spawn(move || {
+        second_memo.late(second_tree.as_ref(), Path::new("/repo"), "module.js")
+    });
+    let duplicate_observed = duplicate_seen.recv_timeout(polling);
+    release_tx.send(()).unwrap();
+
+    assert_eq!(first_thread.join().unwrap(), Some("late".into()));
+    assert_eq!(second_thread.join().unwrap(), Some("late".into()));
+    assert!(duplicate_observed.is_err());
+    assert_eq!(projects.load(Ordering::SeqCst), 1);
+    assert_eq!(digests.load(Ordering::SeqCst), 1);
 }
