@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_css::attribution::{self, OwnPageMatches, PageObservation};
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_html::composition::Composed;
 use mokly_html::tree::{self, Node, Region, RegionKind};
@@ -144,6 +145,28 @@ pub(super) fn compare(
     );
     changes.prepare(&comparison, &entry("before"), &entry("after"), VIEW);
     changes
+}
+
+pub(super) fn own_pages(path: &str) -> OwnPageMatches {
+    let nodes = || {
+        vec![Node::Region {
+            region: Region {
+                id: "root".into(),
+                kind: RegionKind::Root { path: path.into() },
+            },
+            children: vec![hit()],
+        }]
+    };
+    let changes = compare(
+        &document(nodes(), "red", path),
+        &document(nodes(), "blue", path),
+        &BTreeMap::new(),
+    );
+    attribution::attribute(vec![PageObservation {
+        component: Some(path.into()),
+        rules: changes.rules,
+    }])
+    .own_pages
 }
 
 fn entry(path: &str) -> ModelEntry {

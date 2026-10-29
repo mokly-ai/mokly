@@ -1,4 +1,4 @@
-//! Instance ancestry is shared while selectors keep all enclosing matching owners.
+//! Owned style proof keeps only matched instance ancestry.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::thread;
@@ -7,8 +7,24 @@ use mokly_css::rule_matching::{DocumentMatching, ElementMatch, MatchedRule, Sele
 use mokly_css::rules::RuleChange;
 use mokly_html::tree::{self, Node, Region, RegionKind};
 use mokly_model::review_affected::ReviewSide;
+use mokly_model::usage::ComponentInputOwner;
 
-use super::{index, matched};
+use crate::owned_style_chain_source::DocumentIndex;
+use crate::owned_style_instances;
+
+use super::{Compact, matched};
+
+fn compact(
+    nodes: [&[Node]; 2],
+    paths: &BTreeMap<String, String>,
+    matching: &DocumentMatching,
+) -> Compact {
+    let documents = [
+        DocumentIndex::build(nodes[0], paths),
+        DocumentIndex::build(nodes[1], &BTreeMap::new()),
+    ];
+    owned_style_instances::compact(&documents, matching)
+}
 
 fn instance(key: &str, children: Vec<Node>) -> Node {
     Node::Region {
@@ -25,8 +41,25 @@ fn instance(key: &str, children: Vec<Node>) -> Node {
     }
 }
 
+fn matching(element: usize) -> DocumentMatching {
+    DocumentMatching::Resolved(vec![MatchedRule {
+        change: RuleChange {
+            before: None,
+            after: None,
+        },
+        selectors: vec![SelectorMatch {
+            selector: "b".into(),
+            unresolved: false,
+            elements: vec![ElementMatch {
+                side: ReviewSide::Before,
+                element,
+            }],
+        }],
+    }])
+}
+
 #[test]
-fn shared_chains_keep_selector_indices_and_exclude_inert_or_empty_instances() {
+fn shared_chains_keep_selector_matches_and_exclude_inert_or_empty_instances() {
     let nodes = vec![
         instance(
             "outer",
@@ -43,94 +76,161 @@ fn shared_chains_keep_selector_indices_and_exclude_inert_or_empty_instances() {
         ),
         tree::element("footer", &[], vec![]),
     ];
-    let indices = [
-        index(&nodes, &[("old".into(), "new".into())].into()),
-        index(&[], &BTreeMap::new()),
-    ];
-    assert_eq!(indices[0].elements.len(), 4);
-    assert_eq!(indices[0].instances.len(), 3);
+    let paths = [("old".into(), "new".into())].into();
+    let source = DocumentIndex::build(&nodes, &paths);
+    assert_eq!(source.elements.len(), 4);
+    assert_eq!(source.instances.len(), 3);
+    let unresolved = compact([&nodes, &[]], &paths, &DocumentMatching::Unresolved(vec![]));
+    assert!(matched(&unresolved, "new", &BTreeMap::new()).is_empty());
+    let chains = compact([&nodes, &[]], &paths, &matching(1));
     assert_eq!(
-        matched(
-            &DocumentMatching::Unresolved(vec![]),
-            "new",
-            &indices,
-            &BTreeMap::new()
-        ),
-        BTreeSet::new()
-    );
-    let mut matching = DocumentMatching::Resolved(vec![MatchedRule {
-        change: RuleChange {
-            before: None,
-            after: None,
-        },
-        selectors: vec![SelectorMatch {
-            selector: "b".into(),
-            unresolved: false,
-            elements: vec![ElementMatch {
-                side: ReviewSide::Before,
-                element: 1,
-            }],
-        }],
-    }]);
-    assert_eq!(
-        matched(&matching, "new", &indices, &BTreeMap::new()),
+        matched(&chains, "new", &BTreeMap::new()),
         BTreeSet::from(["outer".into(), "inner".into()])
     );
-    assert!(matched(&matching, "old", &indices, &BTreeMap::new()).is_empty());
-    if let DocumentMatching::Resolved(rules) = &mut matching {
-        rules[0].selectors[0].elements[0].element = 0;
-    }
+    assert!(matched(&chains, "old", &BTreeMap::new()).is_empty());
+    let chains = compact([&nodes, &[]], &paths, &matching(0));
     assert_eq!(
-        matched(&matching, "new", &indices, &BTreeMap::new()),
+        matched(&chains, "new", &BTreeMap::new()),
         BTreeSet::from(["outer".into()])
     );
-    if let DocumentMatching::Resolved(rules) = &mut matching {
-        rules[0].selectors[0].elements[0].element = 3;
-    }
-    assert!(matched(&matching, "new", &indices, &BTreeMap::new()).is_empty());
-    if let DocumentMatching::Resolved(rules) = &mut matching {
+    let chains = compact([&nodes, &[]], &paths, &matching(3));
+    assert!(matched(&chains, "new", &BTreeMap::new()).is_empty());
+    let mut unresolved = matching(1);
+    if let DocumentMatching::Resolved(rules) = &mut unresolved {
         rules[0].selectors[0].unresolved = true;
-        rules[0].selectors[0].elements[0].element = 1;
     }
+    let chains = compact([&nodes, &[]], &paths, &unresolved);
+    assert!(matched(&chains, "new", &BTreeMap::new()).is_empty());
+}
+
+#[test]
+fn duplicate_selector_matches_share_one_chain_start() {
+    let nodes = vec![instance(
+        "owner",
+        vec![
+            tree::element("b", &[], vec![]),
+            tree::element("b", &[], vec![]),
+        ],
+    )];
+    let mut matching = matching(0);
+    if let DocumentMatching::Resolved(rules) = &mut matching {
+        rules[0].selectors[0].elements.push(ElementMatch {
+            side: ReviewSide::Before,
+            element: 1,
+        });
+        rules.push(rules[0].clone());
+    }
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching);
+    assert_eq!(chains.counts(), (1, 1));
     assert_eq!(
-        matched(&matching, "new", &indices, &BTreeMap::new()),
-        BTreeSet::new()
+        matched(&chains, "old", &BTreeMap::new()),
+        BTreeSet::from(["owner".into()])
     );
 }
 
 #[test]
-fn deep_nested_instances_retain_one_link_per_region_and_one_index_per_element() {
+fn nested_owner_copies_keep_their_own_physical_chain() {
+    let nodes = vec![instance(
+        "outer",
+        vec![instance("inner", vec![tree::element("b", &[], vec![])])],
+    )];
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    assert_eq!(
+        matched(&chains, "old", &BTreeMap::new()),
+        BTreeSet::from(["outer".into(), "inner".into()])
+    );
+}
+
+#[test]
+fn slot_input_owner_uses_the_supplier_chain_for_blocking() {
+    let nodes = vec![instance(
+        "outer",
+        vec![instance(
+            "owner",
+            vec![Node::Region {
+                region: Region {
+                    id: "slot".into(),
+                    kind: RegionKind::Slot {
+                        key: "slot".into(),
+                        instance_key: "outer".into(),
+                        name: "children".into(),
+                        owner: ComponentInputOwner::Instance {
+                            instance_key: "outer".into(),
+                        },
+                    },
+                },
+                children: vec![tree::element("b", &[], vec![])],
+            }],
+        )],
+    )];
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    assert_eq!(
+        matched(&chains, "old", &BTreeMap::new()),
+        BTreeSet::from(["owner".into(), "outer".into()])
+    );
+}
+
+#[test]
+fn own_page_match_blocks_an_outer_owner_chain() {
+    let nodes = vec![Node::Region {
+        region: Region {
+            id: "outer".into(),
+            kind: RegionKind::Instance {
+                path: "owner".into(),
+                key: "outer".into(),
+                local_id: "outer".into(),
+                props_key: "props".into(),
+            },
+        },
+        children: vec![Node::Region {
+            region: Region {
+                id: "inner".into(),
+                kind: RegionKind::Instance {
+                    path: "other".into(),
+                    key: "inner".into(),
+                    local_id: "inner".into(),
+                    props_key: "props".into(),
+                },
+            },
+            children: vec![Node::Region {
+                region: Region {
+                    id: "slot".into(),
+                    kind: RegionKind::Slot {
+                        key: "slot".into(),
+                        instance_key: "inner".into(),
+                        name: "children".into(),
+                        owner: ComponentInputOwner::Instance {
+                            instance_key: "inner".into(),
+                        },
+                    },
+                },
+                children: vec![tree::element("b", &[], vec![])],
+            }],
+        }],
+    }];
+    let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+    let identity = (None, None);
+    let own_pages = BTreeMap::from([(identity, BTreeSet::from(["other".into()]))]);
+    assert_eq!(
+        matched(&chains, "owner", &BTreeMap::new()),
+        BTreeSet::from(["outer".into()])
+    );
+    assert!(matched(&chains, "owner", &own_pages).is_empty());
+}
+
+#[test]
+fn deep_nested_instances_retain_only_the_matched_chain() {
     thread::spawn(|| {
         let mut nodes = vec![tree::element("b", &[], vec![])];
         for level in 0..20_000 {
             nodes = vec![instance(&level.to_string(), nodes)];
         }
-        let index = index(&nodes, &BTreeMap::new());
-        assert_eq!(index.instances.len(), 20_000);
-        assert_eq!(index.elements.len(), 1);
-        assert_eq!(
-            matched(
-                &DocumentMatching::Resolved(vec![MatchedRule {
-                    change: RuleChange {
-                        before: None,
-                        after: None
-                    },
-                    selectors: vec![SelectorMatch {
-                        selector: "b".into(),
-                        unresolved: false,
-                        elements: vec![ElementMatch {
-                            side: ReviewSide::Before,
-                            element: 0
-                        }],
-                    }],
-                }]),
-                "old",
-                &[index, Default::default()],
-                &BTreeMap::new()
-            )
-            .len(),
-            20_000
-        );
+        let source = DocumentIndex::build(&nodes, &BTreeMap::new());
+        assert_eq!(source.instances.len(), 20_000);
+        assert_eq!(source.elements.len(), 1);
+        let chains = compact([&nodes, &[]], &BTreeMap::new(), &matching(0));
+        assert_eq!(chains.counts(), (20_000, 1));
+        assert_eq!(matched(&chains, "old", &BTreeMap::new()).len(), 20_000);
     })
     .join()
     .unwrap();
