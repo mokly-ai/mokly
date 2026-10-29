@@ -12,7 +12,8 @@ pub trait ClosureInputs: Debug + Send + Sync {
     fn retain(&self, key: &str);
     /// Remove a key from both indexes after its last generation releases it.
     fn release(&self, key: &str);
-    /// Record one successfully validated file; equal keys see late records immediately.
+    /// Record one policy-approved authored file that the document reached.
+    /// Every generation that holds the key sees it at once.
     fn record(&self, key: &str, path: &str);
     /// Return the files recorded for one document key.
     fn paths(&self, key: &str) -> BTreeSet<String>;

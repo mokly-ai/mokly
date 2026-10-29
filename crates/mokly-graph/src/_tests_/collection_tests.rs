@@ -12,7 +12,7 @@ use crate::types::RenderGeneration;
 use super::collection_support;
 
 #[test]
-fn public_membership_uses_one_path_lookup_at_one_and_four_sizes() {
+fn public_membership_uses_one_path_lookup_at_four_and_sixteen_keys() {
     for count in [4, 16] {
         let closures = Arc::new(Unimock::new((
             ClosureInputsMock::retain
