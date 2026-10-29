@@ -1,7 +1,5 @@
 # On-demand Serve
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
