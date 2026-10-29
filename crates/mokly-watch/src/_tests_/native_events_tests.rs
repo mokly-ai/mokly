@@ -49,7 +49,7 @@ fn pathless_and_flagged_events_rescan_and_warn_once() {
     receiver.send(Ok(Event::new(EventKind::Other).set_flag(Flag::Rescan)));
     receiver.send(Ok(Event::new(EventKind::Any)));
     receiver.send(Ok(Event::new(EventKind::Other)
-        .add_path("/repo/specs".into())
+        .add_path("/".into())
         .set_flag(Flag::Rescan)));
     let events = inbox.take();
     assert_eq!(events.len(), 2);

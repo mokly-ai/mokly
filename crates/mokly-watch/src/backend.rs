@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{PathOp, RecommendedWatcher, Watcher};
 
 use crate::error::{Error, Result};
 
@@ -64,52 +64,109 @@ impl DirectoryWatch for NotifyWatch {
         add: &BTreeSet<PathBuf>,
         remove: &BTreeSet<PathBuf>,
     ) -> Result<BTreeSet<PathBuf>> {
-        let mut paths = self.watcher.paths_mut();
-        let mut error = None;
+        let mut operations = Vec::new();
         for path in remove {
-            if !self.attached.contains(path) {
-                continue;
-            }
-            match paths.remove(path) {
-                Ok(()) => {
-                    self.attached.remove(path);
-                }
-                Err(source)
-                    if matches!(
-                        source.kind,
-                        notify::ErrorKind::WatchNotFound | notify::ErrorKind::PathNotFound
-                    ) =>
-                {
-                    self.attached.remove(path);
-                }
-                Err(source) => {
-                    error.get_or_insert(Error::Observer { source });
-                }
+            if self.attached.contains(path) {
+                operations.push(Operation::Remove(path.clone()));
             }
         }
         let mut attached = BTreeSet::new();
         for path in add {
-            if self.attached.contains(path) {
+            if self.attached.contains(path) && !remove.contains(path) {
                 attached.insert(path.clone());
-                continue;
-            }
-            match paths.add(path, RecursiveMode::NonRecursive) {
-                Ok(()) => {
-                    self.attached.insert(path.clone());
-                    attached.insert(path.clone());
-                }
-                Err(source) if vanished(&source, self.tree.as_ref(), path) => {}
-                Err(source) => {
-                    error.get_or_insert(Error::Observer { source });
-                }
+            } else {
+                operations.push(Operation::Add(path.clone()));
             }
         }
-        if let Err(source) = paths.commit() {
-            error.get_or_insert(Error::Observer { source });
+        let mut error = None;
+        while !operations.is_empty() {
+            let batch = operations.iter().map(Operation::path_op).collect();
+            match self.watcher.update_paths(batch) {
+                Ok(()) => {
+                    for operation in operations.drain(..) {
+                        self.applied(operation, &mut attached);
+                    }
+                }
+                Err(update) => {
+                    let failed = update.origin.is_some();
+                    let applied = operations
+                        .len()
+                        .saturating_sub(update.remaining.len() + usize::from(failed));
+                    for operation in operations.drain(..applied) {
+                        self.applied(operation, &mut attached);
+                    }
+                    let Some(origin) = update.origin else {
+                        error.get_or_insert(Error::Observer {
+                            source: update.source,
+                        });
+                        operations.clear();
+                        continue;
+                    };
+                    self.failed(Operation::from_path_op(origin), update.source, &mut error);
+                    operations = update
+                        .remaining
+                        .into_iter()
+                        .map(Operation::from_path_op)
+                        .collect();
+                }
+            }
         }
         match error {
             Some(error) => Err(error),
             None => Ok(attached),
+        }
+    }
+}
+
+#[derive(Clone)]
+enum Operation {
+    Add(PathBuf),
+    Remove(PathBuf),
+}
+
+impl Operation {
+    fn path_op(&self) -> PathOp {
+        match self {
+            Self::Add(path) => PathOp::watch_non_recursive(path.clone()),
+            Self::Remove(path) => PathOp::unwatch(path.clone()),
+        }
+    }
+
+    fn from_path_op(operation: PathOp) -> Self {
+        match operation {
+            PathOp::Watch(path, _) => Self::Add(path),
+            PathOp::Unwatch(path) => Self::Remove(path),
+        }
+    }
+}
+
+impl NotifyWatch {
+    fn applied(&mut self, operation: Operation, attached: &mut BTreeSet<PathBuf>) {
+        match operation {
+            Operation::Add(path) => {
+                self.attached.insert(path.clone());
+                attached.insert(path);
+            }
+            Operation::Remove(path) => {
+                self.attached.remove(&path);
+            }
+        }
+    }
+
+    fn failed(&mut self, operation: Operation, source: notify::Error, error: &mut Option<Error>) {
+        match operation {
+            Operation::Remove(path)
+                if matches!(
+                    source.kind,
+                    notify::ErrorKind::WatchNotFound | notify::ErrorKind::PathNotFound
+                ) =>
+            {
+                self.attached.remove(&path);
+            }
+            Operation::Add(path) if vanished(&source, self.tree.as_ref(), &path) => {}
+            _ => {
+                error.get_or_insert(Error::Observer { source });
+            }
         }
     }
 }
