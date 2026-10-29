@@ -40,7 +40,7 @@ pub(crate) struct State {
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) generation_key: String,
-    pub(crate) public_files: Arc<Mutex<BTreeSet<String>>>,
+    pub(crate) document_keys: BTreeSet<String>,
     pub(crate) matchers: Arc<styles::Matchers>,
     pub(crate) reference_index: Arc<dyn ReferenceIndex>,
     pub(crate) inputs: DeliveryInputs,
@@ -73,17 +73,11 @@ impl Session {
             graph.inputs.resources.retain(&plan.resource_key);
             graph.inputs.closures.retain(&plan.key.0);
         }
-        let mut public_files = BTreeSet::new();
-        for plan in input.plans.values() {
-            public_files.extend(
-                graph
-                    .inputs
-                    .closures
-                    .paths(&plan.key.0)
-                    .into_iter()
-                    .filter(|path| input.policy.check(path).is_ok()),
-            );
-        }
+        let document_keys = input
+            .plans
+            .values()
+            .map(|plan| plan.key.0.clone())
+            .collect();
         Self {
             state: Arc::new(State {
                 anchor_flights: Arc::new(MemoryRequests::default()),
@@ -99,7 +93,7 @@ impl Session {
                 observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
-                public_files: Arc::new(Mutex::new(public_files)),
+                document_keys,
                 matchers: Arc::new(input.matchers),
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
@@ -192,7 +186,7 @@ impl RenderGeneration for Session {
         for result in results {
             summary.record(result);
         }
-        summary.finish(self)
+        summary.finish(self).map(|(summary, _)| summary)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         self.collect_validated(collector)
@@ -208,10 +202,11 @@ impl RenderGeneration for Session {
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.state
-            .public_files
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone()
+            .document_keys
+            .iter()
+            .flat_map(|key| self.state.inputs.closures.paths(key))
+            .filter(|path| self.state.policy.check(path).is_ok())
+            .collect()
     }
     fn watch_files(&self) -> BTreeSet<String> {
         self.state
@@ -229,10 +224,10 @@ impl RenderGeneration for Session {
     }
     fn contains_public_file(&self, path: &str) -> bool {
         self.state
-            .public_files
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .contains(path)
+            .inputs
+            .closures
+            .contains(path, &self.state.document_keys)
+            && self.state.policy.check(path).is_ok()
     }
 }
 

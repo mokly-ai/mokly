@@ -1,5 +1,6 @@
 //! Declared shell, JSON, document, asset, and event routes share one fixed state.
 
+use mokly_model::usage::CatalogueUsage;
 use mokly_model::{canonical, detail_context, readers};
 use mokly_server::publication::{PublicationWriter, Publications};
 
@@ -199,15 +200,11 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
 async fn replacement_keeps_an_unchanged_document_asset_reachable() {
     let harness = support::Harness::new().await;
     let mut updates = harness.publications.subscribe().updates;
-    let document = harness
-        .client
-        .get(format!(
-            "{}/static/mokly-generated/home/index.mobile.html",
-            harness.url
-        ))
-        .send()
-        .await
-        .unwrap();
+    let url = format!(
+        "{}/static/mokly-generated/home/index.mobile.html",
+        harness.url
+    );
+    let document = harness.client.get(url).send().await.unwrap();
     assert_eq!(document.status(), 200);
     while harness.publications.current().index.revision == 1 {
         updates.recv().await.unwrap();
@@ -224,6 +221,41 @@ async fn replacement_keeps_an_unchanged_document_asset_reachable() {
         replacement.document_keys["home/index.mobile.html"]
     );
     assert!(harness.publications.replace(replacement));
+    assert_eq!(
+        harness.client.get(asset).send().await.unwrap().status(),
+        200
+    );
+    harness.close().await;
+}
+
+#[tokio::test]
+async fn replacement_keeps_files_reached_after_preparation() {
+    let harness = support::Harness::new().await;
+    let generation = harness.prepare_replacement();
+    let mut updates = harness.publications.subscribe().updates;
+    let route = "home/index.mobile.html";
+    let url = format!("{}/static/mokly-generated/{route}", harness.url);
+    assert_eq!(harness.client.get(url).send().await.unwrap().status(), 200);
+    while harness.publications.current().index.revision == 1 {
+        updates.recv().await.unwrap();
+    }
+    let previous = harness.publications.current();
+    let replacement = harness.project_replacement(generation);
+    assert_eq!(
+        previous.document_keys[route],
+        replacement.document_keys[route]
+    );
+    assert!(matches!(
+        previous.details["home"].views[0].usage,
+        CatalogueUsage::Ready { .. }
+    ));
+    assert_eq!(
+        previous.details["home"].views[0].usage,
+        replacement.details["home"].views[0].usage
+    );
+    assert!(replacement.completed.contains_key(route));
+    assert!(harness.publications.replace(replacement));
+    let asset = format!("{}/static/specs/assets/public.svg", harness.url);
     assert_eq!(
         harness.client.get(asset).send().await.unwrap().status(),
         200

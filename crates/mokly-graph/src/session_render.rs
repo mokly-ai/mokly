@@ -103,11 +103,6 @@ impl ArtifactWorker for Session {
         for path in &closure.files {
             self.state.inputs.closures.record(key, path);
         }
-        self.state
-            .public_files
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .extend(closure.files);
         Ok(artifact)
     }
 }

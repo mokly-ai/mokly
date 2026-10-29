@@ -57,11 +57,14 @@ attributes do not enter document keys.
 `generation_key` hashes the configuration, the document plans, the delivered
 stylesheet and asset identities, and the fragment generation for the live
 descriptor. A private stylesheet input that changes no delivered byte keeps it.
-`public_files` lists authored files reached by completed renders. A source
-replacement carries the recorded closure files of an unchanged document key
-after the new generation's policy accepts each path. Serve rechecks their live
-eligibility at read time. Temporary closure membership stays separate from the
-catalogue's reached public files.
+`public_files` reads the shared closure records of the generation's document
+keys and applies its own policy to each path. An unchanged document's render
+that completes after replacement preparation is visible to the replacement.
+The records index both document keys and public paths. A membership request
+looks up one path and tests only the keys that reached it. The last lease of
+a document key removes its records from both indexes. Serve also rechecks
+live eligibility at read time. Temporary closure membership stays separate
+from the catalogue's reached public files.
 
 A JavaScript document key includes the render input keys of the definitions
 that it renders, so an edit moves only the keys whose module closures it

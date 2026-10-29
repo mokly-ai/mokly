@@ -41,8 +41,9 @@ publications.
 Evidence revisions share the generation's assets, routes, backend, and shell.
 Unchanged detail payloads and index bytes also stay shared. Only changed
 details are validated and encoded. Source replacements retain ready usage when
-its document key is equal, and carry that document's reached authored closure
-after the replacement policy accepts each path. `Snapshot::detail` supplies
+its document key is equal. Public membership reads that document's shared
+closure records with the replacement's own policy. This includes a render
+that completes after the replacement is prepared. `Snapshot::detail` supplies
 the matching revision to typed consumers.
 
 `UsagePass` and `ChangesPass` run the background work of the

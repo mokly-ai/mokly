@@ -205,11 +205,18 @@ impl Harness {
         }
     }
     pub fn replacement(&self) -> Arc<Snapshot> {
-        let previous = self.publications.current();
-        let replacement_generation = self
-            .graph
+        self.project_replacement(self.prepare_replacement())
+    }
+    pub fn prepare_replacement(&self) -> Arc<dyn RenderGeneration> {
+        self.graph
             .prepare(self.config.clone(), self.prepared.clone(), None)
-            .unwrap();
+            .unwrap()
+    }
+    pub fn project_replacement(
+        &self,
+        replacement_generation: Arc<dyn RenderGeneration>,
+    ) -> Arc<Snapshot> {
+        let previous = self.publications.current();
         let documents = Arc::new(GraphDocuments::new(
             replacement_generation.clone(),
             self.public.clone(),

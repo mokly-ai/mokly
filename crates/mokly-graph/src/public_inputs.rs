@@ -4,17 +4,20 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
 use std::sync::Mutex;
 
-/// Cross-generation authored closure files keyed by a document recipe.
+/// Live authored closure records indexed by document key and public path.
+/// Each generation applies its own policy to a matching record before admission.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClosureInputsMock))]
 pub trait ClosureInputs: Debug + Send + Sync {
     /// Lease one document key while a graph uses its closure record.
     fn retain(&self, key: &str);
-    /// Release one document key after the graph drops its plans.
+    /// Remove a key from both indexes after its last generation releases it.
     fn release(&self, key: &str);
-    /// Record one policy-approved authored file reached by the document.
+    /// Record one successfully validated file; equal keys see late records immediately.
     fn record(&self, key: &str, path: &str);
     /// Return the files recorded for one document key.
     fn paths(&self, key: &str) -> BTreeSet<String>;
+    /// Look up one path and test only the keys that reached it against the generation's keys.
+    fn contains(&self, path: &str, keys: &BTreeSet<String>) -> bool;
 }
 
 #[derive(Debug, Default)]
@@ -23,10 +26,16 @@ struct Record {
     paths: BTreeSet<String>,
 }
 
+#[derive(Debug, Default)]
+struct Indexes {
+    keys: BTreeMap<String, Record>,
+    paths: BTreeMap<String, BTreeSet<String>>,
+}
+
 /// In-memory closure records with the same lease lifetime as resource inputs.
 #[derive(Debug, Default)]
 pub struct MemoryClosureInputs {
-    records: Mutex<BTreeMap<String, Record>>,
+    records: Mutex<Indexes>,
 }
 
 impl ClosureInputs for MemoryClosureInputs {
@@ -34,6 +43,7 @@ impl ClosureInputs for MemoryClosureInputs {
         self.records
             .lock()
             .unwrap_or_else(|error| error.into_inner())
+            .keys
             .entry(key.into())
             .or_default()
             .users += 1;
@@ -44,29 +54,59 @@ impl ClosureInputs for MemoryClosureInputs {
             .records
             .lock()
             .unwrap_or_else(|error| error.into_inner());
-        if let Some(record) = records.get_mut(key) {
+        if let Some(record) = records.keys.get_mut(key) {
             record.users = record.users.saturating_sub(1);
         }
-        if records.get(key).is_some_and(|record| record.users == 0) {
-            records.remove(key);
+        if records
+            .keys
+            .get(key)
+            .is_some_and(|record| record.users == 0)
+            && let Some(record) = records.keys.remove(key)
+        {
+            for path in record.paths {
+                if let Some(keys) = records.paths.get_mut(&path) {
+                    keys.remove(key);
+                    if keys.is_empty() {
+                        records.paths.remove(&path);
+                    }
+                }
+            }
         }
     }
 
     fn record(&self, key: &str, path: &str) {
-        self.records
+        let mut records = self
+            .records
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
+            .unwrap_or_else(|error| error.into_inner());
+        records
+            .keys
             .entry(key.into())
             .or_default()
             .paths
             .insert(path.into());
+        records
+            .paths
+            .entry(path.into())
+            .or_default()
+            .insert(key.into());
     }
 
     fn paths(&self, key: &str) -> BTreeSet<String> {
         self.records
             .lock()
             .unwrap_or_else(|error| error.into_inner())
+            .keys
             .get(key)
             .map_or_else(BTreeSet::new, |record| record.paths.clone())
+    }
+
+    fn contains(&self, path: &str, keys: &BTreeSet<String>) -> bool {
+        self.records
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .paths
+            .get(path)
+            .is_some_and(|reached| reached.iter().any(|key| keys.contains(key)))
     }
 }

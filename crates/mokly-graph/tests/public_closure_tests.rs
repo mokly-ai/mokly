@@ -1,10 +1,12 @@
 //! Replacement generations retain only public files of unchanged documents.
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
 use mokly_graph::cache::MemoryCache;
+use mokly_graph::public_inputs::{ClosureInputs, MemoryClosureInputs};
 use tempfile::TempDir;
 
 #[expect(
@@ -61,6 +63,25 @@ fn unchanged_documents_carry_public_files_without_rendering() {
 }
 
 #[test]
+fn replacement_sees_a_render_completed_after_preparation() {
+    let root = fixture();
+    let inputs = mokly_graph::delivery_inputs::DeliveryInputs::default();
+    let original = support::prepare_with_inputs(root.path(), 0, 1, inputs.clone())
+        .0
+        .unwrap();
+    let replacement = support::prepare_with_inputs(root.path(), 0, 1, inputs)
+        .0
+        .unwrap();
+    assert_eq!(original.plans()[ROUTE].key, replacement.plans()[ROUTE].key);
+    assert!(!replacement.contains_public_file(PUBLIC_FILE));
+
+    original.render(ROUTE).unwrap();
+
+    assert!(replacement.contains_public_file(PUBLIC_FILE));
+    assert!(replacement.public_files().contains(PUBLIC_FILE));
+}
+
+#[test]
 fn changed_documents_do_not_carry_their_old_public_files() {
     let root = fixture();
     let (inputs, _first) = render_first(root.path());
@@ -78,6 +99,7 @@ fn changed_documents_do_not_carry_their_old_public_files() {
         .unwrap();
 
     assert!(!replacement.contains_public_file(PUBLIC_FILE));
+    assert!(!replacement.public_files().contains(PUBLIC_FILE));
 }
 
 #[test]
@@ -100,4 +122,36 @@ fn denied_files_are_not_carried_into_a_replacement() {
     assert_eq!(carried.plans()[ROUTE].key, replacement.plans()[ROUTE].key);
 
     assert!(!replacement.contains_public_file(PUBLIC_FILE));
+    assert!(!replacement.public_files().contains(PUBLIC_FILE));
+}
+
+#[test]
+fn final_key_release_removes_only_its_files_from_both_indexes() {
+    let records = MemoryClosureInputs::default();
+    let first = BTreeSet::from(["first".into()]);
+    let second = BTreeSet::from(["second".into()]);
+    records.retain("first");
+    records.retain("first");
+    records.retain("second");
+    records.record("first", PUBLIC_FILE);
+    records.record("first", PUBLIC_FILE);
+    records.record("first", "assets/first-only.svg");
+    records.record("second", PUBLIC_FILE);
+    assert!(records.contains(PUBLIC_FILE, &first));
+    assert!(records.contains(PUBLIC_FILE, &second));
+    assert!(!records.contains("assets/first-only.svg", &second));
+
+    records.release("first");
+    assert!(records.contains(PUBLIC_FILE, &first));
+    records.release("first");
+    assert!(records.paths("first").is_empty());
+    assert!(!records.contains(PUBLIC_FILE, &first));
+    assert!(!records.contains("assets/first-only.svg", &first));
+    assert!(records.contains(PUBLIC_FILE, &second));
+    records.release("second");
+    assert!(records.paths("second").is_empty());
+    assert!(!records.contains(PUBLIC_FILE, &second));
+    records.retain("first");
+    assert!(!records.contains(PUBLIC_FILE, &first));
+    records.release("first");
 }
