@@ -513,6 +513,11 @@ seven packages.
       of the second options check. Merge `origin/main` at `c9d402cd` in
       `93fb6b7b` first, with an empty remerge diff. Evidence:
       `.context/ui-package/review/fix-3/`.
+- [x] Re-review the third fix round after merging `origin/main` at
+      `3ea78c0b` in `0a268cec`. The remote gate passed 7 of 7 suites on
+      `0a268cec`. Review 3 found two Low doc findings, and `84dc9b0b` fixes both
+      with option A. Reports: `.context/ui-package/review/review-3.md` and
+      `validity-3.md`.
 - [ ] Open the pull request when every other milestone TODO is ticked.
       Put its link in the status paragraph.
 
