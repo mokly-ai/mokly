@@ -17,11 +17,11 @@ rewrite rules.
 | -------------------------------------------------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------------- |
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
-| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v8                                     |
+| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v9                                     |
 | `/mokly-viewer/deployment.json`                                                              | absent    | file                                    | the deployment file v1                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v3                                        |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v4                                        |
 | `/mokly-viewer/diffs/generations/<generation>/`                                              | live      | absent                                  | the generation root: 204 while Serve retains it            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v3 of a removed entry's historical record |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v4 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
 | `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
@@ -55,7 +55,7 @@ render. The in-frame inspector script is the [frame adapter's](./mokly-frame-ada
 
 ## Catalogue Index
 
-The index is the read model v8 of the
+The index is the read model v9 of the
 [catalogue contract](./mokly-catalogue.md), which owns its fields and the tree
 rules: `schemaVersion: 8`, `identity`, `deploymentId`, one integer `revision`,
 the `base` ref when Changes is configured, `baseCommit` while Changes is
@@ -79,7 +79,7 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-The [generated entry detail v3 type](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
+The [generated entry detail v4 type](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
 defines the detail, view, evidence, and workspace shapes.
 A screen or component detail includes `controlOrder`, listing every editable
 property exactly once in the [control declaration order](./mokly-component-controls.md).

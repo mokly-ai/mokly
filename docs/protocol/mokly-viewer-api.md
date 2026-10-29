@@ -6,7 +6,7 @@ behavior and delivery rules.
 
 ```ts
 import type { CSSProperties, ReactNode, Ref } from "react";
-import type { CatalogueReadModel, EntryDetailV3 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV4 } from "@mokly/viewer";
 import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 import type { InstanceRef, ViewerMarker, MarkerState } from "@mokly/viewer";
 
@@ -21,10 +21,10 @@ interface ViewerSelection {
   search: string;
   tags: readonly string[];
 }
-/** The catalogue index v8 as an object, or its absolute HTTP(S) URL. */
+/** The catalogue index v9 as an object, or its absolute HTTP(S) URL. */
 type IndexSource = CatalogueReadModel | string | URL;
-type DetailResult = EntryDetailV3 | string | URL;
-/** One entry detail v3, or its URL; a removed entry names its snapshot. */
+type DetailResult = EntryDetailV4 | string | URL;
+/** One entry detail v4, or its URL; a removed entry names its snapshot. */
 type DetailSource = (
   entryPath: string,
   snapshotId?: string,

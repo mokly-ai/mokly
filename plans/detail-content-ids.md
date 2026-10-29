@@ -418,13 +418,14 @@ Design calls, 2026-10-29:
 - My call: the upgrade guide gives the content id step as an upgrade to the
   release after 0.17.0, not as part of the 0.17.0 steps.
 
-- [ ] Merge `origin/main` at `5d00ca8a` under the `git-merge` skill.
-- [ ] Raise the index to 9 and the entry detail to 4 in the model, the
+- [x] Merge `origin/main` at `5d00ca8a` under the `git-merge` skill.
+- [x] Raise the index to 9 and the entry detail to 4 in the model, the
       readers, the generated types, the fixtures and their detail ids, the
-      tests, and the snapshots.
-- [ ] Update the protocol docs, the upgrade guide, the READMEs, and the viewer
+      tests, and the snapshots. Evidence:
+      `.context/deployment-id-detail-ids/raise-v9-report.txt`.
+- [x] Update the protocol docs, the upgrade guide, the READMEs, and the viewer
       docs to index v9 and entry detail v4.
-- [ ] Turn the open items into follow-up items under `plans/follow-ups/`.
+- [x] Turn the open items into follow-up items under `plans/follow-ups/`.
 - [ ] Run the complete gate, push, and wait for CI.
 - [ ] Give the pull request description the format numbers, each decision and
       design call with its date, and a permalink to this plan.

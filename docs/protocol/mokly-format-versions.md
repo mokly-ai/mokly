@@ -4,8 +4,8 @@
 
 | Boundary                                | Version                   | Reason and reader                                                                                                                                                                                                                                   |
 | --------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public catalogue index                  | 8                         | The read model without per-view usage and resource evidence, with `baseCommit`, the generation root, and each record's `detailId`; the reader requires 8.                                                                                           |
-| Entry detail                            | 3                         | Per-view evidence, reasons, control order, workspace lists under the [placement rule](./mokly-shell-delivery.md#entry-detail), and content `detailId`; current details carry `revision`, removed details carry `snapshotId`; the reader requires 3. |
+| Public catalogue index                  | 9                         | The read model without per-view usage and resource evidence, with `baseCommit`, the generation root, and each record's `detailId`; the reader requires 9.                                                                                           |
+| Entry detail                            | 4                         | Per-view evidence, reasons, control order, workspace lists under the [placement rule](./mokly-shell-delivery.md#entry-detail), and content `detailId`; current details carry `revision`, removed details carry `snapshotId`; the reader requires 4. |
 | Static deployment file                  | 1                         | `{deploymentId,schemaVersion}` at `mokly-viewer/deployment.json`; written by `build`, never by Serve.                                                                                                                                               |
 | Review result                           | 8                         | In memory only: tree materiality, owner-attributed rule and resource evidence, moves; never written or read from a file.                                                                                                                            |
 | Catalogue change snapshot               | 4                         | In memory only: current private path/move/removal evidence paired with review v8 and the base commit.                                                                                                                                               |
@@ -53,14 +53,14 @@ components and variants, including the HTML and YAML file kinds of the
 [HTML screens contract](./mokly-html-screens.md). Usage records
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
-Resource owners exclude CSS. The read model v8 is the model's public form. The
+Resource owners exclude CSS. The read model v9 is the model's public form. The
 [generated TypeScript types](../../packages/viewer/src/generated/catalogue/)
 are the normative shapes.
 
 ## Rejection Before Interpretation
 
 Reject versions before reading identity, route, resource or nested payload
-fields. The index reader rejects catalogue v7 and below; no manifest and no
+fields. The index reader rejects catalogue v8 and below; no manifest and no
 review file is read. Unknown newer versions are invalid.
 
 Index, detail, and live descriptor readers use `MoklyVersionError` at their
@@ -77,6 +77,6 @@ cached.
 A receiver that does not support these versions answers HTTP 426, and the CLI
 sends no Blob or Complete request and does not downgrade. The ownership and upload readers check their own
 fields and namespace; catalogue readers independently enforce their payload
-versions. Mokly Cloud implements upload metadata v3 and catalogue v8, and reads
+versions. Mokly Cloud reads upload metadata v3 and catalogue v9, and reads
 Changes from the index. Its receiver parses no entry detail and no static
-deployment file, and its embedded viewer reads entry detail v3.
+deployment file, and its embedded viewer reads entry detail v4.

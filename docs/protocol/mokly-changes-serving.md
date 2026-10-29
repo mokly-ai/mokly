@@ -43,7 +43,7 @@ output directory of `build`, with its symlink-resolved in-repository target,
 is excluded from source capture and resource comparison, so a build never affects
 its own Changes.
 
-A complete comparison is one generation: the entry detail v3 of every
+A complete comparison is one generation: the entry detail v4 of every
 removed entry, the removed previews, and the snapshots of both sides with
 their transitive resources. The review result v8 of the
 [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4)

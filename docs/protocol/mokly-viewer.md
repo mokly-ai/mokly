@@ -36,14 +36,14 @@ the index publishes, and absent otherwise. The event has no `route`,
 `viewHref(path)` of the [artifact path contract](./mokly-artifact-paths.md)
 for its shell URL.
 
-`index` is the catalogue index v8. For an object source, `baseUrl` is
+`index` is the catalogue index v9. For an object source, `baseUrl` is
 required and supplies the HTTP(S) artifact origin root. A URL or string source
 must be an absolute HTTP(S) URL; its validated final response URL establishes
 that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
-[read model v8](./mokly-catalogue.md) before it renders.
+[read model v9](./mokly-catalogue.md) before it renders.
 
-`detail` supplies the entry detail v3 of one entry. The viewer calls it with the
+`detail` supplies the entry detail v4 of one entry. The viewer calls it with the
 entry path, plus the `snapshotId` of a removed record, when it commits a
 selection whose detail it does not hold. For a current component variant, the
 viewer also calls `detail` with the parent's path and no `snapshotId` when it

@@ -99,7 +99,7 @@ number. The review result stays in memory under the
 current and removed detail shapes use the detail version in the
 [format inventory](./mokly-format-versions.md). The generated
 [`CatalogueReadModel`](../../packages/viewer/src/generated/catalogue/CatalogueReadModel.ts)
-and [`EntryDetailV3`](../../packages/viewer/src/generated/catalogue/EntryDetailV3.ts)
+and [`EntryDetailV4`](../../packages/viewer/src/generated/catalogue/EntryDetailV4.ts)
 types are the normative shapes. A reader validates a document against them
 before use.
 

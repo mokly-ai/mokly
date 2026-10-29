@@ -140,23 +140,6 @@ Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
 
-## Upgrade to content-addressed details
-
-The catalogue index keeps `deploymentId`, and each entry record now carries a
-`detailId`. Current and removed entry details use detail version 3. A current
-detail carries `detailId` and `revision`; a removed detail carries `detailId`
-and `snapshotId`. Details no longer carry `deploymentId` or `generation`.
-
-Static builds also write `mokly-viewer/deployment.json` with schema version 1.
-The standalone shell and an embedded viewer use this file to detect a replaced
-static deployment. Serve does not write or answer this file. A missing or
-unreadable file does not change viewer state.
-
-The TypeScript type is `EntryDetailV3`, and `readEntryDetail` reads version 3
-only. The removed public type `EntryDetailV2` is no longer exported. Update the
-viewer and any receiver that validates catalogue versions before deploying a
-catalogue with these shapes.
-
 ## Upgrade to comparisons without `review.json`
 
 A comparison generation no longer contains `review.json`. The catalogue index
@@ -183,3 +166,23 @@ and the entry details carry every public comparison fact.
 Entry detail version 3 omits `usedBy` and `affected` from current component
 variants. Their pages request the parent detail and read both lists there.
 Rename `EntryDetailV2` to `EntryDetailV3` in viewer integrations.
+
+## Upgrade to content-addressed details
+
+The catalogue index version 9 lists a `detailId` in each entry record and keeps
+`deploymentId`. Current and removed entry details use detail version 4. A
+current detail carries `detailId` and `revision`. A removed detail carries
+`detailId` and `snapshotId`. Details no longer carry `deploymentId` or
+`generation`.
+
+Static builds also write `mokly-viewer/deployment.json` with schema version 1.
+The standalone shell and an embedded viewer use this file to detect a replaced
+static deployment. Serve does not write or answer this file. A missing or
+unreadable file does not change viewer state.
+
+- Rename `EntryDetailV3` to `EntryDetailV4` in viewer integrations.
+  `readCatalogueIndex` reads index version 9 only, and `readEntryDetail` reads
+  detail version 4 only.
+- Update the viewer and each receiver that validates catalogue versions before
+  you deploy a catalogue with these shapes. Mokly Cloud must accept index
+  version 9 before it stores a publication of this release.
