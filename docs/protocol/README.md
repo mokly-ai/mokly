@@ -158,6 +158,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence In The Shell](./mokly-css-evidence-shell.md)
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
+- [Embeddable Viewer API](./mokly-viewer-api.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Inspector Handshake And Wire Protocol](./mokly-inspector-wire.md)
 - [Logical Link Composition](./mokly-logical-links.md)

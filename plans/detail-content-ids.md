@@ -384,6 +384,20 @@ deployment file answered 400 ms late. Evidence:
       Remote CI wait is outside this stop boundary.
       Evidence: `.context/deployment-id-detail-ids/review/fix-2-checks.log`.
 
+## Milestone 8: CI composition with the shared UI package
+
+On 2026-10-29, CI combined merge `0c2d7661` with main `e4c6d2c8` from
+PR #243. The combined viewer protocol page exceeded its 250-line cap.
+Design call: move the unchanged API declarations to a linked protocol page.
+This keeps every requirement and leaves room for the shared UI rules.
+
+- [x] Reproduce the file-length failure on CI's automatic merge.
+- [x] Split the viewer API declarations and preserve every declaration.
+- [x] Check formatting, links, and file lengths on the branch and the
+      automatic merge. Save evidence under
+      `.context/deployment-id-detail-ids/merge-3ea78c0b-ci-cap-`.
+- [ ] Commit, push, and wait for PR #224's checks. The supervisor owns review.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Release the change as a minor version with a breaking-change note.
