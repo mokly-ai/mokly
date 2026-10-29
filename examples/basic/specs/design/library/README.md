@@ -5,16 +5,24 @@
 These sixteen components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
-library; the actual Mokly browser shell remains in the package source.
+library. `chrome/appearance-selector` and `controls/comparison-toolbar`
+render the `@mokly/ui` components that the shipped shell uses: each view
+imports its component, and each component sheet imports the package
+stylesheets of the component and of each package component that it renders,
+each by its repository path under `packages/ui/src`, so each side of a
+comparison renders its own package files. The other components keep their
+own markup and styles here until the package provides them. The Mokly
+browser shell itself remains in the package source.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
 always composes it, so every artboard with a top bar draws it; a screen does not
 opt in. The value defaults to the scheme the file was rendered for and is
 overridden only to depict a different setting, as the Auto artboard does. It is
-the only scheme control the design catalogue draws. Its three pre-rendered faces
-and `data-*` hooks mirror the shipped shell control, with a regression test
-guarding that shared structural contract.
+the only scheme control the design catalogue draws. It is the shipped shell
+control itself, rendered from the `@mokly/ui` appearance selector. The
+compact flag draws its narrow face at every width; below the shell's
+breakpoint the control draws that face on its own, as the shell does.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
@@ -68,6 +76,10 @@ between the mode group and Refresh: a native checkbox with switch semantics
 inside a label whose text is its name, over a drawn track and knob. Every mode
 sample saves it on and **side-by-side-apart** saves it off; Current draws
 neither the switch nor Refresh. The screen header forwards the same state.
+A mode with a destination links to the artboard that shows it. The other
+modes are the shipped toggle buttons in an accessible band, as the component
+explorer depicts them, and inert text elsewhere, where Refresh is a picture
+too; the shown mode never links.
 
 View controls saves **Changed views**, where a change confined to other views
 marks the viewport dropdown; the owning screen also marks top-bar Appearance
@@ -83,7 +95,8 @@ sets props and fills slots with React content. Its props replace the own
 props key by key, so the own props hold only the keys that every variant
 sets, with the first variant's values. The parent's own example renders
 without slot content; only its variants and the composing screens fill slots.
-`{slug}.view.tsx` implements its markup. Each `{slug}.mockup.ts` re-exports the
+`{slug}.view.tsx` implements its markup, or renders the `@mokly/ui` component
+that provides it. Each `{slug}.mockup.ts` re-exports the
 definition from its group directory, deriving
 `design/library/{group}/{slug}`. Variant slugs append one segment. Folder
 records title the shared library and any named groups.
@@ -137,7 +150,10 @@ caption.
 
 `style_files.ts` names each component's public stylesheet,
 `design-library/{group}/{slug}.css`, relative to the configuration file, and
-`metadata.ts` declares it through `stylesheets`. CSS Changes uses own-page matches
+`metadata.ts` declares it through `stylesheets`. For a component that
+`@mokly/ui` provides, that sheet only imports the package's source
+stylesheets by their repository paths, plus a mockup-only rule such as the
+appearance selector's compact flag. CSS Changes uses own-page matches
 kept after nested-component filtering, not file ownership or source paths.
 Shared helpers and saved fixtures are metadata or rendered-output inputs, not
 independent comparison evidence.
@@ -189,7 +205,9 @@ cargo xtask check
 fails on any error or warning. `tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
 pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
-and control edges stay visible and that only palette sources name colours.
+and control edges stay visible, that only palette sources name colours, and
+that the palette declares every token that an imported `@mokly/ui`
+stylesheet reads.
 `tests/design_catalogue.test.ts` serves the example and checks that every
 sample keeps its page and saved variants, has a real screen consumer in each
 viewport, and links only the styles of the components it renders, and that

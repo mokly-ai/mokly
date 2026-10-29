@@ -235,6 +235,7 @@ self-hosted receivers.
 | [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) | The `mokly` command, the authoring API, the render sidecar, and the guides                        |
 | `@mokly/native-<target>`                                     | The Rust binary for one platform; `@mokly/mokly` installs the one that matches                    |
 | [`@mokly/viewer`](./packages/viewer/README.md)               | Embeddable React catalogue viewer with navigation, inspection, markers, slots, and frame adapters |
+| [`@mokly/ui`](./packages/ui/README.md)                       | The presentational components of the Browse shell and their stylesheets; the viewer composes them |
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,

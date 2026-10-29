@@ -2,9 +2,10 @@
 
 import type { CSSProperties } from "react";
 
+import { ChevronIcon } from "@mokly/ui/icons";
+
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { ChevronIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { activateDisclosure } from "./nav_disclosure.js";
 import { NavFilter, NavStatus } from "./nav_filter.js";

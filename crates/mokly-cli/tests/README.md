@@ -6,7 +6,8 @@ Run commands from the repository root.
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including
 HTML, React, and stylesheet edits.
-The design attribution matrix copies the example sources into temporary Git
+The design attribution matrix copies the example sources, with the `@mokly/ui`
+sources that the design library imports by repository path, into temporary Git
 fixtures with fully registered base and head commits. It pins stylesheet links,
 rule and resource records, changed entries, and affected consumers. Independent
 head edits reuse the pinned base generation. Four distinct CSS delivery rules
@@ -19,7 +20,8 @@ verification gate exclude this target. Its runner and hang guards follow the
 
 The design behaviour target checks parents' own-props views, stacked frames,
 captions tied to recorded changes, and the Checklist's Changes in the default
-workspace suite. It renders an isolated copy of the example catalogue.
+workspace suite. It renders an isolated copy of the example catalogue and of
+those `@mokly/ui` sources.
 Set `MOKLY_TEST_DESIGN_MUTATION` to inject one defect into that copy. Each
 value must fail its corresponding behaviour check:
 

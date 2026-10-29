@@ -18,10 +18,7 @@ import {
 } from "./comparison_request.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-export type {
-  ComparisonMode,
-  ComparisonPresentation,
-} from "./comparison_presentation.js";
+export type { ComparisonPresentation } from "./comparison_presentation.js";
 
 interface LoadedState {
   scopeKey: string;

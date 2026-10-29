@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { test } from "node:test";
 
-import { embeddedStyles } from "../scripts/styles.mjs";
-import { SHELL_CSS } from "../src/shell/css.js";
+/** The built stylesheets that a delivery and an embedded host receive. */
+const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
+  fs.readFile(new URL("../dist/shell.css", import.meta.url), "utf8"),
+  fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
+]);
 
 /** One style rule: its selector list and its declarations. */
 interface Rule {
@@ -41,7 +45,7 @@ function stageRules(css: string): Rule[] {
 }
 
 test("a stage centres its frames only while they fit", () => {
-  for (const css of [SHELL_CSS, embeddedStyles(SHELL_CSS, "")]) {
+  for (const css of [STANDALONE_CSS, EMBEDDED_CSS]) {
     const stages = stageRules(css);
     assert.ok(stages.length >= 3, "the base, stacked and component rules");
     for (const rule of stages)
@@ -56,7 +60,7 @@ test("a stage centres its frames only while they fit", () => {
 });
 
 test("a row and a stacked frame that fit stay centred on the stage", () => {
-  const stages = stageRules(SHELL_CSS);
+  const stages = stageRules(STANDALONE_CSS);
   const row = stages.find(
     (rule) =>
       rule.selectors.includes(".mbk-stage") &&

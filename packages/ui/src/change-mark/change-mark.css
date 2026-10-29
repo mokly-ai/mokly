@@ -1,0 +1,26 @@
+/* Per-view change evidence on a view control: a 6px accent dot in the
+   control's top-right corner, ringed so it stays legible over the icon, and
+   the wording a screen reader hears as the control's description. The marked
+   control is the dot's containing block. Both are hidden until the shown view
+   is not the changed one, so the mark stays distinct from the control's
+   pressed state and never draws an edge rail. */
+.mbk-view-changed {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mokly-accent);
+  box-shadow: 0 0 0 1.5px var(--chrome-surface);
+  pointer-events: none;
+}
+
+.mbk-view-changed-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

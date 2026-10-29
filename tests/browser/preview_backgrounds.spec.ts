@@ -2,8 +2,6 @@ import fs from "node:fs/promises";
 
 import { expect } from "@playwright/test";
 
-import { SHELL_CSS } from "../../packages/viewer/dist/shell/css.js";
-
 import { test } from "./browser_test.js";
 
 const layouts = [
@@ -19,10 +17,11 @@ for (const mode of ["standalone", "embedded"] as const) {
   test(`${mode} transparent previews keep their own background across appearance changes`, async ({
     page,
   }) => {
-    const css =
-      mode === "standalone"
-        ? SHELL_CSS
-        : await fs.readFile("packages/viewer/dist/styles.css", "utf8");
+    const stylesheet = mode === "standalone" ? "shell.css" : "styles.css";
+    const css = await fs.readFile(
+      new URL(`../../packages/viewer/dist/${stylesheet}`, import.meta.url),
+      "utf8",
+    );
     await page.setContent(
       `<html data-mokly-theme="light"><head><style>${css}</style></head><body><main class="mokly-viewer" data-mokly-theme="light">${layouts
         .map(

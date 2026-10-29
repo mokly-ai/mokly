@@ -47,12 +47,14 @@ export function nativeTarget(target) {
   return value;
 }
 
+/** The eight packages of one release, in packing and publication order. */
 export function releasePackages() {
   return [
     ...NATIVE_TARGETS.map((value) => ({
       ...value,
       artifact: `native-${value.target}`,
     })),
+    { name: "@mokly/ui", directory: "packages/ui", artifact: "ui" },
     { name: "@mokly/viewer", directory: "packages/viewer", artifact: "viewer" },
     { name: "@mokly/mokly", directory: "packages/mokly", artifact: "mokly" },
   ];

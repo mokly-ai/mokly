@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 
+import { ComparisonToolbar } from "@mokly/ui/comparison-toolbar";
+
 import type { ViewRouteKind } from "../navigation/routes.js";
 import type { ComparedEntry } from "../review/types.js";
 
@@ -10,7 +12,6 @@ import {
   selectedComparisonDocuments,
   selectedComparisonViews,
 } from "./comparison_selection.js";
-import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";

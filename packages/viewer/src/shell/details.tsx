@@ -4,6 +4,8 @@
 
 import type { ReactNode } from "react";
 
+import { ChevronIcon } from "@mokly/ui/icons";
+
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
@@ -17,7 +19,6 @@ import {
   VariantChips,
   VariantOfChip,
 } from "./details_rows.js";
-import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { SCHEME_LABELS, type ChangedView } from "./view_marks.js";
