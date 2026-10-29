@@ -87,29 +87,23 @@ fn warning(field: Field<'_>, path: &str, entry: &ModelEntry) -> Warning {
 }
 
 fn format_message(field: Field<'_>, path: &str) -> String {
-    match field {
-        Field::Prop => format!(
-            "prop {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
-            json_quoted(path)
-        ),
+    let subject = match field {
+        Field::Prop => format!("prop {}", json_quoted(path)),
         Field::Invocation {
             component,
             instance,
         } => format!(
-            "component {} instance {} prop {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
+            "component {} instance {} prop {}",
             json_quoted(component),
             json_quoted(instance),
             json_quoted(path),
         ),
-        Field::Schema => format!(
-            "schema keyword {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
-            json_quoted(path)
-        ),
-        Field::Control => format!(
-            "control {} is outside the JavaScript safe integer range and uses the nearest binary64 value",
-            json_quoted(path)
-        ),
-    }
+        Field::Schema => format!("schema keyword {}", json_quoted(path)),
+        Field::Control => format!("control {}", json_quoted(path)),
+    };
+    format!(
+        "{subject} is outside the JavaScript safe integer range and uses the nearest binary64 value"
+    )
 }
 
 /// Authored control metadata is checked once, before schema defaults are added.
