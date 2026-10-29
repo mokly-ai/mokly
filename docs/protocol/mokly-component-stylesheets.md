@@ -1,7 +1,5 @@
 # Component Stylesheets
 
-Status: In progress under the [built repository packages plan](../../plans/built-repository-packages.md).
-
 ## Two Kinds Of Component CSS
 
 A component's CSS reaches a document in two ways. Styles that a

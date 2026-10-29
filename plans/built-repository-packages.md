@@ -421,28 +421,37 @@ guide. Milestones 1 and 2 depend on no open decision.
 A declared value with `.`, `..`, or empty segments links the stylesheet
 that its normalized path names, under decision 3 B.
 
-- [ ] Add failing tests first beside
-      `crates/mokly-render/tests/integration/declaration_tests.rs`:
-  - [ ] A value with `..` that stays inside `repoRoot` links
+- [x] Add failing tests first beside
+      `crates/mokly-render/tests/integration/declaration_tests.rs`. They
+      are in `declared_stylesheet_tests.rs` beside it.
+  - [x] A value with `..` that stays inside `repoRoot` links
         `styles/{repository path}` on the head side and on the base side.
-  - [ ] A value with a `.` or an empty segment links the same route.
-  - [ ] A value whose path leaves `repoRoot` fails with "declares invalid
+  - [x] A value with a `.` or an empty segment links the same route.
+  - [x] A value whose path leaves `repoRoot` fails with "declares invalid
         stylesheet" and the authored value.
-  - [ ] Two spellings of one file in one component link once, and the
+  - [x] Two spellings of one file in one component link once, and the
         duplicate warning names the first authored spelling.
-  - [ ] A configured stylesheet and a declaration that spell one file
+  - [x] A configured stylesheet and a declaration that spell one file
         differently give one link at the configured position.
-- [ ] Remove the segment check from `crates/mokly-render/src/declarations.rs`.
+- [x] Remove the segment check from `crates/mokly-render/src/declarations.rs`.
       Keep the other shape checks, and keep `repository_path` as the
       confinement check.
-- [ ] Remove the status line that milestone 1 added.
-- [ ] Update the README of `mokly-render` if it states the old rule.
-- [ ] Smoke test: under `.context/built-repository-packages/smoke/`, build a
+- [x] Remove the status line that milestone 1 added.
+- [x] Update the README of `mokly-render` if it states the old rule. It does
+      not, so it did not change.
+- [x] Smoke test: under `.context/built-repository-packages/smoke/`, build a
       small consumer whose component declares a stylesheet outside the
       configuration directory. Check the link and the delivered stylesheet
       in the output.
-- [ ] Run `cargo test -p mokly-render` and
+- [x] Run `cargo test -p mokly-render` and
       `cargo xtask check --suite repository`.
+- Done on 2026-10-29 by the delegated Codex `gpt-6.1-sol` session and
+  checked. One change was requested: the configured-overlap test now lists
+  the declared file first, so that it fails when the link comes from the
+  component block. Its report: `.context/built-repository-packages/delegation/m2-report.md`.
+  The failing-first output and the checks are in
+  `.context/built-repository-packages/m2/`, and the smoke test is in
+  `.context/built-repository-packages/smoke/`.
 
 ## Milestone 3: Documentation for source targets and PostCSS reads
 

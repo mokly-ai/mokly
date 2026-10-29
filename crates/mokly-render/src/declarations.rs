@@ -63,7 +63,6 @@ pub(crate) fn validate(
             if path.is_empty()
                 || path.starts_with('/')
                 || path.contains(['\\', ':', '?', '#', '\0'])
-                || path.split('/').any(|part| matches!(part, "" | "." | ".."))
                 || !path.to_ascii_lowercase().ends_with(".css")
             {
                 return Err(RenderError::StylesheetPath {

@@ -9,6 +9,7 @@ mod config_path_tests;
 mod containment_tests;
 mod declaration_alias_tests;
 mod declaration_tests;
+mod declared_stylesheet_tests;
 mod definition_tests;
 mod dependency_tests;
 mod invocation_paths_tests;
