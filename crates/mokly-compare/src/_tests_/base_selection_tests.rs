@@ -14,10 +14,9 @@ use crate::base_render::{
     BaseProviderMock, BaseSourceFactoryMock, Changes, ChangesService, HistoricalSources,
     PreparedBase,
 };
-use crate::base_selection::{BaseLookup, GitBaseLookup};
-use crate::comparison_types::{Comparison, ComparisonMock, ComparisonRequest, ComparisonResult};
-use crate::error::Error;
-use crate::error::Result;
+use crate::base_selection::{BaseLookup, GitBaseLookup, PinnedBase};
+use crate::comparison_types::ComparisonMock;
+use crate::error::{Error, Result};
 use crate::source_failures::SourceFailuresMock;
 
 #[test]
@@ -77,35 +76,11 @@ fn pin_resolves_once_and_classification_uses_its_reference_and_commit() {
     ));
 }
 
-struct CaptureFailure;
-
-impl Comparison for CaptureFailure {
-    fn capture_base(
-        &self,
-        _before: Arc<dyn RenderGeneration>,
-    ) -> Result<Arc<dyn RenderGeneration>> {
-        Err(crate::error::Error::Graph {
-            source: GraphError::InputsChanged {
-                path: "base-render".into(),
-            },
-        })
-    }
-
-    fn compare_prepared(
-        &self,
-        _request: &ComparisonRequest,
-        _before: Arc<dyn RenderGeneration>,
-        _after: Arc<dyn RenderGeneration>,
-    ) -> Result<ComparisonResult> {
-        Err(crate::error::Error::UnsupportedManager)
-    }
-}
-
 #[test]
 fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
     let commit = ObjectId::parse(&"a".repeat(40)).unwrap();
     let repository: Arc<dyn Repository> = Arc::new(Unimock::new(()));
-    let pinned = Arc::new(crate::base_selection::PinnedBase {
+    let pinned = Arc::new(PinnedBase {
         reference: "selected".into(),
         commit: commit.clone(),
         repository,
@@ -135,7 +110,15 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
                     scripts_off: true,
                 })),
         )),
-        comparison: Arc::new(CaptureFailure),
+        comparison: Arc::new(Unimock::new(
+            ComparisonMock::capture_base
+                .next_call(matching!(_))
+                .returns(Err(Error::Graph {
+                    source: GraphError::InputsChanged {
+                        path: "base-render".into(),
+                    },
+                })),
+        )),
     };
     let config = ResolvedConfig {
         input: Config::default(),
@@ -144,7 +127,7 @@ fn capture_failure_keeps_the_scripts_off_state_on_the_base_error() {
         roots: vec![],
         authored_inputs: vec![],
     };
-    let result = service.classify(&config, None, Arc::new(Unimock::new(())), None);
+    let result: Result<_> = service.classify(&config, None, Arc::new(Unimock::new(())), None);
     assert!(matches!(
         result,
         Err(Error::Base {

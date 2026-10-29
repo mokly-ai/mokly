@@ -36,7 +36,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
                 .next_call(matching!(_))
                 .returns(Ok(PreparedBase {
                     generation: graph,
-                    scripts_off: false,
+                    scripts_off: true,
                 })),
         );
         let progress = Unimock::new(
@@ -66,8 +66,10 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
         assert_eq!(*warnings.lock().unwrap(), [dependency]);
         if active {
             assert!(result.is_ok());
+            assert!(result.unwrap().scripts_off);
         } else {
-            assert!(matches!(result, Err(error) if matches!(*error.source, Error::Cancelled)));
+            assert!(matches!(result, Err(error)
+                if error.scripts_off && matches!(*error.source, Error::Cancelled)));
         }
     }
 }

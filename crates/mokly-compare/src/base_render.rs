@@ -53,7 +53,7 @@ pub struct PreparedBase {
 
 /// A base preparation failure retains whether a scripts-off tier-two install completed.
 #[derive(Debug, thiserror::Error)]
-#[error("{source}")]
+#[error("[mokly-compare/base] {source}")]
 pub struct BasePreparationError {
     /// True only when a tier-two install supplied dependencies with scripts off.
     pub scripts_off: bool,
@@ -280,3 +280,7 @@ pub fn selected_base<'a>(config: &'a ResolvedConfig, explicit: Option<&'a str>) 
         })
         .unwrap_or("origin/main")
 }
+
+#[cfg(test)]
+#[path = "_tests_/base_render_failures_tests.rs"]
+mod base_render_failures_tests;

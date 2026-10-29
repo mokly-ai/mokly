@@ -7,16 +7,18 @@ use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilderMock;
-use mokly_compare::base_render::ChangesServiceMock;
+use mokly_compare::base_render::{BasePreparationError, ChangesServiceMock};
 use mokly_compare::error::Error;
 use mokly_model::read_contract::ContractViolation;
 use mokly_model::readers::ReadError;
+use mokly_server::error::ServerError;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildChanges, BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::BuildCancellation;
 use crate::changes_diagnostics;
 use crate::codes::Code;
+use crate::serve_errors::changes_reason;
 
 use super::build_tests::{capture_head, config, graphs, options, prepared};
 
@@ -134,11 +136,26 @@ fn capture_failure_with_scripts_off_base_keeps_the_hint_in_each_detail_path() {
             .iter()
             .any(|diagnostic| { diagnostic.message.ends_with("--base-install-scripts`.") })
     );
-    let serve_reason =
-        crate::serve_errors::changes_reason(&mokly_server::error::ServerError::Comparison {
-            source: Box::new(error),
-        });
+    let serve_reason = changes_reason(&ServerError::Comparison {
+        source: Box::new(error),
+    });
     assert!(serve_reason.ends_with("--base-install-scripts`."));
+}
+
+#[test]
+fn preparation_error_prefix_does_not_change_cli_details() {
+    let prepared = BasePreparationError::new(false, Error::Cancelled);
+    let error = Error::Base {
+        commit: "a".repeat(40),
+        scripts_off: prepared.scripts_off,
+        source: prepared.source,
+    };
+    let expected = format!("base {}: build cancelled", "a".repeat(40));
+    assert_eq!(changes_diagnostics::failure_detail(&error), expected);
+    let serve = ServerError::Comparison {
+        source: Box::new(error),
+    };
+    assert_eq!(changes_reason(&serve), expected);
 }
 
 #[test]

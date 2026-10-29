@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_catalogue::error::CatalogueError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
@@ -94,7 +95,7 @@ impl BaseProvider for AttemptBase {
             Ok(base) => base.generation.catalogue().warnings.clone(),
             Err(error) => match &*error.source {
                 Error::Catalogue {
-                    source: mokly_catalogue::error::CatalogueError::Invalid { warnings, .. },
+                    source: CatalogueError::Invalid { warnings, .. },
                 } => warnings.clone(),
                 Error::Graph { source } => source.warnings(),
                 _ => Vec::new(),

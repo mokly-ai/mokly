@@ -21,7 +21,7 @@ use mokly_compare::error::{Error, Result};
 use mokly_compare::inputs::{InputReader, SourceInputs};
 use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
 use mokly_git::tree::Limits;
-use mokly_graph::types::GraphFactory;
+use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTree;
 
@@ -38,16 +38,31 @@ pub(super) struct NativeBase {
 
 impl BaseProvider for NativeBase {
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
+        let mut scripts_off = false;
+        match self.prepare_generation(request, &mut scripts_off) {
+            Ok(generation) => Ok(PreparedBase {
+                generation,
+                scripts_off,
+            }),
+            Err(source) => Err(BasePreparationError::new(scripts_off, source)),
+        }
+    }
+}
+
+impl NativeBase {
+    fn prepare_generation(
+        &self,
+        request: &BaseRequest<'_>,
+        scripts_off: &mut bool,
+    ) -> Result<Arc<dyn RenderGeneration>> {
         if self.cancellation.requested() {
-            return Err(BasePreparationError::new(false, Error::Cancelled));
+            return Err(Error::Cancelled);
         }
         let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
             inner: request.sources.tree.clone(),
             cancellation: self.cancellation.clone(),
         });
-        let early = self
-            .early_sources(request)
-            .map_err(|source| BasePreparationError::new(false, source))?;
+        let early = self.early_sources(request)?;
         let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
         let file = request.working_config.file.to_string_lossy();
         let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
@@ -60,23 +75,13 @@ impl BaseProvider for NativeBase {
         } else {
             match loader.load(&request.working_config.repo_root, Some(&file)) {
                 Ok(config) => config,
-                Err(source) => {
-                    return Err(BasePreparationError::new(
-                        false,
-                        Error::Catalogue { source },
-                    ));
-                }
+                Err(source) => return Err(Error::Catalogue { source }),
             }
         };
         let discovery: &dyn Discovery = &Discoverer { tree: tree.clone() };
         let inventory = match discovery.discover(&config, None) {
             Ok(inventory) => inventory,
-            Err(source) => {
-                return Err(BasePreparationError::new(
-                    false,
-                    Error::Catalogue { source },
-                ));
-            }
+            Err(source) => return Err(Error::Catalogue { source }),
         };
         let needs_sidecar = config.input.postcss.is_some()
             || config.input.renderer.is_some()
@@ -84,29 +89,21 @@ impl BaseProvider for NativeBase {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
         let base = if needs_sidecar {
-            Some(
-                self.dependencies
-                    .prepare(
-                        request,
-                        &config,
-                        &self.runtime.dependency_usage.directories(),
-                        &self.runtime.dependency_usage.unmapped_directories(),
-                        early,
-                    )
-                    .map_err(|source| BasePreparationError::new(false, source))?,
-            )
+            Some(self.dependencies.prepare(
+                request,
+                &config,
+                &self.runtime.dependency_usage.directories(),
+                &self.runtime.dependency_usage.unmapped_directories(),
+                early,
+            )?)
         } else {
             None
         };
-        let scripts_off = base.as_ref().is_some_and(|base| {
+        *scripts_off = base.as_ref().is_some_and(|base| {
             base.dependencies.tier == Tier::Installed && !request.install_scripts
         });
         if let Some(base) = &base {
-            request
-                .sources
-                .sources
-                .attach(base.sources.clone())
-                .map_err(|source| BasePreparationError::new(scripts_off, source))?;
+            request.sources.sources.attach(base.sources.clone())?;
         }
         let warning = if needs_sidecar {
             None
@@ -121,11 +118,10 @@ impl BaseProvider for NativeBase {
                     .iter()
                     .cloned()
                     .collect::<Vec<_>>(),
-            )
-            .map_err(|source| BasePreparationError::new(scripts_off, source))?
+            )?
         };
         if self.cancellation.requested() {
-            return Err(BasePreparationError::new(scripts_off, Error::Cancelled));
+            return Err(Error::Cancelled);
         }
         let runtime = Arc::new(Runtime::new(
             tree.clone(),
@@ -143,41 +139,23 @@ impl BaseProvider for NativeBase {
         };
         let mut catalogue = match builder.prepare(&config, None) {
             Ok(catalogue) => catalogue,
-            Err(source) => {
-                return Err(BasePreparationError::new(
-                    scripts_off,
-                    Error::Catalogue { source },
-                ));
-            }
+            Err(source) => return Err(Error::Catalogue { source }),
         };
         catalogue.warnings.extend(warning);
         if self.cancellation.requested() {
-            return Err(BasePreparationError::new(scripts_off, Error::Cancelled));
+            return Err(Error::Cancelled);
         }
         let factory: &dyn GraphFactory = runtime.as_ref();
         let graph = match factory.create(&config) {
             Ok(graph) => graph,
-            Err(source) => {
-                return Err(BasePreparationError::new(
-                    scripts_off,
-                    Error::Graph { source },
-                ));
-            }
+            Err(source) => return Err(Error::Graph { source }),
         };
         match graph.prepare(config, catalogue, None) {
-            Ok(generation) => Ok(PreparedBase {
-                generation,
-                scripts_off,
-            }),
-            Err(source) => Err(BasePreparationError::new(
-                scripts_off,
-                Error::Graph { source },
-            )),
+            Ok(generation) => Ok(generation),
+            Err(source) => Err(Error::Graph { source }),
         }
     }
-}
 
-impl NativeBase {
     /// Before the base configuration loads, leases an existing complete extraction
     /// and attaches it to the base sources, when the working configuration names a
     /// renderer or PostCSS. This optional step never builds an extraction, and a
@@ -250,3 +228,7 @@ impl Discovery for Discovered {
 #[cfg(test)]
 #[path = "_tests_/changes_base_tests.rs"]
 mod changes_base_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_base_success_tests.rs"]
+mod changes_base_success_tests;
