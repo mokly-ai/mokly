@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_compare::comparison_types::{ComparisonResult, EntryClassification};
 use mokly_graph::cache::Artifact;
@@ -64,7 +65,7 @@ pub(super) fn artifact(document: bool) -> Arc<Artifact> {
         content_type: "text/html".into(),
         fragment: None,
         document: document.then(|| Composed {
-            tree: parse::document("<p>Historical page</p>"),
+            tree: parse::html(DeliveredHtml::document("<p>Historical page</p>")),
             usage: CatalogueUsage::Ready {
                 instances: vec![],
                 slots: vec![],

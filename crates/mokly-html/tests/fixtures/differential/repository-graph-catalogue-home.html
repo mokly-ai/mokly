@@ -1,0 +1,45 @@
+---
+title: Home & account
+props:
+  label: '<Save & "go">'
+  visible: true
+  resource: ../../specs/assets/public.svg
+  badge: { text: Ready }
+variants:
+  - slug: hidden
+    title: Hidden
+    props: { visible: false, resource: ../../../specs/assets/public.svg }
+---
+
+<main>
+  <h1 id="home">{{label}}</h1>
+  <p title="prefix {{label}} suffix">{{badge.text}} {{unclosed</p>
+  <p mokly-viewport="mobile">Mobile</p>
+  <p mokly-viewport="desktop">Desktop</p>
+  <ui-button
+    mokly-instance="primary"
+    label="$label"
+    count="3"
+    disabled="false"
+    badge="$badge"
+  ></ui-button>
+  <ui-button mokly-instance="escaped" label="$$literal" count="4"></ui-button>
+  <mokly-ignore-scope enabled="false">
+    <ui-card title="Details" ignored="false" mokly-if="$visible">
+      <strong slot="header">Supplier {{label}}</strong>
+      <span>Supplied text</span>
+      <ui-button
+        label="Slot action"
+        mokly-instance="slot-action"
+        disabled="false"
+      ></ui-button>
+    </ui-card>
+  </mokly-ignore-scope>
+  <mokly-ignore id="counter" material-key="revision"
+    ><time>Today</time></mokly-ignore
+  >
+  <a href="mock:guide#guide">Guide</a>
+  <div to="page" fragment="summary" class="card">Statement</div>
+  <button to="page" disabled>Inactive</button>
+  <img src="{{resource}}" alt="Public" />
+</main>

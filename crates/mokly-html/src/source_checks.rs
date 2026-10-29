@@ -1,14 +1,16 @@
 //! Token checks retain duplicate attributes that an HTML tree must discard.
 
-use html5gum::{Error, Token};
-use mokly_catalogue::html_tokens;
+use mokly_catalogue::html_input::{DeliveredHtml, HtmlInput};
+use mokly_catalogue::html_tokens::{self, Error, Token};
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 
 /// Reject reserved authored metadata before HTML5 parsing removes duplicates.
-pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
-    for parsed in html_tokens::parse(source) {
+pub fn validate<'a>(input: impl Into<HtmlInput<'a>>, fragment_markers: bool) -> Result<()> {
+    let input = input.into();
+    let source = input.text();
+    for parsed in html_tokens::parse(input) {
         match parsed.token {
             Token::StartTag(_) if parsed.reserved_navigation => {
                 return Err(invalid(
@@ -40,12 +42,13 @@ pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
 }
 
 /// Validate callback page structure before the parser can imply missing wrappers.
-pub fn page(source: &str) -> Result<()> {
+pub fn page(html: DeliveredHtml<'_>) -> Result<()> {
+    let source = html.text();
     let mut counts = [0, 0, 0];
-    for parsed in html_tokens::parse(source) {
+    for parsed in html_tokens::parse(html) {
         if let Token::StartTag(tag) = parsed.token {
             for (index, name) in ["html", "head", "body"].iter().enumerate() {
-                if tag.name.as_ref() == name.as_bytes() {
+                if tag.name.as_slice() == name.as_bytes() {
                     counts[index] += 1;
                 }
             }

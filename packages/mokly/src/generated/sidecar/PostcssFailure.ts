@@ -3,7 +3,7 @@
 // prettier-ignore
 export type PostcssFailure = { "kind": "load",
 /**
- * Configuration-relative module path.
+ * Repository-relative module path without `.` or `..` segments.
  */
 module: string,
 /**
@@ -31,7 +31,7 @@ plugin: string, } | { "kind": "factory",
  */
 plugin: string,
 /**
- * Configuration module.
+ * Repository-relative module path without `.` or `..` segments.
  */
 module: string,
 /**

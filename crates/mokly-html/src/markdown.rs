@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_model::axes::ColorScheme;
 use pulldown_cmark::{CowStr, Event, Options, Parser, Tag, TagEnd, html};
 
@@ -150,7 +151,7 @@ pub fn render(
     }
     let mut html_body = String::new();
     html::push_html(&mut html_body, rewritten.into_iter());
-    let mut rendered = parse::fragment(&html_body);
+    let mut rendered = parse::html(DeliveredHtml::fragment(&html_body));
     table_alignment(&mut rendered);
     let mut document = assembly::document(
         title,
