@@ -28,7 +28,8 @@ leaves out the components it renders, such as the change mark of the
 appearance selector. The rules read the shell's colour tokens, such as
 `--chrome-surface`, which the `@mokly/viewer` stylesheet declares; a host that
 renders a component without that stylesheet declares them itself, as the
-design catalogue's `examples/basic/design.css` does. The viewer
+design catalogue's `examples/basic/design.css` does. The design catalogue's
+stylesheets also declare the segmented-control `.mbk-seg` rules. The viewer
 bundles `styles.css` into its own `shell.css` and `styles.css`, so a delivery
 or a host loads one stylesheet as before. A shell container that needs the
 store stays in `@mokly/viewer` and composes a package component.

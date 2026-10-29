@@ -7,11 +7,12 @@ the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library. `chrome/appearance-selector` and `controls/comparison-toolbar`
 render the `@mokly/ui` components that the shipped shell uses: each view
-imports its component, and each component sheet the package stylesheet, by
-its repository path under `packages/ui/src`, so each side of a comparison
-renders its own package files. The other components keep their own markup
-and styles here until the package provides them. The Mokly browser shell
-itself remains in the package source.
+imports its component, and each component sheet imports the package
+stylesheets of the component and of each package component that it renders,
+each by its repository path under `packages/ui/src`, so each side of a
+comparison renders its own package files. The other components keep their
+own markup and styles here until the package provides them. The Mokly
+browser shell itself remains in the package source.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`

@@ -134,9 +134,10 @@ the rule. Rules for one application, package, or feature live in the
   components in `examples/basic/specs/design/library`. Each shared
   component's own styles live in `examples/basic/design-library`. For a
   shared component that `@mokly/ui` provides, the view imports the package
-  component and the sheet imports the package stylesheet, each by its
-  repository path under `packages/ui/src`. Shared, layout, and global
-  design styles stay in the mixed `examples/basic/design*.css` files.
+  component and the sheet imports the package stylesheets of the component
+  and of each package component that it renders, each by its repository path
+  under `packages/ui/src`. Shared, layout, and global design styles stay in
+  the mixed `examples/basic/design*.css` files.
 
 ## Review focus
 

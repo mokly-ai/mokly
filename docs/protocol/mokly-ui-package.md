@@ -38,5 +38,4 @@ give the cascade precedence of the package CSS.
 The package rules read the colour tokens and the segmented-control
 `.mbk-seg` rules that the viewer stylesheet declares. A page that renders
 package components without the viewer stylesheet declares those tokens and
-rules itself. The design catalogue's `examples/basic/design.css` supplies
-them.
+rules itself.
