@@ -38,7 +38,6 @@ test("a removed component variant keeps its own workspace lists", () => {
   const historical = Object.values(rawDetails.removed)[0]!;
   assert.ok(historical.detailId);
   const removedDetail = structuredClone(rawDetails.current[variant.path]!);
-  delete removedDetail.deploymentId;
   delete removedDetail.revision;
   delete removedDetail.before;
   removedDetail.entry = {
