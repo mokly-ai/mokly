@@ -1,0 +1,11 @@
+# Stabilize verification registry cleanup
+
+- **Severity:** Low. **Effort:** Small.
+- **Kind:** Outside the scope.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
+- **Location:** `tests/serve_process.test.ts`.
+- **Reason:** The review found this problem outside the change that it reviewed.
+
+The Serve group ownership test failed once because its verification owner had no parent. The isolated rerun passed. The suspected source is concurrent process-registry cleanup.
+
+The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4436).

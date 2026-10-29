@@ -1,0 +1,11 @@
+# Align shell breakpoint source claims
+
+- **Severity:** Low. **Effort:** Small.
+- **Kind:** Outside the scope.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
+- **Location:** `packages/viewer/src/shell/layout_breakpoint.ts` and the shell README.
+- **Reason:** The review found this problem outside the change that it reviewed.
+
+The docs say every shell rule reads `NARROW_SHELL`, but the phone layout and compact search use their own widths.
+
+The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4839).

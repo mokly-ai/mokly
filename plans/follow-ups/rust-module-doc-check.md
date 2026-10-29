@@ -1,0 +1,11 @@
+# Decide on a Rust module documentation check
+
+- **Severity:** Low. **Effort:** Medium.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-29, from PR #223 and its completed plan.
+- **Location:** The repository Rust checks.
+- **Reason:** The review or plan deferred this work until after PR #223.
+
+A review proposed an xtask check that every Rust file starts with a module doc. This adds a stricter gate and needs user approval.
+
+The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/usage-list-in-parent-detail.md?plain=1#L381).

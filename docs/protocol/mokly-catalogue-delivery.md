@@ -1,6 +1,6 @@
 # Catalogue Projection And Delivery
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+Status: Follow-up work remains in the [related documents item](../../plans/follow-ups/related-docs-generation.md).
 
 Continuation of the [public catalogue contract](./mokly-catalogue.md).
 

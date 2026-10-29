@@ -1,0 +1,11 @@
+# Keep the embedded compact search at 560 pixels
+
+- **Severity:** Low. **Effort:** Small.
+- **Kind:** Outside the scope.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
+- **Location:** `packages/viewer/src/viewer/styles.ts`.
+- **Reason:** The review found this problem outside the change that it reviewed.
+
+The compact-search container query uses `35rem`. A host root font size can violate the required 560-pixel boundary.
+
+The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L4869).

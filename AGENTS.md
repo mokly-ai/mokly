@@ -104,9 +104,10 @@ the rule. Rules for one application, package, or feature live in the
   contract for the Node, browser, and Rust tests. Read it with the
   `deterministic-tests` skill.
 - A protocol, architecture, or README page whose behaviour is not
-  implemented yet starts with one line below its title:
-  `Status: In progress under the [plan name](link to the plan).` That line
-  is the page's only plan link. Remove it when the behaviour is implemented.
+  implemented yet starts with one status line below its title. Link the line
+  to the active plan or follow-up item that owns the missing behaviour. The
+  page has no other link to that work item. Remove the line when the behaviour
+  is implemented.
   The guides under `docs/guides` ship with the npm package, describe the
   released product, and carry no status line.
 - A page names an earlier format number or a removed input only where its

@@ -1,0 +1,18 @@
+# Keep the local gate within its run limit
+
+- **Severity:** Low. **Effort:** Medium.
+- **Kind:** Needs decision.
+- **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan.
+- **Location:** See the affected paths in the task below.
+- **Reason:** PR #199 merged before this work. The completed plan is now being removed.
+
+## Task
+
+Resolve user item 188 (process): the local executor gate on
+`a59b16f1` took 114 of its 120-minute detach limit (batch 31: 86
+minutes), so a later local gate can pass the limit. Severity Low,
+process, effort not recorded. Options (estimate): A, raise the detach
+limit for local gates in the delegate rules to 3 hours; B, find the
+slowest suite and reduce its cost. Recommended: B.
+
+The full historical record is in the [Rust rebuild plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/rust-rebuild.md?plain=1#L6461).
