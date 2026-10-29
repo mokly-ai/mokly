@@ -1,6 +1,7 @@
 //! Declared shell, JSON, document, asset, and event routes share one fixed state.
 
 use mokly_model::{canonical, detail_context, readers};
+use mokly_server::publication::{PublicationWriter, Publications};
 
 use super::support;
 
@@ -190,6 +191,42 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
     assert_eq!(
         public.bytes().await.unwrap(),
         std::fs::read(harness.root.path().join("specs/assets/public.svg")).unwrap()
+    );
+    harness.close().await;
+}
+
+#[tokio::test]
+async fn replacement_keeps_an_unchanged_document_asset_reachable() {
+    let harness = support::Harness::new().await;
+    let mut updates = harness.publications.subscribe().updates;
+    let document = harness
+        .client
+        .get(format!(
+            "{}/static/mokly-generated/home/index.mobile.html",
+            harness.url
+        ))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(document.status(), 200);
+    while harness.publications.current().index.revision == 1 {
+        updates.recv().await.unwrap();
+    }
+    let asset = format!("{}/static/specs/assets/public.svg", harness.url);
+    assert_eq!(
+        harness.client.get(&asset).send().await.unwrap().status(),
+        200
+    );
+
+    let replacement = harness.replacement();
+    assert_eq!(
+        harness.publications.current().document_keys["home/index.mobile.html"],
+        replacement.document_keys["home/index.mobile.html"]
+    );
+    assert!(harness.publications.replace(replacement));
+    assert_eq!(
+        harness.client.get(asset).send().await.unwrap().status(),
+        200
     );
     harness.close().await;
 }

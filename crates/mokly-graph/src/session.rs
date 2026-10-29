@@ -71,6 +71,18 @@ impl Session {
     pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
         for plan in input.plans.values() {
             graph.inputs.resources.retain(&plan.resource_key);
+            graph.inputs.closures.retain(&plan.key.0);
+        }
+        let mut public_files = BTreeSet::new();
+        for plan in input.plans.values() {
+            public_files.extend(
+                graph
+                    .inputs
+                    .closures
+                    .paths(&plan.key.0)
+                    .into_iter()
+                    .filter(|path| input.policy.check(path).is_ok()),
+            );
         }
         Self {
             state: Arc::new(State {
@@ -87,7 +99,7 @@ impl Session {
                 observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
-                public_files: Arc::new(Mutex::new(BTreeSet::new())),
+                public_files: Arc::new(Mutex::new(public_files)),
                 matchers: Arc::new(input.matchers),
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
@@ -228,6 +240,7 @@ impl Drop for State {
     fn drop(&mut self) {
         for plan in self.plans.values() {
             self.inputs.resources.release(&plan.resource_key);
+            self.inputs.closures.release(&plan.key.0);
         }
     }
 }
