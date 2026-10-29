@@ -125,6 +125,23 @@ can declare non-CSS resources. Rendered output, matching CSS rules, and used
 resources determine comparison changes.
 See [styles](/docs/authoring/styles/).
 
+A `stylesheets` value is relative to the configuration's directory, like a
+local stylesheet in `mokly.config.json`. It is not relative to the module
+that declares it. A `..` segment moves up one directory. A `.` segment or an
+empty segment has no effect. The resulting path must stay inside `repoRoot`.
+
+```ts
+// catalogue/components/button.mockup.tsx
+// The configuration is catalogue/mokly.config.json with "repoRoot": "..".
+export const button = defineComponent({
+  // title, description, relatedDocs, propSchema, and render
+  stylesheets: ["../packages/ui/src/button/button.css"],
+});
+```
+
+The value starts from `catalogue`, not from `catalogue/components`. It names
+`packages/ui/src/button/button.css` in the repository.
+
 ## Register an HTML component
 
 Save a `.component.html` file inside a configured root. Declare its custom

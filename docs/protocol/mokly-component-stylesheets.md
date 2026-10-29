@@ -1,5 +1,7 @@
 # Component Stylesheets
 
+Status: In progress under the [built repository packages plan](../../plans/built-repository-packages.md).
+
 ## Two Kinds Of Component CSS
 
 A component's CSS reaches a document in two ways. Styles that a
@@ -38,19 +40,29 @@ export const action = defineComponent({
 });
 ```
 
-Each value is a nonempty, normalized POSIX path, relative to the
-configuration file like a configured local stylesheet, to an existing,
-regular stylesheet input inside `repoRoot` with a case-insensitive
-`.css` suffix. Reject absolute paths, backslashes, empty, dot, or parent segments,
-query or fragment suffixes, other URL schemes, HTTP(S) URLs, non-CSS files,
-missing files, directories, protected source, and paths whose real targets
-escape the repository. A CSS parse or bundle failure is fatal and uses the diagnostics of
+Each value is a nonempty POSIX path with a case-insensitive `.css` suffix.
+The value names the path that it reaches from the configuration directory
+after Mokly removes `.`, `..`, and empty segments. That path must stay inside
+`repoRoot` and name an existing, regular stylesheet input. Reject absolute
+paths, backslashes, query or fragment suffixes, other URL schemes, and
+HTTP(S) URLs. Also reject non-CSS files, missing files, directories,
+protected source, and paths whose real targets escape the repository. A
+validation message names the authored value.
+
+Declarations use the
+[path rule of configured local stylesheets](./mokly-configuration.md#shape),
+so that one rule serves both. A package specifier that each side of a
+comparison resolves was rejected, because it adds a second resolution path
+for declarations.
+
+A CSS parse or bundle failure is fatal and uses the diagnostics of
 [imported styles](./mokly-imported-styles-errors.md). The
-[public closure policy](./mokly-public-closure.md) governs path admission
-before a declaration is accepted; it rejects a symbolic link at every
-path component, even when the target stays confined, for declared
-CSS and configured CSS alike. A file private through an entry root, a module import, or another authoring
-input cannot be declared, except for the configured CSS overlap below.
+[public closure policy](./mokly-public-closure.md) decides path admission
+before Mokly accepts a declaration. It rejects a symbolic link at every
+component of the path that the value names, even when the target stays
+confined. This applies to declared CSS and configured CSS alike. A file
+private through an entry root, a module import, or another authoring input
+cannot be declared, except for the configured CSS overlap below.
 
 Preserve authored order and group paths by resolved real file. If one
 component lists the same validated file twice, keep its first position, link

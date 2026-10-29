@@ -394,22 +394,27 @@ stylesheet.
 State decision 3 B in the component stylesheet contract and the components
 guide. Milestones 1 and 2 depend on no open decision.
 
-- [ ] `docs/protocol/mokly-component-stylesheets.md`, Declaration And Local
+- [x] `docs/protocol/mokly-component-stylesheets.md`, Declaration And Local
       Inputs: a value names the path that it reaches from the configuration
       directory after `.`, `..`, and empty segments are removed, as a
       configured local stylesheet does. The path must stay inside
       `repoRoot`. Remove empty, dot, and parent segments from the rejected
       forms. Put decision 3 B next to the rule, with the rejected package
       specifier and its reason.
-- [ ] Add the status line below the title of that page. Milestone 2 removes
+- [x] Add the status line below the title of that page. Milestone 2 removes
       it.
-- [ ] Align any sentence of `docs/protocol/mokly-components.md`,
+- [x] Align any sentence of `docs/protocol/mokly-components.md`,
       `docs/protocol/mokly-public-closure.md`, or
-      `docs/protocol/mokly-configuration.md` that contradicts the rule.
-- [ ] Add the rule, with one example, to the Component styles section of
+      `docs/protocol/mokly-configuration.md` that contradicts the rule. None
+      of the three contradicts it, so none changed.
+- [x] Add the rule, with one example, to the Component styles section of
       the [components guide](../docs/guides/authoring/components.md).
-- [ ] Run `npm run format:check` and
-      `npm test -- tests/markdown_links.test.ts`.
+- [x] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`. The link test ran as
+      `node --import tsx --test`, which skips only the build, with the four
+      guide tests.
+- Done on 2026-10-29 by the delegated Claude Opus 5.5 session and checked.
+  Its report: `.context/built-repository-packages/delegation/m1-report.md`.
 
 ## Milestone 2: Declared stylesheet paths in `mokly-render`
 
