@@ -27,8 +27,8 @@ export function start(
     },
   });
   const timings = timingCollector();
-  const stdoutLines = completeLineObserver(() => onOutputLine?.());
-  const stderrLines = completeLineObserver(() => onOutputLine?.());
+  const stdoutLines = onOutputLine && completeLineObserver(onOutputLine);
+  const stderrLines = onOutputLine && completeLineObserver(onOutputLine);
   child.stderr.on("data", (chunk) => timings.accept(chunk));
   let stdout = "",
     stderr = "",
@@ -51,11 +51,11 @@ export function start(
   );
   child.stdout.on("data", (chunk) => {
     stdout = (stdout + String(chunk)).slice(-512 * 1024);
-    stdoutLines(chunk);
+    stdoutLines?.(chunk);
   });
   child.stderr.on("data", (chunk) => {
     stderr = (stderr + String(chunk)).slice(-512 * 1024);
-    stderrLines(chunk);
+    stderrLines?.(chunk);
   });
   const output = () => stdout + "\n" + stderr;
   const done = new Promise<void>((resolve, reject) => {

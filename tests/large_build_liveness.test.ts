@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { once } from "node:events";
 import fs from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
 import path from "node:path";
 import test from "node:test";
 
 import type { AcceptanceBuild } from "../scripts/large/acceptance_build.js";
 import { benchmark } from "../scripts/large/benchmark.js";
 import {
+  buildLiveness,
   buildLivenessMessage,
   completeLineObserver,
   outputLiveness,
@@ -49,8 +54,7 @@ const acceptanceBuild: AcceptanceBuild = {
 
 async function fixtureWithCli(
   t: { after(callback: () => void): void },
-  ignoresTermination = false,
-  source = `${ignoresTermination ? "process.on('SIGTERM', () => {});" : "process.on('SIGTERM', () => process.exit(0));"} setInterval(() => {}, 1000);`,
+  source = "setInterval(() => {}, 1000);",
 ) {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/large-build-liveness-"),
@@ -73,18 +77,29 @@ async function fixtureWithCli(
   };
 }
 
-test("a complete line before each window keeps build liveness running", () => {
-  const timer = new ManualTimer();
-  let expired = 0;
-  const liveness = outputLiveness(300_000, () => expired++, timer);
-
+test("a complete line before each window keeps a build running across several windows", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let complete = () => {};
+  const done = new Promise<void>((resolve) => {
+    complete = resolve;
+  });
+  let stopped = 0;
+  const liveness = buildLiveness({ done }, "/fixture", 300_000, async () => {
+    stopped++;
+    complete();
+  });
+  const pending = liveness.wait();
+  const stdout = completeLineObserver(liveness.line);
+  const stderr = completeLineObserver(liveness.line);
   for (let window = 0; window < 4; window++) {
-    const previous = timer.entries.at(-1)!;
-    liveness.line();
-    timer.fire(previous);
-    assert.equal(expired, 0);
+    t.mock.timers.tick(299_999);
+    (window % 2 === 0 ? stdout : stderr)(Buffer.from("progress\n"));
+    assert.equal(stopped, 0);
   }
-  liveness.finish();
+  complete();
+  await pending;
+  t.mock.timers.tick(300_000);
+  assert.equal(stopped, 0);
 });
 
 test("a silent build expires its liveness window", () => {
@@ -155,41 +170,74 @@ test("a silent build reports liveness and its reservation path", async (t) => {
   const result = report.results[0];
   assert.ok(result && typeof result === "object" && "reason" in result);
   assert.match(String(result.reason), /harness liveness limit/);
+  assert.ok((await fs.stat(lock)).isDirectory());
 });
 
-test("a build with a line in each window stays measured", async (t) => {
+test("builds share acceptance and forward complete lines from both output streams", async (t) => {
   const fixture = await fixtureWithCli(
     t,
-    false,
-    "for (const line of ['one', 'two', 'three', 'four']) process.stderr.write(line + '\\n');",
+    "process.stdout.write('one\\ntwo\\npartial'); process.stderr.write('three\\nfour\\npartial');",
   );
   const timer = new ManualTimer();
-  const report = await benchmark(fixture, ["build"], 1, {
+  let acceptanceCalls = 0;
+  const report = await benchmark(fixture, ["build", "build"], 1, {
     memoryStopKiB: 0,
-    acceptanceForFixture: async () => acceptanceBuild,
+    acceptanceForFixture: async () => {
+      acceptanceCalls++;
+      return acceptanceBuild;
+    },
     buildLivenessTimer: timer,
   });
 
-  const result = report.results[0];
-  assert.ok(result && typeof result === "object" && "status" in result);
-  assert.equal(result.status, "measured");
-  assert.equal(timer.entries.length, 5);
+  assert.equal(acceptanceCalls, 1);
+  assert.equal(report.results.length, 2);
+  for (const result of report.results) {
+    assert.ok(result && "status" in result && "acceptanceBuild" in result);
+    assert.equal(result.status, "measured");
+    assert.deepEqual(result.acceptanceBuild, acceptanceBuild);
+  }
+  assert.equal(timer.entries.length, 10);
   assert.ok(timer.entries.every((entry) => entry.cancelled));
 });
 
 test("SIGKILL after a liveness expiry still reports the liveness message", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
-  t.after(() => t.mock.timers.reset());
-  const fixture = await fixtureWithCli(t, true);
-  const timer = new ManualTimer();
-  const pending = benchmark(fixture, ["build"], 1, {
-    memoryStopKiB: 0,
-    acceptanceForFixture: async () => acceptanceBuild,
-    buildLivenessTimer: timer,
+  const fixture = await fixtureWithCli(
+    t,
+    "process.on('SIGTERM', () => {}); process.stderr.write('ready\\n'); setInterval(() => {}, 1000);",
+  );
+  let spawned = (_child: ChildProcess) => {};
+  const started = new Promise<ChildProcess>((resolve) => {
+    spawned = resolve;
   });
-  await new Promise<void>((resolve) => setImmediate(resolve));
-  timer.fire(timer.entries[0]!);
+  const spawn = childProcess.spawn;
+  t.mock.method(childProcess, "spawn", (...args: Parameters<typeof spawn>) => {
+    const child = spawn(...args);
+    child.once("spawn", () => spawned(child));
+    return child;
+  });
+  syncBuiltinESMExports();
+  t.after(() => {
+    t.mock.restoreAll();
+    syncBuiltinESMExports();
+  });
+  const pending = assert.rejects(
+    benchmark(fixture, ["build"], 1, {
+      memoryStopKiB: 0,
+      acceptanceForFixture: async () => acceptanceBuild,
+    }),
+    {
+      message:
+        "Build wrote no output line for 300 seconds, the harness liveness limit.",
+    },
+  );
+  const child = await started;
+  assert.ok(child.stderr);
+  await once(child.stderr, "data");
+  t.mock.timers.tick(299_999);
+  assert.equal(child.signalCode, null);
+  t.mock.timers.tick(1);
   t.mock.timers.tick(10_000);
-
-  await assert.rejects(pending, /Build wrote no output line for 300 seconds/);
+  await pending;
+  assert.equal(child.signalCode, "SIGKILL");
 });

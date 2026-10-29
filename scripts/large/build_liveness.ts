@@ -1,7 +1,6 @@
 /** Track complete child-output lines and report stalled large builds. */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { StringDecoder } from "node:string_decoder";
 
 export interface LivenessTimer {
   schedule(callback: () => void, delayMs: number): () => void;
@@ -21,12 +20,17 @@ export function outputLiveness(
   timer: LivenessTimer = systemTimer,
 ) {
   let active = true;
-  let cancel = timer.schedule(expired, windowMs);
+  const expire = () => {
+    if (!active) return;
+    active = false;
+    expired();
+  };
+  let cancel = timer.schedule(expire, windowMs);
   return {
     line() {
       if (!active) return;
       cancel();
-      cancel = timer.schedule(expired, windowMs);
+      cancel = timer.schedule(expire, windowMs);
     },
     finish() {
       if (!active) return;
@@ -38,15 +42,43 @@ export function outputLiveness(
 
 /** Notify once for each newline, including lines split across child chunks. */
 export function completeLineObserver(onLine: () => void) {
-  const decoder = new StringDecoder("utf8");
-  let partial = "";
   return (chunk: string | Uint8Array) => {
-    const text =
-      partial +
-      (typeof chunk === "string" ? chunk : decoder.write(Buffer.from(chunk)));
-    const lines = text.split("\n");
-    partial = lines.pop() ?? "";
-    for (const _line of lines) onLine();
+    for (const byte of chunk) if (byte === 10 || byte === "\n") onLine();
+  };
+}
+
+/** Preserve the liveness failure when graceful shutdown escalates. */
+export function buildLiveness(
+  running: { done: Promise<void> },
+  root: string,
+  windowMs: number,
+  shutdown: () => Promise<void>,
+  timer?: LivenessTimer,
+) {
+  let expired = false;
+  const watch = outputLiveness(
+    windowMs,
+    () => {
+      expired = true;
+      void shutdown().catch(() => {});
+    },
+    timer,
+  );
+  return {
+    ...watch,
+    get expired() {
+      return expired;
+    },
+    async wait() {
+      try {
+        await running.done;
+      } catch (error) {
+        if (!expired) throw error;
+      } finally {
+        watch.finish();
+      }
+      if (expired) throw new Error(await buildLivenessMessage(root, windowMs));
+    },
   };
 }
 
