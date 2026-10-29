@@ -8,7 +8,8 @@ Cargo workspace under `crates/`. The `@mokly/mokly` package, which holds the
 `packages/viewer`. The example catalogue is under `examples/basic`, the
 tooling tests and browser specs are under `tests/`, the viewer tests are
 under `packages/viewer/tests`, and the Rust verification task runner is under
-`xtask/`. The protocol docs under `docs/protocol` are the spec.
+`xtask/`, with the repository file rules in `xtask/tests/repository_rules`.
+The protocol docs under `docs/protocol` are the spec.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -71,7 +72,7 @@ the rule. Rules for one application, package, or feature live in the
   every failed suite. Rerun one failed suite with `--suite <name>`.
 - Format: `npm run format` and `cargo fmt --all`.
 - Markdown check: `npm run format:check` and
-  `npm test -- tests/markdown_links.test.ts`.
+  `cargo test -p xtask --test repository_rules markdown_links`.
 - Mockup check, after you change an example entry, the renderer, the
   configuration, or a configured style: `npm run build`, then
   `npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example`.
@@ -86,8 +87,8 @@ the rule. Rules for one application, package, or feature live in the
 - `cargo xtask rust-file-length-lint` caps Rust files under `xtask/` and
   `crates/` at 300 lines. Every run audits every Rust file there. There is
   no override.
-- `tests/markdown_links.test.ts` checks the local links and anchors in
-  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
+- The `markdown_links` tests of `xtask/tests/repository_rules` check the local
+  links and anchors in `AGENTS.md`, `docs/`, `plans/`, and every `README.md`.
 - Never commit build output. `mokly-static/` and every `--out` directory
   stay ignored by Git. Commit the authored specs, configuration, components,
   and CSS under `examples/basic/`.

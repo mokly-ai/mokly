@@ -5025,14 +5025,22 @@ dependencies = [
  "chrono",
  "clap",
  "ctrlc",
+ "fancy-regex",
  "mokly-git",
  "mokly-model",
  "mokly-platform",
  "mokly-sidecar",
+ "percent-encoding",
+ "pulldown-cmark",
+ "regex",
  "serde_json",
  "sha2",
+ "tempfile",
  "thiserror",
  "unimock",
+ "url",
+ "walkdir",
+ "yaml-rust2",
 ]
 
 [[package]]

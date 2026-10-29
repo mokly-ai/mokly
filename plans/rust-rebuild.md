@@ -6051,7 +6051,8 @@ does not ask the user before the merge.
       not recorded. Recommended: A. C best protects later branches.
 
 - [ ] Resolve user item 132 (actionlint review finding): the label
-      coverage test misses workflow labels. `tests/actionlint_config.test.ts`
+      coverage test misses workflow labels.
+      `xtask/tests/repository_rules/workflows/actionlint_tests.rs`
       scans only `.yml` workflows. It also ignores a job's own `runs-on`
       label when the job also has a matrix, as three `ci.yml` jobs do.
       Severity Low, effort Small. Options: A, include `.yaml` workflows and
@@ -6733,7 +6734,7 @@ does not ask the user before the merge.
 - Outside the W2 review scope: `examples/basic/specs/design/browse/loading/screens.tsx`:
   the Loading and recovery designs show the preview in the stage, but the
   product shows "Loading preview…". Separate branch.
-- Outside the 200 B scope: `tests/npm_pin.test.ts:48` matches only an exact
+- Outside the 200 B scope: `xtask/tests/repository_rules/workflows/npm_pin_tests.rs:42` matches only an exact
   `npm ci` command, so it skips `npm ci --ignore-scripts`. Separate branch.
 - Outside the 200 B scope: `docs/protocol/npm-bootstrap.md:145`: the older
   sections name a test file and describe how the code works, against the

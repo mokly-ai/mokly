@@ -19,7 +19,7 @@ function readTokens(block: string): Map<string, string> {
 }
 
 /** Both palettes exactly as the shared design stylesheet declares them. */
-export async function designPalette(): Promise<
+async function designPalette(): Promise<
   Record<Appearance, Map<string, string>>
 > {
   const source = await fs.readFile(
@@ -31,39 +31,6 @@ export async function designPalette(): Promise<
   if (!light?.[1] || !dark?.[1])
     throw new Error("design.css is missing a palette block");
   return { light: readTokens(light[1]), dark: readTokens(dark[1]) };
-}
-
-function channel(value: number): number {
-  const ratio = value / 255;
-  return ratio <= 0.04045 ? ratio / 12.92 : ((ratio + 0.055) / 1.055) ** 2.4;
-}
-
-/** Relative luminance of an opaque `#rgb` or `#rrggbb` color. */
-function luminance(color: string): number {
-  const hex = color.trim().replace("#", "");
-  const full =
-    hex.length === 3
-      ? hex
-          .split("")
-          .map((part) => part + part)
-          .join("")
-      : hex;
-  if (!/^[0-9a-fA-F]{6}$/.test(full))
-    throw new Error(`not an opaque colour: ${color}`);
-  return (
-    0.2126 * channel(Number.parseInt(full.slice(0, 2), 16)) +
-    0.7152 * channel(Number.parseInt(full.slice(2, 4), 16)) +
-    0.0722 * channel(Number.parseInt(full.slice(4, 6), 16))
-  );
-}
-
-/** WCAG contrast ratio, truncated to the two decimals the contract records. */
-export function contrast(foreground: string, background: string): number {
-  const first = luminance(foreground);
-  const second = luminance(background);
-  const ratio =
-    (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
-  return Math.floor(ratio * 100) / 100;
 }
 
 /** The CSS `rgb()` form of an opaque `#rgb` or `#rrggbb` colour. */

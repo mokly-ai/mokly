@@ -13,7 +13,11 @@ function record(value: unknown): Record<string, unknown> {
   return Object.fromEntries(Object.entries(value));
 }
 
-async function tagJob() {
+/**
+ * The script of the tag job's only step. The xtask repository rules check
+ * the job's structure, permissions, and dependents.
+ */
+async function tagScript(): Promise<string> {
   const jobs = record(
     record(
       parse(
@@ -24,29 +28,9 @@ async function tagJob() {
       ),
     ).jobs,
   );
-  const job = record(jobs["release-tags"]);
-  assert.deepEqual(job.permissions, { contents: "write" });
-  assert.equal(job.environment, undefined);
-  assert.deepEqual(job.needs, ["select-release"]);
-  assert.match(String(job.if), /needs\.select-release\.result == 'success'/);
-  assert.match(String(job.if), /publish_ref != ''/);
-  assert.ok(Array.isArray(job.steps));
-  assert.equal(job.steps.length, 1, "tagging executes no checkout or build");
-  const step = record(job.steps[0]);
-  assert.match(String(step.uses), /^actions\/github-script@[a-f0-9]{40}$/);
-  assert.deepEqual(step.env, {
-    PUBLISH_REF: "${{ needs.select-release.outputs.publish_ref }}",
-  });
-  for (const name of ["build-native", "prepare-release"]) {
-    const dependent = record(jobs[name]);
-    assert.ok(Array.isArray(dependent.needs));
-    assert.ok(dependent.needs.includes("release-tags"));
-    assert.match(
-      String(dependent.if),
-      /needs\.release-tags\.result == 'success'/,
-    );
-  }
-  const script = record(step.with).script;
+  const steps = record(jobs["release-tags"]).steps;
+  assert.ok(Array.isArray(steps));
+  const script = record(record(steps[0]).with).script;
   assert.equal(typeof script, "string");
   return String(script);
 }
@@ -64,7 +48,7 @@ async function runTagScript(
   const missing = Object.assign(new Error("viewer tag is absent"), {
     status: 404,
   });
-  const script = await tagJob();
+  const script = await tagScript();
   const run = async () => {
     await new Script(`(async () => { ${script} })()`).runInNewContext({
       process: { env: { PUBLISH_REF: options.cliRef ?? "v0.16.0" } },
