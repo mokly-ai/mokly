@@ -6,9 +6,6 @@
  */
 
 import { expect } from "@playwright/test";
-import { createElement } from "react";
-
-import { TagPicker } from "@mokly/ui/tag-picker";
 
 import { test } from "./browser_test.js";
 import { renderWithShellStyles } from "./shell_styles_page.js";
@@ -24,22 +21,10 @@ test.use({ colorScheme: "light" });
 test("the tag button's picture keeps its resting look, while its button and link take the pointer and the hover fill", async ({
   page,
 }) => {
-  const picker = {
-    focusedIndex: 0,
-    interactive: false,
-    open: false,
-    tags: [{ selected: false, tag: "forms" }],
-  };
-  await renderWithShellStyles(page, [
-    createElement(TagPicker, { ...picker, id: "button-picker" }),
-    createElement(TagPicker, {
-      ...picker,
-      id: "link-picker",
-      operable: false,
-      toggleHref: "#tags",
-    }),
-    createElement(TagPicker, { ...picker, id: "picture", operable: false }),
-  ]);
+  await renderWithShellStyles(
+    page,
+    new URL("./tag_picker_forms.tsx", import.meta.url),
+  );
   for (const control of [
     page.getByRole("button", { name: "Filter by tag" }),
     page.getByRole("link", { name: "Filter by tag" }),

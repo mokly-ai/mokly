@@ -6,9 +6,6 @@
  */
 
 import { expect } from "@playwright/test";
-import { createElement } from "react";
-
-import { TagChip } from "@mokly/ui/tag-chip";
 
 import { test } from "./browser_test.js";
 import { renderWithShellStyles } from "./shell_styles_page.js";
@@ -25,21 +22,10 @@ test.use({ colorScheme: "light" });
 test("a selected tag chip fills with the accent as a link, a button, and a picture, and hover never lowers it", async ({
   page,
 }) => {
-  await renderWithShellStyles(page, [
-    createElement(TagChip, { href: "#forms", selected: true, tag: "forms" }),
-    createElement(TagChip, { selected: true, tag: "onboarding" }),
-    createElement(TagChip, {
-      interactive: false,
-      selected: true,
-      tag: "documents",
-    }),
-    createElement(TagChip, { selected: false, tag: "guides" }),
-    createElement(TagChip, {
-      interactive: false,
-      selected: false,
-      tag: "drafts",
-    }),
-  ]);
+  await renderWithShellStyles(
+    page,
+    new URL("./tag_chip_forms.tsx", import.meta.url),
+  );
   const link = page.getByRole("link", { name: "forms" });
   const button = page.getByRole("button", { name: "onboarding" });
   const picture = page.getByText("documents", { exact: true });
