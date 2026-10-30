@@ -1,0 +1,55 @@
+/* The quiet band above a stage that names what it holds, such as "Showing
+   previous version". */
+.mbk-previous {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--chrome-border);
+  background: var(--chrome-surface);
+  color: var(--chrome-muted);
+  font-size: 11.5px;
+}
+
+/* Under Dark, a band that keeps a light document names the fallback: the
+   previous-version label and the Light-only band above a current document. */
+body[data-mokly-color-scheme="dark"]
+  .mbk-previous[data-color-scheme-fallback]
+  .mbk-frame-scheme-note {
+  display: inline;
+}
+
+/* The stage host of a previous version fills the preview, and its states
+   fill the stage. */
+.mbk-preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mbk-preview > .mbk-stage > .mbk-empty,
+.mbk-preview > .mbk-stage > .mbk-preview-state {
+  align-self: stretch;
+}
+
+.mbk-preview > .mbk-stage.mbk-live > .mbk-preview-state {
+  flex: 0 1 auto;
+  align-self: center;
+}
+
+.mbk-preview button.mbk-empty-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--chrome-accent);
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .mbk-previous {
+    padding: 8px 16px;
+  }
+}

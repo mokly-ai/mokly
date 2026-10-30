@@ -544,9 +544,13 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
   `comparison_frame`, `comparison_side`, `comparison_stack`,
   `comparison_viewport`, `comparison_views`, `diffs`, `workspace_stage`,
   `workspace_variant_bar`, and the empty states of `views`.
-- Package components: `device-frame`, `preview-frame`, `flow-step`, `stage`,
-  `preview-state`, `previous-version`, `scheme-fallback`, `comparison-pane`,
-  `comparison-stage`, `empty-state`, and `variant-bar`.
+- Package components: `device-frame`, `browser-bar`, `preview-frame`,
+  `flow-step`, `stage`, `preview-state`, `previous-version`,
+  `scheme-fallback`, `comparison-pane`, `comparison-stage`, `empty-state`,
+  and `variant-bar`. Milestone 12 split `browser-bar` from `device-frame`,
+  because one stylesheet passed 300 lines. `status_bar.tsx` moved into the
+  package, `scheme_fallback` became a `.ts` module, and the viewer's
+  `PreviewFrame` became `SnapshotFrame` beside the package's `PreviewFrame`.
 - CSS sources: `css_chrome_devices`, `css_chrome_expansion`,
   `css_chrome_flow`, `css_preview_scheme`, `css_previews`, `css_review`, and
   the frame, stage, flow, and empty-state rules of `css_views_layout` and
@@ -858,24 +862,35 @@ previous-version presentation, the comparison panes and stage, the empty
 states, and the variant bar. The frame hooks, the adapters, the comparison
 scroll controllers, and the snapshot loaders stay in the viewer.
 
-- [ ] Create the package components of the preview slice, with their CSS,
+- [x] Create the package components of the preview slice, with their CSS,
       exports, and order. The package renders each `<iframe>` element under
       design call 4.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] Tests as in milestone 3: the copied address and its message, expand and
+- [x] Tests as in milestone 3: the copied address and its message, expand and
       collapse, each frame label and Light-only note, the loading,
       unavailable, and retry states, each comparison pane state, and each empty
       state.
-- [ ] Remove the files of the slice from the lint exemption list.
-- [ ] Check as in milestone 3, with the comparison and scrolling browser
+- [x] Remove the files of the slice from the lint exemption list.
+- [x] Check as in milestone 3, with the comparison and scrolling browser
       specs. Save evidence under `.context/ui-package-shell-views/preview/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-preview` and checked: identical markup in 1105
+      cases, identical built CSS rules, zero computed-style differences across
+      166 states, no new order-tool pair, 1024 browser tests and 2856 Node
+      tests passed. The palette test now checks that its scan holds each
+      module that `css.ts` composes, instead of a module count that each
+      slice lowered. Evidence: `.context/ui-package-shell-views/preview/`.
 
 ## Milestone 13: Preview mockups
 
 Tags: mockup
 
 Depends on: 12
+
+The inventory's `preview/device-frame` includes the frame caption, which the
+package draws in `PreviewFrame`. Its view renders `PreviewFrame` with
+`PhoneFrame` or `BrowserFrame`. Found by milestone 12 on 2026-10-30.
 
 - [ ] Adopt `preview/device-frame`, `preview/comparison-pane`,
       `preview/empty-state`, and `preview/flow-step` as milestone 4 adopts the

@@ -207,7 +207,17 @@ The inspector's panels render `@mokly/ui/prop-field`,
 `@mokly/ui/instance-tree`, and `@mokly/ui/comparison-evidence`, from records
 that their containers build, and the preview shows the status of an edit's
 render with `@mokly/ui/edit-status`. The controls' wording of
-`component_controls_copy.ts` reaches them as props. A local ESLint rule
+`component_controls_copy.ts` reaches them as props. The preview's containers
+render `@mokly/ui/stage`, `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
+`@mokly/ui/flow-step`, `@mokly/ui/previous-version`,
+`@mokly/ui/preview-state`, `@mokly/ui/scheme-fallback`,
+`@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
+`@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
+is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
+its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
+mount hooks, the sources, the read-only guard, and the scroll controllers.
+`frames.tsx` holds which browser frame is expanded in the store and copies its
+address, while the package shows "URL copied". A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
@@ -268,7 +278,8 @@ rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. A use case
+shows the loading state, or the unavailable state with retry, which
+`@mokly/ui/preview-state` draws. A use case
 shows the unavailable state, also after a failed publication refresh, only
 after each of its details has arrived, failed, or been replaced, because a
 detail that still loads can show another deployment. Until then the stage
@@ -286,9 +297,9 @@ supplied by prop controls keep their index `documentKey`. Only a temporary
 render URL bypasses that key.
 
 A use case's
-stage, in `public_stage.tsx`, shows each step's desktop view in a browser
-frame, or, while `narrow_layout.ts` reports a window at most 760px wide, its
-mobile view in a phone frame, under the
+stage, in `public_stage.tsx`, shows each step with `@mokly/ui/flow-step` and
+its desktop view in a browser frame, or, while `narrow_layout.ts` reports a
+window at most 760px wide, its mobile view in a phone frame, under the
 [device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome).
 `layout_breakpoint.ts` holds that contract's layout breakpoint as one media
 query, narrower than 900px, which every shell and viewer rule and script
@@ -464,14 +475,16 @@ changes preview selection separately. A reader's choice wins over later pins
 through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues.
-`scheme_fallback.tsx` decides when a document keeps its light file under Dark
+`scheme_fallback.ts` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. A current document then gets a band above its
 pane, and a removed one a suffix on `Showing previous version`; both carry the
-`Light only` note, which the stylesheet shows only under Dark.
-`css_preview_scheme.ts` owns every preview surface background and iframe
-color scheme. Transparent content therefore keeps its selected Light or Dark
-base in screen, page, component, historical and comparison frames, independently
-of interface appearance. Layout styles leave those properties to this module.
+`Light only` note of `@mokly/ui/scheme-fallback`, which the stylesheet shows
+only under Dark. The stylesheets of `@mokly/ui/preview-frame`,
+`@mokly/ui/device-frame`, and `@mokly/ui/comparison-pane` set every preview
+surface background and iframe color scheme from the wrapper's scheme.
+Transparent content therefore keeps its selected Light or Dark base in screen,
+page, component, historical and comparison frames, independently of interface
+appearance.
 React's frame adapters exclusively own source changes; the appearance
 controller only reports the effective scheme, avoiding iframe history entries
 during manual or automatic appearance changes. The frame-source hook keeps the
@@ -480,7 +493,8 @@ must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
-`diffs.tsx` owns the comparison band and stage; `@mokly/ui/comparison-toolbar`
+`diffs.tsx` owns the comparison band and stage, which
+`@mokly/ui/comparison-stage` draws; `@mokly/ui/comparison-toolbar`
 renders the band's mode group, the Scroll together switch (a native checkbox
 with `role="switch"`, shown in every diff mode including loading and failure)
 and Refresh, from props and callbacks alone. `use_comparison.ts` requests, renews and fences the selected
@@ -503,10 +517,12 @@ and the blended Current layer) or `comparison_side.tsx` for Side by side and
 for views missing a side, whose message is the design copy that the
 [pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout)
 names. `comparison_chrome.tsx` picks the browser, phone or
-bordered component frame, `comparison_viewport.tsx` renders the shared
-viewport, its sticky device-sized box and range spacer, and
-`comparison_frame.tsx` reuses `preview_frame.tsx` and the read-only guard for
-each version, marked `data-mokly-comparison-frame` with `scrolling="no"`.
+bordered component frame, `comparison_viewport.tsx` attaches the shared
+viewport, its sticky device-sized box and range spacer, which
+`@mokly/ui/comparison-pane` draws, to the scroll controller through refs, and
+`comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
+read-only guard for each version, marked `data-mokly-comparison-frame` with
+`scrolling="no"`.
 
 `comparison_scroll_sync.ts` is the per-section scroll controller behind the
 interfaces in `comparison_scroll_types.ts`: it follows each layer document from
@@ -546,7 +562,8 @@ contracts own the scroll behavior.
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the React request lifecycle validates, and the shared
-device chrome around captured screen views. It advertises a packaged address only when the accepted
+device chrome around captured screen views, which `@mokly/ui/previous-version`
+and `@mokly/ui/device-frame` draw. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
 quiet. The stage shows the loading state while its request runs and adds Retry
 only if that request fails. The request fencing lives in
@@ -563,9 +580,10 @@ later frame navigation. The copy and Retry contract comes from
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
 both drop the comparison band there, while removed component variants keep
 theirs.
-`css_previews.ts` styles the stage, including the `mbk-preview-note` and
-`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. The
-Both-only rule reads the normalized `data-viewport` value on the live stage.
+`@mokly/ui/preview-state` draws the loading, unavailable, and missing states,
+including the `mbk-preview-note` and `mbk-preview-switch` classes the design
+catalogue's stage stylesheet owns. The Both-only rule of `@mokly/ui/stage`
+reads the normalized `data-viewport` value on the live stage.
 See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the

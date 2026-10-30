@@ -1,10 +1,16 @@
-/** One comparison version: its opaque surface and read-only frame. */
+/**
+ * One comparison version: its opaque surface and read-only frame. This
+ * container registers them with the scroll controller;
+ * `@mokly/ui/comparison-pane` draws the surface.
+ */
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
+import { ComparisonSurface } from "@mokly/ui/comparison-pane";
+
 import type { PaneDocument } from "./comparison_chrome.js";
 import { useComparisonViewport } from "./comparison_viewport.js";
-import { PreviewFrame } from "./preview_frame.js";
+import { SnapshotFrame } from "./preview_frame.js";
 
 /**
  * Reuse the viewer-owned `srcdoc` frame and read-only guard for one version,
@@ -33,12 +39,12 @@ export function ComparisonFrame({ presentation, side, title }: PaneDocument) {
   );
   const comparison = useMemo(() => ({ frame, reveal }), [reveal]);
   return (
-    <div className="mb-pane-doc" ref={surface}>
-      <PreviewFrame
+    <ComparisonSurface ref={surface}>
+      <SnapshotFrame
         comparison={comparison}
         presentation={presentation}
         title={title}
       />
-    </div>
+    </ComparisonSurface>
   );
 }

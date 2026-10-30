@@ -1,8 +1,10 @@
-// The status band the phone chrome reserves above every embedded mobile
-// fragment: a clock to the left of the notch, and cellular, Wi-Fi, and battery
-// glyphs to its right. These glyphs keep their own viewBoxes and fill their
-// shapes because the row is sized in device pixels, unlike the stroked 24-unit
-// navigation icons of `@mokly/ui/icons`.
+/**
+ * The status band that the phone chrome reserves above a mobile screen: a
+ * clock to the left of the notch, and cellular, Wi-Fi, and battery glyphs to
+ * its right. These glyphs keep their own viewBoxes and fill their shapes,
+ * because the band is sized in device pixels, unlike the stroked 24-unit
+ * icons of `../icons/icons.tsx`.
+ */
 
 /** Ascending cellular signal bars. */
 function CellularGlyph() {
@@ -63,7 +65,7 @@ function BatteryGlyph() {
   );
 }
 
-/** The clock, signal, Wi-Fi, and battery row reserved above a mobile screen. */
+/** The clock, signal, Wi-Fi, and battery band above a mobile screen. */
 export function PhoneStatusBar() {
   return (
     <div className="phone-status">

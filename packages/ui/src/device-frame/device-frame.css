@@ -1,0 +1,204 @@
+/* The phone: a dark bezel, the notch, the screen with its status band, and
+   the home pill. */
+.phone-frame {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  padding: 12px;
+  border-radius: 46px;
+  background: var(--mbk-device-body);
+}
+
+/* The decorative notch and home pill let pointers through to the document;
+   the screen itself keeps pointer events, so links under the pill work. */
+.phone-notch,
+.phone-home {
+  pointer-events: none;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  z-index: 2;
+  width: 108px;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--mbk-device-notch);
+}
+
+.phone-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 36px;
+}
+
+.phone-status {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 44px;
+  padding: 14px 28px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+.phone-status-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.phone-home {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: 128px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* The browser window: the bar of `../browser-bar`, then the viewport. An
+   expanded window covers the page and marks its toggle. */
+.browser-frame {
+  width: 100%;
+  max-width: 1180px;
+  height: 760px;
+  overflow: hidden;
+  border: 1px solid var(--chrome-border-strong);
+  border-radius: 8px;
+  background: var(--chrome-surface);
+}
+
+.browser-viewport {
+  height: calc(100% - 40px);
+  overflow: hidden;
+}
+
+.browser-frame.is-expanded .browser-expand {
+  color: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+}
+
+.browser-frame.is-expanded .browser-expand .i-expand {
+  display: none;
+}
+
+.browser-frame.is-expanded .browser-expand .i-collapse {
+  display: inline-flex;
+}
+
+/* An expanded window covers the page above a scrim. The host marks the page
+   while a window is expanded. */
+body.frame-expanded {
+  overflow: hidden;
+}
+
+body.frame-expanded::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: var(--chrome-scrim);
+}
+
+.browser-frame.is-expanded {
+  position: fixed;
+  inset: 2.5vh 2.5vw;
+  z-index: 950;
+  width: auto;
+  max-width: none;
+  height: auto;
+  box-shadow: var(--chrome-shadow);
+}
+
+@media (max-width: 760px) {
+  .phone-frame {
+    width: min(390px, 100%);
+    height: auto;
+    aspect-ratio: 390 / 844;
+  }
+
+  .browser-frame {
+    width: 100%;
+    min-width: 0;
+    height: 560px;
+  }
+}
+
+/* The screen follows the scheme of the shown document, independently of the
+   shell's appearance. */
+.phone-screen {
+  background: var(--mbk-screen-bg);
+}
+
+.phone-status {
+  color: var(--mbk-screen-ink);
+}
+
+.phone-home {
+  background: var(--mbk-device-home);
+}
+
+.browser-viewport {
+  background: var(--mbk-screen-bg);
+}
+
+[data-preview-color-scheme="dark"] .phone-screen {
+  background: var(--mbk-dark-screen-bg);
+}
+
+/* A dark screen would lose its edge in the near-black phone body. Its 1px
+   inset hairline is an overlay above the fragment, so the document cannot
+   cover it. */
+[data-preview-color-scheme="dark"] .phone-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px
+    color-mix(
+      in srgb,
+      var(--mbk-dark-screen-ink) 12%,
+      var(--mbk-dark-screen-bg)
+    );
+  pointer-events: none;
+}
+
+[data-preview-color-scheme="dark"] .phone-status {
+  color: var(--mbk-dark-screen-ink);
+}
+
+[data-preview-color-scheme="dark"] .phone-home {
+  background: color-mix(in srgb, var(--mbk-dark-screen-ink) 40%, transparent);
+}
+
+[data-preview-color-scheme="dark"] .browser-viewport {
+  background: var(--mbk-dark-screen-bg);
+}
+
+/* The content of the phone screen, a frame or a comparison viewport, fills
+   the screen below the status band and keeps its rounded bottom corners. */
+.phone-screen .mbk-frag {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  border-radius: 0 0 36px 36px;
+}
+
+.phone-screen > .mb-viewport {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  border-radius: 0 0 36px 36px;
+}

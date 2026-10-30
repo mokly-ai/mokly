@@ -1,12 +1,21 @@
-/** The chrome around a comparison viewport and the documents shown inside it. */
+/**
+ * The chrome around a comparison viewport and the documents shown inside it.
+ * `@mokly/ui/device-frame` draws the phone and the browser,
+ * `@mokly/ui/comparison-pane` the component frame, and
+ * `@mokly/ui/preview-frame` the pane's chrome.
+ */
 
 import type { ReactNode } from "react";
+
+import { ComponentFrame } from "@mokly/ui/comparison-pane";
+import { PhoneFrame } from "@mokly/ui/device-frame";
+import { PreviewFrame } from "@mokly/ui/preview-frame";
 
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { ReviewView } from "../review/types.js";
 
 import type { ComparisonSide } from "./comparison_scroll_owner.js";
-import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { BrowserFrame } from "./frames.js";
 
 /** Draws one chrome around the viewport it is given. */
 export type ComparisonChrome = (viewport: ReactNode) => ReactNode;
@@ -29,8 +38,7 @@ export function comparisonChrome(
   viewport: "desktop" | "mobile",
   address: string,
 ): ComparisonChrome {
-  if (component)
-    return (content) => <div className="mb-component-frame">{content}</div>;
+  if (component) return (content) => <ComponentFrame>{content}</ComponentFrame>;
   if (viewport === "mobile")
     return (content) => <PhoneFrame>{content}</PhoneFrame>;
   return (content) => (
@@ -49,12 +57,12 @@ export function ChromeScheme({
   view: ReviewView;
 }) {
   return (
-    <div
-      className="mb-pane-chrome mbk-frame-wrap"
-      data-color-scheme-fallback={view.colorScheme === "light" ? "" : undefined}
-      data-preview-color-scheme={view.colorScheme}
+    <PreviewFrame
+      fallback={view.colorScheme === "light"}
+      placement={{ kind: "pane" }}
+      scheme={view.colorScheme}
     >
       {children}
-    </div>
+    </PreviewFrame>
   );
 }

@@ -259,6 +259,19 @@ and Review regressions against `mokly serve` of the example catalogue.
   — the containers of the inspector's panels, which turn the controls state,
   the usage links, the instance records, and the comparison evidence into the
   records and the wording of the package components
+- [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
+  [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
+  [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
+  [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the containers of the
+  preview frames, the stages, a user flow's steps, and a removed entry's
+  previous version: they mount each frame, derive its sources, and pass its
+  `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
+  expanded browser frame in the store
+- [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
+  [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
+  the containers of the comparison sections and panes, which own each
+  section's scroll controller and attach the viewport, its spacer, and each
+  surface to it through refs
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

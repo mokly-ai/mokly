@@ -1,4 +1,9 @@
-/** Saved component variant selection and branch status. */
+/**
+ * Saved component variant selection and branch status. This container builds
+ * each variant's link; `@mokly/ui/variant-bar` draws the bar.
+ */
+
+import { VariantBar } from "@mokly/ui/variant-bar";
 
 import { viewHref } from "../navigation/routes.js";
 
@@ -14,28 +19,21 @@ export function WorkspaceVariantBar({
 }) {
   if (!data.component) return null;
   return (
-    <nav aria-label="Saved variants" className="mbk-selection-bar">
-      <span>Variant</span>
-      {data.variants.map((candidate) => (
-        <a
-          aria-current={candidate === variant ? "page" : undefined}
-          data-workspace-variant={candidate.value.path}
-          href={`${viewHref(candidate.value.path)}${
-            candidate.snapshotId ? `?snapshot=${candidate.snapshotId}` : ""
-          }`}
-          key={candidate.value.path}
-        >
-          {candidate.value.title}
-          {candidate.removed ? " · Removed" : ""}
-        </a>
-      ))}
-      <span
-        className="mbk-variant-status"
-        data-workspace-variant-status=""
-        hidden={!variant?.status}
-      >
-        {variant?.status ? `${variant.value.title} · ${variant.status}` : null}
-      </span>
-    </nav>
+    <VariantBar
+      status={
+        variant?.status
+          ? `${variant.value.title} · ${variant.status}`
+          : undefined
+      }
+      variants={data.variants.map((candidate) => ({
+        current: candidate === variant,
+        href: `${viewHref(candidate.value.path)}${
+          candidate.snapshotId ? `?snapshot=${candidate.snapshotId}` : ""
+        }`,
+        path: candidate.value.path,
+        removed: candidate.removed === true,
+        title: candidate.value.title,
+      }))}
+    />
   );
 }

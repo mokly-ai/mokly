@@ -1,0 +1,94 @@
+/* The comparison of an entry: the band, then Current or the comparison
+   stage, which scrolls its viewport sections on the dotted surface. */
+.mbk-diff-screen,
+.mbk-current-screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mbk-diff-screen [hidden] {
+  display: none;
+}
+
+.mbk-diff-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+  background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 /
+    22px 22px;
+}
+
+/* The empty state's action, inline in the comparison's failure line. */
+.mbk-diff-stage p > .mbk-empty-link {
+  margin: 0 0 0 4px;
+}
+
+.mbk-diff-view {
+  margin-bottom: 24px;
+}
+
+.mbk-diff-view h3 {
+  margin: 0 0 12px;
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Side by side shows two panes; a mobile section keeps each phone's width,
+   and the stacked modes show one chrome. */
+.mb-panes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+
+.mbk-diff-mobile .mb-panes {
+  grid-template-columns: repeat(2, 390px);
+}
+
+.mb-panes[data-compare-mode="overlay"],
+.mb-panes[data-compare-mode="difference"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mbk-diff-mobile .mb-panes:not([data-compare-mode="side"]) {
+  grid-template-columns: 390px;
+}
+
+.mb-panes[data-compare-mode="overlay"] .mb-pane--after {
+  opacity: 0.5;
+}
+
+.mb-panes[data-compare-mode="difference"] .mb-pane--after {
+  mix-blend-mode: difference;
+}
+
+@media (width < 56.25rem) {
+  /* The compact modes of the comparison toolbar, as buttons, links, or inert
+     text. The toolbar leaves the padding and type of its modes to the
+     segmented control, so the comparison narrows them here. */
+  .mbk-diff-toolbar .mbk-seg :is(button, a, span) {
+    flex: 1;
+    padding: 6px;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+
+  .mbk-diff-stage {
+    padding: 16px;
+  }
+
+  .mb-panes[data-compare-mode="side"],
+  .mbk-diff-mobile .mb-panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mbk-diff-mobile .mb-panes:not([data-compare-mode="side"]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

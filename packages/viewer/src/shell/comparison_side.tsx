@@ -1,4 +1,11 @@
-/** Side by side: one chrome per version, their viewports mirrored. */
+/**
+ * Side by side: one chrome per version, their viewports mirrored.
+ * `@mokly/ui/comparison-stage` draws the grid and `@mokly/ui/comparison-pane`
+ * each labelled pane.
+ */
+
+import { ComparisonPane } from "@mokly/ui/comparison-pane";
+import { ComparisonPanes } from "@mokly/ui/comparison-stage";
 
 import type { ReviewView } from "../review/types.js";
 
@@ -11,8 +18,6 @@ import { ComparisonFrame } from "./comparison_frame.js";
 import type { ComparisonScrollSync } from "./comparison_scroll_types.js";
 import { ComparisonViewport } from "./comparison_viewport.js";
 import type { EntryWording } from "./entry_wording.js";
-
-const labels = { after: "Current", before: "Before" } as const;
 
 /** The design catalogue's copy for a side without a document. */
 const missing = {
@@ -43,12 +48,15 @@ export function SideBySideComparison({
   wording: Pick<EntryWording, "label">;
 }) {
   return (
-    <div className="mb-panes" data-compare-mode="side">
+    <ComparisonPanes mode="side">
       {(["before", "after"] as const).map((side) => {
         const document = documents[side];
         return (
-          <div className={`mb-pane mb-pane--${side}`} key={side}>
-            <p className="mb-pane-label">{labels[side]}</p>
+          <ComparisonPane
+            key={side}
+            missing={document ? undefined : wording.label(missing[side])}
+            side={side}
+          >
             {document ? (
               <ChromeScheme view={view}>
                 {chrome(
@@ -57,12 +65,10 @@ export function SideBySideComparison({
                   </ComparisonViewport>,
                 )}
               </ChromeScheme>
-            ) : (
-              <p className="mb-pane-missing">{wording.label(missing[side])}</p>
-            )}
-          </div>
+            ) : null}
+          </ComparisonPane>
         );
       })}
-    </div>
+    </ComparisonPanes>
   );
 }

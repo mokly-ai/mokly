@@ -1,6 +1,15 @@
 // The one previous-version presentation shared by removed documents and
 // removed screens. The React shell owns the request, lifecycle, and historical
 // frames; a shell without a request shows the explicit unavailable state.
+// `@mokly/ui/previous-version` draws the band and the stage host,
+// `@mokly/ui/preview-state` the loading and missing states, and
+// `@mokly/ui/preview-frame` and `@mokly/ui/device-frame` the frames.
+
+import { PhoneFrame } from "@mokly/ui/device-frame";
+import { DocumentFrame, PreviewFrame } from "@mokly/ui/preview-frame";
+import { PreviewLoading, PreviewNotCaptured } from "@mokly/ui/preview-state";
+import { PreviousVersion } from "@mokly/ui/previous-version";
+import { Stage } from "@mokly/ui/stage";
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { entryRoute } from "../navigation/routes.js";
@@ -9,8 +18,8 @@ import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { BrowserFrame, PhoneFrame } from "./frames.js";
-import { PreviewFrame } from "./preview_frame.js";
+import { BrowserFrame } from "./frames.js";
+import { SnapshotFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
 import { documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -77,36 +86,6 @@ export function removedPreviewData(
   };
 }
 
-/**
- * The quiet band naming what the stage below it holds. A light-only document
- * always carries the note, which the stylesheet shows only under Dark.
- */
-function PreviousVersionLabel(props: { lightOnly: boolean }) {
-  return (
-    <p
-      className="mbk-previous"
-      data-color-scheme-fallback={props.lightOnly ? "" : undefined}
-    >
-      Showing previous version
-      {props.lightOnly ? (
-        <span className="mbk-frame-scheme-note"> — Light only</span>
-      ) : null}
-    </p>
-  );
-}
-
-function MissingView(props: { viewport: "desktop" | "mobile" }) {
-  const other = props.viewport === "desktop" ? "Mobile" : "Desktop";
-  return (
-    <div className="mbk-preview-state">
-      <p className="mbk-preview-note" role="status">
-        No previous {props.viewport} version was captured.{" "}
-        <span className="mbk-preview-switch">Switch to {other} to see it.</span>
-      </p>
-    </div>
-  );
-}
-
 function ScreenFrame(props: {
   data: RemovedPreviewData;
   presentation: SnapshotPresentation;
@@ -114,25 +93,18 @@ function ScreenFrame(props: {
   view: PreviewScreenView;
   viewport: "desktop" | "mobile";
 }) {
-  const fallback = props.view.colorScheme !== props.scheme;
   const content = (
-    <PreviewFrame
+    <SnapshotFrame
       presentation={props.presentation}
       title={`${props.data.title} — ${props.viewport}`}
     />
   );
   return (
-    <div
-      className={`mbk-frame-wrap mbk-frame-${props.viewport}`}
-      data-color-scheme-fallback={fallback ? "" : undefined}
-      data-preview-color-scheme={props.view.colorScheme}
+    <PreviewFrame
+      fallback={props.view.colorScheme !== props.scheme}
+      placement={{ kind: "frame", viewport: props.viewport }}
+      scheme={props.view.colorScheme}
     >
-      <p className="mbk-frame-label">
-        {props.viewport === "mobile" ? "Mobile" : "Desktop"}
-        {fallback ? (
-          <span className="mbk-frame-scheme-note"> — Light only</span>
-        ) : null}
-      </p>
       {props.viewport === "mobile" ? (
         <PhoneFrame>{content}</PhoneFrame>
       ) : (
@@ -143,7 +115,7 @@ function ScreenFrame(props: {
           {content}
         </BrowserFrame>
       )}
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -163,17 +135,13 @@ export function ReadyPreview(props: {
         ? (content.views.find(
             (view) => view.colorScheme === props.colorScheme,
           ) ?? content.views[0]!)
-        : { url: content.url, colorScheme: "light" };
+        : { url: content.url, colorScheme: "light" as const };
     const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
-      <div
-        className="mbk-stage-embed"
-        data-mokly-scroll="embed"
-        data-preview-color-scheme={view.colorScheme}
-      >
-        <PreviewFrame presentation={presentation} title={props.data.title} />
-      </div>
+      <DocumentFrame scheme={view.colorScheme}>
+        <SnapshotFrame presentation={presentation} title={props.data.title} />
+      </DocumentFrame>
     );
   }
   const viewports =
@@ -189,7 +157,7 @@ export function ReadyPreview(props: {
       content.views.find(
         (item) => item.viewport === viewport && item.colorScheme === "light",
       );
-    if (!view) return <MissingView key={viewport} viewport={viewport} />;
+    if (!view) return <PreviewNotCaptured key={viewport} viewport={viewport} />;
     const presentation = presentationFor(props.presentations, view.url);
     return presentation ? (
       <ScreenFrame
@@ -205,13 +173,9 @@ export function ReadyPreview(props: {
   if (frames.some((frame) => frame === undefined))
     return <PreviewUnavailable retry={props.retry} />;
   return (
-    <div
-      className="mbk-stage mbk-live"
-      data-mokly-scroll="stage"
-      data-viewport={props.viewport}
-    >
+    <Stage kind="live" viewport={props.viewport}>
       {frames}
-    </div>
+    </Stage>
   );
 }
 
@@ -245,17 +209,7 @@ function PreviewState(props: {
         viewport={props.viewport}
       />
     );
-  if (preview.state.status === "loading")
-    return (
-      <div className="mbk-stage">
-        <div className="mbk-preview-state">
-          <p className="mbk-preview-status" role="status">
-            <span aria-hidden="true" className="mbk-preview-spinner" />
-            Loading previous version…
-          </p>
-        </div>
-      </div>
-    );
+  if (preview.state.status === "loading") return <PreviewLoading />;
   return (
     <PreviewUnavailable
       retry={preview.state.status === "failed" ? preview.retry : undefined}
@@ -273,21 +227,16 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const colorScheme = store?.state.selection.colorScheme ?? "light";
   const viewport = store?.state.selection.viewport ?? "both";
   return (
-    <>
-      <PreviousVersionLabel lightOnly={props.data.lightOnly === true} />
-      <div
-        aria-live="polite"
-        className="mbk-preview"
-        data-mokly-preview={JSON.stringify(props.data)}
-        data-mokly-stage=""
-        data-viewport={viewport}
-      >
-        <PreviewState
-          colorScheme={colorScheme}
-          data={props.data}
-          viewport={viewport}
-        />
-      </div>
-    </>
+    <PreviousVersion
+      descriptor={JSON.stringify(props.data)}
+      lightOnly={props.data.lightOnly === true}
+      viewport={viewport}
+    >
+      <PreviewState
+        colorScheme={colorScheme}
+        data={props.data}
+        viewport={viewport}
+      />
+    </PreviousVersion>
   );
 }

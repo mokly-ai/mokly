@@ -12,6 +12,10 @@
       "types": "./dist/appearance-selector/appearance-selector.d.ts",
       "import": "./dist/appearance-selector/appearance-selector.js"
     },
+    "./browser-bar": {
+      "types": "./dist/browser-bar/browser-bar.d.ts",
+      "import": "./dist/browser-bar/browser-bar.js"
+    },
     "./catalogue-navigation": {
       "types": "./dist/catalogue-navigation/catalogue-navigation.d.ts",
       "import": "./dist/catalogue-navigation/catalogue-navigation.js"
@@ -32,6 +36,14 @@
       "types": "./dist/comparison-evidence/comparison-evidence.d.ts",
       "import": "./dist/comparison-evidence/comparison-evidence.js"
     },
+    "./comparison-pane": {
+      "types": "./dist/comparison-pane/comparison-pane.d.ts",
+      "import": "./dist/comparison-pane/comparison-pane.js"
+    },
+    "./comparison-stage": {
+      "types": "./dist/comparison-stage/comparison-stage.d.ts",
+      "import": "./dist/comparison-stage/comparison-stage.js"
+    },
     "./comparison-toolbar": {
       "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
       "import": "./dist/comparison-toolbar/comparison-toolbar.js"
@@ -44,9 +56,21 @@
       "types": "./dist/details-panel/details-panel.d.ts",
       "import": "./dist/details-panel/details-panel.js"
     },
+    "./device-frame": {
+      "types": "./dist/device-frame/device-frame.d.ts",
+      "import": "./dist/device-frame/device-frame.js"
+    },
     "./edit-status": {
       "types": "./dist/edit-status/edit-status.d.ts",
       "import": "./dist/edit-status/edit-status.js"
+    },
+    "./empty-state": {
+      "types": "./dist/empty-state/empty-state.d.ts",
+      "import": "./dist/empty-state/empty-state.js"
+    },
+    "./flow-step": {
+      "types": "./dist/flow-step/flow-step.d.ts",
+      "import": "./dist/flow-step/flow-step.js"
     },
     "./icon-control": {
       "types": "./dist/icon-control/icon-control.d.ts",
@@ -68,6 +92,18 @@
       "types": "./dist/metadata-row/metadata-row.d.ts",
       "import": "./dist/metadata-row/metadata-row.js"
     },
+    "./preview-frame": {
+      "types": "./dist/preview-frame/preview-frame.d.ts",
+      "import": "./dist/preview-frame/preview-frame.js"
+    },
+    "./preview-state": {
+      "types": "./dist/preview-state/preview-state.d.ts",
+      "import": "./dist/preview-state/preview-state.js"
+    },
+    "./previous-version": {
+      "types": "./dist/previous-version/previous-version.d.ts",
+      "import": "./dist/previous-version/previous-version.js"
+    },
     "./prop-field": {
       "types": "./dist/prop-field/prop-field.d.ts",
       "import": "./dist/prop-field/prop-field.js"
@@ -76,6 +112,10 @@
       "types": "./dist/props-panel/props-panel.d.ts",
       "import": "./dist/props-panel/props-panel.js"
     },
+    "./scheme-fallback": {
+      "types": "./dist/scheme-fallback/scheme-fallback.d.ts",
+      "import": "./dist/scheme-fallback/scheme-fallback.js"
+    },
     "./screen-header": {
       "types": "./dist/screen-header/screen-header.d.ts",
       "import": "./dist/screen-header/screen-header.js"
@@ -83,6 +123,10 @@
     "./segmented-control": {
       "types": "./dist/segmented-control/segmented-control.d.ts",
       "import": "./dist/segmented-control/segmented-control.js"
+    },
+    "./stage": {
+      "types": "./dist/stage/stage.d.ts",
+      "import": "./dist/stage/stage.js"
     },
     "./styles.css": "./dist/styles.css",
     "./tag-chip": {
@@ -104,6 +148,10 @@
     "./usage-list": {
       "types": "./dist/usage-list/usage-list.d.ts",
       "import": "./dist/usage-list/usage-list.js"
+    },
+    "./variant-bar": {
+      "types": "./dist/variant-bar/variant-bar.d.ts",
+      "import": "./dist/variant-bar/variant-bar.js"
     },
     "./view-controls": {
       "types": "./dist/view-controls/view-controls.d.ts",

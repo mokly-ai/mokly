@@ -1,27 +1,16 @@
 /** The package-owned shell stylesheet: the shared rules of every root, and the
  * standalone stylesheet Serve and `build` deliver as /mokly-viewer/shell.css. */
 
-import { SHELL_CHROME_CSS } from "./css_chrome.js";
 import { SHELL_NAV_CSS } from "./css_nav.js";
 import { SHELL_NAV_RESIZE_CSS } from "./css_nav_resize.js";
-import { SHELL_PREVIEW_SCHEME_CSS } from "./css_preview_scheme.js";
-import { SHELL_PREVIEW_CSS } from "./css_previews.js";
-import { SHELL_REVIEW_CSS } from "./css_review.js";
 import { SHELL_THEME_CSS, STANDALONE_STUB_THEME_CSS } from "./css_theme.js";
 import { SHELL_TOKENS_CSS } from "./css_tokens.js";
-import { SHELL_VIEW_CSS } from "./css_views.js";
+import { CSS_VIEWS_LAYOUT } from "./css_views_layout.js";
 import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
 
 /** The shell's own rules, after the tokens, the palette, and the package rules. */
 const SHELL_RULES_CSS =
-  SHELL_NAV_CSS +
-  SHELL_NAV_RESIZE_CSS +
-  SHELL_VIEW_CSS +
-  SHELL_CHROME_CSS +
-  SHELL_PREVIEW_SCHEME_CSS +
-  SHELL_REVIEW_CSS +
-  SHELL_WORKSPACE_CSS +
-  SHELL_PREVIEW_CSS;
+  SHELL_NAV_CSS + SHELL_NAV_RESIZE_CSS + CSS_VIEWS_LAYOUT + SHELL_WORKSPACE_CSS;
 
 /**
  * The rules every shell root shares: the tokens and the palette, then the
