@@ -1,8 +1,8 @@
 # Shell Views In The UI Package
 
-Status: Active. On branch `calummoore/mokly-ui-component-migration`, no pull
-request yet. The work lands as a stack of five pull requests, one for each
-slice, as design call 11 says. Each earlier pull request keeps this plan. The
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249) is open
+for milestones 1 to 5. The work lands as a stack of five pull requests, one
+for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
 last one deletes it, as the `plans` skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
@@ -763,14 +763,18 @@ The mockups show the shipped components, and the product does not change:
 
 Depends on: 1, 2, 3, 4
 
-- [ ] Merge `origin/main` with the `git-merge` skill.
-- [ ] Run the complete gate of `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the diff against `origin/main` with the `implementation-review`
+- [x] Merge `origin/main` with the `git-merge` skill.
+- [x] Run the complete gate of `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the diff against `origin/main` with the `implementation-review`
       skill. Fix the `fix now` findings, record follow-up items for the rest,
       re-review once, and report.
-- [ ] Open the pull request into `main`. Put its link in the status
+- [x] Open the pull request into `main`. Put its link in the status
       paragraph.
+- [x] Done on 2026-10-30: `origin/main` had not moved, the remote gate passed
+      7 of 7 suites on `73e2f3ea`, and review round 1 found no finding in
+      scope. Its two out-of-scope notes have follow-up items. Reports:
+      `.context/reviews/calummoore/mokly-ui-component-migration/`.
 
 ## Milestone 6: Control components
 
