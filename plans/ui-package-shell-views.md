@@ -988,11 +988,16 @@ Decision 4 G needs a class on the standalone stub's `<html>` element, so the
 stub keeps the Auto appearance before the bundle runs. Nothing styles the
 class yet, so the product does not change.
 
-- [ ] `crates/mokly-model/src/shell.rs` writes the document class on the
+- [x] `crates/mokly-model/src/shell.rs` writes the document class on the
       stub's `<html>` element, with its Rust test, and every Rust or Node
       test that compares the stub markup.
-- [ ] Check: `cargo test -p mokly-model`, the repository suite of
+- [x] Check: `cargo test -p mokly-model`, the repository suite of
       `cargo xtask check`, and the tests that read the stub.
+- [x] Done on 2026-10-30 by the non-ui implementor and checked: the stub
+      writes `<html lang="en" class="mbk-document">` from one Rust constant,
+      a new unit test failed before the change and passes after it, and the
+      shell delivery and appearance contracts name the class. Evidence:
+      `.context/stub-document-class/`.
 
 ## Milestone 18: Theme on the shell root and the reset class
 
