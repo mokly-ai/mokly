@@ -125,6 +125,10 @@ The message to the user gives each decision in the `decisions-and-findings`
 layout. Record each answer here with its date. The options check of
 2026-10-30 is in `.context/keep-base-side-in-memory/options-check.md`.
 
+Each decision stays open until the user answers it. Silence is not approval.
+Apply no option of an open decision, and start no milestone that depends on
+it.
+
 1. When does a kept base still give the result of a fresh preparation, when
    it reads files of the working install? Severity High. Recommended: C.
    - A. Check the dependency selection again before each reuse. Medium.
