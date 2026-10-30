@@ -5,8 +5,9 @@
 - **Added:** 2026-10-29, from PR #243 and its completed plan, an unchecked
   post-merge task.
 - **Location:** `packages/viewer/src/shell`, `packages/ui/src`,
-  `packages/viewer/scripts/styles.mjs:5` and `:32-56`, and
-  `docs/protocol/mokly-design-component-library.md`.
+  `packages/viewer/scripts/styles.mjs:5` and `:32-56`,
+  `docs/protocol/mokly-design-component-library.md`, and the two stale plan
+  lines at `plans/ui-package-shell-views.md:3` and `:34`.
 - **Reason:** PR #243 moved only the first slice on purpose, and the slices
   after the chrome slice of PR #249 wait for the later pull requests of
   `plans/ui-package-shell-views.md`.
@@ -59,6 +60,14 @@
   - Since PR #249, `packages/viewer/src/shell/README.md` starts with a status
     line for that plan and describes the end state without the transform.
     Before, its line 200 described the transform.
+  - On 2026-10-30, after PR #249 merged, two lines of
+    `plans/ui-package-shell-views.md` state old facts:
+    - Its status line, at line 3, says that PR #249 is open. PR #249 merged
+      as `14c6f9ec` on 2026-10-30.
+    - Its introduction, at line 34, puts the removal of the embedded
+      selector transform out of scope. But the user's choice of 2026-10-30
+      drops the transform. The plan's own transform rule, updated that day,
+      and its theme work on the shell root with the reset class remove it.
 - **Task:** Since 2026-10-29, `plans/ui-package-shell-views.md` holds tasks 2
   to 7 in one plan.
   1. Move the chrome components into `@mokly/ui`. Done by PR #249 on
@@ -78,6 +87,13 @@
   7. In each slice, make the design library render the moved components
      through the package, and delete its own copies and their styles.
      PR #249 did this for the chrome slice.
+  8. For the owner of `plans/ui-package-shell-views.md`: in a later pull
+     request of that plan, correct its two stale lines. Make the status line
+     say that PR #249 merged as `14c6f9ec` on 2026-10-30. Make the
+     introduction keep the removal of the embedded selector transform in
+     scope, as the user's choice of 2026-10-30 does. This is plan upkeep
+     after the merge. It is no gate and no prerequisite, and the other work
+     does not stop for it.
 - **Impact if no action:** The shell and the design library keep two
   implementations of the remaining components. Browser specs must keep the
   copies in step, and the copies still drift.
@@ -89,6 +105,8 @@
   `@mokly/ui/styles.css` carries, and the embedded selector transform is
   gone. Until the user's decision of 2026-10-30, this line named
   `@mokly/ui/tokens.css`. The branch that completes the last slice deletes
-  this item, as the `plans` skill says for a fixed item.
+  this item, as the `plans` skill says for a fixed item. Task 8 is done when
+  the two plan lines state the current facts, or when the plan's last pull
+  request deletes the plan.
 
 The full historical record is in the [plan at the commit before deletion](https://github.com/mokly-ai/mokly/blob/f93afceaa1d94de3526c4825cc11708c951678ba/plans/ui-package.md?plain=1#L533).
