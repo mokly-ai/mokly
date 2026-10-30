@@ -22,6 +22,12 @@ no copy of that markup or CSS. Decision: the mockup renders
 the package component, not its own copy kept aligned by tests, because two
 implementations drift and one serves the product and its mockups.
 
+A desktop render follows the shell's
+[layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior), so
+below it the chrome draws the shell's narrow form. Decision: no mockup rule
+holds the desktop form at that width, because the mockups show what the shell
+draws.
+
 Every other artboard part that a package component provides renders that
 component too, such as an artboard's shell and workspace layout, its panels
 and lists, and its highlight mask. The sheet that styles such a part imports

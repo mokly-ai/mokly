@@ -66,6 +66,19 @@ const EXEMPT_SURFACES = new Map([
 ]);
 
 /**
+ * Control surfaces that keep a decorative hairline, each named as the audit
+ * names a rule, by its sheet and selector, with the reason that exempts it.
+ * Each entry must be reached by the control-edge audit, so a future control
+ * cannot quietly inherit the exemption.
+ */
+const EXEMPT_CONTROL_SURFACES = new Map([
+  [
+    "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
+    "the user kept the shipped border on 2026-10-30",
+  ],
+]);
+
+/**
  * Every rule the audit collects, so a failure names the rule that appeared or
  * vanished instead of only reporting that the total moved. A component that
  * `@mokly/ui` provides is audited in the package stylesheet that its library
@@ -197,10 +210,22 @@ test("every marked boundary is visible against an adjacent colour", async () => 
 
 test("every control boundary is a readable control edge", async () => {
   const palette = await designPalette();
+  const rules = await designStyleRules();
+  for (const [surface, reason] of EXEMPT_CONTROL_SURFACES)
+    assert.ok(
+      rules.some(
+        (rule) =>
+          `${rule.file} ${rule.selector}` === surface &&
+          CONTROL_SELECTOR.test(rule.selector) &&
+          boundaryOf(rule.body) !== undefined,
+      ),
+      `the exempt control surface ${surface} (${reason}) is not reached by the audit`,
+    );
   const failures: string[] = [];
-  for (const rule of await designStyleRules()) {
+  for (const rule of rules) {
     if (!CONTROL_SELECTOR.test(rule.selector)) continue;
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
+    if (EXEMPT_CONTROL_SURFACES.has(`${rule.file} ${rule.selector}`)) continue;
     const boundary = boundaryOf(rule.body);
     if (!boundary) continue;
     if (boundary.token && HAIRLINE_TOKENS.has(boundary.token)) {

@@ -1,5 +1,9 @@
+import {
+  accessibleName,
+  isHidden,
+  withAncestors,
+} from "./design_accessibility.js";
 import { links, tagStates } from "./design_expectations.js";
-import { accessibleName, isHidden, withAncestors } from "./design_rules.js";
 import { attribute, textContent, type HtmlElement } from "./html.js";
 import type { ServedCatalogue, ServedView } from "./served_design.js";
 
