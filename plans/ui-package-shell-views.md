@@ -69,8 +69,8 @@ Contract owners:
 
 ## Decisions
 
-The four decisions were asked on 2026-10-29. Decision 1 is answered, and
-decisions 2, 3, and 4 are open. Each went through
+The four decisions were asked on 2026-10-29, and the user answered them on
+2026-10-30. Each went through
 the options check of the `plans` skill. The first check added options 1 D,
 1 E, and 2 D, changed the recommendation of decision 1 from C to D, and
 raised decisions 3 and 4. The second check measured decisions 3 and 4, added
@@ -145,6 +145,13 @@ only and can start only after the last slice.
 
 ### 2. Artboards keep copies of product views
 
+Decision 2 (2026-10-30, the user): option B. Every artboard part that a
+package component provides renders that component, in the mockup milestone
+of the slice that moves it, the scaffolds included, and the design components
+contract states the rule. Rejected: A, because the copies stay and drift.
+Rejected: D, because it keeps the scaffold copies. Rejected: C, because it
+breaks the inventory limit of five components in a group.
+
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Mockup.
@@ -205,6 +212,15 @@ only and can start only after the last slice.
   the inventory.
 
 ### 3. The highlight mask is drawn outside React
+
+Decision 3 (2026-10-30, the user): option F. The shell draws every highlight
+mask with a React package component, from the boundary geometry that already
+places the labels. The adapters keep only the pick listeners, and the in-frame
+inspector stops drawing. The frame adapter contract and the overlay section of
+the published inspector contract change, and a cross-origin mask redraws
+after a message round trip, as its labels do. Rejected: the recommended D,
+because it keeps a second drawer in the in-frame inspector. Rejected: A, B,
+C, and E, because each keeps a mask drawing outside the shell's React tree.
 
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design. The first options check raised it from a design call.
@@ -277,6 +293,15 @@ only and can start only after the last slice.
 
 ### 4. Page rules in the package stylesheet
 
+Decision 4 (2026-10-30, the user): option G, which the orchestrator added on
+2026-10-30 after research into other libraries. The tokens live on the shell
+root element, each package component puts a reset class on its own elements,
+no package rule selects the page, and the viewer build drops the `@scope`
+transform. Rejected: the recommended E, because its page stylesheet still
+resets a whole page. Rejected: A, B, C, and D, because each leaves a page rule
+or the theme's `:root` rules on a host page. Rejected: F, because rules under a
+root class still reach host slot content without `@scope`.
+
 - **Severity:** Medium. **Effort:** Large.
 - **Source:** Design. The first options check raised it.
 - **Category:** Code structure.
@@ -333,21 +358,25 @@ only and can start only after the last slice.
     root. The viewer build derives the stub's page form and the embedded
     form. A host must render components inside a root element. Effort:
     Large.
+  - **G.** D and F together, the Radix Themes model: the tokens on the root
+    element, and a reset class on each component's own elements. The viewer
+    can then drop `@scope`. Most selectors change, so the product needs its
+    own visual check. Effort: Large.
 - **Left out:** The theme in the viewer, because it fails the goal: the
   user's message covers the palette. The viewer reading a package file that
   the package does not export, because the package contract allows exported
   subpaths only. A JavaScript export of the page CSS, because it is a second
   stylesheet in another form.
-- **Wider fix:** F.
+- **Wider fix:** G.
 - **Previous examples:** None found.
 - **Related:** The follow-up item
   [embedded-styles-need-css-scope](./follow-ups/embedded-styles-need-css-scope.md)
   shares the wider fix: rules authored under the root class need no `@scope`
   transform.
-- **Recommendation:** E, changed from B by the second options check. E keeps
-  every rule in the package, keeps both viewer outputs without a selector
-  rewrite, and keeps page rules off a host page. F protects the codebase
-  best, because then no package rule selects the page.
+- **Recommendation:** E, changed from B by the second options check, for
+  this plan, with G after it. E keeps every rule in the package, keeps both
+  viewer outputs without a selector rewrite, and keeps page rules off a host
+  page. G protects the codebase best.
 - **Action:** ask the user, because condition 1 holds: E replaces the wording
   of shared UI package decision 12, a user decision.
 
@@ -362,7 +391,11 @@ Each call is the orchestrator's own, made on 2026-10-29.
    comes first, because no screen changes and the approved artboards stay the
    reference. A mockup can render a package component only after it exists,
    so each mockup milestone follows its slice. Precedent: milestones 3 and 4
-   of the shared UI package plan.
+   of the shared UI package plan. The theme milestone of decision 4 adds the
+   reset class to the markup and rewrites selectors, and the mask milestone
+   of decision 3 moves a drawing. Both keep the computed styles of the shell,
+   and each lists every intended difference that the computed-style tool
+   reports.
 3. **The split.** A package component takes props and callbacks. Each id that
    the viewer derives from `useShellIdentifier` becomes a prop, and store
    state and store actions become props and callbacks. Interaction that
@@ -393,19 +426,29 @@ Each call is the orchestrator's own, made on 2026-10-29.
    `css_views_responsive.ts` override the rules of `css_views_layout.ts`, and
    name order would move such rules apart.
 8. **Theme.** The tokens and the Light and Dark palette move into a package
-   `theme` stylesheet, first in `styles.css`. Decision 4 settles where the
-   page rules go, including the theme's `color-scheme` and the standalone
-   stub rule. The user's message covers the move, because the palette is a
-   styled part of the shell.
+   `theme` stylesheet, first in `styles.css`, declared on the shell root
+   class under decision 4. The user's message covers the move, because the
+   palette is a styled part of the shell. Updated on 2026-10-30 for decision 4
+   G: every viewer root carries the root class, including the loading and
+   failure roots. The standalone stub's `<html>` element carries a document
+   class, which the Rust stub writes, so the stub keeps the Auto appearance
+   before the bundle runs, as the appearance contract requires. The page
+   marks that the standalone shell sets on `body` or `<html>` today, such as
+   `frame-expanded`, `mbk-nav-resizing`, and the preview scheme, move to the
+   shell root, as the embedded shell already sets them.
 9. **Font.** The Inter font file and its `@font-face` rule stay with the
    viewer's delivery assets. The Rust server and the release archive read the
    font from the viewer package, and the rule's URL is a delivery path. The
    package's `--sans` token names the family with system fallbacks.
 10. **Embedded transform.** The viewer build keeps the selector transform that
-    scopes the shell rules to an embedded root. A rule that names the
-    embedding root or a host slot stays outside the `@scope` block, as the
-    rules of `viewer/styles.ts` do today. A post-merge follow-up proposes to
-    remove the transform once every rule is authored under the root class.
+    scopes the shell rules to an embedded root until the theme milestone. A
+    rule that names the embedding root or a host slot stays outside the
+    `@scope` block, as the rules of `viewer/styles.ts` do today. Updated on
+    2026-10-30 for decision 4 G: the theme milestone removes the transform and
+    its selector mapping. The build keeps the font URL rewrite and the
+    fallbacks that let a host's accent value inherit. This fixes the follow-up
+    item `embedded-styles-need-css-scope`, which the last pull request
+    deletes.
 11. **Delivery.** A stack of five pull requests, one for each slice, each on
     the one before. The first uses this branch. Each later slice starts its
     own branch from the one before, with `gh stack`. Each pull request keeps
@@ -417,6 +460,16 @@ Each call is the orchestrator's own, made on 2026-10-29.
     standalone shell and in an embedded root. It also lists each pair of rules
     whose order changed in the built stylesheets and that can set the same
     property on one element. Both tools stay under `.context/`.
+13. **Reset class.** Added on 2026-10-30 for decision 4 G. The reset class
+    is `mbk-reset`. Its rules use `:where()` element filters, so they add no
+    specificity, as Radix Themes' `.rt-reset` does. Each package component
+    puts it on its own elements that need a reset, and it never reaches host
+    slot content. The theme milestone decides whether box sizing sits in the
+    reset class or in each component's rules, and records the call.
+14. **Mask switch.** Added on 2026-10-30 for decision 3 F. The layout slice
+    adds the package mask component unused. A later milestone switches the
+    shell to it and removes both adapter drawings in one change, so no state
+    shows two masks or none.
 
 ## Inventory
 
@@ -487,15 +540,19 @@ them. Files under `src/shell` drop the prefix. `views.tsx` and
   `embedded_stage_overlay`, `workspace_inspection_labels`,
   `standalone/shell`, `standalone/version_failure`, `viewer/component`,
   `viewer/ready`, `viewer/host_bridge`, `viewer/inspection_layer`, and
-  `viewer/marker_layer`. When decision 3 is B, also the drawings of
+  `viewer/marker_layer`. Under decision 3 F, the mask drawings of
   `client/same_origin_highlight.ts`, `client/component_overlay.ts`, and
-  `inspector/overlay.ts`.
+  `inspector/overlay.ts` go, and the shell draws the package mask instead.
 - Package components: `shell-layout`, `workspace-layout`, `embedded-layout`,
-  `highlight-label`, and the `theme` stylesheet.
+  `highlight-label`, `highlight-mask`, the `theme` stylesheet, and the
+  `mbk-reset` stylesheet.
 - CSS sources: `css_tokens` without its `@font-face` rule, `css_theme`, the
   rest of `css_views_layout`, `css_views_responsive`, and `css_workspace`, and
   `viewer/styles.ts`.
-- Design library: none.
+- Design library: none in the inventory. Under decision 2 B, the artboard
+  scaffolds `specs/design/parts/shell.tsx` and
+  `specs/design/components/parts/workspace.tsx` and the artboard mask
+  `specs/design/components/parts/highlight.tsx`.
 
 ## Milestone 1: Documentation and protocol
 
@@ -503,7 +560,7 @@ Depends on: none
 
 State the end state, so that each slice and its review can check the code
 against it. Each touched protocol, architecture, and README page gets the
-repository's status line until milestone 17 removes it.
+repository's status line until milestone 20 removes it.
 
 - [ ] `docs/protocol/mokly-ui-package.md`: the package holds every element
       and every style rule of the Browse shell, including the tokens and the
@@ -520,13 +577,27 @@ repository's status line until milestone 17 removes it.
       the semantic palette. The page stands at 248 of its 250 lines, so the
       change keeps the line count.
 - [ ] `docs/protocol/mokly-design-components.md` and the design library
-      README: the outcome of decision 2.
+      README: decision 2 B. Every artboard part that a package component
+      provides renders that component, the scaffolds included.
+- [ ] Decision 3 F: `docs/protocol/mokly-frame-adapter.md`,
+      `docs/protocol/mokly-published-inspector.md`, and, when it names the
+      overlay, `docs/protocol/mokly-inspector-wire.md`. The shell draws the
+      highlight mask from the geometry that the adapters return. An adapter
+      keeps its pick listeners and draws nothing, and the in-frame inspector
+      draws nothing.
+- [ ] Decision 4 G: the theming paragraph of `docs/protocol/mokly-viewer.md`
+      and the stub and palette sentences of
+      `docs/protocol/mokly-viewer-appearance.md`. The tokens live on the
+      shell root, components reset their own elements, no package rule
+      selects the page, and the embedded stylesheet needs no `@scope`. Check
+      `docs/protocol/mokly-shell-delivery.md` for the stub's `<html>` element
+      and add the document class where the page names the stub markup.
 - [ ] `docs/architecture/package-boundary.md`: the viewer owns the shell
       state, the containers, the data, the frames, and the browser entry. The
       UI package owns every element and every style rule.
 - [ ] `AGENTS.md`, Product section: every element and every stylesheet of the
       shell lives in `@mokly/ui`, and a viewer file composes package
-      components only.
+      components only. Name the lint of decision 1 C.
 - [ ] `packages/ui/README.md`, `packages/viewer/README.md`, and
       `packages/viewer/src/shell/README.md`: the responsibilities and the
       stylesheet order. Each slice updates the Key Code entries and the
@@ -555,8 +626,8 @@ each slice changes nothing for a reader. The product does not change.
       list each pair of rules whose order changed, which set the same property
       at the same specificity on selectors that share a subject class.
 - [ ] Decision 1 C: add the rule under `scripts/eslint/` with the exemption
-      list of the 53 files, its cases in the ESLint rule tests, and its
-      sentence in `AGENTS.md`.
+      list of the 53 files and its cases in the ESLint rule tests. Milestone 1
+      writes its sentence in `AGENTS.md`.
 - [ ] Check: `npm run build`, `npm run typecheck`,
       `cargo xtask check --suite repository`, and the package tests.
 
@@ -607,8 +678,9 @@ Depends on: 3
 - [ ] Where a mockup draws a static destination or an inert control, the
       package component gains an optional prop, as `ComparisonToolbar` gained
       `modeHref` and `interactive`. The product output does not change.
-- [ ] Decision 2: when the answer is B, C, or D, adopt the artboard parts
-      of this slice in the same way.
+- [ ] Decision 2 B: the artboard parts of this slice that a package
+      component provides render that component in the same way, and their
+      copies and CSS go.
 - [ ] Compare each changed artboard and component page with its render
       before the change, in both viewports and both schemes. Record each
       difference as a finding with options, ask the user in one message, and
@@ -761,57 +833,132 @@ Depends on: 12, 13
 - [ ] Merge, gate, commit, push, review, and open the pull request on the
       third one, as milestone 8 says.
 
-## Milestone 15: Layout, theme, and embedded root
+## Milestone 15: Layout components
 
 Tags: ui
 
 Depends on: 12, 14
 
 Move the shell layout, the workspace layout, the embedded root and its host
-slots, the highlight labels, and the theme. After this milestone the viewer
-holds no element and no style rule, apart from the `@font-face` rule of
-design call 9 and the page rules that decision 4 keeps there.
+slots, and the highlight labels. Add the package highlight mask unused, under
+design call 14. After this milestone, the viewer renders no element of its
+own, and only the theme modules remain of its CSS.
 
-- [ ] Create the package components of the last slice, and the `theme`
-      stylesheet under design calls 8 and 9, first in `src/styles.css`.
-- [ ] The viewer files of the slice become containers. Delete `css.ts`, every
-      `css_*.ts` module, and `viewer/styles.ts`. The viewer build writes
-      `shell.css` and `styles.css` from the `@font-face` rule and the package
-      stylesheets, with the page rules where decision 4 puts them, and keeps
-      the embedded transform under design call 10.
-- [ ] Tests as in milestone 3. The viewer's styles tests read the built
-      stylesheets, and keep every assertion.
-- [ ] Decision 3: move the mask drawing as its answer says.
+- [ ] Create the package components of the last slice, with their CSS,
+      exports, and order. The embedded root rules of `viewer/styles.ts` move
+      to the `embedded-layout` stylesheet and stay outside the `@scope`
+      block until milestone 18.
+- [ ] Create `highlight-mask`: the dimmed layer with outlined cutouts, drawn
+      from a width, a height, and boxes, in the colours of today's mask.
+- [ ] The viewer files of the slice become containers. Move their rules and
+      delete each emptied module.
 - [ ] `localPresentation` of `client/same_origin_adapter.ts` and the label
       branch of `installLocalHighlight` run only from a test. Check them
       against the dead-code rule of the `git-commit` skill. When they are
       dead, delete them and record the search.
+- [ ] Tests as in milestone 3, also for the mask's cutouts and outlines.
 - [ ] Empty the lint exemption list of decision 1.
-- [ ] Check as in milestone 3, with the embedded viewer specs and the
-      appearance specs. Save evidence under
-      `.context/ui-package-shell-views/layout/`.
+- [ ] Check as in milestone 3, with the embedded viewer specs. Save evidence
+      under `.context/ui-package-shell-views/layout/`.
 
-## Milestone 16: Layout mockups
-
-Tags: mockup
+## Milestone 16: The shell draws the highlight mask
 
 Depends on: 15
 
-Runs only when decision 2 is B. The layout slice has no inventory component.
+Decision 3 F. The shell's inspection layers render the package mask from the
+boundary geometry that already places the labels, for both adapters. The
+same-origin adapter keeps its pick listeners and draws nothing. The in-frame
+inspector reports geometry and picks and draws nothing.
 
-- [ ] The artboard scaffolds `specs/design/parts/shell.tsx`,
-      `specs/design/components/parts/workspace.tsx`, and
-      `specs/design/components/parts/highlight.tsx` render the package
-      layout components, and the artboard mask renders the package mask
-      when decision 3 is D or F, with the comparison and the findings step of
-      milestone 4.
+- [ ] The workspace inspection overlay and the embedded viewer's inspection
+      layer render `highlight-mask` with the boxes of the shown instances.
+- [ ] The same-origin adapter stops drawing: remove the mask layer of
+      `client/same_origin_highlight.ts` and `client/component_overlay.ts`.
+      Keep its pick, Escape, and redraw listeners where the shell needs them.
+- [ ] The in-frame inspector stops drawing: remove `inspector/overlay.ts`
+      and its calls. The built inspector stays within its 9,216-byte budget.
+- [ ] Tests: the adapter tests no longer expect a drawn layer, the inspector
+      tests no longer expect an overlay, and the shell tests and browser specs
+      of highlighting see one mask over same-origin and cross-origin frames.
+- [ ] Check: `npm run build`, the targeted tests, the highlighting and
+      embedded browser specs, the inspector budget test, and the
+      computed-style tool, which lists the mask as its one intended
+      difference. Smoke-test highlighting in Serve and in a published
+      catalogue. Save evidence under `.context/ui-package-shell-views/mask/`.
+
+## Milestone 17: The stub document class
+
+Depends on: 15
+
+Decision 4 G needs a class on the standalone stub's `<html>` element, so the
+stub keeps the Auto appearance before the bundle runs. Nothing styles the
+class yet, so the product does not change.
+
+- [ ] `crates/mokly-model/src/shell.rs` writes the document class on the
+      stub's `<html>` element, with its Rust test, and every Rust or Node
+      test that compares the stub markup.
+- [ ] Check: `cargo test -p mokly-model`, the repository suite of
+      `cargo xtask check`, and the tests that read the stub.
+
+## Milestone 18: Theme on the shell root and the reset class
+
+Tags: ui
+
+Depends on: 16, 17
+
+Decision 4 G. After this milestone the viewer holds no style rule apart from
+the `@font-face` rule of design call 9, and the embedded stylesheet has no
+`@scope` block.
+
+- [ ] Create the `theme` stylesheet under design call 8: the tokens and the
+      palette on the shell root class and the stub document class, never on
+      `:root`, `html`, or `body`.
+- [ ] Create the `mbk-reset` stylesheet under design call 13, and put the
+      class on the elements of each package component that need a reset.
+      Record where box sizing lives.
+- [ ] Every viewer root carries the root class. The standalone shell sets its
+      page marks on the shell root instead of `body` or `<html>`.
+- [ ] Rewrite each rule that selects `body`, `html`, or `:root` with a shell
+      mark to select the shell root.
+- [ ] Delete `css.ts` and the remaining CSS modules. The viewer build writes
+      `shell.css` and `styles.css` from the `@font-face` rule and the package
+      stylesheet. Remove the `@scope` transform and its selector mapping, and
+      keep the font URL rewrite and the accent fallbacks under design call 10.
+- [ ] Tests: the package and viewer styles tests read the new forms, a test
+      shows that no package rule selects the page or reaches a host slot, and
+      every earlier assertion stays.
+- [ ] Check as in milestone 3, with the appearance, embedded viewer, and
+      device chrome specs. The computed-style tool lists every intended
+      difference. Run a visual check of the standalone shell and an embedded
+      host in Light and Dark at both widths, also in Firefox. Save evidence
+      under `.context/ui-package-shell-views/theme/`.
+
+## Milestone 19: Layout mockups
+
+Tags: mockup
+
+Depends on: 18
+
+Decision 2 B. The layout slice has no inventory component, but the
+artboards draw its parts with their own scaffolds.
+
+- [ ] The artboard scaffolds `specs/design/parts/shell.tsx` and
+      `specs/design/components/parts/workspace.tsx` render the package
+      layout components, and the artboard mask
+      `specs/design/components/parts/highlight.tsx` renders the package mask,
+      with the comparison and the findings step of milestone 4.
+- [ ] The design library's sheets import the `theme` and `mbk-reset`
+      stylesheets where a package component needs them.
 - [ ] Run the mockup check and smoke-test the changed pages.
 
-## Milestone 17: Last pull request
+## Milestone 20: Last pull request
 
 Depends on: every other milestone
 
 - [ ] Remove the status lines that milestone 1 added.
+- [ ] Delete the follow-up item
+      `plans/follow-ups/embedded-styles-need-css-scope.md`, which milestone 18
+      fixes.
 - [ ] Merge, run the complete gate, commit, push, and review as milestone 8
       says.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
@@ -822,7 +969,5 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Remove the embedded selector transform once every shell rule is
-      authored under the root class (design call 10).
 - [ ] Let the design catalogue import the package theme in place of its own
       palette in `examples/basic/design.css`.
