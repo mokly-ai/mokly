@@ -48,12 +48,25 @@
 - **Options:**
   - **A.** Assert each guard flag and variable in the manager command tests.
     Effort: Small (estimate).
+  - **C.** Apply A. Then check these points once, outside the test suite,
+    and save the output under `.context/`:
+    - Run cold base installs with a `.pnpmfile.cjs`, a `.pnpmfile.mjs`, a
+      Berry `yarnPath` script, and a Classic `yarn-path` in an ancestor
+      `.yarnrc`. No hook marker may appear. When a marker appears, copy the
+      manager, its version, and the marker path into this item, and keep it
+      open.
+    - Find where the lifecycle scripts of
+      `tests/helpers/base_manager_fixture.ts` write their markers in a base
+      install. When `tests/static_base_managers.test.ts:96-107` reads other
+      paths, correct those paths in the suite.
+    - Risk: each check covers only the manager versions of that run.
+    - Effort: Small (estimate).
 - **Left out:**
   - One generic marker cannot reach the different hook locations of pnpm
     and Yarn.
-  - Only two distinct approaches exist: check the command, or check the
-    process result. Since the `testing` skill of 2026-10-30, the process
-    result is a one-time proof, so A is the only approach for the suite.
+  - Only two distinct approaches exist: check the command, or also check
+    the process result. Since the `testing` skill of 2026-10-30, the process
+    result is a one-time proof, so C checks it once, outside the suite.
   - Former option B: Apply A. Also add cold-build fixtures that write a
     marker file. Use a `.pnpmfile.cjs`, a `.pnpmfile.mjs`, a Berry
     `yarnPath` script, and a Classic `yarn-path` in an ancestor `.yarnrc`.
@@ -61,18 +74,17 @@
     locations of the existing lifecycle checks. Effort: Medium. Under the
     `testing` skill of 2026-10-30, these fixtures check package-manager
     behaviour, so they run once as a proof under `.context/`, not in the
-    suite.
+    suite. C keeps them in that form, with the marker correction.
 - **Wider fix:** None. The fixtures of former option B check
   package-manager behaviour, which the `testing` skill keeps out of the
   suite, so they are not a wider fix.
 - **Previous examples:** The scripts-off cases of
   `tests/static_base_managers.test.ts` already use a lifecycle marker that
   the test requires to be absent.
-- **Recommendation:** A. It asserts each guard that the protocol requires,
-  at the lowest level that fails without it. The recommendation was former
-  option B before the `testing` skill of 2026-10-30, which keeps checks of
-  package-manager behaviour out of the suite. A does not cover the
-  lifecycle checks that the Problem names.
+- **Recommendation:** C. It covers each concern of the Problem and keeps
+  package-manager checks out of the suite. The recommendation was former
+  option B before the `testing` skill of 2026-10-30. It was then A, which
+  does not cover the lifecycle checks that the Problem names.
 - **Action:** ask the user, because condition 5 holds: on 2026-10-21 the
   user reserved the choice for each open review item of the rebuild.
   Condition 6 also holds, because the item concerns missing tests.

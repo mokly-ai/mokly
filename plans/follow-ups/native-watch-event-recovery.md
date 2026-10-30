@@ -42,6 +42,15 @@
 - **Root question:** How does Serve stay correct when the native watcher
   loses events on macOS or Windows?
 - **Options:**
+  - **D.** Keep the current rescan-flag recovery. Check once, outside the
+    test suite, on macOS and on Windows. Force a batch and a buffer
+    overflow, and see whether each loss arrives with a rescan flag or as a
+    pathless event. Save the output under `.context/`. When every loss
+    arrives in one of those forms, the current recovery covers it, so delete
+    this item. Otherwise copy the failure text and the counts into this
+    item, and keep A and B for the user's choice. It needs a macOS host and
+    a Windows host. One run covers only the system versions of that run.
+    Effort: Small (estimate).
   - **A.** Rescan the repository roots after each macOS batch, and check
     exact-input stamps on Windows. Effort: Medium (estimate).
   - **B.** Use one recursive watch for each root on both systems. Effort:
@@ -53,10 +62,8 @@
     macOS and Windows tests that force a batch and a buffer overflow. Add A
     or B only for a loss that comes without a rescan flag. Effort: Small
     (estimate). Under the `testing` skill of 2026-10-30, the hosted check of
-    the operating system's watcher is a one-time proof. Run it once, and
-    save its output under `.context/`.
-  - Fewer than three approaches remain, because former option C now holds
-    only that one-time check.
+    the operating system's watcher is a one-time proof, so it gets no suite
+    test. D keeps this approach as a check that runs once.
 - **Wider fix:** A. Platform-specific recovery handles each known loss mode
   and keeps the current watcher ownership.
 - **Previous examples:** None found.
