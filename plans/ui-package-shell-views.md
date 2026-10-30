@@ -775,6 +775,8 @@ Depends on: 1, 2, 3, 4
       7 of 7 suites on `73e2f3ea`, and review round 1 found no finding in
       scope. Its two out-of-scope notes have follow-up items. Reports:
       `.context/reviews/calummoore/mokly-ui-component-migration/`.
+- [x] Merged `origin/main` at `afc9f58d` in `5db03042` with an empty remerge
+      diff, and the remote gate passed 7 of 7 suites on it.
 
 ## Milestone 6: Control components
 
