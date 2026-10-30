@@ -38,7 +38,7 @@ function CatalogueView({
         title="Welcome"
         action={
           <>
-            <ViewSwitch active={viewport} />
+            <ViewSwitch active={viewport} highlight="available" />
           </>
         }
       />

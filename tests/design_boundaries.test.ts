@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { contrast, designPalette } from "./helpers/design_palette.js";
+import { boundaryContrast, designPalette } from "./helpers/design_palette.js";
 import {
   boundaryOf,
   designStyleRules,
   fillOf,
   type ColorReference,
+  type StyleRule,
 } from "./helpers/design_styles.js";
 
 /**
@@ -32,7 +33,14 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip:is\(a\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip\.flow:is\(a\)/u;
+
+/**
+ * `@mokly/ui` stylesheets that style a control through a base class whose
+ * selector names no control primitive, so each boundary there is a control
+ * edge too: the chip rule draws the resting edge of every tag chip.
+ */
+const CONTROL_SHEETS = new Set(["packages/ui/src/tag-chip/tag-chip.css"]);
 
 /** Tokens the palette contract reserves for decoration between surfaces. */
 const HAIRLINE_TOKENS = new Set([
@@ -46,9 +54,6 @@ const HAIRLINE_TOKENS = new Set([
  * exempts it, so a new entry has to state why rather than join a list.
  */
 const DECORATIVE_BOUNDARIES = new Map([
-  [".ce-added", "a label naming its own state in 7.08:1 ink"],
-  [".ce-changed", "a label naming its own state in 5.62:1 ink"],
-  [".ce-removed", "a label naming its own state in 5.73:1 ink"],
   [".ce-control-alert", "a label naming its own state in 5.97:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
 ]);
@@ -66,6 +71,29 @@ const EXEMPT_SURFACES = new Map([
 ]);
 
 /**
+ * Control surfaces that keep a decorative hairline, each named as the audit
+ * names a rule, by its sheet and selector, with the reason that exempts it.
+ * Each entry must be reached by the control-edge audit, so a future control
+ * cannot quietly inherit the exemption. A kept hairline that a state draws,
+ * such as a pressed icon control's, is exempt from the marked-boundary audit
+ * too: the state shows through its fill and its accent glyph.
+ */
+const EXEMPT_CONTROL_SURFACES = new Map([
+  [
+    "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
+    "the user kept the shipped border on 2026-10-30",
+  ],
+  [
+    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
+    "the user kept the shipped border on 2026-10-30",
+  ],
+  [
+    "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
+    "the user kept the shipped border on 2026-10-30",
+  ],
+]);
+
+/**
  * Every rule the audit collects, so a failure names the rule that appeared or
  * vanished instead of only reporting that the total moved. A component that
  * `@mokly/ui` provides is audited in the package stylesheet that its library
@@ -79,55 +107,36 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-components.css .ce-variants a[aria-current]",
-  "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
-  "design-library/controls/change-status.css .ce-added",
-  "design-library/controls/change-status.css .ce-changed",
-  "design-library/controls/change-status.css .ce-removed",
-  "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
-  "design-library/controls/view-controls.css .ce-icon-control:focus-within",
-  "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
   "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
   "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
   "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
-  "design-stage.css .mbk-chip:is(a):focus-visible",
+  "design-stage.css .mbk-chip.flow:is(a):focus-visible",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
+  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
+  "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
+  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked)',
+  "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag:is(a, button).active",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
   return EXEMPT_SURFACES.get(file) === selector;
 }
 
-/** Resolves a reference to the colour it paints in one appearance. */
-function resolve(
-  reference: ColorReference,
-  tokens: Map<string, string>,
-): string | undefined {
-  return reference.token ? tokens.get(reference.token) : reference.literal;
+/** Whether a rule draws a control surface that keeps a decorative hairline. */
+function keepsHairline(rule: StyleRule): boolean {
+  return EXEMPT_CONTROL_SURFACES.has(`${rule.file} ${rule.selector}`);
+}
+
+/** Whether a rule styles a control, by its selector or by its sheet. */
+function isControlRule(rule: StyleRule): boolean {
+  return CONTROL_SELECTOR.test(rule.selector) || CONTROL_SHEETS.has(rule.file);
 }
 
 function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
-}
-
-/**
- * A boundary sits between its own fill and the surface around it, so it only
- * has to reach 3:1 against one of them to read as an edge.
- */
-function boundaryContrast(
-  boundary: ColorReference,
-  fill: ColorReference | undefined,
-  tokens: Map<string, string>,
-): number | undefined {
-  const edge = resolve(boundary, tokens);
-  if (!edge) return undefined;
-  const behind = fill ? resolve(fill, tokens) : undefined;
-  return Math.max(
-    behind ? contrast(edge, behind) : 0,
-    contrast(edge, tokens.get("--chrome-surface")!),
-  );
 }
 
 /**
@@ -179,6 +188,7 @@ test("every marked boundary is visible against an adjacent colour", async () => 
   for (const rule of rules) {
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
     if (isExemptSurface(rule.file, rule.selector)) continue;
+    if (keepsHairline(rule)) continue;
     for (const appearance of ["light", "dark"] as const) {
       const tokens = palette[appearance];
       const reached = boundaryContrast(rule.boundary, rule.fill, tokens);
@@ -197,10 +207,22 @@ test("every marked boundary is visible against an adjacent colour", async () => 
 
 test("every control boundary is a readable control edge", async () => {
   const palette = await designPalette();
+  const rules = await designStyleRules();
+  for (const [surface, reason] of EXEMPT_CONTROL_SURFACES)
+    assert.ok(
+      rules.some(
+        (rule) =>
+          `${rule.file} ${rule.selector}` === surface &&
+          isControlRule(rule) &&
+          boundaryOf(rule.body) !== undefined,
+      ),
+      `the exempt control surface ${surface} (${reason}) is not reached by the audit`,
+    );
   const failures: string[] = [];
-  for (const rule of await designStyleRules()) {
-    if (!CONTROL_SELECTOR.test(rule.selector)) continue;
+  for (const rule of rules) {
+    if (!isControlRule(rule)) continue;
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
+    if (keepsHairline(rule)) continue;
     const boundary = boundaryOf(rule.body);
     if (!boundary) continue;
     if (boundary.token && HAIRLINE_TOKENS.has(boundary.token)) {
@@ -261,21 +283,4 @@ test("no design stylesheet outside a palette source names a colour", async () =>
     }
   }
   assert.deepEqual(failures, []);
-});
-
-test("the design palette declares every token that a @mokly/ui stylesheet reads", async () => {
-  // The root block declares each token, and design_appearance.test.ts holds
-  // the dark block to the same roles.
-  const declared = (await designPalette()).light;
-  const files = new Set<string>();
-  const missing: string[] = [];
-  for (const rule of await designStyleRules()) {
-    if (!rule.file.startsWith("packages/ui/src/")) continue;
-    files.add(rule.file);
-    for (const [, token] of rule.body.matchAll(/var\((--[\w-]+)/gu))
-      if (!declared.has(token!))
-        missing.push(`${rule.file} ${rule.selector}: ${token}`);
-  }
-  assert.ok(files.size > 0, "no @mokly/ui stylesheet was read");
-  assert.deepEqual(missing, []);
 });

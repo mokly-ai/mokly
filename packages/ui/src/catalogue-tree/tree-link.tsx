@@ -88,7 +88,8 @@ function LinkGlyph({
  * stylesheet draws the mark from `data-changed` and `data-changed-variants`
  * and decides whether the wording reaches assistive technology, so a host
  * moves the mark by changing the attributes alone. `data-nav-changed-text`
- * names the wording, so that search can leave it out.
+ * names the wording, so that search can leave it out. A row without an
+ * address draws the same row as a picture that opens nothing.
  */
 export function RowLink({
   link,
@@ -98,30 +99,40 @@ export function RowLink({
   /** Whether the row is a variant in an entry's list. */
   variant: boolean;
 }) {
-  return (
-    <a
-      aria-current={link.current ? "page" : undefined}
-      className="mbk-nav-row mbk-reset"
-      data-changed={link.changed ? "true" : undefined}
-      data-changed-variants={link.changedVariants ? "true" : undefined}
-      data-entry-id={link.entry}
-      data-entry-kind={link.kind}
-      data-nav-index={link.index ? "" : undefined}
-      data-nav-row=""
-      data-nav-removed={link.removed ? "" : undefined}
-      data-removed-page={link.removedPage ? "" : undefined}
-      data-removed-variant={link.removedVariant ? "" : undefined}
-      hidden={link.hidden}
-      data-route={link.route}
-      data-tags={link.tags.length > 0 ? link.tags.join(" ") : undefined}
-      href={link.href}
-      style={rowStyle(link.depth)}
-    >
+  const row = {
+    "aria-current": link.current ? ("page" as const) : undefined,
+    className: "mbk-nav-row mbk-reset",
+    "data-changed": link.changed ? "true" : undefined,
+    "data-changed-variants": link.changedVariants ? "true" : undefined,
+    "data-entry-id": link.entry,
+    "data-entry-kind": link.kind,
+    "data-nav-index": link.index ? "" : undefined,
+    "data-nav-row": "",
+    "data-nav-removed": link.removed ? "" : undefined,
+    "data-removed-page": link.removedPage ? "" : undefined,
+    "data-removed-variant": link.removedVariant ? "" : undefined,
+    hidden: link.hidden,
+    "data-route": link.route,
+    "data-tags": link.tags.length > 0 ? link.tags.join(" ") : undefined,
+  };
+  const content = (
+    <>
       <LinkGlyph kind={link.kind} variant={variant} />
       {link.label}
       <span className="mbk-nav-changed-text mbk-reset" data-nav-changed-text="">
         Changed
       </span>
+    </>
+  );
+  if (link.href === undefined)
+    return (
+      <span {...row} style={rowStyle(link.depth)}>
+        {content}
+      </span>
+    );
+  return (
+    <a {...row} href={link.href} style={rowStyle(link.depth)}>
+      {content}
     </a>
   );
 }

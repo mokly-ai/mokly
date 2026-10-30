@@ -94,7 +94,7 @@ export function registerDesignPortable(
       expect((sideBounds?.width ?? 0) > 70).toBe(true);
       await page.goto(design("design/browse/views/screen", viewport));
       if (viewport === "desktop") {
-        const row = page.locator(".mbk-nav-row.active");
+        const row = page.locator('.mbk-nav-row[aria-current="page"]');
         await expect(row).toHaveCSS("display", "flex");
         await expect(row).toHaveCSS("color", "rgb(255, 255, 255)");
         const bounds = await row.boundingBox();

@@ -1,6 +1,11 @@
+import type { ComparisonMode } from "../../parts/destinations.js";
 import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
-import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
+import {
+  ScreenHead,
+  type ArtboardViewport,
+  type HighlightState,
+} from "../../parts/shell.js";
 
 import { screenComparison } from "./comparison_fixtures.js";
 import { INSPECTION_PAGES } from "./destinations.js";
@@ -15,6 +20,23 @@ import {
 } from "./screen_preview.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
+
+/**
+ * The Highlight components state that the shell shows for a consuming screen.
+ * Every mode but Current is a comparison, which cannot highlight, and a
+ * removed screen has no current preview. The inspection states give their
+ * own reason, and the highlight states turn it on.
+ */
+function screenHighlight(
+  state: ScreenPageState,
+  mode: ComparisonMode,
+): HighlightState {
+  if (mode !== "current") return "comparison";
+  if (state === "removed-consumer") return "removed";
+  if (state === "inspection-loading") return "loading";
+  if (state === "unavailable" || state === "empty") return state;
+  return state === "highlight" || state === "nested" ? "on" : "available";
+}
 
 /**
  * A consuming screen in the component explorer. A removed consumer keeps the
@@ -43,7 +65,6 @@ export function ScreenPage({
   const comparison = screenComparison(state);
   const identity = screenIdentity(state);
   const { title, path } = SCREENS[identity];
-  const highlighting = state === "highlight" || state === "nested";
   // Changed components affect this screen, so it compares while Unmodified.
   const affected = comparison !== undefined && "affected" in comparison;
   const comparisonMode = affected ? "side-by-side" : "current";
@@ -65,20 +86,7 @@ export function ScreenPage({
         action={
           <ViewControls
             viewport={viewport}
-            highlight={{
-              active: highlighting,
-              // Every mode but Current is a comparison, which cannot highlight.
-              unavailable:
-                comparisonMode !== "current"
-                  ? "comparison"
-                  : removed
-                    ? "removed"
-                    : state === "inspection-loading"
-                      ? "loading"
-                      : state === "unavailable" || state === "empty"
-                        ? state
-                        : undefined,
-            }}
+            highlight={screenHighlight(state, comparisonMode)}
           />
         }
       />

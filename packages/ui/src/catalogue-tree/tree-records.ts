@@ -15,7 +15,11 @@ export interface NavigationLink {
   /** The entry's path, which `data-entry-id` carries. */
   entry: string;
   kind: NavigationEntryKind;
-  href: string;
+  /**
+   * The row's address. A row without one is a picture of itself, for a static
+   * depiction of an entry that it cannot open.
+   */
+  href?: string | undefined;
   /** The route of the entry, which `data-route` carries. */
   route: string;
   /** The text of the row, such as the entry's title. */

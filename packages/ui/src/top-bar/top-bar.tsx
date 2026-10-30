@@ -8,11 +8,16 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { BrandIcon, IconSvg, SearchIcon } from "../icons/icons.js";
+import { IconSvg, SearchIcon } from "../icons/icons.js";
+
+import { Brand, Menu } from "./top-bar-links.js";
 
 export function TopBar({
+  brandHref,
   drawerOpen,
   end,
+  interactive = true,
+  menuHref,
   navigationId,
   onDrawer,
   onSearch,
@@ -20,10 +25,28 @@ export function TopBar({
   searchId,
   tagPicker,
 }: {
+  /**
+   * The address of the brand link, `/` by default. A bar that is not
+   * interactive draws a brand without an address as a picture of itself.
+   */
+  brandHref?: string | undefined;
   /** Whether the catalogue drawer is open, which the menu button reports. */
   drawerOpen: boolean;
   /** The control at the end of the bar, such as the appearance selector. */
   end?: ReactNode;
+  /**
+   * Whether a menu without an address is a button and the compact search
+   * draws its toggle and Close search, as they do by default. A static
+   * depiction that runs no script sets `false`, which draws such a menu as a
+   * picture of itself and leaves out the compact search controls.
+   */
+  interactive?: boolean;
+  /**
+   * The address that the menu opens, such as another document that shows the
+   * drawer opened or closed. A menu with an address is a link whose name says
+   * whether it opens or closes the drawer.
+   */
+  menuHref?: string | undefined;
   /** The id of the catalogue navigation that the menu button opens. */
   navigationId: string;
   /** Receives the drawer state that the menu button asks for. */
@@ -52,36 +75,27 @@ export function TopBar({
       data-compact-search={compactSearchOpen ? "open" : "closed"}
       data-search=""
     >
-      <button
-        aria-controls={navigationId}
-        aria-expanded={drawerOpen}
-        aria-label="Open catalogue navigation"
-        className="mbk-menu mbk-reset"
-        data-mokly-menu=""
-        onClick={() => onDrawer?.(!drawerOpen)}
-        type="button"
-      >
-        <IconSvg size={16}>
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </IconSvg>
-      </button>
-      <a aria-label="Mokly" className="mbk-brand mbk-reset" href="/">
-        <span aria-hidden="true" className="mbk-mark mbk-reset">
-          <BrandIcon />
-        </span>
-        <span className="mbk-name mbk-reset">mokly.</span>
-      </a>
-      <button
-        aria-controls={searchId}
-        aria-expanded={compactSearchOpen}
-        aria-label="Search catalogue"
-        className="mbk-search-toggle mbk-reset"
-        onClick={() => setCompactSearchOpen(true)}
-        ref={searchToggle}
-        type="button"
-      >
-        <SearchIcon />
-      </button>
+      <Menu
+        drawerOpen={drawerOpen}
+        href={menuHref}
+        interactive={interactive}
+        navigationId={navigationId}
+        onDrawer={onDrawer}
+      />
+      <Brand href={brandHref ?? (interactive ? "/" : undefined)} />
+      {interactive ? (
+        <button
+          aria-controls={searchId}
+          aria-expanded={compactSearchOpen}
+          aria-label="Search catalogue"
+          className="mbk-search-toggle mbk-reset"
+          onClick={() => setCompactSearchOpen(true)}
+          ref={searchToggle}
+          type="button"
+        >
+          <SearchIcon />
+        </button>
+      ) : null}
       <div className="mbk-search mbk-reset">
         <SearchIcon />
         <input
@@ -100,16 +114,18 @@ export function TopBar({
         />
         {tagPicker}
       </div>
-      <button
-        aria-label="Close search"
-        className="mbk-search-close mbk-reset"
-        onClick={() => setCompactSearchOpen(false)}
-        type="button"
-      >
-        <IconSvg size={16}>
-          <path d="m6 6 12 12M18 6 6 18" />
-        </IconSvg>
-      </button>
+      {interactive ? (
+        <button
+          aria-label="Close search"
+          className="mbk-search-close mbk-reset"
+          onClick={() => setCompactSearchOpen(false)}
+          type="button"
+        >
+          <IconSvg size={16}>
+            <path d="m6 6 12 12M18 6 6 18" />
+          </IconSvg>
+        </button>
+      ) : null}
       {end}
     </header>
   );

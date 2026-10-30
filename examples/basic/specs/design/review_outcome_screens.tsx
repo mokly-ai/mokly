@@ -71,7 +71,7 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       nav={viewport === "desktop" ? <ReviewNav activeTitle="Details" /> : null}
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={viewport} highlight="available" />}
         crumbs={["Example", "Screens"]}
         path={ENTRY_PATHS.details}
         status="added"

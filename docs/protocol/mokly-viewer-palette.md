@@ -67,9 +67,9 @@ its rules take `--chrome-surface` as the Cloud's rules take its surface.
 | `--chrome-disabled-edge` | `#d7dfd9`                                | `#302d28`                             |
 | `--chrome-disabled-ink`  | `#5d6f63`                                | `#b2aba0`                             |
 
-Status and validation pairs. Added reuses the accent surface, edge and deep
-accent ink so one selected-state family covers both jobs. Unmodified and
-Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
+Status and validation pairs. Added reuses the accent surface and deep accent
+ink so one selected-state family covers both jobs. Unmodified keeps
+`--chrome-ink-2` without a fill, and every status badge draws `--chrome-border`.
 
 | Role                        | Light     | Dark      |
 | --------------------------- | --------- | --------- |
@@ -120,13 +120,25 @@ hovered, selected or checked state with a boundary uses `--mbk-sage-deep`,
 because `--chrome-control-edge` reaches only 2.99:1 on `--mbk-accent-surface`,
 the fill those states carry.
 
-One family is exempt. The `--mbk-status-*-edge` tokens, `--mbk-accent-edge` and
-`--mbk-danger-edge` outline the Added, Changed and Removed status badges and the
-validation alert, which are labels rather than controls: each names its own
-state in 5.62:1 or better text inside a distinct tinted fill, so the outline
-adds no information and is held to the decorative hairline standard. No other
-boundary may claim this exception; a control state that draws a boundary must
-reach 3:1 against its own fill or the surface around it.
+One family is exempt. The Added, Changed and Removed status badges and the
+validation alert are labels rather than controls: each names its own state in
+5.62:1 or better text inside a distinct tinted fill, so its outline adds no
+information and is held to the decorative hairline standard. The badges draw
+`--chrome-border`, and the alert draws `--mbk-danger-edge`.
+
+Four controls keep a hairline boundary. The segmented control group, such as
+the viewport switch and the comparison modes, draws `--chrome-border`, and the
+resting navigation resize grip draws `--chrome-border-strong`. A pressed icon
+control, such as the pressed Highlight components toggle or a selected
+inspector tab, draws `--chrome-border`, and so does a resting tag chip. The
+group shows its value through the filled selected segment, and the grip draws
+the accent on hover and focus. A pressed icon control fills with the accent
+tint and draws its glyph in the accent, and a selected tag chip fills with the
+accent. Decision: the shipped hairlines, not the control edge, because each
+control already shows its state through a fill or the accent, and the design
+mockups render these shipped controls. No other boundary may claim these
+exceptions; a control state that draws a boundary must reach 3:1 against its
+own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
@@ -137,9 +149,9 @@ the same way in both appearances.
 
 - `--chrome-muted` carries breadcrumbs, frame captions, navigation heads,
   counts and field hints as normal text.
-- `--chrome-control-edge` draws the boundaries of the preview and appearance
-  controls, the navigation and inspector resize grips, the mobile sheet
-  grabber and native fields, including the prop field's input border.
+- `--chrome-control-edge` draws the boundary of the appearance control, the
+  inspector resize grip, the mobile sheet grabber and native fields, including
+  the prop field's input border. The view controls draw no boundary at rest.
   `--chrome-border-strong` keeps the device and pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.

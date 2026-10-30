@@ -235,7 +235,8 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 /* The changed mark: a 6px accent dot at the row's trailing edge and the
    wording a screen reader hears beside it. Both are driven by the row's own
    attributes, so a client evidence refresh moves the mark by toggling them.
-   A Removed row is never marked; its label already names its state. */
+   A Removed row is never marked; its label already names its state. A row
+   link and the picture of a row without an address carry the same mark. */
 .mbk-nav-changed-text {
   display: none;
 }
@@ -243,7 +244,11 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 a[data-nav-row][data-changed="true"]:not([data-nav-removed]):where(
     .mbk-reset
   )::after,
-a[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after {
+a[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after,
+span[data-nav-row][data-changed="true"]:not([data-nav-removed]):where(
+    .mbk-reset
+  )::after,
+span[data-nav-row][data-changed-variants="true"]:where(.mbk-reset)::after {
   content: "";
   width: 6px;
   height: 6px;
@@ -258,13 +263,22 @@ a[data-nav-row][aria-current="page"][data-changed="true"]:where(
   )::after,
 a[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
     .mbk-reset
+  )::after,
+span[data-nav-row][aria-current="page"][data-changed="true"]:where(
+    .mbk-reset
+  )::after,
+span[data-nav-row][aria-current="page"][data-changed-variants="true"]:where(
+    .mbk-reset
   )::after {
   background: var(--mokly-accent-contrast);
 }
 
 a[data-nav-row][data-changed="true"]:not([data-nav-removed])
   .mbk-nav-changed-text,
-a[data-nav-row][data-changed-variants="true"] .mbk-nav-changed-text {
+a[data-nav-row][data-changed-variants="true"] .mbk-nav-changed-text,
+span[data-nav-row][data-changed="true"]:not([data-nav-removed])
+  .mbk-nav-changed-text,
+span[data-nav-row][data-changed-variants="true"] .mbk-nav-changed-text {
   display: block;
   position: absolute;
   width: 1px;

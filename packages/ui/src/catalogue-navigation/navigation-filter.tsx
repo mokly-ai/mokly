@@ -4,6 +4,8 @@
  * result.
  */
 
+import type { ReactNode } from "react";
+
 import type {
   NavigationFilter,
   NavigationStatus,
@@ -34,6 +36,57 @@ const STATUS_TEXT: Record<
   unmatched: "No matching changes.",
 };
 
+/** The view that a filter shows, and the `data-filter` value that names it. */
+const FILTER_NAMES = { all: "all", changes: "changed" } as const;
+
+/**
+ * One filter. A filter with an address is a link. A filter without one is a
+ * toggle button that reports its view, or text when the column is not
+ * operable. A link or text names the shown filter as the current page,
+ * because each filter of a static depiction is its own page.
+ */
+function FilterOption({
+  children,
+  href,
+  onView,
+  operable,
+  shown,
+  view,
+}: {
+  children: ReactNode;
+  href: string | undefined;
+  onView: ((view: "all" | "changes") => void) | undefined;
+  operable: boolean;
+  shown: boolean;
+  view: "all" | "changes";
+}) {
+  const depicted = {
+    "aria-current": shown ? ("page" as const) : undefined,
+    className: shown
+      ? "mbk-nav-filter-opt active mbk-reset"
+      : "mbk-nav-filter-opt mbk-reset",
+    "data-filter": FILTER_NAMES[view],
+  };
+  if (href !== undefined)
+    return (
+      <a {...depicted} href={href}>
+        {children}
+      </a>
+    );
+  if (!operable) return <span {...depicted}>{children}</span>;
+  return (
+    <button
+      aria-pressed={shown}
+      className="mbk-nav-filter-opt mbk-reset"
+      data-filter={FILTER_NAMES[view]}
+      onClick={() => onView?.(view)}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * The filter group. The count slot holds the number of changed entries once
  * detection is ready, a dash when it failed, and otherwise a spinner whose
@@ -41,10 +94,14 @@ const STATUS_TEXT: Record<
  */
 export function FilterGroup({
   filter,
+  href,
   onView,
+  operable,
 }: {
   filter: NavigationFilter;
+  href: ((view: "all" | "changes") => string | undefined) | undefined;
   onView: ((view: "all" | "changes") => void) | undefined;
+  operable: boolean;
 }) {
   const { status } = filter;
   return (
@@ -55,21 +112,21 @@ export function FilterGroup({
       data-changes-status={status}
       role="group"
     >
-      <button
-        aria-pressed={filter.view === "all"}
-        className="mbk-nav-filter-opt mbk-reset"
-        data-filter="all"
-        onClick={() => onView?.("all")}
-        type="button"
+      <FilterOption
+        href={href?.("all")}
+        onView={onView}
+        operable={operable}
+        shown={filter.view === "all"}
+        view="all"
       >
         All
-      </button>
-      <button
-        aria-pressed={filter.view === "changes"}
-        className="mbk-nav-filter-opt mbk-reset"
-        data-filter="changed"
-        onClick={() => onView?.("changes")}
-        type="button"
+      </FilterOption>
+      <FilterOption
+        href={href?.("changes")}
+        onView={onView}
+        operable={operable}
+        shown={filter.view === "changes"}
+        view="changes"
       >
         Changes
         <span className="mbk-nav-filter-count mbk-reset">
@@ -87,7 +144,7 @@ export function FilterGroup({
             />
           )}
         </span>
-      </button>
+      </FilterOption>
     </div>
   );
 }

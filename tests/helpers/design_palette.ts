@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type { ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
 
 /** The two interface palettes the design mockups select between. */
@@ -72,6 +73,39 @@ export function contrast(foreground: string, background: string): number {
   const ratio =
     (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
   return Math.floor(ratio * 100) / 100;
+}
+
+/** Resolves a reference to the colour it paints in one appearance. */
+function resolve(
+  reference: ColorReference,
+  tokens: Map<string, string>,
+): string | undefined {
+  return reference.token ? tokens.get(reference.token) : reference.literal;
+}
+
+/** Whether a palette value is an opaque `#rgb` or `#rrggbb` colour. */
+function isOpaque(color: string): boolean {
+  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/iu.test(color.trim());
+}
+
+/**
+ * A boundary sits between its own fill and the surface around it, so it only
+ * has to reach 3:1 against one of them to read as an edge. A translucent fill,
+ * such as the accent tint of a pressed icon button, shows the surface through
+ * it, so the surface decides.
+ */
+export function boundaryContrast(
+  boundary: ColorReference,
+  fill: ColorReference | undefined,
+  tokens: Map<string, string>,
+): number | undefined {
+  const edge = resolve(boundary, tokens);
+  if (!edge) return undefined;
+  const behind = fill ? resolve(fill, tokens) : undefined;
+  return Math.max(
+    behind && isOpaque(behind) ? contrast(edge, behind) : 0,
+    contrast(edge, tokens.get("--chrome-surface")!),
+  );
 }
 
 /** The CSS `rgb()` form of an opaque `#rgb` or `#rrggbb` colour. */

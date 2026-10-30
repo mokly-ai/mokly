@@ -33,9 +33,12 @@ Mobile and desktop still select distinct viewport contexts; controls must not
 fake scaling or modify consumer props to fit. Long or full-width components
 stay inspectable by scrolling.
 
-One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown.
-Screen views add the Highlight components toggle there. Standalone uses one
-top-bar Appearance selector; embedded hosts keep a separate preview toggle.
+One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown and
+the Highlight components toggle, on component and screen pages alike. A
+component page highlights the registered components that its example renders;
+when it renders none, the toggle stays disabled and states that reason.
+Standalone uses one top-bar Appearance selector; embedded hosts keep a separate
+preview toggle.
 Both renders both real viewport contexts. The shell and title stay fixed. On
 desktop, the preview and vertically resizable inspector are sibling panes
 whose contents scroll, with the navigation divider's centred short-line grip.
@@ -151,12 +154,13 @@ cannot introduce arbitrary DOM selectors or file paths.
 
 ## Highlight Components
 
-The screen toolbar has a keyboard-operable Highlight components toggle with an
-accessible pressed state. It starts off. In Current, enabling it dims the
-surrounding screen while registered component regions keep their original
-appearance. Outlines and labels identify visible regions; selecting a region
-selects the corresponding instance and opens Props if needed. Selecting a
-Components entry highlights and scrolls its instance into view.
+The view toolbar of each screen and component page has a keyboard-operable
+Highlight components toggle with an accessible pressed state. It starts off.
+In Current, enabling it dims the surrounding screen while registered component
+regions keep their original appearance. Outlines and labels identify visible
+regions; selecting a region selects the corresponding instance and opens Props
+if needed. Selecting a Components entry highlights and scrolls its instance
+into view.
 
 Initially highlight outermost visible component boundaries. Selecting or
 expanding a nested entry focuses that instance so a large shared container does

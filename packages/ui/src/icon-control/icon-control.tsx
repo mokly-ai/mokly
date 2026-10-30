@@ -2,7 +2,8 @@
  * The 34px icon controls of the workspace: a button drawn as one glyph, and a
  * native select laid transparent over a glyph and a down chevron. The view
  * controls draw both, and the inspector's tabs share the button's look, so
- * one stylesheet styles them all.
+ * one stylesheet styles them all. A static depiction that runs no script
+ * draws a toggle as a native switch with the button's look.
  */
 
 import type { ReactNode } from "react";
@@ -67,6 +68,55 @@ export function IconButton({
     >
       {children}
     </button>
+  );
+}
+
+/**
+ * A toggle of a static depiction that runs no script: a native checkbox with
+ * switch semantics laid transparent over the glyph, inside a label with the
+ * button's look. The reader's check acts in place, and a stylesheet can read
+ * it, so the switch starts at `checked` and then holds its own state. `label`
+ * is its accessible name and `title` the tooltip of the control.
+ */
+export function IconSwitch({
+  checked,
+  children,
+  describedBy,
+  description,
+  disabled,
+  label,
+  mark,
+  title,
+}: {
+  /** Whether the switch starts checked. */
+  checked: boolean;
+  /** The glyph, and the change mark of a control that carries one. */
+  children: ReactNode;
+  /** The id of the element that describes the switch, such as a mark's wording. */
+  describedBy?: string | undefined;
+  /** The description of the switch, such as why it is unavailable. */
+  description?: string | undefined;
+  disabled?: boolean | undefined;
+  label: string;
+  /** An empty data attribute on the switch, such as `data-workspace-highlight`. */
+  mark?: DataAttribute | undefined;
+  title: string;
+}) {
+  return (
+    <label className="mbk-icon-button mbk-reset" title={title}>
+      <input
+        className="mbk-reset"
+        type="checkbox"
+        role="switch"
+        aria-label={label}
+        aria-describedby={describedBy}
+        aria-description={description}
+        {...dataMark(mark)}
+        defaultChecked={checked}
+        disabled={disabled}
+      />
+      {children}
+    </label>
   );
 }
 

@@ -25,16 +25,20 @@ export interface ResizeActions {
 /**
  * The separator. A drag with the primary pointer captures it and resizes the
  * column continuously; Left and Right change the width by 16px, Home and End
- * choose its bounds, and a double click restores 248px.
+ * choose its bounds, and a double click restores 248px. A column that is not
+ * operable draws only the picture of its grip.
  */
 export function ResizeHandle({
   actions,
   maximum,
+  operable,
   width,
 }: {
   actions: ResizeActions;
   /** The widest column, in pixels. */
   maximum: number;
+  /** Whether the separator is a control, or only the picture of its grip. */
+  operable: boolean;
   /** The column width, in pixels. */
   width: number;
 }) {
@@ -55,6 +59,14 @@ export function ResizeHandle({
       handle.releasePointerCapture(pointer);
     onWidthCommit?.(currentWidth.current);
   };
+  if (!operable)
+    return (
+      <div
+        aria-hidden="true"
+        className="mbk-nav-resize mbk-reset"
+        data-mokly-nav-resize=""
+      />
+    );
   return (
     <div
       aria-label="Resize navigation panel"
