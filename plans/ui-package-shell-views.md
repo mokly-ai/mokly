@@ -69,7 +69,8 @@ Contract owners:
 
 ## Decisions
 
-The four decisions were asked on 2026-10-29 and are open. Each went through
+The four decisions were asked on 2026-10-29. Decision 1 is answered, and
+decisions 2, 3, and 4 are open. Each went through
 the options check of the `plans` skill. The first check added options 1 D,
 1 E, and 2 D, changed the recommendation of decision 1 from C to D, and
 raised decisions 3 and 4. The second check measured decisions 3 and 4, added
@@ -78,6 +79,15 @@ from B to 3 D and 4 E. Its notes are under
 `.context/ui-package-shell-views/options-check/`.
 
 ### 1. Keep UI out of the viewer with a lint
+
+Decision 1 (2026-10-30, the user): option C, a local ESLint rule that
+rejects every intrinsic element in `packages/viewer/src`, with an exemption
+list that each slice empties. Rejected: the recommended D, whose rule also
+rejects element-creating DOM calls and HTML strings, so markup that the
+viewer builds with DOM calls stays a review matter. Rejected: A, because only
+review then holds the boundary. Rejected: B, because it allows unstyled
+elements that package rules still style. Rejected: E, because it sees JSX
+only and can start only after the last slice.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -225,8 +235,8 @@ from B to 3 D and 4 E. Its notes are under
   `@mokly/ui`?
 - **Options:**
   - **A.** Keep both mask drawings in the viewer as frame-layer code. Their
-    shell rules move with the shell CSS, and the lint of decision 1 exempts
-    them. Effort: Small.
+    shell rules move with the shell CSS. The lint of decision 1 reads JSX
+    only, so it does not see them. Effort: Small.
   - **B.** Move the drawing into `@mokly/ui` as a React-free module that
     builds the mask from boxes, for both adapters. One shared DOM drawer puts
     the in-frame inspector 267 bytes over its budget. Moving today's markup
@@ -533,11 +543,9 @@ each slice changes nothing for a reader. The product does not change.
       `styles.css` of the baseline and the branch with `lightningcss`, and
       list each pair of rules whose order changed, which set the same property
       at the same specificity on selectors that share a subject class.
-- [ ] Decision 1: when the answer is B, C, or D, add the rule under
-      `scripts/eslint/` with the exemption list of the 53 files, and for D of
-      the files that build elements with DOM calls, its cases in the ESLint
-      rule tests, and its sentence in `AGENTS.md`. When the answer is E,
-      milestone 15 adds the typecheck configuration instead.
+- [ ] Decision 1 C: add the rule under `scripts/eslint/` with the exemption
+      list of the 53 files, its cases in the ESLint rule tests, and its
+      sentence in `AGENTS.md`.
 - [ ] Check: `npm run build`, `npm run typecheck`,
       `cargo xtask check --suite repository`, and the package tests.
 
@@ -767,8 +775,7 @@ design call 9 and the page rules that decision 4 keeps there.
       branch of `installLocalHighlight` run only from a test. Check them
       against the dead-code rule of the `git-commit` skill. When they are
       dead, delete them and record the search.
-- [ ] Empty the lint exemption list, or add the typecheck configuration of
-      decision 1 E.
+- [ ] Empty the lint exemption list of decision 1.
 - [ ] Check as in milestone 3, with the embedded viewer specs and the
       appearance specs. Save evidence under
       `.context/ui-package-shell-views/layout/`.
