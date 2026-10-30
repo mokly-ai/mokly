@@ -67,6 +67,7 @@ mod comparison_capture;
 mod comparison_error;
 
 mod comparison_resources;
+pub mod comparison_steps;
 pub mod comparison_types;
 mod entry_metadata;
 mod move_lines;
