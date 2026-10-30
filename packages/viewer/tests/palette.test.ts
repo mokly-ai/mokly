@@ -69,7 +69,7 @@ test("the shell stylesheets were actually scanned", async () => {
       await fs.readFile(new URL("../src/shell/css.ts", import.meta.url), "utf8")
     ).matchAll(/from "\.\/(css[a-z_]*)\.js"/gu),
   ].map((match) => `${match[1]}.ts`);
-  assert.ok(composed.length > 3, `only ${composed.length} modules composed`);
+  assert.ok(composed.length > 0, "the scan found no composed module");
   for (const source of [...composed, ...PALETTE_SOURCES, PACKAGE_STYLESHEET])
     assert.ok(
       modules.some((module) => module.file === source),

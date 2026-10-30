@@ -217,7 +217,14 @@ is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
 its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
 mount hooks, the sources, the read-only guard, and the scroll controllers.
 `frames.tsx` holds which browser frame is expanded in the store and copies its
-address, while the package shows "URL copied". A local ESLint rule
+address, while the package shows "URL copied". `views.tsx` renders the main
+region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
+with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
+embedded root and its host slots with `@mokly/ui/embedded-layout`, which
+places each slot's content and never reads it. The standalone shell's root
+and the loading, failure, and version states of both roots render
+`@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
+host's inspection render `@mokly/ui/highlight-label`. A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
@@ -444,9 +451,10 @@ Workspace labels and host markers acquire the registry's single geometry
 scheduler; a usage revision supersedes any unresolved measurement before fresh
 evidence is read. Navigation and inspector resize drag state stays on the
 owning shell root so independent embedded viewers cannot alter the host page or
-each other. Embedded roots also own their flex containment and measure host
-stage overlays against the current preview, keeping sibling viewers,
-navigation and the inspector outside an overlay's bounds. Browser transport
+each other. Embedded roots also own their flex containment, and
+`@mokly/ui/embedded-layout` measures host stage overlays against the current
+preview, keeping sibling viewers, navigation and the inspector outside an
+overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines route loading, revision fencing, and the absence of the render

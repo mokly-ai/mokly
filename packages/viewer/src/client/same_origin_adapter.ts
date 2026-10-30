@@ -13,10 +13,7 @@ import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
-import {
-  installLocalHighlight,
-  type HighlightFrame,
-} from "./same_origin_highlight.js";
+import { installLocalHighlight } from "./same_origin_highlight.js";
 import { normalizedHtmlPath } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
@@ -39,16 +36,6 @@ export function localInspection(
       target?.scrollIntoView({ block: "nearest", inline: "nearest" });
     },
   };
-}
-export function localPresentation(
-  root: HTMLElement,
-  frames: readonly HighlightFrame[],
-  selected: string | undefined,
-  label: (key: string) => string,
-  select: (key: string, viewport: "mobile" | "desktop") => void,
-  exit: () => void,
-): () => void {
-  return installLocalHighlight(root, frames, selected, label, select, exit);
 }
 export function replaceLocalFrame(frame: HTMLIFrameElement, url: URL): void {
   localFrameAccess(frame).replace(url);
@@ -127,8 +114,6 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
                     usage: record,
                   },
                 ],
-                undefined,
-                undefined,
                 (key) =>
                   emit({
                     type: "click",

@@ -12,6 +12,8 @@ import {
   type InstanceNode,
 } from "../src/instance-tree/instance-tree.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 function node(key: string, nested: readonly InstanceNode[] = []): InstanceNode {
   return { id: `${key}-id`, key, nested, title: "Action" };
 }
@@ -81,7 +83,7 @@ test("a view without records waits, cannot be inspected, or uses no components",
     "Waiting for the component preview.",
   );
   rerender(tree({ usage: { status: "unavailable" } }));
-  assert.equal(screen.queryByRole("status"), null);
+  assertSameElement(screen.queryByRole("status"), null);
   assert.ok(
     screen.getByText("Component inspection is unavailable for this view."),
   );
@@ -93,7 +95,7 @@ test("a view without records waits, cannot be inspected, or uses no components",
   assert.ok(
     screen.getByText("No registered components are used in this view."),
   );
-  assert.equal(screen.queryByRole("list"), null);
+  assertSameElement(screen.queryByRole("list"), null);
 });
 
 test("a reader selects an instance, and the selected instance is pressed", () => {

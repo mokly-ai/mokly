@@ -12,6 +12,8 @@ import {
   type UsageRow,
 } from "../src/usage-list/usage-list.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 function row(title: string, overrides: Partial<UsageRow> = {}): UsageRow {
   return {
     direct: true,
@@ -82,9 +84,9 @@ test("a row keeps its link element, and the focus on it, while its key stays", (
       usedBy={[row("Home", { href: "/view/home/?comparison=side" })]}
     />,
   );
-  assert.equal(screen.getByRole("link", { name: "Home" }), link);
+  assertSameElement(screen.getByRole("link", { name: "Home" }), link);
   assert.equal(link.getAttribute("href"), "/view/home/?comparison=side");
-  assert.equal(document.activeElement, link);
+  assertSameElement(document.activeElement, link);
 });
 
 test("the tab's data loads in a status, and a failed load offers Try again", () => {

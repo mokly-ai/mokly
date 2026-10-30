@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { EditStatus } from "../src/edit-status/edit-status.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 test("the edit status stays present, and a render in flight shows its dot and text", () => {
   assert.equal(
     renderToStaticMarkup(<EditStatus />),
@@ -24,13 +26,13 @@ test("the status region keeps its element when a render starts and ends", () => 
   const status = screen.getByRole("status");
   assert.equal(status.textContent, "");
   rerender(<EditStatus status="Updating preview…" />);
-  assert.equal(screen.getByRole("status"), status);
+  assertSameElement(screen.getByRole("status"), status);
   assert.equal(status.textContent, "Updating preview…");
   assert.equal(
     status.querySelector(".mbk-pending-dot")?.getAttribute("aria-hidden"),
     "true",
   );
   rerender(<EditStatus />);
-  assert.equal(screen.getByRole("status"), status);
+  assertSameElement(screen.getByRole("status"), status);
   assert.equal(status.textContent, "");
 });

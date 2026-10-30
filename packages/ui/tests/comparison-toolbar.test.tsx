@@ -11,6 +11,8 @@ import {
   type ComparisonMode,
 } from "../src/comparison-toolbar/comparison-toolbar.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 /** The props of one band; every callback records into `calls`. */
 function props(
   mode: ComparisonMode,
@@ -116,15 +118,15 @@ test("a switch that is off reports on", () => {
 test("the props hide the band, the switch, and Refresh", () => {
   const { rerender } = render(<ComparisonToolbar {...props("current")} />);
   assert.ok(screen.getByRole("group", { name: "Comparison mode" }));
-  assert.equal(screen.queryByRole("switch"), null);
-  assert.equal(
+  assertSameElement(screen.queryByRole("switch"), null);
+  assertSameElement(
     screen.queryByRole("button", { name: "Refresh comparison" }),
     null,
   );
 
   rerender(<ComparisonToolbar {...props("side", { loaded: false })} />);
   assert.ok(screen.getByRole("switch", { name: "Scroll together" }));
-  assert.equal(
+  assertSameElement(
     screen.queryByRole("button", { name: "Refresh comparison" }),
     null,
   );
@@ -133,7 +135,10 @@ test("the props hide the band, the switch, and Refresh", () => {
   assert.ok(screen.getByRole("button", { name: "Refresh comparison" }));
 
   rerender(<ComparisonToolbar {...props("side", { eligible: false })} />);
-  assert.equal(screen.queryByRole("group", { name: "Comparison mode" }), null);
-  assert.equal(screen.queryByRole("switch"), null);
-  assert.equal(screen.queryByRole("button"), null);
+  assertSameElement(
+    screen.queryByRole("group", { name: "Comparison mode" }),
+    null,
+  );
+  assertSameElement(screen.queryByRole("switch"), null);
+  assertSameElement(screen.queryByRole("button"), null);
 });

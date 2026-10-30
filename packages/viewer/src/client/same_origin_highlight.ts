@@ -19,11 +19,9 @@ export interface HighlightFrame {
 export function installLocalHighlight(
   root: HTMLElement,
   frames: readonly HighlightFrame[],
-  selected: string | undefined,
-  label: ((key: string) => string) | undefined,
   select: (key: string, viewport: "mobile" | "desktop") => void,
   exit: () => void,
-  requestedKeys?: ReadonlySet<string>,
+  keys: ReadonlySet<string>,
 ): () => void {
   const doc = root.ownerDocument;
   const win = doc.defaultView!;
@@ -47,17 +45,6 @@ export function installLocalHighlight(
     layer.dataset["highlightViewport"] = usage.viewport;
     (root.matches(`.${VIEWER_DIRECTORY}`) ? root : doc.body).append(layer);
     cleanups.push(() => layer.remove());
-    const keys =
-      requestedKeys ??
-      new Set(
-        usage.instances
-          .filter((instance) =>
-            selected
-              ? instance.key === selected
-              : instance.owner.kind === "entry",
-          )
-          .map((instance) => instance.key),
-      );
     let bounds: ComponentBounds[] = [];
     const draw = () => {
       const visible = visibleFrameBox(frame);
@@ -77,45 +64,14 @@ export function installLocalHighlight(
       const width = visible.right - visible.left;
       const height = visible.bottom - visible.top;
       const overlay = createOverlay(doc, width, height);
-      const labels: HTMLButtonElement[] = [];
-      const seen = new Set<string>();
-      for (const box of bounds) {
-        const x =
-          rect.left + (box.x + frame.clientLeft) * scaleX - visible.left;
-        const y = rect.top + (box.y + frame.clientTop) * scaleY - visible.top;
-        const w = box.width * scaleX;
-        const h = box.height * scaleY;
-        overlay.cutout(x, y, w, h);
-        if (
-          label &&
-          !seen.has(box.key) &&
-          x + w > 0 &&
-          y + h > 0 &&
-          x < width &&
-          y < height
-        ) {
-          const button = doc.createElement("button");
-          button.type = "button";
-          button.className = "mbk-highlight-label";
-          button.textContent = label(box.key);
-          button.dataset["instanceKey"] = box.key;
-          button.style.left = `${Math.max(0, Math.min(width - 40, x))}px`;
-          button.style.top = `${Math.max(0, Math.min(height - 22, y - 22))}px`;
-          button.addEventListener("click", () =>
-            select(box.key, usage.viewport),
-          );
-          labels.push(button);
-          seen.add(box.key);
-        }
-      }
-      const focusedKey = layer.contains(doc.activeElement)
-        ? (doc.activeElement as HTMLElement)?.dataset["instanceKey"]
-        : undefined;
-      layer.replaceChildren(overlay.svg, ...labels);
-      if (focusedKey)
-        labels
-          .find((button) => button.dataset["instanceKey"] === focusedKey)
-          ?.focus({ preventScroll: true });
+      for (const box of bounds)
+        overlay.cutout(
+          rect.left + (box.x + frame.clientLeft) * scaleX - visible.left,
+          rect.top + (box.y + frame.clientTop) * scaleY - visible.top,
+          box.width * scaleX,
+          box.height * scaleY,
+        );
+      layer.replaceChildren(overlay.svg);
     };
     draws.push(draw);
     const activate = (event: MouseEvent) => {

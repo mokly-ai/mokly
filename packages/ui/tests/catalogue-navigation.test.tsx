@@ -12,6 +12,7 @@ import {
   type NavigationStatusMessage,
 } from "../src/catalogue-navigation/catalogue-navigation.js";
 
+import { assertSameElement } from "./dom-assertions.js";
 import { column, leaf, link, specs } from "./navigation-fixture.js";
 
 function scrollPane(container: HTMLElement): HTMLElement {
@@ -34,8 +35,8 @@ test("the column names its parts as the shell specs query them", () => {
     within(nav).getByRole("separator", { name: "Resize navigation panel" }),
   );
   // A catalogue without Changes shows no filter and no status line.
-  assert.equal(screen.queryByRole("group"), null);
-  assert.equal(screen.queryByRole("status"), null);
+  assertSameElement(screen.queryByRole("group"), null);
+  assertSameElement(screen.queryByRole("status"), null);
 });
 
 test("a resizable column carries its width, and a fixed one keeps the stylesheet's", () => {
@@ -123,7 +124,7 @@ test("the filter presses its view and fills the count slot for each detection st
     assert.equal(filter.getAttribute("data-changes-status"), status);
     const spinner = within(filter).getByRole("status", { name });
     assert.equal(spinner.className, "mbk-nav-spinner");
-    assert.equal(spinner.parentElement, count());
+    assertSameElement(spinner.parentElement, count());
   }
 });
 
@@ -192,8 +193,8 @@ test("the tree reports that it waits, and the refs reach the column and the tree
       {...column({ busy: true, ref: nav, scrollRef: tree })}
     />,
   );
-  assert.equal(nav.current, screen.getByRole("navigation"));
-  assert.equal(tree.current, scrollPane(container));
+  assertSameElement(nav.current, screen.getByRole("navigation"));
+  assertSameElement(tree.current, scrollPane(container));
   assert.equal(tree.current?.getAttribute("aria-busy"), "true");
 });
 

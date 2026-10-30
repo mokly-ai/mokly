@@ -82,7 +82,7 @@ cargo xtask check --suite viewer
 - [`same_origin_access.ts`](./same_origin_access.ts) holds `localFrameAccess`,
   the only same-origin adapter code that reads a frame's document or window.
 - [`same_origin_highlight.ts`](./same_origin_highlight.ts) holds
-  `installLocalHighlight`, which draws the parent-owned mask, labels, and
+  `installLocalHighlight`, which draws the parent-owned mask and reports
   selection.
 - [`component_geometry.ts`](./component_geometry.ts) holds `authenticateRanges`
   and `rangeBounds`, which measure clipped boxes with the clipping rules of

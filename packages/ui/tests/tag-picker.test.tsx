@@ -10,6 +10,7 @@ import { TagIcon } from "../src/icons/icons.js";
 import { TagChip } from "../src/tag-chip/tag-chip.js";
 import { TagPicker } from "../src/tag-picker/tag-picker.js";
 
+import { assertSameElement } from "./dom-assertions.js";
 import { chips, PICKER_ID, TAGS, tagButton } from "./tag-picker-fixture.js";
 
 /** The shell's closed picker, with each chip's tab index. */
@@ -95,7 +96,7 @@ test("a closed picker is hidden, and the button reports it collapsed", () => {
     />,
   );
   assert.equal(tagButton().getAttribute("aria-expanded"), "false");
-  assert.equal(screen.queryByRole("group", { name: "Tags" }), null);
+  assertSameElement(screen.queryByRole("group", { name: "Tags" }), null);
   const picker = document.getElementById(PICKER_ID);
   assert.ok(picker);
   assert.equal(picker.hidden, true);
@@ -134,9 +135,9 @@ test("focus follows the host's focused chip only while the picker is open", () =
     />
   );
   const { rerender } = render(picker(0, true));
-  assert.equal(document.activeElement, chips()[0]);
+  assertSameElement(document.activeElement, chips()[0]);
   rerender(picker(2, true));
-  assert.equal(document.activeElement, chips()[2]);
+  assertSameElement(document.activeElement, chips()[2]);
   assert.deepEqual(
     chips().map((chip) => chip.getAttribute("tabindex")),
     ["-1", "-1", "0"],
@@ -145,5 +146,5 @@ test("focus follows the host's focused chip only while the picker is open", () =
   rerender(picker(2, false));
   tagButton().focus();
   rerender(picker(1, false));
-  assert.equal(document.activeElement, tagButton());
+  assertSameElement(document.activeElement, tagButton());
 });

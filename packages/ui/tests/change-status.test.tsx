@@ -11,6 +11,8 @@ import {
   type ChangeStatusValue,
 } from "../src/change-status/change-status.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const STATUSES: readonly ChangeStatusValue[] = [
   "Added",
   "Changed",
@@ -59,7 +61,7 @@ test("a badge without a status stays in place, hidden and empty", () => {
 
   // A status that arrives later shows in the same badge.
   rerender(<ChangeStatus mark="data-workspace-status" status="Added" />);
-  assert.equal(container.querySelector("[data-workspace-status]"), badge);
+  assertSameElement(container.querySelector("[data-workspace-status]"), badge);
   assert.equal(badge.hidden, false);
   assert.equal(badge.textContent, "Added");
   assert.equal(badge.getAttribute("data-status"), "Added");

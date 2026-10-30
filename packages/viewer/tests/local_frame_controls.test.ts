@@ -3,9 +3,9 @@ import test from "node:test";
 
 import {
   localInspection,
-  localPresentation,
   replaceLocalFrame,
 } from "../src/client/same_origin_adapter.js";
+import { installLocalHighlight } from "../src/client/same_origin_highlight.js";
 import type { ComponentViewRecord } from "../src/components/manifest_types.js";
 
 test("local inspection stays unavailable when the immediate document cannot authenticate", () => {
@@ -37,7 +37,7 @@ test("replacing a local frame preserves the exact query and fragment", () => {
   assert.deepEqual(replacements, [url.href]);
 });
 
-test("local presentation cancels pending drawing and listeners on disposal", () => {
+test("local highlighting cancels pending drawing and listeners on disposal", () => {
   const signals: AbortSignal[] = [];
   const cancelled: number[] = [];
   let scheduled = 0;
@@ -56,13 +56,12 @@ test("local presentation cancels pending drawing and listeners on disposal", () 
       },
     },
   } as unknown as HTMLElement;
-  const dispose = localPresentation(
+  const dispose = installLocalHighlight(
     root,
     [],
-    undefined,
-    (key) => key,
     () => {},
     () => {},
+    new Set(),
   );
   assert.equal(scheduled, 1);
   assert.equal(signals.length, 2);

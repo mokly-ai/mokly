@@ -8,6 +8,8 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
+
 import type { Box } from "../client/frame_adapter.js";
 import { SupersededFrameGeometry } from "../shell/frame_geometry.js";
 import {
@@ -134,24 +136,19 @@ export function ViewerInspectionLayer({
         )
       : [];
   return (
-    <div
-      data-mokly-label-layer=""
-      ref={layer}
-      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-    >
+    <LabelLayer placement="root" ref={layer}>
       {labels.map((label) => (
-        <button
-          className="mbk-highlight-label"
-          data-mokly-label-key={label.id}
+        <HighlightLabel
           key={label.id}
-          onClick={() => onSelect(label.session, label.key, label.boxes)}
-          style={{ left: label.left, pointerEvents: "auto", top: label.top }}
-          type="button"
-        >
-          {label.text}
-        </button>
+          labelKey={label.id}
+          left={label.left}
+          onSelect={() => onSelect(label.session, label.key, label.boxes)}
+          pointerEvents="auto"
+          text={label.text}
+          top={label.top}
+        />
       ))}
-    </div>
+    </LabelLayer>
   );
 }
 

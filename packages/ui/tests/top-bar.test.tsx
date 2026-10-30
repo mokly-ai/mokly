@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { TopBar } from "../src/top-bar/top-bar.js";
 
+import { assertNotSameElement, assertSameElement } from "./dom-assertions.js";
+
 const IDS = { navigationId: "root-mb-nav", searchId: "root-mb-search" };
 
 function searchField(): HTMLInputElement {
@@ -125,12 +127,12 @@ test("the compact search focuses its field and returns focus to its toggle", () 
   const bar = container.querySelector("header");
   assert.ok(bar);
   // Before the compact search ever opened, focus stays where it is.
-  assert.notEqual(document.activeElement, searchToggle());
+  assertNotSameElement(document.activeElement, searchToggle());
 
   fireEvent.click(searchToggle());
   assert.equal(bar.getAttribute("data-compact-search"), "open");
   assert.equal(searchToggle().getAttribute("aria-expanded"), "true");
-  assert.equal(document.activeElement, searchField());
+  assertSameElement(document.activeElement, searchField());
 
   // A key other than Escape keeps it open.
   fireEvent.keyDown(searchField(), { key: "Enter" });
@@ -138,11 +140,11 @@ test("the compact search focuses its field and returns focus to its toggle", () 
   fireEvent.keyDown(searchField(), { key: "Escape" });
   assert.equal(bar.getAttribute("data-compact-search"), "closed");
   assert.equal(searchToggle().getAttribute("aria-expanded"), "false");
-  assert.equal(document.activeElement, searchToggle());
+  assertSameElement(document.activeElement, searchToggle());
 
   fireEvent.click(searchToggle());
-  assert.equal(document.activeElement, searchField());
+  assertSameElement(document.activeElement, searchField());
   fireEvent.click(screen.getByRole("button", { name: "Close search" }));
   assert.equal(bar.getAttribute("data-compact-search"), "closed");
-  assert.equal(document.activeElement, searchToggle());
+  assertSameElement(document.activeElement, searchToggle());
 });

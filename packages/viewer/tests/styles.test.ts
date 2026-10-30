@@ -71,8 +71,8 @@ test("the package component rules follow the tokens and the palette", () => {
   );
 });
 
-test("embedded styles keep a package rule whole between the palette and the shell rules", () => {
-  const styles = embeddedStyles(shellCss(COMPONENT_CSS), "");
+test("embedded styles keep a package rule whole after the palette", () => {
+  const styles = embeddedStyles(shellCss(COMPONENT_CSS));
   const scope = styles.search(
     /@scope \(\.mokly-viewer\) to \(\[data-mokly-slot\]\) \{/,
   );
@@ -82,19 +82,109 @@ test("embedded styles keep a package rule whole between the palette and the shel
   const whole = /^\.mbk-x \{[^}]*\}\s*/u.exec(styles.slice(rule))?.[0] ?? "";
   assert.equal(whole.trim().replace(/\s+/g, " "), ".mbk-x { color: red; }");
   // The scoped tokens and palette come before the rule, and without it the
-  // shell's own rules follow them unchanged.
-  const palette = embeddedStyles(SHELL_TOKENS_CSS + SHELL_THEME_CSS, "");
+  // stylesheet is the shell's stylesheet without package rules.
+  const palette = embeddedStyles(SHELL_TOKENS_CSS + SHELL_THEME_CSS);
   assert.equal(
     styles.slice(0, rule).trimEnd(),
     palette.slice(0, palette.lastIndexOf("}")).trimEnd(),
   );
   assert.equal(
     styles.slice(0, rule) + styles.slice(rule + whole.length),
-    embeddedStyles(shellCss(""), ""),
+    embeddedStyles(shellCss("")),
   );
   assert.doesNotMatch(styles, /-:scope/);
   assert.doesNotMatch(styles, bareDocumentSelector);
-  assert.match(styles, /:scope\.mbk\s*\{/);
+  // A rule of the shell root class also matches the scope root itself.
+  assert.match(
+    embeddedStyles(shellCss(".mbk { color: red }\n")),
+    /:scope\.mbk\s*\{/,
+  );
+});
+
+/** The scope that stops at host slots, and the rules after it. */
+function scopeParts(styles: string): { inside: string; after: string } {
+  const head = "@scope (.mokly-viewer) to ([data-mokly-slot]) {";
+  const start = styles.indexOf(head);
+  assert.ok(start >= 0, "the stylesheet has the scope");
+  let depth = 0;
+  for (let index = start + head.length - 1; index < styles.length; index++) {
+    if (styles[index] === "{") depth++;
+    else if (styles[index] === "}" && --depth === 0)
+      return {
+        inside: styles.slice(start + head.length, index),
+        after: styles.slice(index + 1),
+      };
+  }
+  assert.fail("the scope does not close");
+}
+
+/** The position of each text in `styles`, which must hold each of them. */
+function positions(styles: string, texts: readonly string[]): number[] {
+  return texts.map((text) => {
+    const position = styles.indexOf(text);
+    assert.ok(position >= 0, `${text} is missing`);
+    return position;
+  });
+}
+
+test("embedded styles keep the root's own rules after the scope, in their order", () => {
+  const { inside, after } = scopeParts(
+    embeddedStyles(
+      shellCss(
+        [
+          ".mbk-x { color: red }",
+          ".mokly-viewer { position: relative }",
+          "@media (width < 56.25rem) { .mbk-y { color: red } }",
+          "@scope (.mokly-viewer) to ([data-mokly-slot]) { :scope.mbk { height: 100% } }",
+          ".mokly-viewer > .mbk-body, .mokly-viewer .mbk-z { display: flex }",
+          ".mokly-viewer .mbk-mixed, .mbk-mixed { color: green }",
+          ".mokly-viewer-note { color: blue }",
+          ".mbk-w .mokly-viewer { color: purple }",
+          "@media (width < 56.25rem) { .mokly-viewer .mbk-rail { width: 0 } }",
+          "@container mokly-top-host (max-width: 560px) { .mokly-top-host > .mbk-topbar { gap: 8px } }",
+          "@container other (max-width: 560px) { .mbk-v { gap: 8px } }",
+        ].join("\n"),
+      ),
+    ),
+  );
+  // Each root rule follows the scope once, in the order of the source.
+  const root = [
+    ".mokly-viewer {",
+    "@scope (.mokly-viewer) to ([data-mokly-slot])",
+    ".mokly-viewer > .mbk-body, .mokly-viewer .mbk-z {",
+    "@media (width < 56.25rem) {\n  .mokly-viewer .mbk-rail {",
+    "@container mokly-top-host",
+  ];
+  const order = positions(after, root);
+  assert.deepEqual(
+    order,
+    [...order].sort((first, second) => first - second),
+  );
+  // No root rule starts a line inside the scope.
+  for (const text of root) assert.ok(!inside.includes(`\n${text}`), text);
+  // A rule that only names the root class elsewhere stays in the scope.
+  positions(inside, [
+    ".mbk-x {",
+    ".mbk-y {",
+    ".mokly-viewer .mbk-mixed, .mbk-mixed {",
+    ".mokly-viewer-note {",
+    ".mbk-w .mokly-viewer {",
+    "@container other",
+  ]);
+  for (const text of [".mbk-x", ".mbk-mixed", "mokly-viewer-note", "other"])
+    assert.ok(!after.includes(text), text);
+});
+
+test("the built embedded stylesheet keeps the root's own package rules after its scope", () => {
+  const { inside, after } = scopeParts(EMBEDDED_CSS);
+  assert.match(after, /^\s*\.mokly-viewer \{/);
+  positions(after, [
+    "@scope (.mokly-viewer) to ([data-mokly-slot])",
+    '.mokly-viewer [data-mokly-slot="stageOverlay"]',
+    "@container mokly-top-host",
+  ]);
+  assert.doesNotMatch(inside, /(^|[{},]\s*)\.mokly-viewer\b/u);
+  assert.doesNotMatch(inside, /@container\b/u);
 });
 
 test("no shell stylesheet declares a cascade layer", () => {

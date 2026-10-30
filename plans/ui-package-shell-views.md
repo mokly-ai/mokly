@@ -915,22 +915,34 @@ slots, and the highlight labels. Add the package highlight mask unused, under
 design call 14. After this milestone, the viewer renders no element of its
 own, and only the theme modules remain of its CSS.
 
-- [ ] Create the package components of the last slice, with their CSS,
+- [x] Create the package components of the last slice, with their CSS,
       exports, and order. The embedded root rules of `viewer/styles.ts` move
       to the `embedded-layout` stylesheet and stay outside the `@scope`
       block until milestone 18.
-- [ ] Create `highlight-mask`: the dimmed layer with outlined cutouts, drawn
+- [x] Create `highlight-mask`: the dimmed layer with outlined cutouts, drawn
       from a width, a height, and boxes, in the colours of today's mask.
-- [ ] The viewer files of the slice become containers. Move their rules and
+- [x] The viewer files of the slice become containers. Move their rules and
       delete each emptied module.
-- [ ] `localPresentation` of `client/same_origin_adapter.ts` and the label
+- [x] `localPresentation` of `client/same_origin_adapter.ts` and the label
       branch of `installLocalHighlight` run only from a test. Check them
       against the dead-code rule of the `git-commit` skill. When they are
       dead, delete them and record the search.
-- [ ] Tests as in milestone 3, also for the mask's cutouts and outlines.
-- [ ] Empty the lint exemption list of decision 1.
-- [ ] Check as in milestone 3, with the embedded viewer specs. Save evidence
+- [x] Tests as in milestone 3, also for the mask's cutouts and outlines.
+- [x] Empty the lint exemption list of decision 1.
+- [x] Check as in milestone 3, with the embedded viewer specs. Save evidence
       under `.context/ui-package-shell-views/layout/`.
+- [x] Done on 2026-10-30 by the ui implementor on
+      `calummoore/mokly-ui-layout-theme` and checked: identical markup in 607
+      server-rendered and 9 browser cases, 2887 Node tests and 300 browser
+      tests passed, and no new order-tool pair. The computed-style tool's only
+      difference is the two new preview roles of the mask, which every element
+      inherits. `HighlightMask` and today's DOM drawer gave byte-identical
+      screenshots. The embedded transform keeps each package rule that starts
+      with `.mokly-viewer`, and each `@container mokly-top-host` block,
+      outside the scope wrapper. Dead code, with the searches recorded:
+      `localPresentation`, the label branch and the `selected` parameter of
+      `installLocalHighlight`, and `themeAttributes`. Evidence:
+      `.context/ui-package-shell-views/layout/`.
 
 ## Milestone 16: The shell draws the highlight mask
 
@@ -994,6 +1006,11 @@ the `@font-face` rule of design call 9, and the embedded stylesheet has no
       page marks on the shell root instead of `body` or `<html>`.
 - [ ] Rewrite each rule that selects `body`, `html`, or `:root` with a shell
       mark to select the shell root.
+- [ ] The embedded root's loading, failure, and version states are not laid
+      out today, because the `@scope` wrapper does not apply `.mbk-empty` to
+      the scope root itself. Check that they are laid out once `@scope` goes,
+      and list the change as an intended difference. Found by milestone 15 on
+      2026-10-30.
 - [ ] Update the Key Code entry of `src/shell` in `packages/viewer/README.md`,
       which still says "scoped styles". Name the shell root class and the
       stub document class in the docs that milestone 1 left unnamed. Found by

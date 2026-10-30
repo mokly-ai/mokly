@@ -2,12 +2,24 @@
  * The quiet state of a stage that has no preview to show, and the states of
  * the shell that use it: the catalogue home, a route that matches no entry,
  * and a removed entry. A state can be busy while it loads, or an alert after
- * a failure, and its action is a link or a button.
+ * a failure, and its action is a link or a button. A state can also take the
+ * place of a whole viewer root that has no shell to show.
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
+import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import type { DataAttribute } from "../segmented-control/segmented-control.js";
+
+/**
+ * The viewer root that a state takes the place of: the standalone shell's
+ * root, or an embedded root, which states its appearance.
+ */
+export type EmptyStateRoot =
+  { kind: "standalone" } | { kind: "embedded"; theme: Appearance };
+
+/** The class that each root carries before the state's own class. */
+const ROOT_CLASS = { embedded: "mokly-viewer", standalone: "mbk" } as const;
 
 /** An action that goes to another page. */
 export interface EmptyStateLink {
@@ -63,10 +75,13 @@ export function EmptyState({
   action,
   body,
   busy = false,
+  children,
   code,
+  focusRef,
   mark,
   note,
   role,
+  root,
   stage = false,
   title,
 }: {
@@ -75,14 +90,23 @@ export function EmptyState({
   body?: string | undefined;
   /** Whether the state waits for its data, which marks it busy. */
   busy?: boolean;
+  /** A message without a paragraph of its own, after the other lines. */
+  children?: ReactNode;
   /** The code after the body, such as the path that matches no entry. */
   code?: string | undefined;
+  /**
+   * Receives the state's element, which can then take focus, such as a
+   * loading state that the host focuses after Try again.
+   */
+  focusRef?: Ref<HTMLDivElement> | undefined;
   /** An empty data attribute on the state, such as `data-workspace-empty`. */
   mark?: DataAttribute | undefined;
   /** A quieter line after the body, such as what the catalogue holds. */
   note?: string | undefined;
   /** `alert` for a failure that the reader hears at once. */
   role?: "alert" | undefined;
+  /** The viewer root that the state takes the place of, if any. */
+  root?: EmptyStateRoot | undefined;
   /**
    * Whether the state takes the place of the routed stage, which marks it
    * `data-mokly-stage` for both viewports.
@@ -93,10 +117,15 @@ export function EmptyState({
   return (
     <div
       aria-busy={busy ? "true" : undefined}
-      className="mbk-empty"
+      className={
+        root === undefined ? "mbk-empty" : `${ROOT_CLASS[root.kind]} mbk-empty`
+      }
       {...(stage ? { "data-mokly-stage": "", "data-viewport": "both" } : {})}
       {...dataMark(mark)}
+      ref={focusRef}
       role={role}
+      tabIndex={focusRef === undefined ? undefined : -1}
+      {...(root?.kind === "embedded" ? { "data-mokly-theme": root.theme } : {})}
     >
       {title === undefined ? null : <h2>{title}</h2>}
       {body === undefined && code === undefined ? null : (
@@ -107,6 +136,7 @@ export function EmptyState({
       )}
       {note === undefined ? null : <p className="mbk-empty-note">{note}</p>}
       {action === undefined ? null : <EmptyAction action={action} />}
+      {children}
     </div>
   );
 }

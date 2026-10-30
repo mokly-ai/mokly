@@ -267,6 +267,15 @@ and Review regressions against `mokly serve` of the example catalogue.
   previous version: they mount each frame, derive its sources, and pass its
   `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
   expanded browser frame in the store
+- [`src/shell/views.tsx`](./src/shell/views.tsx),
+  [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
+  [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
+  [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
+  the shell layout: the main region, the workspace, an embedded root with its
+  host slots, and the standalone root; `src/viewer/component.tsx` shows an
+  embedded root's loading and failure states, and
+  `src/viewer/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place
+  the host's markers and inspection labels
 - [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
   [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
   the containers of the comparison sections and panes, which own each

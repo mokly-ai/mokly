@@ -2,6 +2,9 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import type { EmptyStateRoot } from "@mokly/ui/empty-state";
+import { RootState, ShellLayout } from "@mokly/ui/shell-layout";
+
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
@@ -34,6 +37,9 @@ type IndexState =
 
 /** The browser surface of the standalone shell. */
 export type ShellWindow = Window & typeof globalThis & StandaloneWindow;
+
+/** The root that the standalone shell's own states take the place of. */
+const STANDALONE_ROOT: EmptyStateRoot = { kind: "standalone" };
 
 /** Fetch the index, then render the shell; a version failure replaces it. */
 export function StandaloneShell({
@@ -72,31 +78,23 @@ export function StandaloneShell({
     );
   if (state.kind === "failed")
     return (
-      <div className="mbk mbk-empty" role="alert">
-        <h2>The catalogue could not be loaded</h2>
-        <button
-          className="mbk-empty-link"
-          onClick={() => {
-            focus.request("loading");
-            setState({ kind: "loading" });
-            setAttempt((value) => value + 1);
-          }}
-          type="button"
-        >
-          Try again
-        </button>
-      </div>
+      <RootState
+        onRetry={() => {
+          focus.request("loading");
+          setState({ kind: "loading" });
+          setAttempt((value) => value + 1);
+        }}
+        root={STANDALONE_ROOT}
+        state="failed"
+      />
     );
   if (state.kind === "loading")
     return (
-      <div
-        aria-busy="true"
-        className="mbk mbk-empty"
-        ref={focus.ref("loading")}
-        tabIndex={-1}
-      >
-        <p role="status">Loading catalogue…</p>
-      </div>
+      <RootState
+        focusRef={focus.ref("loading")}
+        root={STANDALONE_ROOT}
+        state="loading"
+      />
     );
   return (
     <ReadyShell
@@ -173,34 +171,24 @@ export function StandaloneShellContents() {
     [disclosures, selection],
   );
   return (
-    <div
-      className="mbk"
-      data-drawer={store.state.drawerOpen ? "open" : "closed"}
-      data-mokly-shell=""
-      ref={shell}
-    >
-      <a className="mbk-skip-link" href="#mb-main">
-        Skip to content
-      </a>
-      <TopBar appearance={appearance} catalogue={store.catalogue} />
-      <div className="mbk-body">
-        <CatalogueNav catalogue={store.catalogue} context={store.context} />
+    <ShellLayout
+      announcement={store.state.announcement}
+      drawerOpen={store.state.drawerOpen}
+      main={
         <ShellMain
           catalogue={store.catalogue}
           context={store.context}
           view={store.state.route.view}
         />
-      </div>
-      <p
-        aria-atomic="true"
-        aria-live="polite"
-        className="mbk-route-status"
-        id="mb-status"
-        role="status"
-      >
-        {store.state.announcement}
-      </p>
-    </div>
+      }
+      mainHref="#mb-main"
+      navigation={
+        <CatalogueNav catalogue={store.catalogue} context={store.context} />
+      }
+      ref={shell}
+      statusId="mb-status"
+      topBar={<TopBar appearance={appearance} catalogue={store.catalogue} />}
+    />
   );
 }
 

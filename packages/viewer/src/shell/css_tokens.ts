@@ -103,6 +103,8 @@ export const SHELL_TOKENS_CSS = `
   --mbk-device-light-close: #d9655b;
   --mbk-device-light-minimise: #dba43d;
   --mbk-device-light-expand: #50a86d;
+  --mbk-highlight-scrim: rgba(244, 246, 244, 0.72);
+  --mbk-highlight-edge: #336249;
 }
 
 *,

@@ -146,13 +146,30 @@ host's scroll controller through refs. `VariantBar` draws a component's saved
 variants. The host supplies the wording of its copy modules, such as the
 unavailable previous version and the comparison's state labels.
 
+`ShellLayout` draws the standalone shell's root: the skip link, the top bar,
+and the body with the navigation and the `MainRegion`, and the `RouteStatus`
+that announces each navigation. `EmbeddedLayout` draws an embedded root with
+the same parts between its host's slots. It places each slot's content
+without reading it, keeps the host's stage overlay over the shown preview,
+and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
+a workspace's header, variant bar, preview, and inspector. `RootState` takes
+a root's place while its catalogue loads, cannot be loaded, or needs a
+compatible viewer, or when the requested view is unavailable, as the
+`EmptyState` of the standalone root or of an embedded root. `LabelLayer` and
+`HighlightLabel` draw the labels of highlighted instances. `HighlightMask`
+draws the dimmed layer with a cutout and an outline for each box, in the
+colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
 viewer. `npm run typecheck` includes it. Tests live under `tests/` and run with
 `npm test -- packages/ui/tests/<file>`. A test that mounts a component imports
 `tests/dom.ts` first, which registers a happy-dom window for Testing Library.
-File names are kebab-case, such as `top-bar.tsx` exporting `TopBar`. A lint
+Compare DOM nodes with the helpers of `tests/dom-assertions.ts`, not with
+`assert.equal`: a failed comparison formats a happy-dom node, which runs out
+of memory. File names are kebab-case, such as `top-bar.tsx` exporting
+`TopBar`. A lint
 checks the rule only for the JavaScript and TypeScript files under `src/` and
 `tests/` and for the directories that hold them. A component imports only
 `react`, `react-dom`, and the other components of this package by relative path;
@@ -286,12 +303,31 @@ override the desktop layout rules.
   `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
 - [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
   `VariantBar`: the links of a component's saved variants and the status
+- [`src/shell-layout/shell-layout.tsx`](./src/shell-layout/shell-layout.tsx)
+  — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
+  `MainRegion`, and `RouteStatus`, which both roots draw; and `RootState`, the
+  state of a root without a shell
+- [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
+  — `EmbeddedLayout`, an embedded root with the host slots and the stage
+  overlay of `host-slot.tsx`, and `MarkerLayer`, the host's markers
+- [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
+  — `WorkspaceLayout`: the header, the variant bar, and the preview beside the
+  inspector
+- [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
+  — `LabelLayer` and `HighlightLabel`: the layer and the labels of
+  highlighted instances
+- [`src/highlight-mask/highlight-mask.tsx`](./src/highlight-mask/highlight-mask.tsx)
+  — `HighlightMask`: the dimmed layer with a cutout and an outline for each
+  box, as an SVG mask
 - [`scripts/build.mjs`](./scripts/build.mjs) — compiles the package, copies
   each CSS file beside its JavaScript, and writes `styles.css`
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — finds the component
   stylesheets and orders `styles.css`
 - [`tests/dom.ts`](./tests/dom.ts) — the happy-dom window, the act
   environment, and the cleanup of each DOM test
+- [`tests/dom-assertions.ts`](./tests/dom-assertions.ts) —
+  `assertSameElement`, `assertNotSameElement`, and `assertSameList`, which
+  compare DOM nodes by identity and describe them in a few words
 - [`tests/navigation-fixture.ts`](./tests/navigation-fixture.ts) — the
   records and props of the catalogue navigation tests
 - [`tests/tag-picker-fixture.tsx`](./tests/tag-picker-fixture.tsx) — the tags

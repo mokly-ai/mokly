@@ -1,5 +1,7 @@
 /** React label presentation for adapter-owned workspace highlights. */
 
+import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
+
 import { visibleFrameBox } from "../client/component_geometry.js";
 import type { InstanceBoundary } from "../client/frame_adapter.js";
 
@@ -81,28 +83,17 @@ export function WorkspaceInspectionOverlay({
 }) {
   if (!labels.length) return null;
   return (
-    <div
-      data-mokly-label-layer=""
-      style={{
-        inset: 0,
-        overflow: "hidden",
-        pointerEvents: "none",
-        position: "fixed",
-        zIndex: 952,
-      }}
-    >
+    <LabelLayer placement="viewport">
       {labels.map((label) => (
-        <button
-          className="mbk-highlight-label"
-          data-instance-key={label.key}
+        <HighlightLabel
+          instanceKey={label.key}
           key={label.id}
-          onClick={() => onSelect(label.key, label.viewport)}
-          style={{ left: label.left, top: label.top }}
-          type="button"
-        >
-          {label.text}
-        </button>
+          left={label.left}
+          onSelect={() => onSelect(label.key, label.viewport)}
+          text={label.text}
+          top={label.top}
+        />
       ))}
-    </div>
+    </LabelLayer>
   );
 }

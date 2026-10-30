@@ -11,6 +11,8 @@ import {
   type ComparisonMode,
 } from "../src/comparison-toolbar/comparison-toolbar.js";
 
+import { assertSameElement, assertSameList } from "./dom-assertions.js";
+
 /** The props of one band; every callback records into `calls`. */
 function props(mode: ComparisonMode, calls: unknown[][] = []) {
   return {
@@ -62,7 +64,7 @@ test("a mode with an address is a link, and the shown mode's link is the current
       ["Difference", "#difference", null, "difference"],
     ],
   );
-  assert.deepEqual(within(group).queryAllByRole("button"), []);
+  assertSameList(within(group).queryAllByRole("button"), []);
   fireEvent.click(within(group).getByRole("link", { name: "Difference" }));
   assert.deepEqual(calls, []);
 });
@@ -98,7 +100,7 @@ test("a band that is not interactive draws its other modes and Refresh as inert 
       modeHref={others("difference")}
     />,
   );
-  assert.deepEqual(screen.queryAllByRole("button"), []);
+  assertSameList(screen.queryAllByRole("button"), []);
   const group = screen.getByRole("group", { name: "Comparison mode" });
   assert.equal(within(group).getAllByRole("link").length, 3);
   const shown = group.querySelector('[data-diff-mode="difference"]')!;
@@ -117,7 +119,7 @@ test("a band that is not interactive draws its other modes and Refresh as inert 
 test("with no address at all, an inert band marks only the shown mode", () => {
   render(<ComparisonToolbar {...props("current")} interactive={false} />);
   const group = screen.getByRole("group", { name: "Comparison mode" });
-  assert.deepEqual(within(group).queryAllByRole("link"), []);
+  assertSameList(within(group).queryAllByRole("link"), []);
   assert.deepEqual(
     [...group.children].map((mode) => [
       mode.tagName,
@@ -131,8 +133,11 @@ test("with no address at all, an inert band marks only the shown mode", () => {
       ["SPAN", "Difference", null],
     ],
   );
-  assert.equal(screen.queryByRole("switch"), null);
-  assert.equal(screen.queryByRole("img", { name: "Refresh comparison" }), null);
+  assertSameElement(screen.queryByRole("switch"), null);
+  assertSameElement(
+    screen.queryByRole("img", { name: "Refresh comparison" }),
+    null,
+  );
 });
 
 test("Scroll together stays a native switch in a band that is not interactive", () => {

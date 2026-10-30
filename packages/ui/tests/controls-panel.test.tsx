@@ -13,6 +13,8 @@ import {
   type ControlsFocus,
 } from "../src/controls-panel/controls-panel.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const WORDING = {
   edited: "Edited props",
   heading: "Edit props",
@@ -115,7 +117,7 @@ test("a reset announces itself in the status that the form always holds", () => 
   const status = screen.getByRole("status");
   assert.equal(status.textContent, "");
   rerender(form({ restored: "Saved props restored." }));
-  assert.equal(screen.getByRole("status"), status);
+  assertSameElement(screen.getByRole("status"), status);
   assert.equal(status.textContent, "Saved props restored.");
 });
 
@@ -145,7 +147,7 @@ test("the fields wait while editing starts, and a failed start offers its action
     ),
   );
   assert.equal(fieldset?.disabled, true);
-  assert.equal(screen.queryByText("Preparing to edit props…"), null);
+  assertSameElement(screen.queryByText("Preparing to edit props…"), null);
   const alert = screen.getByRole("alert");
   assert.equal(alert.textContent, "Editing could not start. Try again");
   fireEvent.click(within(alert).getByRole("button", { name: "Try again" }));
@@ -200,5 +202,5 @@ test("saved props that cannot be edited name the reason, and a comparison offers
   assert.equal(presses, 1);
   assert.deepEqual([...found.keys()], ["heading"]);
   rerender(panel());
-  assert.equal(screen.queryByRole("button"), null);
+  assertSameElement(screen.queryByRole("button"), null);
 });

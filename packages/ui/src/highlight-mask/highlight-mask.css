@@ -1,0 +1,35 @@
+/* The layer over a frame in which the same-origin frame adapter draws its
+   mask: fixed over the frame's visible box, and the mask fills it. */
+.mbk-highlight-layer {
+  position: fixed;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+}
+
+.mbk-highlight-layer svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The mask keeps the scrim where it is white and cuts it out where it is
+   black; these are mask values, not colours that the reader sees. */
+.mbk-highlight-kept {
+  fill: white;
+}
+
+.mbk-highlight-cutout {
+  fill: black;
+}
+
+.mbk-highlight-scrim {
+  fill: var(--mbk-highlight-scrim);
+}
+
+.mbk-highlight-outline {
+  fill: none;
+  stroke: var(--mbk-highlight-edge);
+  stroke-width: 1.5;
+}

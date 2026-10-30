@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { ScreenHeader } from "../src/screen-header/screen-header.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 /** A host crumb that carries more than the header reads. */
 interface HostCrumb {
   href?: string;
@@ -102,7 +104,7 @@ test("the path chip reports the path, and a header without a path has no chip", 
   );
   assert.deepEqual(copied, ["components/card"]);
   rerender(<ScreenHeader crumbs={[]} heading="Card" path="" />);
-  assert.equal(screen.queryByRole("button"), null);
+  assertSameElement(screen.queryByRole("button"), null);
 });
 
 test("the action follows the copy at the end of the header", () => {

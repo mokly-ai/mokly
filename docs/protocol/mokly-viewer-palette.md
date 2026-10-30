@@ -175,6 +175,15 @@ appearances, and are named so no stylesheet repeats them:
 | `--mbk-device-light-minimise` | `#dba43d`               |
 | `--mbk-device-light-expand`   | `#50a86d`               |
 
+The highlight mask over a preview dims the preview around the highlighted
+component instances and outlines each instance. It marks the preview, not the
+interface, so its two roles keep their values in both appearances:
+
+| Role                    | Both appearances            |
+| ----------------------- | --------------------------- |
+| `--mbk-highlight-scrim` | `rgba(244, 246, 244, 0.72)` |
+| `--mbk-highlight-edge`  | `#336249`                   |
+
 A comparison in Difference mode paints an opaque base behind the compared
 frames, taken from the compared preview scheme, so the blended result is
 identical in both appearances.

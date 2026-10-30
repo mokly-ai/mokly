@@ -11,6 +11,8 @@ import {
   type Segment,
 } from "../src/segmented-control/segmented-control.js";
 
+import { assertSameElement, assertSameList } from "./dom-assertions.js";
+
 type Viewport = "mobile" | "desktop" | "both";
 
 const VIEWPORTS: readonly Segment<Viewport>[] = [
@@ -61,7 +63,7 @@ test("a group without a mark carries no group attribute", () => {
     />,
   );
   const group = screen.getByRole("group", { name: "Comparison mode" });
-  assert.equal(container.firstElementChild, group);
+  assertSameElement(container.firstElementChild, group);
   assert.deepEqual(
     [...group.attributes].map((attribute) => attribute.name),
     ["aria-label", "class", "role"],
@@ -160,7 +162,7 @@ test("a group that is not interactive draws its segments as inert text", () => {
     />,
   );
   const group = screen.getByRole("group", { name: "Preview color scheme" });
-  assert.deepEqual(within(group).queryAllByRole("button"), []);
+  assertSameList(within(group).queryAllByRole("button"), []);
   assert.deepEqual(
     [...group.children].map((segment) => [
       segment.tagName,

@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from "react";
 import type { Ref } from "react";
 
+import {
+  MarkerLayer as MarkerLayerView,
+  type MarkerRecord,
+} from "@mokly/ui/embedded-layout";
+
 import type { MarkerStore } from "./marker_store.js";
 import type { ViewerMarker } from "./types.js";
 
@@ -19,24 +24,19 @@ export function MarkerLayer({ layerRef, markers, store }: MarkerLayerProps) {
   );
   const content = new Map(markers.map((marker) => [marker.id, marker.content]));
   return (
-    <div data-mokly-marker-layer="" data-mokly-slot="markers" ref={layerRef}>
-      {placements.flatMap((placement) =>
+    <MarkerLayerView
+      markers={placements.flatMap((placement): MarkerRecord[] =>
         placement.status === "visible" && placement.rect
           ? [
-              <div
-                data-mokly-marker={placement.id}
-                key={placement.id}
-                style={{
-                  position: "absolute",
-                  pointerEvents: "none",
-                  ...placement.rect,
-                }}
-              >
-                {content.get(placement.id)}
-              </div>,
+              {
+                content: content.get(placement.id),
+                id: placement.id,
+                rect: placement.rect,
+              },
             ]
           : [],
       )}
-    </div>
+      ref={layerRef}
+    />
   );
 }

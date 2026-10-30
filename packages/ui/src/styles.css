@@ -35,3 +35,8 @@
 @import "./variant-bar/variant-bar.css";
 @import "./preview-state/preview-state.css";
 @import "./previous-version/previous-version.css";
+@import "./highlight-label/highlight-label.css";
+@import "./highlight-mask/highlight-mask.css";
+@import "./shell-layout/shell-layout.css";
+@import "./workspace-layout/workspace-layout.css";
+@import "./embedded-layout/embedded-layout.css";

@@ -41,14 +41,16 @@ await bundleInspector(
 );
 await writeBrowserManifest(browser);
 const { shellCss, standaloneShellCss } = await import("../dist/shell/css.js");
-const { VIEWER_CSS } = await import("../dist/viewer/styles.js");
 // The standalone stylesheet that Serve and `build` deliver as
-// `mokly-viewer/shell.css`, and the scoped stylesheet of an embedded root.
+// `mokly-viewer/shell.css`, and the scoped stylesheet of an embedded root,
+// which keeps the package rules of the root itself after its scope. The
+// standalone stylesheet carries those rules too, and no element of the
+// standalone shell matches them.
 await fs.writeFile(
   path.join(target, "shell.css"),
   standaloneShellCss(componentCss),
 );
 await fs.writeFile(
   path.join(target, "styles.css"),
-  embeddedStyles(shellCss(componentCss), VIEWER_CSS),
+  embeddedStyles(shellCss(componentCss)),
 );

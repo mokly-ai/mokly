@@ -9,6 +9,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { PropField, PropFields } from "../src/prop-field/prop-field.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 type FieldProps = ComponentProps<typeof PropField>;
 
 /** A required text field without help, and the reports of its callbacks. */
@@ -176,7 +178,7 @@ test("a required toggle is named by its label column and reports each change at 
   assert.equal(box.id, ID);
   fireEvent.click(box);
   assert.deepEqual(reports, [["change", true, true]]);
-  assert.equal(screen.queryByText("Optional"), null);
+  assertSameElement(screen.queryByText("Optional"), null);
 });
 
 test("an optional toggle names its value check box and supplies itself with Set", () => {
@@ -194,7 +196,7 @@ test("an optional toggle names its value check box and supplies itself with Set"
   );
   const { container, rerender } = render(<PropField {...props} />);
   // The label column is no label, so the value check box carries the name.
-  assert.equal(container.querySelector("label[for]"), null);
+  assertSameElement(container.querySelector("label[for]"), null);
   assert.equal(
     container.querySelector(".mbk-control-label")?.textContent,
     "Muted Optional",
@@ -203,7 +205,7 @@ test("an optional toggle names its value check box and supplies itself with Set"
   assert.equal(value.getAttribute("data-prop-control"), "muted");
   const set = screen.getByRole("checkbox", { name: "Set Muted" });
   assert.equal((set as HTMLInputElement).checked, true);
-  assert.equal(screen.queryByText("Not set"), null);
+  assertSameElement(screen.queryByText("Not set"), null);
 
   rerender(<PropField {...props} supplied={false} />);
   assert.equal(screen.getByText("Not set").className, "mbk-control-unset");

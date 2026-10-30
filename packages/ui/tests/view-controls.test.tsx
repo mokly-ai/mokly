@@ -14,6 +14,8 @@ import {
   type ViewMark,
 } from "../src/view-controls/view-controls.js";
 
+import { assertSameElement } from "./dom-assertions.js";
+
 const VIEWPORT_MARK: ViewMark = {
   id: "root-mb-view-changed-viewport",
   marked: false,
@@ -71,7 +73,10 @@ test("the group names its controls as the shell specs query them", () => {
   );
   assert.equal(highlightToggle().getAttribute("data-workspace-highlight"), "");
   // Without dark previews the group has no Dark preview toggle.
-  assert.equal(screen.queryByRole("button", { name: "Dark preview" }), null);
+  assertSameElement(
+    screen.queryByRole("button", { name: "Dark preview" }),
+    null,
+  );
   assert.deepEqual(
     [...group.children].map((child) => child.tagName.toLowerCase()),
     ["label", "button"],
@@ -155,7 +160,7 @@ test("Dark preview presses in Dark, asks for the other scheme, and carries its m
   assert.deepEqual(schemes, ["dark", "light"]);
   // The toggle sits between the viewport select and Highlight components.
   assert.equal(toggle.previousElementSibling?.tagName.toLowerCase(), "label");
-  assert.equal(toggle.nextElementSibling, highlightToggle());
+  assertSameElement(toggle.nextElementSibling, highlightToggle());
 });
 
 test("Highlight components describes itself and reports each press while available", () => {
