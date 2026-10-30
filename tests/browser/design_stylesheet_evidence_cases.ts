@@ -171,7 +171,7 @@ export function registerDesignStylesheetEvidence(
           ),
         );
         await expect(
-          page.locator(".mbk-screen-head .ce-change-status"),
+          page.locator(".mbk-screen-head .mbk-entry-status"),
         ).toHaveText("Changed");
         await expect(page.locator(count)).toHaveText("4");
         await expect(
@@ -208,7 +208,7 @@ export function registerDesignStylesheetEvidence(
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
         await expect(page.locator(count)).toHaveText("4");
         await expect(
-          page.locator(".mbk-screen-head .ce-change-status"),
+          page.locator(".mbk-screen-head .mbk-entry-status"),
         ).toHaveText("Unmodified");
         // Welcome stays out of Changes, yet Action's link opens its comparison.
         const toolbar = page.locator(".mbk-diff-toolbar");

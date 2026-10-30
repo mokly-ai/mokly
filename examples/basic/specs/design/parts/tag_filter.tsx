@@ -1,6 +1,5 @@
 import { optional, useDesignInstance } from "../library/composition.js";
 import { tagChip } from "../library/controls/tag-chip.js";
-import { tagPicker } from "../library/controls/tag-picker.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
 import { tagTarget, type NavigationState } from "./navigation_states.js";
@@ -38,16 +37,5 @@ export function TagChips({
         />
       ))}
     </span>
-  );
-}
-
-export function TagPicker({ activeTag }: { activeTag?: string | undefined }) {
-  const navigation = useDesignNavigation();
-  return (
-    <tagPicker.Component
-      moklyInstance={useDesignInstance("tag-picker")}
-      tags={designTagRecords(navigation.tags)}
-      {...optional("activeTag", activeTag)}
-    />
   );
 }

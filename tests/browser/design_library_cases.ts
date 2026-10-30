@@ -184,7 +184,7 @@ export function registerDesignLibrary(
     }) => {
       for (const [slug, selector] of [
         ["tag-chip", ".mbk-chip"],
-        ["change-status", ".ce-change-status"],
+        ["change-status", ".mbk-entry-status"],
       ]) {
         const entry = manifest.entries.find(
           (entry) =>

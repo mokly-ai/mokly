@@ -74,9 +74,9 @@ export function registerComparisonDesign(
           viewport,
         ),
       );
-      await expect(page.locator('[data-change-status="changed"]')).toHaveText(
-        "Changed",
-      );
+      await expect(
+        page.locator('.mbk-entry-status[data-status="Changed"]'),
+      ).toHaveText("Changed");
       const controls = page.getByRole("group", { name: "Comparison mode" });
       await expect(controls).toBeVisible();
       await expect(controls.locator('[aria-current="page"]')).toHaveText(
@@ -121,7 +121,7 @@ export function registerComparisonDesign(
         );
       await expect(page.locator(".mbk-screen-head h2")).toHaveText("Details");
       await expect(
-        page.locator('[data-change-status="unmodified"]'),
+        page.locator('.mbk-entry-status[data-status="Unmodified"]'),
       ).toHaveText("Unmodified");
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
@@ -215,9 +215,7 @@ export function registerComparisonDesign(
           viewport === "desktop" ? 1 : 0,
         );
         if (route === "outcomes/removed") {
-          await expect(page.locator("[data-change-status]")).toHaveText(
-            "Removed",
-          );
+          await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
           await expect(
             page.getByText("Farewell was removed from the catalogue.", {
               exact: true,
@@ -253,7 +251,7 @@ export function registerComparisonDesign(
       await page.goto(
         design("design/changes/outcomes/previous-version/no-view", viewport),
       );
-      await expect(page.locator("[data-change-status]")).toHaveText("Removed");
+      await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
       await expect(page.locator(".mbk-previous")).toHaveText(
         "Showing previous version",
       );
@@ -264,7 +262,7 @@ export function registerComparisonDesign(
       const hint = page.locator(".mbk-preview-switch");
       const captured = page.locator(".ce-preview-view:visible .browser-frame");
       const selection = page.getByRole("combobox", {
-        name: "Preview viewport",
+        name: "Viewport",
       });
       await expect(selection).toHaveValue("mobile");
       await expect(note).toBeVisible();
