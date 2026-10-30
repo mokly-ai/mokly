@@ -116,9 +116,12 @@ below use text, boolean, number and primitive enum selections only.
    header icon group contains the viewport dropdown and optional highlight
    toggle; one Appearance control sets the catalogue scheme.
 6. **Tag picker:** tag records containing stable id, label and optional
-   destination, plus optional active id. Controls: optional active tag, with
-   the forms and onboarding tags as examples. An empty tag list hides the
-   picker; the outer inspector can still inspect the empty variant.
+   destination, plus optional active id, the open flag and an optional toggle
+   destination. Controls: optional active tag, with the forms and onboarding
+   tags as examples. It draws the search field's tag button and, while open,
+   its panel, whose chips are the registered tag chip; a closed picker draws
+   only its button. An empty tag list hides the picker; the outer inspector
+   can still inspect the empty variant.
 7. **Tag chip:** stable tag id, label, selected state and optional destination.
    Controls: label and selected state. Missing destinations stay non-links;
    repeated picker/metadata instances are keyed by tag identity, not label.

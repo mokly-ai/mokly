@@ -58,15 +58,15 @@ export function registerDesignModernControls(
                 screen.path,
               ).toHaveCount(1);
               await expect(
-                page.getByRole("toolbar", { name: "Preview options" }),
+                page.getByRole("group", { name: "View options" }),
                 screen.path,
               ).toHaveCount(1);
               await expect(
-                page.locator(".mbk-topbar .ce-view-controls"),
+                page.locator(".mbk-topbar .mbk-view-tools"),
               ).toHaveCount(0);
               for (const selection of ["mobile", "desktop", "both"]) {
                 await page
-                  .getByLabel("Preview viewport", { exact: true })
+                  .getByLabel("Viewport", { exact: true })
                   .selectOption(selection);
                 await expect(
                   page.locator(".ce-preview-view:visible"),
@@ -90,7 +90,7 @@ export function registerDesignModernControls(
         );
         const header = page.locator(".mbk-screen-head");
         const initialHeader = await header.boundingBox();
-        const options = page.getByLabel("Preview viewport", { exact: true });
+        const options = page.getByLabel("Viewport", { exact: true });
         for (const selection of ["mobile", "desktop", "both"]) {
           await options.selectOption(selection);
           await expect(page.locator(".ce-preview-view:visible")).toHaveCount(

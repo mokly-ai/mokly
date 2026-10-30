@@ -160,10 +160,9 @@ export function registerComponentEvidence(
           });
           await expect(toggle).toBeDisabled();
           await expect(toggle).toHaveAccessibleDescription(reason!);
-          await expect(page.locator(".ce-highlight-control")).toHaveAttribute(
-            "title",
-            reason!,
-          );
+          await expect(
+            page.locator(".mbk-icon-button:has([data-workspace-highlight])"),
+          ).toHaveAttribute("title", reason!);
         }
         await page.goto(
           componentDesignUrl(
@@ -229,7 +228,7 @@ export function registerComponentEvidence(
         ]) {
           await page.goto(componentDesignUrl(route!, viewport));
           await expect(
-            page.locator(".mbk-screen-head .ce-change-status"),
+            page.locator(".mbk-screen-head .mbk-entry-status"),
           ).toHaveText(status!);
         }
         const preview = page.locator(".ce-preview-view:visible");
