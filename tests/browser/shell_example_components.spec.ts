@@ -83,10 +83,10 @@ test("each view of a component renders in its actual viewport and scheme", async
   const mobile = page.frameLocator('[data-workspace-frame="mobile"]');
   const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
   // The top bar reads the viewport and scheme from its render context.
-  await expect(mobile.locator(".mbk-menu-btn")).toBeVisible();
-  await expect(mobile.locator(".mbk-name")).toHaveCount(0);
+  await expect(mobile.locator(".mbk-menu")).toBeVisible();
+  await expect(mobile.locator(".mbk-name")).toBeHidden();
   await expect(desktop.locator(".mbk-name")).toHaveText("mokly.");
-  await expect(desktop.locator(".mbk-menu-btn")).toHaveCount(0);
+  await expect(desktop.locator(".mbk-menu")).toBeHidden();
   await chooseScheme(page, "dark");
   for (const frame of [mobile, desktop])
     await expect(frame.locator("html")).toHaveCSS("color-scheme", "dark");

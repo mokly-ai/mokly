@@ -1,7 +1,5 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
 
-import { NARROW_SHELL } from "./layout_breakpoint.js";
-
 export const CSS_VIEWS_RESPONSIVE = `.mbk-frame-scheme-note {
   display: none;
   font-weight: 500;
@@ -142,30 +140,7 @@ button.mbk-empty-link {
   border-radius: 0 0 36px 36px;
 }
 
-@media ${NARROW_SHELL} {
-  .mbk-topbar > [data-mokly-schemeswitch] {
-    display: none;
-  }
-
-  .mbk-screen-head > [data-mokly-schemeswitch] {
-    display: inline-flex;
-  }
-}
-
 @media (max-width: 760px) {
-  .mbk-screen-head {
-    padding: 12px 16px 11px;
-  }
-
-  .mbk-screen-head > .mbk-seg {
-    flex: 1 0 100%;
-    margin-left: 0;
-  }
-
-  .mbk-screen-head > .mbk-seg button {
-    flex: 1;
-  }
-
   /* Stacked frames start at the top: centring a column taller than the
      stage would push its first frame above the scroll origin. A frame wider
      than the stage starts at its left edge for the same reason. */

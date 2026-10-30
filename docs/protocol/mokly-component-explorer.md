@@ -1,5 +1,7 @@
 # Component Pages And Screen Inspection
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components
@@ -166,8 +168,9 @@ Highlighting is shell-owned presentation over validated live DOM ranges: a
 dimming mask with cutouts for the selected regions. It never sets opacity on a
 consumer ancestor. It never clones component DOM, changes its position,
 inserts layout wrappers, or alters its computed styles. Component pixels,
-layout, and original opacity stay intact. Consumer CSS cannot paint over the
-selected regions, also in a cross-origin overlay.
+layout, and original opacity stay intact. The shell draws the mask above the
+preview frame, also over a cross-origin frame, so consumer CSS cannot paint
+over it or restyle it.
 
 Bounds come from the active composed document, support multi-root and text
 ranges, and follow scroll, nested scroll containers, frame resize and

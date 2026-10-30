@@ -1,5 +1,7 @@
 # Shell Delivery And Read Model Routes
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 ## Purpose And Boundary
 
 The browser renders Browse from a stub, an index, and entry details. The index
@@ -44,14 +46,18 @@ to the public paths of the [viewer namespace](./mokly-viewer-namespace.md#public
 
 The stub is one HTML document, written once per shell route by `build` and
 returned for every shell route by Serve, with identical bytes for every route
-of one deployment: the document type, `lang="en"`, a `<title>` with the
-catalogue title, the `/mokly-viewer/shell.css` stylesheet link, an SVG icon link
+of one deployment: the document type, an `<html>` element with `lang="en"` and
+the shell's document class, a `<title>` with the catalogue title, the
+`/mokly-viewer/shell.css` stylesheet link, an SVG icon link
 to `/mokly-viewer/client/brand.svg` using the Browse brand mark, one
 `<div data-mokly-shell>` mount element, a `<noscript>` sentence that says the
 catalogue needs JavaScript, and one `<script type="module" src="/mokly-viewer/client/shell.js">`. It embeds no
 catalogue data, no descriptor, and no route; the shell reads the route from
 `location` and applies the stored or system appearance before its first
-render. The in-frame inspector script is the [frame adapter's](./mokly-frame-adapter.md).
+render. Before the bundle runs, the shell stylesheet gives the stub the Auto
+interface appearance through the document class, under the
+[appearance contract](./mokly-viewer-appearance.md#standalone-appearance-control).
+The in-frame inspector script is the [frame adapter's](./mokly-frame-adapter.md).
 
 ## Catalogue Index
 

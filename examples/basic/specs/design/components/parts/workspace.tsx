@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { DesignInstances } from "../../library/composition.js";
-import { NavResizeHandle } from "../../parts/nav_resize.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { Stage } from "../../parts/stage.js";
 
@@ -25,7 +24,7 @@ export function InspectorWorkspace({
           {children}
         </div>
         <div className="ce-inspector-resize" aria-hidden="true">
-          <NavResizeHandle />
+          <span aria-hidden="true" className="mbk-nav-resize" />
         </div>
       </div>
       <div className="ce-inspector-dock">{inspector}</div>

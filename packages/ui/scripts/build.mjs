@@ -8,7 +8,11 @@ import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { componentStylesheets, packageStylesheet } from "./styles.mjs";
+import {
+  componentStylesheets,
+  orderedStylesheets,
+  packageStylesheet,
+} from "./styles.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const source = path.join(root, "src");
@@ -54,13 +58,24 @@ if (files.some((file) => /\.tsx?$/u.test(file)))
   );
 const stylesheets = componentStylesheets(files);
 for (const file of files) {
-  if (file.endsWith(".css") && !stylesheets.some((css) => css.file === file))
+  if (
+    file.endsWith(".css") &&
+    file !== "styles.css" &&
+    !stylesheets.some((css) => css.file === file)
+  )
     process.stderr.write(
       `warning: src/${file} is not a component stylesheet, so the package leaves it out. Name it src/{name}/{name}.css.\n`,
     );
 }
+const imports = files.includes("styles.css")
+  ? await fs.readFile(path.join(source, "styles.css"), "utf8")
+  : "";
 const components = [];
-for (const { name, file } of stylesheets) {
+for (const { name, file } of orderedStylesheets(
+  stylesheets,
+  imports,
+  (message) => process.stderr.write(message),
+)) {
   const css = await fs.readFile(path.join(source, file), "utf8");
   await fs.mkdir(path.join(target, name), { recursive: true });
   await fs.writeFile(path.join(target, file), css);

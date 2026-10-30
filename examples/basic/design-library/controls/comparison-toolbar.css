@@ -1,2 +1,4 @@
-/* The shipped comparison band: the @mokly/ui stylesheet. */
+/* The shipped comparison band: the @mokly/ui stylesheets of the band and of
+   the segmented control that draws its modes, in the package's order. */
 @import "../../../../packages/ui/src/comparison-toolbar/comparison-toolbar.css";
+@import "../../../../packages/ui/src/segmented-control/segmented-control.css";

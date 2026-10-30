@@ -10,7 +10,7 @@ import {
   STANDALONE_STUB_THEME_CSS,
 } from "../src/shell/css_theme.js";
 import { SHELL_TOKENS_CSS } from "../src/shell/css_tokens.js";
-import { NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
+import { NARROW_LAYOUT, NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
 
 /** The built stylesheets that a delivery and an embedded host receive. */
 const [STANDALONE_CSS, EMBEDDED_CSS] = await Promise.all([
@@ -104,10 +104,23 @@ test("no shell stylesheet declares a cascade layer", () => {
     assert.doesNotMatch(styles.replace(/\/\*[^]*?\*\//g, ""), /@layer\b/);
 });
 
-test("the package rules switch at the shell's one layout breakpoint", () => {
+/**
+ * The media queries of the package rules: the shell's layout breakpoint, its
+ * device breakpoint, and the reader's reduced motion.
+ */
+const PACKAGE_QUERIES = new Set<string>([
+  NARROW_SHELL,
+  NARROW_LAYOUT,
+  "(prefers-reduced-motion: reduce)",
+]);
+
+test("the package rules switch at the shell's layout and device breakpoints", () => {
   const queries = [...PACKAGE_CSS.matchAll(/@media ([^{]+)\{/g)].map((match) =>
     match[1]!.trim(),
   );
-  assert.ok(queries.length > 0, "the package stylesheet has a narrow rule");
-  for (const query of queries) assert.equal(query, NARROW_SHELL);
+  assert.ok(
+    queries.includes(NARROW_SHELL),
+    "the package stylesheet has a narrow rule",
+  );
+  for (const query of queries) assert.ok(PACKAGE_QUERIES.has(query), query);
 });

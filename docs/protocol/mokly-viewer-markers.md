@@ -1,5 +1,7 @@
 # Viewer Markers And Multi-Instance Highlights
 
+Status: In progress under the [shell views plan](../../plans/ui-package-shell-views.md).
+
 ## Purpose And Boundary
 
 `@mokly/viewer` positions host-owned React content on component instances and
@@ -82,13 +84,14 @@ boxes produce `hidden`. The container has `pointer-events: none`; marker content
 may opt in with its own pointer-event style. Host interaction remains ordinary
 React interaction and cannot start picking or synthesize instance events.
 
-The marker and package-label layers remain above an expanded Current frame.
-Their stacking returns to normal after collapse. Marker content remains outside
+The marker, mask, and package-label layers remain above an expanded Current
+frame. Their stacking returns to normal after collapse. Marker content remains outside
 the frame and is never injected into consumer HTML.
 
 ## Refresh And Scheduling
 
-Placement and package-owned instance labels refresh after:
+Placement, the highlight masks, and package-owned instance labels refresh
+after:
 
 - an authenticated in-frame `geometry` notification;
 - capture-phase scrolling at the viewer root, including outer stage scrolling;
@@ -105,9 +108,9 @@ settles, so an asynchronous stale snapshot cannot lose a geometry wake-up.
 Replacement or disposal cancels scheduled work and prevents late results,
 errors or callbacks from reaching the host.
 
-Workspace inspection labels and host markers share one boundary read when both
-target the same session. Validated usage adoption supersedes unresolved work
-for the prior usage before the refresh. A late old success or failure cannot
+Highlight masks, workspace inspection labels, and host markers share one
+boundary read when they target the same session. Validated usage adoption
+supersedes unresolved work for the prior usage before the refresh. A late old success or failure cannot
 delay, replace or report against the fresh snapshot.
 
 ## Multi-Instance Highlight
