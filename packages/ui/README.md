@@ -78,6 +78,18 @@ current page. Scroll together stays a native switch in every band. The mode
 group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
+`TopBar`, `CatalogueNavigation`, and `ScreenHeader` draw controls that act
+through a script. A static mockup gives `TopBar` a `brandHref` and a
+`menuHref`, which draw the brand and the menu as links, and sets
+`interactive={false}`, which draws a control without an address as a picture
+of itself and leaves out the compact search. It gives `CatalogueNavigation` a
+`filterHref`, which draws each filter that has an address as a link, and sets
+`operable={false}`, which draws Collapse all and the other filters as text and
+the separator as a picture of its grip. The link or the text of the shown
+filter is marked as the current page. A tree row without an address is a
+picture of the row. On `ScreenHeader`, `interactive={false}` draws the path
+chip as a picture of itself and a folder crumb as text.
+
 `CatalogueNavigation` renders the column around `CatalogueTree`, which draws
 plain records that the host builds: sections, folders, entries, and the
 variants and members of an entry's list, each with its keys, label, depth,
@@ -144,6 +156,8 @@ override the desktop layout rules.
 - [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`: the
   drawer menu, the brand, and the catalogue search with its compact form and
   its focus return
+- [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
+  menu and the brand, as controls, links, or pictures of a static depiction
 - [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)
   — `CatalogueNavigation`: the column, the All and Changes filter, the status
   line, and the resize separator with its drag and keys

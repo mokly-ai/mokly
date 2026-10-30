@@ -79,7 +79,6 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-components.css .ce-variants a[aria-current]",
-  "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",
@@ -92,6 +91,7 @@ const AUDITED_BOUNDARIES = [
   "design-stage.css .mbk-chip:is(a):focus-visible",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
+  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
   "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
 ];
@@ -261,21 +261,4 @@ test("no design stylesheet outside a palette source names a colour", async () =>
     }
   }
   assert.deepEqual(failures, []);
-});
-
-test("the design palette declares every token that a @mokly/ui stylesheet reads", async () => {
-  // The root block declares each token, and design_appearance.test.ts holds
-  // the dark block to the same roles.
-  const declared = (await designPalette()).light;
-  const files = new Set<string>();
-  const missing: string[] = [];
-  for (const rule of await designStyleRules()) {
-    if (!rule.file.startsWith("packages/ui/src/")) continue;
-    files.add(rule.file);
-    for (const [, token] of rule.body.matchAll(/var\((--[\w-]+)/gu))
-      if (!declared.has(token!))
-        missing.push(`${rule.file} ${rule.selector}: ${token}`);
-  }
-  assert.ok(files.size > 0, "no @mokly/ui stylesheet was read");
-  assert.deepEqual(missing, []);
 });

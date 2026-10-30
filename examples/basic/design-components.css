@@ -1,9 +1,11 @@
 /* Component-page artboards in the basic example's owning design catalogue. */
-.ce-design a {
+/* Prose links take the deep sage. The brand and the catalogue rows keep the
+   colours of their @mokly/ui stylesheets, as the shipped shell draws them. */
+.ce-design a:where(:not(.mbk-brand, .mbk-nav-row)) {
   color: var(--mbk-sage-deep);
   text-decoration: none;
 }
-.ce-design a:hover {
+.ce-design a:where(:not(.mbk-brand, .mbk-nav-row)):hover {
   text-decoration: underline;
 }
 .ce-design a:focus-visible,
@@ -18,29 +20,12 @@
   font: inherit;
 }
 .ce-button,
-.ce-action,
-.ce-design .mbk-seg button {
+.ce-action {
   font-family: var(--sans);
 }
 .ce-design .mbk-stage {
   min-height: 225px;
   padding: 24px;
-}
-.ce-design .mbk-seg button {
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  color: var(--chrome-muted);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  white-space: nowrap;
-}
-.ce-design .mbk-seg button[aria-pressed="true"] {
-  background: white;
-  box-shadow: var(--chrome-shadow-soft);
-  color: var(--chrome-ink);
 }
 .ce-variants {
   align-items: center;

@@ -29,6 +29,11 @@
   cursor: pointer;
 }
 
+/* The picture of the menu in a static depiction acts on nothing. */
+span.mbk-menu {
+  cursor: default;
+}
+
 .mbk-search-toggle,
 .mbk-search-close {
   display: none;
