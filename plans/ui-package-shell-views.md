@@ -1,10 +1,14 @@
 # Shell Views In The UI Package
 
 Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
-milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The second pull request,
-with milestones 6 to 8, is on `calummoore/mokly-ui-controls`. The work lands as a stack of five pull requests, one
-for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
-last one deletes it, as the `plans` skill says.
+milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
+stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, where
+[PR #251](https://github.com/mokly-ai/mokly/pull/251) is open, 9 to 11 on
+`calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
+of five pull requests, one for each slice, as design call 11 says. Each
+earlier pull request keeps this plan. The last one deletes it, as the `plans`
+skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
 [PR #243](https://github.com/mokly-ai/mokly/pull/243): the icons, the change
@@ -873,13 +877,23 @@ by the user, option C:
 
 Depends on: 6, 7
 
-- [ ] Start the slice's branch from the first one. Merge the first branch
+- [x] Start the slice's branch from the first one. Merge the first branch
       into it, or `origin/main` after the first pull request merges. Run the
       complete gate. Commit and push.
-- [ ] Review against the first pull request's branch. Fix, re-review once,
+- [x] Review against the first pull request's branch. Fix, re-review once,
       and report.
-- [ ] Open the pull request on the first one. Put its link in the status
+- [x] Open the pull request on the first one. Put its link in the status
       paragraph.
+- [x] Done on 2026-10-30: the branch merged `origin/main` at `e9c20225` and
+      at `133782a9` (#247), and the remote gate passed 7 of 7 suites on
+      `c45a87cb`. Review round 1 found findings 1 and 2, and round 2 found 3
+      and 4. The fixes are `34357fa0`, `ffc19e11`, and `1d81517f`. The rest
+      of finding 1, the Highlight components switch of 22 Browse and 8
+      Changes artboards, waits for the user under
+      `plans/follow-ups/browse-artboard-highlight-drawing.md`. On `1d81517f`
+      the remote gate passed 6 of 7 suites, and browser shard 2 passed on a
+      rerun after the known flaky handoff test. Reports:
+      `.context/reviews/calummoore/mokly-ui-controls/`.
 
 ## Milestone 9: Inspector components
 
