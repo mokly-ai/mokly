@@ -7,24 +7,28 @@ use async_trait::async_trait;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
+use mokly_compare::comparison_steps::Step;
 use mokly_server::changes::{ChangeCancellation, ChangeCommit, ChangeRun};
 use mokly_sidecar::workers::Diagnostics;
 use tokio::sync::watch;
 use tokio::time;
 
-use crate::phase_format::frame;
+use crate::phase_format::{frame, stepped};
 use crate::terminal::Terminal;
 
 #[cfg_attr(test, unimock::unimock(api = ProgressMock))]
 #[async_trait]
 pub(super) trait Progress: Send + Sync {
     fn begin(&self, label: &str, cancel: Arc<dyn ChangeCancellation>) -> Box<dyn ChangeRun>;
+    /// Show `step` beside the label that `cancel` began, while that label owns the line.
+    fn step(&self, cancel: &Arc<dyn ChangeCancellation>, step: Step);
     async fn animate(&self, stop: watch::Receiver<bool>);
 }
 
 struct Label {
     id: u64,
     text: String,
+    step: Option<Step>,
     frame: usize,
     cancel: Arc<dyn ChangeCancellation>,
 }
@@ -90,8 +94,11 @@ impl ServeProgress {
             return;
         }
         label.frame = label.frame.wrapping_add(1);
-        self.terminal
-            .stdout(&frame(&self.style, &label.text, label.frame));
+        self.terminal.stdout(&frame(
+            &self.style,
+            &stepped(&label.text, label.step),
+            label.frame,
+        ));
     }
 }
 impl Terminal for ServeProgress {
@@ -126,6 +133,7 @@ impl Progress for ServeProgress {
         state.label = Some(Label {
             id,
             text: label.into(),
+            step: None,
             frame: 0,
             cancel,
         });
@@ -140,6 +148,26 @@ impl Progress for ServeProgress {
             animate: self.animate,
             id,
         })
+    }
+    fn step(&self, cancel: &Arc<dyn ChangeCancellation>, step: Step) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        let Some(label) = state.label.as_mut() else {
+            return;
+        };
+        if !Arc::ptr_eq(&label.cancel, cancel)
+            || label.cancel.cancelled()
+            || self.cancellation.requested()
+        {
+            return;
+        }
+        label.step = Some(step);
+        if self.animate {
+            self.terminal.stdout(&frame(
+                &self.style,
+                &stepped(&label.text, label.step),
+                label.frame,
+            ));
+        }
     }
     async fn animate(&self, mut stop: watch::Receiver<bool>) {
         if !self.animate {
