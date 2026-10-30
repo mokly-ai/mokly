@@ -1,10 +1,13 @@
 # Shell Views In The UI Package
 
 Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
-milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The second pull request,
-with milestones 6 to 8, is on `calummoore/mokly-ui-controls`. The work lands as a stack of five pull requests, one
-for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
-last one deletes it, as the `plans` skill says.
+milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The later slices are
+stacked branches: milestones 6 to 8 on `calummoore/mokly-ui-controls`, 9 to 11
+on `calummoore/mokly-ui-inspector`, 12 to 14 on `calummoore/mokly-ui-preview`,
+and 15 to 20 on `calummoore/mokly-ui-layout-theme`. The work lands as a stack
+of five pull requests, one for each slice, as design call 11 says. Each
+earlier pull request keeps this plan. The last one deletes it, as the `plans`
+skill says.
 
 `@mokly/ui` holds four parts of the Browse shell since
 [PR #243](https://github.com/mokly-ai/mokly/pull/243): the icons, the change
