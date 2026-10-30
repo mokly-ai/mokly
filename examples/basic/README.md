@@ -217,14 +217,16 @@ paths resolve from the file:
 From the repository root:
 
 ```bash
-npm ci
-npm run build
 npm run dev
 ```
 
-`npm run build` builds the native binary, the UI package, the viewer, the shim,
-and the sidecar. `npm run dev` runs watched Serve on this configuration and
-prints its URL. Put Serve options after `--`, for example
+`npm run dev` runs watched Serve on this configuration and prints its URL.
+Before Serve starts, it installs the dependencies with `npm ci` when they are
+missing or `package-lock.json` changed after the last install. It builds with
+`npm run build` when a build output is missing or older than the install. The
+build covers the native binary, the UI package, the viewer, the shim, and the
+sidecar. After you change Mokly's own sources, run `npm run build` before
+`npm run dev`. Put Serve options after `--`, for example
 `npm run dev -- --port 0`.
 
 To validate the catalogue and write the static site:
