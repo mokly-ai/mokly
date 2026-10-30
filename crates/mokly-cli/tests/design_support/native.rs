@@ -15,6 +15,7 @@ use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_compare::comparison::Engine;
+use mokly_compare::comparison_steps::Step;
 use mokly_compare::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
@@ -179,6 +180,7 @@ impl Phases for ProbeDiagnostics {
     fn start(&self, phase: Phase) {
         assert!(matches!(phase, Phase::Comparing(_)));
     }
+    fn step(&self, _: Step) {}
     fn diagnostic(&self, message: &str) {
         eprintln!("{message}");
     }

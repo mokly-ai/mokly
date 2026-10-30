@@ -1,7 +1,8 @@
 # Shell Views In The UI Package
 
-Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249) is open
-for milestones 1 to 5. The work lands as a stack of five pull requests, one
+Status: Active. [PR #249](https://github.com/mokly-ai/mokly/pull/249), with
+milestones 1 to 5, merged on 2026-10-30 as `14c6f9ec`. The second pull request,
+with milestones 6 to 8, is on `calummoore/mokly-ui-controls`. The work lands as a stack of five pull requests, one
 for each slice, as design call 11 says. Each earlier pull request keeps this plan. The
 last one deletes it, as the `plans` skill says.
 
@@ -777,6 +778,8 @@ Depends on: 1, 2, 3, 4
       7 of 7 suites on `73e2f3ea`, and review round 1 found no finding in
       scope. Its two out-of-scope notes have follow-up items. Reports:
       `.context/reviews/calummoore/mokly-ui-component-migration/`.
+- [x] Merged `origin/main` at `afc9f58d` in `5db03042` with an empty remerge
+      diff, and the remote gate passed 7 of 7 suites on it.
 
 ## Milestone 6: Control components
 

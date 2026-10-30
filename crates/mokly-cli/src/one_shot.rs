@@ -16,15 +16,16 @@ use mokly_cli::publication::command::BuildReporter;
 use mokly_cli::recovery_output;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
+use mokly_compare::comparison_steps::Step;
 use mokly_model::output::artifact::Artifact;
 use mokly_publish::accounting::{Progress, Receipt};
-use mokly_publish::completion::Outcome;
 use mokly_publish::runtime::Reporter;
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::workers::Clock;
 
+use crate::one_shot_summary;
 use crate::phase_format;
-use crate::phase_format::{duration, frame};
+use crate::phase_format::{duration, frame, stepped};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {
@@ -41,6 +42,7 @@ pub(super) struct Lines {
 #[derive(Default)]
 struct State {
     label: Option<String>,
+    step: Option<Step>,
     started: Option<u64>,
     frame: usize,
 }
@@ -68,7 +70,11 @@ impl Lines {
                         let mut state = state.lock().unwrap_or_else(|error| error.into_inner());
                         state.frame += 1;
                         if let Some(label) = &state.label {
-                            terminal.stdout(&frame(&style, label, state.frame));
+                            terminal.stdout(&frame(
+                                &style,
+                                &stepped(label, state.step),
+                                state.frame,
+                            ));
                         }
                     }
                 })
@@ -97,6 +103,7 @@ impl Lines {
             self.terminal.stdout("\r\x1b[2K");
         }
         state.label = None;
+        state.step = None;
         state
             .started
             .take()
@@ -104,42 +111,19 @@ impl Lines {
     }
     pub(super) fn built(&self, artifact: &Artifact, root: &Path, elapsed: Duration) {
         let directory = self.redactor.safe(&relative(&artifact.directory, root));
-        if self.style.mode == Mode::Plain {
-            self.terminal.stdout(&format!(
-                "Built Mokly to {directory} ({} files).\n",
-                artifact.files.len()
-            ));
-        } else {
-            self.success(&format!(
-                "Built Mokly to {directory} · {} files ({})",
-                artifact.files.len(),
-                duration(elapsed)
-            ));
-        }
+        self.terminal.stdout(&one_shot_summary::built(
+            &self.style,
+            &directory,
+            artifact.files.len(),
+            elapsed,
+        ));
         self.terminal
             .stdout("Deploy this directory at your site's root with your hosting provider.\n");
     }
     pub(super) fn published(&self, receipt: &Receipt, elapsed: Duration) {
         self.clear();
-        if self.style.mode == Mode::Plain {
-            self.terminal.stdout(&format!("{}\n", receipt.summary()));
-        } else {
-            let message = if receipt.completion.outcome == Outcome::AlreadyPublished {
-                "Mokly catalogue already published for this commit".into()
-            } else {
-                format!(
-                    "Published Mokly catalogue · {} {} uploaded, {} unchanged",
-                    receipt.uploaded,
-                    if receipt.uploaded == 1 {
-                        "file"
-                    } else {
-                        "files"
-                    },
-                    receipt.unchanged
-                )
-            };
-            self.success(&format!("{message} ({})", duration(elapsed)));
-        }
+        self.terminal
+            .stdout(&one_shot_summary::published(&self.style, receipt, elapsed));
         if let Some(url) = &receipt.completion.viewer_url {
             self.terminal
                 .stdout(&format!("{}\n", self.redactor.safe(url)));
@@ -181,6 +165,7 @@ impl Phases for Lines {
             ));
         }
         state.label = Some(label.clone());
+        state.step = None;
         state.started = Some(now);
         state.frame = 0;
         self.terminal.stdout(&if self.animate {
@@ -188,6 +173,18 @@ impl Phases for Lines {
         } else {
             format!("{}\n", bounded(&format!("  {label}…"), self.style.columns))
         });
+    }
+    fn step(&self, step: Step) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        let Some(label) = &state.label else {
+            return;
+        };
+        let text = stepped(label, Some(step));
+        if self.animate {
+            self.terminal
+                .stdout(&frame(&self.style, &text, state.frame));
+        }
+        state.step = Some(step);
     }
     fn note(&self, message: &str) {
         let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
